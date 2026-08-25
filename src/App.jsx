@@ -17,6 +17,16 @@ import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
 import PriorityWritingNotificationBanner from './modules/notifications/PriorityWritingNotificationBanner';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
 import { DEFAULT_WRITING_EDITOR_SETTINGS } from './modules/writing/editor-settings/settings';
+import {
+  STUDENT_HOME_ROUTE,
+  createStudentHistoryState,
+  getStudentActiveBottomTab,
+  getStudentBackDestination,
+  getStudentBottomNavDestination,
+  getStudentRouteKey,
+  readStudentHistoryParent,
+  readStudentHistoryState
+} from './components/student/studentNavigation';
 
 const DEFAULT_STUDENT_EDITOR_SETTINGS = DEFAULT_WRITING_EDITOR_SETTINGS;
 
@@ -97,16 +107,16 @@ function App() {
     return getEnabledModules(ids, 'student');
   }, [studentHomeBootstrap, studentSession]);
   const studentPageName = internalPage.name;
+  const studentRouteKey = getStudentRouteKey(internalPage);
   // 하단 내비의 '나의 아지트'는 페이지가 아니라 홈 위에 뜨는 판이라,
-  // 홈으로 보낸 뒤 이 값을 올려 대시보드에 "열어라"라고 알린다.
+  // 홈으로 보낸 뒤 일회용 신호로 열고, 실제로 열린 판을 따로 기억해 하단 메뉴 강조를 맞춘다.
   const [myAgitSignal, setMyAgitSignal] = useState(0);
   const [playgroundSignal, setPlaygroundSignal] = useState(0);
-  // 입력 화면에 넘기는 라우팅 콜백은 안정된 참조를 유지한다.
-  // 주기적인 앱 셸 갱신이 글 초기 로드의 신호로 오인되는 회귀를 이 경계에서도 막는다.
-  const handleStudentWritingBack = useCallback(
-    () => setInternalPage('mission_list'),
-    [setInternalPage]
-  );
+  const [dashboardResetSignal, setDashboardResetSignal] = useState(0);
+  const [studentNavOverlay, setStudentNavOverlay] = useState(null);
+  const studentBottomActiveTab = getStudentActiveBottomTab(studentPageName, studentNavOverlay);
+  const handleMyAgitSignalHandled = useCallback(() => setMyAgitSignal(0), []);
+  const handlePlaygroundSignalHandled = useCallback(() => setPlaygroundSignal(0), []);
 
   // 코드 로그인도 브라우저 방문 기록의 한 단계로 둔다. 같은 탭에서 연구소를 보고 왔더라도
   // 기기·브라우저 뒤로가기가 연구소까지 빠져나가지 않고 아지트 첫 화면에 먼저 머물게 한다.
@@ -140,7 +150,7 @@ function App() {
   // 학생 화면 뒤로가기: 그동안 처리가 없어 태블릿·폰에서 뒤로가기를 누르면 앱이 닫혔다.
   // 페이지가 바뀔 때 히스토리를 쌓고, 뒤로가기가 오면 그 페이지로 되돌린다.
   const skipHistoryPushRef = useRef(false);
-  const lastStudentPageRef = useRef(null);
+  const lastStudentRouteRef = useRef(null);
   const previousStudentHomePageRef = useRef(null);
   const studentDeepLinkHandledRef = useRef(false);
 
@@ -163,19 +173,29 @@ function App() {
   }, [setInternalPage, studentSession]);
 
   useEffect(() => {
-    if (!studentSession) { lastStudentPageRef.current = null; return; }
+    if (!studentSession) { lastStudentRouteRef.current = null; return; }
+    const currentRoute = { name: internalPage.name, params: internalPage.params };
     if (skipHistoryPushRef.current) {
       skipHistoryPushRef.current = false;
-      lastStudentPageRef.current = studentPageName;
+      lastStudentRouteRef.current = currentRoute;
       return;
     }
-    if (lastStudentPageRef.current === null) {
-      window.history.replaceState({ studentPage: studentPageName }, '');
-    } else if (lastStudentPageRef.current !== studentPageName) {
-      window.history.pushState({ studentPage: studentPageName }, '');
+    const previousRoute = lastStudentRouteRef.current;
+    if (lastStudentRouteRef.current === null) {
+      window.history.replaceState(createStudentHistoryState(currentRoute.name, currentRoute.params), '');
+    } else if (getStudentRouteKey(previousRoute) !== studentRouteKey) {
+      const recordedParent = readStudentHistoryParent(window.history.state);
+      if (recordedParent && getStudentRouteKey(recordedParent) === studentRouteKey) {
+        window.history.back();
+      } else {
+        window.history.pushState(
+          createStudentHistoryState(currentRoute.name, currentRoute.params, previousRoute),
+          ''
+        );
+      }
     }
-    lastStudentPageRef.current = studentPageName;
-  }, [studentSession, studentPageName]);
+    lastStudentRouteRef.current = currentRoute;
+  }, [internalPage, studentRouteKey, studentSession]);
 
   useEffect(() => {
     if (!studentSession) {
@@ -192,13 +212,86 @@ function App() {
   useEffect(() => {
     if (!studentSession) return undefined;
     const handlePop = (event) => {
-      const target = event.state?.studentPage || 'main';
+      const target = readStudentHistoryState(event.state);
       skipHistoryPushRef.current = true;
-      setInternalPage(target);
+      setInternalPage(target.name, target.params);
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
   }, [studentSession, setInternalPage]);
+
+  const replaceStudentRoute = useCallback((route) => {
+    const nextRoute = route || STUDENT_HOME_ROUTE;
+    window.history.replaceState(
+      createStudentHistoryState(nextRoute.name, nextRoute.params),
+      ''
+    );
+    lastStudentRouteRef.current = nextRoute;
+    setStudentNavOverlay(null);
+    setMyAgitSignal(0);
+    setPlaygroundSignal(0);
+    setDashboardResetSignal((value) => value + 1);
+    setInternalPage(nextRoute.name, nextRoute.params);
+  }, [setInternalPage]);
+
+  // 화면 안의 뒤로가기는 새 방문 기록을 만들지 않고 정해진 부모 화면으로 교체한다.
+  // 과제 편집기는 과제 목록, 과제에서 연 친구 글은 과제 목록, 나머지 메뉴는 모두 홈이 부모다.
+  const handleCurrentStudentBack = useCallback(() => {
+    const destination = getStudentBackDestination(internalPage);
+    const recordedParent = readStudentHistoryParent(window.history.state);
+    if (recordedParent && getStudentRouteKey(recordedParent) === getStudentRouteKey(destination)) {
+      setStudentNavOverlay(null);
+      setMyAgitSignal(0);
+      setPlaygroundSignal(0);
+      setDashboardResetSignal((value) => value + 1);
+      window.history.back();
+      return;
+    }
+    replaceStudentRoute(destination);
+  }, [internalPage, replaceStudentRoute]);
+
+  // 하단 메뉴끼리 이동할 때 현재 메뉴를 홈으로 바꾼 뒤 새 메뉴를 쌓는다.
+  // 따라서 어느 메뉴에서 다른 메뉴로 옮겼더라도 기기 뒤로가기는 직전 메뉴가 아니라 홈으로 간다.
+  const handleStudentBottomNavigation = useCallback((tabId) => {
+    const destination = getStudentBottomNavDestination(tabId);
+    const destinationRoute = { name: destination.pageName, params: destination.params };
+    const destinationKey = getStudentRouteKey(destinationRoute);
+    const samePage = !destination.overlay
+      && !studentNavOverlay
+      && !window.history.state?.overlay
+      && studentRouteKey === destinationKey;
+    const sameOverlay = destination.overlay
+      && studentNavOverlay === destination.overlay
+      && studentPageName === 'main';
+    if (samePage || sameOverlay) return;
+
+    const isHomeBase = studentPageName === 'main'
+      && !studentNavOverlay
+      && !window.history.state?.overlay;
+    if (!isHomeBase) {
+      window.history.replaceState(
+        createStudentHistoryState(STUDENT_HOME_ROUTE.name, STUDENT_HOME_ROUTE.params),
+        ''
+      );
+      lastStudentRouteRef.current = STUDENT_HOME_ROUTE;
+    }
+
+    if (destination.overlay === 'my_agit') {
+      setStudentNavOverlay('my_agit');
+      setPlaygroundSignal(0);
+      setMyAgitSignal((value) => value + 1);
+    } else if (destination.overlay === 'playground') {
+      setStudentNavOverlay('playground');
+      setMyAgitSignal(0);
+      setPlaygroundSignal((value) => value + 1);
+    } else {
+      setStudentNavOverlay(null);
+      setMyAgitSignal(0);
+      setPlaygroundSignal(0);
+      setDashboardResetSignal((value) => value + 1);
+    }
+    setInternalPage(destination.pageName, destination.params);
+  }, [setInternalPage, studentNavOverlay, studentPageName, studentRouteKey]);
   // 상태 변경 감지 로그
   useEffect(() => {
   }, [isAdminMode]);
@@ -476,12 +569,16 @@ function App() {
                   onRefreshHome={refreshStudentHome}
                   myAgitSignal={myAgitSignal}
                   playgroundSignal={playgroundSignal}
+                  dashboardResetSignal={dashboardResetSignal}
+                  onMyAgitSignalHandled={handleMyAgitSignalHandled}
+                  onPlaygroundSignalHandled={handlePlaygroundSignalHandled}
+                  onActiveNavChange={setStudentNavOverlay}
                 />
               )}
               {studentPageName === 'mission_list' && (
                 <MissionList
                   studentSession={studentSession}
-                  onBack={() => setInternalPage('main')}
+                  onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
                 />
               )}
@@ -490,7 +587,7 @@ function App() {
                   studentSession={studentSession}
                   missionId={internalPage.params.missionId}
                   params={internalPage.params}
-                  onBack={handleStudentWritingBack}
+                  onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
                 />
               )}
@@ -498,7 +595,7 @@ function App() {
                 <ReadingLogPage
                   studentSession={studentSession}
                   params={internalPage.params}
-                  onBack={() => setInternalPage('main')}
+                  onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
                 />
               )}
@@ -506,7 +603,7 @@ function App() {
                 <DiaryPage
                   studentSession={studentSession}
                   params={internalPage.params}
-                  onBack={() => setInternalPage('main')}
+                  onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
                 />
               )}
@@ -514,14 +611,14 @@ function App() {
                 <FriendsHideout
                   studentSession={studentSession}
                   params={internalPage.params}
-                  onBack={() => setInternalPage(internalPage.params?.returnTo || 'main')}
+                  onBack={handleCurrentStudentBack}
                 />
               )}
               {studentPageName === 'lab_activities' && (
                 <LabActivitiesPage
                   studentSession={studentSession}
                   params={internalPage.params}
-                  onBack={() => setInternalPage('main')}
+                  onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
                 />
               )}
@@ -529,10 +626,8 @@ function App() {
               {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
               <Suspense fallback={null}>
                 <StudentBottomNav
-                  activeTab={studentPageName}
-                  onNavigate={setInternalPage}
-                  onOpenMyAgit={() => setMyAgitSignal((n) => n + 1)}
-                  onOpenPlayground={() => setPlaygroundSignal((n) => n + 1)}
+                  activeTab={studentBottomActiveTab}
+                  onNavigate={handleStudentBottomNavigation}
                 />
               </Suspense>
             </WritingEditorSettingsProvider>

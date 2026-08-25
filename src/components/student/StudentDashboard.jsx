@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
@@ -41,7 +41,11 @@ const StudentDashboard = ({
     homeBootstrapLoading = false,
     onRefreshHome,
     myAgitSignal = 0,
-    playgroundSignal = 0
+    playgroundSignal = 0,
+    dashboardResetSignal = 0,
+    onMyAgitSignalHandled,
+    onPlaygroundSignalHandled,
+    onActiveNavChange
 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
@@ -56,21 +60,68 @@ const StudentDashboard = ({
     const [growthCelebration, setGrowthCelebration] = useState(null);
     const [openSpeciesPickerAfterGrowth, setOpenSpeciesPickerAfterGrowth] = useState(false);
 
+    const activeDashboardNav = isMyAgitOpen
+        ? 'my_agit'
+        : (isPlaygroundOpen || isShopOpen || isDragonModalOpen || activeGameModuleId ? 'playground' : null);
+    const activeDashboardNavRef = useRef(null);
+    const onActiveNavChangeRef = useRef(onActiveNavChange);
+    useEffect(() => { onActiveNavChangeRef.current = onActiveNavChange; }, [onActiveNavChange]);
+    useEffect(() => {
+        if (activeDashboardNavRef.current === activeDashboardNav) return;
+        activeDashboardNavRef.current = activeDashboardNav;
+        onActiveNavChangeRef.current?.(activeDashboardNav);
+    }, [activeDashboardNav]);
+    useEffect(() => () => {
+        if (activeDashboardNavRef.current) onActiveNavChangeRef.current?.(null);
+    }, []);
+
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
         if (!myAgitSignal) return undefined;
         const timerId = window.setTimeout(() => {
+            setIsPlaygroundOpen(false);
+            setIsShopOpen(false);
+            setIsDragonModalOpen(false);
+            setActiveGameModuleId(null);
+            setIsFootprintOpen(false);
+            setIsGuideOpen(false);
             setMyAgitInitialPost(null);
             setIsMyAgitOpen(true);
+            onMyAgitSignalHandled?.();
         }, 0);
         return () => window.clearTimeout(timerId);
-    }, [myAgitSignal]);
+    }, [myAgitSignal, onMyAgitSignalHandled]);
 
     useEffect(() => {
         if (!playgroundSignal) return undefined;
-        const timerId = window.setTimeout(() => setIsPlaygroundOpen(true), 0);
+        const timerId = window.setTimeout(() => {
+            setIsMyAgitOpen(false);
+            setMyAgitInitialPost(null);
+            setIsShopOpen(false);
+            setIsDragonModalOpen(false);
+            setActiveGameModuleId(null);
+            setIsFootprintOpen(false);
+            setIsGuideOpen(false);
+            setIsPlaygroundOpen(true);
+            onPlaygroundSignalHandled?.();
+        }, 0);
         return () => window.clearTimeout(timerId);
-    }, [playgroundSignal]);
+    }, [playgroundSignal, onPlaygroundSignalHandled]);
+
+    useEffect(() => {
+        if (!dashboardResetSignal) return undefined;
+        const timerId = window.setTimeout(() => {
+            setIsMyAgitOpen(false);
+            setMyAgitInitialPost(null);
+            setIsPlaygroundOpen(false);
+            setIsShopOpen(false);
+            setIsDragonModalOpen(false);
+            setActiveGameModuleId(null);
+            setIsFootprintOpen(false);
+            setIsGuideOpen(false);
+        }, 0);
+        return () => window.clearTimeout(timerId);
+    }, [dashboardResetSignal]);
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
