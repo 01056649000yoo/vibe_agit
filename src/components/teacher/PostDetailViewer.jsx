@@ -65,6 +65,13 @@ const PostDetailViewer = ({
     const [finalEval, setFinalEval] = useState(selectedPost?.final_eval || null);
     const [evalComment, setEvalComment] = useState(selectedPost?.eval_comment || '');
     const [isFeedbackVisible, setIsFeedbackVisible] = useState(true);
+    /*
+     * 학생이 고정한 개요를 **글 옆에서** 본다(2026-08-25 요청).
+     * 예전에는 글 위에 통째로 펼쳐져 있어, 글을 읽으려면 개요를 지나쳐 내려가야 했고
+     * 개요와 글을 **함께 대조할 수 없었다**(위아래로 떨어져 있어서다).
+     * 피드백 사이드바로 옮겨 글과 나란히 두고, 접었다 펼 수 있게 한다.
+     */
+    const [isOutlineOpen, setIsOutlineOpen] = useState(false);
 
     useEffect(() => {
         if (selectedPost) {
@@ -124,6 +131,60 @@ const PostDetailViewer = ({
             textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
         }
     }, [tempFeedback, selectedPost]);
+
+
+    /*
+     * 학생이 고정한 개요 칸. 데스크톱은 글 옆 사이드바에, 모바일은 글 아래에 **같은 것**을 쓴다.
+     * 두 벌로 두면 한쪽만 고치는 실수가 난다.
+     * 기본은 접어 둔다 — 먼저 보는 것은 학생의 글이고, 개요는 견줄 때 편다.
+     */
+    const outlinePanel = outlineReference ? (
+
+                                    <div style={{
+                                        background: '#F8F9FA', borderRadius: '24px',
+                                        border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsOutlineOpen((current) => !current)}
+                                            aria-expanded={isOutlineOpen}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                gap: '10px', width: '100%', padding: '18px 24px', border: 0,
+                                                background: 'transparent', color: '#1F2937', cursor: 'pointer',
+                                                fontSize: 'var(--ui-text-lg)', fontWeight: '900', textAlign: 'left'
+                                            }}
+                                        >
+                                            🗂️ 학생이 참고한 개요
+                                            <span style={{ color: '#6B7280', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>
+                                                {isOutlineOpen ? '접기' : '펼치기'}
+                                            </span>
+                                        </button>
+                                        {isOutlineOpen && (
+                                            <div style={{ padding: '0 16px 16px' }}>
+                                                <LabOutlineReferenceCard
+                                                    result={outlineReference}
+                                                    eyebrow="학생 참고 개요"
+                                                    badge="이 글에 고정됨"
+                                                    notice={outlineNotice}
+                                                    compact
+                                                    actions={onRefreshPostDetail ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => void onRefreshPostDetail()}
+                                                            disabled={postDetailLoading}
+                                                        >
+                                                            {postDetailLoading ? '최신 내용 확인 중…' : '최신 개요 다시 불러오기'}
+                                                        </Button>
+                                                    ) : null}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+    ) : null;
 
     return (
         <AnimatePresence>
@@ -365,28 +426,6 @@ const PostDetailViewer = ({
                                     )}
                                 </div>
 
-                                {outlineReference && (
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <LabOutlineReferenceCard
-                                            result={outlineReference}
-                                            eyebrow="학생 참고 개요"
-                                            heading="학생이 참고한 최신 개요"
-                                            badge="이 글에 고정됨"
-                                            notice={outlineNotice}
-                                            actions={onRefreshPostDetail ? (
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => void onRefreshPostDetail()}
-                                                    disabled={postDetailLoading}
-                                                >
-                                                    {postDetailLoading ? '최신 내용 확인 중…' : '최신 개요 다시 불러오기'}
-                                                </Button>
-                                            ) : null}
-                                        />
-                                    </div>
-                                )}
 
                                 {!postDetailLoading && outlineReference === null && selectedPost.mission_id && (
                                     <div style={{
@@ -544,6 +583,11 @@ const PostDetailViewer = ({
                                         ) : selectedPost.content}
                                     </WritingPresentationTrigger>
                                 )}
+                                {/* ⚠️ 모바일에서는 사이드바가 통째로 숨는다. 개요를 사이드바에만 두면
+                                    폰에서는 아예 못 본다. 같은 칸을 글 아래에 한 번 더 놓는다. */}
+                                {isMobile && (
+                                    <div style={{ marginTop: '20px' }}>{outlinePanel}</div>
+                                )}
                             </div>
 
                             {/* Sidebar Area */}
@@ -553,6 +597,8 @@ const PostDetailViewer = ({
                                     gap: '16px',
                                     position: 'sticky', top: '20px', height: 'fit-content'
                                 }}>
+                                    {outlinePanel}
+
                                     {/* 피드백 섹션 */}
                                     <div style={{
                                         background: '#F8F9FA', borderRadius: '24px', padding: '24px',

@@ -266,7 +266,12 @@ test('교사 글 상세는 반응·댓글·고정 개요를 한 RPC로 읽는다
     assert.match(section, /get_teacher_post_detail_v1/);
     assert.match(section, /detail\?\.outline_reference/);
     assert.doesNotMatch(section, /\.from\('post_reactions'\)|\.from\('post_comments'\)/);
-    assert.match(viewer, /학생이 참고한 최신 개요/);
+    /*
+     * 2026-08-25: 개요를 **글 옆 사이드바**로 옮기고 머리말에서 고정 문구를 뺐다(제목만 쓴다).
+     * 여기서 볼 것은 문구가 아니라 **교사 화면이 고정 개요를 실제로 그린다**는 것이다.
+     */
+    assert.match(viewer, /<LabOutlineReferenceCard[\s\S]*?result=\{outlineReference\}/);
+    assert.match(viewer, /학생이 참고한 개요/);
     assert.match(migration, /'outline_reference'/);
     assert.match(migration, /portable\.id = pin\.result_id/);
 });
@@ -390,4 +395,28 @@ test('학습 성취 공개 범위는 서버가 가르고 홈에는 붙지 않는
     // 홈이 아니라 나의 아지트를 **열 때만** 부른다(성능 계약: 홈 추가 조회 0회).
     assert.match(myAgit, /useLearningMastery\(\{\s*\n?\s*viewer: 'me', active: isOpen/);
     assert.doesNotMatch(await read('src/components/student/StudentDashboard.jsx'), /useLearningMastery/);
+});
+
+/*
+ * 2026-08-25: 학생이 고정한 개요가 **글 위에** 통째로 펼쳐져 있었다. 글을 읽으려면 개요를 지나쳐
+ * 내려가야 했고, 위아래로 떨어져 있어 **개요와 글을 함께 대조할 수 없었다.**
+ * 피드백 사이드바로 옮겨 글과 나란히 두고 접었다 펼 수 있게 했다.
+ */
+test('교사 글 상세는 학생 개요를 글 옆에서 접었다 펴며 본다', async () => {
+    const viewer = await readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8');
+
+    // 칸은 **한 벌만** 만든다. 두 벌이면 한쪽만 고치는 실수가 난다.
+    assert.match(viewer, /const outlinePanel = outlineReference \? \(/);
+    assert.equal((viewer.match(/<LabOutlineReferenceCard/g) ?? []).length, 1);
+
+    // 기본은 접어 둔다 — 먼저 보는 것은 학생의 글이다.
+    assert.match(viewer, /const \[isOutlineOpen, setIsOutlineOpen\] = useState\(false\)/);
+    assert.match(viewer, /aria-expanded=\{isOutlineOpen\}/);
+
+    /*
+     * ⚠️ 모바일에서는 사이드바가 통째로 숨는다(`isFeedbackVisible && !isMobile`).
+     *    개요를 사이드바에만 두면 폰에서는 아예 못 본다. 글 아래에 같은 칸을 한 번 더 놓는다.
+     */
+    assert.match(viewer, /\{isMobile && \(\s*\n\s*<div style=\{\{ marginTop: '20px' \}\}>\{outlinePanel\}<\/div>/);
+    assert.equal((viewer.match(/\{outlinePanel\}/g) ?? []).length, 2);
 });
