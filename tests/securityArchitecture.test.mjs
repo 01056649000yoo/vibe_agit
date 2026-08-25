@@ -389,3 +389,22 @@ test('과제 임시저장은 전용 RPC로만 하고 서버 값을 실어 보내
     }
     assert.match(draftMigration, /REVOKE ALL ON FUNCTION public\.save_my_assignment_draft_v1[\s\S]*?FROM PUBLIC, anon/);
 });
+
+test('교사 제출 전광판은 실제 담당 학급만 보고 글 본문을 반환하지 않는다', async () => {
+    const boardMigration = await readFile(
+        'supabase/migrations/20261167_teacher_assignment_submission_board.sql',
+        'utf8'
+    );
+
+    assert.match(boardMigration, /SECURITY DEFINER[\s\S]*class\.id = p_class_id[\s\S]*class\.teacher_id = auth\.uid\(\)/);
+    assert.match(boardMigration, /SELECT DISTINCT ON \(post\.mission_id, post\.student_id\)/);
+    assert.match(boardMigration, /post\.class_id = p_class_id[\s\S]*post\.mission_id = mission\.id/);
+    assert.match(boardMigration, /event\.class_id = p_class_id/);
+    assert.match(boardMigration, /LEAST\(GREATEST\(COALESCE\(p_recent_limit, 8\), 1\), 8\)/);
+    assert.match(boardMigration, /REVOKE ALL ON FUNCTION public\.teacher_assignment_submission_board_snapshot_v1[\s\S]*authenticated/);
+    assert.match(boardMigration, /REVOKE ALL ON FUNCTION public\.get_teacher_assignment_submission_board_v1[\s\S]*FROM PUBLIC, anon/);
+
+    const recentProjection = boardMigration.match(/'recent_submissions',[\s\S]*?FROM recent_rows recent/)?.[0] || '';
+    assert.ok(recentProjection, '최근 제출 최소 응답 블록을 찾지 못했습니다.');
+    assert.doesNotMatch(recentProjection, /post_content|original_content|structured_content|ai_feedback|eval_comment/);
+});

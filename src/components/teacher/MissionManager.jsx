@@ -15,6 +15,7 @@ import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
 import TeacherGuideButton from './TeacherGuideButton';
+import TeacherSubmissionBoard from './TeacherSubmissionBoard';
 
 const GENRE_MISSION_BUILDERS = new Map(
     getGenreMissionTypes()
@@ -42,7 +43,8 @@ const MissionManager = ({
     const handledNavigationRef = useRef(null);
 
     const {
-        missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
+        missions, submissionCounts, submissionBoard, submissionBoardPollError,
+        isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
         tempFeedback, setTempFeedback, postComments, totalStudentCount,
@@ -118,6 +120,15 @@ const MissionManager = ({
         setActiveGenreMode('review');
         setIsMissionTypePickerOpen(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleOpenSubmissionBoardMission = (mission) => {
+        const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
+        if (missionType?.teacherReview) {
+            handleReviewMission(mission);
+            return;
+        }
+        fetchPostsForMission(mission);
     };
 
     useEffect(() => {
@@ -282,25 +293,39 @@ const MissionManager = ({
                 handleSaveDefaultSettings={handleSaveDefaultSettings}
             />
 
-            {/* 미션 리스트 */}
-            <MissionList
-                missions={missions}
-                loading={loading}
-                submissionCounts={submissionCounts}
-                totalStudentCount={totalStudentCount}
-                handleEditClick={handleMissionEditClick}
-                setArchiveModal={setArchiveModal}
-                handleDeleteMission={handleDeleteMission}
-                fetchPostsForMission={fetchPostsForMission}
-                fetchMissions={fetchMissions}
-                isMobile={isMobile}
-                showEvaluationReport={(m) => setReportMission(m)}
-                handleEvaluationMode={handleEvaluationMode}
-                onReviewMission={handleReviewMission}
-                onConnectLabSources={setLabSourceMission}
-                highlightedMissionId={highlightedMissionId}
-                cardLayout={cardLayout}
-            />
+            {/* 과제 카드와 실시간 제출 전광판 — 작성/수정 중에는 폼 너비를 우선한다. */}
+            <div className={`teacher-mission-live-layout${isFormOpen || isMissionTypePickerOpen ? ' is-single' : ''}`}>
+                <div className="teacher-mission-live-layout__cards">
+                    <MissionList
+                        missions={missions}
+                        loading={loading}
+                        submissionCounts={submissionCounts}
+                        missionStatuses={submissionBoard.mission_statuses}
+                        totalStudentCount={totalStudentCount}
+                        handleEditClick={handleMissionEditClick}
+                        setArchiveModal={setArchiveModal}
+                        handleDeleteMission={handleDeleteMission}
+                        fetchPostsForMission={fetchPostsForMission}
+                        fetchMissions={fetchMissions}
+                        isMobile={isMobile}
+                        showEvaluationReport={(m) => setReportMission(m)}
+                        handleEvaluationMode={handleEvaluationMode}
+                        onReviewMission={handleReviewMission}
+                        onConnectLabSources={setLabSourceMission}
+                        highlightedMissionId={highlightedMissionId}
+                        cardLayout={cardLayout}
+                        splitView={!isFormOpen && !isMissionTypePickerOpen}
+                    />
+                </div>
+                {!isFormOpen && !isMissionTypePickerOpen && (
+                    <TeacherSubmissionBoard
+                        missions={missions}
+                        board={submissionBoard}
+                        pollError={submissionBoardPollError}
+                        onOpenMission={handleOpenSubmissionBoardMission}
+                    />
+                )}
+            </div>
 
             {labSourceMission && (
                 <Suspense fallback={null}>

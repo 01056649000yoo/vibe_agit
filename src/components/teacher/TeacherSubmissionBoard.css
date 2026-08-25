@@ -1,0 +1,376 @@
+.teacher-mission-live-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.teacher-mission-live-layout.is-single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.teacher-mission-live-layout__cards {
+    min-width: 0;
+}
+
+.teacher-submission-board {
+    position: sticky;
+    top: 106px;
+    align-self: start;
+    min-width: 0;
+    max-height: calc(100vh - 126px);
+    overflow: auto;
+    padding: 16px;
+    border: 1px solid #BFDBFE;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #EFF6FF 0%, #F8FAFC 42%, #FFFFFF 100%);
+    box-shadow: 0 10px 28px rgba(30, 64, 175, 0.09);
+    box-sizing: border-box;
+    scrollbar-width: thin;
+}
+
+.teacher-submission-board__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid #DBEAFE;
+}
+
+.teacher-submission-board__header h4,
+.teacher-submission-board__section-title h5 {
+    margin: 0;
+    color: #172554;
+    font-weight: 950;
+}
+
+.teacher-submission-board__header h4 {
+    font-size: 1rem;
+}
+
+.teacher-submission-board__header p {
+    margin: 4px 0 0;
+    color: #64748B;
+    font-size: var(--ui-text-sm);
+    line-height: 1.4;
+}
+
+.teacher-submission-board__live {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    justify-content: end;
+    column-gap: 5px;
+    flex: 0 0 auto;
+    color: #1D4ED8;
+    font-size: var(--ui-text-sm);
+}
+
+.teacher-submission-board__live time {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+    color: #64748B;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.teacher-submission-board__live.has-error {
+    color: #B45309;
+}
+
+.teacher-submission-board__live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22C55E;
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.12);
+    animation: teacher-submission-live-pulse 1.8s ease-out infinite;
+}
+
+.teacher-submission-board__live.has-error .teacher-submission-board__live-dot {
+    background: #F59E0B;
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.12);
+}
+
+@keyframes teacher-submission-live-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.8); opacity: 0.62; }
+}
+
+.teacher-submission-board__summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.teacher-submission-board__summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px;
+    border: 1px solid #DBEAFE;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.teacher-submission-board__summary span {
+    color: #64748B;
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+}
+
+.teacher-submission-board__summary strong {
+    color: #1E3A8A;
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.teacher-submission-board__summary small {
+    margin-left: 2px;
+    color: #64748B;
+    font-size: var(--ui-text-sm);
+}
+
+.teacher-submission-board__recent,
+.teacher-submission-board__missions {
+    margin-top: 16px;
+}
+
+.teacher-submission-board__section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.teacher-submission-board__section-title h5 {
+    font-size: 0.85rem;
+}
+
+.teacher-submission-board__section-title > span {
+    color: #94A3B8;
+    font-size: var(--ui-text-sm);
+    font-weight: 750;
+}
+
+.teacher-submission-board__recent ol {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.teacher-submission-board__recent li {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.teacher-submission-board__recent time {
+    color: #2563EB;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.teacher-submission-board__recent li div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 7px;
+    min-width: 0;
+    font-size: var(--ui-text-sm);
+}
+
+.teacher-submission-board__recent li strong {
+    color: #1E293B;
+}
+
+.teacher-submission-board__recent li span {
+    min-width: 0;
+    overflow: hidden;
+    color: #64748B;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teacher-submission-board__legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+    color: #64748B;
+    font-size: 0.68rem;
+    font-weight: 850;
+}
+
+.teacher-submission-board__legend span::before {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 3px;
+    border-radius: 999px;
+    background: currentColor;
+    content: '';
+}
+
+.teacher-submission-board__legend .is-confirmed { color: #16A34A; }
+.teacher-submission-board__legend .is-pending { color: #2563EB; }
+.teacher-submission-board__legend .is-rewriting { color: #D97706; }
+
+.teacher-submission-board__mission-list {
+    display: grid;
+    gap: 9px;
+}
+
+.teacher-submission-board__mission {
+    padding: 11px;
+    border: 1px solid #E2E8F0;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.94);
+}
+
+.teacher-submission-board__mission.has-pending {
+    border-color: #93C5FD;
+    box-shadow: inset 3px 0 0 #3B82F6;
+}
+
+.teacher-submission-board__mission-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.teacher-submission-board__mission-heading > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.teacher-submission-board__mission-heading strong {
+    overflow: hidden;
+    color: #1E293B;
+    font-size: 0.82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teacher-submission-board__mission-heading span {
+    margin-top: 2px;
+    color: #64748B;
+    font-size: var(--ui-text-sm);
+    font-weight: 750;
+}
+
+.teacher-submission-board__mission-heading button {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 5px 9px;
+    border: 1px solid #BFDBFE;
+    border-radius: 9px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    cursor: pointer;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+}
+
+.teacher-submission-board__progress {
+    display: flex;
+    width: 100%;
+    height: 9px;
+    margin-top: 9px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #E2E8F0;
+}
+
+.teacher-submission-board__progress span {
+    display: block;
+    height: 100%;
+    transition: width 320ms ease;
+}
+
+.teacher-submission-board__progress .is-confirmed { background: #22C55E; }
+.teacher-submission-board__progress .is-pending { background: #3B82F6; }
+.teacher-submission-board__progress .is-rewriting { background: #F59E0B; }
+.teacher-submission-board__progress .is-meeting { background: #8B5CF6; }
+
+.teacher-submission-board__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 9px;
+    margin-top: 7px;
+    color: #64748B;
+    font-size: 0.68rem;
+    font-weight: 850;
+}
+
+.teacher-submission-board__counts .is-confirmed { color: #15803D; }
+.teacher-submission-board__counts .is-pending { color: #1D4ED8; }
+.teacher-submission-board__counts .is-rewriting { color: #B45309; }
+.teacher-submission-board__counts.is-meeting-count { color: #6D28D9; justify-content: space-between; }
+
+.teacher-submission-board__empty {
+    margin: 0;
+    padding: 18px 10px;
+    border: 1px dashed #CBD5E1;
+    border-radius: 12px;
+    color: #94A3B8;
+    font-size: var(--ui-text-sm);
+    font-weight: 750;
+    text-align: center;
+}
+
+@media (max-width: 1180px) {
+    .teacher-mission-live-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .teacher-submission-board {
+        position: static;
+        grid-row: 1;
+        max-height: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .teacher-submission-board {
+        padding: 13px;
+        border-radius: 15px;
+    }
+
+    .teacher-submission-board__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .teacher-submission-board__live {
+        grid-template-columns: auto auto 1fr;
+        justify-content: start;
+    }
+
+    .teacher-submission-board__live time {
+        grid-column: auto;
+        margin: 0;
+        text-align: left;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .teacher-submission-board__live-dot {
+        animation: none;
+    }
+
+    .teacher-submission-board__progress span {
+        transition: none;
+    }
+}

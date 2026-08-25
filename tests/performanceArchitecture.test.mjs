@@ -289,7 +289,8 @@ test('승인·회수 성공 뒤 전체 목록을 다시 조회하지 않는다',
         source.indexOf('const handleBulkRequestRewrite')
     );
     assert.doesNotMatch(section, /fetchPostsForMission\(|fetchMissions\(/);
-    assert.match(section, /setSubmissionCounts/);
+    assert.match(section, /transitionMissionStatus/);
+    assert.doesNotMatch(section, /setSubmissionCounts/);
 });
 
 test('등록된 콘텐츠는 성능 계약을 빠짐없이 선언한다', async () => {

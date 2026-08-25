@@ -24,7 +24,7 @@ const VIEWER_BUTTON_STYLE = {
 
 // 개별 미션 아이템 컴포넌트 분리 및 memo 적용
 const MissionItem = memo(({
-    mission, isMobile, completedCount, totalStudentCount,
+    mission, isMobile, submittedCount, missionStatus, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
     showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
     isHighlighted, cardLayout
@@ -32,7 +32,10 @@ const MissionItem = memo(({
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
     const supportsEvaluation = genreMissionType?.supportsEvaluation !== false;
-    const progressLabel = isMeetingMission ? `💡 제안 ${completedCount}건` : `✍️ ${completedCount}명 완료`;
+    const pendingCount = Number(missionStatus?.pendingCount || 0);
+    const progressLabel = isMeetingMission
+        ? `💡 제안 ${submittedCount}건`
+        : `✍️ 제출 ${submittedCount}/${totalStudentCount}`;
     const isDense = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
 
     return (
@@ -62,7 +65,7 @@ const MissionItem = memo(({
                     </button>
                     <button onClick={(e) => {
                         e.stopPropagation();
-                        const hasIncomplete = completedCount < totalStudentCount;
+                        const hasIncomplete = submittedCount < totalStudentCount;
                         setArchiveModal({
                             isOpen: true,
                             mission: mission,
@@ -102,7 +105,7 @@ const MissionItem = memo(({
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={PROGRESS_BAR_CONTAINER_STYLE}>
-                    <div style={{ width: `${Math.min(completedCount / (totalStudentCount || 1) * 100, 100)}%`, height: '100%', background: isMeetingMission ? '#7C3AED' : '#2E7D32', borderRadius: '4px' }} />
+                    <div style={{ width: `${Math.min(submittedCount / (totalStudentCount || 1) * 100, 100)}%`, height: '100%', background: isMeetingMission ? '#7C3AED' : '#2E7D32', borderRadius: '4px' }} />
                 </div>
                 <div style={isMeetingMission ? { ...PROGRESS_COUNT_BADGE_STYLE, background: '#F5F3FF', color: '#6D28D9' } : PROGRESS_COUNT_BADGE_STYLE}>
                     {progressLabel}
@@ -115,7 +118,9 @@ const MissionItem = memo(({
                         ? { ...VIEWER_BUTTON_STYLE, backgroundColor: '#7C3AED', color: 'white', border: '1px solid #7C3AED' }
                         : { ...VIEWER_BUTTON_STYLE, backgroundColor: '#F1F3F5', color: '#495057', border: '1px solid #E9ECEF' }}
                 >
-                    {isMeetingMission ? `💡 ${isDense ? '검토' : genreMissionType.reviewLabel} (${completedCount})` : `📝 ${isDense ? '글 확인' : '학생 글 확인'}`}
+                    {isMeetingMission
+                        ? `💡 ${isDense ? '검토' : genreMissionType.reviewLabel} (${submittedCount})`
+                        : `📝 ${isDense ? '글 확인' : '학생 글 확인'}${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
                 </Button>
                 {supportsEvaluation && mission.evaluation_rubric?.use_rubric && (
                     <>
@@ -139,10 +144,10 @@ const MissionItem = memo(({
 });
 
 const MissionList = ({
-    missions, loading, submissionCounts, totalStudentCount,
+    missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    highlightedMissionId, cardLayout
+    highlightedMissionId, cardLayout, splitView = false
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
 
@@ -205,7 +210,9 @@ const MissionList = ({
             ) : (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
+                    gridTemplateColumns: isMobile
+                        ? '1fr'
+                        : `repeat(${splitView ? Math.min(cardLayout?.columns || 4, 2) : (cardLayout?.columns || 4)}, minmax(0, 1fr))`,
                     gap: '12px',
                     justifyContent: 'start'
                 }}>
@@ -214,7 +221,8 @@ const MissionList = ({
                             key={mission.id}
                             mission={mission}
                             isMobile={isMobile}
-                            completedCount={submissionCounts[mission.id] || 0}
+                            submittedCount={submissionCounts[mission.id] || 0}
+                            missionStatus={missionStatuses?.[mission.id]}
                             totalStudentCount={totalStudentCount}
                             handleEditClick={handleEditClick}
                             setArchiveModal={setArchiveModal}

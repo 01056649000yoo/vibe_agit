@@ -7,10 +7,17 @@ import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
 import { assignmentApi } from '../modules/writing/assignmentApi';
 import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
+import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
 
 export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const [missions, setMissions] = useState([]);
-    const [submissionCounts, setSubmissionCounts] = useState({});
+    const {
+        board: submissionBoard,
+        submissionCounts,
+        pollError: submissionBoardPollError,
+        hydrateBoard: hydrateSubmissionBoard,
+        transitionMissionStatus
+    } = useTeacherSubmissionBoard(activeClass?.id);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedMission, setSelectedMission] = useState(null);
@@ -222,13 +229,16 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
             if (Number(overview?.version) !== 1) throw new Error('지원하지 않는 교사 과제 개요 응답입니다.');
             setMissions(overview.missions || []);
             setTotalStudentCount(Number(overview.total_students || 0));
-            setSubmissionCounts(overview.submission_counts || {});
+            hydrateSubmissionBoard(overview.submission_board, {
+                totalStudents: overview.total_students,
+                submissionCounts: overview.submission_counts
+            });
         } catch (err) {
             console.error('글쓰기 미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [activeClass?.id]);
+    }, [activeClass?.id, hydrateSubmissionBoard]);
 
     useEffect(() => {
         if (activeClass?.id) {
@@ -631,6 +641,7 @@ ${postArray.map((p, idx) => {
         }
 
         const count = updated?.length ?? 0;
+        transitionMissionStatus(selectedMission?.id || list[0]?.mission_id, 'recall', count);
         return { count, failed: list.length - count };
     };
 
@@ -652,6 +663,7 @@ ${postArray.map((p, idx) => {
             return { ok: false, error };
         }
         if (selectedMission) await fetchPostsForMission(selectedMission);
+        transitionMissionStatus(post.mission_id || selectedMission?.id, 'undo-recall', 1);
         return { ok: true };
     };
 
@@ -813,10 +825,10 @@ ${postArray.map((p, idx) => {
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
-            // 이 버튼은 미확인 제출글에서만 열리므로(is_confirmed=false) 승인 수는 그대로 둔다.
             setPosts((current) => current.map((item) => item.id === post.id
                 ? { ...item, is_submitted: false, is_returned: true, ai_feedback: tempFeedback }
                 : item));
+            transitionMissionStatus(post.mission_id, 'request-rewrite', 1);
         } catch (err) {
             console.error('다시 쓰기 요청 실패:', err.message);
             alert(`요청 중 오류 발생: ${err.message}`);
@@ -840,10 +852,7 @@ ${postArray.map((p, idx) => {
                     ? { ...item, is_submitted: true, is_confirmed: true, is_returned: false, ai_feedback: tempFeedback }
                     : item));
                 if (selectedMission?.mission_type !== 'meeting') {
-                    setSubmissionCounts((current) => ({
-                        ...current,
-                        [post.mission_id]: (current[post.mission_id] || 0) + 1
-                    }));
+                    transitionMissionStatus(post.mission_id, 'approve', 1);
                 }
             }
         } catch (err) {
@@ -872,10 +881,7 @@ ${postArray.map((p, idx) => {
                 ? { ...post, is_submitted: true, is_confirmed: true, is_returned: false }
                 : post));
             if (selectedMission.mission_type !== 'meeting') {
-                setSubmissionCounts((current) => ({
-                    ...current,
-                    [selectedMission.id]: (current[selectedMission.id] || 0) + Number(data?.approved_count ?? toApprove.length)
-                }));
+                transitionMissionStatus(selectedMission.id, 'approve', Number(data?.approved_count ?? toApprove.length));
             }
         } catch (err) {
             console.error('일괄 승인 실패:', err.message);
@@ -902,10 +908,7 @@ ${postArray.map((p, idx) => {
                     ? { ...item, is_confirmed: false, ai_feedback: tempFeedback }
                     : item));
                 if (selectedMission?.mission_type !== 'meeting') {
-                    setSubmissionCounts((current) => ({
-                        ...current,
-                        [post.mission_id]: Math.max(0, (current[post.mission_id] || 0) - 1)
-                    }));
+                    transitionMissionStatus(post.mission_id, 'recover', 1);
                 }
             }
         } catch (err) {
@@ -934,10 +937,7 @@ ${postArray.map((p, idx) => {
                 ? { ...post, is_confirmed: false }
                 : post));
             if (selectedMission.mission_type !== 'meeting') {
-                setSubmissionCounts((current) => ({
-                    ...current,
-                    [selectedMission.id]: Math.max(0, (current[selectedMission.id] || 0) - Number(data?.recovered_count ?? toRecover.length))
-                }));
+                transitionMissionStatus(selectedMission.id, 'recover', Number(data?.recovered_count ?? toRecover.length));
             }
         } catch (err) {
             console.error('일괄 회수 실패:', err.message);
@@ -965,6 +965,7 @@ ${postArray.map((p, idx) => {
             setPosts((current) => current.map((post) => rewrittenIds.has(post.id)
                 ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false }
                 : post));
+            transitionMissionStatus(selectedMission.id, 'request-rewrite', requestedCount);
         } catch (err) {
             console.error('일괄 다시 쓰기 요청 실패:', err.message);
             alert('일괄 처리 중 오류가 발생했습니다.');
@@ -1107,7 +1108,8 @@ ${postArray.map((p, idx) => {
         : undefined;
 
     return {
-        missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
+        missions, submissionCounts, submissionBoard, submissionBoardPollError,
+        isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
