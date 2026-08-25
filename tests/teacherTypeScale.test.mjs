@@ -58,7 +58,8 @@ const MIGRATED = [
     'src/components/student/StudentModuleGuide.css',
     'src/components/student/StudentHomeGrowthPanel.css',
     'src/components/student/StudentBottomNav.jsx',
-    'src/components/student/ReactionNamesTooltip.jsx'
+    'src/components/student/ReactionNamesTooltip.jsx',
+    'src/components/teacher/TeacherSubmissionBoard.css'
 ];
 
 /*

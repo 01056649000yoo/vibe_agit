@@ -33,6 +33,14 @@ const formatRecentTime = (value, includeDate = false) => {
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 };
 
+/*
+ * 제출을 과제별로 묶는다.
+ *
+ * ⚠️ 묶는 기준은 **과제 id** 다. 같은 제목의 과제를 두 번 내면(예: 매주 같은 제목의 일기 과제)
+ *    묶음이 둘로 나뉘는데, 머리말에는 제목만 있어 **똑같은 이름 두 개**로 보인다(2026-08-25 지적).
+ *    그래서 제목이 겹칠 때만 만든 날짜를 덧붙여 가른다. 안 겹치면 붙이지 않는다 — 늘 붙이면
+ *    대부분의 경우에 쓸데없는 글자가 늘어난다.
+ */
 const groupSubmissionsByMission = (submissions, missionsById) => {
     const groups = [];
     const groupByMission = new Map();
@@ -46,12 +54,22 @@ const groupSubmissionsByMission = (submissions, missionsById) => {
                 missionId,
                 mission,
                 title: mission?.title || submission.mission_title || '선생님 과제',
+                createdAt: mission?.created_at || null,
                 submissions: []
             };
             groupByMission.set(missionId, group);
             groups.push(group);
         }
         group.submissions.push(submission);
+    });
+
+    // 같은 제목이 둘 이상일 때만 날짜를 붙인다.
+    const titleCounts = new Map();
+    groups.forEach((group) => titleCounts.set(group.title, (titleCounts.get(group.title) || 0) + 1));
+    groups.forEach((group) => {
+        if (titleCounts.get(group.title) > 1 && group.createdAt) {
+            group.subtitle = `${new Date(group.createdAt).getMonth() + 1}/${new Date(group.createdAt).getDate()} 낸 과제`;
+        }
     });
 
     return groups;
@@ -65,6 +83,9 @@ const SubmissionEventGroups = memo(({
             <section className="teacher-submission-board__submission-group" key={group.missionId}>
                 <header>
                     <strong>{group.title}</strong>
+                    {group.subtitle && (
+                        <em className="teacher-submission-board__group-subtitle">{group.subtitle}</em>
+                    )}
                     <span>{group.submissions.length}건</span>
                 </header>
                 <ol>
@@ -83,6 +104,9 @@ const SubmissionEventGroups = memo(({
                                 >
                                     <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at, includeDate)}</time>
                                     <strong>{item.student_name || '학생'}</strong>
+                                    {/* 이름이 남는 폭을 다 먹어 오른쪽이 비어 보였다(2026-08-25 지적).
+                                        이름은 필요한 만큼만 쓰고 남는 자리는 이 칸이 흡수한다. */}
+                                    <span aria-hidden="true" />
                                     <span className={`teacher-submission-board__recent-status${isResubmission ? ' is-resubmitted' : ' is-first'}`}>
                                         {isOpening ? '여는 중' : submissionLabel}
                                     </span>

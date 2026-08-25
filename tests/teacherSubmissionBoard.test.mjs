@@ -166,3 +166,31 @@ test('승인·회수·다시쓰기 동작은 추가 목록 조회 없이 전광�
     assert.match(managerHook, /transitionMissionStatus\(selectedMission\?\.id \|\| list\[0\]\?\.mission_id, 'recall', count\)/);
     assert.doesNotMatch(managerHook, /setSubmissionCounts/);
 });
+
+/*
+ * 2026-08-25: 최근 제출 줄에서 ① 글자가 너무 작고 ② 오른쪽이 넓게 비어 보인다는 지적을 받았고,
+ * ③ 같은 제목의 과제를 두 번 내면 어떻게 보이는지 물어 확인한 결과 **구분할 방법이 없었다**.
+ *
+ * ⚠️ 묶는 기준은 과제 **id** 라 같은 제목이어도 묶음은 갈린다. 그런데 머리말에는 제목만 있어
+ *    교사 눈에는 **똑같은 이름 두 개**로 보였다. 어느 쪽이 이번 주 과제인지 알 수 없다.
+ */
+test('최근 제출 줄은 읽히는 크기이고 같은 제목 과제를 가른다', async () => {
+    const [board, styles] = await Promise.all([
+        readFile('src/components/teacher/TeacherSubmissionBoard.jsx', 'utf8'),
+        readFile('src/components/teacher/TeacherSubmissionBoard.css', 'utf8')
+    ]);
+
+    // 이름·시간이 잔글씨로 되돌아가면 걸린다.
+    assert.match(styles, /font-size: var\(--ui-text-md\);\n    font-weight: 900;\n    text-overflow: ellipsis;/);
+    assert.doesNotMatch(styles, /font-size: 0\.78rem;/);
+    assert.doesNotMatch(styles, /font-size: 0\.65rem;/);
+
+    // 이름이 남는 폭을 다 먹지 않도록 빈 칸이 남는 자리를 흡수한다.
+    assert.match(styles, /grid-template-columns: minmax\(76px, auto\) minmax\(0, max-content\) minmax\(0, 1fr\) auto;/);
+    assert.match(board, /<span aria-hidden="true" \/>/);
+
+    // 같은 제목이 **둘 이상일 때만** 날짜를 붙인다. 늘 붙이면 쓸데없는 글자가 는다.
+    assert.match(board, /titleCounts\.get\(group\.title\) > 1 && group\.createdAt/);
+    assert.match(board, /낸 과제/);
+    assert.match(board, /group\.subtitle && \(/);
+});

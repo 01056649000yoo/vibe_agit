@@ -20,7 +20,7 @@
     background: transparent;
     color: #64748B;
     cursor: pointer;
-    font-size: 0.86rem;
+    font-size: var(--ui-text-sm);
     font-weight: 850;
 }
 
@@ -45,7 +45,7 @@
     border-radius: 999px;
     background: #2563EB;
     color: #FFFFFF;
-    font-size: 0.68rem;
+    font-size: var(--ui-text-sm);
     font-variant-numeric: tabular-nums;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .teacher-submission-board__header h4 {
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
 }
 
 .teacher-submission-board__header p {
@@ -159,7 +159,7 @@
 
 .teacher-submission-board__summary strong {
     color: #1E3A8A;
-    font-size: 1.35rem;
+    font-size: var(--ui-text-xl);
     font-variant-numeric: tabular-nums;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .teacher-submission-board__section-title h5 {
-    font-size: 0.85rem;
+    font-size: var(--ui-text-sm);
 }
 
 .teacher-submission-board__recent-actions {
@@ -220,7 +220,7 @@
     background: #EFF6FF;
     color: #1D4ED8;
     cursor: pointer;
-    font-size: 0.69rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 
@@ -251,7 +251,7 @@
     min-width: 0;
     overflow: hidden;
     color: #334155;
-    font-size: 0.75rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -260,7 +260,7 @@
 .teacher-submission-board__submission-group > header span {
     flex: 0 0 auto;
     color: #64748B;
-    font-size: 0.68rem;
+    font-size: var(--ui-text-xs);
     font-weight: 850;
 }
 
@@ -281,7 +281,7 @@
 
 .teacher-submission-board__submission-group li button {
     display: grid;
-    grid-template-columns: minmax(70px, 96px) minmax(0, 1fr) 70px;
+    grid-template-columns: minmax(76px, auto) minmax(0, max-content) minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     width: 100%;
@@ -315,7 +315,7 @@
 
 .teacher-submission-board__submission-group time {
     color: #2563EB;
-    font-size: 0.68rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
     font-variant-numeric: tabular-nums;
 }
@@ -324,17 +324,17 @@
     min-width: 0;
     overflow: hidden;
     color: #1E293B;
-    font-size: 0.78rem;
+    font-size: var(--ui-text-md);
     font-weight: 900;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .teacher-submission-board__recent-status {
-    justify-self: stretch;
-    padding: 4px 5px;
+    justify-self: end;
+    padding: 4px 9px;
     border-radius: 999px;
-    font-size: 0.65rem;
+    font-size: var(--ui-text-xs);
     font-weight: 900;
     text-align: center;
     white-space: nowrap;
@@ -363,13 +363,13 @@
 
 .teacher-submission-board__history-summary strong {
     color: #1D4ED8;
-    font-size: 1.1rem;
+    font-size: var(--ui-text-lg);
 }
 
 .teacher-submission-board__history-summary span,
 .teacher-submission-board__history-limit {
     color: #64748B;
-    font-size: 0.72rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
 }
 
@@ -395,7 +395,7 @@
     justify-content: flex-end;
     gap: 7px;
     color: #64748B;
-    font-size: 0.68rem;
+    font-size: var(--ui-text-xs);
     font-weight: 850;
 }
 
@@ -447,7 +447,7 @@
 .teacher-submission-board__mission-heading strong {
     overflow: hidden;
     color: #1E293B;
-    font-size: 0.82rem;
+    font-size: var(--ui-text-sm);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -499,7 +499,7 @@
     gap: 5px 9px;
     margin-top: 7px;
     color: #64748B;
-    font-size: 0.68rem;
+    font-size: var(--ui-text-xs);
     font-weight: 850;
 }
 
@@ -608,4 +608,17 @@
     .teacher-submission-board__progress span {
         transition: none;
     }
+}
+
+/* 같은 제목의 과제가 둘 이상일 때만 나오는 구분표. 제목 옆에 조용히 붙는다. */
+.teacher-submission-board__group-subtitle {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #F1F5F9;
+    color: #64748B;
+    font-size: var(--ui-text-xs);
+    font-style: normal;
+    font-weight: 850;
+    white-space: nowrap;
 }
