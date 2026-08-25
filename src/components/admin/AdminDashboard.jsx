@@ -11,6 +11,7 @@ import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
+import { useAdminHealthSummary } from './useAdminHealthSummary';
 import useAdminUsage from '../../hooks/useAdminUsage';
 import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
 
@@ -224,7 +225,6 @@ const formatLastLogin = (dateString) => {
 // --- Main Container ---
 
 const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) => {
-    const [registeredStudentCount, setRegisteredStudentCount] = useState(0);
     const [autoApproval, setAutoApproval] = useState(false);
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
@@ -245,7 +245,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         enabled: currentTab === 'active' || currentTab === 'pending'
     });
     const teacherPageCount = Math.max(1, Math.ceil(teacherPage.totalCount / ITEMS_PER_PAGE));
-    const approvedTeacherCount = Number(teacherPage.counts.approved || 0);
     const newSignupCount = Number(teacherPage.counts.pending_new || 0);
     const revokedTeacherCount = Number(teacherPage.counts.pending_revoked || 0);
 
@@ -259,6 +258,18 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const activeGroup = findTabGroup(currentTab);
 
     // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
+    const health = useAdminHealthSummary();
+    /*
+     * 색은 **지금 손대야 하는지**만 나타낸다. 판단 기준은 `AdminResourceStatus` 와 같게 둔다 —
+     * 두 곳이 다르면 상단은 초록인데 안에 들어가면 빨강인 일이 생긴다.
+     */
+    const containerTone = health.summary == null || health.summary.containerTotal == null
+        ? '#A0AEC0'
+        : (health.summary.containerHealthy === health.summary.containerTotal ? '#48BB78' : '#E53E3E');
+    const diskTone = health.summary?.diskFreeGb == null
+        ? '#A0AEC0'
+        : (health.summary.diskFreeGb < 20 ? '#E53E3E' : health.summary.diskFreeGb < 50 ? '#D69E2E' : '#48BB78');
+
     const tabBadges = useMemo(() => ({
         pending: newSignupCount,
         dormant: usage.dormantTeachers.length,
@@ -300,19 +311,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         } catch (err) { console.error('설정 로드 실패:', err); }
     };
 
-    const fetchRegisteredStudentCount = async () => {
-        try {
-            const { count, error } = await supabase
-                .from('students')
-                .select('id', { count: 'exact', head: true })
-                .is('deleted_at', null);
-
-            if (error) throw error;
-            setRegisteredStudentCount(count || 0);
-        } catch (err) {
-            console.error('등록 학생 수 조회 실패:', err);
-        }
-    };
 
     const handleToggleAutoApproval = async () => {
         setSettingsLoading(true);
@@ -347,7 +345,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     useEffect(() => {
         fetchSettings();
         fetchFeedbackCount();
-        fetchRegisteredStudentCount();
     }, []);
 
     // 탭이나 검색어가 바뀔 때 페이지 리셋
@@ -433,35 +430,42 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 </div>
             </header>
 
-            {/* 요약 카드 — 숫자만 보여 주지 않고, 누르면 그 일을 처리하는 화면으로 바로 간다. */}
+            {/*
+              * 상단 요약 — **"지금 손대야 하나"에 답하는 값만** 둔다(2026-08-25 정리).
+              *
+              * 예전에는 여섯 칸이 전부 `사람 수` 였다(가입 교사·학급·승인된 선생님·등록 학생 …).
+              * 늘어나는 숫자는 좋은 소식이지 **조치가 필요한 신호가 아니다.** 그 값들은
+              * `현황 > 사용량` 으로 내렸다. 반대로 컨테이너·디스크·경고는 `운영 > 서버 상태` **안에만**
+              * 있어서, 문제가 나도 그 탭을 열어야 알았다. 자리를 맞바꾼 것이다.
+              *
+              * ⚠️ 메모리·스왑은 **아직 올리지 않는다.** 지금 값은 도커 VM 안만 재서, 맥 본체가
+              *    굶고 있어도 `정상` 으로 보인다(2026-08-24 확인). 본체까지 재게 된 뒤에 올린다.
+              */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
+                <StatCard
+                    label="컨테이너"
+                    value={health.summary
+                        ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}`
+                        : '확인 중'}
+                    color={containerTone} icon="📦"
+                    onOpen={() => setCurrentTab('service')}
+                />
+                <StatCard
+                    label="디스크 여유"
+                    value={health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중'}
+                    color={diskTone} icon="💾"
+                    onOpen={() => setCurrentTab('service')}
+                />
+                <StatCard
+                    label="조치 필요"
+                    value={health.summary ? `${health.summary.openAlertCount}건` : '확인 중'}
+                    color={health.summary?.openAlertCount > 0 ? '#E53E3E' : '#48BB78'} icon="🚨"
+                    onOpen={() => setCurrentTab('service')}
+                />
                 <StatCard
                     label="신규 승인 대기" value={`${newSignupCount}명`}
                     color="#F6AD55" icon="⏳"
                     onOpen={() => setCurrentTab('pending')}
-                />
-                <StatCard
-                    label="승인된 선생님" value={`${approvedTeacherCount}명`}
-                    color="#48BB78" icon="✅"
-                    onOpen={() => setCurrentTab('active')}
-                />
-                <StatCard
-                    label="등록 학생수"
-                    value={`${usage.overview?.student_total ?? registeredStudentCount}명`}
-                    color="#4299E1" icon="🧑‍🎓"
-                    onOpen={() => setCurrentTab('students')}
-                />
-                <StatCard
-                    label={`장기 미접속 (${usage.dormantDays}일)`}
-                    value={`${usage.dormantTeachers.length}명`}
-                    color="#D69E2E" icon="😴"
-                    onOpen={() => setCurrentTab('dormant')}
-                />
-                <StatCard
-                    label="정리 대상"
-                    value={`${usage.cleanupCandidates.length}명`}
-                    color="#E53E3E" icon="🧹"
-                    onOpen={() => setCurrentTab('cleanup')}
                 />
                 {/* 의견 제보는 예전에는 탭 이름에만 배지가 붙어, 13개를 훑어야 알 수 있었다. */}
                 <StatCard

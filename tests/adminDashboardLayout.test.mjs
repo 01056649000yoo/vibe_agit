@@ -48,7 +48,11 @@ test('처리할 일은 묶음 배지와 요약 카드 양쪽에서 보인다', a
 
     // 요약 카드는 눌러서 그 일을 처리하는 화면으로 간다.
     assert.match(dashboard, /const StatCard = \(\{ label, value, color, icon, onOpen \}\)/);
-    for (const tabId of ['pending', 'active', 'students', 'dormant', 'cleanup', 'feedback']) {
+    /*
+     * 2026-08-25: 상단을 **"지금 손대야 하나"에 답하는 값**으로 갈았다.
+     * 규모 지표(승인된 선생님·등록 학생)는 `현황 > 사용량` 에 이미 있어 중복이라 내렸다.
+     */
+    for (const tabId of ['service', 'pending', 'feedback']) {
         assert.ok(dashboard.includes(`onOpen={() => setCurrentTab('${tabId}')}`), `요약 카드에서 '${tabId}' 로 가는 길이 없다`);
     }
 });
@@ -68,4 +72,38 @@ test('한 번 연 화면은 살려 두어 다시 열 때 서버를 다시 읽지
     for (const tabId of ['students', 'dormant', 'cleanup', 'lab', 'backup', 'vocab', 'spelling', 'announcements']) {
         assert.ok(dashboard.includes(`visited={visitedTabs.has('${tabId}')}`), `'${tabId}' 화면이 살려 두기에서 빠졌다`);
     }
+});
+
+/*
+ * 2026-08-25: 늘 보이는 상단 카드 6개가 **전부 `사람 수`** 였다(신규 승인 대기·승인된 선생님·
+ * 등록 학생수·장기 미접속·정리 대상·새 의견 제보). 서비스가 살아 있는지 알려주는 값이 하나도 없었고,
+ * 디스크·컨테이너·경고는 `운영 > 서버 상태` **안에만** 있어 문제가 나도 그 탭을 열어야 알았다.
+ */
+test('관리자 상단은 지금 손대야 하는 것만 보여 준다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+
+    // 건강 지표가 상단에 올라와 있다.
+    for (const label of ['컨테이너', '디스크 여유', '조치 필요']) {
+        assert.ok(dashboard.includes(`label="${label}"`), `상단에 '${label}' 이 없다`);
+    }
+
+    /*
+     * ⚠️ 규모 지표는 상단에서 뺀다. 늘어나는 숫자는 **좋은 소식이지 조치가 필요한 신호가 아니다.**
+     *    `현황 > 사용량` 에 이미 같은 값이 있어 중복이기도 했다.
+     */
+    for (const gone of ['승인된 선생님', '등록 학생수', '장기 미접속', '정리 대상']) {
+        assert.doesNotMatch(dashboard, new RegExp(`label=\\{?["\`]${gone}`), `'${gone}' 이 상단에 다시 올라왔다`);
+    }
+
+    /*
+     * ⚠️ 메모리·스왑은 **아직 올리지 않는다.** 지금 값은 도커 VM 안만 재서, 맥 본체가 굶고 있어도
+     *    `정상` 으로 보인다(2026-08-24 확인). 본체까지 재게 된 뒤에 올린다.
+     */
+    assert.doesNotMatch(dashboard, /label="메모리|label="스왑/);
+
+    // 서비스 현황 패널과 **같은 RPC** 를 쓴다. 같은 값을 두 곳에서 따로 세면 숫자가 갈린다.
+    const hook = await read('src/components/admin/useAdminHealthSummary.js');
+    assert.match(hook, /admin_get_service_overview_v1/);
+    // 상단은 곁눈질용이라 추이까지 받지 않는다.
+    assert.match(hook, /p_trend_days: 1/);
 });
