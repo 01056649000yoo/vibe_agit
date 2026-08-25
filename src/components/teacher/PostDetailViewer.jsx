@@ -8,6 +8,7 @@ import ReportDocument from '../../modules/writing/mission-types/report/ReportDoc
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import LabOutlineReferenceCard from '../../modules/writing/references/LabOutlineReferenceCard';
 import WritingPresentationModal from '../../modules/writing/presentation/WritingPresentationModal';
+import WritingPresentationTrigger from '../../modules/writing/presentation/WritingPresentationTrigger';
 
 const PostDetailViewer = ({
     selectedPost, setSelectedPost, selectedMission,
@@ -100,12 +101,6 @@ const PostDetailViewer = ({
             if (onUpdate) onUpdate();
             alert('수정본을 학생에게 보냈습니다.');
         }
-    };
-
-    const handlePresentationKeyDown = (event, version) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        setPresentationVersion(version);
     };
 
     const handleSaveEval = async () => {
@@ -489,13 +484,9 @@ const PostDetailViewer = ({
                                 ) : showOriginal ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', flex: 1 }}>
                                         {/* Left: Original Content */}
-                                        <article
-                                            className="writing-presentation-trigger"
-                                            role="button"
-                                            tabIndex="0"
-                                            aria-label="최초 제출 글 전체 화면으로 보기"
-                                            onClick={() => setPresentationVersion('original')}
-                                            onKeyDown={(event) => handlePresentationKeyDown(event, 'original')}
+                                        <WritingPresentationTrigger
+                                            label="최초 제출 글 전체 화면으로 보기"
+                                            onOpen={() => setPresentationVersion('original')}
                                             style={{
                                              background: '#F8F9FA', borderRadius: '24px', padding: '24px',
                                              border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column'
@@ -510,16 +501,12 @@ const PostDetailViewer = ({
                                             }}>
                                                 {selectedPost.original_content || '최초 내용 기록이 없습니다.'}
                                             </div>
-                                        </article>
+                                        </WritingPresentationTrigger>
 
                                         {/* Right: Final Content */}
-                                        <article
-                                            className="writing-presentation-trigger"
-                                            role="button"
-                                            tabIndex="0"
-                                            aria-label="최종 제출 글 전체 화면으로 보기"
-                                            onClick={() => setPresentationVersion('final')}
-                                            onKeyDown={(event) => handlePresentationKeyDown(event, 'final')}
+                                        <WritingPresentationTrigger
+                                            label="최종 제출 글 전체 화면으로 보기"
+                                            onOpen={() => setPresentationVersion('final')}
                                             style={{
                                              background: 'white', borderRadius: '24px', padding: '24px',
                                              border: '1px solid #E9ECEF', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
@@ -537,16 +524,12 @@ const PostDetailViewer = ({
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
                                                 ) : selectedPost.content}
                                             </div>
-                                        </article>
+                                        </WritingPresentationTrigger>
                                     </div>
                                 ) : (
-                                    <article
-                                        className="writing-presentation-trigger"
-                                        role="button"
-                                        tabIndex="0"
-                                        aria-label="현재 글 전체 화면으로 보기"
-                                        onClick={() => setPresentationVersion('final')}
-                                        onKeyDown={(event) => handlePresentationKeyDown(event, 'final')}
+                                    <WritingPresentationTrigger
+                                        label="현재 글 전체 화면으로 보기"
+                                        onOpen={() => setPresentationVersion('final')}
                                         style={{
                                          fontSize: isMobile ? '1.15rem' : '1.3rem',
                                          color: '#374151',
@@ -559,7 +542,7 @@ const PostDetailViewer = ({
                                         {isReportPost ? (
                                             <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} />
                                         ) : selectedPost.content}
-                                    </article>
+                                    </WritingPresentationTrigger>
                                 )}
                             </div>
 

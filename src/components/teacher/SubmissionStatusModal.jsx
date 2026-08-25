@@ -5,6 +5,10 @@ import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton from './PromptRuleButton';
 import { getMissionReactionOptions } from '../../modules/writing/mission-types/registry';
 import { fetchTeacherMissionEngagement } from '../../modules/writing/reactions/reactionApi';
+import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
+import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
+import WritingPresentationModal from '../../modules/writing/presentation/WritingPresentationModal';
+import WritingPresentationTrigger from '../../modules/writing/presentation/WritingPresentationTrigger';
 
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
@@ -93,6 +97,7 @@ const SubmissionStatusModal = ({
     const [reactionPosts, setReactionPosts] = React.useState([]);
     const [loadingReactions, setLoadingReactions] = React.useState(false);
     const [reactionError, setReactionError] = React.useState('');
+    const [presentationSelection, setPresentationSelection] = React.useState(null);
     const reactionRequestRef = React.useRef(0);
 
     // [성능 최적화] 지연 렌더링을 위한 표시 개수 상태
@@ -101,6 +106,14 @@ const SubmissionStatusModal = ({
     const [reactionDisplayLimit, setReactionDisplayLimit] = React.useState(12);
 
     const reactionIcons = getMissionReactionOptions(selectedMission);
+    const presentationPost = presentationSelection?.post || null;
+    const presentationVersion = presentationSelection?.version || null;
+    const presentationIsReport = presentationVersion === 'final'
+        && isReportStructuredContent(presentationPost?.structured_content);
+
+    React.useEffect(() => {
+        setPresentationSelection(null);
+    }, [selectedMission?.id]);
 
     const openReactionView = async () => {
         const missionId = selectedMission?.id;
@@ -459,20 +472,36 @@ const SubmissionStatusModal = ({
                                                         width: '100%'
                                                     }}>
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#10B981', marginBottom: '10px' }}>📜 처음글 (초안)</div>
-                                                            <div style={{
-                                                                padding: '20px', background: '#F0FDF4', borderRadius: '16px',
-                                                                border: '1px solid #DCFCE7', fontSize: 'var(--ui-text-md)', color: '#333',
-                                                                lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
-                                                            }}>{post.original_content || '기록 없음'}</div>
+                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#10B981', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                                                <span>📜 처음글 (초안)</span>
+                                                                <span className="writing-presentation-trigger__hint">크게 보기</span>
+                                                            </div>
+                                                            <WritingPresentationTrigger
+                                                                label={`${post.students?.name || '학생'}의 처음글 전체 화면으로 보기`}
+                                                                onOpen={() => setPresentationSelection({ post, version: 'original' })}
+                                                                style={{
+                                                                 padding: '20px', background: '#F0FDF4', borderRadius: '16px',
+                                                                 border: '1px solid #DCFCE7', fontSize: 'var(--ui-text-md)', color: '#333',
+                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+                                                            }}>
+                                                                {post.original_content || '기록 없음'}
+                                                            </WritingPresentationTrigger>
                                                         </div>
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px' }}>✨ 마지막글 (수정본)</div>
-                                                            <div style={{
-                                                                padding: '20px', background: '#EFF6FF', borderRadius: '16px',
-                                                                border: '1px solid #DBEAFE', fontSize: 'var(--ui-text-md)', color: '#333',
-                                                                lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
-                                                            }}>{post.content || '기록 없음'}</div>
+                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                                                <span>✨ 마지막글 (수정본)</span>
+                                                                <span className="writing-presentation-trigger__hint">크게 보기</span>
+                                                            </div>
+                                                            <WritingPresentationTrigger
+                                                                label={`${post.students?.name || '학생'}의 마지막글 전체 화면으로 보기`}
+                                                                onOpen={() => setPresentationSelection({ post, version: 'final' })}
+                                                                style={{
+                                                                 padding: '20px', background: '#EFF6FF', borderRadius: '16px',
+                                                                 border: '1px solid #DBEAFE', fontSize: 'var(--ui-text-md)', color: '#333',
+                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+                                                            }}>
+                                                                {post.content || '기록 없음'}
+                                                            </WritingPresentationTrigger>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -609,6 +638,26 @@ const SubmissionStatusModal = ({
                             </motion.div>
                         )}
                     </AnimatePresence>
+                    <WritingPresentationModal
+                        isOpen={presentationPost !== null}
+                        onClose={() => setPresentationSelection(null)}
+                        title={presentationVersion === 'original'
+                            ? (presentationPost?.original_title || presentationPost?.title)
+                            : presentationPost?.title}
+                        studentName={presentationPost?.students?.name}
+                        versionLabel={presentationVersion === 'original'
+                            ? '🌱 최초 제출 (초안)'
+                            : '✨ 최종 제출 (수정본)'}
+                    >
+                        {presentationIsReport ? (
+                            <ReportDocument
+                                structuredContent={presentationPost.structured_content}
+                                content={presentationPost.content}
+                            />
+                        ) : presentationVersion === 'original'
+                            ? (presentationPost?.original_content || '최초 내용 기록이 없습니다.')
+                            : (presentationPost?.content || '내용이 없습니다.')}
+                    </WritingPresentationModal>
                 </motion.div>
             )}
         </AnimatePresence>

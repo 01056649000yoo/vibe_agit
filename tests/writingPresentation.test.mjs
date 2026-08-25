@@ -32,13 +32,36 @@ test('작품 감상 모달은 수업 중 키보드 닫기와 초점 복귀를 �
     assert.match(modal, /previousFocusRef\.current\?\.focus/);
 });
 
+test('작품 클릭은 두 교사 화면이 같은 키보드 접근 트리거를 사용한다', async () => {
+    const [trigger, viewer, collection] = await Promise.all([
+        read('src/modules/writing/presentation/WritingPresentationTrigger.jsx'),
+        read('src/components/teacher/PostDetailViewer.jsx'),
+        read('src/components/teacher/SubmissionStatusModal.jsx')
+    ]);
+
+    assert.match(trigger, /role="button"[\s\S]*tabIndex="0"/);
+    assert.match(trigger, /event\.key !== 'Enter' && event\.key !== ' '/);
+    assert.match(trigger, /onOpen\?\.\(\)/);
+    assert.match(viewer, /import WritingPresentationTrigger/);
+    assert.match(collection, /import WritingPresentationTrigger/);
+});
+
 test('교사 비교 화면의 최초글과 최종글을 각각 감상 모달로 연다', async () => {
     const viewer = await read('src/components/teacher/PostDetailViewer.jsx');
 
     assert.match(viewer, /import WritingPresentationModal/);
-    assert.match(viewer, /aria-label="최초 제출 글 전체 화면으로 보기"[\s\S]*setPresentationVersion\('original'\)/);
-    assert.match(viewer, /aria-label="최종 제출 글 전체 화면으로 보기"[\s\S]*setPresentationVersion\('final'\)/);
-    assert.match(viewer, /role="button"[\s\S]*tabIndex="0"[\s\S]*handlePresentationKeyDown/);
+    assert.match(viewer, /label="최초 제출 글 전체 화면으로 보기"[\s\S]*setPresentationVersion\('original'\)/);
+    assert.match(viewer, /label="최종 제출 글 전체 화면으로 보기"[\s\S]*setPresentationVersion\('final'\)/);
     assert.match(viewer, /전체 화면으로 읽기/);
     assert.match(viewer, /<WritingPresentationModal[\s\S]*versionLabel=[\s\S]*<ReportDocument/);
+});
+
+test('학생 글 모아보기의 처음글과 마지막글도 같은 감상 모달로 연다', async () => {
+    const collection = await read('src/components/teacher/SubmissionStatusModal.jsx');
+
+    assert.match(collection, /학생 글 모아보기/);
+    assert.match(collection, /처음글 전체 화면으로 보기`\}[\s\S]*version: 'original'/);
+    assert.match(collection, /마지막글 전체 화면으로 보기`\}[\s\S]*version: 'final'/);
+    assert.match(collection, /<WritingPresentationModal[\s\S]*presentationIsReport[\s\S]*<ReportDocument/);
+    assert.match(collection, /\[selectedMission\?\.id\][\s\S]*<WritingPresentationModal/);
 });
