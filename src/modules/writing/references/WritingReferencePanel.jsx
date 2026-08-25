@@ -42,9 +42,18 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
      * ⚠️ 여기서 고르는 것은 **내 화면에서 무엇을 펼칠지**일 뿐이다. 연구소 개요를 글에 묶는
      *    `고정`(서버에 저장, 선생님도 봄)과는 **다른 것**이라 같은 말을 쓰지 않는다.
      */
+    /*
+     * ⚠️ 칩 이름은 **짧아야 한다.** 패널이 280~340px 뿐이라 셋으로 나누면 글자칸이 89px 남짓인데,
+     *    `글쓰기 연구소 자료`(10글자)는 109px 이 필요해 말줄임으로 잘렸다(2026-08-25 계산).
+     *    그래서 칩에는 줄인 이름을 쓰고, 전체 이름은 `title` 로 남긴다.
+     */
     const chips = [
-        ...visibleSections.map((section) => ({ id: section.id, label: section.eyebrow || section.title })),
-        ...(renderSources ? [{ id: 'lab-sources', label: '글쓰기 연구소 자료' }] : [])
+        ...visibleSections.map((section) => ({
+            id: section.id,
+            label: section.chipLabel || section.eyebrow || section.title,
+            title: section.eyebrow || section.title
+        })),
+        ...(renderSources ? [{ id: 'lab-sources', label: '연구소 자료', title: '글쓰기 연구소 자료' }] : [])
     ];
     const [activeChip, setActiveChip] = useState(null);
     const defaultChipId = chips[0]?.id ?? null;
@@ -162,6 +171,7 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
                                         aria-selected={currentChip === chip.id}
                                         className={currentChip === chip.id ? 'is-active' : ''}
                                         onClick={() => setActiveChip(chip.id)}
+                                        title={chip.title || chip.label}
                                     >
                                         {chip.label}
                                     </button>

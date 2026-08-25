@@ -97,7 +97,13 @@ test('학생 글쓰기 참고함은 선생님 안내·핵심질문과 지연 연
 test('참고 자료는 칩으로 하나만 골라 펼친다', () => {
     // 칩은 각 묶음 + 연구소 자료로 만든다.
     assert.match(referencePanel, /const chips = \[/);
-    assert.match(referencePanel, /label: '글쓰기 연구소 자료'/);
+    /*
+     * ⚠️ 칩 이름은 **짧아야 한다.** 패널이 280~340px 뿐이라 셋으로 나누면 글자칸이 89px 남짓인데
+     *    `글쓰기 연구소 자료`(10글자)는 109px 이 필요해 두 줄로 밀리거나 잘린다(2026-08-25).
+     *    칩에는 줄인 이름을 쓰고 전체 이름은 `title` 로 남긴다.
+     */
+    assert.match(referencePanel, /label: '연구소 자료', title: '글쓰기 연구소 자료'/);
+    assert.match(referencePanel, /title=\{chip\.title \|\| chip\.label\}/);
 
     // 고른 것만 펼친다. 전부 쌓던 옛 방식으로 돌아가면 걸린다.
     assert.match(referencePanel, /visibleSections\.filter\(\(section\) => section\.id === currentChip\)/);
@@ -117,4 +123,19 @@ test('참고 자료는 칩으로 하나만 골라 펼친다', () => {
     // 위쪽 갈래 탭과 모양이 같으면 어느 것이 상위인지 헷갈린다.
     assert.match(referencePanelCss, /\.writing-reference-chips button \{/);
     assert.match(referencePanelCss, /border-radius: 999px/);
+
+    /*
+     * ⚠️ 좁은 화면에서도 **한 줄**을 지킨다. `flex-wrap: wrap` 이면 긴 이름이 밀려 두 줄이 된다.
+     *    셋을 똑같이 삼등분하고, 모자라면 글자만 줄인다. 가로 사이바는 만들지 않는다.
+     */
+    const chipRow = referencePanelCss.split('}').find((chunk) => (
+        chunk.includes('.writing-reference-chips {')
+    ));
+    assert.match(chipRow, /flex-wrap: nowrap/);
+    const chipButton = referencePanelCss.split('}').find((chunk) => (
+        chunk.includes('.writing-reference-chips button {')
+    ));
+    assert.match(chipButton, /flex: 1 1 0/);
+    assert.match(chipButton, /min-width: 0/);
+    assert.match(chipButton, /font-size: clamp\(/);
 });
