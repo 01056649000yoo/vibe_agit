@@ -12,11 +12,28 @@ import {
     readStudentHistoryState
 } from '../src/components/student/studentNavigation.js';
 
-const [app, bottomNav, dashboard] = await Promise.all([
+const [app, bottomNav, dashboard, navigationGuide, agents] = await Promise.all([
     readFile('src/App.jsx', 'utf8'),
     readFile('src/components/student/StudentBottomNav.jsx', 'utf8'),
-    readFile('src/components/student/StudentDashboard.jsx', 'utf8')
+    readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
+    readFile('src/components/student/README.md', 'utf8'),
+    readFile('AGENTS.md', 'utf8')
 ]);
+
+test('새 학생 메뉴의 내비게이션·뒤로가기 계약은 코드 가까이와 작업 지침에 연결된다', () => {
+    const compactGuide = navigationGuide.replace(/\s/g, '');
+    for (const { label } of STUDENT_BOTTOM_NAV_TABS) {
+        assert.ok(compactGuide.includes(label.replace(/\s/g, '')), `${label} 메뉴가 내비게이션 계약에 없습니다.`);
+    }
+    assert.match(navigationGuide, /최상위 메뉴[\s\S]*항상 메인 대시보드/);
+    assert.match(navigationGuide, /하위 화면[\s\S]*부모 목록/);
+    assert.match(navigationGuide, /studentPage[\s\S]*studentParams[\s\S]*studentParent/);
+    assert.match(navigationGuide, /열기 신호[\s\S]*사용 직후[\s\S]*초기화/);
+    assert.match(navigationGuide, /StudentBackButton/);
+    assert.match(navigationGuide, /tests\/studentNavigation\.test\.mjs/);
+    assert.match(agents, /src\/components\/student\/README\.md/);
+    assert.match(agents, /STUDENT_BOTTOM_NAV_TABS/);
+});
 
 test('모바일 하단 메뉴 여섯 개는 목적지를 한 목록에서 정한다', () => {
     assert.deepEqual(

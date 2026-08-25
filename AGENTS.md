@@ -15,6 +15,7 @@
 | **[SECURITY_HARNESS.md](SECURITY_HARNESS.md)** | 보안 설계 원칙·검사 명령 |
 | **[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md)** | 맥미니 이관(Stage 1)의 상세 절차·검증 사실 |
 | **[CLASS_ACTIVITY_TOOLS_PLAN.md](CLASS_ACTIVITY_TOOLS_PLAN.md)** | 전체 화면 모달 기반 학급 활동 도구함 확장 순서·공통 계약 |
+| **[src/components/student/README.md](src/components/student/README.md)** | 학생 메뉴 유형별 활성 표시·방문 기록·뒤로가기 계약과 신규 메뉴 추가 순서 |
 | **[backup.md](backup.md)** | 백업·복구 절차, 매월 1일 자동 리허설 |
 | **[docs/OUTAGE_PLAN.md](docs/OUTAGE_PLAN.md)** | 맥미니 내부 장애 시 Caddy 점검 화면·로컬 상태 기록 운영 절차 |
 | **[MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)** | 브라우저 없이는 확인 못 하는 실기기 인수 검사표 |
@@ -125,6 +126,14 @@
 - 새 설정은 `evaluation_rubric.curriculum.grade_band`에 저장한다. 기존 `curriculum.grade`는 읽기 호환을 유지한다.
 - 글쓰기를 독립 교과처럼 평가하지 않는다. 실제 평가 결과·교사 의견과 교사가 고른 국어 성취기준으로
   기존 국어 평어의 앞뒤에 붙일 짧은 문장만 생성한다.
+
+### 학생 내비게이션
+- 모바일 하단 메뉴는 `src/components/student/studentNavigation.js`의 `STUDENT_BOTTOM_NAV_TABS` 한 곳에만
+  등록한다. `StudentBottomNav.jsx`에 메뉴·예외를 다시 하드코딩하지 않는다.
+- 최상위 메뉴의 화면·브라우저·기기 뒤로가기는 메인 대시보드, 편집기·상세 같은 실제 하위 화면은 명시한 부모
+  목록으로 간다. 하단 메뉴끼리 이동할 때 직전 메뉴를 부모로 남기지 않는다.
+- 전체 화면 오버레이는 메인 위 기록 한 단계로 두고 열기 신호를 사용 직후 소진하며, 실제 열림 상태를 하단 메뉴
+  활성 표시에 반영한다. 새 메뉴·하위 화면·오버레이의 상세 절차와 검사는 `src/components/student/README.md`를 따른다.
 
 ### 장르형 글쓰기 PDF
 - 일반 글 PDF는 공용 양식을 유지한다. `studentEditorEntry`로 별도 학생 입력 틀을 추가하는 장르는 같은 작업에서
