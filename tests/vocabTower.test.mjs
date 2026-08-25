@@ -674,3 +674,41 @@ test('학생 게임 화면에 읽을 수 없이 작은 글자가 없다', async 
         assert.match(rule, /font-size:\s*clamp\(/, `${selector} 가 화면 폭을 따라가지 않는다`);
     }
 });
+
+/*
+ * 2026-08-25: 공방의 `완성된 아지트부터 골라 보기` 에 **가로 사이바**가 생겼다.
+ *
+ * ⚠️ 원인은 `repeat(6,minmax(92px,1fr))` + 칸의 `min-width:92px` 였다. 칸이 화면보다 좁아지지 못해
+ *    가로로 넘쳤고, `overflow-x:auto` 가 그것을 사이바로 보여 주고 있었다. 사이바는 증상이지 원인이
+ *    아니라, 그것만 지우면 내용이 잘린다. **칸이 화면을 따라 줄어들게** 고쳐야 한다.
+ *
+ * 세트는 8개라 4열이면 정확히 두 줄로 떨어진다.
+ */
+test('공방 아지트 세트는 가로로 넘치지 않고 줄맞춰 놓인다', async () => {
+    const [css, catalog] = await Promise.all([
+        readFile('src/modules/game/dragon/BackgroundShopModal.css', 'utf8'),
+        readFile('src/modules/game/dragon/decorCatalog.js', 'utf8')
+    ]);
+
+    /*
+     * ⚠️ 주석에도 `overflow-x:auto` 라는 말이 나온다 — 왜 없앴는지 적어 두었기 때문이다.
+     *    글자만 찾으면 그 주석에 걸린다(2026-08-25 실제로 걸렸다). **주석을 걷어내고** 본다.
+     */
+    const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const listRule = cssWithoutComments.split('}').find((chunk) => (
+        chunk.includes('.agit-workshop__collection-list {')
+    ));
+    assert.ok(listRule, '세트 목록 규칙을 찾지 못했다');
+
+    // 4열이고, 칸은 화면을 따라 줄어든다.
+    assert.match(listRule, /grid-template-columns: repeat\(4,minmax\(0,1fr\)\)/);
+    // 가로 사이바를 만들던 두 가지가 없어야 한다.
+    // ⚠️ 주석에도 `overflow-x` 라는 말이 나온다(왜 없앴는지 적어 두었다). 실제 **선언**만 본다.
+    assert.doesNotMatch(listRule, /overflow-x:\s*(auto|scroll)/);
+    assert.doesNotMatch(cssWithoutComments, /\.agit-workshop__collection-list button \{[^}]*min-width: *[0-9]+px/);
+
+    // ⚠️ 세트 수가 바뀌면 4열이 더는 딱 떨어지지 않는다. 그때 열 수를 다시 정하라고 여기서 알린다.
+    const collectionBlock = catalog.slice(catalog.indexOf('DRAGON_DECOR_COLLECTIONS = Object.freeze(['));
+    const setCount = (collectionBlock.match(/name: '/g) ?? []).length;
+    assert.equal(setCount % 4, 0, `세트가 ${setCount}개라 4열로 딱 떨어지지 않는다 — 열 수를 다시 정한다`);
+});

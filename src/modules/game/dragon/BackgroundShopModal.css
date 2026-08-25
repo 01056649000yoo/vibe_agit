@@ -64,8 +64,12 @@
 .agit-workshop__collections-heading span { color: #8c6d4b; font-size: clamp(.62rem, 1.3vw, .7rem); font-weight: 950; letter-spacing: .12em; }
 .agit-workshop__collections-heading strong { margin-top: 2px; color: #352f2c; font-size: .82rem; }
 .agit-workshop__collections-heading small { margin-top: 2px; color: #837a72; font-size: clamp(.64rem, 1.4vw, .74rem); font-weight: 750; }
-.agit-workshop__collection-list { display: grid; grid-template-columns: repeat(6,minmax(92px,1fr)); gap: 6px; margin-top: 9px; overflow-x: auto; padding-bottom: 2px; }
-.agit-workshop__collection-list button { position: relative; min-width: 92px; overflow: hidden; padding: 9px 7px 8px; border: 1px solid #ded9d4; border-radius: 11px; background: #fff; color: #49413b; cursor: pointer; font: inherit; text-align: left; }
+/* 세트가 8개라 **4열이면 정확히 두 줄로 떨어진다**(2026-08-25).
+   예전에는 6열 + `min-width:92px` + `overflow-x:auto` 라 칸이 화면보다 넓어져 가로 사이바가 생겼고,
+   둘째 줄에 2개만 남아 허전했다. ⚠️ `minmax(92px,…)` 를 그대로 두면 좁은 화면에서 또 넘치므로
+   `minmax(0,1fr)` 로 바꿔 칸이 화면을 따라 줄어들게 한다. */
+.agit-workshop__collection-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 7px; margin-top: 9px; padding-bottom: 2px; }
+.agit-workshop__collection-list button { position: relative; min-width: 0; overflow: hidden; padding: 9px 7px 8px; border: 1px solid #ded9d4; border-radius: 11px; background: #fff; color: #49413b; cursor: pointer; font: inherit; text-align: left; }
 .agit-workshop__collection-list button::before { position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--collection-accent); content: ''; }
 .agit-workshop__collection-list button > span,
 .agit-workshop__collection-list button > strong,
@@ -159,4 +163,6 @@
     .agit-workshop__legend-reward > button { grid-column: 1 / -1; width: 100%; }
     .agit-workshop__tabs button { min-height: 50px; font-size: clamp(.62rem, 1.4vw, .7rem); }
     .agit-workshop__items { grid-template-columns: 1fr; }
+    /* 470px 에서 4열이면 칸이 100px 남짓이라 세트 이름이 거의 잘린다. 2열로 접어 4줄로 보인다. */
+    .agit-workshop__collection-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
