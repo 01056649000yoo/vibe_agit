@@ -108,3 +108,38 @@ test('글자 계단은 일곱 단계뿐이고 바닥이 0.8rem이다', async () 
         assert.ok(steps[i][1] > steps[i - 1][1], `${steps[i][0]}가 ${steps[i - 1][0]}보다 크지 않다`);
     }
 });
+
+/*
+ * 2026-08-25: 디자인 시스템은 2026-08-05부터 있었는데 **아무 문서도 그것을 가리키지 않았다.**
+ * 그래서 새 화면을 만들 때마다 있는 줄 모르고 값을 새로 적었고 색이 680종에서 1,851종으로 늘었다.
+ *
+ * ⚠️ 가이드를 글로만 두면 또 잊는다. 이 검사는 **가이드가 실제 코드와 어긋나지 않는지**와
+ *    **세션마다 읽는 곳에 규칙이 남아 있는지**를 본다. 문서를 지우거나 계단 값을 바꾸면 걸린다.
+ */
+test('디자인 가이드가 실제 계단·읽는 자리와 어긋나지 않는다', async () => {
+    const [guide, sessionContext, wikiIndex, tokens] = await Promise.all([
+        readFile('docs/wiki/DESIGN_GUIDE.md', 'utf8'),
+        readFile('SESSION_CONTEXT.md', 'utf8'),
+        readFile('docs/wiki/README.md', 'utf8'),
+        readFile('src/styles/design-system.css', 'utf8')
+    ]);
+
+    // 가이드에 적힌 계단 값이 코드의 값과 같아야 한다. 한쪽만 고치면 여기서 걸린다.
+    for (const [step, size] of [['xs', '0.80'], ['sm', '0.90'], ['md', '1.00'],
+                                ['lg', '1.15'], ['xl', '1.35'], ['2xl', '1.50'], ['3xl', '2.00']]) {
+        assert.ok(guide.includes(`--ui-text-${step}`), `가이드에 ${step} 단계가 없다`);
+        assert.ok(guide.includes(`${size}rem`), `가이드의 ${step} 크기(${size}rem)가 빠졌다`);
+        // 코드 쪽은 0 을 떼고 적으므로(0.8rem) 숫자만 견준다.
+        assert.match(tokens, new RegExp(`--ui-text-${step}:\\s*${Number(size)}rem`),
+            `코드의 ${step} 값이 가이드(${size}rem)와 다르다`);
+    }
+
+    // ⚠️ 세션마다 자동으로 읽는 곳은 SESSION_CONTEXT 뿐이다. 여기서 빠지면 다음 세션이 모른 채 시작한다.
+    assert.match(sessionContext, /UI를 다듬을 땐 값을 화면에서 직접 적지 않는다/);
+    assert.match(sessionContext, /docs\/wiki\/DESIGN_GUIDE\.md/);
+    // 찾아 읽는 경로도 살아 있어야 한다.
+    assert.match(wikiIndex, /DESIGN_GUIDE\.md/);
+
+    // 바닥을 낮추면 아이가 태블릿에서 못 읽는다. 이유를 지우지 않는다.
+    assert.match(guide, /바닥이 0\.80rem인 이유/);
+});

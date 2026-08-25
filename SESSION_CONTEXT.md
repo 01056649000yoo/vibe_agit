@@ -21,6 +21,11 @@
 - 기능 삭제보다 모듈화와 기본 OFF를 우선한다.
 - 학급 글 조회, 학생 홈/RPC, 포인트, DB·인증·외부 API 변경은 각각의 성능·보안 계약을 먼저 확인한다.
 - 설명 정보 아이콘은 `GuideInfoButton`, 교사 메뉴 안내는 `TeacherGuideButton`과 `teacherGuides.js`를 사용한다.
+- **UI를 다듬을 땐 값을 화면에서 직접 적지 않는다** — 색·글자·간격·모서리는 `src/styles/design-system.css`의
+  `--ui-*` 토큰을 쓴다. 글자는 `--ui-text-xs~3xl` 일곱 단계뿐이고 **바닥은 0.8rem**이다(그 아래는 아이가
+  태블릿에서 못 읽는다). 버튼·카드·창은 `components/common`의 공용 부품을 먼저 쓴다.
+  옮긴 화면은 `tests/teacherTypeScale.test.mjs`가 지키므로, 새로 옮겼으면 그 `MIGRATED` 목록에 한 줄 추가한다.
+  상세는 [디자인 가이드](docs/wiki/DESIGN_GUIDE.md).
 - 기존 사용자 변경을 보존하고, 관련 검증을 통과한 뒤 `WORKLOG.md`와 `ROADMAP.md`를 갱신한다.
 - **푸시 전 검사를 건다** — `npm run hooks:install` 한 번. 배포 실패의 상당수가 *올리지 않은 새 파일*
   탓인데 로컬에는 파일이 있어 검사가 통과하므로 로컬로는 잡을 수 없다. 셸·시스템 도구에 기대는 검사를
