@@ -27,9 +27,10 @@ const EMPTY_DATA = {
         accessed_students: 0,
         active_students: 0,
         submitted_posts: 0,
-        revisions: 0,
+        rewrite_requests: 0,
+        revision_submissions: 0,
         comments: 0,
-        feedbacks: 0,
+        feedback_updates: 0,
         avg_chars: 0
     },
     actions: {
@@ -243,7 +244,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
             <div role="status" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ height: '32px', width: '210px', borderRadius: '9px', background: '#F1F5F9' }} />
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: '9px' }}>
-                    {[1, 2, 3, 4, 5, 6, 7].map((key) => <div key={key} style={{ height: '92px', borderRadius: '15px', background: '#F8FAFC' }} />)}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((key) => <div key={key} style={{ height: '92px', borderRadius: '15px', background: '#F8FAFC' }} />)}
                 </div>
                 <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>학급 운영 현황을 집계하는 중...</span>
             </div>
@@ -322,7 +323,9 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                     />
                 </div>
                 <p style={{ margin: '7px 2px 0', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', lineHeight: 1.4 }}>
-                    접속 학생은 선택한 기간의 로그인 기록, 나머지는 글쓰기 발자국 기록을 시작한 이후 활동부터 집계합니다.
+                    접속 학생은 학생 로그인·저장 세션 복구 기록과 인증 서버의 최근 로그인 중 확인 가능한 최신 기록을 사용합니다.
+                    오래된 접속은 기록 기능 도입 전 내역이 일부 빠질 수 있습니다. 작성 완료 글은 현재 상태가 아니라 최초 제출 이력,
+                    다시쓰기 요청·수정 제출·댓글·피드백 반영은 현재 활성 학생의 기간 기록만 집계합니다.
                 </p>
             </section>
 

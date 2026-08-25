@@ -19,18 +19,24 @@ export const CLASS_OPERATIONS_CORE_CARDS = [
         icon: '📝', label: '작성 완료 글', metric: { path: 'summary.submitted_posts', unit: '편' }
     },
     {
-        id: 'revisions', section: 'summary', renderer: 'metric', order: 30,
-        icon: '♻️', label: '고쳐쓰기', background: '#F0FDF4', color: '#15803D',
-        metric: { path: 'summary.revisions', unit: '회' }
+        id: 'rewrite-requests', section: 'summary', renderer: 'metric', order: 30,
+        icon: '↩️', label: '다시쓰기 요청', background: '#F0FDF4', color: '#15803D',
+        metric: { path: 'summary.rewrite_requests', unit: '회' }
+    },
+    {
+        id: 'revision-submissions', section: 'summary', renderer: 'metric', order: 35,
+        icon: '♻️', label: '수정 제출', background: '#ECFDF5', color: '#047857',
+        metric: { path: 'summary.revision_submissions', unit: '회' }
     },
     {
         id: 'comments', section: 'summary', renderer: 'metric', order: 40,
         icon: '💬', label: '댓글 활동', metric: { path: 'summary.comments', unit: '회' }
     },
     {
-        id: 'feedbacks', section: 'summary', renderer: 'metric', order: 50,
-        icon: '💡', label: '받은 피드백', background: '#FFF7ED', color: '#C2410C',
-        metric: { path: 'summary.feedbacks', unit: '회' }
+        id: 'feedback-updates', section: 'summary', renderer: 'metric', order: 50,
+        icon: '💡', label: '피드백 반영', background: '#FFF7ED', color: '#C2410C',
+        note: 'AI 피드백·교사 의견 저장',
+        metric: { path: 'summary.feedback_updates', unit: '회' }
     },
     {
         id: 'average-characters', section: 'summary', renderer: 'metric', order: 60,
