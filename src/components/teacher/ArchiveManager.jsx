@@ -16,8 +16,7 @@ const MISSION_POST_LIMIT = 100;
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
  */
-const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
-    const isDenseCard = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
+const ArchiveManager = ({ activeClass, isMobile }) => {
     const [archivedMissions, setArchivedMissions] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
@@ -422,7 +421,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 <>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))',
                         gap: '12px',
                         justifyContent: 'start'
                     }}>
@@ -436,7 +435,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                 background: 'white',
                                 border: selectedMissionIds.includes(mission.id) ? '2px solid #3498DB' : '1px solid #E9ECEF',
                                 borderRadius: '16px',
-                                padding: isMobile ? '16px' : (isDenseCard ? '10px' : '14px'),
+                                padding: isMobile ? '16px' : '14px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
@@ -532,8 +531,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     </span>
                                 </div>
                                 {mission.tags && mission.tags.length > 0 && (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px', maxHeight: isDenseCard ? '18px' : 'none', overflow: 'hidden' }}>
-                                        {mission.tags.slice(0, isDenseCard ? 2 : mission.tags.length).map((tag, idx) => (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px', overflow: 'hidden' }}>
+                                        {mission.tags.map((tag, idx) => (
                                             <span key={idx} style={{
                                                 fontSize: 'var(--ui-text-sm)',
                                                 background: '#F3E5F5',

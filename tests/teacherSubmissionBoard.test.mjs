@@ -19,7 +19,7 @@ test('선생님 과제와 제출 전광판은 데스크톱에서 정확히 절�
     assert.match(manager, /teacher-mission-live-layout[\s\S]*TeacherSubmissionBoard/);
     assert.match(styles, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
     assert.match(styles, /@media \(max-width: 1180px\)[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
-    assert.match(missionList, /splitView \? Math\.min\(cardLayout\?\.columns \|\| 4, 2\)/);
+    assert.match(missionList, /getMissionCardColumns\(missionCardSize, splitView\)/);
     assert.match(manager, /isFormOpen \|\| isMissionTypePickerOpen \? ' is-single'/);
     assert.match(board, /실시간 제출 전광판/);
 });

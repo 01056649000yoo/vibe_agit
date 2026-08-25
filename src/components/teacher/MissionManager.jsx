@@ -29,7 +29,7 @@ const MissionLabSourcesModal = lazy(() => import('./MissionLabSourcesModal'));
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({
-    activeClass, isDashboardMode = true, cardLayout,
+    activeClass, isDashboardMode = true, missionCardSize,
     navigationTarget, onNavigationHandled, bootstrapProfile
 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
@@ -313,7 +313,7 @@ const MissionManager = ({
                         onReviewMission={handleReviewMission}
                         onConnectLabSources={setLabSourceMission}
                         highlightedMissionId={highlightedMissionId}
-                        cardLayout={cardLayout}
+                        missionCardSize={missionCardSize}
                         splitView={!isFormOpen && !isMissionTypePickerOpen}
                     />
                 </div>

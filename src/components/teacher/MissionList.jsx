@@ -2,6 +2,7 @@ import React, { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
 import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
+import { getMissionCardColumns, normalizeMissionCardSize } from '../../modules/writing/mission-card-layout/missionCardLayout';
 
 // 컴포넌트 외부로 스타일 상수화 (Optimization 5)
 const EMPTY_STATE_STYLE = { textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF', width: '100%', boxSizing: 'border-box' };
@@ -27,7 +28,7 @@ const MissionItem = memo(({
     mission, isMobile, submittedCount, missionStatus, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
     showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    isHighlighted, cardLayout
+    isHighlighted, missionCardSize
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
@@ -36,13 +37,15 @@ const MissionItem = memo(({
     const progressLabel = isMeetingMission
         ? `💡 제안 ${submittedCount}건`
         : `✍️ 제출 ${submittedCount}/${totalStudentCount}`;
-    const isDense = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
+    const normalizedCardSize = normalizeMissionCardSize(missionCardSize);
+    const isSmall = normalizedCardSize === 'small';
+    const isLarge = normalizedCardSize === 'large';
 
     return (
         <motion.div data-mission-id={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
-            background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : (isDense ? '10px' : '14px'),
+            background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : (isSmall ? '10px' : isLarge ? '18px' : '14px'),
             borderRadius: '16px', border: isHighlighted ? '2px solid #F59E0B' : isMeetingMission ? '1px solid #DDD6FE' : '1px solid #ECEFF1',
-            boxShadow: isHighlighted ? '0 8px 20px rgba(245, 158, 11, 0.16)' : '0 3px 9px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: isDense ? '6px' : '8px',
+            boxShadow: isHighlighted ? '0 8px 20px rgba(245, 158, 11, 0.16)' : '0 3px 9px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: isSmall ? '6px' : isLarge ? '10px' : '8px',
             width: '100%', boxSizing: 'border-box',
             wordBreak: 'keep-all', overflowWrap: 'break-word', transition: 'all 0.25s ease'
         }}>
@@ -85,11 +88,11 @@ const MissionItem = memo(({
                     </button>
                 </div>
             </div>
-            <h4 style={{ margin: 0, fontSize: '1rem', lineHeight: 1.35, color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
+            <h4 style={{ margin: 0, fontSize: isSmall ? '0.92rem' : isLarge ? '1.08rem' : '1rem', lineHeight: 1.35, color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
 
             {mission.tags && mission.tags.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px', maxHeight: isDense ? '18px' : 'none', overflow: 'hidden' }}>
-                    {mission.tags.slice(0, isDense ? 2 : mission.tags.length).map((tag, idx) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px', maxHeight: isSmall ? '18px' : 'none', overflow: 'hidden' }}>
+                    {mission.tags.slice(0, isSmall ? 2 : mission.tags.length).map((tag, idx) => (
                         <span key={idx} style={{
                             fontSize: '0.7rem',
                             background: '#F3E5F5',
@@ -119,8 +122,8 @@ const MissionItem = memo(({
                         : { ...VIEWER_BUTTON_STYLE, backgroundColor: '#F1F3F5', color: '#495057', border: '1px solid #E9ECEF' }}
                 >
                     {isMeetingMission
-                        ? `💡 ${isDense ? '검토' : genreMissionType.reviewLabel} (${submittedCount})`
-                        : `📝 ${isDense ? '글 확인' : '학생 글 확인'}${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
+                        ? `💡 ${isSmall ? '검토' : genreMissionType.reviewLabel} (${submittedCount})`
+                        : `📝 ${isSmall ? '글 확인' : '학생 글 확인'}${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
                 </Button>
                 {supportsEvaluation && mission.evaluation_rubric?.use_rubric && (
                     <>
@@ -147,9 +150,10 @@ const MissionList = ({
     missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    highlightedMissionId, cardLayout, splitView = false
+    highlightedMissionId, missionCardSize, splitView = false
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
+    const cardColumns = getMissionCardColumns(missionCardSize, splitView);
 
     if (loading) {
         return <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중...</div>;
@@ -210,9 +214,7 @@ const MissionList = ({
             ) : (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: isMobile
-                        ? '1fr'
-                        : `repeat(${splitView ? Math.min(cardLayout?.columns || 4, 2) : (cardLayout?.columns || 4)}, minmax(0, 1fr))`,
+                    gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardColumns}, minmax(0, 1fr))`,
                     gap: '12px',
                     justifyContent: 'start'
                 }}>
@@ -234,7 +236,7 @@ const MissionList = ({
                             onReviewMission={onReviewMission}
                             onConnectLabSources={onConnectLabSources}
                             isHighlighted={mission.id === highlightedMissionId}
-                            cardLayout={cardLayout}
+                            missionCardSize={missionCardSize}
                         />
                     ))}
                 </div>

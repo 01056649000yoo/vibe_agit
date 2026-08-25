@@ -30,9 +30,16 @@ import AnnouncementSpotlight from './AnnouncementSpotlight';
 import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
 import useAnnouncementSeen from './useAnnouncementSeen';
+import {
+    DEFAULT_MISSION_CARD_SIZE,
+    LEGACY_WRITING_CARD_LAYOUT_STORAGE_KEY,
+    MISSION_CARD_SIZE_OPTIONS,
+    MISSION_CARD_SIZE_STORAGE_KEY,
+    migrateLegacyMissionCardSize,
+    normalizeMissionCardSize
+} from '../../modules/writing/mission-card-layout/missionCardLayout';
 import './TeacherDashboard.css';
 
-const DEFAULT_WRITING_CARD_LAYOUT = { columns: 4, density: 'comfortable' };
 const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
 const TEACHER_TAB_IDS = TEACHER_NAV_GROUPS.flatMap(group => group.tabs.map(tab => tab.id));
 
@@ -47,14 +54,15 @@ const loadTeacherTab = () => {
     }
 };
 
-const loadWritingCardLayout = () => {
+const loadMissionCardSize = () => {
     try {
-        const saved = JSON.parse(window.localStorage.getItem('teacher-writing-card-layout-v1'));
-        const columns = [3, 4, 5, 6].includes(saved?.columns) ? saved.columns : DEFAULT_WRITING_CARD_LAYOUT.columns;
-        const density = ['comfortable', 'compact'].includes(saved?.density) ? saved.density : DEFAULT_WRITING_CARD_LAYOUT.density;
-        return { columns, density };
+        const savedSize = window.localStorage.getItem(MISSION_CARD_SIZE_STORAGE_KEY);
+        if (savedSize) return normalizeMissionCardSize(savedSize);
+
+        const legacyLayout = JSON.parse(window.localStorage.getItem(LEGACY_WRITING_CARD_LAYOUT_STORAGE_KEY));
+        return migrateLegacyMissionCardSize(legacyLayout);
     } catch {
-        return DEFAULT_WRITING_CARD_LAYOUT;
+        return DEFAULT_MISSION_CARD_SIZE;
     }
 };
 
@@ -81,7 +89,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [adminPassword, setAdminPassword] = useState('');
     const [adminPasswordError, setAdminPasswordError] = useState('');
     const [isVerifyingAdminPassword, setIsVerifyingAdminPassword] = useState(false);
-    const [writingCardLayout, setWritingCardLayout] = useState(loadWritingCardLayout);
+    const [missionCardSize, setMissionCardSize] = useState(loadMissionCardSize);
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
@@ -117,8 +125,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     }, [loadFeedbackReplyCount]);
 
     useEffect(() => {
-        window.localStorage.setItem('teacher-writing-card-layout-v1', JSON.stringify(writingCardLayout));
-    }, [writingCardLayout]);
+        try {
+            window.localStorage.setItem(MISSION_CARD_SIZE_STORAGE_KEY, missionCardSize);
+        } catch {
+            // 저장소가 차단된 환경에서도 현재 화면의 크기 선택은 그대로 유지한다.
+        }
+    }, [missionCardSize]);
 
     useEffect(() => {
         try {
@@ -210,7 +222,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
-    const showsWritingLayoutControls = !isMobile && activeNavGroup.id === 'writing';
+    const showsMissionCardSizeControls = !isMobile && visibleTab === 'dashboard';
 
     return (
         <div className="teacher-dashboard">
@@ -329,30 +341,19 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         </button>
                     );
                 })}
-                {showsWritingLayoutControls && (
-                    <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
+                {showsMissionCardSizeControls && (
+                    <div role="group" aria-label="미션 카드 크기 설정" style={{
                         display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '18px',
                         borderLeft: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.76rem', fontWeight: '800', flexShrink: 0
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span>한 줄</span>
-                            {[3, 4, 5, 6].map(columns => (
-                                <button key={columns} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, columns }))} aria-pressed={writingCardLayout.columns === columns} style={{
-                                    width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
-                                    border: writingCardLayout.columns === columns ? '1px solid #2563EB' : '1px solid #CBD5E1',
-                                    background: writingCardLayout.columns === columns ? '#EFF6FF' : 'white',
-                                    color: writingCardLayout.columns === columns ? '#1D4ED8' : '#64748B'
-                                }}>{columns}</button>
-                            ))}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingRight: '4px' }}>
-                            <span>크기</span>
-                            {[{ id: 'comfortable', label: '보통' }, { id: 'compact', label: '작게' }].map(option => (
-                                <button key={option.id} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, density: option.id }))} aria-pressed={writingCardLayout.density === option.id} style={{
+                            <span>미션 카드</span>
+                            {MISSION_CARD_SIZE_OPTIONS.map(option => (
+                                <button key={option.id} type="button" onClick={() => setMissionCardSize(option.id)} aria-pressed={missionCardSize === option.id} style={{
                                     height: '28px', padding: '0 9px', borderRadius: '8px', cursor: 'pointer', fontWeight: '800',
-                                    border: writingCardLayout.density === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
-                                    background: writingCardLayout.density === option.id ? '#EFF6FF' : 'white',
-                                    color: writingCardLayout.density === option.id ? '#1D4ED8' : '#64748B'
+                                    border: missionCardSize === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: missionCardSize === option.id ? '#EFF6FF' : 'white',
+                                    color: missionCardSize === option.id ? '#1D4ED8' : '#64748B'
                                 }}>{option.label}</button>
                             ))}
                         </div>
@@ -426,7 +427,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             ))}
                         </div>
                     ) : visibleTab === 'archive' ? (
-                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} cardLayout={writingCardLayout} />
+                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'tools' ? (
@@ -447,7 +448,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 activeClass={activeClass}
                                 isMobile={isMobile}
                                 section={visibleTab === 'dashboard' ? 'missions' : visibleTab}
-                                cardLayout={writingCardLayout}
+                                missionCardSize={missionCardSize}
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
