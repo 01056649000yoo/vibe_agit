@@ -2,12 +2,21 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+/*
+ * 줄바꿈은 항상 `\n` 으로 맞춰서 읽는다.
+ *
+ * 저장소에는 `\n` 으로 들어 있지만 윈도우에서 받으면 `\r\n` 으로 바뀐다. 아래 검사들은 여러 줄에
+ * 걸친 모양을 `\n` 으로 견주므로, 그대로 두면 **윈도우에서 작업하는 사람은 푸시 자체가 막힌다**
+ * (2026-08-25에 실제로 막혔다). 검사가 보려는 것은 줄바꿈 방식이 아니라 배포 절차의 모양이다.
+ */
+const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
+
 const [workflow, dockerfile, dockerignore, caddy, localDeploy] = await Promise.all([
-    readFile('.github/workflows/deploy.yml', 'utf8'),
-    readFile('Dockerfile', 'utf8'),
-    readFile('.dockerignore', 'utf8'),
-    readFile('Caddyfile.container', 'utf8'),
-    readFile('scripts/deploy-local.sh', 'utf8')
+    readText('.github/workflows/deploy.yml'),
+    readText('Dockerfile'),
+    readText('.dockerignore'),
+    readText('Caddyfile.container'),
+    readText('scripts/deploy-local.sh')
 ]);
 
 test('로컬 배포도 CI와 같은 일을 한다 — 앱과 AI 함수를 함께 맞춘다', () => {

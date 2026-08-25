@@ -59,10 +59,14 @@ const lookupPayload = {
 const detectionSerialized = `${JSON.stringify(detectionPayload, null, 2)}\n`;
 const lookupSerialized = `${JSON.stringify(lookupPayload, null, 2)}\n`;
 
+// 저장소에는 `\n` 으로 들어 있지만 윈도우에서 받으면 `\r\n` 이 된다. 줄바꿈 방식이 다르다고
+// "규칙과 다르다" 고 막으면 윈도우에서는 빌드가 통째로 안 된다(2026-08-25에 실제로 막혔다).
+const readNormalized = async (url) => (await readFile(url, 'utf8').catch(() => '')).split('\r\n').join('\n');
+
 if (checkOnly) {
     const [currentDetection, currentLookup] = await Promise.all([
-        readFile(detectionOutputUrl, 'utf8').catch(() => ''),
-        readFile(lookupOutputUrl, 'utf8').catch(() => '')
+        readNormalized(detectionOutputUrl),
+        readNormalized(lookupOutputUrl)
     ]);
     if (currentDetection !== detectionSerialized || currentLookup !== lookupSerialized) {
         throw new Error('공유 맞춤법 목록이 원본 규칙과 다릅니다. npm run spelling:export를 실행해 주세요.');
