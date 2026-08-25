@@ -1,27 +1,39 @@
 .priority-writing-notification {
     position: fixed;
     z-index: 120000;
-    top: max(12px, env(safe-area-inset-top));
+    top: 0;
     right: 0;
     left: 0;
     display: flex;
-    justify-content: center;
-    padding: 0 14px;
-    pointer-events: none;
 }
 
 .priority-writing-notification__banner {
+    appearance: none;
     display: flex;
-    width: min(560px, 100%);
+    width: 100%;
     min-height: 58px;
     align-items: center;
+    justify-content: center;
     gap: 12px;
-    padding: 13px 18px;
-    border: 1px solid transparent;
-    border-radius: 16px;
+    padding: calc(13px + env(safe-area-inset-top)) 18px 13px;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
     color: #fff;
+    font: inherit;
+    text-align: center;
     box-shadow: 0 12px 32px rgba(15, 23, 42, .26);
+    cursor: pointer;
     animation: priority-writing-banner-in .22s ease-out;
+}
+
+.priority-writing-notification__banner:hover {
+    filter: brightness(.96);
+}
+
+.priority-writing-notification__banner:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, .95);
+    outline-offset: -5px;
 }
 
 .priority-writing-notification__banner--rewrite {
@@ -55,8 +67,9 @@
 @media (max-width: 520px) {
     .priority-writing-notification__banner {
         display: grid;
+        justify-items: center;
         gap: 3px;
-        padding: 12px 15px;
+        padding: calc(12px + env(safe-area-inset-top)) 15px 12px;
     }
 }
 

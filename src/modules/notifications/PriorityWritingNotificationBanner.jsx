@@ -126,13 +126,15 @@ const PriorityWritingNotificationBanner = ({ studentId, initialCursorCreatedAt }
     return (
         <ModalPortal>
             <div className="priority-writing-notification" aria-live="polite" aria-atomic="true">
-                <div
+                <button
+                    type="button"
                     className={`priority-writing-notification__banner priority-writing-notification__banner--${presentation.tone}`}
-                    role="status"
+                    aria-label={`${presentation.title}. ${presentation.message} 눌러서 닫기`}
+                    onClick={() => setActive(null)}
                 >
                     <strong>{presentation.title}</strong>
                     <span>{presentation.message}</span>
-                </div>
+                </button>
             </div>
         </ModalPortal>
     );

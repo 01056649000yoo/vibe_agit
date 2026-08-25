@@ -170,8 +170,11 @@ test('반려·승인 전역 배너는 12초 분산 폴링과 최소 응답 계�
     assert.doesNotMatch(banner, /setInterval|markRead|setInternalPage|onNavigate/);
     assert.match(banner, /글이 되돌아왔어요/);
     assert.match(banner, /글이 승인되었어요/);
+    assert.match(banner, /<button[\s\S]*?type="button"[\s\S]*?onClick=\{\(\) => setActive\(null\)\}/);
+    assert.match(banner, /눌러서 닫기/);
     assert.match(css, /position: fixed[\s\S]*?z-index: 120000/);
-    assert.match(css, /pointer-events: none/);
+    assert.match(css, /top: 0[\s\S]*?width: 100%/);
+    assert.doesNotMatch(css, /width: min\(560px, 100%\)|padding: 0 14px/);
 
     assert.equal(policy.PRIORITY_WRITING_POLL_INTERVAL_MS, 12000);
     assert.equal(policy.getPriorityWritingInitialDelay(0), 0);
