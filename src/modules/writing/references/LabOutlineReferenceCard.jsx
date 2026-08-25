@@ -37,13 +37,17 @@ const LabOutlineReferenceCard = ({
         <section className={`lab-outline-reference-card${compact ? ' is-compact' : ''}`}>
             <header className="lab-outline-reference-card__header">
                 <div>
+                    {/*
+                      * ⚠️ 머리말을 짧게 유지한다. 참고함 패널이 340px 뿐이라 줄이 늘면 바로 밀린다
+                      *    (2026-08-25 `나의 글 개요` 가 두 줄로 밀렸다).
+                      *    글 종류(`생활문` 같은 `topic`)는 **어떤 활동인지 아는 데 필요 없어** 뺐다.
+                      *    남기는 것은 `활동 이름`(눈썹)과 `내가 붙인 제목` 둘뿐이다.
+                      */}
                     <div className="lab-outline-reference-card__eyebrow">
                         <span>{eyebrow}</span>
                         {badge && <em>{badge}</em>}
                     </div>
-                    <h4>{heading}</h4>
-                    <p>{result.title}{result.topic ? ` · ${result.topic}` : ''}</p>
-                    {result.hint && <span className="lab-outline-reference-card__hint">{result.hint}</span>}
+                    <h4>{result.title || heading}</h4>
                 </div>
                 <div className="lab-outline-reference-card__dates">
                     {updatedLabel && <time dateTime={result.updatedAt}>최신 저장 {updatedLabel}</time>}

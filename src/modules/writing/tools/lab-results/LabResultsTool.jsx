@@ -184,9 +184,12 @@ const LabResultsTool = ({
                                             {result.isLinked && <em className="lab-results-linked-badge">이 과제와 연결됨</em>}
                                             {result.isPinned && <em className="lab-results-pinned-badge">이 글에 고정됨</em>}
                                         </span>
+                                        {/*
+                                          * ⚠️ 고르는 창에서는 **어떤 활동인지 알아볼 정도만** 보여 준다
+                                          *    (2026-08-25 요청). 글 종류(`생활문` 같은 `topic`)는 고르는 데
+                                          *    도움이 안 되면서 줄만 늘린다. 내용은 아래 미리보기로 확인한다.
+                                          */}
                                         <h3>{result.title}</h3>
-                                        {result.topic && <p>{result.topic}</p>}
-                                        {result.hint && <p className="lab-results-hint">{result.hint}</p>}
                                     </div>
                                     <time dateTime={result.updatedAt || result.completedAt}>
                                         {result.resultKind === 'outline' ? '최신 저장 ' : ''}

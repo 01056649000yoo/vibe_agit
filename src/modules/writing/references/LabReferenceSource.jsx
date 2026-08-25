@@ -132,10 +132,9 @@ const LabReferenceResult = ({ result, onRemove, onChangeOutline, outlineChangeLo
         <section className="writing-reference-section writing-reference-lab-result">
             <div className="writing-reference-section__heading writing-reference-lab-result__heading">
                 <div>
+                    {/* 활동 이름과 내가 붙인 제목만 남긴다. 글 종류는 어떤 활동인지 아는 데 필요 없다. */}
                     <span>{meta.eyebrow}</span>
-                    <h4>{meta.title}</h4>
-                    <p>{result.title}{result.topic ? ` · ${result.topic}` : ''}</p>
-                    {result.hint && <p className="writing-reference-lab-result__hint">{result.hint}</p>}
+                    <h4>{result.title || meta.title}</h4>
                 </div>
                 <button type="button" onClick={() => onRemove(result.resultKind)}>
                     <Trash2 size={14} aria-hidden="true" />

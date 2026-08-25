@@ -139,3 +139,31 @@ test('참고 자료는 칩으로 하나만 골라 펼친다', () => {
     assert.match(chipButton, /min-width: 0/);
     assert.match(chipButton, /font-size: clamp\(/);
 });
+
+/*
+ * 2026-08-25: 참고함에 불러온 개요 카드의 `나의 글 개요` 가 **두 줄로 밀렸다.**
+ *
+ * ⚠️ 참고함 패널은 340px 뿐이라 머리말에 줄이 하나만 늘어도 바로 밀린다. 예전에는 네 줄이었다 —
+ *    활동 이름 / 고정 제목(`나의 글 개요`) / `제목 · 글 종류` / 힌트.
+ *    글 종류(`생활문` 같은 것)는 **어떤 활동인지 아는 데 도움이 안 되면서** 줄만 늘렸다.
+ *    남기는 것은 `활동 이름`과 `내가 붙인 제목` 둘뿐이다.
+ */
+test('연구소 자료는 활동 이름과 제목만 보여 준다', async () => {
+    const [outlineCard, picker] = await Promise.all([
+        readFile('src/modules/writing/references/LabOutlineReferenceCard.jsx', 'utf8'),
+        readFile('src/modules/writing/tools/lab-results/LabResultsTool.jsx', 'utf8')
+    ]);
+
+    // 제목 자리에 고정 문구 대신 학생이 붙인 제목을 쓴다.
+    assert.match(outlineCard, /<h4>\{result\.title \|\| heading\}<\/h4>/);
+
+    // 글 종류와 힌트는 머리말에서 뺐다. 되돌리면 줄이 늘어 다시 밀린다.
+    for (const [name, source] of [['고정 개요 카드', outlineCard], ['고르는 창', picker]]) {
+        assert.doesNotMatch(source, /result\.topic/, `${name}: 글 종류가 머리말에 다시 들어왔다`);
+        assert.doesNotMatch(source, /result\.hint/, `${name}: 힌트가 머리말에 다시 들어왔다`);
+    }
+
+    // 참고함 안 자료도 같은 규칙이다.
+    assert.match(labReferenceSource, /<h4>\{result\.title \|\| meta\.title\}<\/h4>/);
+    assert.doesNotMatch(labReferenceSource, /result\.topic/);
+});
