@@ -629,3 +629,32 @@ test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화�
     assert.ok(student.includes('vocab-journey__overlay'), '게임 화면 안에서 뜨는 오버레이를 쓰지 않는다');
     assert.ok(student.includes("event.key === 'Escape'"), '창을 Esc 로 닫을 수 없다');
 });
+
+/*
+ * 2026-08-25: 학생 게임 화면은 교사 화면처럼 **계단으로 일괄 교체할 수 없다.**
+ * 고정 px 칸이 40곳, 격자가 35곳이라 글자만 키우면 칸을 넘치거나 겹친다.
+ * 그래서 계단 대신 `clamp()` 로 **바닥만 올리고 위쪽은 화면이 넓을 때만** 커지게 한다.
+ *
+ * ⚠️ 여기서 지키는 것은 "본문처럼 크게"가 아니라 **"안 보일 만큼 작은 것은 없앤다"** 이다.
+ *    게임 화면은 오래 읽는 곳이 아니라 보고 누르는 곳이라 기준이 다르다.
+ */
+test('학생 어휘의 탑 화면에 읽을 수 없이 작은 글자가 없다', async () => {
+    const css = await readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8');
+
+    // 고정값으로 0.62rem(9.9px) 밑을 쓰지 않는다. 되돌리면 여기서 걸린다.
+    const tooSmall = [...css.matchAll(/font-size:\s*(0?\.[0-9]+)rem/g)]
+        .map((match) => Number(match[1]))
+        .filter((size) => size < 0.62);
+    assert.deepEqual(tooSmall, [], `읽기 어려운 글자 크기가 남아 있다: ${tooSmall.join(', ')}rem`);
+
+    // 좁았던 자리들은 `clamp` 로 화면 폭을 따라간다. 고정값으로 되돌리면 걸린다.
+    for (const selector of [
+        '.vocab-journey__floor-map span',
+        '.vocab-journey__status-row span',
+        '.vocab-summit-stages small'
+    ]) {
+        const rule = css.split('}').find((chunk) => chunk.includes(selector) && chunk.includes('font-size'));
+        assert.ok(rule, `${selector} 의 글자 크기 규칙을 찾지 못했다`);
+        assert.match(rule, /font-size:\s*clamp\(/, `${selector} 가 화면 폭을 따라가지 않는다`);
+    }
+});

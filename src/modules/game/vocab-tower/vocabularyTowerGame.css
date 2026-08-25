@@ -73,7 +73,7 @@
 .vocab-deck-card__copy { display: grid; gap: 9px; min-width: 0; }
 .vocab-deck-card__heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
 .vocab-deck-card__heading > strong { color: #243b78; font-size: .9rem; }
-.vocab-deck-card__heading > span { padding: 4px 7px; border-radius: 999px; background: #eef2f7; color: #68758a; font-size: .61rem; font-weight: 900; }
+.vocab-deck-card__heading > span { padding: 4px 7px; border-radius: 999px; background: #eef2f7; color: #68758a; font-size: clamp(.68rem, 1.5vw, .78rem); font-weight: 900; }
 .vocab-deck-card__heading > span.is-started { background: #dcf5e7; color: #27714c; }
 .vocab-deck-card__heading > span.is-conquered { background: #ffe799; color: #76500a; }
 .vocab-deck-card__heading > span.is-active { background: #f9dc8d; color: #75500b; }
@@ -104,7 +104,7 @@
 .vocab-deck-card__states span { color: #5d6a7d; font-size: .64rem; font-weight: 800; }
 .vocab-deck-card__states strong { font-size: .76rem; }
 .vocab-deck-card__state-action { display: flex; align-items: center; gap: 5px; }
-.vocab-deck-card__state-action button { min-height: 24px; padding: 3px 8px; border: 1px solid #e4a5ad; border-radius: 999px; background: #fff; color: #a43846; font: inherit; font-size: .61rem; font-weight: 900; cursor: pointer; }
+.vocab-deck-card__state-action button { min-height: 24px; padding: 3px 8px; border: 1px solid #e4a5ad; border-radius: 999px; background: #fff; color: #a43846; font: inherit; font-size: clamp(.66rem, 1.4vw, .74rem); font-weight: 900; cursor: pointer; }
 .vocab-deck-card__state-action button:not(:disabled):hover { border-color: #c95a68; background: #fff8f8; }
 .vocab-deck-card__state-action button:disabled { border-color: #e2d7d9; background: rgba(255,255,255,.55); color: #b9a7aa; cursor: default; }
 .vocab-deck-card__states .is-new { background: #eef2f7; color: #526173; }
@@ -116,7 +116,7 @@
 .vocab-deck-card__reward > span { font-size: 1.15rem; }
 .vocab-deck-card__reward strong, .vocab-deck-card__reward small { display: block; }
 .vocab-deck-card__reward strong { font-size: .7rem; }
-.vocab-deck-card__reward small { margin-top: 2px; color: #69758a; font-size: .61rem; line-height: 1.4; }
+.vocab-deck-card__reward small { margin-top: 2px; color: #69758a; font-size: clamp(.68rem, 1.5vw, .78rem); line-height: 1.4; }
 /* 층당 총액 중 지금까지 받은 비율. 한 번 찬 칸은 이후 연습에서 다시 줄어들지 않는다. */
 .vocab-deck-card__reward-track { display: block; margin-top: 5px; height: 5px; border-radius: 999px; background: #e6ebf5; overflow: hidden; }
 .vocab-deck-card__reward-track > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#f3b64b,#e59a20); transition: width .35s ease; }
@@ -241,7 +241,7 @@
 .vocab-journey__timer { justify-self: end; min-width: 76px; padding: 9px 12px; border-radius: 12px; background: #e6f4ff; color: #236392; font-weight: 950; text-align: center; }
 .vocab-journey__timer.is-low { background: #fff0f0; color: #c63232; animation: vocab-timer-pulse 1s ease-in-out infinite; }
 .vocab-journey__floor-map { display: grid; grid-template-columns: repeat(10,minmax(0,1fr)); gap: 6px; width: min(800px,100%); margin: 13px auto 9px; }
-.vocab-journey__floor-map span { display: grid; place-items: center; aspect-ratio: 1.35; border-radius: 9px; background: rgba(255,255,255,.5); color: #8791a3; font-size: .68rem; font-weight: 950; }
+.vocab-journey__floor-map span { display: grid; place-items: center; aspect-ratio: 1.35; border-radius: 9px; background: rgba(255,255,255,.5); color: #8791a3; font-size: clamp(.66rem, 1.5vw, .76rem); font-weight: 950; }
 .vocab-journey__floor-map span.is-passed { background: #63b88b; color: white; }
 .vocab-journey__floor-map span.is-current { background: #f5bd4d; color: #704a05; box-shadow: 0 0 0 3px rgba(255,255,255,.8),0 5px 13px rgba(194,133,16,.25); transform: translateY(-2px); }
 .vocab-practice-progress { width: min(760px,100%); height: 10px; margin: 14px auto 10px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.65); box-shadow: inset 0 1px 3px rgba(54,74,112,.16); }
@@ -249,7 +249,7 @@
 .vocab-journey__status-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: min(900px,100%); margin: 0 auto 10px; }
 .vocab-journey__status-row > div { min-width: 118px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,.7); text-align: center; }
 .vocab-journey__status-row span, .vocab-journey__status-row strong { display: block; }
-.vocab-journey__status-row span { color: #798397; font-size: .6rem; font-weight: 850; }
+.vocab-journey__status-row span { color: #798397; font-size: clamp(.66rem, 1.4vw, .76rem); font-weight: 850; }
 .vocab-journey__status-row strong { margin-top: 2px; color: #344773; font-size: .78rem; }
 .vocab-journey__status-row .is-boon { background: #fff4cf; }
 .vocab-journey__rooms { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; width: min(680px,100%); margin: 0 auto 13px; }
@@ -350,7 +350,7 @@
   .vocab-journey__header { grid-template-columns: auto 1fr auto; }
   .vocab-journey__header > button { padding: 8px; font-size: .7rem; }
   .vocab-journey__floor-map { gap: 3px; }
-  .vocab-journey__floor-map span { aspect-ratio: 1; font-size: .58rem; }
+  .vocab-journey__floor-map span { aspect-ratio: 1; font-size: clamp(.62rem, 1.6vw, .68rem); }
   .vocab-journey__status-row > div { min-width: calc(50% - 8px); }
   .vocab-question-card__options { grid-template-columns: 1fr; }
   .vocab-boon-card__choices { grid-template-columns: 1fr; }
@@ -575,7 +575,7 @@
 .vocab-summit-stages > span { display: grid; gap: 2px; min-height: 42px; place-content: center; padding: 7px 8px; border: 1px solid #d6ddea; border-radius: 11px; background: #f3f5f8; color: #727e90; font: inherit; text-align: center; }
 .vocab-summit-stages b { font-size: .69rem; }
 .vocab-summit-stages span,
-.vocab-summit-stages small { margin: 0; font-size: .58rem; font-weight: 800; }
+.vocab-summit-stages small { margin: 0; font-size: clamp(.64rem, 1.3vw, .72rem); font-weight: 800; }
 .vocab-summit-stages > button { border-color: #d9bd6e; background: #fff5d2; color: #75520d; cursor: pointer; }
 .vocab-summit-stages > button:disabled { border-color: #d9dee7; background: #f2f4f7; color: #9aa3b1; cursor: default; }
 .vocab-summit-stages > span.is-next { border-color: #91b6e6; background: #edf5ff; color: #315b96; }
