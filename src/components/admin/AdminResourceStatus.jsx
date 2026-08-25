@@ -7,9 +7,9 @@ import React from 'react';
  * 그래서 칸마다 **판단 기준과 지금 해야 할 일**을 함께 적는다.
  *
  * 값의 출처는 두 갈래다.
- *   - 하루 한 번(04:50) 재는 것: 디스크 여유, DB 크기, 컨테이너 수
- *   - 5분마다 재서 그날 최악값만 남기는 것: 메모리 여유·스왑·게이트웨이 CPU
- *     새벽에 한 번만 재면 가장 한가한 때만 보게 되어, 수업 시간의 나쁜 순간을 놓친다.
+ *   - 5분마다 재는 현재값: 맥·도커 메모리/스왑, 디스크, 컨테이너, 게이트웨이
+ *   - 같은 표에 함께 남기는 오늘 최악값: 도커 메모리 최저, 도커 스왑·게이트웨이 최고
+ *   - 하루 한 번(04:50) 재는 것: DB 크기와 트래픽 측정 구간
  */
 
 const TONES = Object.freeze({
@@ -53,19 +53,27 @@ const AdminResourceStatus = ({ latest }) => {
         );
     }
 
+    const hostMemPercent = toFiniteNumber(latest.host_mem_available_pct);
+    const hostSwapUsed = toFiniteNumber(latest.host_swap_used_mb);
     const memTotal = toFiniteNumber(latest.vm_mem_total_mb);
-    const memFree = toFiniteNumber(latest.vm_mem_available_min_mb);
-    const memPercent = memTotal > 0 && Number.isFinite(memFree) ? Math.round((memFree / memTotal) * 100) : null;
-    const swapUsed = toFiniteNumber(latest.vm_swap_used_max_mb);
-    const gatewayCpu = toFiniteNumber(latest.gateway_cpu_max_pct);
-    const gatewayMem = toFiniteNumber(latest.gateway_mem_max_mb);
+    const memCurrent = toFiniteNumber(latest.vm_mem_available_current_mb);
+    const memMinimum = toFiniteNumber(latest.vm_mem_available_min_mb);
+    const memPercent = memTotal > 0 && Number.isFinite(memCurrent) ? Math.round((memCurrent / memTotal) * 100) : null;
+    const memMinimumPercent = memTotal > 0 && Number.isFinite(memMinimum) ? Math.round((memMinimum / memTotal) * 100) : null;
+    const swapCurrent = toFiniteNumber(latest.vm_swap_used_current_mb);
+    const swapMaximum = toFiniteNumber(latest.vm_swap_used_max_mb);
+    const gatewayCpu = toFiniteNumber(latest.gateway_cpu_current_pct);
+    const gatewayCpuMaximum = toFiniteNumber(latest.gateway_cpu_max_pct);
+    const gatewayMem = toFiniteNumber(latest.gateway_mem_current_mb);
     const diskFree = toFiniteNumber(latest.disk_free_gb);
     const dbSize = toFiniteNumber(latest.db_size_mb);
     const containers = toFiniteNumber(latest.container_total);
     const healthy = toFiniteNumber(latest.container_healthy);
 
+    const hostMemTone = hostMemPercent === null ? 'none' : hostMemPercent < 15 ? 'bad' : hostMemPercent < 30 ? 'watch' : 'good';
+    const hostSwapTone = !Number.isFinite(hostSwapUsed) ? 'none' : hostSwapUsed > 1024 ? 'bad' : hostSwapUsed > 0 ? 'watch' : 'good';
     const memTone = memPercent === null ? 'none' : memPercent < 15 ? 'bad' : memPercent < 30 ? 'watch' : 'good';
-    const swapTone = !Number.isFinite(swapUsed) ? 'none' : swapUsed > 100 ? 'bad' : swapUsed > 0 ? 'watch' : 'good';
+    const swapTone = !Number.isFinite(swapCurrent) ? 'none' : swapCurrent > 100 ? 'bad' : swapCurrent > 0 ? 'watch' : 'good';
     const cpuTone = !Number.isFinite(gatewayCpu) ? 'none' : gatewayCpu > 70 ? 'bad' : gatewayCpu > 40 ? 'watch' : 'good';
     const diskTone = !Number.isFinite(diskFree) ? 'none' : diskFree < 10 ? 'bad' : diskFree < 30 ? 'watch' : 'good';
     const dbTone = Number.isFinite(dbSize) ? 'good' : 'none';
@@ -79,34 +87,54 @@ const AdminResourceStatus = ({ latest }) => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))'
         }}>
             <Card
-                title="메모리 여유 (오늘 최저)"
+                title="맥 메모리 여유 (현재)"
+                value={Number.isFinite(hostMemPercent) ? hostMemPercent : '—'}
+                unit={Number.isFinite(hostMemPercent) ? '%' : ''}
+                tone={hostMemTone}
+                note={hostMemTone === 'none' ? '아직 재지 않았습니다.'
+                    : hostMemTone === 'bad' ? '맥 본체 메모리 압박이 큽니다. 가장 큰 프로세스를 확인하세요.'
+                    : hostMemTone === 'watch' ? '맥 본체 여유가 줄었습니다.'
+                        : '맥 본체에 여유가 있습니다.'}
+            />
+            <Card
+                title="맥 스왑 사용 (현재)"
+                value={Number.isFinite(hostSwapUsed) ? hostSwapUsed.toLocaleString() : '—'}
+                unit={Number.isFinite(hostSwapUsed) ? 'MB' : ''}
+                tone={hostSwapTone}
+                note={hostSwapTone === 'none' ? '아직 재지 않았습니다.'
+                    : hostSwapTone === 'bad' ? '맥 본체가 디스크로 많이 밀어냈습니다.'
+                    : hostSwapTone === 'watch' ? '현재 스왑을 사용 중입니다.'
+                        : '현재 스왑을 쓰지 않습니다.'}
+            />
+            <Card
+                title="도커 메모리 여유 (현재)"
                 value={memPercent === null ? '—' : memPercent}
-                unit={memPercent === null ? '' : `% · ${memFree.toLocaleString()}MB`}
+                unit={memPercent === null ? '' : `% · ${memCurrent.toLocaleString()}MB`}
                 tone={memTone}
                 note={memPercent === null ? '아직 재지 않았습니다.'
                     : memTone === 'bad' ? '30% 아래로 오래 머무르면 도커 메모리 할당을 올리세요.'
                         : memTone === 'watch' ? '수업 시간에 더 떨어지는지 지켜보세요.'
-                            : '여유 있습니다.'}
+                            : `현재는 여유 있습니다.${Number.isFinite(memMinimumPercent) ? ` 오늘 최저 ${memMinimumPercent}%` : ''}`}
             />
             <Card
-                title="스왑 사용 (오늘 최대)"
-                value={Number.isFinite(swapUsed) ? swapUsed.toLocaleString() : '—'}
-                unit={Number.isFinite(swapUsed) ? 'MB' : ''}
+                title="도커 스왑 사용 (현재)"
+                value={Number.isFinite(swapCurrent) ? swapCurrent.toLocaleString() : '—'}
+                unit={Number.isFinite(swapCurrent) ? 'MB' : ''}
                 tone={swapTone}
                 note={swapTone === 'none' ? '아직 재지 않았습니다.'
                     : swapTone === 'bad' ? '메모리가 모자라 디스크로 밀어냈습니다. 할당을 올릴 때입니다.'
                     : swapTone === 'watch' ? '조금씩 쓰기 시작했습니다.'
-                        : '0이면 메모리가 넉넉하다는 뜻입니다.'}
+                        : `현재는 쓰지 않습니다.${Number.isFinite(swapMaximum) ? ` 오늘 최대 ${swapMaximum.toLocaleString()}MB` : ''}`}
             />
             <Card
-                title="게이트웨이 CPU (오늘 최대)"
+                title="게이트웨이 CPU (현재)"
                 value={Number.isFinite(gatewayCpu) ? gatewayCpu : '—'}
                 unit={Number.isFinite(gatewayCpu) ? `% · ${Number.isFinite(gatewayMem) ? gatewayMem + 'MB' : ''}` : ''}
                 tone={cpuTone}
                 note={cpuTone === 'none' ? '아직 재지 않았습니다.'
                     : cpuTone === 'bad' ? '수업 시간에 계속 70%를 넘으면 kong 워커를 2에서 늘리세요.'
                     : cpuTone === 'watch' ? '아직 여유는 있습니다.'
-                        : '워커 2개로 충분합니다.'}
+                        : `워커 2개로 충분합니다.${Number.isFinite(gatewayCpuMaximum) ? ` 오늘 최대 ${gatewayCpuMaximum}%` : ''}`}
             />
             <Card
                 title="디스크 여유"

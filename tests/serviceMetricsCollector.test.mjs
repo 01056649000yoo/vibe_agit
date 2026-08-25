@@ -42,35 +42,35 @@ const dayDelta = (previousLines, currentLines) => {
         input: `${currentLines.join('\n')}\n`,
         encoding: 'utf8',
     });
-    const [rx, tx] = out.trim().split(/\s+/).map(Number);
-    return { rx, tx };
+    const [rx, tx, resets] = out.trim().split(/\s+/).map(Number);
+    return { rx, tx, resets };
 };
 
 test('트래픽 하루치는 컨테이너마다 따로 센다', () => {
     // 평범한 하루: 둘 다 늘기만 한다.
     assert.deepEqual(
         dayDelta(['agit-app 1000 2000', 'kong 500 700'], ['agit-app 1500 2600', 'kong 900 1000']),
-        { rx: 900, tx: 900 },
+        { rx: 900, tx: 900, resets: 0 },
     );
 
     // 배포한 날: agit-app 을 지우고 새로 만들어 누적값이 0부터 다시 쌓인다.
     // 지금 값이 곧 그날치다. 예전에는 전체 합계만 비교해 이런 날을 통째로 버렸다.
     assert.deepEqual(
         dayDelta(['agit-app 5000000000 6000000000', 'kong 500 700'], ['agit-app 12000 18000', 'kong 900 1000']),
-        { rx: 12400, tx: 18300 },
+        { rx: 12400, tx: 18300, resets: 2 },
     );
 
     // 컨테이너가 새로 생긴 날도 같은 규칙이다.
     assert.deepEqual(
         dayDelta(['kong 500 700'], ['kong 900 1000', 'new-app 3000 4000']),
-        { rx: 3400, tx: 4300 },
+        { rx: 3400, tx: 4300, resets: 0 },
     );
 
     // 받은 양과 보낸 양은 따로 본다. 한쪽이 줄었다고 다른 쪽까지 버리지 않는다.
-    assert.deepEqual(dayDelta(['a 1000 1000'], ['a 400 1500']), { rx: 400, tx: 500 });
+    assert.deepEqual(dayDelta(['a 1000 1000'], ['a 400 1500']), { rx: 400, tx: 500, resets: 1 });
 
     // 사라진 컨테이너는 그날치에 끼지 않는다.
-    assert.deepEqual(dayDelta(['a 100 100', 'gone 900 900'], ['a 300 400']), { rx: 200, tx: 300 });
+    assert.deepEqual(dayDelta(['a 100 100', 'gone 900 900'], ['a 300 400']), { rx: 200, tx: 300, resets: 1 });
 });
 
 test('값을 못 재거나 옛 형식이면 0 을 기록하지 않는다', () => {
@@ -92,7 +92,7 @@ test('값을 못 재거나 옛 형식이면 0 을 기록하지 않는다', () =>
 
 test('기록 RPC에는 정해진 값만 넘긴다', () => {
     // 셸 문자열을 그대로 SQL 에 끼워 넣는 자리라 숫자·NULL 말고는 들어가면 안 된다.
-    const call = script.slice(script.indexOf('record_system_daily_metric_v1'));
+    const call = script.slice(script.indexOf('record_system_daily_metric_v2'));
     assert.match(call, /\$\{RX_DAY\}::bigint/);
     assert.match(call, /\$\{TX_DAY\}::bigint/);
     const assignments = [
@@ -105,4 +105,16 @@ test('기록 RPC에는 정해진 값만 넘긴다', () => {
             `${name} 에 예상 밖의 값이 들어간다: ${value}`,
         );
     }
+});
+
+test('트래픽은 측정 구간과 컨테이너 초기화 여부를 함께 기록한다', async () => {
+    const traffic = await import('node:fs/promises').then(({ readFile }) => readFile('src/components/admin/AdminTrafficTrend.jsx', 'utf8'));
+
+    assert.match(script, /STATE_TIME_FILE/);
+    assert.match(script, /TRAFFIC_COMPLETE=false/);
+    assert.match(script, /TRAFFIC_STARTED_SQL/);
+    assert.match(traffic, /row\?\.rx_bytes == null \? null/);
+    assert.match(traffic, /traffic_period_started_at/);
+    assert.match(traffic, /traffic_measured_at/);
+    assert.match(traffic, /컨테이너 재시작으로 구간 일부가 빠질 수 있습니다/);
 });

@@ -44,6 +44,23 @@ const toDayKey = (date) => {
 
 const shortDay = (dayKey) => dayKey.slice(5).replace('-', '/');
 
+const formatWindowTime = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString('ko-KR', {
+        month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+};
+
+const trafficWindowLabel = (row) => {
+    const start = formatWindowTime(row?.periodStartedAt);
+    const end = formatWindowTime(row?.measuredAt);
+    if (start && end) return `${start}~${end}`;
+    if (end) return `${end}까지`;
+    return '측정 구간 정보 없음';
+};
+
 /** 기록이 있는 날만 평균을 낸다. 못 잰 날을 0으로 세면 경향이 아래로 꺾인다. */
 const averageOf = (rows) => {
     const recorded = rows.filter((row) => row.hasRecord);
@@ -65,8 +82,9 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
             date.setDate(today.getDate() - offset);
             const dayKey = toDayKey(date);
             const row = byDay.get(dayKey);
-            const rx = Number(row?.rx_bytes);
-            const tx = Number(row?.tx_bytes);
+            const rx = row?.rx_bytes == null ? null : Number(row.rx_bytes);
+            const tx = row?.tx_bytes == null ? null : Number(row.tx_bytes);
+            // Number(null)은 0이라서, 명시적으로 비운 과거 오측정치가 0B 기록으로 둔갑하지 않게 한다.
             const hasRecord = row != null && Number.isFinite(rx) && Number.isFinite(tx);
             filled.push({
                 dayKey,
@@ -75,6 +93,9 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
                 tx: hasRecord ? tx : 0,
                 total: hasRecord ? rx + tx : 0,
                 hasRecord,
+                periodStartedAt: row?.traffic_period_started_at || null,
+                measuredAt: row?.traffic_measured_at || null,
+                complete: row?.traffic_complete ?? null,
             });
         }
         return filled;
@@ -135,6 +156,7 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
             </div>
             <p style={{ margin: '0 0 14px', fontSize: '0.75rem', color: '#A0AEC0' }}>
                 컨테이너가 주고받은 양입니다. 정확한 회선 사용량은 아니고 경향을 보는 값입니다.
+                막대 날짜는 그날 04:50 무렵에 끝난 직전 측정 이후의 구간이며, 오늘 0시부터의 실시간 누계가 아닙니다.
                 {recordedCount < days && ` · ${days}일 가운데 ${recordedCount}일만 기록되었습니다.`}
             </p>
 
@@ -180,10 +202,10 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
                                 type="button"
                                 onClick={() => setSelectedDay(isSelected ? '' : row.dayKey)}
                                 aria-label={row.hasRecord
-                                    ? `${row.dayKey} 받은 양 ${formatBytes(row.rx)}, 보낸 양 ${formatBytes(row.tx)}`
+                                    ? `${row.dayKey} ${trafficWindowLabel(row)}, 받은 양 ${formatBytes(row.rx)}, 보낸 양 ${formatBytes(row.tx)}${row.complete === false ? ', 일부 누락 가능' : ''}`
                                     : `${row.dayKey} 기록 없음`}
                                 title={row.hasRecord
-                                    ? `${row.dayKey}\n받은 양 ${formatBytes(row.rx)} · 보낸 양 ${formatBytes(row.tx)}`
+                                    ? `${row.dayKey}\n${trafficWindowLabel(row)}\n받은 양 ${formatBytes(row.rx)} · 보낸 양 ${formatBytes(row.tx)}${row.complete === false ? '\n컨테이너 재시작으로 일부 누락 가능' : ''}`
                                     : `${row.dayKey} · 기록 없음`}
                                 style={{
                                     flex: '1 1 0', minWidth: '6px', height: '100%', padding: 0,
@@ -241,9 +263,15 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
                             <strong>{row.dayKey}</strong>
                             {!selected && <span style={{ color: '#A0AEC0' }}> (가장 최근 기록)</span>}
                             {row.hasRecord ? (
-                                <span style={{ marginLeft: '8px', color: '#4A5568' }}>
-                                    받은 양 <strong>{formatBytes(row.rx)}</strong> · 보낸 양 <strong>{formatBytes(row.tx)}</strong> · 합계 <strong>{formatBytes(row.total)}</strong>
-                                </span>
+                                <>
+                                    <span style={{ marginLeft: '8px', color: '#4A5568' }}>
+                                        받은 양 <strong>{formatBytes(row.rx)}</strong> · 보낸 양 <strong>{formatBytes(row.tx)}</strong> · 합계 <strong>{formatBytes(row.total)}</strong>
+                                    </span>
+                                    <span style={{ display: 'block', marginTop: '4px', color: row.complete === false ? '#C05621' : '#718096' }}>
+                                        측정 구간: {trafficWindowLabel(row)}
+                                        {row.complete === false && ' · 컨테이너 재시작으로 구간 일부가 빠질 수 있습니다.'}
+                                    </span>
+                                </>
                             ) : (
                                 <span style={{ marginLeft: '8px', color: '#A0AEC0' }}>기록 없음 (스크립트가 돌지 않았거나 값을 재지 못한 날)</span>
                             )}
@@ -272,6 +300,7 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
                                 <th style={{ padding: '6px 8px', borderBottom: '1px solid #E2E8F0' }}>받은 양</th>
                                 <th style={{ padding: '6px 8px', borderBottom: '1px solid #E2E8F0' }}>보낸 양</th>
                                 <th style={{ padding: '6px 8px', borderBottom: '1px solid #E2E8F0' }}>합계</th>
+                                <th style={{ padding: '6px 8px', borderBottom: '1px solid #E2E8F0' }}>측정 구간</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -283,9 +312,12 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
                                             <td style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5' }}>{formatBytes(row.rx)}</td>
                                             <td style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5' }}>{formatBytes(row.tx)}</td>
                                             <td style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5', fontWeight: 'bold' }}>{formatBytes(row.total)}</td>
+                                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5', color: row.complete === false ? '#C05621' : '#718096' }}>
+                                                {trafficWindowLabel(row)}{row.complete === false ? ' · 일부 누락 가능' : ''}
+                                            </td>
                                         </>
                                     ) : (
-                                        <td colSpan={3} style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5' }}>기록 없음</td>
+                                        <td colSpan={4} style={{ padding: '6px 8px', borderBottom: '1px solid #F1F3F5' }}>기록 없음</td>
                                     )}
                                 </tr>
                             ))}

@@ -269,6 +269,11 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const diskTone = health.summary?.diskFreeGb == null
         ? '#A0AEC0'
         : (health.summary.diskFreeGb < 20 ? '#E53E3E' : health.summary.diskFreeGb < 50 ? '#D69E2E' : '#48BB78');
+    const hostMemoryTone = health.summary?.hostMemoryAvailablePct == null || health.summary?.hostSwapUsedMb == null
+        ? '#A0AEC0'
+        : (health.summary.hostMemoryAvailablePct < 15 || health.summary.hostSwapUsedMb > 1024
+            ? '#E53E3E'
+            : (health.summary.hostMemoryAvailablePct < 30 || health.summary.hostSwapUsedMb > 0 ? '#D69E2E' : '#48BB78'));
 
     const tabBadges = useMemo(() => ({
         pending: newSignupCount,
@@ -438,8 +443,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
               * `현황 > 사용량` 으로 내렸다. 반대로 컨테이너·디스크·경고는 `운영 > 서버 상태` **안에만**
               * 있어서, 문제가 나도 그 탭을 열어야 알았다. 자리를 맞바꾼 것이다.
               *
-              * ⚠️ 메모리·스왑은 **아직 올리지 않는다.** 지금 값은 도커 VM 안만 재서, 맥 본체가
-              *    굶고 있어도 `정상` 으로 보인다(2026-08-24 확인). 본체까지 재게 된 뒤에 올린다.
+              * 맥 본체 메모리·스왑은 5분 현재값을 함께 재므로, 도커 VM 값으로 본체 상태를 짐작하지 않는다.
               */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
                 <StatCard
@@ -454,6 +458,14 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     label="디스크 여유"
                     value={health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중'}
                     color={diskTone} icon="💾"
+                    onOpen={() => setCurrentTab('service')}
+                />
+                <StatCard
+                    label="맥 메모리"
+                    value={health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null
+                        ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB`
+                        : '확인 중'}
+                    color={hostMemoryTone} icon="🧠"
                     onOpen={() => setCurrentTab('service')}
                 />
                 <StatCard

@@ -47,6 +47,8 @@ else
 fi
 
 # --- 4) 컨테이너가 꺼져 있지 않은가 ---
+CONTAINER_TOTAL="$("$DOCKER" ps -q 2>/dev/null | wc -l | tr -d ' ')"
+CONTAINER_HEALTHY="$("$DOCKER" ps --format '{{.Status}}' 2>/dev/null | grep -cv 'unhealthy\|Restarting\|Exited' | tr -d ' ')"
 BAD="$("$DOCKER" ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep -c 'unhealthy\|Restarting' | tr -d ' ')"
 if [ "${BAD:-0}" -gt 0 ] 2>/dev/null; then
     NAMES="$("$DOCKER" ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep 'unhealthy\|Restarting' | awk '{print $1}' | paste -sd, - )"
@@ -63,7 +65,7 @@ else
     report backup_failed false ""
 fi
 
-# --- 6) 메모리와 게이트웨이 ---
+# --- 6) 맥 본체·도커 VM 메모리와 게이트웨이 ---
 #
 # 하루 한 번 도는 지표 기록은 새벽 04:50 이라 가장 한가한 때다. 정작 알고 싶은 것은 수업 시간의
 # 가장 나쁜 순간이라, 5분마다 도는 여기서 재서 그날의 최악값만 남긴다.
@@ -78,6 +80,18 @@ NR==3 { swap=$3 }
 END { printf "%d %d %d", total, avail, swap }')
 EOF
 
+# 도커 VM 값만 보면 맥 본체가 굶어도 정상처럼 보인다. macOS 의 현재 메모리 여유와 스왑을
+# 별도로 재서 화면에서 출처를 분명히 표시한다. 둘 다 값만 저장하며 원문 시스템 로그는 남기지 않는다.
+HOST_MEM_PCT="$(/usr/bin/memory_pressure -Q 2>/dev/null | awk '/System-wide memory free percentage:/ {gsub(/%/, "", $5); print $5}')"
+HOST_SWAP_USED="$(/usr/sbin/sysctl vm.swapusage 2>/dev/null | awk '
+{
+    for (i = 1; i <= NF; i += 1) {
+        if ($i == "used") {
+            value = $(i + 2); sub(/M$/, "", value); printf "%.0f", value; exit
+        }
+    }
+}')"
+
 # 게이트웨이 CPU 는 kong 워커 수를 언제 올릴지 판단하는 근거다.
 read -r GW_CPU GW_MEM <<EOF
 $("$DOCKER" stats --no-stream --format '{{.CPUPerc}} {{.MemUsage}}' agit-kong 2>/dev/null | awk '
@@ -88,18 +102,28 @@ $("$DOCKER" stats --no-stream --format '{{.CPUPerc}} {{.MemUsage}}' agit-kong 2>
 EOF
 
 if [ -n "${MEM_TOTAL:-}" ] && [ "${MEM_TOTAL:-0}" -gt 0 ] 2>/dev/null; then
-    psql_exec -c "SELECT public.record_system_peak_v1(
+    if ! psql_exec -c "SELECT public.record_system_resource_sample_v2(
         CURRENT_DATE, ${MEM_TOTAL}::int, ${MEM_AVAIL:-0}::int, ${SWAP_USED:-0}::int,
-        ${GW_CPU:-0}::numeric, ${GW_MEM:-0}::int
-    );" >/dev/null 2>&1 || true
+        ${GW_CPU:-0}::numeric, ${GW_MEM:-0}::int,
+        ${HOST_MEM_PCT:-NULL}::numeric, ${HOST_SWAP_USED:-NULL}::int,
+        ${FREE_GB:-NULL}::numeric, ${CONTAINER_TOTAL:-NULL}::int, ${CONTAINER_HEALTHY:-NULL}::int
+    );" >/dev/null 2>&1; then
+        # 배포는 DB 마이그레이션과 앱 이미지 사이에 짧은 순서 차이가 있다. 새 RPC 적용 전에도
+        # 기존 5분 최고치 기록을 끊지 않는다.
+        psql_exec -c "SELECT public.record_system_peak_v1(
+            CURRENT_DATE, ${MEM_TOTAL}::int, ${MEM_AVAIL:-0}::int, ${SWAP_USED:-0}::int,
+            ${GW_CPU:-0}::numeric, ${GW_MEM:-0}::int
+        );" >/dev/null 2>&1 || true
+    fi
 
-    # 여유가 15% 아래로 떨어지거나 스왑을 쓰기 시작하면 알린다. 둘 다 "메모리가 모자라다" 는 신호다.
+    # 도커나 맥 본체 어느 쪽이든 여유가 15% 아래로 떨어지거나 스왑이 커지면 알린다.
     MEM_PCT=$(( MEM_AVAIL * 100 / MEM_TOTAL ))
-    if [ "$MEM_PCT" -lt 15 ] || [ "${SWAP_USED:-0}" -gt 100 ]; then
-        report memory_low true "여유 ${MEM_AVAIL}MB(${MEM_PCT}%) · 스왑 ${SWAP_USED:-0}MB 사용"
+    if [ "$MEM_PCT" -lt 15 ] || [ "${SWAP_USED:-0}" -gt 100 ] \
+       || [ "${HOST_MEM_PCT:-100}" -lt 15 ] || [ "${HOST_SWAP_USED:-0}" -gt 1024 ]; then
+        report memory_low true "도커 여유 ${MEM_AVAIL}MB(${MEM_PCT}%)·스왑 ${SWAP_USED:-0}MB · 맥 여유 ${HOST_MEM_PCT:-?}%·스왑 ${HOST_SWAP_USED:-?}MB"
     else
         report memory_low false ""
     fi
 fi
 
-echo "상태 기록 완료 $(date '+%H:%M') — 앱 ${CODE} · 디스크 ${FREE_GB:-?}GB · 메모리 여유 ${MEM_AVAIL:-?}MB · 게이트웨이 CPU ${GW_CPU:-?}%"
+echo "상태 기록 완료 $(date '+%H:%M') — 앱 ${CODE} · 디스크 ${FREE_GB:-?}GB · 도커 여유 ${MEM_AVAIL:-?}MB · 맥 여유 ${HOST_MEM_PCT:-?}% · 게이트웨이 CPU ${GW_CPU:-?}%"

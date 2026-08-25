@@ -95,7 +95,7 @@ const AdminServicePanel = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.85rem', color: '#718096' }}>
-                    {latest ? `마지막 서버 기록: ${latest.metric_day} (${formatWhen(latest.recorded_at)})` : '서버 기록이 아직 없습니다'}
+                    {latest ? `마지막 현재 상태 확인: ${formatWhen(latest.resource_sampled_at || latest.recorded_at)}` : '서버 기록이 아직 없습니다'}
                 </span>
                 <Button size="sm" onClick={load} disabled={loading}>
                     {loading ? '새로고침 중...' : '새로고침'}
@@ -160,8 +160,8 @@ const AdminServicePanel = () => {
             <div>
                 <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#2D3748' }}>서버 자원</h3>
                 <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: '#A0AEC0' }}>
-                    메모리·스왑·게이트웨이는 5분마다 재서 <strong>오늘의 가장 나쁜 순간</strong>을 남깁니다.
-                    디스크·DB·컨테이너는 하루 한 번(04:50) 기록입니다.
+                    맥·도커 메모리와 스왑, 디스크, 컨테이너, 게이트웨이는 5분마다 현재값을 갱신합니다.
+                    도커 자원은 오늘의 가장 나쁜 순간도 함께 남기고, DB 크기와 트래픽은 04:50에 기록합니다.
                 </p>
                 <AdminResourceStatus latest={latest} />
             </div>
