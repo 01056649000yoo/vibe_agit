@@ -78,11 +78,43 @@ test('학생 글쓰기 참고함은 선생님 안내·핵심질문과 지연 연
     assert.match(studentWriting, /supportingText: Reflect\.get\(studentAnswers, index\)/);
     assert.match(studentWriting, /<LabReferenceSource[\s\S]*?missionId=\{missionId\}[\s\S]*?isActive=\{isOpen\}[\s\S]*?\/>/);
     assert.match(studentWriting, /onInsertText=\{GenreEditor \? undefined : insertToBody\}/);
-    assert.match(referencePanel, /renderSources\?\.\(\{ isOpen \}\)/);
+    // 2026-08-25: 참고 자료 안을 칩으로 갈랐다. 연구소 자료는 **그 칩을 골랐을 때만** 그린다 —
+    // 안 고른 자료를 미리 불러오면 참고함을 열 때마다 쓸데없는 조회가 돈다.
+    assert.match(referencePanel, /currentChip === 'lab-sources' && renderSources\?\.\(/);
+    assert.match(referencePanel, /isOpen: isOpen && currentTab === 'sources'/);
     assert.match(labReferenceSource, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
     assert.match(labReferenceSource, /item\.isLinked/);
     assert.match(labReferenceSource, /outline:[\s\S]*?글 개요짜기/);
     assert.match(labReferenceSource, /selected_questions:[\s\S]*?좋은 질문 고르기/);
     assert.match(labReferenceSource, /one_line:[\s\S]*?한줄모아/);
     assert.doesNotMatch(labReferenceSource, /setInterval|\.channel\(|postgres_changes/);
+});
+
+/*
+ * 2026-08-25: 참고 자료 갈래가 선생님 안내·선생님 질문·연구소 자료를 **한 줄로 다 쌓아** 보여
+ * 오른쪽이 지저분했다. 하나만 골라 펼치고 바꾸고 싶을 때 칩을 누르게 했다.
+ */
+test('참고 자료는 칩으로 하나만 골라 펼친다', () => {
+    // 칩은 각 묶음 + 연구소 자료로 만든다.
+    assert.match(referencePanel, /const chips = \[/);
+    assert.match(referencePanel, /label: '글쓰기 연구소 자료'/);
+
+    // 고른 것만 펼친다. 전부 쌓던 옛 방식으로 돌아가면 걸린다.
+    assert.match(referencePanel, /visibleSections\.filter\(\(section\) => section\.id === currentChip\)/);
+    assert.doesNotMatch(referencePanel, /\) : visibleSections\.map\(\(section\) => \(/);
+
+    /*
+     * ⚠️ 여기서 고르는 것은 **내 화면에서 무엇을 펼칠지**일 뿐이다.
+     *    연구소 개요를 글에 묶는 `고정`(서버 저장, 선생님도 봄)과 **다른 것**이라
+     *    칩 쪽에 `고정` 이라는 말을 쓰지 않는다. 같은 말을 두 뜻으로 쓰면 학생도 교사도 헷갈린다.
+     */
+    const chipBlock = referencePanel.slice(
+        referencePanel.indexOf('const chips = ['),
+        referencePanel.indexOf('const closePanel')
+    );
+    assert.doesNotMatch(chipBlock, /고정/);
+
+    // 위쪽 갈래 탭과 모양이 같으면 어느 것이 상위인지 헷갈린다.
+    assert.match(referencePanelCss, /\.writing-reference-chips button \{/);
+    assert.match(referencePanelCss, /border-radius: 999px/);
 });

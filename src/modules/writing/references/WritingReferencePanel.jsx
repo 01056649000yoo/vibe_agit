@@ -35,6 +35,21 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
         && section.items.length > 0
     ));
 
+    /*
+     * 참고 자료 안의 **칩**. 예전에는 선생님 안내·선생님 질문·연구소 자료를 **한 줄로 다 쌓아** 보여
+     * 오른쪽이 지저분했다(2026-08-25 지적). 이제 하나만 골라 펼치고, 바꾸고 싶을 때 칩을 누른다.
+     *
+     * ⚠️ 여기서 고르는 것은 **내 화면에서 무엇을 펼칠지**일 뿐이다. 연구소 개요를 글에 묶는
+     *    `고정`(서버에 저장, 선생님도 봄)과는 **다른 것**이라 같은 말을 쓰지 않는다.
+     */
+    const chips = [
+        ...visibleSections.map((section) => ({ id: section.id, label: section.eyebrow || section.title })),
+        ...(renderSources ? [{ id: 'lab-sources', label: '글쓰기 연구소 자료' }] : [])
+    ];
+    const [activeChip, setActiveChip] = useState(null);
+    const defaultChipId = chips[0]?.id ?? null;
+    const currentChip = chips.some((chip) => chip.id === activeChip) ? activeChip : defaultChipId;
+
     const closePanel = () => {
         setIsOpen(false);
         window.requestAnimationFrame(() => triggerRef.current?.focus());
@@ -137,13 +152,29 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
                     )}
 
                     <div className="writing-reference-panel__body" hidden={currentTab !== 'sources'}>
+                        {chips.length > 1 && (
+                            <div className="writing-reference-chips" role="tablist" aria-label="참고 자료 종류">
+                                {chips.map((chip) => (
+                                    <button
+                                        key={chip.id}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={currentChip === chip.id}
+                                        className={currentChip === chip.id ? 'is-active' : ''}
+                                        onClick={() => setActiveChip(chip.id)}
+                                    >
+                                        {chip.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                         {visibleSections.length === 0 && !renderSources ? (
                             <div className="writing-reference-empty">
                                 <span aria-hidden="true">🗂️</span>
                                 <strong>현재 글에 연결된 참고 자료가 없어요.</strong>
                                 <p>참고 자료가 준비되면 이곳에 펼쳐 두고 글을 쓸 수 있어요.</p>
                             </div>
-                        ) : visibleSections.map((section) => (
+                        ) : visibleSections.filter((section) => section.id === currentChip).map((section) => (
                             <section key={section.id} className="writing-reference-section">
                                 <div className="writing-reference-section__heading">
                                     {section.eyebrow && <span>{section.eyebrow}</span>}
@@ -166,7 +197,7 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
                                 </ol>
                             </section>
                         ))}
-                        {renderSources?.({ isOpen })}
+                        {currentChip === 'lab-sources' && renderSources?.({ isOpen: isOpen && currentTab === 'sources' })}
                     </div>
                 </aside>
 
