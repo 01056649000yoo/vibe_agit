@@ -55,10 +55,12 @@ test('학생 상시 알림은 WebSocket 대신 분산된 공용 홈 동기화를
     assert.match(app, /refreshStudentHome\(\{ force: true \}\)/);
 });
 
-test('학생 활동 알림은 bootstrap 요약과 열 때만 목록 RPC를 사용한다', async () => {
+test('학생 활동 알림 목록은 열 때만 읽고 반려·승인 신호만 12초 핵심 폴링 예외를 쓴다', async () => {
     const dashboard = await read('src/components/student/StudentDashboard.jsx');
     const api = await read('src/modules/notifications/notificationApi.js');
     const panel = await read('src/modules/notifications/ActivityNotificationPanel.jsx');
+    const priorityBanner = await read('src/modules/notifications/PriorityWritingNotificationBanner.jsx');
+    const priorityPolicy = await read('src/modules/notifications/priorityWritingPollPolicy.js');
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
 
     assert.match(dashboard, /homeBootstrap\?\.activity_notifications/);
@@ -67,6 +69,11 @@ test('학생 활동 알림은 bootstrap 요약과 열 때만 목록 RPC를 사�
     assert.match(api, /mark_my_activity_notifications_read_v1/);
     assert.match(panel, /listUnread\(\{ limit: 50 \}\)/);
     assert.doesNotMatch(panel, /setInterval\s*\(|\.channel\(|postgres_changes/);
+    assert.match(priorityPolicy, /PRIORITY_WRITING_POLL_INTERVAL_MS = 12000/);
+    assert.match(priorityBanner, /notificationApi\.pollPriorityWriting/);
+    assert.match(priorityBanner, /getPriorityWritingInitialDelay/);
+    assert.match(priorityBanner, /visibilitychange/);
+    assert.doesNotMatch(priorityBanner, /setInterval\s*\(|\.channel\(|postgres_changes|listUnread/);
     assert.match(migration, /activity_notifications[\s\S]*unread_count[\s\S]*latest/);
     assert.match(migration, /LIMIT v_limit \+ 1/);
 });

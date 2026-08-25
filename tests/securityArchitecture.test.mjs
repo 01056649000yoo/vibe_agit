@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration, spellCheckMigration, findingsMigration, promotionMigration, spellingSearchHardeningMigration, draftBulkCleanupMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration, spellCheckMigration, findingsMigration, promotionMigration, spellingSearchHardeningMigration, draftBulkCleanupMigration, priorityNotificationMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -31,7 +31,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261131_spelling_ai_findings.sql', 'utf8'),
     readFile('supabase/migrations/20261132_spelling_promotion_review.sql', 'utf8'),
     readFile('supabase/migrations/20261145_spelling_search_legacy_hardening.sql', 'utf8'),
-    readFile('supabase/migrations/20261146_self_writing_draft_bulk_cleanup.sql', 'utf8')
+    readFile('supabase/migrations/20261146_self_writing_draft_bulk_cleanup.sql', 'utf8'),
+    readFile('supabase/migrations/20261166_priority_writing_notification_poll.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
@@ -203,6 +204,18 @@ test('학생 활동 알림 원장은 직접 공개하지 않고 본인 학급·�
     assert.match(notificationMigration, /event\.class_id = v_student\.class_id[\s\S]*event\.student_id = v_student\.id/);
     assert.match(notificationMigration, /cardinality\(p_ids\), 0\) NOT BETWEEN 1 AND 50/);
     assert.doesNotMatch(notificationMigration, /auth\.jwt|app_metadata/);
+});
+
+test('반려·승인 폴링은 실제 학생 연결과 현재 글 상태를 확인하고 최소 신호만 반환한다', () => {
+    assert.match(priorityNotificationMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(priorityNotificationMigration, /student\.auth_id = auth\.uid\(\)/);
+    assert.match(priorityNotificationMigration, /event\.class_id = v_student\.class_id[\s\S]*?event\.student_id = v_student\.id/);
+    assert.match(priorityNotificationMigration, /post\.class_id = v_student\.class_id[\s\S]*?post\.student_id = v_student\.id/);
+    assert.match(priorityNotificationMigration, /post\.is_returned IS TRUE[\s\S]*?post\.is_confirmed IS TRUE/);
+    assert.match(priorityNotificationMigration, /LIMIT 10/);
+    assert.doesNotMatch(priorityNotificationMigration, /auth\.jwt|app_metadata/);
+    assert.doesNotMatch(priorityNotificationMigration, /jsonb_build_object\([\s\S]{0,300}'payload'/);
+    assert.match(priorityNotificationMigration, /REVOKE ALL ON FUNCTION public\.poll_my_priority_writing_notifications_v1[\s\S]*?PUBLIC, anon/);
 });
 
 test('학생 반응은 장르별 허용값을 검사하는 RPC로만 쓴다', () => {

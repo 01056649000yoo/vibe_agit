@@ -1,0 +1,65 @@
+.priority-writing-notification {
+    position: fixed;
+    z-index: 120000;
+    top: max(12px, env(safe-area-inset-top));
+    right: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    padding: 0 14px;
+    pointer-events: none;
+}
+
+.priority-writing-notification__banner {
+    display: flex;
+    width: min(560px, 100%);
+    min-height: 58px;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 18px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .26);
+    animation: priority-writing-banner-in .22s ease-out;
+}
+
+.priority-writing-notification__banner--rewrite {
+    border-color: #ea580c;
+    background: #f97316;
+}
+
+.priority-writing-notification__banner--approved {
+    border-color: #15803d;
+    background: #16a34a;
+}
+
+.priority-writing-notification__banner strong {
+    flex: none;
+    font-size: .95rem;
+    font-weight: 950;
+}
+
+.priority-writing-notification__banner span {
+    min-width: 0;
+    font-size: .82rem;
+    font-weight: 750;
+    line-height: 1.4;
+}
+
+@keyframes priority-writing-banner-in {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 520px) {
+    .priority-writing-notification__banner {
+        display: grid;
+        gap: 3px;
+        padding: 12px 15px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .priority-writing-notification__banner { animation: none; }
+}

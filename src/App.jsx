@@ -14,6 +14,7 @@ import { getBootSkeletonKind, useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
 import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
+import PriorityWritingNotificationBanner from './modules/notifications/PriorityWritingNotificationBanner';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
 import { DEFAULT_WRITING_EDITOR_SETTINGS } from './modules/writing/editor-settings/settings';
 
@@ -457,6 +458,13 @@ function App() {
               classId={studentSession?.classId || studentSession?.class_id}
               overrideSettings={studentHomeBootstrap?.class_config?.writing_editor_settings || DEFAULT_STUDENT_EDITOR_SETTINGS}
             >
+              {studentHomeBootstrap?.generated_at && (
+                <PriorityWritingNotificationBanner
+                  key={studentSession.id}
+                  studentId={studentSession.id}
+                  initialCursorCreatedAt={studentHomeBootstrap.generated_at}
+                />
+              )}
               {studentPageName === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}

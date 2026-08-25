@@ -149,6 +149,49 @@ test('활동 알림은 단일 원장·중복 방지·학생 범위 RPC 계약을
     assert.match(migration, /BETWEEN 1 AND 50/);
 });
 
+test('반려·승인 전역 배너는 12초 분산 폴링과 최소 응답 계약만 사용한다', async () => {
+    const [app, banner, css, api, migration, policy] = await Promise.all([
+        read('src/App.jsx'),
+        read('src/modules/notifications/PriorityWritingNotificationBanner.jsx'),
+        read('src/modules/notifications/PriorityWritingNotificationBanner.css'),
+        read('src/modules/notifications/notificationApi.js'),
+        read('supabase/migrations/20261166_priority_writing_notification_poll.sql'),
+        import('../src/modules/notifications/priorityWritingPollPolicy.js')
+    ]);
+
+    assert.match(app, /studentHomeBootstrap\?\.generated_at[\s\S]*?<PriorityWritingNotificationBanner/);
+    assert.match(app, /key=\{studentSession\.id\}/);
+    assert.match(banner, /getPriorityWritingInitialDelay\(\)/);
+    assert.match(banner, /visibilitychange/);
+    assert.match(banner, /addEventListener\('online', pollOnReturn\)/);
+    assert.match(banner, /document\.visibilityState !== 'visible'/);
+    assert.match(banner, /if \(stopped \|\| inFlight/);
+    assert.match(banner, /getPriorityWritingNextDelay/);
+    assert.doesNotMatch(banner, /setInterval|markRead|setInternalPage|onNavigate/);
+    assert.match(banner, /글이 되돌아왔어요/);
+    assert.match(banner, /글이 승인되었어요/);
+    assert.match(css, /position: fixed[\s\S]*?z-index: 120000/);
+    assert.match(css, /pointer-events: none/);
+
+    assert.equal(policy.PRIORITY_WRITING_POLL_INTERVAL_MS, 12000);
+    assert.equal(policy.getPriorityWritingInitialDelay(0), 0);
+    assert.equal(policy.getPriorityWritingInitialDelay(0.5), 6000);
+    assert.equal(policy.getPriorityWritingInitialDelay(1), 11999);
+    assert.equal(policy.getPriorityWritingNextDelay({ failureCount: 0, elapsedMs: 750 }), 11250);
+    assert.equal(policy.getPriorityWritingNextDelay({ failureCount: 1 }), 30000);
+    assert.equal(policy.getPriorityWritingNextDelay({ failureCount: 3 }), 120000);
+
+    assert.match(api, /poll_my_priority_writing_notifications_v1/);
+    assert.match(migration, /idx_student_notification_events_priority_writing_poll/);
+    assert.match(migration, /event\.class_id = v_student\.class_id[\s\S]*?event\.student_id = v_student\.id/);
+    assert.match(migration, /event\.event_type IN \('writing\.rewrite_requested', 'writing\.approved'\)/);
+    assert.match(migration, /LIMIT 10/);
+    assert.match(migration, /SELECT DISTINCT ON \(item\.entity_id\)/);
+    assert.match(migration, /'id', item\.id,[\s\S]*?'event_type', item\.event_type,[\s\S]*?'created_at', item\.created_at/);
+    assert.doesNotMatch(migration, /'payload', item\./);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.poll_my_priority_writing_notifications_v1[\s\S]*?PUBLIC, anon/);
+});
+
 test('홈 bootstrap은 할 일 세 종류와 최신 미확인 알림을 한 번에 반환한다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
     const api = await read('src/modules/home/studentHomeApi.js');

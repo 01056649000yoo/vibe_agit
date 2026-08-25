@@ -12,6 +12,13 @@ const callNotificationRpc = async (name, params = {}) => {
 };
 
 export const notificationApi = Object.freeze({
+    pollPriorityWriting({ afterCreatedAt, afterId }) {
+        return callNotificationRpc('poll_my_priority_writing_notifications_v1', {
+            p_after_created_at: afterCreatedAt,
+            p_after_id: afterId
+        });
+    },
+
     listUnread({
         limit = 50,
         beforeCreatedAt = null,
