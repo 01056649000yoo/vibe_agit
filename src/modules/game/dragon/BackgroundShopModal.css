@@ -53,29 +53,29 @@
 .agit-workshop__legend-reward-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #e8c75f; border-radius: 50%; background: radial-gradient(circle,#fff5b8 0 9%,#d7a92e 10% 25%,#4b3610 64%); color: #fff3a5; font-size: 1.2rem; box-shadow: 0 0 18px rgba(246,202,69,.36); }
 .agit-workshop__legend-reward small,
 .agit-workshop__legend-reward strong { display: block; }
-.agit-workshop__legend-reward small { color: #e5c966; font-size: .52rem; font-weight: 950; letter-spacing: .08em; }
+.agit-workshop__legend-reward small { color: #e5c966; font-size: clamp(.62rem, 1.3vw, .7rem); font-weight: 950; letter-spacing: .08em; }
 .agit-workshop__legend-reward strong { margin-top: 2px; font-size: .78rem; }
-.agit-workshop__legend-reward p { margin: 3px 0 0; color: #e8ddc5; font-size: .55rem; font-weight: 750; line-height: 1.4; }
+.agit-workshop__legend-reward p { margin: 3px 0 0; color: #e8ddc5; font-size: clamp(.64rem, 1.4vw, .74rem); font-weight: 750; line-height: 1.4; }
 .agit-workshop__legend-reward > button { min-width: 78px; border-color: #e2bd45; background: linear-gradient(#f2ce62,#bd851b); color: #34230a; }
 .agit-workshop__collections { margin-bottom: 14px; padding: 12px; border: 1px solid #ded8d2; border-radius: 16px; background: linear-gradient(145deg,#f8f6f2,#f1eee9); }
 .agit-workshop__collections-heading span,
 .agit-workshop__collections-heading strong,
 .agit-workshop__collections-heading small { display: block; }
-.agit-workshop__collections-heading span { color: #8c6d4b; font-size: .52rem; font-weight: 950; letter-spacing: .12em; }
+.agit-workshop__collections-heading span { color: #8c6d4b; font-size: clamp(.62rem, 1.3vw, .7rem); font-weight: 950; letter-spacing: .12em; }
 .agit-workshop__collections-heading strong { margin-top: 2px; color: #352f2c; font-size: .82rem; }
-.agit-workshop__collections-heading small { margin-top: 2px; color: #837a72; font-size: .58rem; font-weight: 750; }
+.agit-workshop__collections-heading small { margin-top: 2px; color: #837a72; font-size: clamp(.64rem, 1.4vw, .74rem); font-weight: 750; }
 .agit-workshop__collection-list { display: grid; grid-template-columns: repeat(6,minmax(92px,1fr)); gap: 6px; margin-top: 9px; overflow-x: auto; padding-bottom: 2px; }
 .agit-workshop__collection-list button { position: relative; min-width: 92px; overflow: hidden; padding: 9px 7px 8px; border: 1px solid #ded9d4; border-radius: 11px; background: #fff; color: #49413b; cursor: pointer; font: inherit; text-align: left; }
 .agit-workshop__collection-list button::before { position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--collection-accent); content: ''; }
 .agit-workshop__collection-list button > span,
 .agit-workshop__collection-list button > strong,
 .agit-workshop__collection-list button > small { display: block; padding-left: 2px; }
-.agit-workshop__collection-list button > span { color: var(--collection-accent); font-size: .48rem; font-weight: 950; letter-spacing: .08em; }
-.agit-workshop__collection-list button > strong { margin-top: 2px; overflow: hidden; font-size: .6rem; text-overflow: ellipsis; white-space: nowrap; }
-.agit-workshop__collection-list button > small { margin-top: 2px; color: #8c837c; font-size: .5rem; font-weight: 800; }
+.agit-workshop__collection-list button > span { color: var(--collection-accent); font-size: clamp(.6rem, 1.3vw, .68rem); font-weight: 950; letter-spacing: .08em; }
+.agit-workshop__collection-list button > strong { margin-top: 2px; overflow: hidden; font-size: clamp(.68rem, 1.5vw, .78rem); text-overflow: ellipsis; white-space: nowrap; }
+.agit-workshop__collection-list button > small { margin-top: 2px; color: #8c837c; font-size: clamp(.62rem, 1.3vw, .7rem); font-weight: 800; }
 .agit-workshop__collection-list button.is-active { border-color: var(--collection-accent); background: color-mix(in srgb,var(--collection-accent) 9%,#fff); box-shadow: 0 0 0 2px color-mix(in srgb,var(--collection-accent) 15%,transparent); }
 .agit-workshop__tabs { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; padding: 5px; border-radius: 14px; background: #f1ece6; }
-.agit-workshop__tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 54px; padding: 6px 3px; border: 0; border-radius: 11px; background: transparent; color: #7b6b60; cursor: pointer; font: inherit; font-size: .66rem; font-weight: 900; }
+.agit-workshop__tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 54px; padding: 6px 3px; border: 0; border-radius: 11px; background: transparent; color: #7b6b60; cursor: pointer; font: inherit; font-size: clamp(.64rem, 1.4vw, .74rem); font-weight: 900; }
 .agit-workshop__tabs button span { font-size: 1rem; line-height: 1; }
 .agit-workshop__tabs button.is-active { background: #fff; color: #2d5c70; box-shadow: 0 4px 12px rgba(54,46,40,.1); }
 .agit-workshop__slot-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 18px 2px 11px; }
@@ -122,11 +122,11 @@
 .agit-workshop__item-preview[data-slot='leftProp'] img,
 .agit-workshop__item-preview[data-slot='rightProp'] img { display: block; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(46,32,23,.24)); }
 .agit-workshop__item-preview[data-slot='leftProp'] span,
-.agit-workshop__item-preview[data-slot='rightProp'] span { color: #918176; font-size: .55rem; font-weight: 900; }
+.agit-workshop__item-preview[data-slot='rightProp'] span { color: #918176; font-size: clamp(.62rem, 1.3vw, .7rem); font-weight: 900; }
 .agit-workshop__item-copy { grid-area: copy; min-width: 0; }
 .agit-workshop__item-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; margin-bottom: 3px; }
 .agit-workshop__rarity,
-.agit-workshop__collection-badge { display: inline-flex; flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; font-size: .5rem; font-weight: 950; line-height: 1.2; white-space: nowrap; }
+.agit-workshop__collection-badge { display: inline-flex; flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; font-size: clamp(.6rem, 1.2vw, .68rem); font-weight: 950; line-height: 1.2; white-space: nowrap; }
 .agit-workshop__rarity { flex: 0 0 auto; background: #ece8e2; color: #6f6258; }
 .agit-workshop__collection-badge { background: #f0eee9; color: #6f645b; }
 .agit-workshop__collection-badge.is-signature { background: #292d36; color: #f2d89a; letter-spacing: .02em; }
@@ -137,7 +137,7 @@
 .agit-workshop__item[data-rarity='hero'] .agit-workshop__rarity { background: #fff0d9; color: #9a5718; }
 .agit-workshop__item[data-rarity='legendary'] .agit-workshop__rarity { background: linear-gradient(135deg,#fff4b8,#f3c75d); color: #774b08; }
 .agit-workshop__item-copy strong { display: block; color: #473a31; font-size: .76rem; line-height: 1.3; overflow-wrap: anywhere; }
-.agit-workshop__item-copy small { display: block; margin-top: 2px; color: #89786b; font-size: .6rem; font-weight: 800; }
+.agit-workshop__item-copy small { display: block; margin-top: 2px; color: #89786b; font-size: clamp(.64rem, 1.4vw, .74rem); font-weight: 800; }
 .agit-workshop__item > button:not(.agit-workshop__item-preview) { grid-area: action; min-height: 34px; padding: 5px 8px; border-radius: 10px; font-size: .65rem; }
 
 @media (max-width: 720px) {
@@ -157,6 +157,6 @@
     .agit-workshop__legend-reward { grid-template-columns: 38px minmax(0,1fr); }
     .agit-workshop__legend-reward-mark { width: 36px; height: 36px; }
     .agit-workshop__legend-reward > button { grid-column: 1 / -1; width: 100%; }
-    .agit-workshop__tabs button { min-height: 50px; font-size: .58rem; }
+    .agit-workshop__tabs button { min-height: 50px; font-size: clamp(.62rem, 1.4vw, .7rem); }
     .agit-workshop__items { grid-template-columns: 1fr; }
 }

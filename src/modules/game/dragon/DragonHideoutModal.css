@@ -13,13 +13,13 @@
 .dragon-room-modal__badges span:last-child { background: #eaf5fb; color: #346780; }
 .dragon-room-modal__progress { height: 9px; margin-top: 14px; overflow: hidden; border-radius: 99px; background: #ede7df; }
 .dragon-room-modal__progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#eba936,#e46d49,#706fd0); }
-.dragon-room-modal__progress-copy { display: flex; justify-content: space-between; gap: 9px; margin-top: 6px; color: #806f62; font-size: .61rem; font-weight: 800; }
+.dragon-room-modal__progress-copy { display: flex; justify-content: space-between; gap: 9px; margin-top: 6px; color: #806f62; font-size: clamp(.66rem, 1.4vw, .76rem); font-weight: 800; }
 .dragon-room-modal__progress-copy strong { color: #a1732f; }
 .dragon-room-modal__reader { display: flex; align-items: center; gap: 9px; margin-top: 16px; padding: 11px; border: 1px solid #cddfea; border-radius: 14px; background: linear-gradient(135deg,#eef8fc,#f8fbff); }
 .dragon-room-modal__reader > span { display: grid; place-items: center; width: 34px; aspect-ratio: 1; border-radius: 12px; background: #d7ebf5; color: #367690; font-size: 1.05rem; }
 .dragon-room-modal__reader strong, .dragon-room-modal__reader small { display: block; }
 .dragon-room-modal__reader strong { color: #325d70; font-size: .76rem; }
-.dragon-room-modal__reader small { margin-top: 2px; color: #66818d; font-size: .61rem; font-weight: 750; line-height: 1.4; }
+.dragon-room-modal__reader small { margin-top: 2px; color: #66818d; font-size: clamp(.66rem, 1.4vw, .76rem); font-weight: 750; line-height: 1.4; }
 .dragon-room-modal__guide { margin: 12px 0 0; padding: 11px 12px; border-radius: 13px; background: #fff7df; color: #725f3f; font-size: .67rem; font-weight: 750; line-height: 1.55; }
 .dragon-room-modal__reselect { width: 100%; min-height: 40px; margin-top: 9px; border: 1px solid #d9c9b7; border-radius: 12px; background: #fff; color: #6d5542; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 900; }
 .dragon-room-modal__actions { grid-column: 1/-1; display: grid; grid-template-columns: 1.35fr 1fr; gap: 10px; }

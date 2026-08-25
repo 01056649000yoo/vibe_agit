@@ -638,14 +638,30 @@ test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화�
  * ⚠️ 여기서 지키는 것은 "본문처럼 크게"가 아니라 **"안 보일 만큼 작은 것은 없앤다"** 이다.
  *    게임 화면은 오래 읽는 곳이 아니라 보고 누르는 곳이라 기준이 다르다.
  */
-test('학생 어휘의 탑 화면에 읽을 수 없이 작은 글자가 없다', async () => {
-    const css = await readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8');
+test('학생 게임 화면에 읽을 수 없이 작은 글자가 없다', async () => {
+    /*
+     * 어휘의 탑과 작가수호룡을 **한꺼번에** 본다. 한쪽만 보면 다른 쪽이 조용히 되돌아간다.
+     * ⚠️ 교사 화면(`Teacher*`)은 계단을 쓰므로 여기 대상이 아니다.
+     */
+    const files = [
+        'src/modules/game/vocab-tower/vocabularyTowerGame.css',
+        'src/modules/game/dragon/BackgroundShopModal.css',
+        'src/modules/game/dragon/DragonHideoutModal.css',
+        'src/modules/game/dragon/DragonFarewellPanel.css',
+        'src/modules/game/dragon/DragonGrowthCelebrationModal.css',
+        'src/modules/game/dragon/DragonSpeciesPicker.css'
+    ];
+    const sources = await Promise.all(files.map((path) => readFile(path, 'utf8')));
 
     // 고정값으로 0.62rem(9.9px) 밑을 쓰지 않는다. 되돌리면 여기서 걸린다.
-    const tooSmall = [...css.matchAll(/font-size:\s*(0?\.[0-9]+)rem/g)]
-        .map((match) => Number(match[1]))
-        .filter((size) => size < 0.62);
-    assert.deepEqual(tooSmall, [], `읽기 어려운 글자 크기가 남아 있다: ${tooSmall.join(', ')}rem`);
+    for (const [index, source] of sources.entries()) {
+        const tooSmall = [...source.matchAll(/font-size:\s*(0?\.[0-9]+)rem/g)]
+            .map((match) => Number(match[1]))
+            .filter((size) => size < 0.62);
+        assert.deepEqual(tooSmall, [], `${files[index]}: 읽기 어려운 글자 ${tooSmall.join(', ')}rem`);
+    }
+
+    const css = sources[0];
 
     // 좁았던 자리들은 `clamp` 로 화면 폭을 따라간다. 고정값으로 되돌리면 걸린다.
     for (const selector of [
