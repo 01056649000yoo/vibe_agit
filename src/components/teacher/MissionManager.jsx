@@ -44,13 +44,14 @@ const MissionManager = ({
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
     const [editingGenreMission, setEditingGenreMission] = useState(null);
     const [activeGenreMode, setActiveGenreMode] = useState('create');
+    const [activeGenreReviewPostId, setActiveGenreReviewPostId] = useState(null);
     const [highlightedMissionId, setHighlightedMissionId] = useState(null);
     const [labSourceMission, setLabSourceMission] = useState(null);
     const [presetGenre, setPresetGenre] = useState(null);
     const handledNavigationRef = useRef(null);
 
     const {
-        missions, submissionCounts, submissionBoard, submissionBoardPollError,
+        missions, submissionCounts, submissionBoard, submissionBoardPollError, loadSubmissionHistory,
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
@@ -119,6 +120,7 @@ const MissionManager = ({
         setActiveGenreMissionId(null);
         setEditingGenreMission(null);
         setActiveGenreMode('create');
+        setActiveGenreReviewPostId(null);
         fetchMissions();
     };
 
@@ -137,13 +139,14 @@ const MissionManager = ({
         handleEditClick(mission);
     };
 
-    const handleReviewMission = (mission) => {
+    const handleReviewMission = (mission, postId = null) => {
         const templateId = resolveGenreMissionTypeId(mission);
         const missionType = getGenreMissionType(templateId);
         if (!missionType?.teacherReview) return;
         setEditingGenreMission(mission);
         setActiveGenreMissionId(templateId);
         setActiveGenreMode('review');
+        setActiveGenreReviewPostId(postId);
         setIsMissionTypePickerOpen(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -155,6 +158,31 @@ const MissionManager = ({
             return;
         }
         fetchPostsForMission(mission);
+    };
+
+    const handleOpenSubmissionBoardPost = async (submission) => {
+        const mission = missions.find((item) => item.id === submission?.mission_id);
+        if (!mission || !submission?.post_id) {
+            alert('확인할 학생 글을 찾지 못했습니다.');
+            return false;
+        }
+
+        const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
+        if (missionType?.teacherReview) {
+            handleReviewMission(mission, submission.post_id);
+            return true;
+        }
+
+        const fetchedPosts = await fetchPostsForMission(mission);
+        const targetPost = fetchedPosts.find((post) => post.id === submission.post_id);
+        if (!targetPost) {
+            alert('해당 글을 불러오지 못했습니다. 과제별 현황에서 다시 확인해주세요.');
+            return false;
+        }
+
+        setIsEvaluationMode(false);
+        setSelectedPost(targetPost);
+        return true;
     };
 
     useEffect(() => {
@@ -192,7 +220,7 @@ const MissionManager = ({
 
                 const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
                 if (navigationTarget.kind !== 'evaluation-entry' && missionType?.teacherReview) {
-                    handleReviewMission(mission);
+                    handleReviewMission(mission, postId);
                     return;
                 }
 
@@ -225,6 +253,7 @@ const MissionManager = ({
                     isMobile,
                     mission: editingGenreMission,
                     mode: activeGenreMode,
+                    initialPostId: activeGenreReviewPostId,
                     onBack: closeGenreMissionBuilder,
                     onSaved: closeGenreMissionBuilder,
                 })}
@@ -388,6 +417,8 @@ const MissionManager = ({
                     board={submissionBoard}
                     pollError={submissionBoardPollError}
                     onOpenMission={handleOpenSubmissionBoardMission}
+                    onOpenPost={handleOpenSubmissionBoardPost}
+                    onLoadHistory={loadSubmissionHistory}
                 />
             </section>
 

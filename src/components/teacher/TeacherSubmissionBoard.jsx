@@ -1,5 +1,6 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
+import CenteredDialog from '../common/CenteredDialog';
 import './TeacherSubmissionBoard.css';
 
 const EMPTY_STATUS = Object.freeze({
@@ -20,12 +21,82 @@ const formatClock = (value) => {
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 };
 
-const formatRecentTime = (value) => {
+const formatRecentTime = (value, includeDate = false) => {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
+    if (includeDate) {
+        return date.toLocaleString('ko-KR', {
+            month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+    }
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 };
+
+const groupSubmissionsByMission = (submissions, missionsById) => {
+    const groups = [];
+    const groupByMission = new Map();
+
+    submissions.forEach((submission) => {
+        const missionId = submission.mission_id;
+        let group = groupByMission.get(missionId);
+        if (!group) {
+            const mission = missionsById.get(missionId) || null;
+            group = {
+                missionId,
+                mission,
+                title: mission?.title || submission.mission_title || '선생님 과제',
+                submissions: []
+            };
+            groupByMission.set(missionId, group);
+            groups.push(group);
+        }
+        group.submissions.push(submission);
+    });
+
+    return groups;
+};
+
+const SubmissionEventGroups = memo(({
+    groups, includeDate = false, openingPostId, onOpenPost
+}) => (
+    <div className="teacher-submission-board__submission-groups">
+        {groups.map((group) => (
+            <section className="teacher-submission-board__submission-group" key={group.missionId}>
+                <header>
+                    <strong>{group.title}</strong>
+                    <span>{group.submissions.length}건</span>
+                </header>
+                <ol>
+                    {group.submissions.map((item) => {
+                        const isResubmission = item.event_type === 'post_resubmitted';
+                        const submissionLabel = isResubmission ? '다시 제출' : '첫 제출';
+                        const isOpening = openingPostId === item.post_id;
+                        return (
+                            <li key={item.event_id}>
+                                <button
+                                    type="button"
+                                    disabled={!group.mission || Boolean(openingPostId)}
+                                    onClick={() => onOpenPost(item)}
+                                    aria-label={`${item.student_name || '학생'}의 ${group.title} ${submissionLabel} 글 바로 열기`}
+                                    aria-busy={isOpening || undefined}
+                                >
+                                    <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at, includeDate)}</time>
+                                    <strong>{item.student_name || '학생'}</strong>
+                                    <span className={`teacher-submission-board__recent-status${isResubmission ? ' is-resubmitted' : ' is-first'}`}>
+                                        {isOpening ? '여는 중' : submissionLabel}
+                                    </span>
+                                </button>
+                            </li>
+                        );
+                    })}
+                </ol>
+            </section>
+        ))}
+    </div>
+));
+
+SubmissionEventGroups.displayName = 'SubmissionEventGroups';
 
 const MissionStatusRow = memo(({ mission, status, onOpen }) => {
     const isMeeting = resolveGenreMissionTypeId(mission) === 'meeting';
@@ -84,7 +155,18 @@ const MissionStatusRow = memo(({ mission, status, onOpen }) => {
 
 MissionStatusRow.displayName = 'MissionStatusRow';
 
-const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) => {
+const TeacherSubmissionBoard = ({
+    missions, board, pollError, onOpenMission, onOpenPost, onLoadHistory
+}) => {
+    const [openingPostId, setOpeningPostId] = useState(null);
+    const [historyState, setHistoryState] = useState({
+        isOpen: false,
+        loading: false,
+        error: false,
+        submissions: [],
+        hasMore: false
+    });
+    const historyRequestIdRef = useRef(0);
     const statuses = useMemo(() => board?.mission_statuses || {}, [board?.mission_statuses]);
     const missionsById = useMemo(
         () => new Map(missions.map((mission) => [mission.id, mission])),
@@ -98,7 +180,63 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
             return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
         });
     }, [missions, statuses]);
-    const recentSubmissions = (board?.recent_submissions || []).slice(0, 8);
+    const recentSubmissions = useMemo(
+        () => (board?.recent_submissions || []).slice(0, 8),
+        [board?.recent_submissions]
+    );
+    const recentGroups = useMemo(
+        () => groupSubmissionsByMission(recentSubmissions, missionsById),
+        [missionsById, recentSubmissions]
+    );
+    const historyGroups = useMemo(
+        () => groupSubmissionsByMission(historyState.submissions, missionsById),
+        [historyState.submissions, missionsById]
+    );
+
+    const handleOpenPost = useCallback(async (submission) => {
+        if (!submission?.post_id || openingPostId) return;
+        setOpeningPostId(submission.post_id);
+        try {
+            const opened = await onOpenPost(submission);
+            if (opened !== false) {
+                setHistoryState((current) => ({ ...current, isOpen: false }));
+            }
+        } finally {
+            setOpeningPostId(null);
+        }
+    }, [onOpenPost, openingPostId]);
+
+    const handleOpenHistory = useCallback(async () => {
+        const requestId = historyRequestIdRef.current + 1;
+        historyRequestIdRef.current = requestId;
+        setHistoryState((current) => ({
+            ...current,
+            isOpen: true,
+            loading: true,
+            error: false,
+            submissions: [],
+            hasMore: false
+        }));
+        try {
+            const history = await onLoadHistory();
+            if (requestId !== historyRequestIdRef.current) return;
+            setHistoryState({
+                isOpen: true,
+                loading: false,
+                error: false,
+                submissions: history.submissions,
+                hasMore: Boolean(history.has_more)
+            });
+        } catch {
+            if (requestId !== historyRequestIdRef.current) return;
+            setHistoryState((current) => ({ ...current, loading: false, error: true }));
+        }
+    }, [onLoadHistory]);
+
+    const handleCloseHistory = useCallback(() => {
+        historyRequestIdRef.current += 1;
+        setHistoryState((current) => ({ ...current, isOpen: false }));
+    }, []);
 
     return (
         <aside className="teacher-submission-board" aria-labelledby="teacher-submission-board-title">
@@ -133,41 +271,17 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
                 <section className="teacher-submission-board__recent" aria-labelledby="teacher-submission-recent-title">
                     <div className="teacher-submission-board__section-title">
                         <h5 id="teacher-submission-recent-title">최근 제출 학생</h5>
-                        <span>최신 8건</span>
+                        <div className="teacher-submission-board__recent-actions">
+                            <span>최신 8건</span>
+                            <button type="button" onClick={handleOpenHistory}>제출 기록 모아보기</button>
+                        </div>
                     </div>
                     {recentSubmissions.length > 0 ? (
-                        <div className="teacher-submission-board__recent-table">
-                            <div className="teacher-submission-board__recent-columns" aria-hidden="true">
-                                <span>시간</span>
-                                <span>학생</span>
-                                <span>과제</span>
-                                <span>상태</span>
-                            </div>
-                            <ol>
-                                {recentSubmissions.map((item) => {
-                                    const mission = missionsById.get(item.mission_id);
-                                    const isResubmission = item.event_type === 'post_resubmitted';
-                                    const submissionLabel = isResubmission ? '다시 제출' : '첫 제출';
-                                    return (
-                                        <li key={item.event_id}>
-                                            <button
-                                                type="button"
-                                                disabled={!mission}
-                                                onClick={() => mission && onOpenMission(mission)}
-                                                aria-label={`${item.student_name || '학생'}의 ${item.mission_title || '선생님 과제'} ${submissionLabel} 글 확인`}
-                                            >
-                                                <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at)}</time>
-                                                <strong>{item.student_name || '학생'}</strong>
-                                                <span className="teacher-submission-board__recent-mission">{item.mission_title || '선생님 과제'}</span>
-                                                <span className={`teacher-submission-board__recent-status${isResubmission ? ' is-resubmitted' : ' is-first'}`}>
-                                                    {submissionLabel}
-                                                </span>
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ol>
-                        </div>
+                        <SubmissionEventGroups
+                            groups={recentGroups}
+                            openingPostId={openingPostId}
+                            onOpenPost={handleOpenPost}
+                        />
                     ) : (
                         <p className="teacher-submission-board__empty">아직 표시할 최근 제출이 없습니다.</p>
                     )}
@@ -198,6 +312,43 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
                     )}
                 </section>
             </div>
+
+            <CenteredDialog
+                isOpen={historyState.isOpen}
+                onClose={handleCloseHistory}
+                eyebrow="실시간 제출 전광판"
+                title="제출 기록 모아보기"
+                description="활성 과제의 제출·재제출 기록을 과제별로 묶었습니다. 학생을 누르면 해당 글이 바로 열립니다."
+                maxWidth="860px"
+                bodyPadding="16px"
+            >
+                <div className="teacher-submission-board__history-summary">
+                    <strong>{historyState.submissions.length}건</strong>
+                    <span>최신 제출 기록 · 최대 100건</span>
+                </div>
+                {historyState.loading ? (
+                    <p className="teacher-submission-board__history-message">제출 기록을 불러오는 중입니다...</p>
+                ) : historyState.error ? (
+                    <div className="teacher-submission-board__history-message is-error">
+                        <p>제출 기록을 불러오지 못했습니다.</p>
+                        <button type="button" onClick={handleOpenHistory}>다시 불러오기</button>
+                    </div>
+                ) : historyGroups.length > 0 ? (
+                    <SubmissionEventGroups
+                        groups={historyGroups}
+                        includeDate
+                        openingPostId={openingPostId}
+                        onOpenPost={handleOpenPost}
+                    />
+                ) : (
+                    <p className="teacher-submission-board__history-message">아직 제출 기록이 없습니다.</p>
+                )}
+                {historyState.hasMore && !historyState.loading && !historyState.error && (
+                    <p className="teacher-submission-board__history-limit">
+                        최근 100건까지만 표시했습니다. 이전 기록은 과제별 글 확인에서 볼 수 있습니다.
+                    </p>
+                )}
+            </CenteredDialog>
         </aside>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import Card from '../../../components/common/Card';
@@ -38,7 +38,9 @@ const INITIAL_LIST_LIMIT = 100;
  * - 4열 그리드로 한 화면에 12명 아이디어 한눈에 확인 가능
  * - 클릭 시 상세보기 모달에서 가이드 질문 답변 + 상태 변경
  */
-const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = null, mode = 'create' }) => {
+const IdeaMarketManager = ({
+    activeClass, onBack, onSaved, isMobile, mission = null, mode = 'create', initialPostId = null
+}) => {
     const [activeTab, setActiveTab] = useState(mode === 'review' ? 'manage' : 'create'); // legacy 화면 호환용
     const [meetings, setMeetings] = useState(() => mission ? [mission] : []);
     const [selectedMeeting, setSelectedMeeting] = useState(() => mode === 'review' ? mission : null);
@@ -49,6 +51,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [editingMeetingId, setEditingMeetingId] = useState(mode === 'edit' ? mission?.id : null); // 수정 중인 안건 ID
     const [detailModal, setDetailModal] = useState(null); // 상세보기 모달용
+    const pendingInitialPostIdRef = useRef(initialPostId);
 
     // 새 안건 폼
     const [formData, setFormData] = useState(() => createMeetingForm(mode === 'edit' ? mission : null));
@@ -138,6 +141,14 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
             fetchIdeas(selectedMeeting.id);
         }
     }, [selectedMeeting?.id, fetchIdeas]);
+
+    useEffect(() => {
+        const postId = pendingInitialPostIdRef.current;
+        if (!postId || ideasLoading || ideas.length === 0) return;
+        const targetIdea = ideas.find((idea) => idea.id === postId);
+        if (targetIdea) setDetailModal(targetIdea);
+        pendingInitialPostIdRef.current = null;
+    }, [ideas, ideasLoading]);
 
     useEffect(() => {
         if (!detailModal?.id) return undefined;

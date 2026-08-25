@@ -204,6 +204,10 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
     }, []);
 
     const submissionCounts = useMemo(() => board.submission_counts || {}, [board.submission_counts]);
+    const loadSubmissionHistory = useCallback(() => {
+        if (!classId) return Promise.reject(new Error('학급을 먼저 선택해주세요.'));
+        return teacherSubmissionBoardApi.getHistory(classId);
+    }, [classId]);
 
     return {
         board,
@@ -211,6 +215,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
         hasSnapshot,
         pollError,
         hydrateBoard,
-        transitionMissionStatus
+        transitionMissionStatus,
+        loadSubmissionHistory
     };
 };

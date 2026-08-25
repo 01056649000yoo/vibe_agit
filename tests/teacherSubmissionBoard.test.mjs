@@ -44,12 +44,14 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
-test('전광판은 과제별 제출 상태와 정돈된 최근 제출 학생 8명을 같은 스냅샷으로 표시한다', async () => {
-    const [board, styles, hook, missionList] = await Promise.all([
+test('전광판은 과제별 제출 상태와 과제명 반복을 줄인 최근 제출 학생 8명을 표시한다', async () => {
+    const [board, styles, hook, missionList, manager, ideaMarket] = await Promise.all([
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
         read('src/components/teacher/TeacherSubmissionBoard.css'),
         read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
-        read('src/components/teacher/MissionList.jsx')
+        read('src/components/teacher/MissionList.jsx'),
+        read('src/components/teacher/MissionManager.jsx'),
+        read('src/modules/writing/idea-market/IdeaMarketManager.jsx')
     ]);
 
     assert.match(board, /승인/);
@@ -57,15 +59,54 @@ test('전광판은 과제별 제출 상태와 정돈된 최근 제출 학생 8�
     assert.match(board, /다시쓰기/);
     assert.match(board, /미제출/);
     assert.match(board, /recent_submissions[\s\S]*slice\(0, 8\)/);
-    assert.match(board, /최근 제출 학생[\s\S]*시간[\s\S]*학생[\s\S]*과제[\s\S]*상태/);
+    assert.match(board, /groupSubmissionsByMission[\s\S]*groupByMission[\s\S]*group\.submissions\.push/);
+    assert.match(board, /mission\?\.title \|\| submission\.mission_title/);
     assert.match(board, /post_resubmitted[\s\S]*다시 제출[\s\S]*첫 제출/);
-    assert.match(board, /new Map\(missions\.map[\s\S]*missionsById\.get\(item\.mission_id\)/);
-    assert.match(board, /onClick=\{\(\) => mission && onOpenMission\(mission\)\}/);
+    assert.match(board, /new Map\(missions\.map/);
+    assert.match(board, /missionsById\.get\(missionId\)/);
+    assert.match(board, /onClick=\{\(\) => onOpenPost\(item\)\}/);
+    assert.match(manager, /handleOpenSubmissionBoardPost[\s\S]*fetchedPosts\.find\(\(post\) => post\.id === submission\.post_id\)[\s\S]*setSelectedPost\(targetPost\)/);
+    assert.match(manager, /handleReviewMission\(mission, submission\.post_id\)/);
+    assert.match(manager, /initialPostId: activeGenreReviewPostId/);
+    assert.match(ideaMarket, /ideas\.find\(\(idea\) => idea\.id === postId\)[\s\S]*setDetailModal\(targetIdea\)/);
     assert.match(styles, /recent-status\.is-first[\s\S]*recent-status\.is-resubmitted/);
+    assert.match(styles, /submission-group > header[\s\S]*submission-group li button/);
     assert.match(board, /resolveGenreMissionTypeId\(mission\) === 'meeting'/);
     assert.match(missionList, /제출 \$\{submittedCount\}\/\$\{totalStudentCount\}/);
     assert.doesNotMatch(missionList, /명 완료/);
     assert.match(hook, /TRANSITION_DELTAS[\s\S]*request-rewrite[\s\S]*undo-recall/);
+});
+
+test('제출 기록 모아보기는 명시적으로 열 때만 활성 과제의 최신 100건을 한 번 읽는다', async () => {
+    const [board, api, hook, manager, migration, smoke, harness] = await Promise.all([
+        read('src/components/teacher/TeacherSubmissionBoard.jsx'),
+        read('src/modules/writing/submission-board/teacherSubmissionBoardApi.js'),
+        read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
+        read('src/components/teacher/MissionManager.jsx'),
+        read('supabase/migrations/20261168_teacher_assignment_submission_history.sql'),
+        read('tests/sql/20261168_teacher_assignment_submission_history.smoke.sql'),
+        read('PERFORMANCE_HARNESS.md')
+    ]);
+
+    assert.match(board, /handleOpenHistory[\s\S]*await onLoadHistory\(\)/);
+    assert.match(board, /historyRequestIdRef[\s\S]*requestId !== historyRequestIdRef\.current/);
+    assert.match(board, /제출 기록 모아보기/);
+    assert.match(board, /CenteredDialog[\s\S]*최신 제출 기록 · 최대 100건/);
+    assert.match(api, /TEACHER_SUBMISSION_HISTORY_LIMIT = 100/);
+    assert.match(api, /get_teacher_assignment_submission_history_v1[\s\S]*p_limit:\s*TEACHER_SUBMISSION_HISTORY_LIMIT/);
+    assert.match(hook, /loadSubmissionHistory[\s\S]*teacherSubmissionBoardApi\.getHistory\(classId\)/);
+    assert.match(manager, /onLoadHistory=\{loadSubmissionHistory\}/);
+    assert.match(migration, /LEAST\(GREATEST\(COALESCE\(p_limit, 100\), 1\), 100\)/);
+    assert.match(migration, /event\.class_id = p_class_id/);
+    assert.match(migration, /post\.class_id = p_class_id[\s\S]*mission\.class_id = p_class_id[\s\S]*student\.class_id = p_class_id/);
+    assert.match(migration, /mission\.is_archived IS FALSE/);
+    assert.match(migration, /ORDER BY event\.occurred_at DESC, event\.id DESC[\s\S]*LIMIT v_limit \+ 1/);
+    assert.match(migration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_teacher_assignment_submission_history_v1/);
+    assert.doesNotMatch(migration, /'content'|'feedback'|'mission_title'/);
+    assert.match(smoke, /jsonb_array_length\(v_history->'submissions'\) > 100/);
+    assert.match(smoke, /교사가 다른 학급의 과제 제출 기록/);
+    assert.match(harness, /제출 기록 모아보기[\s\S]*최대 100건/);
 });
 
 test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·가시 화면·단일 요청을 지킨다', async () => {
