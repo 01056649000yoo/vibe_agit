@@ -134,7 +134,11 @@ const PostDetailViewer = ({
 
 
     /*
-     * 학생이 고정한 개요 칸. 데스크톱은 글 옆 사이드바에, 모바일은 글 아래에 **같은 것**을 쓴다.
+     * 연구소 참고자료 칸. 데스크톱은 글 옆 사이드바에, 모바일은 글 아래에 **같은 것**을 쓴다.
+     *
+     * ⚠️ 칸 이름에 `개요` 를 넣지 않는다(2026-08-25 결정). 지금은 개요만 붙지만 앞으로 **연구소에서
+     *    만든 다른 활동 결과도 여기에 계속 붙는다.** 활동 이름은 카드 안쪽 눈썹(`글 개요짜기` 등)이
+     *    맡고, 바깥 칸은 `연구소 참고자료` 라는 자리 이름만 갖는다.
      * 두 벌로 두면 한쪽만 고치는 실수가 난다.
      * 기본은 접어 둔다 — 먼저 보는 것은 학생의 글이고, 개요는 견줄 때 편다.
      */
@@ -156,7 +160,7 @@ const PostDetailViewer = ({
                                                 fontSize: 'var(--ui-text-lg)', fontWeight: '900', textAlign: 'left'
                                             }}
                                         >
-                                            🗂️ 학생이 참고한 개요
+                                            🧪 연구소 참고자료
                                             <span style={{ color: '#6B7280', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>
                                                 {isOutlineOpen ? '접기' : '펼치기'}
                                             </span>
@@ -165,7 +169,7 @@ const PostDetailViewer = ({
                                             <div style={{ padding: '0 16px 16px' }}>
                                                 <LabOutlineReferenceCard
                                                     result={outlineReference}
-                                                    eyebrow="학생 참고 개요"
+                                                    eyebrow="글 개요짜기"
                                                     badge="이 글에 고정됨"
                                                     notice={outlineNotice}
                                                     compact

@@ -271,7 +271,12 @@ test('교사 글 상세는 반응·댓글·고정 개요를 한 RPC로 읽는다
      * 여기서 볼 것은 문구가 아니라 **교사 화면이 고정 개요를 실제로 그린다**는 것이다.
      */
     assert.match(viewer, /<LabOutlineReferenceCard[\s\S]*?result=\{outlineReference\}/);
-    assert.match(viewer, /학생이 참고한 개요/);
+    /*
+     * ⚠️ 바깥 칸 이름에 `개요` 를 넣지 않는다(2026-08-25 결정). 앞으로 연구소에서 만든 **다른 활동
+     *    결과도 여기에 계속 붙기** 때문이다. 활동 이름은 카드 안쪽 눈썹이 맡는다.
+     */
+    assert.match(viewer, /🧪 연구소 참고자료/);
+    assert.doesNotMatch(viewer, /🗂️ 학생이 참고한 개요/);
     assert.match(migration, /'outline_reference'/);
     assert.match(migration, /portable\.id = pin\.result_id/);
 });
