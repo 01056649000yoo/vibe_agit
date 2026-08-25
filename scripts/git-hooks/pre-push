@@ -10,6 +10,12 @@
 #      배포는 도커 이미지 빌드 안에서 `npm run test:all` 을 돌린다. 여기서 깨지면 이미지가 안 만들어지고
 #      배포가 통째로 멈춘다. 밀기 전에 같은 것을 돌려 본다.
 #
+#   3. 운영 DB에 안 넣은 마이그레이션이 있나
+#      배포는 push 하면 자동인데 마이그레이션은 손으로 넣는다. 그래서 **코드는 나갔는데 RPC 가 없는
+#      시간대**가 생긴다. 2026-08-24 `20261164`, 08-25 `20261168` 이 실제로 그랬다(교사 화면에서
+#      `function ... does not exist`). 검사로는 절대 못 잡는다 — 파일은 다 있고 SQL 도 옳기 때문이다.
+#      밀기 전에 운영 DB 를 직접 보고 막는다.
+#
 # 설치: npm run hooks:install
 # 건너뛰기: git push --no-verify   (급할 때만)
 
@@ -55,5 +61,30 @@ if ! npm run test:all --silent > /tmp/agit-pre-push-test.log 2>&1; then
 fi
 
 PASSED="$(grep -E '^# pass' /tmp/agit-pre-push-test.log | awk '{print $3}')"
-echo "${GREEN}✔ 검사 ${PASSED}개 통과. 밀어도 좋습니다.${OFF}"
+echo "${GREEN}✔ 검사 ${PASSED}개 통과.${OFF}"
+
+# --- 3. 운영 DB에 안 넣은 마이그레이션 ---
+# 운영 DB 를 못 볼 때(다른 컴퓨터·도커 꺼짐)는 막지 않는다. 여기서 막으면 DB 가 없는 곳에서
+# 아무것도 밀 수 없게 된다. 볼 수 있을 때만 본다.
+if MIGRATE_STATUS="$(npm run migrate:status --silent 2>/dev/null)"; then
+    # ⚠️ 파일 이름 앞자리(202x)로 거르지 않는다. 이름 규칙이 바뀌면 조용히 못 잡는다.
+    #    `migrate:status` 가 대기 목록을 3칸 들여쓴 `.sql` 줄로 내는 것만 믿는다.
+    PENDING="$(printf '%s' "$MIGRATE_STATUS" | sed -n 's/^   \([^ ].*\.sql\)$/\1/p')"
+    if [ -n "$PENDING" ]; then
+        echo
+        echo "${RED}✖ 운영 DB에 아직 안 넣은 마이그레이션이 있습니다.${OFF}"
+        echo "$PENDING" | sed 's/^/    /'
+        echo
+        echo "  지금 밀면 코드는 배포되는데 DB에는 그 RPC·표가 없습니다."
+        echo "  교사·학생 화면에서 ${YELLOW}function ... does not exist${OFF} 가 납니다."
+        echo
+        echo "  먼저 넣으세요: ${YELLOW}npm run migrate:check${OFF} (실제 스키마에서 확인 후 롤백)"
+        echo "                 ${YELLOW}npm run migrate${OFF}"
+        echo "  이번 푸시에 마이그레이션이 없다면: ${YELLOW}git push --no-verify${OFF}"
+        exit 1
+    fi
+    echo "${GREEN}✔ 안 넣은 마이그레이션 없음. 밀어도 좋습니다.${OFF}"
+else
+    echo "${YELLOW}· 운영 DB를 보지 못해 마이그레이션 확인은 건너뜁니다.${OFF}"
+fi
 exit 0
