@@ -6,6 +6,7 @@ import PromptRuleButton, { PROMPT_ACCENT } from './PromptRuleButton';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
+import LabOutlineReferenceCard from '../../modules/writing/references/LabOutlineReferenceCard';
 
 const PostDetailViewer = ({
     selectedPost, setSelectedPost, selectedMission,
@@ -13,7 +14,8 @@ const PostDetailViewer = ({
     handleGenerateSingleAI, tempFeedback, setTempFeedback,
     isGenerating, postComments,
     isMobile, onUpdate, isEvaluationMode, posts = [],
-    addTeacherComment, deleteTeacherComment, handleTeacherEditPost
+    addTeacherComment, deleteTeacherComment, handleTeacherEditPost,
+    outlineReference, postDetailLoading, onRefreshPostDetail
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -27,6 +29,24 @@ const PostDetailViewer = ({
     const [editedContent, setEditedContent] = useState('');
     const [isSavingTeacherEdit, setIsSavingTeacherEdit] = useState(false);
     const isReportPost = isReportStructuredContent(selectedPost?.structured_content);
+    const outlineNotice = outlineReference ? (
+        <>
+            {outlineReference.selectionChangedAfterFirstSubmit && (
+                <p>학생이 첫 제출 뒤 다른 개요로 교체했습니다. 현재 고정된 개요를 보여줍니다.</p>
+            )}
+            {outlineReference.contentChangedAfterFirstSubmit && (
+                <p>첫 제출 뒤 연구소 개요가 추가로 수정되어 서버에 저장된 최신본을 보여줍니다.</p>
+            )}
+            {outlineReference.contentChangedAfterApproval && (
+                <p>최종 승인 뒤에도 같은 개요의 내용이 수정되었습니다.</p>
+            )}
+            {!outlineReference.selectionChangedAfterFirstSubmit
+                && !outlineReference.contentChangedAfterFirstSubmit
+                && !outlineReference.contentChangedAfterApproval && (
+                <p>학생이 이 글에 고정한 개요의 최신 저장 내용입니다.</p>
+            )}
+        </>
+    ) : null;
 
     // 현재 교사 uid 조회
     useEffect(() => {
@@ -340,6 +360,39 @@ const PostDetailViewer = ({
                                         </button>
                                     )}
                                 </div>
+
+                                {outlineReference && (
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <LabOutlineReferenceCard
+                                            result={outlineReference}
+                                            eyebrow="학생 참고 개요"
+                                            heading="학생이 참고한 최신 개요"
+                                            badge="이 글에 고정됨"
+                                            notice={outlineNotice}
+                                            actions={onRefreshPostDetail ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => void onRefreshPostDetail()}
+                                                    disabled={postDetailLoading}
+                                                >
+                                                    {postDetailLoading ? '최신 내용 확인 중…' : '최신 개요 다시 불러오기'}
+                                                </Button>
+                                            ) : null}
+                                        />
+                                    </div>
+                                )}
+
+                                {!postDetailLoading && outlineReference === null && selectedPost.mission_id && (
+                                    <div style={{
+                                        marginBottom: '24px', padding: '14px 16px', border: '1px dashed #CBD5E1',
+                                        borderRadius: '14px', background: '#F8FAFC', color: '#64748B',
+                                        fontSize: 'var(--ui-text-sm)', fontWeight: '700'
+                                    }}>
+                                        이 글에 고정된 연구소 개요가 없습니다.
+                                    </div>
+                                )}
 
                                 {isTeacherEditMode ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>

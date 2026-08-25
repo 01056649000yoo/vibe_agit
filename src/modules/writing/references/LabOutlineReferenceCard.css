@@ -1,0 +1,155 @@
+.lab-outline-reference-card {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid #c4b5fd;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #faf9ff 0%, #fff 100%);
+    color: #334155;
+}
+
+.lab-outline-reference-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.lab-outline-reference-card__header > div:first-child { min-width: 0; }
+
+.lab-outline-reference-card__eyebrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    color: #6d28d9;
+    font-size: .72rem;
+    font-weight: 900;
+}
+
+.lab-outline-reference-card__eyebrow em {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #ede9fe;
+    color: #5b21b6;
+    font-size: .68rem;
+    font-style: normal;
+}
+
+.lab-outline-reference-card h4 {
+    margin: 5px 0 0;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.lab-outline-reference-card__header p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+.lab-outline-reference-card__hint {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .7rem;
+    font-weight: 800;
+}
+
+.lab-outline-reference-card__dates {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 4px;
+    color: #64748b;
+    font-size: .68rem;
+    text-align: right;
+}
+
+.lab-outline-reference-card__outline {
+    display: grid;
+    gap: 10px;
+}
+
+.lab-outline-reference-card__outline > div {
+    padding: 12px;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    background: #fffbeb;
+}
+
+.lab-outline-reference-card__outline > div > strong {
+    display: block;
+    color: #a16207;
+    font-size: .74rem;
+}
+
+.lab-outline-reference-card__outline ul {
+    display: grid;
+    gap: 9px;
+    margin: 9px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lab-outline-reference-card__outline li span {
+    display: block;
+    margin-bottom: 2px;
+    color: #64748b;
+    font-size: .69rem;
+    font-weight: 850;
+}
+
+.lab-outline-reference-card__outline li p {
+    margin: 0;
+    color: #1e293b;
+    font-size: .86rem;
+    font-weight: 720;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.lab-outline-reference-card__footer {
+    display: grid;
+    gap: 10px;
+    padding-top: 2px;
+}
+
+.lab-outline-reference-card__notice {
+    padding: 10px 12px;
+    border-radius: 11px;
+    background: #eef6ff;
+    color: #1e40af;
+    font-size: .75rem;
+    font-weight: 750;
+    line-height: 1.55;
+}
+
+.lab-outline-reference-card__notice p { margin: 0; }
+.lab-outline-reference-card__notice p + p { margin-top: 5px; }
+
+.lab-outline-reference-card__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lab-outline-reference-card.is-compact {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+}
+
+.lab-outline-reference-card.is-compact .lab-outline-reference-card__outline > div { padding: 10px; }
+.lab-outline-reference-card.is-compact .lab-outline-reference-card__outline li p { font-size: .8rem; }
+
+@media (max-width: 720px) {
+    .lab-outline-reference-card__header { display: grid; }
+    .lab-outline-reference-card__dates { text-align: left; }
+}

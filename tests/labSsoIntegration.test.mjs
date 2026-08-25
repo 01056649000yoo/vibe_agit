@@ -56,6 +56,12 @@ const [
     readFile('package.json', 'utf8')
 ]);
 
+const [outlinePinsMigration, outlineCard, teacherPostViewer] = await Promise.all([
+    readFile('supabase/migrations/20261165_assignment_outline_pins.sql', 'utf8'),
+    readFile('src/modules/writing/references/LabOutlineReferenceCard.jsx', 'utf8'),
+    readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8')
+]);
+
 test('아지트 인증은 연구소와 공유하는 루트 쿠키를 사용한다', () => {
     assert.match(packageJson, /"@supabase\/ssr"/);
     assert.match(supabaseClient, /createBrowserClient/);
@@ -110,6 +116,8 @@ test('연구소 표준 결과 원장은 서버만 쓰고 학생은 본인 RPC로
     assert.match(portableResultsMigration, /CREATE TABLE IF NOT EXISTS writing_helper\.portable_results/);
     assert.match(portableResultsMigration, /REVOKE ALL ON TABLE writing_helper\.portable_results FROM PUBLIC, anon, authenticated/);
     assert.match(portableResultsMigration, /GRANT EXECUTE ON FUNCTION writing_helper\.upsert_portable_result_v1[\s\S]*TO service_role/);
+    assert.match(portableResultsMigration, /ON CONFLICT \(session_id\) DO UPDATE SET/);
+    assert.match(portableResultsMigration, /RETURNING id INTO v_result_id/);
     assert.match(myResultsMigration, /v_student_id UUID := public\.auth_student_id\(\)/);
     assert.match(myResultsMigration, /portable\.agit_student_id = v_student_id/);
     assert.match(myResultsMigration, /LIMIT v_limit \+ 1/);
@@ -120,13 +128,37 @@ test('연구소 표준 결과 원장은 서버만 쓰고 학생은 본인 RPC로
 
 test('글쓰기 연구소 결과 도구는 열 때만 본인 RPC를 호출하고 직접 선택한 내용만 넣는다', () => {
     assert.match(writingToolRegistry, /labResultsToolManifest/);
-    assert.match(labResultsManifest, /performance: \{ home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 20 \}/);
+    assert.match(labResultsManifest, /performance: \{ home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 20 \}/);
     assert.match(labResultsApi, /supabase\.rpc\('get_my_lab_results_v1'/);
     assert.match(labResultsApi, /Math\.min\(Math\.max\(Number\(limit\) \|\| 20, 1\), 50\)/);
     assert.doesNotMatch(labResultsApi, /\.from\(|setInterval|\.channel\(/);
     assert.match(labResultsTool, /onClick=\{\(\) => void handleUseText/);
     assert.match(writingToolHost, /lazy\(manifest\.studentEntry\)/);
     assert.match(writingToolHost, /onInsertText=\{onInsertText\}/);
+});
+
+test('학생이 확인한 개요만 과제에 고정하고 교체·최신본·교사 조회를 같은 포인터로 잇는다', () => {
+    assert.match(outlinePinsMigration, /CREATE TABLE IF NOT EXISTS public\.writing_assignment_outline_pins/);
+    assert.match(outlinePinsMigration, /PRIMARY KEY \(class_id, student_id, mission_id\)/);
+    assert.match(outlinePinsMigration, /REFERENCES writing_helper\.portable_results\(id\) ON DELETE RESTRICT/);
+    assert.match(outlinePinsMigration, /CREATE TABLE IF NOT EXISTS public\.writing_assignment_outline_pin_events/);
+    assert.match(outlinePinsMigration, /p_expected_result_id UUID DEFAULT NULL/);
+    assert.match(outlinePinsMigration, /'status', 'conflict'/);
+    assert.match(outlinePinsMigration, /post\.is_confirmed IS TRUE/);
+    assert.match(outlinePinsMigration, /portable\.result_kind = 'outline'/);
+    assert.match(outlinePinsMigration, /portable\.updated_at AS result_updated_at/);
+    assert.match(outlinePinsMigration, /'outline_reference'/);
+    assert.match(outlinePinsMigration, /REVOKE ALL ON TABLE public\.writing_assignment_outline_pins[\s\S]*FROM PUBLIC, anon, authenticated/);
+    assert.doesNotMatch(outlinePinsMigration, /auth\.jwt|app_metadata/);
+
+    assert.match(labResultsApi, /set_my_assignment_outline_pin_v1/);
+    assert.match(labReferenceSource, /이 개요를 고정할까요/);
+    assert.match(labReferenceSource, /다른 개요로 바꿀까요/);
+    assert.match(labReferenceSource, /expectedResultId: currentPinned\?\.id \|\| null/);
+    assert.match(labReferenceSource, /LabOutlineReferenceCard/);
+    assert.match(outlineCard, /최신 저장/);
+    assert.match(teacherPostViewer, /LabOutlineReferenceCard/);
+    assert.match(teacherPostViewer, /첫 제출 뒤 연구소 개요가 추가로 수정/);
 });
 
 test('과제 참고함은 교사가 연결한 개요·좋은 질문 결과를 본인 범위에서 우선 읽는다', () => {

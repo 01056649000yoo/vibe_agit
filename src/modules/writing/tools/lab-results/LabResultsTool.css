@@ -75,6 +75,18 @@
     padding: 16px 18px calc(24px + env(safe-area-inset-bottom));
 }
 
+.lab-results-selection-message {
+    margin-bottom: 13px;
+    padding: 11px 13px;
+    border: 1px solid #bfdbfe;
+    border-radius: 13px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: .8rem;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
 .lab-results-state { padding: 52px 18px; text-align: center; color: #60766f; }
 .lab-results-state p { margin: 8px 0 0; }
 .lab-results-state.is-error { color: #a33b32; }
@@ -107,6 +119,16 @@
     background: #ede9fe;
     color: #6d28d9;
     font-size: 0.67rem;
+    font-style: normal;
+}
+.lab-results-pinned-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: .67rem;
     font-style: normal;
 }
 .lab-results-card-heading h3 { margin: 3px 0 0; font-size: 1.05rem; }
@@ -144,6 +166,10 @@
     border-color: #c4b5fd;
     background: #f5f3ff;
     color: #6d28d9;
+}
+.lab-results-use-all:disabled {
+    cursor: not-allowed;
+    opacity: .68;
 }
 .lab-results-more { display: block; margin-right: auto; margin-left: auto; }
 

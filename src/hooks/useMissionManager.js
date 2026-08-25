@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
@@ -6,6 +6,7 @@ import { dataCache } from '../lib/cache';
 import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
 import { assignmentApi } from '../modules/writing/assignmentApi';
+import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 
 export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const [missions, setMissions] = useState([]);
@@ -21,6 +22,10 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const [tempFeedback, setTempFeedback] = useState('');
     const [postReactions, setPostReactions] = useState([]);
     const [postComments, setPostComments] = useState([]);
+    const [postOutlineReferenceState, setPostOutlineReferenceState] = useState({ postId: null, result: null });
+    const [postDetailLoading, setPostDetailLoading] = useState(false);
+    const postDetailRequestRef = useRef(0);
+    const lastPostDetailLoadedAtRef = useRef(0);
     const [totalStudentCount, setTotalStudentCount] = useState(0);
     const [archiveModal, setArchiveModal] = useState({ isOpen: false, mission: null, hasIncomplete: false });
     const [progress, setProgress] = useState({ current: 0, total: 0 });
@@ -381,11 +386,15 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
         }
     };
 
-    const fetchReactionsAndComments = async (postId) => {
+    const fetchReactionsAndComments = useCallback(async (postId) => {
         if (!postId) return;
+        const requestId = postDetailRequestRef.current + 1;
+        postDetailRequestRef.current = requestId;
+        setPostDetailLoading(true);
         try {
             const { data: detail, error } = await supabase.rpc('get_teacher_post_detail_v1', { p_post_id: postId });
             if (error) throw error;
+            if (postDetailRequestRef.current !== requestId) return;
             setPostReactions((detail?.reactions || []).map((reaction) => ({
                 ...reaction,
                 students: reaction.student_name ? { name: reaction.student_name } : null
@@ -394,22 +403,55 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
                 ...comment,
                 students: comment.student_name ? { name: comment.student_name } : null
             })));
+            setPostOutlineReferenceState({
+                postId,
+                result: normalizeLabResult(detail?.outline_reference) || null
+            });
+            lastPostDetailLoadedAtRef.current = Date.now();
         } catch (err) {
             console.error('반응/댓글 로드 실패:', err.message);
+        } finally {
+            if (postDetailRequestRef.current === requestId) setPostDetailLoading(false);
         }
-    };
+    }, []);
+
+    const selectedPostId = selectedPost?.id || null;
+    const selectedPostFeedback = selectedPost?.ai_feedback || '';
 
     useEffect(() => {
-        if (selectedPost) {
-            fetchReactionsAndComments(selectedPost.id);
-            setTempFeedback(selectedPost.ai_feedback || '');
+        if (selectedPostId) {
+            fetchReactionsAndComments(selectedPostId);
+            setTempFeedback(selectedPostFeedback);
         } else {
+            postDetailRequestRef.current += 1;
             setPostReactions([]);
             setPostComments([]);
+            setPostOutlineReferenceState({ postId: null, result: null });
+            setPostDetailLoading(false);
             setTempFeedback('');
             setIsEvaluationMode(false); // 뷰어 닫힐 때 평가 모드 초기화
         }
-    }, [selectedPost]);
+    }, [fetchReactionsAndComments, selectedPostFeedback, selectedPostId]);
+
+    useEffect(() => {
+        if (!selectedPostId) return undefined;
+        const refreshWhenReturning = () => {
+            if (document.visibilityState !== 'visible') return;
+            if (Date.now() - lastPostDetailLoadedAtRef.current < 1000) return;
+            void fetchReactionsAndComments(selectedPostId);
+        };
+        window.addEventListener('focus', refreshWhenReturning);
+        document.addEventListener('visibilitychange', refreshWhenReturning);
+        return () => {
+            window.removeEventListener('focus', refreshWhenReturning);
+            document.removeEventListener('visibilitychange', refreshWhenReturning);
+        };
+    }, [fetchReactionsAndComments, selectedPostId]);
+
+    const refreshSelectedPostDetail = useCallback(() => {
+        if (!selectedPostId) return Promise.resolve();
+        return fetchReactionsAndComments(selectedPostId);
+    }, [fetchReactionsAndComments, selectedPostId]);
 
     const handleEvaluationMode = async (mission) => {
         const fetchedPosts = await fetchPostsForMission(mission);
@@ -1060,11 +1102,16 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    const postOutlineReference = postOutlineReferenceState.postId === selectedPostId
+        ? postOutlineReferenceState.result
+        : undefined;
+
     return {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
+        postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,

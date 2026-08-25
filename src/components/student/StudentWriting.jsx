@@ -750,7 +750,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         ? ({ isOpen }) => (
                             <LabReferenceSource
                                 missionId={missionId}
+                                missionTitle={mission.title}
                                 isActive={isOpen}
+                                isApproved={isConfirmed}
                                 onInsertText={GenreEditor ? undefined : insertToBody}
                             />
                         )

@@ -46,6 +46,7 @@ const MissionManager = ({
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
         tempFeedback, setTempFeedback, postComments, totalStudentCount,
+        postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
         editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
@@ -342,6 +343,9 @@ const MissionManager = ({
                 isGenerating={isGenerating}
                 showCompleteToast={showCompleteToast}
                 postComments={postComments}
+                outlineReference={postOutlineReference}
+                postDetailLoading={postDetailLoading}
+                onRefreshPostDetail={refreshSelectedPostDetail}
                 isMobile={isMobile}
                 onUpdate={() => fetchPostsForMission(selectedMission)}
                 isEvaluationMode={isEvaluationMode}

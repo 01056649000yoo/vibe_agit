@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Copy, FlaskConical, Plus, X } from 'lucide-react';
+import { Check, Copy, FlaskConical, Pin, Plus, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
 import { labResultsApi } from './api';
 import './LabResultsTool.css';
@@ -51,7 +51,9 @@ const LabResultsTool = ({
     onToggleReference,
     selectedResultIds = [],
     providedResults = null,
-    resultKinds = null
+    resultKinds = null,
+    outlineSelectionLocked = false,
+    selectionMessage = ''
 }) => {
     const usesProvidedResults = Array.isArray(providedResults);
     const isReferenceSelection = typeof onToggleReference === 'function';
@@ -110,6 +112,11 @@ const LabResultsTool = ({
         ...result,
         text: buildResultText(result)
     })), [results]);
+    const hasPinnedOutline = groupedResults.some((result) => (
+        result.resultKind === 'outline'
+        && result.isPinned
+        && selectedResultIds.includes(result.id)
+    ));
 
     const handleUseText = async (id, text) => {
         if (!text) return;
@@ -151,6 +158,9 @@ const LabResultsTool = ({
                     </p>
 
                     <div className="lab-results-body">
+                        {selectionMessage && (
+                            <div className="lab-results-selection-message" role="status">{selectionMessage}</div>
+                        )}
                         {loading && <div className="lab-results-state">연구소 결과를 불러오는 중...</div>}
                         {!loading && error && (
                             <div className="lab-results-state is-error">
@@ -172,13 +182,15 @@ const LabResultsTool = ({
                                         <span>
                                             {Reflect.get(RESULT_LABELS, result.resultKind) || '연구소 활동'}
                                             {result.isLinked && <em className="lab-results-linked-badge">이 과제와 연결됨</em>}
+                                            {result.isPinned && <em className="lab-results-pinned-badge">이 글에 고정됨</em>}
                                         </span>
                                         <h3>{result.title}</h3>
                                         {result.topic && <p>{result.topic}</p>}
                                         {result.hint && <p className="lab-results-hint">{result.hint}</p>}
                                     </div>
-                                    <time dateTime={result.completedAt}>
-                                        {new Date(result.completedAt).toLocaleDateString('ko-KR')}
+                                    <time dateTime={result.updatedAt || result.completedAt}>
+                                        {result.resultKind === 'outline' ? '최신 저장 ' : ''}
+                                        {new Date(result.updatedAt || result.completedAt).toLocaleDateString('ko-KR')}
                                     </time>
                                 </div>
 
@@ -205,9 +217,20 @@ const LabResultsTool = ({
                                         type="button"
                                         className={`lab-results-use-all ${selectedResultIds.includes(result.id) ? 'is-selected' : ''}`}
                                         onClick={() => onToggleReference(result)}
+                                        disabled={result.resultKind === 'outline' && (
+                                            outlineSelectionLocked || (result.isPinned && selectedResultIds.includes(result.id))
+                                        )}
                                     >
-                                        <Plus size={17} />
-                                        {selectedResultIds.includes(result.id) ? '참고함에서 빼기' : '참고함에 두기'}
+                                        {result.resultKind === 'outline'
+                                            ? (result.isPinned ? <Check size={17} /> : <Pin size={17} />)
+                                            : <Plus size={17} />}
+                                        {result.resultKind === 'outline'
+                                            ? (outlineSelectionLocked
+                                                ? '승인된 글은 개요 교체 불가'
+                                                : result.isPinned && selectedResultIds.includes(result.id)
+                                                    ? '현재 고정된 개요'
+                                                    : hasPinnedOutline ? '이 개요로 바꾸기' : '이 개요 고정하기')
+                                            : selectedResultIds.includes(result.id) ? '참고함에서 빼기' : '참고함에 두기'}
                                     </button>
                                 ) : (
                                     <button type="button" className="lab-results-use-all" onClick={() => void handleUseText(result.id, result.text)}>

@@ -183,15 +183,19 @@ test('글쓰기 참고함 연구소 자료는 패널을 열 때 단일 RPC로 �
     const source = await read('src/modules/writing/references/LabReferenceSource.jsx');
     const api = await read('src/modules/writing/tools/lab-results/api.js');
     const migration = await read('supabase/migrations/20261104_writing_reference_sources.sql');
+    const outlinePinsMigration = await read('supabase/migrations/20261165_assignment_outline_pins.sql');
 
-    // 참고함이 열릴 때만 조회한다(자리는 그대로, 넘기는 값만 늘었다).
-    assert.match(studentWriting, /<LabReferenceSource\s+missionId=\{missionId\}\s+isActive=\{isOpen\}/);
+    // 참고함이 열릴 때만 조회하고 과제명·승인 상태도 고정 확인창에 전달한다.
+    assert.match(studentWriting, /<LabReferenceSource[\s\S]*?missionId=\{missionId\}[\s\S]*?missionTitle=\{mission\.title\}[\s\S]*?isActive=\{isOpen\}[\s\S]*?isApproved=\{isConfirmed\}/);
     // 교사가 `연구소 결과 불러오기`를 끄면 참고함의 연구소 자료도 함께 닫힌다.
     assert.match(studentWriting, /labResultsEnabled\s*\n?\s*\?/);
-    assert.match(source, /if \(!isActive \|\| loaded \|\| loading \|\| error\) return/);
+    assert.match(source, /if \(!isActive\) return/);
     assert.match(source, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
     assert.match(api, /supabase\.rpc\('get_my_writing_references_v1'/);
+    assert.match(api, /supabase\.rpc\('set_my_assignment_outline_pin_v1'/);
     assert.match(migration, /LIMIT v_limit/);
+    assert.match(outlinePinsMigration, /recent_ids AS \([\s\S]*portable\.agit_student_id = v_student_id[\s\S]*portable\.class_id = v_class_id[\s\S]*LIMIT v_limit[\s\S]*candidate_ids AS/);
+    assert.match(outlinePinsMigration, /ORDER BY \(pin\.result_id IS NOT NULL\) DESC,[\s\S]*LIMIT v_limit/);
     for (const content of [source, api]) {
         assert.doesNotMatch(content, /setInterval\s*\(|\.channel\(|postgres_changes/);
     }
@@ -247,11 +251,17 @@ test('독서록 책장은 다섯 조회 대신 화면 전용 RPC 한 번을 사�
     assert.doesNotMatch(section, /Promise\.all|\.from\(/);
 });
 
-test('교사 글 상세는 반응·댓글을 한 RPC로 읽는다', async () => {
+test('교사 글 상세는 반응·댓글·고정 개요를 한 RPC로 읽는다', async () => {
     const source = await read('src/hooks/useMissionManager.js');
+    const viewer = await read('src/components/teacher/PostDetailViewer.jsx');
+    const migration = await read('supabase/migrations/20261165_assignment_outline_pins.sql');
     const section = source.slice(source.indexOf('const fetchReactionsAndComments'), source.indexOf('const handleEvaluationMode'));
     assert.match(section, /get_teacher_post_detail_v1/);
+    assert.match(section, /detail\?\.outline_reference/);
     assert.doesNotMatch(section, /\.from\('post_reactions'\)|\.from\('post_comments'\)/);
+    assert.match(viewer, /학생이 참고한 최신 개요/);
+    assert.match(migration, /'outline_reference'/);
+    assert.match(migration, /portable\.id = pin\.result_id/);
 });
 
 test('활동 보고서는 1,000개 고정 절단 대신 200개 커서 RPC를 사용한다', async () => {

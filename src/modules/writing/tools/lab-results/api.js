@@ -36,8 +36,14 @@ export const normalizeLabResult = (row) => {
         hint: String(row.hint || '').trim(),
         chunks,
         completedAt: row.completed_at,
+        updatedAt: row.result_updated_at || row.updated_at || row.completed_at,
         hasMore: row.has_more === true,
-        isLinked: row.is_linked === true
+        isLinked: row.is_linked === true,
+        isPinned: row.is_pinned === true,
+        pinnedAt: row.pinned_at || null,
+        selectionChangedAfterFirstSubmit: row.selection_changed_after_first_submit === true,
+        contentChangedAfterFirstSubmit: row.content_changed_after_first_submit === true,
+        contentChangedAfterApproval: row.content_changed_after_approval === true
     };
 };
 
@@ -80,5 +86,18 @@ export const labResultsApi = {
         return (Array.isArray(data) ? data : [])
             .map(normalizeLabResult)
             .filter(Boolean);
+    },
+
+    async pinOutline({ missionId, resultId, expectedResultId = null } = {}) {
+        if (!supabase) throw new Error('연구소 결과 연결을 준비하고 있습니다.');
+        if (!missionId || !resultId) throw new Error('고정할 과제와 개요 정보가 필요합니다.');
+
+        const { data, error } = await supabase.rpc('set_my_assignment_outline_pin_v1', {
+            p_mission_id: missionId,
+            p_result_id: resultId,
+            p_expected_result_id: expectedResultId
+        });
+        if (error) throw error;
+        return data || { success: false, status: 'unknown' };
     }
 };

@@ -538,3 +538,33 @@
     font-size: .72rem;
     font-weight: 800;
 }
+
+.writing-reference-pin-change-summary {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border: 1px solid #fed7aa;
+    border-radius: 12px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: .84rem;
+    line-height: 1.55;
+}
+
+.writing-reference-pin-error {
+    margin: 14px 0 0;
+    padding: 11px 13px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff7f7;
+    color: #b42318;
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.writing-reference-pin-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}

@@ -10,6 +10,6 @@ export const labResultsToolManifest = {
     triggerLabel: '연구소 결과 불러오기',
     triggerHelp: '개요, 질문, 한 줄 문장을 내 글에 활용해요.',
     triggerEmoji: '🧪',
-    performance: { home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 20 },
+    performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 20 },
     studentEntry: () => import('./LabResultsTool')
 };
