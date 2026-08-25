@@ -68,7 +68,9 @@
     flex-direction: column;
     gap: 1px;
     color: var(--ui-ink-strong);
-    font-size: var(--ui-text-sm);
+    /* ⚠️ `sm` 으로 키우면 가장 긴 `작성 중인 과제` 가 두 줄로 밀린다(2026-08-25 확인).
+       한 낱말짜리는 아니지만 아이콘 옆 **짧은 꼬리표**라 xs 가 맞다. */
+    font-size: var(--ui-text-xs);
     font-weight: 900;
     line-height: 1.25;
 }
@@ -81,6 +83,7 @@
     .student-todo-card__rows { gap: 5px; }
     .student-todo-row { grid-template-columns: 1fr; justify-items: center; gap: 3px; padding: 7px 3px; text-align: center; }
     .student-todo-row__icon { width: 27px; height: 27px; font-size: var(--ui-text-md); }
-    .student-todo-row__label { align-items: center; font-size: var(--ui-text-sm); }
+    .student-todo-row__label { align-items: center; font-size: var(--ui-text-xs); }
+    /* 좁은 화면에서는 제목도 한 단계 낮춘다. 세로로 쌓여 폭이 더 좁다. */
     .student-todo-row__label strong { font-size: var(--ui-text-sm); }
 }
