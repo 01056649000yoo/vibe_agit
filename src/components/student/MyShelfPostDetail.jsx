@@ -60,7 +60,7 @@ const MyShelfPostDetail = ({
                             color: '#546E7A', cursor: 'pointer', fontWeight: 900, boxShadow: '0 2px 8px rgba(0,0,0,.06)'
                         }}>← 내 서재</button>
                     )}
-                    <strong style={{ color: '#3E2E23', fontSize: '.95rem' }}>📖 내 글 보기</strong>
+                    <strong style={{ color: '#3E2E23', fontSize: 'var(--ui-text-md)' }}>📖 내 글 보기</strong>
                     <span style={{ width: '76px' }} aria-hidden="true" />
                 </header>
 
@@ -78,21 +78,21 @@ const MyShelfPostDetail = ({
                 ) : (
                     <article style={{ padding: '26px', borderRadius: '28px', background: 'white', border: '1px solid #E3E8EF', boxShadow: '0 12px 34px rgba(55,71,79,.08)' }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: '14px' }}>
-                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: selfType ? '#F1F8E9' : '#E3F2FD', color: selfType ? '#558B2F' : '#1565C0', fontSize: '.72rem', fontWeight: 950 }}>
+                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: selfType ? '#F1F8E9' : '#E3F2FD', color: selfType ? '#558B2F' : '#1565C0', fontSize: 'var(--ui-text-sm)', fontWeight: 950 }}>
                                 {selfType ? selfType.icon : '✍️'} {typeName}
                             </span>
-                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: post.visibility === 'class' ? '#F3E5F5' : '#F5F5F5', color: post.visibility === 'class' ? '#7B1FA2' : '#78909C', fontSize: '.72rem', fontWeight: 900 }}>
+                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: post.visibility === 'class' ? '#F3E5F5' : '#F5F5F5', color: post.visibility === 'class' ? '#7B1FA2' : '#78909C', fontSize: 'var(--ui-text-sm)', fontWeight: 900 }}>
                                 {post.visibility === 'class' ? '👥 친구 공개' : '🔒 친구에게 비공개'}
                             </span>
                             {post.mission?.is_archived && (
-                                <span style={{ padding: '5px 9px', borderRadius: '9px', background: '#ECEFF1', color: '#607D8B', fontSize: '.72rem', fontWeight: 900 }}>📂 보관된 과제</span>
+                                <span style={{ padding: '5px 9px', borderRadius: '9px', background: '#ECEFF1', color: '#607D8B', fontSize: 'var(--ui-text-sm)', fontWeight: 900 }}>📂 보관된 과제</span>
                             )}
                         </div>
 
                         <h1 style={{ margin: 0, color: '#263238', fontSize: 'clamp(1.45rem, 4vw, 2rem)', lineHeight: 1.35, wordBreak: 'break-word' }}>
                             {title || '제목 없는 글'}
                         </h1>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', marginTop: '10px', color: '#90A4AE', fontSize: '.78rem', fontWeight: 800 }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', marginTop: '10px', color: '#90A4AE', fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
                             <span>{formatDate(post.updated_at || post.created_at)}</span>
                             <span>{Number(post.char_count || 0).toLocaleString('ko-KR')}자</span>
                             {post.mission?.title && <span>과제 · {post.mission.title}</span>}
@@ -108,7 +108,7 @@ const MyShelfPostDetail = ({
                                 <div style={{ minWidth: 0 }}>
                                     <small style={{ color: '#689F38', fontWeight: 950 }}>읽은 책</small>
                                     <strong style={{ display: 'block', margin: '5px 0', color: '#263238' }}>{book.bookTitle || '책 제목 없음'}</strong>
-                                    <span style={{ color: '#78909C', fontSize: '.8rem' }}>{[book.bookAuthor, book.publisher].filter(Boolean).join(' · ') || '책 정보 없음'}</span>
+                                    <span style={{ color: '#78909C', fontSize: 'var(--ui-text-sm)' }}>{[book.bookAuthor, book.publisher].filter(Boolean).join(' · ') || '책 정보 없음'}</span>
                                 </div>
                             </section>
                         )}
@@ -122,7 +122,7 @@ const MyShelfPostDetail = ({
                             </button>
                         )}
 
-                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: '1rem', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {displayingReport ? (
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
                             ) : content || '아직 내용이 없어요.'}

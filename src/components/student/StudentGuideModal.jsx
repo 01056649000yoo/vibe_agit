@@ -103,10 +103,10 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                             >
                                 📖
                             </motion.div>
-                            <h1 style={{ margin: '10px 0', color: '#3E2723', fontWeight: '900', fontSize: '2.4rem', letterSpacing: '-1px' }}>
+                            <h1 style={{ margin: '10px 0', color: '#3E2723', fontWeight: '900', fontSize: 'var(--ui-text-2xl)', letterSpacing: '-1px' }}>
                                 끄적끄적 아지트 가이드
                             </h1>
-                            <p style={{ color: '#8D6E63', fontWeight: '700', fontSize: '1.1rem', marginTop: '5px' }}>
+                            <p style={{ color: '#8D6E63', fontWeight: '700', fontSize: 'var(--ui-text-md)', marginTop: '5px' }}>
                                 친구들과 함께 드래곤을 키워볼까요? ✨
                             </p>
                         </header>
@@ -143,10 +143,10 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                                         {step.icon}
                                     </div>
                                     <div style={{ flex: 1 }}>
-                                        <h3 style={{ margin: '0 0 6px 0', fontSize: '1.3rem', color: '#333', fontWeight: '900' }}>
+                                        <h3 style={{ margin: '0 0 6px 0', fontSize: 'var(--ui-text-xl)', color: '#333', fontWeight: '900' }}>
                                             {index + 1}단계: {step.title}
                                         </h3>
-                                        <p style={{ margin: 0, fontSize: '1rem', color: '#555', lineHeight: '1.5', fontWeight: '600' }}>
+                                        <p style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: '#555', lineHeight: '1.5', fontWeight: '600' }}>
                                             {step.description}
                                         </p>
                                     </div>
@@ -163,7 +163,7 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                                     width: '100%',
                                     padding: '20px',
                                     borderRadius: '25px',
-                                    fontSize: '1.4rem',
+                                    fontSize: 'var(--ui-text-lg)',
                                     fontWeight: '900',
                                     background: '#4CAF50',
                                     boxShadow: '0 8px 0 #2E7D32',

@@ -64,9 +64,9 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isTeacherComment ? (
-                        <span style={{ fontSize: '0.75rem', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
+                        <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
                     ) : (
-                        <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
+                        <span style={{ fontWeight: '900', fontSize: 'var(--ui-text-md)', color: isMe ? '#1976D2' : '#3498DB' }}>
                             {commentAuthorName}
                         </span>
                     )}
@@ -78,7 +78,7 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                       */}
                     {isMe && !comment.isOptimistic && comment.status && comment.status !== 'approved' && (
                         <span style={{
-                            fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '999px',
+                            fontSize: 'var(--ui-text-xs)', fontWeight: '800', padding: '2px 8px', borderRadius: '999px',
                             background: comment.status === 'blocked' ? '#FEF3C7' : '#F1F5F9',
                             color: comment.status === 'blocked' ? '#B45309' : '#64748B'
                         }}>
@@ -90,7 +90,7 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {(isMe && !isTeacher) && !isConfirming && (
-                        <button onClick={() => onEdit(comment)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
+                        <button onClick={() => onEdit(comment)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: 'var(--ui-text-sm)', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
                     )}
                     {(isMe || isTeacher) && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -102,7 +102,7 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                                     color: isConfirming ? 'white' : '#E74C3C', 
                                     padding: isConfirming ? '4px 12px' : '0',
                                     borderRadius: '10px',
-                                    fontSize: '0.8rem', 
+                                    fontSize: 'var(--ui-text-sm)', 
                                     cursor: 'pointer', 
                                     fontWeight: 'bold',
                                     transition: 'all 0.2s'
@@ -113,7 +113,7 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                             {isConfirming && !isDeleting && (
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setIsConfirming(false); }}
-                                    style={{ background: '#ECF0F1', border: 'none', color: '#7F8C8D', padding: '4px 12px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                    style={{ background: '#ECF0F1', border: 'none', color: '#7F8C8D', padding: '4px 12px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
                                     취소
                                 </button>
@@ -122,7 +122,7 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                     )}
                 </div>
             </div>
-            <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            <div style={{ fontSize: 'var(--ui-text-lg)', color: '#2D3436', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {comment.content}
             </div>
         </motion.div>
@@ -157,10 +157,10 @@ const ReactionButton = memo(({ icon, count, isMine, onClick, onMouseEnter, onMou
                 }}
             >
                 <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
-                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
+                <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
                     {icon.label}
                 </span>
-                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
+                <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
                     {count}
                 </span>
             </button>
@@ -397,7 +397,7 @@ const PostDetailModal = ({
                                     const item = ACCESSORIES.find(a => a.id === itemId);
                                     if (!item) return null;
                                     return (
-                                        <div key={item.id} style={{ position: 'absolute', ...item.pos, fontSize: '1rem', pointerEvents: 'none' }}>
+                                        <div key={item.id} style={{ position: 'absolute', ...item.pos, fontSize: 'var(--ui-text-lg)', pointerEvents: 'none' }}>
                                             {item.emoji}
                                         </div>
                                     );
@@ -405,7 +405,7 @@ const PostDetailModal = ({
                             </div>
                         )}
                         <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '2px' }}>
+                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#3498DB', fontWeight: '900', marginBottom: '2px' }}>
                                 {postAuthorName}의 {selfType ? selfType.label : '소중한 이야기'} {selfType ? selfType.icon : '✍️'}
                             </div>
                             <h3 style={{
@@ -416,7 +416,7 @@ const PostDetailModal = ({
                             }}>
                                 {displayingOriginal ? (post.original_title || post.title) : post.title}
                                 <span style={{
-                                    fontSize: '0.7rem',
+                                    fontSize: 'var(--ui-text-sm)',
                                     color: displayingOriginal ? '#E67E22' : (selfType ? '#558B2F' : '#3498DB'),
                                     background: displayingOriginal ? '#FFF3E0' : (selfType ? '#F1F8E9' : '#E3F2FD'),
                                     padding: '2px 8px',
@@ -432,7 +432,7 @@ const PostDetailModal = ({
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                                     {mission.tags.map((tag, idx) => (
                                         <span key={idx} style={{
-                                            fontSize: '0.7rem',
+                                            fontSize: 'var(--ui-text-sm)',
                                             background: '#F3E5F5',
                                             color: '#7B1FA2',
                                             padding: '2px 8px',
@@ -454,7 +454,7 @@ const PostDetailModal = ({
                                 background: displayingOriginal ? '#E3F2FD' : '#F8F9FA',
                                 color: displayingOriginal ? '#1976D2' : '#636E72',
                                 border: 'none', padding: '10px 16px', borderRadius: '14px',
-                                fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
+                                fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '6px',
                                 transition: 'all 0.2s',
                                 flexShrink: 0
@@ -475,9 +475,9 @@ const PostDetailModal = ({
                                 <div style={{ width: '62px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '7px 11px 11px 7px', background: 'linear-gradient(145deg,#8BC34A,#558B2F)', color: 'white', fontSize: '1.8rem', flexShrink: 0 }}>📖</div>
                             )}
                             <div style={{ minWidth: 0 }}>
-                                <div style={{ color: '#558B2F', fontSize: '.72rem', fontWeight: 950 }}>읽은 책</div>
-                                <strong style={{ display: 'block', margin: '5px 0', color: '#263238', fontSize: '1.05rem' }}>{bookInfo.bookTitle || '책 제목 없음'}</strong>
-                                <span style={{ display: 'block', color: '#78909C', fontSize: '.82rem' }}>{[bookInfo.bookAuthor, bookInfo.publisher].filter(Boolean).join(' · ') || '책 정보 없음'}</span>
+                                <div style={{ color: '#558B2F', fontSize: 'var(--ui-text-sm)', fontWeight: 950 }}>읽은 책</div>
+                                <strong style={{ display: 'block', margin: '5px 0', color: '#263238', fontSize: 'var(--ui-text-lg)' }}>{bookInfo.bookTitle || '책 제목 없음'}</strong>
+                                <span style={{ display: 'block', color: '#78909C', fontSize: 'var(--ui-text-sm)' }}>{[bookInfo.bookAuthor, bookInfo.publisher].filter(Boolean).join(' · ') || '책 정보 없음'}</span>
                             </div>
                         </div>
                     )}
@@ -536,7 +536,7 @@ const PostDetailModal = ({
                     {/* 댓글 섹션 */}
                     {!isTeacher && (
                         <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '48px' }}>
-                            <h4 style={{ margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: '900', color: '#2D3436' }}>
+                            <h4 style={{ margin: '0 0 24px 0', fontSize: 'var(--ui-text-xl)', fontWeight: '900', color: '#2D3436' }}>
                                 💬 친구들의 따뜻한 한마디
                             </h4>
 
@@ -549,7 +549,7 @@ const PostDetailModal = ({
                                 <>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
                                         {comments.length === 0 ? (
-                                            <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
+                                            <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: 'var(--ui-text-lg)', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
                                                 첫 번째 응원의 주인공이 되어보세요! ✨
                                             </div>
                                         ) : (
@@ -574,7 +574,7 @@ const PostDetailModal = ({
                                             value={commentInput}
                                             onChange={e => setCommentInput(e.target.value)}
                                             placeholder={editingCommentId ? "댓글을 수정하고 있어요..." : "따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"}
-                                            style={{ flex: 1, padding: '14px 20px', border: 'none', outline: 'none', fontSize: '1.05rem', color: '#2D3436' }}
+                                            style={{ flex: 1, padding: '14px 20px', border: 'none', outline: 'none', fontSize: 'var(--ui-text-lg)', color: '#2D3436' }}
                                         />
                                         {editingCommentId && (
                                             <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setCommentInput(''); }}>취소</Button>
@@ -590,7 +590,7 @@ const PostDetailModal = ({
                                             {editingCommentId ? '수정' : '보내기'}
                                         </Button>
                                     </form>
-                                    <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                    <div style={{ marginTop: '10px', fontSize: 'var(--ui-text-sm)', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                         <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
                                     </div>
                                 </>

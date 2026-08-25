@@ -89,7 +89,7 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
 
                     .nav-label {
                         /* 6칸이라 라벨이 좁다. 줄바꿈 없이 한 줄에 들어가도록 줄인다. */
-                        font-size: 0.62rem;
+                        font-size: var(--ui-text-xs);
                         font-weight: 700;
                         white-space: nowrap;
                     }

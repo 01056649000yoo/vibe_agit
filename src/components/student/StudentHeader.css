@@ -12,8 +12,8 @@
     gap: 7px;
     color: var(--ui-ink-muted);
 }
-.student-home-toolbar__brand > span { font-size: 1rem; }
-.student-home-toolbar__brand strong { font-size: .82rem; font-weight: 900; white-space: nowrap; }
+.student-home-toolbar__brand > span { font-size: var(--ui-text-lg); }
+.student-home-toolbar__brand strong { font-size: var(--ui-text-sm); font-weight: 900; white-space: nowrap; }
 .student-home-toolbar__actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .student-home-toolbar__action {
     position: relative;
@@ -30,8 +30,8 @@
     cursor: pointer;
 }
 .student-home-toolbar__action:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-.student-home-toolbar__action-icon { font-size: .86rem; }
-.student-home-toolbar__action > strong { font-size: .7rem; font-weight: 850; white-space: nowrap; }
+.student-home-toolbar__action-icon { font-size: var(--ui-text-sm); }
+.student-home-toolbar__action > strong { font-size: var(--ui-text-sm); font-weight: 850; white-space: nowrap; }
 .student-home-toolbar__action.has-notice {
     border-color: #FFB4A6;
     background: #FFF2EE;
@@ -48,7 +48,7 @@
     border-radius: var(--ui-radius-pill);
     background: #C62828;
     color: white;
-    font-size: .6rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
     font-style: normal;
     line-height: 1;
@@ -80,7 +80,7 @@
     .student-home-toolbar__actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
     .student-home-toolbar__action { justify-content: center; padding: 7px 4px; border-radius: 12px; }
     .student-home-toolbar__action > strong { display: none; }
-    .student-home-toolbar__action-icon { font-size: .95rem; }
+    .student-home-toolbar__action-icon { font-size: var(--ui-text-md); }
     .student-home-toolbar__notice {
         position: absolute;
         top: -5px;
@@ -89,11 +89,11 @@
         min-height: 17px;
         padding: 1px 4px;
         border: 2px solid var(--ui-page);
-        font-size: .56rem;
+        font-size: var(--ui-text-sm);
     }
     .student-home-toolbar__notice-full { display: none; }
     .student-home-toolbar__notice-compact { display: inline; }
-    .student-home-toolbar__logout { width: 100%; padding: 6px !important; font-size: .66rem !important; }
+    .student-home-toolbar__logout { width: 100%; padding: 6px !important; font-size: var(--ui-text-sm) !important; }
 }
 @media (prefers-reduced-motion: reduce) {
     .student-home-toolbar__action.has-notice { animation: none; }

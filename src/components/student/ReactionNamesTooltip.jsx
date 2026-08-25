@@ -24,14 +24,14 @@ const ReactionNamesTooltip = ({ open, names = [] }) => (
                     position: 'absolute', bottom: '100%', left: '20%', marginBottom: '10px',
                     padding: '10px 16px', borderRadius: '12px', zIndex: 9999,
                     background: '#2D3436', color: 'white', boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-                    fontSize: '0.8rem', fontWeight: 600, pointerEvents: 'none',
+                    fontSize: 'var(--ui-text-sm)', fontWeight: 600, pointerEvents: 'none',
                     minWidth: 'max-content', maxWidth: '250px'
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                        <span style={{ fontSize: '0.9rem' }}>👥</span>
-                        <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
+                        <span style={{ fontSize: 'var(--ui-text-sm)' }}>👥</span>
+                        <span style={{ color: '#BDC3C7', fontSize: 'var(--ui-text-sm)' }}>반응을 보낸 친구들</span>
                     </div>
                     <div style={{ lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
                         {formatNames(names)}

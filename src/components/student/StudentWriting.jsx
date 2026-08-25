@@ -631,7 +631,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?
                                 {aiSpellCheckEnabled && ' 참고함에서 맞춤법 검사를 한번 할 수 있어요.'}
                             </div>
-                            {aiFeedback && <div style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', fontSize: '1rem', color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.8', border: '1px solid rgba(230, 81, 0, 0.2)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)' }}>{aiFeedback}</div>}
+                            {aiFeedback && <div style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', fontSize: 'var(--ui-text-lg)', color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.8', border: '1px solid rgba(230, 81, 0, 0.2)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)' }}>{aiFeedback}</div>}
                         </WritingNotice>
                     </motion.div>
                 )}
@@ -801,7 +801,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     lineHeight: '1.4'
                                 }}>
                                     {originalTitle || '제목 없음'}
-                                    <span style={{ fontSize: '0.9rem', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
+                                    <span style={{ fontSize: 'var(--ui-text-md)', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
                                 </div>
                                 <div style={{
                                     fontSize: isMobile ? '1.1rem' : '1.25rem',
@@ -863,7 +863,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             border: '1px solid #E9ECEF'
                         }}
                     >
-                        <h3 style={{ margin: '0 0 24px 0', fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
+                        <h3 style={{ margin: '0 0 24px 0', fontSize: 'var(--ui-text-xl)', color: '#2C3E50', fontWeight: '900' }}>
                             💬 친구들의 소중한 반응
                         </h3>
 
@@ -906,8 +906,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                             }}
                                         >
                                             <span style={{ fontSize: '1.4rem' }}>{icon.emoji}</span>
-                                            <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D' }}>{icon.label}</span>
-                                            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>{typeReactions.length}</span>
+                                            <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D' }}>{icon.label}</span>
+                                            <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>{typeReactions.length}</span>
                                         </button>
 
                                         <ReactionNamesTooltip open={hoveredType === icon.type} names={reactorNames} />
@@ -938,27 +938,27 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     {isTeacher ? (
                                                         <span style={{
-                                                            fontSize: '0.75rem', fontWeight: '900',
+                                                            fontSize: 'var(--ui-text-sm)', fontWeight: '900',
                                                             background: '#3B82F6', color: 'white',
                                                             padding: '2px 8px', borderRadius: '6px'
                                                         }}>🍎 선생님</span>
                                                     ) : (
-                                                        <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
+                                                        <span style={{ fontWeight: '900', fontSize: 'var(--ui-text-md)', color: isMe ? '#1976D2' : '#3498DB' }}>
                                                             {c.students?.name} {isMe && '(나)'}
                                                         </span>
                                                     )}
-                                                    <span style={{ fontSize: '0.75rem', color: '#ADB5BD' }}>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD' }}>
                                                         {new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
                                                 {isMe && (
                                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <button onClick={() => { setEditingCommentId(c.id); setCommentInput(c.content); }} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer' }}>수정</button>
-                                                        <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer' }}>삭제</button>
+                                                        <button onClick={() => { setEditingCommentId(c.id); setCommentInput(c.content); }} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: 'var(--ui-text-sm)', cursor: 'pointer' }}>수정</button>
+                                                        <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: 'var(--ui-text-sm)', cursor: 'pointer' }}>삭제</button>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
+                                            <div style={{ fontSize: 'var(--ui-text-lg)', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
                                         </div>
                                     );
                                 })
@@ -975,7 +975,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 />
                                 <Button type="submit" disabled={submittingComment}>{editingCommentId ? '수정' : '보내기'}</Button>
                             </form>
-                            <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            <div style={{ marginTop: '10px', fontSize: 'var(--ui-text-sm)', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
                             </div>
                         </div>
@@ -1058,10 +1058,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
                                 <div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>
+                                    <div style={{ fontSize: 'var(--ui-text-2xl)', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>
                                         {studentLabels.previewHeading || '제출 전 검토하기'}
                                     </div>
-                                    <div style={{ color: '#607D8B', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                    <div style={{ color: '#607D8B', fontSize: 'var(--ui-text-md)', lineHeight: '1.6' }}>
                                         {studentLabels.previewDescription || '문단이 잘 나뉘었는지, 제목과 본문이 의도대로 보이는지 마지막으로 확인해보세요.'}
                                     </div>
                                 </div>
@@ -1086,7 +1086,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             </div>
 
                             <div style={{ marginBottom: '18px' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
+                                <div style={{ fontSize: 'var(--ui-text-md)', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
                                     {studentLabels.titleLabel || '제목'}
                                 </div>
                                 <div style={{
@@ -1094,7 +1094,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     border: '1px solid #ECEFF1',
                                     borderRadius: '18px',
                                     padding: '18px 20px',
-                                    fontSize: '1.5rem',
+                                    fontSize: 'var(--ui-text-2xl)',
                                     fontWeight: '900',
                                     color: '#263238',
                                     lineHeight: '1.4'
@@ -1104,7 +1104,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             </div>
 
                             <div style={{ marginBottom: '28px' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
+                                <div style={{ fontSize: 'var(--ui-text-md)', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
                                     {studentLabels.contentLabel || '본문 미리보기'}
                                 </div>
                                 <div style={{
@@ -1123,7 +1123,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                             border: '1px solid #E3F2FD',
                                             borderRadius: '18px',
                                             padding: '18px 20px',
-                                            fontSize: '1.05rem',
+                                            fontSize: 'var(--ui-text-lg)',
                                             lineHeight: '1.9',
                                             color: '#37474F',
                                             whiteSpace: 'pre-wrap',
@@ -1162,7 +1162,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                                                     background: '#FFF8E1',
                                                                     border: '1px solid #FFE082',
                                                                     color: '#FB8C00',
-                                                                    fontSize: '0.78rem',
+                                                                    fontSize: 'var(--ui-text-sm)',
                                                                     fontWeight: '800'
                                                                 }}>
                                                                     ↵

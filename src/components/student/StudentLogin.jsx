@@ -112,7 +112,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
     return (
         <Card style={{ textAlign: 'center', padding: '40px' }}>
             <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🎒</div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '8px', color: 'var(--text-primary)' }}>
+            <h2 style={{ fontSize: 'var(--ui-text-3xl)', marginBottom: '8px', color: 'var(--text-primary)' }}>
                 학생 로그인을 도와줄게요!
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
@@ -164,7 +164,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             {errorMsg ? (
                 <p style={{
                     color: '#EF5350',
-                    fontSize: '0.9rem',
+                    fontSize: 'var(--ui-text-md)',
                     marginBottom: '16px',
                     fontWeight: '600',
                     minHeight: '1.4em'
@@ -178,7 +178,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             <Button
                 variant="secondary"
                 size="lg"
-                style={{ width: '100%', height: '60px', fontSize: '1.2rem', background: '#FBC02D' }}
+                style={{ width: '100%', height: '60px', fontSize: 'var(--ui-text-lg)', background: '#FBC02D' }}
                 onClick={handleLogin}
                 disabled={loading}
             >

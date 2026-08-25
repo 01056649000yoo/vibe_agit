@@ -43,7 +43,22 @@ const MIGRATED = [
     'src/modules/game/vocab-tower/teacherManager.css',
     'src/modules/game/dragon/TeacherManager.css',
     'src/modules/game/dragon/TeacherWorkshopPreview.css',
-    'src/modules/game/dragon/TeacherStagePreview.css'
+    'src/modules/game/dragon/TeacherStagePreview.css',
+    // 학생 화면 — 글 위주부터 옮긴다(2026-08-25). 게임 화면은 좁은 칸이 많아 뒤로 미룬다.
+    'src/components/student/PostDetailModal.jsx',
+    'src/components/student/MyShelfPostDetail.jsx',
+    'src/components/student/StudentFeedbackModal.jsx',
+    'src/components/student/StudentGuideModal.jsx',
+    'src/components/student/MissionList.jsx',
+    'src/components/student/StudentWriting.jsx',
+    'src/components/student/StudentLogin.jsx',
+    'src/components/student/StudentHeader.css',
+    'src/components/student/DashboardMenu.css',
+    'src/components/student/StudentTodoCard.css',
+    'src/components/student/StudentModuleGuide.css',
+    'src/components/student/StudentHomeGrowthPanel.css',
+    'src/components/student/StudentBottomNav.jsx',
+    'src/components/student/ReactionNamesTooltip.jsx'
 ];
 
 /*

@@ -30,9 +30,9 @@
 .student-home-growth__greeting { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; }
 .student-home-marathon-medal { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 5px; min-height: 38px; padding: 6px 10px; border: 1px solid #fbbf24; border-radius: 999px; background: linear-gradient(145deg,#fffbeb,#fef3c7); color: #92400e; font: inherit; cursor: pointer; box-shadow: 0 3px 9px rgba(146,64,14,.12); }
 .student-home-marathon-medal.is-team { border-color: #93c5fd; border-radius: 12px; background: linear-gradient(145deg,#eff6ff,#dbeafe); color: #1d4ed8; box-shadow: 0 3px 9px rgba(30,64,175,.12); }
-.student-home-marathon-medal > span { font-size: 1rem; }
-.student-home-marathon-medal > strong { font-size: .68rem; white-space: nowrap; }
-.student-home-marathon-medal > em { display: grid; min-width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #fff; font-size: .58rem; font-style: normal; font-weight: 950; }
+.student-home-marathon-medal > span { font-size: var(--ui-text-lg); }
+.student-home-marathon-medal > strong { font-size: var(--ui-text-sm); white-space: nowrap; }
+.student-home-marathon-medal > em { display: grid; min-width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #fff; font-size: var(--ui-text-sm); font-style: normal; font-weight: 950; }
 .student-home-marathon-medal:hover { transform: translateY(-1px); }
 .student-home-marathon-medal:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
 .student-home-growth__message {
@@ -92,14 +92,14 @@
 .student-home-point-summary small,
 .student-home-title-summary small {
     color: var(--ui-ink-muted);
-    font-size: .66rem;
+    font-size: var(--ui-text-sm);
     font-weight: 800;
 }
 .student-home-point-summary strong,
 .student-home-title-summary strong {
     overflow: hidden;
     color: var(--ui-ink-strong);
-    font-size: .84rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -107,7 +107,7 @@
 .student-home-point-summary em {
     grid-column: 2;
     color: var(--ui-primary);
-    font-size: .62rem;
+    font-size: var(--ui-text-sm);
     font-style: normal;
     font-weight: 900;
 }
@@ -116,7 +116,7 @@
 .student-home-title-summary em {
     grid-column: 2;
     color: var(--ui-ink-subtle);
-    font-size: .6rem;
+    font-size: var(--ui-text-sm);
     font-style: normal;
     font-weight: 900;
 }
@@ -135,7 +135,7 @@
 }
 .student-home-dragon-summary__label {
     color: var(--ui-ink-muted);
-    font-size: .65rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 .student-home-dragon-summary__avatar {
@@ -146,13 +146,13 @@
     object-fit: contain;
     filter: drop-shadow(0 6px 6px rgba(30, 64, 175, .12));
 }
-.student-home-dragon-summary strong { font-size: .86rem; font-weight: 950; }
+.student-home-dragon-summary strong { font-size: var(--ui-text-sm); font-weight: 950; }
 .student-home-dragon-summary__meta {
     margin-top: 2px;
     overflow: hidden;
     max-width: 100%;
     color: var(--ui-ink-muted);
-    font-size: .64rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -160,7 +160,7 @@
 .student-home-dragon-summary em {
     margin-top: 6px;
     color: var(--ui-primary);
-    font-size: .64rem;
+    font-size: var(--ui-text-sm);
     font-style: normal;
     font-weight: 900;
 }

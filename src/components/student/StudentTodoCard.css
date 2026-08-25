@@ -7,7 +7,7 @@
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
     color: var(--ui-ink-muted);
-    font-size: .8rem;
+    font-size: var(--ui-text-sm);
     font-weight: 800;
 }
 .student-todo-card__header {
@@ -20,7 +20,7 @@
 .student-todo-card__header h2 {
     margin: 0;
     color: var(--ui-ink-strong);
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
     font-weight: 950;
 }
 .student-todo-card__header > strong {
@@ -28,7 +28,7 @@
     border-radius: var(--ui-radius-pill);
     background: var(--ui-surface-muted);
     color: var(--ui-ink-muted);
-    font-size: .68rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 .student-todo-card__rows { display: grid; min-height: 78px; flex: 1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -60,7 +60,7 @@
     place-items: center;
     border-radius: 10px;
     background: var(--todo-bg);
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
 }
 .student-todo-row__label {
     display: flex;
@@ -68,11 +68,11 @@
     flex-direction: column;
     gap: 1px;
     color: var(--ui-ink-strong);
-    font-size: .68rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
     line-height: 1.25;
 }
-.student-todo-row__label strong { color: var(--todo-text); font-size: .94rem; }
+.student-todo-row__label strong { color: var(--todo-text); font-size: var(--ui-text-md); }
 
 @media (hover: hover) {
     .student-todo-row:not(:disabled):hover { border-top-color: var(--ui-border-strong); border-right-color: var(--ui-border-strong); border-bottom-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-xs); }
@@ -80,7 +80,7 @@
 @media (max-width: 390px) {
     .student-todo-card__rows { gap: 5px; }
     .student-todo-row { grid-template-columns: 1fr; justify-items: center; gap: 3px; padding: 7px 3px; text-align: center; }
-    .student-todo-row__icon { width: 27px; height: 27px; font-size: .9rem; }
-    .student-todo-row__label { align-items: center; font-size: .62rem; }
-    .student-todo-row__label strong { font-size: .86rem; }
+    .student-todo-row__icon { width: 27px; height: 27px; font-size: var(--ui-text-md); }
+    .student-todo-row__label { align-items: center; font-size: var(--ui-text-sm); }
+    .student-todo-row__label strong { font-size: var(--ui-text-sm); }
 }

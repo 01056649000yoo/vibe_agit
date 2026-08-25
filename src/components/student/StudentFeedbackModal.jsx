@@ -106,7 +106,7 @@ const StudentFeedbackModal = ({
                     onClick={e => e.stopPropagation()}
                 >
                     <div style={{ padding: '24px 32px 10px 32px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#2C3E50' }}>🔔 내 글 소식</h2>
+                        <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', fontWeight: '900', color: '#2C3E50' }}>🔔 내 글 소식</h2>
                         <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" />
                     </div>
 
@@ -125,7 +125,7 @@ const StudentFeedbackModal = ({
                                     color: activeTab === tab.id ? '#1976D2' : '#95A5A6',
                                     fontWeight: '900',
                                     cursor: 'pointer',
-                                    fontSize: '0.85rem',
+                                    fontSize: 'var(--ui-text-sm)',
                                     transition: 'all 0.2s',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -140,7 +140,7 @@ const StudentFeedbackModal = ({
                     {/* 하루에 스무 건까지 올 수 있어 한 건씩만 처리하게 두면 지금보다 나빠진다. */}
                     {!loading && feedbacks.length > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 28px 8px', gap: '12px' }}>
-                            <span style={{ color: '#607D8B', fontSize: '0.78rem', fontWeight: 800 }}>
+                            <span style={{ color: '#607D8B', fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
                                 확인하지 않은 소식 {feedbacks.length}개
                             </span>
                             <Button size="sm" variant="ghost" onClick={handleConfirmAll} disabled={bulkStatus === 'saving'}>
@@ -150,7 +150,7 @@ const StudentFeedbackModal = ({
                     )}
 
                     {error && (
-                        <div role="alert" style={{ padding: '0 28px 6px', color: '#C62828', fontSize: '0.75rem', fontWeight: 800 }}>
+                        <div role="alert" style={{ padding: '0 28px 6px', color: '#C62828', fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
                             {error}
                         </div>
                     )}
@@ -204,10 +204,10 @@ const StudentFeedbackModal = ({
                                                     {presentation.icon}
                                                 </span>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem', marginBottom: '4px' }}>
+                                                    <div style={{ fontWeight: 'bold', color: '#5D4037', fontSize: 'var(--ui-text-md)', marginBottom: '4px' }}>
                                                         {presentation.title}
                                                     </div>
-                                                    <div style={{ fontSize: '0.88rem', color: '#795548', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                                                    <div style={{ fontSize: 'var(--ui-text-sm)', color: '#795548', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                                         {presentation.message}
                                                     </div>
                                                 </div>
@@ -224,7 +224,7 @@ const StudentFeedbackModal = ({
                                                         background: isPending ? '#ECEFF1' : '#E8F5E9',
                                                         color: isPending ? '#90A4AE' : '#2E7D32',
                                                         fontWeight: 900,
-                                                        fontSize: '0.78rem',
+                                                        fontSize: 'var(--ui-text-sm)',
                                                         cursor: isPending ? 'default' : 'pointer'
                                                     }}
                                                 >
@@ -232,7 +232,7 @@ const StudentFeedbackModal = ({
                                                 </button>
                                             </div>
 
-                                            <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '10px', textAlign: 'right' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#BDBDBD', marginTop: '10px', textAlign: 'right' }}>
                                                 {new Date(item.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>

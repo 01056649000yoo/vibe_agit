@@ -111,7 +111,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
                 <StudentBackButton onClick={onBack} disabled={loading} />
-                <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#5D4037', fontWeight: '900' }}>오늘은 어떤 글을 써볼까?</h2>
+                <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', color: '#5D4037', fontWeight: '900' }}>오늘은 어떤 글을 써볼까?</h2>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
@@ -124,7 +124,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         >
                             📚
                         </motion.div>
-                        <p style={{ color: '#8D6E63', fontWeight: 'bold', fontSize: '1.1rem' }}>선생님이 준비한 주제를 불러오는 중이에요..</p>
+                        <p style={{ color: '#8D6E63', fontWeight: 'bold', fontSize: 'var(--ui-text-md)' }}>선생님이 준비한 주제를 불러오는 중이에요..</p>
                     </div>
                 ) : missions.length === 0 ? (
                     <div style={{
@@ -137,7 +137,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                     }}>
                         <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📝</div>
                         <h3 style={{ margin: '0 0 8px 0', color: '#5D4037' }}>아직 등록된 글쓰기 미션이 없어요</h3>
-                        <p style={{ color: '#9E9E9E', fontSize: '0.95rem' }}>선생님이 새로운 주제를 주실 때까지 조금만 기다려볼까요?</p>
+                        <p style={{ color: '#9E9E9E', fontSize: 'var(--ui-text-md)' }}>선생님이 새로운 주제를 주실 때까지 조금만 기다려볼까요?</p>
                     </div>
                 ) : (
                     missions.map((mission) => {
@@ -151,7 +151,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         if (post?.recalled_at) {
                             // 다시쓰기 기한이 지나 선생님이 걷어간 글 — 학생이 이유를 알 수 있게 표시
                             statusBadge = (
-                                <div style={{ background: '#EDE7F6', color: '#5E35B1', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #D1C4E9' }}>
+                                <div style={{ background: '#EDE7F6', color: '#5E35B1', padding: '4px 10px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900', border: '1px solid #D1C4E9' }}>
                                     선생님이 걷어감
                                 </div>
                             );
@@ -159,7 +159,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             buttonText = '내 글 보기';
                         } else if (isPendingRewrite(post)) {
                             statusBadge = (
-                                <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFCDD2' }}>
+                                <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900', border: '1px solid #FFCDD2' }}>
                                     다시 쓰기 필요
                                 </div>
                             );
@@ -167,7 +167,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             buttonText = '다시 쓰기 시작';
                         } else if (post?.is_submitted || post?.is_confirmed) {
                             statusBadge = (
-                                <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #C8E6C9' }}>
+                                <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900', border: '1px solid #C8E6C9' }}>
                                     제출 완료
                                 </div>
                             );
@@ -175,7 +175,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             buttonText = '내 글 보기';
                         } else if (post) {
                             statusBadge = (
-                                <div style={{ background: '#FFF3E0', color: '#EF6C00', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFE0B2' }}>
+                                <div style={{ background: '#FFF3E0', color: '#EF6C00', padding: '4px 10px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900', border: '1px solid #FFE0B2' }}>
                                     작성 중
                                 </div>
                             );
@@ -183,7 +183,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             buttonText = '계속 쓰기';
                         } else {
                             statusBadge = (
-                                <div style={{ background: '#F5F5F5', color: '#9E9E9E', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #E0E0E0' }}>
+                                <div style={{ background: '#F5F5F5', color: '#9E9E9E', padding: '4px 10px', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900', border: '1px solid #E0E0E0' }}>
                                     작성 전
                                 </div>
                             );
@@ -210,7 +210,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 {(!post?.is_submitted && !post?.is_confirmed && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
                                     <div style={{
                                         position: 'absolute', top: '12px', right: '12px',
-                                        background: '#FF5252', color: 'white', fontSize: '0.7rem',
+                                        background: '#FF5252', color: 'white', fontSize: 'var(--ui-text-sm)',
                                         padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
                                         boxShadow: '0 2px 4px rgba(255, 82, 82, 0.2)',
                                         zIndex: 2
@@ -223,7 +223,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                             background: '#E1F5FE',
                                             color: '#0288D1',
                                             borderRadius: '12px',
-                                            fontSize: '0.75rem',
+                                            fontSize: 'var(--ui-text-sm)',
                                             fontWeight: '900'
                                         }}>
                                             {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
@@ -238,17 +238,17 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                         padding: '4px 10px',
                                         borderRadius: '10px',
                                         border: '1px solid #FFF59D',
-                                        fontSize: '0.8rem',
+                                        fontSize: 'var(--ui-text-sm)',
                                         fontWeight: '900',
                                         color: '#F57F17'
                                     }}>
                                         ⭐ {mission.base_reward}P
                                     </div>
                                 </div>
-                                <h4 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontSize: '1.2rem', fontWeight: '900' }}>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontSize: 'var(--ui-text-lg)', fontWeight: '900' }}>
                                     {mission.title}
                                 </h4>
-                                <p style={{ fontSize: '0.95rem', color: '#607D8B', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                <p style={{ fontSize: 'var(--ui-text-md)', color: '#607D8B', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {mission.guide}
                                 </p>
                                 <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
