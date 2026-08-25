@@ -195,6 +195,25 @@ test('반려·승인 전역 배너는 12초 분산 폴링과 최소 응답 계�
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.poll_my_priority_writing_notifications_v1[\s\S]*?PUBLIC, anon/);
 });
 
+test('교사가 과제 글을 다시 쓸 수 있게 돌려주는 모든 전환은 반려 알림을 남긴다', async () => {
+    const [hook, migration, smoke] = await Promise.all([
+        read('src/hooks/useMissionManager.js'),
+        read('supabase/migrations/20261169_assignment_return_always_notifies.sql'),
+        read('tests/sql/20261169_assignment_return_always_notifies.smoke.sql')
+    ]);
+
+    // 강제 회수한 글을 다시 줄 때도 일반 반려와 같은 실제 다시쓰기 상태로 복구한다.
+    assert.match(hook, /handleUndoRecall[\s\S]*?is_submitted: false,[\s\S]*?is_returned: true,[\s\S]*?recalled_at: null/);
+    // 이전 회수 시각이 있었던 전환을 명시적으로 허용하되, 같은 상태 재저장은 제외한다.
+    assert.match(migration, /OR OLD\.recalled_at IS NOT NULL/);
+    assert.doesNotMatch(migration, /AND OLD\.recalled_at IS NULL/);
+    assert.match(migration, /AFTER UPDATE OF is_returned, is_submitted, is_confirmed, recalled_at/);
+    assert.match(smoke, /강제 회수된 상태[\s\S]*?recalled_at = clock_timestamp\(\)/);
+    assert.match(smoke, /교사가 다시 주면[\s\S]*?recalled_at = NULL/);
+    assert.match(smoke, /poll_my_priority_writing_notifications_v1/);
+    assert.match(smoke, /중복 알림이 생성되었습니다/);
+});
+
 test('홈 bootstrap은 할 일 세 종류와 최신 미확인 알림을 한 번에 반환한다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
     const api = await read('src/modules/home/studentHomeApi.js');
