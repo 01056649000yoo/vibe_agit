@@ -53,7 +53,7 @@ const StudentFootprintDetailModal = ({ student, onClose, container }) => {
 
             <DetailCard icon="🔥" title="꾸준함" value={`${num(student.active_days)}일 활동`} description={`현재 ${num(student.current_streak)}일 연속 · 최고 ${num(student.best_streak)}일 연속`} accent="var(--ui-warning)" />
 
-            <DetailCard icon="✍️" title="다듬기" value={`${num(student.revisions)}회`} description={`받은 피드백 ${num(student.feedbacks_received)}회 · 활동 기록 기능 적용 이후`} accent="#7C3AED" />
+            <DetailCard icon="✍️" title="학습 횟수" value={`다시쓰기 요청 ${num(student.rewrite_requests)}회`} description={`수정 제출 ${num(student.revision_submissions)}회 · 활동 기록 기능 적용 이후`} accent="#7C3AED" />
 
             <DetailCard icon="💬" title="친구 교류" value={`남김 ${num(interactionsGiven)} · 받음 ${num(interactionsReceived)}`} accent="#047857">
                 <Breakdown>
