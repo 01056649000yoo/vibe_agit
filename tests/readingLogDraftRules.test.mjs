@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
     applyBookSelection,
     autoTitleFor,
+    getBookKeys,
     hasCustomTitle,
+    isFinishedBookDraft,
     readingDraftHasContent
 } from '../src/modules/writing/reading-log/draftRules.js';
 
@@ -136,4 +138,43 @@ test('쓰던 글이 있으면 책을 바꿔도 본문은 그대로다', () => {
     const swapped = applyBookSelection(written, BOOK_B);
     assert.equal(swapped.content, '기억에 남는 장면이 있다.');
     assert.equal(readingDraftHasContent(swapped), true);
+});
+
+// --- 이미 독서록을 낸 책의 초안 판정 ---------------------------------------
+// 새 글 화면에는 완성본 시각이 없어 시각으로 막을 수 없다. 책으로 막는다.
+
+const FINISHED = new Set(getBookKeys(BOOK_A));
+
+test('아직 아무 책도 완성하지 않았으면 어떤 초안도 막지 않는다', () => {
+    assert.equal(isFinishedBookDraft(BOOK_A, new Set()), false);
+    assert.equal(isFinishedBookDraft(BOOK_A, undefined), false);
+});
+
+test('이미 독서록을 낸 책의 초안은 되살리지 않는다', () => {
+    assert.equal(isFinishedBookDraft(BOOK_A, FINISHED), true);
+});
+
+test('아직 안 쓴 책의 초안은 그대로 이어 쓴다', () => {
+    assert.equal(isFinishedBookDraft(BOOK_B, FINISHED), false);
+});
+
+test('책이 없는 초안은 막지 않는다', () => {
+    assert.equal(isFinishedBookDraft(null, FINISHED), false);
+    assert.equal(isFinishedBookDraft({}, FINISHED), false);
+});
+
+test('ISBN 이 같으면 제목이 달라도 같은 책으로 본다', () => {
+    // 책 검색 결과와 직접 입력한 제목이 조금 달라도 같은 책이다.
+    const byIsbn = new Set(getBookKeys({ title: '마당을 나온 암탉', isbn13: '9788936442699' }));
+    assert.equal(isFinishedBookDraft({ title: '마당을나온암탉', isbn13: '9788936442699' }, byIsbn), true);
+});
+
+test('ISBN 없이 직접 입력한 책은 제목으로 알아본다', () => {
+    assert.equal(isFinishedBookDraft({ title: '  마당을 나온 암탉  ' }, FINISHED), true);
+});
+
+test('빈 값은 열쇠로 세지 않는다', () => {
+    // 제목·ISBN 이 모두 비면 열쇠가 없어야 한다. 빈 문자열이 열쇠가 되면 모든 초안이 막힌다.
+    assert.deepEqual(getBookKeys({ title: '   ', isbn13: '', isbn10: null }), []);
+    assert.equal(isFinishedBookDraft({ title: '' }, new Set([''])), false);
 });

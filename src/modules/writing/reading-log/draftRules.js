@@ -59,3 +59,30 @@ export const applyBookSelection = (form, book, { keepCustomTitle = false } = {})
         titleAutoFilled: Boolean(book) && !keep
     };
 };
+
+/**
+ * 한 책을 가리키는 열쇠들.
+ *
+ * 직접 입력한 책에는 ISBN 이 없어 제목까지 함께 본다. 책장 카드와 초안 판정이 같은 열쇠를
+ * 써야 "같은 책"을 서로 다르게 보지 않는다.
+ */
+export const getBookKeys = (book = {}) => (
+    [book.isbn13, book.isbn10, book.title]
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+);
+
+/**
+ * 이 초안이 **이미 독서록을 낸 책**의 것인가.
+ *
+ * 새 독서록 화면(`postId` 없음)에는 완성본 시각이 없어 "완성본보다 오래된 초안은 되살리지
+ * 않는다" 는 방어가 돌지 않는다. 게다가 새 독서록은 모두 `new` 라는 초안 자리를 함께 쓰므로,
+ * 완성 뒤 정리가 한 번만 어긋나면 **이미 낸 독서록이 새 글 화면에 되살아나고**, 그대로 작성
+ * 완료를 누르면 "한 책 = 한 독서록" 유일 제약에 걸려 학생이 막다른 길에 선다(2026-08-25 확인).
+ * 그래서 새 글 화면에서는 시각 대신 **책**으로 판정한다.
+ */
+export const isFinishedBookDraft = (draftBook, finishedBookKeys) => {
+    const keys = finishedBookKeys instanceof Set ? finishedBookKeys : new Set(finishedBookKeys || []);
+    if (keys.size === 0) return false;
+    return getBookKeys(draftBook || {}).some((key) => keys.has(key));
+};

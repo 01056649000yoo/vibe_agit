@@ -80,7 +80,18 @@ const diaryDraftHasContent = (candidate) => Boolean(
     candidate?.title?.trim() || candidate?.content?.trim()
 );
 
-const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) => {
+/** 아직 아무 날도 쓰지 않은 화면이 렌더마다 새 집합을 만들지 않게 한다. */
+const NO_FINISHED_DIARY_DATES = new Set();
+
+const DiaryEditor = ({
+    studentSession,
+    postId,
+    diaryDate,
+    // 이미 일기를 쓴 날짜들. 새 일기 화면에서 옛 임시본을 되살릴지 판단할 때만 쓴다.
+    finishedDiaryDates = NO_FINISHED_DIARY_DATES,
+    onDone,
+    onCancel
+}) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const today = todayInKorea();
     const [form, setForm] = useState(EMPTY_FORM);
@@ -90,6 +101,15 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
     const [locked, setLocked] = useState(false);
+    /*
+     * 이 화면에서 `일기 완료` 가 끝났는가.
+     *
+     * 완료 뒤에도 자동 임시저장이 켜져 있으면, 저장 알림창이 화면을 붙드는 동안 예약돼 있던
+     * 저장이 **방금 완성한 내용을 임시본에 다시 쓴다**. 지운 임시본이 되살아나 그 날짜로
+     * 다시 들어갔을 때 옛 글이 올라오고, 그대로 완료를 누르면 "하루 = 한 일기" 제약에 걸린다.
+     * 독서록과 같은 구조라 같은 방식으로 막는다(2026-08-25).
+     */
+    const [completed, setCompleted] = useState(false);
     const [writingPolicy, setWritingPolicy] = useState(DIARY_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -186,9 +206,16 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
     const draftKey = buildDraftKey('diary_draft', studentSession?.id, postId || selectedDiaryDate);
     const draftHasContent = useCallback((candidate) => diaryDraftHasContent(candidate), []);
     const restoreDraft = useCallback((stored) => {
+        // 이미 일기를 쓴 날짜의 임시본은 되살리지 않는다. 되살리면 학생이 낸 일기가 새 일기
+        // 화면에 올라오고, 그대로 완료를 누르면 "하루 = 한 일기" 제약에 걸려 길이 막힌다.
+        // 다음에 또 올라오지 않게 그 자리에서 지운다.
+        if (!postId && finishedDiaryDates.has(selectedDiaryDate)) {
+            removeLocalDraft(draftKey);
+            return;
+        }
         // 날짜만 바꿀 때 다른 날짜의 임시본이 지금 쓰던 내용을 덮지 않게 한다.
         setForm((current) => diaryDraftHasContent(current) ? current : ({ ...current, ...stored }));
-    }, []);
+    }, [draftKey, finishedDiaryDates, postId, selectedDiaryDate]);
     const {
         savedAt: draftSavedAt,
         error: draftError,
@@ -197,7 +224,11 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
     } = useLocalWritingDraft(
         draftKey,
         form,
-        { enabled: !loading && !saving && !locked, hasContent: draftHasContent, onRestore: restoreDraft }
+        {
+            enabled: !loading && !saving && !locked && !completed,
+            hasContent: draftHasContent,
+            onRestore: restoreDraft
+        }
     );
 
     /*
@@ -216,6 +247,20 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
                 if (error) console.error('일기 서버 임시본 불러오기 실패:', error.message);
                 return;
             }
+
+            // 이미 일기를 쓴 날짜의 임시본이면 되살리지 않는다(로컬과 같은 규칙).
+            // 다른 기기에서도 또 올라오지 않게 서버에서 지운다.
+            if (!postId && finishedDiaryDates.has(selectedDiaryDate)) {
+                const { error: cleanupError } = await supabase.rpc('delete_my_self_writing_drafts', {
+                    p_writing_type: 'diary',
+                    p_source_keys: [selectedDiaryDate]
+                });
+                if (cleanupError) console.error('낡은 일기 임시본 정리 실패:', cleanupError.message);
+                if (!active) return;
+                setServerDraftAt(null);
+                return;
+            }
+
             const serverAt = new Date(data.updated_at);
             setServerDraftAt(serverAt);
 
@@ -232,7 +277,9 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         load();
         return () => { active = false; };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-    }, [draftKey, loading, locked, selectedDiaryDate, studentSession?.id]);
+        // `completed` 는 일부러 넣지 않는다 — 완료 뒤 이 효과가 다시 돌면 방금 지운 임시본을
+        // 다시 읽어 올 수 있다.
+    }, [draftKey, finishedDiaryDates, loading, locked, postId, selectedDiaryDate, studentSession?.id]);
 
     const handleDiaryDateChange = (event) => {
         const nextDate = event.target.value;
@@ -311,15 +358,19 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
             p_content: form.content,
             p_visibility: form.visibility
         });
-        setSaving(false);
-
         if (error || !data?.success) {
+            setSaving(false);
             console.error('일기 저장 실패:', error?.message || data?.error);
             alert(error?.code === '23505'
                 ? '선택한 날짜에는 이미 일기가 있어요. 그 일기를 목록에서 열어 주세요.'
                 : (error?.message || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'));
             return;
         }
+
+        // 자동 임시저장을 먼저 끈다. `saving` 만 내리면 아래 알림창이 화면을 붙드는 동안
+        // 예약돼 있던 자동저장이 깨어나 방금 지운 임시본을 완성본 내용으로 다시 쓴다.
+        setCompleted(true);
+        setSaving(false);
 
         clearLocalDraft();
         const draftDatesToClear = [...new Set([
@@ -526,9 +577,18 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         setLoading(false);
     }, [classId, studentId]);
 
+    /*
+     * 편집기를 여는 동안에는 목록을 다시 읽지 않는다 — 쓰던 화면 위로 덮이지 않게.
+     * 다만 목록을 한 번도 읽지 않고 곧장 편집기로 들어온 경우에는, **이미 일기를 쓴 날인지**
+     * 판단할 자료가 없어 옛 임시본 되살리기를 막을 수 없다. 그때만 한 번 읽는다.
+     */
+    const loadedOnceRef = useRef(false);
     useEffect(() => {
-        if (mode !== 'list') return undefined;
-        const timerId = window.setTimeout(load, 0);
+        if (mode !== 'list' && loadedOnceRef.current) return undefined;
+        const timerId = window.setTimeout(() => {
+            loadedOnceRef.current = true;
+            load();
+        }, 0);
         return () => window.clearTimeout(timerId);
     }, [load, mode]);
 
@@ -540,6 +600,13 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         });
         return map;
     }, [diaries]);
+
+    /*
+     * 이미 일기를 쓴 날짜들. `diaries` 는 완성된 일기만 담는다(임시본은 따로 있는 자리에 있다).
+     * **반드시 기억해 둔다** — 렌더마다 새 집합을 만들면 편집기의 임시본 불러오기 효과가
+     * 렌더마다 다시 돌아 서버를 계속 두드린다.
+     */
+    const finishedDiaryDates = useMemo(() => new Set(diaryByDate.keys()), [diaryByDate]);
 
     const todayDiary = diaryByDate.get(today) || null;
 
@@ -621,6 +688,7 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 studentSession={studentSession}
                 postId={params.postId || null}
                 diaryDate={params.diaryDate || today}
+                finishedDiaryDates={finishedDiaryDates}
                 onDone={handleEditorDone}
                 onCancel={closeEditor}
             />

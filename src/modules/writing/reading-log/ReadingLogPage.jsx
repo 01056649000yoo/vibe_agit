@@ -14,7 +14,7 @@ import {
 import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
-import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import { buildDraftKey, readLocalDraft, removeLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
 import WritingPolicyProgress from '../policy/WritingPolicyProgress';
 import {
     evaluateWritingPolicy,
@@ -25,7 +25,14 @@ import {
 } from '../policy/writingPolicy';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
-import { applyBookSelection, autoTitleFor, hasCustomTitle, readingDraftHasContent } from './draftRules';
+import {
+    applyBookSelection,
+    autoTitleFor,
+    getBookKeys,
+    hasCustomTitle,
+    isFinishedBookDraft,
+    readingDraftHasContent
+} from './draftRules';
 import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
@@ -97,11 +104,8 @@ const SHELF_WRITING_STATES = {
     }
 };
 
-const getBookKeys = (book = {}) => (
-    [book.isbn13, book.isbn10, book.title]
-        .map((value) => String(value || '').trim())
-        .filter(Boolean)
-);
+/** 아직 아무 책도 완성하지 않은 화면이 렌더마다 새 집합을 만들지 않게 한다. */
+const NO_FINISHED_BOOKS = new Set();
 
 const bookFromDraft = (book = {}) => ({
     source: book.source || 'manual',
@@ -118,7 +122,16 @@ const bookFromDraft = (book = {}) => ({
     pageCountSource: book.pageCountSource || book.page_count_source || ''
 });
 
-const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, onDone, onCancel }) => {
+const ReadingLogEditor = ({
+    studentSession,
+    postId,
+    initialBook,
+    draftBookKey,
+    // 이미 독서록을 낸 책들의 열쇠. 새 글 화면에서 옛 초안을 되살릴지 판단할 때만 쓴다.
+    finishedBookKeys = NO_FINISHED_BOOKS,
+    onDone,
+    onCancel
+}) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const createInitialForm = () => ({
         ...EMPTY_FORM,
@@ -130,6 +143,15 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
     const [locked, setLocked] = useState(false);
+    /*
+     * 이 화면에서 `작성 완료` 가 끝났는가.
+     *
+     * 완료 뒤에도 자동 임시저장이 켜져 있으면, 저장 알림창이 화면을 붙드는 동안 예약돼 있던
+     * 저장이 **방금 완성한 내용을 임시본에 다시 쓴다**. 지운 초안이 되살아나 다음 `새 독서록`
+     * 화면에 옛 글이 올라오고, 그대로 완료를 누르면 "한 책 = 한 독서록" 제약에 걸린다.
+     * 그래서 완료 순간부터 화면을 벗어날 때까지 자동 저장을 꺼 둔다(2026-08-25).
+     */
+    const [completed, setCompleted] = useState(false);
     const [completedPostAt, setCompletedPostAt] = useState(null);
     const [writingPolicy, setWritingPolicy] = useState(READING_LOG_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
@@ -255,8 +277,14 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     const restoreDraft = useCallback((stored, storedAt) => {
         // 완성본 저장 뒤 초안 정리만 실패했을 때 옛 로컬 초안이 되살아나지 않게 한다.
         if (completedPostAt && storedAt && storedAt <= completedPostAt) return;
+        // 새 글 화면에는 완성본 시각이 없어 위 방어가 돌지 않는다. 책으로 판정하고,
+        // 되살리지 않기로 한 초안은 다음에 또 올라오지 않게 그 자리에서 지운다.
+        if (!postId && isFinishedBookDraft(stored?.selectedBook, finishedBookKeys)) {
+            removeLocalDraft(draftKey);
+            return;
+        }
         setForm((current) => ({ ...current, ...stored }));
-    }, [completedPostAt]);
+    }, [completedPostAt, draftKey, finishedBookKeys, postId]);
     const {
         savedAt: draftSavedAt,
         error: draftError,
@@ -265,7 +293,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     } = useLocalWritingDraft(
         draftKey,
         form,
-        { enabled: !loading && !saving && !locked, hasContent: draftHasContent, onRestore: restoreDraft }
+        {
+            enabled: !loading && !saving && !locked && !completed,
+            hasContent: draftHasContent,
+            onRestore: restoreDraft
+        }
     );
 
     /*
@@ -299,6 +331,23 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
             }
             if (!data) return;
 
+            /*
+             * 새 글 화면(`postId` 없음)에는 완성본 시각이 없어 아래 시각 방어가 돌지 않는다.
+             * 게다가 새 독서록은 모두 `new` 라는 한 자리를 함께 쓰므로, 완성 뒤 정리가 한 번만
+             * 어긋나면 이미 낸 독서록이 여기로 되살아난다. 책으로 판정해 막고, 다른 기기에서도
+             * 또 올라오지 않게 서버에서 지운다.
+             */
+            if (!postId && isFinishedBookDraft(data.book, finishedBookKeys)) {
+                const { error: cleanupError } = await supabase.rpc('delete_my_reading_log_draft', {
+                    p_post_id: null,
+                    p_book_key: bookKey
+                });
+                if (cleanupError) console.error('낡은 독서록 임시본 정리 실패:', cleanupError.message);
+                if (!active) return;
+                setServerDraftAt(null);
+                return;
+            }
+
             const serverAt = new Date(data.updated_at);
             setServerDraftAt(serverAt);
 
@@ -324,7 +373,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
             active = false;
         };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-    }, [bookKey, completedPostAt, draftKey, loading, locked, postId, studentSession?.id]);
+        // `completed` 는 일부러 넣지 않는다 — 완료 뒤 이 효과가 다시 돌면 방금 지운 임시본을
+        // 다시 읽어 올 수 있다.
+    }, [bookKey, completedPostAt, draftKey, finishedBookKeys, loading, locked, postId, studentSession?.id]);
 
     const handleSaveDraft = async () => {
         if (locked) {
@@ -464,6 +515,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 // 외부 서지 서비스가 잠시 실패해도 이미 저장된 독서록 완료 흐름은 유지한다.
             }
         }
+        // 자동 임시저장을 먼저 끈다. `saving` 만 내리면 아래 알림창이 화면을 붙드는 동안
+        // 예약돼 있던 자동저장이 깨어나 방금 지운 임시본을 완성본 내용으로 다시 쓴다.
+        setCompleted(true);
         setSaving(false);
 
         setInitialForm(form);
@@ -656,9 +710,18 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         setLoading(false);
     }, []);
 
+    /*
+     * 편집기를 여는 동안에는 책장을 다시 읽지 않는다 — 쓰던 화면 위로 덮이지 않게.
+     * 다만 책장을 한 번도 읽지 않고 곧장 편집기로 들어온 경우에는, **이미 독서록을 낸 책인지**
+     * 판단할 자료가 없어 옛 초안 되살리기를 막을 수 없다. 그때만 한 번 읽는다.
+     */
+    const loadedOnceRef = useRef(false);
     useEffect(() => {
-        if (isEditing) return undefined;
-        const timerId = window.setTimeout(fetchLogs, 0);
+        if (isEditing && loadedOnceRef.current) return undefined;
+        const timerId = window.setTimeout(() => {
+            loadedOnceRef.current = true;
+            fetchLogs();
+        }, 0);
         return () => window.clearTimeout(timerId);
     }, [fetchLogs, isEditing]);
 
@@ -858,6 +921,15 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         new Map(teacherReviews.map((review) => [review.post_id, review]))
     ), [teacherReviews]);
 
+    /*
+     * 이미 독서록을 낸 책들. `logs` 는 완성된 독서록만 담는다(임시본은 따로 있는 자리에 있다).
+     * **반드시 기억해 둔다** — 렌더마다 새 집합을 만들면 편집기의 임시본 불러오기 효과가
+     * 렌더마다 다시 돌아 서버를 계속 두드린다.
+     */
+    const finishedBookKeys = useMemo(() => new Set(
+        logs.flatMap((log) => getBookKeys(bookFromStructuredContent(log.structured_content || {})))
+    ), [logs]);
+
     if (isEditing) {
         return (
             <ReadingLogEditor
@@ -865,6 +937,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 postId={params.postId}
                 initialBook={params.book}
                 draftBookKey={params.draftBookKey}
+                finishedBookKeys={finishedBookKeys}
                 onDone={handleEditorDone}
                 onCancel={openList}
             />

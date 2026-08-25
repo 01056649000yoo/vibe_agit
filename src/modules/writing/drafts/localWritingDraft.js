@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * 태블릿 배터리가 나가거나 실수로 뒤로 가도 쓰던 글이 사라지지 않게 하는 것이 목적이다.
  * 서버에 보내지 않으므로 다른 단말에서는 보이지 않는다 — 서버 저장은 각 화면의 `저장` 이 맡는다.
  *
- * 과제 글쓰기(`StudentWriting`)와 독서록(`ReadingLogPage`)이 같은 파일을 쓴다.
+ * 과제 글쓰기(`StudentWriting`)와 독서록(`ReadingLogPage`)·일기(`DiaryPage`)가 같은 파일을 쓴다.
  */
 
 /** 화면마다 열쇠 앞가지를 다르게 두어 과제 글과 독서록이 서로 덮어쓰지 않게 한다. */
@@ -50,6 +50,33 @@ export const removeLocalDraft = (key) => {
 /** 손을 멈추고 이만큼 지나면 남긴다. 글자마다 저장하면 느린 태블릿에서 입력이 밀린다. */
 const SAVE_DELAY_MS = 1500;
 
+/** 내용이 같은지 견주기 위한 한 줄 표현. 실패하면 `null` — 그때는 잠그지 않는다(저장이 우선). */
+const draftFingerprint = (draft) => {
+    try {
+        return JSON.stringify(draft);
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * 방금 지운 그 내용을 **다시 쓰려는 것인가**.
+ *
+ * 왜 필요한가 — 완성 저장이 끝나면 화면은 임시본을 지운다. 그런데 그 직후 `저장했어요` 알림창이
+ * 화면을 붙드는 동안, 1.5초 뒤로 예약돼 있던 자동 저장이 깨어나 **방금 지운 내용을 그대로 다시
+ * 쓴다**. 학생이 확인을 누르기까지는 반드시 1.5초가 넘으므로 사실상 매번 되살아났다.
+ * 독서록에서 실제로 그 일이 났고, 되살아난 임시본이 다음 `새 글` 화면에 올라와 학생이
+ * "이미 한 편 있어요" 앞에 갇혔다(2026-08-25).
+ *
+ * 화면마다 "완료하면 자동 저장을 꺼라" 를 기억하게 하면 새 글쓰기 화면이 생길 때마다 또 빠뜨린다.
+ * 그래서 **지운 장치 자신이 기억한다** — 지운 내용과 똑같으면 다시 쓰지 않고, 학생이 다시 손대
+ * 내용이 달라지면 저절로 풀린다.
+ */
+export const isClearedDraft = (cleared, key, draft) => {
+    if (!cleared || !key || cleared.key !== key || cleared.fingerprint === null) return false;
+    return cleared.fingerprint === draftFingerprint(draft);
+};
+
 /** 기본값도 렌더마다 새로 만들지 않아야 효과가 헛돌지 않는다. */
 const ALWAYS_HAS_CONTENT = () => true;
 
@@ -79,6 +106,8 @@ export const useLocalWritingDraft = (key, draft, {
     });
     const [error, setError] = useState('');
     const restoredKeyRef = useRef(null);
+    // 방금 지운 열쇠와 그때 내용. 규칙과 근거는 위 `isClearedDraft` 에 있다.
+    const clearedRef = useRef(null);
     // `saveNow` 가 늘 최신 내용을 남기도록, 지금 화면의 내용을 따로 담아 둔다.
     const draftRef = useRef(draft);
     useEffect(() => {
@@ -102,6 +131,8 @@ export const useLocalWritingDraft = (key, draft, {
 
     useEffect(() => {
         if (!key || !enabled || !hasContent(draft)) return undefined;
+        // 방금 지운 그 내용이면 다시 쓰지 않는다.
+        if (isClearedDraft(clearedRef.current, key, draft)) return undefined;
 
         const timer = setTimeout(() => {
             const written = writeLocalDraft(key, draft);
@@ -123,6 +154,8 @@ export const useLocalWritingDraft = (key, draft, {
 
         const saveNow = () => {
             if (!hasContent(draft)) return;
+            // 완성 저장 직후 화면을 덮거나 앱을 벗어나도 지운 내용이 되살아나지 않게 한다.
+            if (isClearedDraft(clearedRef.current, key, draft)) return;
             writeLocalDraft(key, draft);
         };
         const onHide = () => {
@@ -139,6 +172,8 @@ export const useLocalWritingDraft = (key, draft, {
 
     const clear = useCallback(() => {
         removeLocalDraft(key);
+        // 지운 내용을 기억해 둔다. 예약돼 있던 자동 저장이 깨어나도 이 내용은 다시 쓰지 않는다.
+        clearedRef.current = { key, fingerprint: draftFingerprint(draftRef.current) };
         setSavedAt(null);
         setError('');
     }, [key]);
@@ -146,6 +181,8 @@ export const useLocalWritingDraft = (key, draft, {
     // 학생이 `임시 저장` 을 눌렀을 때처럼 기다리지 않고 지금 남긴다.
     const saveNow = useCallback(() => {
         if (!key) return null;
+        // 학생이 스스로 누른 저장이므로 잠금을 푼다 — 다시 쓰는 중이라는 뜻이다.
+        clearedRef.current = null;
         const written = writeLocalDraft(key, draftRef.current);
         if (written) {
             setSavedAt(new Date(written));

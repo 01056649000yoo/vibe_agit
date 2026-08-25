@@ -47,3 +47,8 @@ supabase/migrations/20260224_final_security_fix.sql
 
 # 편지지·PDF 미리보기 등 눈으로 확인하려고 뽑아 둔 산출물
 output/
+
+# 눈으로 확인하려고 잠깐 만든 스크립트·화면 사진. 확인이 끝나면 지운다.
+# 실제로 여러 날 남아 저장소를 어지럽힌 적이 있어 아예 올라가지 않게 막는다.
+*.tmp.mjs
+*.tmp.json
