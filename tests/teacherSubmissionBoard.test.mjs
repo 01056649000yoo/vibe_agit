@@ -8,20 +8,37 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
-test('선생님 과제와 제출 전광판은 데스크톱에서 정확히 절반씩 배치된다', async () => {
-    const [manager, board, styles, missionList] = await Promise.all([
+test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 독립 탭으로 분리된다', async () => {
+    const [dashboard, hub, tab, manager, board, styles, missionList, workspace] = await Promise.all([
+        read('src/components/teacher/TeacherDashboard.jsx'),
+        read('src/components/teacher/TeacherWritingHub.jsx'),
+        read('src/components/teacher/TeacherMissionTab.jsx'),
         read('src/components/teacher/MissionManager.jsx'),
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
         read('src/components/teacher/TeacherSubmissionBoard.css'),
-        read('src/components/teacher/MissionList.jsx')
+        read('src/components/teacher/MissionList.jsx'),
+        read('src/modules/writing/mission-workspace/missionWorkspaceView.js')
     ]);
 
-    assert.match(manager, /teacher-mission-live-layout[\s\S]*TeacherSubmissionBoard/);
-    assert.match(styles, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
-    assert.match(styles, /@media \(max-width: 1180px\)[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
-    assert.match(missionList, /getMissionCardColumns\(missionCardSize, splitView\)/);
-    assert.match(manager, /isFormOpen \|\| isMissionTypePickerOpen \? ' is-single'/);
+    assert.match(workspace, /과제 만들기·관리[\s\S]*실시간 제출 현황/);
+    assert.match(manager, /role="tablist"[\s\S]*role="tab"[\s\S]*aria-selected/);
+    assert.match(manager, /tabIndex=\{isActive \? 0 : -1\}[\s\S]*handleWorkspaceTabKeyDown/);
+    assert.match(manager, /ArrowRight[\s\S]*ArrowLeft[\s\S]*Home[\s\S]*End/);
+    assert.match(manager, /teacher-mission-management-panel[\s\S]*hidden=\{isSubmissionBoardView\}/);
+    assert.match(manager, /teacher-submission-board-panel[\s\S]*hidden=\{!isSubmissionBoardView\}[\s\S]*TeacherSubmissionBoard/);
+    assert.doesNotMatch(manager, /teacher-mission-live-layout|splitView/);
+    assert.match(styles, /teacher-submission-board__content[\s\S]*minmax\(260px, 0\.72fr\) minmax\(0, 1\.8fr\)/);
+    assert.match(styles, /teacher-submission-board__mission-list[\s\S]*repeat\(auto-fit, minmax\(300px, 1fr\)\)/);
+    assert.match(missionList, /getMissionCardColumns\(missionCardSize\)/);
+    assert.doesNotMatch(styles, /teacher-submission-board\s*\{[\s\S]*position:\s*sticky/);
     assert.match(board, /실시간 제출 전광판/);
+
+    for (const source of [dashboard, hub, tab, manager]) {
+        assert.match(source, /missionWorkspaceView/);
+    }
+    assert.match(dashboard, /MISSION_WORKSPACE_VIEW_STORAGE_KEY, missionWorkspaceView/);
+    assert.match(manager, /pendingCount > 0[\s\S]*확인할 글/);
+    assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
 test('전광판은 과제별 제출 상태와 최근 제출을 같은 스냅샷으로 표시한다', async () => {
@@ -43,7 +60,7 @@ test('전광판은 과제별 제출 상태와 최근 제출을 같은 스냅샷�
     assert.match(hook, /TRANSITION_DELTAS[\s\S]*request-rewrite[\s\S]*undo-recall/);
 });
 
-test('교사 전광판 폴링은 12초·가시 화면·단일 진행 요청 계약을 지킨다', async () => {
+test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·가시 화면·단일 요청을 지킨다', async () => {
     const [hook, policy, api] = await Promise.all([
         read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
         read('src/modules/writing/submission-board/teacherSubmissionBoardPollPolicy.js'),
@@ -56,11 +73,18 @@ test('교사 전광판 폴링은 12초·가시 화면·단일 진행 요청 계�
     assert.match(hook, /inFlight/);
     assert.match(hook, /visibilitychange/);
     assert.match(hook, /mutationVersionAtStart === localMutationVersionRef\.current/);
-    assert.match(hook, /getTeacherSubmissionBoardInitialDelay/);
+    assert.match(hook, /if \(!enabled \|\| !classId \|\| !hasSnapshot\)/);
+    assert.match(hook, /schedule\(0\)/);
+    assert.match(hook, /\[classId, enabled, hasSnapshot\]/);
     assert.match(hook, /getTeacherSubmissionBoardNextDelay/);
     assert.doesNotMatch(hook, /setInterval\s*\(|\.channel\(|postgres_changes/);
     assert.match(api, /get_teacher_assignment_submission_board_v1/);
     assert.match(api, /p_recent_limit:\s*TEACHER_SUBMISSION_BOARD_RECENT_LIMIT/);
+
+    const manager = await read('src/components/teacher/MissionManager.jsx');
+    const managerHook = await read('src/hooks/useMissionManager.js');
+    assert.match(manager, /submissionBoardPollingEnabled: isSubmissionBoardView/);
+    assert.match(managerHook, /enabled: submissionBoardPollingEnabled/);
 });
 
 test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집계를 사용한다', async () => {

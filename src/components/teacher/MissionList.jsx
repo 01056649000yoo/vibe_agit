@@ -150,10 +150,10 @@ const MissionList = ({
     missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    highlightedMissionId, missionCardSize, splitView = false
+    highlightedMissionId, missionCardSize
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
-    const cardColumns = getMissionCardColumns(missionCardSize, splitView);
+    const cardColumns = getMissionCardColumns(missionCardSize);
 
     if (loading) {
         return <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중...</div>;

@@ -11,9 +11,9 @@ export const MISSION_CARD_SIZE_OPTIONS = Object.freeze([
 const VALID_MISSION_CARD_SIZES = new Set(MISSION_CARD_SIZE_OPTIONS.map((option) => option.id));
 
 const COLUMN_PRESETS = Object.freeze({
-    small: Object.freeze({ split: 2, full: 4 }),
-    medium: Object.freeze({ split: 2, full: 3 }),
-    large: Object.freeze({ split: 1, full: 2 })
+    small: 4,
+    medium: 3,
+    large: 2
 });
 
 export const normalizeMissionCardSize = (value) => (
@@ -25,7 +25,4 @@ export const migrateLegacyMissionCardSize = (legacyLayout) => {
     return DEFAULT_MISSION_CARD_SIZE;
 };
 
-export const getMissionCardColumns = (size, splitView) => {
-    const preset = COLUMN_PRESETS[normalizeMissionCardSize(size)];
-    return splitView ? preset.split : preset.full;
-};
+export const getMissionCardColumns = (size) => COLUMN_PRESETS[normalizeMissionCardSize(size)];

@@ -38,6 +38,11 @@ import {
     migrateLegacyMissionCardSize,
     normalizeMissionCardSize
 } from '../../modules/writing/mission-card-layout/missionCardLayout';
+import {
+    DEFAULT_MISSION_WORKSPACE_VIEW,
+    MISSION_WORKSPACE_VIEW_STORAGE_KEY,
+    normalizeMissionWorkspaceView
+} from '../../modules/writing/mission-workspace/missionWorkspaceView';
 import './TeacherDashboard.css';
 
 const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
@@ -66,6 +71,16 @@ const loadMissionCardSize = () => {
     }
 };
 
+const loadMissionWorkspaceView = () => {
+    try {
+        return normalizeMissionWorkspaceView(
+            window.localStorage.getItem(MISSION_WORKSPACE_VIEW_STORAGE_KEY)
+        );
+    } catch {
+        return DEFAULT_MISSION_WORKSPACE_VIEW;
+    }
+};
+
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
@@ -90,6 +105,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [adminPasswordError, setAdminPasswordError] = useState('');
     const [isVerifyingAdminPassword, setIsVerifyingAdminPassword] = useState(false);
     const [missionCardSize, setMissionCardSize] = useState(loadMissionCardSize);
+    const [missionWorkspaceView, setMissionWorkspaceView] = useState(loadMissionWorkspaceView);
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
@@ -134,6 +150,14 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
     useEffect(() => {
         try {
+            window.localStorage.setItem(MISSION_WORKSPACE_VIEW_STORAGE_KEY, missionWorkspaceView);
+        } catch {
+            // 저장소가 차단된 환경에서도 현재 화면 선택은 그대로 유지한다.
+        }
+    }, [missionWorkspaceView]);
+
+    useEffect(() => {
+        try {
             window.sessionStorage.setItem(TEACHER_TAB_STORAGE_KEY, currentTab);
         } catch {
             // 저장소가 차단된 환경에서는 기존 기본 탭 동작을 유지한다.
@@ -151,6 +175,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             ...target,
             requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         });
+        if (target.tab === 'dashboard') setMissionWorkspaceView('manage');
         setCurrentTab(target.tab);
     }, []);
 
@@ -222,7 +247,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
-    const showsMissionCardSizeControls = !isMobile && visibleTab === 'dashboard';
+    const showsMissionCardSizeControls = !isMobile
+        && visibleTab === 'dashboard'
+        && missionWorkspaceView === 'manage';
 
     return (
         <div className="teacher-dashboard">
@@ -449,6 +476,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 isMobile={isMobile}
                                 section={visibleTab === 'dashboard' ? 'missions' : visibleTab}
                                 missionCardSize={missionCardSize}
+                                missionWorkspaceView={missionWorkspaceView}
+                                onMissionWorkspaceViewChange={setMissionWorkspaceView}
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}

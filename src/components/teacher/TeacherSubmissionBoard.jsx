@@ -125,52 +125,54 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
                 </div>
             </section>
 
-            <section className="teacher-submission-board__recent" aria-labelledby="teacher-submission-recent-title">
-                <div className="teacher-submission-board__section-title">
-                    <h5 id="teacher-submission-recent-title">최근 제출</h5>
-                    <span>최신 4건</span>
-                </div>
-                {recentSubmissions.length > 0 ? (
-                    <ol>
-                        {recentSubmissions.map((item) => (
-                            <li key={item.event_id}>
-                                <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at)}</time>
-                                <div>
-                                    <strong>{item.student_name || '학생'}</strong>
-                                    <span>{item.mission_title || '선생님 과제'} · {item.event_type === 'post_resubmitted' ? '다시 제출' : '제출'}</span>
-                                </div>
-                            </li>
-                        ))}
-                    </ol>
-                ) : (
-                    <p className="teacher-submission-board__empty">아직 표시할 최근 제출이 없습니다.</p>
-                )}
-            </section>
+            <div className="teacher-submission-board__content">
+                <section className="teacher-submission-board__recent" aria-labelledby="teacher-submission-recent-title">
+                    <div className="teacher-submission-board__section-title">
+                        <h5 id="teacher-submission-recent-title">최근 제출</h5>
+                        <span>최신 4건</span>
+                    </div>
+                    {recentSubmissions.length > 0 ? (
+                        <ol>
+                            {recentSubmissions.map((item) => (
+                                <li key={item.event_id}>
+                                    <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at)}</time>
+                                    <div>
+                                        <strong>{item.student_name || '학생'}</strong>
+                                        <span>{item.mission_title || '선생님 과제'} · {item.event_type === 'post_resubmitted' ? '다시 제출' : '제출'}</span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+                    ) : (
+                        <p className="teacher-submission-board__empty">아직 표시할 최근 제출이 없습니다.</p>
+                    )}
+                </section>
 
-            <section className="teacher-submission-board__missions" aria-labelledby="teacher-submission-missions-title">
-                <div className="teacher-submission-board__section-title">
-                    <h5 id="teacher-submission-missions-title">과제별 진행 현황</h5>
-                    <div className="teacher-submission-board__legend" aria-label="진행 상태 색상 안내">
-                        <span className="is-confirmed">승인</span>
-                        <span className="is-pending">대기</span>
-                        <span className="is-rewriting">다시쓰기</span>
+                <section className="teacher-submission-board__missions" aria-labelledby="teacher-submission-missions-title">
+                    <div className="teacher-submission-board__section-title">
+                        <h5 id="teacher-submission-missions-title">과제별 진행 현황</h5>
+                        <div className="teacher-submission-board__legend" aria-label="진행 상태 색상 안내">
+                            <span className="is-confirmed">승인</span>
+                            <span className="is-pending">대기</span>
+                            <span className="is-rewriting">다시쓰기</span>
+                        </div>
                     </div>
-                </div>
-                {orderedMissions.length > 0 ? (
-                    <div className="teacher-submission-board__mission-list">
-                        {orderedMissions.map((mission) => (
-                            <MissionStatusRow
-                                key={mission.id}
-                                mission={mission}
-                                status={statuses[mission.id] || { ...EMPTY_STATUS, totalStudents: board?.total_students || 0 }}
-                                onOpen={onOpenMission}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <p className="teacher-submission-board__empty">활성 과제를 만들면 진행 현황이 여기에 표시됩니다.</p>
-                )}
-            </section>
+                    {orderedMissions.length > 0 ? (
+                        <div className="teacher-submission-board__mission-list">
+                            {orderedMissions.map((mission) => (
+                                <MissionStatusRow
+                                    key={mission.id}
+                                    mission={mission}
+                                    status={statuses[mission.id] || { ...EMPTY_STATUS, totalStudents: board?.total_students || 0 }}
+                                    onOpen={onOpenMission}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="teacher-submission-board__empty">활성 과제를 만들면 진행 현황이 여기에 표시됩니다.</p>
+                    )}
+                </section>
+            </div>
         </aside>
     );
 };

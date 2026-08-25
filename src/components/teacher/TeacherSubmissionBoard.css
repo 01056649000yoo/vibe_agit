@@ -1,26 +1,62 @@
-.teacher-mission-live-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-    gap: 16px;
+.teacher-mission-workspace-tabs {
+    display: inline-flex;
+    gap: 5px;
+    margin-bottom: 18px;
+    padding: 5px;
+    border: 1px solid #CBD5E1;
+    border-radius: 14px;
+    background: #F1F5F9;
 }
 
-.teacher-mission-live-layout.is-single {
-    grid-template-columns: minmax(0, 1fr);
+.teacher-mission-workspace-tabs button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #64748B;
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 850;
 }
 
-.teacher-mission-live-layout__cards {
+.teacher-mission-workspace-tabs button.is-active {
+    border-color: #BFDBFE;
+    background: #FFFFFF;
+    color: #1D4ED8;
+    box-shadow: 0 2px 7px rgba(30, 64, 175, 0.1);
+}
+
+.teacher-mission-workspace-tabs button:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.24);
+    outline-offset: 2px;
+}
+
+.teacher-mission-workspace-tabs strong {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    place-items: center;
+    border-radius: 999px;
+    background: #2563EB;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.teacher-mission-management-panel,
+.teacher-submission-board-panel {
     min-width: 0;
 }
 
 .teacher-submission-board {
-    position: sticky;
-    top: 106px;
-    align-self: start;
     min-width: 0;
-    max-height: calc(100vh - 126px);
-    overflow: auto;
-    padding: 16px;
+    padding: 20px;
     border: 1px solid #BFDBFE;
     border-radius: 18px;
     background: linear-gradient(180deg, #EFF6FF 0%, #F8FAFC 42%, #FFFFFF 100%);
@@ -135,7 +171,16 @@
 
 .teacher-submission-board__recent,
 .teacher-submission-board__missions {
-    margin-top: 16px;
+    min-width: 0;
+    margin-top: 0;
+}
+
+.teacher-submission-board__content {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.8fr);
+    align-items: start;
+    gap: 18px;
+    margin-top: 18px;
 }
 
 .teacher-submission-board__section-title {
@@ -227,6 +272,7 @@
 
 .teacher-submission-board__mission-list {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 9px;
 }
 
@@ -331,18 +377,24 @@
 }
 
 @media (max-width: 1180px) {
-    .teacher-mission-live-layout {
+    .teacher-submission-board__content {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .teacher-submission-board {
-        position: static;
-        grid-row: 1;
-        max-height: none;
     }
 }
 
 @media (max-width: 640px) {
+    .teacher-mission-workspace-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .teacher-mission-workspace-tabs button {
+        min-width: 0;
+        padding: 8px;
+    }
+
     .teacher-submission-board {
         padding: 13px;
         border-radius: 15px;
@@ -362,6 +414,10 @@
         grid-column: auto;
         margin: 0;
         text-align: left;
+    }
+
+    .teacher-submission-board__mission-list {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

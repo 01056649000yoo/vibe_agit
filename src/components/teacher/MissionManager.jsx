@@ -5,6 +5,10 @@ import { dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
 import { applyGenrePreset, getFreeformGenreCategories } from '../../modules/writing/mission-types/genreCatalog';
+import {
+    MISSION_WORKSPACE_VIEW_OPTIONS,
+    normalizeMissionWorkspaceView
+} from '../../modules/writing/mission-workspace/missionWorkspaceView';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionTypePicker from './MissionTypePicker';
@@ -30,8 +34,11 @@ const MissionLabSourcesModal = lazy(() => import('./MissionLabSourcesModal'));
  */
 const MissionManager = ({
     activeClass, isDashboardMode = true, missionCardSize,
+    missionWorkspaceView, onMissionWorkspaceViewChange,
     navigationTarget, onNavigationHandled, bootstrapProfile
 }) => {
+    const activeWorkspaceView = normalizeMissionWorkspaceView(missionWorkspaceView);
+    const isSubmissionBoardView = activeWorkspaceView === 'board';
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
@@ -63,7 +70,9 @@ const MissionManager = ({
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         addTeacherComment, deleteTeacherComment, handleTeacherEditPost
-    } = useMissionManager(activeClass, bootstrapProfile);
+    } = useMissionManager(activeClass, bootstrapProfile, {
+        submissionBoardPollingEnabled: isSubmissionBoardView
+    });
 
     const [reportMission, setReportMission] = useState(null);
 
@@ -78,6 +87,23 @@ const MissionManager = ({
         const timerId = window.setTimeout(() => setHighlightedMissionId(null), 5000);
         return () => window.clearTimeout(timerId);
     }, [highlightedMissionId]);
+
+    const handleWorkspaceTabKeyDown = (event, currentIndex) => {
+        const lastIndex = MISSION_WORKSPACE_VIEW_OPTIONS.length - 1;
+        let nextIndex = null;
+        if (event.key === 'ArrowRight') nextIndex = currentIndex === lastIndex ? 0 : currentIndex + 1;
+        if (event.key === 'ArrowLeft') nextIndex = currentIndex === 0 ? lastIndex : currentIndex - 1;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = lastIndex;
+        if (nextIndex === null) return;
+
+        event.preventDefault();
+        const nextOption = MISSION_WORKSPACE_VIEW_OPTIONS.at(nextIndex);
+        onMissionWorkspaceViewChange?.(nextOption.id);
+        event.currentTarget.parentElement
+            ?.querySelector(`#teacher-mission-workspace-tab-${nextOption.id}`)
+            ?.focus();
+    };
 
     const genreCategories = getFreeformGenreCategories();
 
@@ -226,106 +252,144 @@ const MissionManager = ({
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     {isDashboardMode && <TeacherGuideButton tabId="dashboard" variant="help" />}
-                    <Button
-                        onClick={() => {
-                            if (isFormOpen) {
-                                handleCancelEdit();
-                                setIsMissionTypePickerOpen(false);
-                            } else {
-                                setIsMissionTypePickerOpen((open) => !open);
-                            }
-                        }}
-                        style={{
-                            background: isFormOpen || isMissionTypePickerOpen ? '#FF5252' : '#3498DB',
-                            color: 'white', padding: isMobile ? '8px 12px' : '8px 14px',
-                            fontSize: isMobile ? '0.82rem' : '0.9rem',
-                            minHeight: isMobile ? '44px' : '38px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        {isFormOpen || isMissionTypePickerOpen ? '✖ 닫기' : '➕ 미션 만들기'}
-                    </Button>
+                    {!isSubmissionBoardView && (
+                        <Button
+                            onClick={() => {
+                                if (isFormOpen) {
+                                    handleCancelEdit();
+                                    setIsMissionTypePickerOpen(false);
+                                } else {
+                                    setIsMissionTypePickerOpen((open) => !open);
+                                }
+                            }}
+                            style={{
+                                background: isFormOpen || isMissionTypePickerOpen ? '#FF5252' : '#3498DB',
+                                color: 'white', padding: isMobile ? '8px 12px' : '8px 14px',
+                                fontSize: isMobile ? '0.82rem' : '0.9rem',
+                                minHeight: isMobile ? '44px' : '38px',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {isFormOpen || isMissionTypePickerOpen ? '✖ 닫기' : '➕ 미션 만들기'}
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {isMissionTypePickerOpen && (
-                <MissionTypePicker
-                    isMobile={isMobile}
-                    onClose={() => setIsMissionTypePickerOpen(false)}
-                    onSelectFreeform={(genreId) => {
-                        setIsMissionTypePickerOpen(false);
-                        if (genreId) {
-                            setFormData((current) => applyGenrePreset(current, genreId).formData);
-                            setPresetGenre(genreId);
-                        }
-                        setIsFormOpen(true);
-                    }}
-                    onSelectGenre={(id) => {
-                        setIsMissionTypePickerOpen(false);
-                        setEditingGenreMission(null);
-                        setActiveGenreMode('create');
-                        setActiveGenreMissionId(id);
-                    }}
-                />
-            )}
+            <div className="teacher-mission-workspace-tabs" role="tablist" aria-label="선생님 과제 화면 선택">
+                {MISSION_WORKSPACE_VIEW_OPTIONS.map((option, index) => {
+                    const isActive = activeWorkspaceView === option.id;
+                    const pendingCount = option.id === 'board'
+                        ? Number(submissionBoard.pending_total || 0)
+                        : 0;
+                    return (
+                        <button
+                            key={option.id}
+                            id={`teacher-mission-workspace-tab-${option.id}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            aria-controls={`teacher-mission-workspace-panel-${option.id}`}
+                            tabIndex={isActive ? 0 : -1}
+                            className={isActive ? 'is-active' : ''}
+                            onClick={() => onMissionWorkspaceViewChange?.(option.id)}
+                            onKeyDown={(event) => handleWorkspaceTabKeyDown(event, index)}
+                        >
+                            <span aria-hidden="true">{option.icon}</span>
+                            {option.label}
+                            {pendingCount > 0 && <strong aria-label={`확인할 글 ${pendingCount}건`}>{pendingCount}</strong>}
+                        </button>
+                    );
+                })}
+            </div>
 
-            {/* 미션 등록/수정 폼 */}
-            <MissionForm
-                classId={activeClass?.id}
-                isFormOpen={isFormOpen}
-                isEditing={isEditing}
-                editingMissionId={editingMissionId}
-                formData={formData}
-                setFormData={setFormData}
-                genreCategories={genreCategories}
-                presetGenre={presetGenre}
-                setPresetGenre={setPresetGenre}
-                submittedCount={editingMissionId ? (Reflect.get(submissionCounts || {}, editingMissionId) || 0) : 0}
-                handleSubmit={handleSubmit}
-                handleCancelEdit={handleCancelEdit}
-                isMobile={isMobile}
-                handleGenerateQuestions={handleGenerateQuestions}
-                isGeneratingQuestions={isGeneratingQuestions}
-                handleSaveDefaultRubric={handleSaveDefaultRubric}
-                frequentTags={frequentTags}
-                saveFrequentTag={saveFrequentTag}
-                removeFrequentTag={removeFrequentTag}
-                handleSaveDefaultSettings={handleSaveDefaultSettings}
-            />
-
-            {/* 과제 카드와 실시간 제출 전광판 — 작성/수정 중에는 폼 너비를 우선한다. */}
-            <div className={`teacher-mission-live-layout${isFormOpen || isMissionTypePickerOpen ? ' is-single' : ''}`}>
-                <div className="teacher-mission-live-layout__cards">
-                    <MissionList
-                        missions={missions}
-                        loading={loading}
-                        submissionCounts={submissionCounts}
-                        missionStatuses={submissionBoard.mission_statuses}
-                        totalStudentCount={totalStudentCount}
-                        handleEditClick={handleMissionEditClick}
-                        setArchiveModal={setArchiveModal}
-                        handleDeleteMission={handleDeleteMission}
-                        fetchPostsForMission={fetchPostsForMission}
-                        fetchMissions={fetchMissions}
+            <section
+                id="teacher-mission-workspace-panel-manage"
+                role="tabpanel"
+                aria-labelledby="teacher-mission-workspace-tab-manage"
+                className="teacher-mission-management-panel"
+                hidden={isSubmissionBoardView}
+            >
+                {isMissionTypePickerOpen && (
+                    <MissionTypePicker
                         isMobile={isMobile}
-                        showEvaluationReport={(m) => setReportMission(m)}
-                        handleEvaluationMode={handleEvaluationMode}
-                        onReviewMission={handleReviewMission}
-                        onConnectLabSources={setLabSourceMission}
-                        highlightedMissionId={highlightedMissionId}
-                        missionCardSize={missionCardSize}
-                        splitView={!isFormOpen && !isMissionTypePickerOpen}
-                    />
-                </div>
-                {!isFormOpen && !isMissionTypePickerOpen && (
-                    <TeacherSubmissionBoard
-                        missions={missions}
-                        board={submissionBoard}
-                        pollError={submissionBoardPollError}
-                        onOpenMission={handleOpenSubmissionBoardMission}
+                        onClose={() => setIsMissionTypePickerOpen(false)}
+                        onSelectFreeform={(genreId) => {
+                            setIsMissionTypePickerOpen(false);
+                            if (genreId) {
+                                setFormData((current) => applyGenrePreset(current, genreId).formData);
+                                setPresetGenre(genreId);
+                            }
+                            setIsFormOpen(true);
+                        }}
+                        onSelectGenre={(id) => {
+                            setIsMissionTypePickerOpen(false);
+                            setEditingGenreMission(null);
+                            setActiveGenreMode('create');
+                            setActiveGenreMissionId(id);
+                        }}
                     />
                 )}
-            </div>
+
+                {/* 미션 등록/수정 폼 */}
+                <MissionForm
+                    classId={activeClass?.id}
+                    isFormOpen={isFormOpen}
+                    isEditing={isEditing}
+                    editingMissionId={editingMissionId}
+                    formData={formData}
+                    setFormData={setFormData}
+                    genreCategories={genreCategories}
+                    presetGenre={presetGenre}
+                    setPresetGenre={setPresetGenre}
+                    submittedCount={editingMissionId ? (Reflect.get(submissionCounts || {}, editingMissionId) || 0) : 0}
+                    handleSubmit={handleSubmit}
+                    handleCancelEdit={handleCancelEdit}
+                    isMobile={isMobile}
+                    handleGenerateQuestions={handleGenerateQuestions}
+                    isGeneratingQuestions={isGeneratingQuestions}
+                    handleSaveDefaultRubric={handleSaveDefaultRubric}
+                    frequentTags={frequentTags}
+                    saveFrequentTag={saveFrequentTag}
+                    removeFrequentTag={removeFrequentTag}
+                    handleSaveDefaultSettings={handleSaveDefaultSettings}
+                />
+
+                <MissionList
+                    missions={missions}
+                    loading={loading}
+                    submissionCounts={submissionCounts}
+                    missionStatuses={submissionBoard.mission_statuses}
+                    totalStudentCount={totalStudentCount}
+                    handleEditClick={handleMissionEditClick}
+                    setArchiveModal={setArchiveModal}
+                    handleDeleteMission={handleDeleteMission}
+                    fetchPostsForMission={fetchPostsForMission}
+                    fetchMissions={fetchMissions}
+                    isMobile={isMobile}
+                    showEvaluationReport={(m) => setReportMission(m)}
+                    handleEvaluationMode={handleEvaluationMode}
+                    onReviewMission={handleReviewMission}
+                    onConnectLabSources={setLabSourceMission}
+                    highlightedMissionId={highlightedMissionId}
+                    missionCardSize={missionCardSize}
+                />
+            </section>
+
+            <section
+                id="teacher-mission-workspace-panel-board"
+                role="tabpanel"
+                aria-labelledby="teacher-mission-workspace-tab-board"
+                className="teacher-submission-board-panel"
+                hidden={!isSubmissionBoardView}
+            >
+                <TeacherSubmissionBoard
+                    missions={missions}
+                    board={submissionBoard}
+                    pollError={submissionBoardPollError}
+                    onOpenMission={handleOpenSubmissionBoardMission}
+                />
+            </section>
 
             {labSourceMission && (
                 <Suspense fallback={null}>

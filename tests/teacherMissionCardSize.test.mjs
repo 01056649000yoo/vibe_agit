@@ -21,11 +21,7 @@ test('미션 카드 크기는 작게·보통·크게 세 단계와 한 곳의 �
     assert.equal(normalizeMissionCardSize('unknown'), 'medium');
 
     assert.deepEqual(
-        MISSION_CARD_SIZE_OPTIONS.map((option) => getMissionCardColumns(option.id, true)),
-        [2, 2, 1]
-    );
-    assert.deepEqual(
-        MISSION_CARD_SIZE_OPTIONS.map((option) => getMissionCardColumns(option.id, false)),
+        MISSION_CARD_SIZE_OPTIONS.map((option) => getMissionCardColumns(option.id)),
         [4, 3, 2]
     );
 });
@@ -40,7 +36,7 @@ test('예전 압축·5열 이상 설정만 작은 카드로 이어지고 나머�
 test('상단 조절기는 선생님 과제에서만 보이고 숫자 열 수 대신 크기를 저장한다', async () => {
     const dashboard = await read('src/components/teacher/TeacherDashboard.jsx');
 
-    assert.match(dashboard, /showsMissionCardSizeControls = !isMobile && visibleTab === 'dashboard'/);
+    assert.match(dashboard, /showsMissionCardSizeControls = !isMobile[\s\S]*missionWorkspaceView === 'manage'/);
     assert.match(dashboard, /aria-label="미션 카드 크기 설정"/);
     assert.match(dashboard, /MISSION_CARD_SIZE_OPTIONS\.map/);
     assert.match(dashboard, /MISSION_CARD_SIZE_STORAGE_KEY, missionCardSize/);

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { teacherSubmissionBoardApi } from './teacherSubmissionBoardApi';
 import {
-    getTeacherSubmissionBoardInitialDelay,
     getTeacherSubmissionBoardNextDelay
 } from './teacherSubmissionBoardPollPolicy';
 
@@ -72,7 +71,7 @@ const TRANSITION_DELTAS = new Map([
     ['undo-recall', Object.freeze({ submittedCount: -1, pendingCount: -1, rewritingCount: 1 })]
 ]);
 
-export const useTeacherSubmissionBoard = (classId) => {
+export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => {
     const [board, setBoard] = useState(() => emptyBoard());
     const [hasSnapshot, setHasSnapshot] = useState(false);
     const [pollError, setPollError] = useState(false);
@@ -93,7 +92,7 @@ export const useTeacherSubmissionBoard = (classId) => {
     }, []);
 
     useEffect(() => {
-        if (!classId || !hasSnapshot) return undefined;
+        if (!enabled || !classId || !hasSnapshot) return undefined;
 
         let stopped = false;
         let timerId = null;
@@ -146,7 +145,9 @@ export const useTeacherSubmissionBoard = (classId) => {
             schedule(0);
         };
 
-        schedule(getTeacherSubmissionBoardInitialDelay());
+        // 전광판 화면을 직접 연 동작에는 현재 스냅샷을 즉시 확인하고,
+        // 이후 요청만 완료 시점 기준 12초 간격으로 이어 간다.
+        schedule(0);
         window.addEventListener('focus', pollOnReturn);
         window.addEventListener('online', pollOnReturn);
         document.addEventListener('visibilitychange', pollOnReturn);
@@ -157,7 +158,7 @@ export const useTeacherSubmissionBoard = (classId) => {
             window.removeEventListener('online', pollOnReturn);
             document.removeEventListener('visibilitychange', pollOnReturn);
         };
-    }, [classId, hasSnapshot]);
+    }, [classId, enabled, hasSnapshot]);
 
     const transitionMissionStatus = useCallback((missionId, transition, count = 1) => {
         const delta = TRANSITION_DELTAS.get(transition);

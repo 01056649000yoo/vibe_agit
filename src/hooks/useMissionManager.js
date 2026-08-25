@@ -9,7 +9,11 @@ import { assignmentApi } from '../modules/writing/assignmentApi';
 import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
 
-export const useMissionManager = (activeClass, bootstrapProfile = null) => {
+export const useMissionManager = (
+    activeClass,
+    bootstrapProfile = null,
+    { submissionBoardPollingEnabled = false } = {}
+) => {
     const [missions, setMissions] = useState([]);
     const {
         board: submissionBoard,
@@ -17,7 +21,7 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
         pollError: submissionBoardPollError,
         hydrateBoard: hydrateSubmissionBoard,
         transitionMissionStatus
-    } = useTeacherSubmissionBoard(activeClass?.id);
+    } = useTeacherSubmissionBoard(activeClass?.id, { enabled: submissionBoardPollingEnabled });
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedMission, setSelectedMission] = useState(null);
