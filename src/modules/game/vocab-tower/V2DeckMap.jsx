@@ -347,7 +347,20 @@ const V2DeckMap = ({
                                         <div className="vocab-deck-card__states" aria-label={`${deckNumber}층 낱말 학습 상태`}>
                                             <div className="is-new"><span>처음 볼 낱말</span><strong>{unseenCount}</strong></div>
                                             <div className="is-learning"><span>연습 중</span><strong>{learningCount}</strong></div>
-                                            <div className="is-review"><span>다시 볼 낱말</span><strong>{needsReviewCount}</strong></div>
+                                            <div className="is-review">
+                                                <span>다시 볼 낱말</span>
+                                                <span className="vocab-deck-card__state-action">
+                                                    <strong>{needsReviewCount}</strong>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onOpenCardBox(deckNumber, 'needs_review')}
+                                                        disabled={submitting || needsReviewCount === 0}
+                                                        aria-label={`${deckNumber}층 다시 볼 낱말 ${needsReviewCount}개 확인`}
+                                                    >
+                                                        확인
+                                                    </button>
+                                                </span>
+                                            </div>
                                             <div className="is-mastered"><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
                                         </div>
 

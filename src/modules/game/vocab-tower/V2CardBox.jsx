@@ -32,6 +32,7 @@ const SECTIONS = Object.freeze([
     { id: 'almost', label: '거의 익혔어요', icon: '🌿', tone: 'is-almost' },
     { id: 'mastered', label: '완전히 익힘', icon: '🌳', tone: 'is-mastered', chips: true }
 ]);
+const REVIEW_SECTION_IDS = Object.freeze(['confusing', 'review_now']);
 
 /**
  * 낱말을 가리는 방향에서는 예문에 정답이 그대로 들어 있어 빈칸으로 바꿔 보여 준다.
@@ -70,11 +71,27 @@ const buildEvidence = (card) => {
     return lines;
 };
 
-const V2CardBox = ({ cardBox, notice, onBack }) => {
+const V2CardBox = ({
+    cardBox,
+    view = 'all',
+    notice,
+    submitting = false,
+    practiceBlockedMessage = '',
+    onPractice,
+    onBack
+}) => {
     const cards = Array.isArray(cardBox?.cards) ? cardBox.cards : [];
-    const [openSections, setOpenSections] = useState(() => new Set());
+    const isReviewView = view === 'needs_review';
+    // 지도에서 `다시 볼 낱말`로 바로 들어오면 두 관련 묶음을 펼쳐서 목록을 곧바로 보여 준다.
+    // 일반 카드함은 기존처럼 모든 묶음을 접은 채로 시작한다.
+    const [openSections, setOpenSections] = useState(() => (
+        isReviewView ? new Set(REVIEW_SECTION_IDS) : new Set()
+    ));
     const [revealed, setRevealed] = useState(() => new Set());
     const [mode, setMode] = useState('meaning');
+    const visibleCards = isReviewView
+        ? cards.filter((card) => card.learning_state === 'needs_review')
+        : cards;
 
     const hideWord = mode === 'word';
     const deckNumber = Number(cardBox?.deck_number || 0);
@@ -82,7 +99,8 @@ const V2CardBox = ({ cardBox, notice, onBack }) => {
     const seenCount = Number(cardBox?.seen_count || 0);
     const unseenCount = Number(cardBox?.unseen_count || 0);
     const masteredCount = cards.filter((card) => card.card_state === 'mastered').length;
-    const allRevealed = cards.length > 0 && revealed.size >= cards.length;
+    const confusingCount = visibleCards.filter((card) => card.card_state === 'confusing').length;
+    const allRevealed = visibleCards.length > 0 && revealed.size >= visibleCards.length;
 
     const toggleSection = (id) => setOpenSections((current) => {
         const next = new Set(current);
@@ -103,7 +121,7 @@ const V2CardBox = ({ cardBox, notice, onBack }) => {
     };
 
     const toggleAll = () => setRevealed(
-        allRevealed ? new Set() : new Set(cards.map((card) => card.item_key))
+        allRevealed ? new Set() : new Set(visibleCards.map((card) => card.item_key))
     );
 
     return (
@@ -111,24 +129,40 @@ const V2CardBox = ({ cardBox, notice, onBack }) => {
             <main className="vocab-card-box">
                 <button type="button" className="vocab-journey__back" onClick={onBack}>← 탑 지도</button>
                 <p className="vocab-intro-card__eyebrow">{deckNumber}층 낱말 카드함</p>
-                <h1>내가 만난 낱말</h1>
+                <h1>{isReviewView ? '다시 볼 낱말 모아보기' : '내가 만난 낱말'}</h1>
                 <p className="vocab-intro-card__lead">
-                    가려진 쪽을 먼저 <strong>떠올려 본 뒤</strong> 확인해 보세요. 그냥 읽을 때보다 훨씬 잘 기억나요.
+                    {isReviewView ? (
+                        <>헷갈렸던 낱말만 모았어요. 가려진 쪽을 <strong>떠올려 본 뒤</strong> 확인하고 다시 연습해 보세요.</>
+                    ) : (
+                        <>가려진 쪽을 먼저 <strong>떠올려 본 뒤</strong> 확인해 보세요. 그냥 읽을 때보다 훨씬 잘 기억나요.</>
+                    )}
                 </p>
 
-                <div className="vocab-card-box__summary" aria-label="카드함 요약">
-                    <div><span>만난 낱말</span><strong>{seenCount}/{itemCount}</strong></div>
-                    <div><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
-                    <div><span>아직 만나지 않음</span><strong>{unseenCount}</strong></div>
+                <div className={`vocab-card-box__summary${isReviewView ? ' is-review' : ''}`} aria-label={isReviewView ? '다시 볼 낱말 요약' : '카드함 요약'}>
+                    {isReviewView ? (
+                        <>
+                            <div><span>다시 볼 낱말</span><strong>{visibleCards.length}</strong></div>
+                            <div><span>자주 헷갈림</span><strong>{confusingCount}</strong></div>
+                            <div><span>이 층에서 만남</span><strong>{seenCount}/{itemCount}</strong></div>
+                        </>
+                    ) : (
+                        <>
+                            <div><span>만난 낱말</span><strong>{seenCount}/{itemCount}</strong></div>
+                            <div><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
+                            <div><span>아직 만나지 않음</span><strong>{unseenCount}</strong></div>
+                        </>
+                    )}
                 </div>
 
                 {notice && <p className="vocab-journey__notice" role="alert">{notice}</p>}
 
-                {cards.length === 0 ? (
+                {visibleCards.length === 0 ? (
                     <div className="vocab-card-box__empty">
                         <span aria-hidden="true">📭</span>
-                        <strong>아직 만난 낱말이 없어요.</strong>
-                        <p>이 층을 한 번 연습하면 만난 낱말이 여기에 차곡차곡 쌓여요.</p>
+                        <strong>{isReviewView ? '지금 다시 볼 낱말이 없어요.' : '아직 만난 낱말이 없어요.'}</strong>
+                        <p>{isReviewView
+                            ? '연습해서 모두 정리했나 봐요. 새로운 연습을 이어가 보세요.'
+                            : '이 층을 한 번 연습하면 만난 낱말이 여기에 차곡차곡 쌓여요.'}</p>
                     </div>
                 ) : (
                     <>
@@ -156,7 +190,7 @@ const V2CardBox = ({ cardBox, notice, onBack }) => {
                         </div>
 
                         {SECTIONS.map((section) => {
-                            const sectionCards = cards.filter((card) => card.card_state === section.id);
+                            const sectionCards = visibleCards.filter((card) => card.card_state === section.id);
                             if (sectionCards.length === 0) return null;
                             const isOpen = openSections.has(section.id);
                             const panelId = `vocab-card-section-${section.id}`;
@@ -249,7 +283,24 @@ const V2CardBox = ({ cardBox, notice, onBack }) => {
                     </>
                 )}
 
-                <button type="button" className="vocab-journey__primary" onClick={onBack}>탑 지도로 돌아가기</button>
+                {isReviewView ? (
+                    <div className="vocab-card-box__actions">
+                        {practiceBlockedMessage && (
+                            <p className="vocab-card-box__practice-note" role="note">{practiceBlockedMessage}</p>
+                        )}
+                        <button
+                            type="button"
+                            className="vocab-journey__primary"
+                            onClick={onPractice}
+                            disabled={submitting || visibleCards.length === 0 || Boolean(practiceBlockedMessage)}
+                        >
+                            {submitting ? '연습 준비 중…' : '다시 볼 낱말 연습 시작'}
+                        </button>
+                        <button type="button" className="vocab-card-box__back" onClick={onBack}>탑 지도로 돌아가기</button>
+                    </div>
+                ) : (
+                    <button type="button" className="vocab-journey__primary" onClick={onBack}>탑 지도로 돌아가기</button>
+                )}
             </main>
         </div>
     );

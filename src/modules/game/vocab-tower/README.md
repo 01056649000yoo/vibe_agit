@@ -17,6 +17,8 @@
 - V2 덱 연습 RPC: `get_my_vocab_tower_v2_overview_v1`, `start_my_vocab_tower_v2_practice_v1`,
   `get_next_my_vocab_tower_v2_practice_question_v1`, `submit_my_vocab_tower_v2_practice_answer_v1`,
   `finish_my_vocab_tower_v2_practice_v1`
+- V2 낱말 카드함 RPC: `get_my_vocab_tower_v2_card_box_v1` — 학생이 고른 한 층에서 이미 만난 낱말만
+  최대 100개 반환한다. 지도 상태의 `확인`은 이 응답에서 `learning_state='needs_review'`인 낱말만 모아 보여 준다.
 - 조회는 항상 모듈을 연 학급의 `class_id`로 직접 제한하고 반환 상한을 둔다.
 
 한 층은 뜻·문장·구별의 방 세 개로 구성하며 5층·10층 마지막 방은 복습 보스가 된다. 층을 통과하면
@@ -56,7 +58,9 @@ V2 학생 화면은 잠긴 덱 10개를 지도로 보여주고, 학생이 고른
 각 덱은 낱말 익힘 진도 25·50·75·100% 네 구간에서 학급 설정 총액을 20·20·30·30%로 나눠 한 번씩만 지급한다.
 층당 총액의 기본값은 100P이며 교사가 0P 이상이면 얼마든지 정할 수 있다(2026-08-22에 위쪽 상한 500P를 없앴다.
 값 보정의 원본은 `vocab_tower_v2_floor_reward_points_v1`과 `rewardPolicy.js` 두 곳뿐이다). 서버가 학급 설정과 정답 수를 다시 확인하고 학생·학급·학년·덱 고정 이벤트 키로 중복 지급을 막는다.
-같은 덱 반복 성공은 0P다. 주관식·개인 적응 복습·카드별 숙련 상태·덱 마스터/정상 도전은 후속이다.
+같은 덱 반복 성공은 0P다. 학생은 층별 카드함에서 낱말·뜻을 양방향으로 가려 공부할 수 있다. 지도에서
+`다시 볼 낱말`의 `확인`을 누르면 자주 헷갈린 낱말까지 한데 모아 펼쳐 보고 기존 개인 적응 연습으로 바로
+이어 간다. 목록을 열 때만 한 층 카드함 RPC를 호출하며 홈·지도에 추가 조회나 폴링을 두지 않는다.
 
 첫 덱의 직접 편집 재생성 원본은
 `docs/vocab-tower/data/grade3-deck01-human-review.json`이다. 전체 40개 덱의 관리자용 생성 산출물은

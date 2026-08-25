@@ -439,11 +439,13 @@ test('낱말 카드함은 아직 만나지 않은 낱말을 노출하지 않는�
     assert.match(cardBoxMigration, /LIMIT 100/);
 });
 
-test('카드함 묶음은 모두 접힌 채로 시작한다', () => {
-    // 먼저 어디에 몇 개가 있는지 보고 필요한 묶음만 연다.
-    assert.match(cardBox, /useState\(\(\) => new Set\(\)\)/);
+test('일반 카드함은 접혀 있고 다시 볼 낱말 모아보기는 관련 묶음이 열린다', () => {
+    // 일반 카드함은 먼저 개수를 훑고 필요한 묶음만 연다.
+    assert.match(cardBox, /isReviewView \? new Set\(REVIEW_SECTION_IDS\) : new Set\(\)/);
     assert.match(cardBox, /const isOpen = openSections\.has\(section\.id\)/);
     assert.match(cardBox, /aria-expanded=\{isOpen\}/);
+    // 지도에서 바로 확인할 때는 `자주 헷갈려요`까지 포함한 다시 볼 두 묶음을 곧바로 보여 준다.
+    assert.match(cardBox, /REVIEW_SECTION_IDS = Object\.freeze\(\['confusing', 'review_now'\]\)/);
     // 열려 있는 상태를 기본값으로 되돌리지 않는다.
     assert.doesNotMatch(cardBox, /open: true/);
     assert.match(cardBox, /id: 'mastered'[\s\S]*?chips: true/);
@@ -483,6 +485,28 @@ test('카드함은 모달이 아니라 게임 화면 단계로 연다', () => {
     assert.match(v2DeckMap, /onOpenCardBox\(deckNumber\)/);
     // 만난 낱말이 없으면 볼 것이 없으므로 버튼을 만들지 않는다.
     assert.match(v2DeckMap, /seenCount > 0 && \(/);
+});
+
+test('다시 볼 낱말 확인은 한 층 카드함에서 대상만 모아 공부한 뒤 기존 연습으로 잇는다', () => {
+    // 상태 숫자 바로 옆 확인 버튼은 다시 볼 낱말 전용 보기로 카드함을 연다.
+    assert.match(v2DeckMap, /onOpenCardBox\(deckNumber, 'needs_review'\)/);
+    assert.match(v2DeckMap, /disabled=\{submitting \|\| needsReviewCount === 0\}/);
+    assert.match(v2DeckMap, />\s*확인\s*<\/button>/);
+
+    // `자주 헷갈려요`도 서버상 needs_review 상태이므로 card_state 이름이 아니라 원래 학습 상태로 거른다.
+    assert.match(cardBox, /cards\.filter\(\(card\) => card\.learning_state === 'needs_review'\)/);
+    assert.match(cardBox, /const sectionCards = visibleCards\.filter/);
+    assert.match(cardBox, /다시 볼 낱말 모아보기/);
+    assert.match(cardBox, /다시 볼 낱말 연습 시작/);
+
+    // 새 목록·연습 RPC를 만들지 않고 기존 한 층 카드함 조회와 개인 연습 시작 흐름을 재사용한다.
+    assert.equal((vocabularyGame.match(/get_my_vocab_tower_v2_card_box_v1/g) || []).length, 1);
+    assert.match(vocabularyGame, /view=\{cardBoxView\}/);
+    assert.match(vocabularyGame, /onPractice=\{\(\) => \{ void handleStart\(cardBoxDeckNumber\); \}\}/);
+    // 다른 층 연습이 진행 중이거나 현재 잠긴 층이면 공부 목록은 보되 잘못된 연습 시작은 막는다.
+    assert.match(vocabularyGame, /activeDeckNumber > 0 && activeDeckNumber !== cardBoxDeckNumber/);
+    assert.match(vocabularyGame, /cardBoxDeck && !Boolean\(cardBoxDeck\.unlocked\)/);
+    assert.match(cardBox, /visibleCards\.length === 0 \|\| Boolean\(practiceBlockedMessage\)/);
 });
 
 /*

@@ -73,6 +73,7 @@ const VocabularyTowerGame = ({
     const [submitting, setSubmitting] = useState(false);
     const [typedAnswer, setTypedAnswer] = useState('');
     const [cardBox, setCardBox] = useState(null);
+    const [cardBoxView, setCardBoxView] = useState('all');
     // 덱마스터는 층을 다 익힌 학생만 치는 공식 도전이라 연습과 상태를 섞지 않는다.
     const [masterSession, setMasterSession] = useState(null);
     const [masterQuestion, setMasterQuestion] = useState(null);
@@ -202,7 +203,7 @@ const VocabularyTowerGame = ({
         return true;
     }, [activeBoon, createQuiz, isV2, run.runId, setServerQuiz]);
 
-    const openCardBox = async (deckNumber) => {
+    const openCardBox = async (deckNumber, view = 'all') => {
         if (submitting) return;
         setSubmitting(true);
         setNotice('');
@@ -216,6 +217,7 @@ const VocabularyTowerGame = ({
             return;
         }
         setCardBox(data);
+        setCardBoxView(view);
         setPhase('card-box');
     };
 
@@ -529,11 +531,28 @@ const VocabularyTowerGame = ({
     }
 
     if (phase === 'card-box' && cardBox) {
+        const cardBoxDeckNumber = Number(cardBox.deck_number || 0);
+        const cardBoxDeck = v2Decks.find((deck) => Number(deck.deck_number) === cardBoxDeckNumber);
+        const activeDeckNumber = Number(status?.active_run?.deck_number || 0);
+        const practiceBlockedMessage = activeDeckNumber > 0 && activeDeckNumber !== cardBoxDeckNumber
+            ? `${activeDeckNumber}층에서 진행 중인 연습을 먼저 완료하세요.`
+            : cardBoxDeck && !Boolean(cardBoxDeck.unlocked)
+                ? `${cardBoxDeck.unlock_required_deck}층 덱마스터를 통과하면 이 층을 다시 연습할 수 있어요.`
+                : '';
         return (
             <V2CardBox
                 cardBox={cardBox}
+                view={cardBoxView}
                 notice={notice}
-                onBack={() => { setCardBox(null); setNotice(''); setPhase('deck-map'); }}
+                submitting={submitting}
+                practiceBlockedMessage={practiceBlockedMessage}
+                onPractice={() => { void handleStart(cardBoxDeckNumber); }}
+                onBack={() => {
+                    setCardBox(null);
+                    setCardBoxView('all');
+                    setNotice('');
+                    setPhase('deck-map');
+                }}
             />
         );
     }
