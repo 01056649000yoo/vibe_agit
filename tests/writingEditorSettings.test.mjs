@@ -167,3 +167,27 @@ test('연구소 자료는 활동 이름과 제목만 보여 준다', async () =>
     assert.match(labReferenceSource, /<h4>\{result\.title \|\| meta\.title\}<\/h4>/);
     assert.doesNotMatch(labReferenceSource, /result\.topic/);
 });
+
+/*
+ * 2026-08-25: 참고함 옆 설명이 갈래가 있기만 하면 늘 `여기서 맞춤법 검사도 해요` 라고 했다.
+ * 그런데 AI 맞춤법 검사는 **선생님이 다시 쓰기를 요청한 뒤에만** 열린다.
+ * 아직 못 쓰는 학생에게도 된다고 말하고 있었던 것이다.
+ */
+test('참고함 설명은 맞춤법 검사가 언제 열리는지 상태대로 말한다', () => {
+    // 참고함 셸은 갈래가 준 문구를 그대로 쓴다 — 무엇이 언제 열리는지는 그 갈래를 가진 쪽이 안다.
+    assert.match(referencePanel, /tabs\.filter\(\(tab\) => tab\.statusNote\)/);
+    assert.match(referencePanel, /tab\.statusReady \? '✅' : '🔒'/);
+    // 조건 없이 되는 것처럼 말하던 옛 문구가 돌아오면 걸린다.
+    assert.doesNotMatch(referencePanel, /여기서 <b>맞춤법 검사<\/b>도 해요/);
+
+    /*
+     * ⚠️ **말과 동작이 같아야 한다.** 설명의 `statusReady` 와 실제로 검사를 돌릴 수 있는 `canRun` 이
+     *    다르면, 된다고 해 놓고 눌러도 안 되거나 그 반대가 된다. 둘 다 `isReturned && !isConfirmed` 다.
+     */
+    assert.match(studentWriting, /statusReady: Boolean\(isReturned\) && !isConfirmed/);
+    assert.match(studentWriting, /canRun=\{Boolean\(isReturned\) && !isConfirmed && !submitting\}/);
+
+    // 아직 못 쓰는 상태에서도 **언제 열리는지**를 알려 준다.
+    assert.match(studentWriting, /다시 쓰기 요청을 받으면 맞춤법 검사가 열려요/);
+    assert.match(studentWriting, /AI 맞춤법 검사를 지금 할 수 있어요/);
+});

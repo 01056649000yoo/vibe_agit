@@ -518,6 +518,22 @@
 .writing-reference-tabs button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 38px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 11px; background: #f8fafc; color: #64748b; font-size: .8rem; font-weight: 800; cursor: pointer; }
 .writing-reference-tabs button.is-active { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
 
+/* 갈래 상태 알림 — 무엇이 언제 열리는지 한 줄로 알려 준다(2026-08-25).
+   아직 못 쓰는 것과 지금 되는 것을 색과 자물쇠로 갈라 준다. */
+.writing-reference-status-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.writing-reference-status-note b { flex: 0 0 auto; font-size: .8rem; }
+.writing-reference-status-note.is-ready { color: #15803d; }
+
 /* 참고 자료 안의 칩 — 무엇을 펼칠지 고른다(2026-08-25).
    ⚠️ 위쪽 갈래 탭(`writing-reference-tabs`)과 **모양을 달리한다.** 같은 모양이면 탭이 두 줄로
       보여 어느 것이 상위인지 헷갈린다. 탭은 칸을 나눠 채우고, 칩은 내용만큼만 차지한다. */

@@ -82,14 +82,25 @@ const WritingReferencePanel = ({ sections = [], renderSources, extraTabs = [], c
                         ? <ChevronUp size={18} aria-hidden="true" />
                         : <ChevronDown size={18} aria-hidden="true" />}
                 </button>
-                {/* 참고함이 무엇을 하는 곳인지 옆에 한 줄로 알려 준다(2026-08-19 사용자 요청). */}
+                {/*
+                  * 참고함이 무엇을 하는 곳인지 옆에 한 줄로 알려 준다(2026-08-19 사용자 요청).
+                  *
+                  * ⚠️ 예전에는 갈래가 있기만 하면 늘 `여기서 맞춤법 검사도 해요` 라고 했다. 그런데
+                  *    맞춤법 검사는 **선생님이 다시 쓰기를 요청한 뒤에만** 열린다. 그래서 아직 못 쓰는
+                  *    학생에게도 된다고 말하고 있었다(2026-08-25 지적).
+                  *    이제 갈래가 자기 상태 문구(`statusNote`)를 주면 그것을 그대로 쓴다 —
+                  *    무엇이 언제 열리는지는 그 갈래를 가진 쪽이 안다.
+                  */}
                 <div className="writing-reference-position-note">
                     <PanelsTopLeft size={19} aria-hidden="true" />
                     <span>
-                        <strong>
-                            선생님 질문과 내 연구소 자료를 펼쳐 두는 곳이에요
-                            {tabs.length > 1 && <> · 여기서 <b>맞춤법 검사</b>도 해요</>}
-                        </strong>
+                        <strong>선생님 질문과 내 연구소 자료를 펼쳐 두는 곳이에요</strong>
+                        {tabs.filter((tab) => tab.statusNote).map((tab) => (
+                            <small key={`note-${tab.id}`} className={`writing-reference-status-note${tab.statusReady ? ' is-ready' : ''}`}>
+                                <b aria-hidden="true">{tab.statusReady ? '✅' : '🔒'}</b>
+                                {tab.statusNote}
+                            </small>
+                        ))}
                         <small>글을 쓰면서 옆에 두고 볼 수 있어요. 가로 화면에서는 오른쪽, 세로 화면에서는 입력창 위에 보여요.</small>
                     </span>
                 </div>

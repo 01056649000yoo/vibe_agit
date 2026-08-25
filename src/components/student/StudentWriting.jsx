@@ -761,6 +761,20 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         id: 'spell-check',
                         label: '맞춤법',
                         icon: '🔍',
+                        /*
+                         * ⚠️ 참고함 옆 설명이 **언제 열리는지**를 말하게 한다(2026-08-25 요청).
+                         *    맞춤법 검사는 선생님이 `다시 쓰기` 를 요청한 뒤에만 열리는데, 예전에는
+                         *    아직 못 쓰는 학생에게도 "여기서 맞춤법 검사도 해요"라고 말하고 있었다.
+                         *    조건은 아래 `canRun` 과 같아야 한다 — 다르면 말과 동작이 어긋난다.
+                         */
+                        statusReady: Boolean(isReturned) && !isConfirmed,
+                        statusNote: isConfirmed
+                            ? '선생님이 확인을 마친 글이라 맞춤법 검사는 끝났어요.'
+                            : (isReturned
+                                ? 'AI 맞춤법 검사를 지금 할 수 있어요. 글 한 편에 한 번이에요.'
+                                : (isSubmitted
+                                    ? '선생님이 확인하는 중이에요. 다시 쓰기 요청을 받으면 맞춤법 검사가 열려요.'
+                                    : '글을 내고 선생님께 다시 쓰기 요청을 받으면 맞춤법 검사가 열려요.')),
                         // 다시 쓰기 요청을 받았을 때만 위에 눈에 띄는 줄을 띄운다(그전에는 눌러도 못 쓴다).
                         cta: (isReturned && !isConfirmed) ? {
                             label: 'AI 맞춤법 검사를 할 수 있어요',
