@@ -214,6 +214,27 @@ test('교사가 과제 글을 다시 쓸 수 있게 돌려주는 모든 전환�
     assert.match(smoke, /중복 알림이 생성되었습니다/);
 });
 
+test('강제 회수 뒤 다시쓰기와 학생 재제출은 회수 흔적을 지우고 매 주기 알림을 남긴다', async () => {
+    const [migration, smoke] = await Promise.all([
+        read('supabase/migrations/20261170_assignment_rewrite_clears_recall.sql'),
+        read('tests/sql/20261170_assignment_rewrite_clears_recall.smoke.sql')
+    ]);
+    const rewriteFunction = migration.slice(
+        migration.indexOf('CREATE OR REPLACE FUNCTION public.request_assignment_rewrite_v1'),
+        migration.indexOf('CREATE OR REPLACE FUNCTION public.writing_engine_submit_assignment')
+    );
+    const submitFunction = migration.slice(
+        migration.indexOf('CREATE OR REPLACE FUNCTION public.writing_engine_submit_assignment')
+    );
+
+    assert.match(migration, /UPDATE public\.student_posts[\s\S]*?recalled_at = NULL,[\s\S]*?recalled_by = NULL/);
+    assert.match(rewriteFunction, /is_returned = TRUE,[\s\S]*?recalled_at = NULL,[\s\S]*?recalled_by = NULL/);
+    assert.match(submitFunction, /ON CONFLICT \(student_id, mission_id\) DO UPDATE SET[\s\S]*?recalled_at = NULL,[\s\S]*?recalled_by = NULL/);
+    assert.match(smoke, /request_assignment_rewrite_v1[\s\S]*?submit_assignment_post_v1[\s\S]*?request_assignment_rewrite_v1/);
+    assert.match(smoke, /v_after_count <> v_before_count \+ 2/);
+    assert.match(smoke, /두 번째 상단 알림을 찾지 못했습니다/);
+});
+
 test('홈 bootstrap은 할 일 세 종류와 최신 미확인 알림을 한 번에 반환한다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
     const api = await read('src/modules/home/studentHomeApi.js');
