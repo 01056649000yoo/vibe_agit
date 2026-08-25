@@ -86,6 +86,10 @@ MissionStatusRow.displayName = 'MissionStatusRow';
 
 const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) => {
     const statuses = useMemo(() => board?.mission_statuses || {}, [board?.mission_statuses]);
+    const missionsById = useMemo(
+        () => new Map(missions.map((mission) => [mission.id, mission])),
+        [missions]
+    );
     const orderedMissions = useMemo(() => {
         return [...missions].sort((left, right) => {
             const leftPending = Number(statuses[left.id]?.pendingCount || 0);
@@ -94,7 +98,7 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
             return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
         });
     }, [missions, statuses]);
-    const recentSubmissions = (board?.recent_submissions || []).slice(0, 4);
+    const recentSubmissions = (board?.recent_submissions || []).slice(0, 8);
 
     return (
         <aside className="teacher-submission-board" aria-labelledby="teacher-submission-board-title">
@@ -128,21 +132,42 @@ const TeacherSubmissionBoard = ({ missions, board, pollError, onOpenMission }) =
             <div className="teacher-submission-board__content">
                 <section className="teacher-submission-board__recent" aria-labelledby="teacher-submission-recent-title">
                     <div className="teacher-submission-board__section-title">
-                        <h5 id="teacher-submission-recent-title">최근 제출</h5>
-                        <span>최신 4건</span>
+                        <h5 id="teacher-submission-recent-title">최근 제출 학생</h5>
+                        <span>최신 8건</span>
                     </div>
                     {recentSubmissions.length > 0 ? (
-                        <ol>
-                            {recentSubmissions.map((item) => (
-                                <li key={item.event_id}>
-                                    <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at)}</time>
-                                    <div>
-                                        <strong>{item.student_name || '학생'}</strong>
-                                        <span>{item.mission_title || '선생님 과제'} · {item.event_type === 'post_resubmitted' ? '다시 제출' : '제출'}</span>
-                                    </div>
-                                </li>
-                            ))}
-                        </ol>
+                        <div className="teacher-submission-board__recent-table">
+                            <div className="teacher-submission-board__recent-columns" aria-hidden="true">
+                                <span>시간</span>
+                                <span>학생</span>
+                                <span>과제</span>
+                                <span>상태</span>
+                            </div>
+                            <ol>
+                                {recentSubmissions.map((item) => {
+                                    const mission = missionsById.get(item.mission_id);
+                                    const isResubmission = item.event_type === 'post_resubmitted';
+                                    const submissionLabel = isResubmission ? '다시 제출' : '첫 제출';
+                                    return (
+                                        <li key={item.event_id}>
+                                            <button
+                                                type="button"
+                                                disabled={!mission}
+                                                onClick={() => mission && onOpenMission(mission)}
+                                                aria-label={`${item.student_name || '학생'}의 ${item.mission_title || '선생님 과제'} ${submissionLabel} 글 확인`}
+                                            >
+                                                <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at)}</time>
+                                                <strong>{item.student_name || '학생'}</strong>
+                                                <span className="teacher-submission-board__recent-mission">{item.mission_title || '선생님 과제'}</span>
+                                                <span className={`teacher-submission-board__recent-status${isResubmission ? ' is-resubmitted' : ' is-first'}`}>
+                                                    {submissionLabel}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ol>
+                        </div>
                     ) : (
                         <p className="teacher-submission-board__empty">아직 표시할 최근 제출이 없습니다.</p>
                     )}

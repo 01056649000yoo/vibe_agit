@@ -27,8 +27,11 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /teacher-mission-management-panel[\s\S]*hidden=\{isSubmissionBoardView\}/);
     assert.match(manager, /teacher-submission-board-panel[\s\S]*hidden=\{!isSubmissionBoardView\}[\s\S]*TeacherSubmissionBoard/);
     assert.doesNotMatch(manager, /teacher-mission-live-layout|splitView/);
-    assert.match(styles, /teacher-submission-board__content[\s\S]*minmax\(260px, 0\.72fr\) minmax\(0, 1\.8fr\)/);
-    assert.match(styles, /teacher-submission-board__mission-list[\s\S]*repeat\(auto-fit, minmax\(300px, 1fr\)\)/);
+    const contentRule = styles.match(/\.teacher-submission-board__content\s*\{([^}]*)\}/)?.[1];
+    assert.ok(contentRule, '전광판 콘텐츠 레이아웃 규칙이 있어야 한다');
+    assert.match(contentRule, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(styles, /teacher-submission-board__mission-list[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+    assert.match(styles, /@media \(max-width: 960px\)[\s\S]*teacher-submission-board__content[\s\S]*minmax\(0, 1fr\)/);
     assert.match(missionList, /getMissionCardColumns\(missionCardSize\)/);
     assert.doesNotMatch(styles, /teacher-submission-board\s*\{[\s\S]*position:\s*sticky/);
     assert.match(board, /실시간 제출 전광판/);
@@ -41,9 +44,10 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
-test('전광판은 과제별 제출 상태와 최근 제출을 같은 스냅샷으로 표시한다', async () => {
-    const [board, hook, missionList] = await Promise.all([
+test('전광판은 과제별 제출 상태와 정돈된 최근 제출 학생 8명을 같은 스냅샷으로 표시한다', async () => {
+    const [board, styles, hook, missionList] = await Promise.all([
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
+        read('src/components/teacher/TeacherSubmissionBoard.css'),
         read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
         read('src/components/teacher/MissionList.jsx')
     ]);
@@ -52,8 +56,12 @@ test('전광판은 과제별 제출 상태와 최근 제출을 같은 스냅샷�
     assert.match(board, /확인 대기/);
     assert.match(board, /다시쓰기/);
     assert.match(board, /미제출/);
-    assert.match(board, /recent_submissions[\s\S]*slice\(0, 4\)/);
-    assert.match(board, /post_resubmitted[\s\S]*다시 제출/);
+    assert.match(board, /recent_submissions[\s\S]*slice\(0, 8\)/);
+    assert.match(board, /최근 제출 학생[\s\S]*시간[\s\S]*학생[\s\S]*과제[\s\S]*상태/);
+    assert.match(board, /post_resubmitted[\s\S]*다시 제출[\s\S]*첫 제출/);
+    assert.match(board, /new Map\(missions\.map[\s\S]*missionsById\.get\(item\.mission_id\)/);
+    assert.match(board, /onClick=\{\(\) => mission && onOpenMission\(mission\)\}/);
+    assert.match(styles, /recent-status\.is-first[\s\S]*recent-status\.is-resubmitted/);
     assert.match(board, /resolveGenreMissionTypeId\(mission\) === 'meeting'/);
     assert.match(missionList, /제출 \$\{submittedCount\}\/\$\{totalStudentCount\}/);
     assert.doesNotMatch(missionList, /명 완료/);
