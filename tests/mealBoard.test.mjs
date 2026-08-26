@@ -66,8 +66,10 @@ test('공개 전체화면은 급식만 받고 학생 명단이나 비고를 전�
   assert.doesNotMatch(fullscreen, /meal-icon-button|>×<|>횞</);
   assert.doesNotMatch(fullscreen, /student|roster|studentNote|healthAuthorization|allergenCodes\s*:\s*student/);
   assert.match(fullscreen, /학생 이름과 비고는 이 화면에 표시되지 않아요/);
-  assert.match(mealCss, /\.meal-display-dishes strong \{[^}]*font-size: clamp\(1\.35rem, 2\.7vw, 2\.25rem\)/);
-  assert.match(mealCss, /\.meal-display-dishes small \{[^}]*font-size: clamp\(\.82rem, 1\.4vw, 1\.05rem\); font-weight: 750; line-height: 1\.45/);
+  assert.match(mealCss, /\.meal-display-card \{[^}]*width: min\(1080px, 100%\); min-height: clamp\(440px, 62vh, 680px\);/);
+  assert.match(mealCss, /\.meal-display-dishes \{[^}]*flex: 1;[^}]*align-content: center;/);
+  assert.match(mealCss, /\.meal-display-dishes strong \{[^}]*font-size: clamp\(1\.65rem, 3\.1vw, 2\.85rem\)/);
+  assert.match(mealCss, /\.meal-display-dishes small \{[^}]*font-size: clamp\(1rem, 1\.6vw, 1\.28rem\); font-weight: 750; line-height: 1\.45/);
 });
 
 test('나이스 키는 서버 환경변수에서만 읽고 브라우저는 Edge 함수를 호출한다', () => {
