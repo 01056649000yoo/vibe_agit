@@ -17,6 +17,8 @@
     "spelling:export": "node scripts/export-spelling-detection.mjs",
     "spelling:export:check": "node scripts/export-spelling-detection.mjs --check",
     "spelling:benchmark": "node scripts/benchmark-spelling.mjs",
+    "spelling:weekly:check": "node scripts/run-weekly-spelling-review.mjs --self-check",
+    "spelling:weekly:run": "node scripts/run-weekly-spelling-review.mjs",
     "vocab:audit": "node scripts/audit-vocab-tower-v2.mjs",
     "vocab:audit:check": "node scripts/audit-vocab-tower-v2.mjs --check",
     "vocab:review:seed:check": "node scripts/seed-vocab-tower-v2-review.mjs",

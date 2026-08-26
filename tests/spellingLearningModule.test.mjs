@@ -326,7 +326,8 @@ test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 �
 });
 
 test('관리자 승격은 AI·검색 후보를 재배포 없는 공통 자료로 게시하고 되돌릴 수 있다', () => {
-    assert.match(adminPromotion, /admin_get_spelling_promotion_workspace_v2/);
+    assert.match(adminPromotion, /admin_get_spelling_promotion_workspace_v3/);
+    assert.match(adminPromotion, /admin_publish_weekly_spelling_entry_v1/);
     assert.match(adminPromotion, /admin_publish_common_spelling_entry_v1/);
     assert.match(adminPromotion, /admin_set_common_spelling_entry_status_v1/);
     assert.match(adminPromotion, /재배포 없이 모든 학급에 적용/);
@@ -342,13 +343,15 @@ test('맞춤법 공통 자료 대시보드는 후보와 게시 자료를 나눠 
     assert.match(adminPromotion, /맞춤법 공통 자료 관리/);
     assert.match(adminPromotion, /activeView === 'candidates'/);
     assert.match(adminPromotion, /activeView === 'common'/);
-    assert.match(adminPromotion, /activeSource === 'ai'/);
-    assert.match(adminPromotion, /activeSource === 'search'/);
+    assert.match(adminPromotion, /verdictFilter === 'recommend'/);
+    assert.match(adminPromotion, /verdictFilter === 'caution'/);
+    assert.match(adminPromotion, /verdictFilter === 'reject'/);
     assert.match(adminPromotion, /commonFilter === 'enabled'/);
     assert.match(adminPromotion, /className="admin-spelling__metrics"/);
     assert.match(adminPromotion, /className="admin-spelling__view-tabs" role="tablist"/);
     assert.match(adminPromotion, /className="admin-spelling__source-tabs" role="tablist"/);
-    assert.match(adminPromotion, /className="admin-spelling__thresholds" onSubmit=\{applyFilters\}/);
+    assert.match(adminPromotion, /className="admin-spelling__run-summary"/);
+    assert.match(adminPromotion, /기존 500개 전체를 AI에 보내지 않습니다/);
     assert.match(adminPromotionStyles, /max-height: min\(620px, 68vh\); overflow-y: auto/);
     assert.match(adminPromotionStyles, /@media \(max-width: 620px\)/);
     assert.doesNotMatch(adminPromotion, /style=\{\{/);

@@ -37,6 +37,9 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
 const dynamicCommonSpellingMigration = await readFile(
     'supabase/migrations/20261178_dynamic_common_spelling_promotion.sql', 'utf8'
 );
+const weeklySpellingReviewMigration = await readFile(
+    'supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'
+);
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
     assert.match(vibeAi, /profile\.is_approved === true/);
@@ -87,6 +90,16 @@ test('맞춤법 공통 승격은 관리자 전용이며 학생에게 승인 자�
     assert.match(dynamicCommonSpellingMigration, /student\.auth_id = auth\.uid\(\)/);
     assert.match(dynamicCommonSpellingMigration, /LIMIT 100/);
     assert.doesNotMatch(dynamicCommonSpellingMigration, /student_posts|post_content|student_id TEXT/);
+});
+
+test('주간 맞춤법 AI 검수는 서버 실행·입력 상한·관리자 승인 경계를 지킨다', () => {
+    assert.match(weeklySpellingReviewMigration, /REVOKE ALL ON public\.spelling_weekly_review_items FROM PUBLIC, anon, authenticated, service_role/);
+    assert.match(weeklySpellingReviewMigration, /session_user <> 'supabase_admin' AND COALESCE\(auth\.role\(\), ''\) <> 'service_role'/);
+    assert.match(weeklySpellingReviewMigration, /jsonb_array_length\(p_items\) > 200/);
+    assert.match(weeklySpellingReviewMigration, /jsonb_array_length\(v_similar\) > 3/);
+    assert.match(weeklySpellingReviewMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(weeklySpellingReviewMigration, /item\.decision = 'pending'/);
+    assert.doesNotMatch(weeklySpellingReviewMigration, /student_posts|student_id|post_id|content TEXT/);
 });
 
 test('맞춤법 구버전 기록과 일기 임시본 정리는 학생 권한 경계를 지킨다', () => {

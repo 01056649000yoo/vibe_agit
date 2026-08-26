@@ -27,9 +27,11 @@
 .admin-spelling__panel-heading h3, .admin-spelling__editor-heading h3 { margin: 3px 0 0; color: #312e81; font-size: 1.1rem; }
 .admin-spelling__panel-heading > div:first-child > span, .admin-spelling__editor-heading > div > span { color: #7c3aed; font-size: .72rem; font-weight: 900; }
 .admin-spelling__editor-heading small { display: block; margin-top: 4px; color: #64748b; font-size: .72rem; }
-.admin-spelling__thresholds { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
-.admin-spelling__number-filter { display: grid; grid-template-columns: auto 54px auto; gap: 5px; align-items: center; color: #64748b; font-size: .72rem; font-weight: 800; }
-.admin-spelling__number-filter input { box-sizing: border-box; width: 54px; padding: 7px 6px; border: 1px solid #cbd5e1; border-radius: 8px; color: #334155; font: inherit; text-align: center; }
+.admin-spelling__run-summary { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.admin-spelling__run-summary > div { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border-radius: 8px; background: white; }
+.admin-spelling__run-summary span { color: #64748b; font-size: .65rem; font-weight: 800; }
+.admin-spelling__run-summary strong { overflow: hidden; color: #334155; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-spelling__run-summary.is-empty { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: .75rem; }
 .admin-spelling__source-toolbar { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
 .admin-spelling__source-tabs { display: flex; align-items: center; gap: 6px; }
 .admin-spelling__source-tabs button, .admin-spelling__common-filters button, .admin-spelling__refresh { min-height: 36px; padding: 7px 12px; border: 1px solid transparent; border-radius: 9px; background: #f1f5f9; color: #64748b; font: inherit; font-size: .78rem; font-weight: 850; cursor: pointer; }
@@ -42,7 +44,16 @@
 .admin-spelling__list { display: grid; gap: 7px; max-height: min(620px, 68vh); overflow-y: auto; overscroll-behavior: contain; }
 .admin-spelling__candidate, .admin-spelling__common-entry { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(150px, auto) auto; gap: 16px; align-items: center; min-height: 58px; padding: 11px 12px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
 .admin-spelling__candidate:hover { border-color: #c4b5fd; background: #fdfcff; }
+.admin-spelling__candidate.is-caution { border-color: #fed7aa; background: #fffdf8; }
+.admin-spelling__candidate.is-reject { border-color: #e2e8f0; background: #f8fafc; }
 .admin-spelling__common-entry.is-enabled { border-color: #bbf7d0; background: #fbfffc; }
+.admin-spelling__candidate-main { display: grid; gap: 5px; min-width: 0; }
+.admin-spelling__candidate-main p { margin: 0; overflow: hidden; color: #64748b; font-size: .72rem; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.admin-spelling__candidate-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.admin-spelling__candidate-badges span, .admin-spelling__candidate-badges small { padding: 3px 6px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: .64rem; font-weight: 800; }
+.admin-spelling__candidate-badges span.is-recommend { background: #dcfce7; color: #166534; }
+.admin-spelling__candidate-badges span.is-caution { background: #ffedd5; color: #9a3412; }
+.admin-spelling__candidate-badges span.is-reject { background: #e2e8f0; color: #475569; }
 .admin-spelling__expression { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .admin-spelling__expression strong, .admin-spelling__expression b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-spelling__expression strong { color: #b91c1c; font-size: .92rem; }
@@ -64,7 +75,9 @@
 .admin-spelling__field { display: grid; gap: 5px; color: #475569; font-size: .76rem; font-weight: 800; }
 .admin-spelling__field small { color: #94a3b8; font-weight: 600; }
 .admin-spelling__field input, .admin-spelling__field textarea { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #1f2937; font: inherit; line-height: 1.45; resize: vertical; }
-.admin-spelling__field input:focus, .admin-spelling__field textarea:focus, .admin-spelling__number-filter input:focus { border-color: #8b5cf6; outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
+.admin-spelling__field input:focus, .admin-spelling__field textarea:focus { border-color: #8b5cf6; outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
+.admin-spelling__ai-reason { display: flex; gap: 8px; margin: 0; padding: 9px 11px; border-radius: 9px; background: #eef2ff; color: #4338ca; font-size: .75rem; line-height: 1.5; }
+.admin-spelling__ai-reason b { white-space: nowrap; }
 .admin-spelling__warning { margin: 0; padding: 9px 11px; border-radius: 9px; background: #fff7ed; color: #9a3412; font-size: .75rem; line-height: 1.55; }
 .admin-spelling__editor-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
 .admin-spelling__empty { display: grid; justify-items: center; gap: 5px; padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 13px; background: #f8fafc; text-align: center; }
@@ -75,7 +88,7 @@
     .admin-spelling__header { grid-template-columns: 1fr; }
     .admin-spelling__metrics { width: 100%; }
     .admin-spelling__panel-heading { flex-direction: column; }
-    .admin-spelling__thresholds { width: 100%; }
+    .admin-spelling__run-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .admin-spelling__candidate, .admin-spelling__common-entry { grid-template-columns: minmax(0, 1fr) auto; }
     .admin-spelling__evidence, .admin-spelling__common-meta { grid-column: 1; justify-content: flex-start; justify-items: start; }
     .admin-spelling__row-actions { grid-column: 2; grid-row: 1 / span 2; }
@@ -87,12 +100,15 @@
     .admin-spelling__metric { min-width: 0; padding: 9px; }
     .admin-spelling__metric small { overflow: hidden; text-overflow: ellipsis; }
     .admin-spelling__view-tabs button { font-size: .8rem; }
+    .admin-spelling__run-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-spelling__run-summary.is-empty { align-items: flex-start; flex-direction: column; }
     .admin-spelling__source-toolbar { align-items: stretch; flex-direction: column; }
     .admin-spelling__source-tabs { flex-wrap: wrap; }
     .admin-spelling__refresh { margin-left: 0; }
     .admin-spelling__editor-heading { flex-direction: column; }
     .admin-spelling__editor-grid { grid-template-columns: 1fr; }
     .admin-spelling__candidate, .admin-spelling__common-entry { grid-template-columns: 1fr; gap: 9px; }
+    .admin-spelling__candidate-main p { white-space: normal; }
     .admin-spelling__evidence, .admin-spelling__common-meta, .admin-spelling__row-actions { grid-column: 1; grid-row: auto; }
     .admin-spelling__row-actions { width: 100%; }
     .admin-spelling__row-actions > button { flex: 1; }

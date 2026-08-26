@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
-import { getElementarySpellingEntries } from '../../modules/writing/tools/spelling-lookup/elementarySpellingEntries';
 import { spellingLearningApi } from '../../modules/writing/spelling-learning/api';
 import './AdminSpellingPromotionPanel.css';
 
-const EMPTY_DATA = { ai_findings: [], searched: [], common_entries: [], reviewed_recent: [] };
+const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], common_entries: [] };
 const EMPTY_DRAFT = {
     wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: []
 };
 const DATE_FORMATTER = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' });
-
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+});
 const normalize = (value) => String(value || '').normalize('NFC').replace(/\s+/g, '');
-const candidateKey = (sourceKind, row) => `${sourceKind}:${row.expression}:${row.correction || ''}`;
 const formatDate = (value) => value ? DATE_FORMATTER.format(new Date(value)) : '기록 없음';
+const formatDateTime = (value) => value ? DATE_TIME_FORMATTER.format(new Date(value)) : '아직 없음';
+const verdictLabel = (value) => value === 'recommend' ? '반영 권장' : value === 'caution' ? '주의 검토' : '제외 권장';
+const sourceLabel = (value) => value === 'ai' ? '학생 AI 검사' : value === 'search' ? '학생 검색' : value === 'teacher' ? '교사 학급 자료' : value;
 
-/** AI 검사·학생 검색 후보를 검토해 모든 학급의 동적 맞춤법 자료로 게시한다. */
+/** 매주 자동 검수된 맞춤법 후보 중 관리자가 고른 것만 모든 학급의 공통 자료로 게시한다. */
 const AdminSpellingPromotionPanel = () => {
-    const [minClasses, setMinClasses] = useState(2);
-    const [minHits, setMinHits] = useState(3);
-    const [filterDraft, setFilterDraft] = useState({ minClasses: 2, minHits: 3 });
     const [activeView, setActiveView] = useState('candidates');
-    const [activeSource, setActiveSource] = useState('ai');
+    const [verdictFilter, setVerdictFilter] = useState('recommend');
     const [commonFilter, setCommonFilter] = useState('enabled');
     const [data, setData] = useState(EMPTY_DATA);
     const [reviewTarget, setReviewTarget] = useState(null);
@@ -34,17 +34,15 @@ const AdminSpellingPromotionPanel = () => {
         setLoading(true);
         setNotice(null);
         try {
-            const { data: result, error } = await supabase.rpc('admin_get_spelling_promotion_workspace_v2', {
-                p_min_classes: minClasses, p_min_hits: minHits, p_limit: 200
-            });
+            const { data: result, error } = await supabase.rpc('admin_get_spelling_promotion_workspace_v3');
             if (error) throw error;
             setData(result || EMPTY_DATA);
         } catch (error) {
-            setNotice({ tone: 'error', text: error.message || '맞춤법 승격 데이터를 불러오지 못했습니다.' });
+            setNotice({ tone: 'error', text: error.message || '맞춤법 주간 검수 데이터를 불러오지 못했습니다.' });
         } finally {
             setLoading(false);
         }
-    }, [minClasses, minHits]);
+    }, []);
 
     useEffect(() => { load(); }, [load]);
     useEffect(() => {
@@ -52,58 +50,59 @@ const AdminSpellingPromotionPanel = () => {
         window.requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }, [reviewTarget]);
 
-    const builtInIndex = useMemo(() => {
-        const index = new Set();
-        for (const entry of getElementarySpellingEntries()) {
-            for (const value of [entry.question, entry.answer, ...(entry.searchable || [])]) {
-                if (value) index.add(normalize(value));
-            }
-        }
-        return index;
-    }, []);
-
-    const aiFindings = useMemo(() => (data.ai_findings || []).filter(
-        (row) => !builtInIndex.has(normalize(row.expression))
-    ), [builtInIndex, data.ai_findings]);
-    const searched = useMemo(() => (data.searched || []).filter(
-        (row) => !builtInIndex.has(normalize(row.expression))
-    ), [builtInIndex, data.searched]);
+    const weeklyCandidates = useMemo(() => data.weekly_candidates || [], [data.weekly_candidates]);
     const commonEntries = data.common_entries || [];
     const enabledCommonCount = commonEntries.filter((entry) => entry.status === 'approved').length;
     const disabledCommonCount = commonEntries.length - enabledCommonCount;
-    const pendingCount = aiFindings.length + searched.length;
-    const activeCandidates = activeSource === 'ai' ? aiFindings : searched;
+    const verdictCounts = useMemo(() => ({
+        recommend: weeklyCandidates.filter((item) => item.ai_verdict === 'recommend').length,
+        caution: weeklyCandidates.filter((item) => item.ai_verdict === 'caution').length,
+        reject: weeklyCandidates.filter((item) => item.ai_verdict === 'reject').length
+    }), [weeklyCandidates]);
+    const visibleCandidates = weeklyCandidates.filter((item) => (
+        verdictFilter === 'all' || item.ai_verdict === verdictFilter
+    ));
     const visibleCommonEntries = commonEntries.filter((entry) => (
         commonFilter === 'all'
         || (commonFilter === 'enabled' && entry.status === 'approved')
         || (commonFilter === 'disabled' && entry.status !== 'approved')
     ));
-    const hiddenKnownCount = (data.ai_findings || []).length - aiFindings.length
-        + (data.searched || []).length - searched.length;
+    const latestRun = data.latest_run;
 
-    const startCandidateReview = (sourceKind, row) => {
+    const startCandidateReview = (row) => {
         setActiveView('candidates');
-        setActiveSource(sourceKind);
         setReviewTarget({
-            key: candidateKey(sourceKind, row), sourceKind, expression: row.expression,
-            sourceCorrection: row.correction || '', classCount: row.class_count || 0,
-            hitCount: row.hit_count ?? row.search_count ?? 0, entryId: null
+            weeklyItemId: row.id,
+            expression: row.expression,
+            sourceCorrection: row.source_correction || '',
+            classCount: row.class_count || 0,
+            hitCount: row.hit_count || 0,
+            sourceKinds: row.source_kinds || [],
+            verdict: row.ai_verdict,
+            aiReason: row.ai_reason,
+            entryId: null,
+            sourceKind: row.primary_source
         });
         setDraft({
-            ...EMPTY_DRAFT,
             wrong_expression: row.expression || '',
-            correct_expression: row.correction || '',
-            label: row.label && row.label !== '미등록 표현' ? row.label : '미분류'
+            correct_expression: row.ai_correct_expression || row.source_correction || '',
+            label: row.ai_label || '미분류',
+            explanation: row.ai_explanation || '',
+            examples: Array.isArray(row.ai_examples) ? row.ai_examples : []
         });
-        setNotice({ tone: 'info', text: '바른 표현과 설명을 확인한 뒤 전체 학급에 적용하세요.' });
+        setNotice({ tone: 'info', text: 'AI 검수 결과를 참고하되, 게시 전 표현·설명·예문을 직접 확인해 주세요.' });
     };
 
     const startCommonEdit = (entry) => {
         setReviewTarget({
-            key: `common:${entry.id}`,
+            weeklyItemId: null,
             sourceKind: ['ai', 'search', 'manual'].includes(entry.source_kind) ? entry.source_kind : 'manual',
-            expression: entry.wrong_expression, sourceCorrection: entry.correct_expression,
-            classCount: 0, hitCount: 0, entryId: entry.id
+            expression: entry.wrong_expression,
+            sourceCorrection: entry.correct_expression,
+            classCount: 0,
+            hitCount: 0,
+            sourceKinds: [],
+            entryId: entry.id
         });
         setDraft({
             wrong_expression: entry.wrong_expression || '', correct_expression: entry.correct_expression || '',
@@ -124,23 +123,6 @@ const AdminSpellingPromotionPanel = () => {
         setActiveView(nextView);
     };
 
-    const selectSource = (nextSource) => {
-        if (nextSource !== activeSource && reviewTarget && !reviewTarget.entryId) cancelReview();
-        setActiveSource(nextSource);
-    };
-
-    const applyFilters = (event) => {
-        event.preventDefault();
-        const nextClasses = Math.min(Math.max(filterDraft.minClasses, 1), 20);
-        const nextHits = Math.min(Math.max(filterDraft.minHits, 1), 100);
-        setFilterDraft({ minClasses: nextClasses, minHits: nextHits });
-        if (nextClasses === minClasses && nextHits === minHits) load();
-        else {
-            setMinClasses(nextClasses);
-            setMinHits(nextHits);
-        }
-    };
-
     const generateDraft = async () => {
         if (!draft.wrong_expression.trim()) return;
         setLoading(true);
@@ -152,7 +134,7 @@ const AdminSpellingPromotionPanel = () => {
                 wrong_expression: current.wrong_expression.trim(),
                 correct_expression: current.correct_expression.trim() || generated.correct_expression || ''
             }));
-            setNotice({ tone: 'success', text: 'AI 초안을 만들었습니다. 오탐이 없는지 직접 확인해 주세요.' });
+            setNotice({ tone: 'success', text: 'AI 초안을 다시 만들었습니다. 기존 주간 검수와 함께 직접 확인해 주세요.' });
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || 'AI 초안을 만들지 못했습니다.' });
         } finally {
@@ -165,13 +147,18 @@ const AdminSpellingPromotionPanel = () => {
         setLoading(true);
         setNotice(null);
         try {
-            const { error } = await supabase.rpc('admin_publish_common_spelling_entry_v1', {
-                p_source_kind: reviewTarget.sourceKind,
-                p_expression: reviewTarget.expression,
-                p_source_correction: reviewTarget.sourceCorrection,
-                p_entry: draft,
-                p_entry_id: reviewTarget.entryId
-            });
+            const request = reviewTarget.weeklyItemId
+                ? supabase.rpc('admin_publish_weekly_spelling_entry_v1', {
+                    p_item_id: reviewTarget.weeklyItemId, p_entry: draft
+                })
+                : supabase.rpc('admin_publish_common_spelling_entry_v1', {
+                    p_source_kind: reviewTarget.sourceKind,
+                    p_expression: reviewTarget.expression,
+                    p_source_correction: reviewTarget.sourceCorrection,
+                    p_entry: draft,
+                    p_entry_id: reviewTarget.entryId
+                });
+            const { error } = await request;
             if (error) throw error;
             setReviewTarget(null);
             setDraft(EMPTY_DRAFT);
@@ -184,22 +171,18 @@ const AdminSpellingPromotionPanel = () => {
         }
     };
 
-    const rejectCandidate = async (sourceKind, row) => {
+    const rejectCandidate = async (row) => {
         setLoading(true);
         setNotice(null);
         try {
-            const { error } = await supabase.rpc('admin_reject_spelling_candidate_v1', {
-                p_source_kind: sourceKind,
-                p_expression: row.expression,
-                p_source_correction: row.correction || ''
-            });
+            const { error } = await supabase.rpc('admin_reject_weekly_spelling_entry_v1', { p_item_id: row.id });
             if (error) throw error;
-            if (reviewTarget?.key === candidateKey(sourceKind, row)) {
+            if (reviewTarget?.weeklyItemId === row.id) {
                 setReviewTarget(null);
                 setDraft(EMPTY_DRAFT);
             }
             await load();
-            setNotice({ tone: 'success', text: '후보를 보류했습니다. 같은 근거로는 다시 추천하지 않습니다.' });
+            setNotice({ tone: 'success', text: '후보를 보류했습니다. 같은 검수 결과는 다시 AI에 보내지 않습니다.' });
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || '후보를 보류하지 못했습니다.' });
         } finally {
@@ -234,22 +217,23 @@ const AdminSpellingPromotionPanel = () => {
     return <section className="admin-spelling">
         <header className="admin-spelling__header">
             <div className="admin-spelling__intro">
-                <span className="admin-spelling__eyebrow">전체 학급 기준 자료</span>
+                <span className="admin-spelling__eyebrow">매주 월요일 자동 정리</span>
                 <h2>맞춤법 공통 자료 관리</h2>
-                <p>반복해서 발견된 표현을 검토해 게시하면 모든 학급에 적용됩니다. 교사는 자기 학급 자료를 별도로 추가할 수 있습니다.</p>
+                <p>AI 검사·학생 검색·교사 학급 자료를 주 1회 모아 기존 자료와 비교하고 AI 검수를 마친 뒤, 관리자가 고른 것만 모든 학급에 적용합니다.</p>
             </div>
             <div className="admin-spelling__metrics" aria-label="맞춤법 공통 자료 현황">
-                <Metric label="검토 대기" value={pendingCount} detail={`AI ${aiFindings.length} · 검색 ${searched.length}`} tone={pendingCount ? 'warning' : 'neutral'} />
+                <Metric label="검토 대기" value={weeklyCandidates.length} detail={`권장 ${verdictCounts.recommend} · 주의 ${verdictCounts.caution}`} tone={weeklyCandidates.length ? 'warning' : 'neutral'} />
                 <Metric label="전체 적용 중" value={enabledCommonCount} detail="모든 학급" tone="active" />
                 <Metric label="적용 중지" value={disabledCommonCount} detail="되돌릴 수 있음" tone="neutral" />
             </div>
         </header>
 
         {notice && <p className={`admin-spelling__notice is-${notice.tone}`} role="status">{notice.text}</p>}
+        {latestRun?.status === 'failed' && <p className="admin-spelling__notice is-error" role="status">최근 주간 검수가 완료되지 않았습니다. 오류 코드: {latestRun.error_code || 'unknown'}</p>}
 
         <div className="admin-spelling__view-tabs" role="tablist" aria-label="맞춤법 공통 자료 관리 화면">
             <button type="button" role="tab" aria-selected={activeView === 'candidates'} aria-controls="spelling-candidate-panel" className={activeView === 'candidates' ? 'is-active' : ''} onClick={() => selectView('candidates')}>
-                검토할 후보 <b>{pendingCount}</b>
+                이번 주 검수 결과 <b>{weeklyCandidates.length}</b>
             </button>
             <button type="button" role="tab" aria-selected={activeView === 'common'} aria-controls="spelling-common-panel" className={activeView === 'common' ? 'is-active' : ''} onClick={() => selectView('common')}>
                 전체 공통 자료 <b>{commonEntries.length}</b>
@@ -266,37 +250,24 @@ const AdminSpellingPromotionPanel = () => {
         {activeView === 'candidates' && <section id="spelling-candidate-panel" className="admin-spelling__panel" role="tabpanel">
             <div className="admin-spelling__panel-heading">
                 <div>
-                    <span>관리자 확인 후에만 게시됩니다</span>
-                    <h3>검토할 후보</h3>
-                </div>
-                <form className="admin-spelling__thresholds" onSubmit={applyFilters}>
-                    <NumberFilter label="학급" value={filterDraft.minClasses} max={20} onChange={(minClassesValue) => setFilterDraft((current) => ({ ...current, minClasses: minClassesValue }))} />
-                    <NumberFilter label="횟수" value={filterDraft.minHits} max={100} onChange={(minHitsValue) => setFilterDraft((current) => ({ ...current, minHits: minHitsValue }))} />
-                    <Button type="submit" size="sm" variant="outline" disabled={loading}>기준 적용</Button>
-                </form>
-            </div>
-
-            <div className="admin-spelling__source-toolbar">
-                <div className="admin-spelling__source-tabs" role="tablist" aria-label="후보 출처">
-                    <button type="button" role="tab" aria-selected={activeSource === 'ai'} aria-controls="spelling-candidate-results" className={activeSource === 'ai' ? 'is-active' : ''} onClick={() => selectSource('ai')}>
-                        AI 검사 <b>{aiFindings.length}</b>
-                    </button>
-                    <button type="button" role="tab" aria-selected={activeSource === 'search'} aria-controls="spelling-candidate-results" className={activeSource === 'search' ? 'is-active' : ''} onClick={() => selectSource('search')}>
-                        학생 검색 <b>{searched.length}</b>
-                    </button>
+                    <span>기존 500개 전체를 AI에 보내지 않습니다</span>
+                    <h3>주간 AI 검수 결과</h3>
                 </div>
                 <button type="button" className="admin-spelling__refresh" onClick={load} disabled={loading}>{loading ? '갱신 중…' : '새로고침'}</button>
             </div>
 
-            <div id="spelling-candidate-results" className="admin-spelling__results" role="tabpanel">
-                <p className="admin-spelling__source-guide">
-                    {activeSource === 'ai'
-                        ? 'AI가 학생 글에서 제안한 틀린 표현과 바른 표현입니다. 학급·횟수는 검토 우선순위이며 자동 게시 기준이 아닙니다.'
-                        : '학생이 궁금해한 표현이라 틀렸다고 단정할 수 없습니다. 바른 표현과 설명을 직접 확인해 주세요.'}
-                </p>
-                {hiddenKnownCount > 0 && <p className="admin-spelling__known">기본 500개 자료와 겹치는 후보 {hiddenKnownCount}개는 숨겼습니다.</p>}
-                <CandidateList rows={activeCandidates} sourceKind={activeSource} loading={loading} onReview={startCandidateReview} onReject={rejectCandidate} />
+            <RunSummary run={latestRun} candidateWeek={data.candidate_week} />
+            <div className="admin-spelling__source-toolbar">
+                <div className="admin-spelling__source-tabs" role="tablist" aria-label="AI 검수 결과 필터">
+                    <FilterButton active={verdictFilter === 'recommend'} onClick={() => setVerdictFilter('recommend')}>반영 권장 {verdictCounts.recommend}</FilterButton>
+                    <FilterButton active={verdictFilter === 'caution'} onClick={() => setVerdictFilter('caution')}>주의 검토 {verdictCounts.caution}</FilterButton>
+                    <FilterButton active={verdictFilter === 'reject'} onClick={() => setVerdictFilter('reject')}>제외 권장 {verdictCounts.reject}</FilterButton>
+                    <FilterButton active={verdictFilter === 'all'} onClick={() => setVerdictFilter('all')}>전체 {weeklyCandidates.length}</FilterButton>
+                </div>
             </div>
+
+            <p className="admin-spelling__source-guide">정확히 같은 기본·공통 자료는 코드가 먼저 제외합니다. AI에는 새 후보와 유사 자료 최대 3개만 전달하며, 이전에 검수한 같은 후보는 저장된 결과를 재사용합니다.</p>
+            <CandidateList rows={visibleCandidates} loading={loading} onReview={startCandidateReview} onReject={rejectCandidate} />
         </section>}
 
         {activeView === 'common' && <section id="spelling-common-panel" className="admin-spelling__panel" role="tabpanel">
@@ -321,24 +292,32 @@ const Metric = ({ label, value, detail, tone }) => <div className={`admin-spelli
     <span>{label}</span><strong>{value}</strong><small>{detail}</small>
 </div>;
 
-const NumberFilter = ({ label, value, max, onChange }) => <label className="admin-spelling__number-filter">
-    {label}
-    <input type="number" min={1} max={max} value={value} aria-label={`최소 ${label}`}
-        onChange={(event) => onChange(Number(event.target.value) || 1)} />
-    <span>이상</span>
-</label>;
-
 const FilterButton = ({ active, children, onClick }) => <button type="button" className={active ? 'is-active' : ''} aria-pressed={active} onClick={onClick}>{children}</button>;
+
+const RunSummary = ({ run, candidateWeek }) => {
+    if (!run) return <div className="admin-spelling__run-summary is-empty">
+        <strong>아직 주간 검수 기록이 없습니다.</strong><span>마이그레이션과 예약 작업 적용 후 매주 월요일 05:10에 첫 결과가 만들어집니다.</span>
+    </div>;
+    return <div className="admin-spelling__run-summary">
+        <div><span>결과 주간</span><strong>{candidateWeek ? formatDate(candidateWeek) : '후보 없음'}</strong></div>
+        <div><span>최근 실행</span><strong>{formatDateTime(run.finished_at || run.started_at)}</strong></div>
+        <div><span>수집</span><strong>{run.collected_count || 0}개</strong></div>
+        <div><span>기존 자료 제외</span><strong>{run.known_filtered_count || 0}개</strong></div>
+        <div><span>AI 새 검수</span><strong>{run.ai_reviewed_count || 0}개</strong></div>
+        <div><span>이전 결과 재사용</span><strong>{run.cache_hit_count || 0}개</strong></div>
+    </div>;
+};
 
 const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, onPublish, canPublish }) => <section className="admin-spelling__editor" aria-label="공통 맞춤법 자료 검토">
     <div className="admin-spelling__editor-heading">
         <div>
-            <span>{target.entryId ? '공통 자료 수정' : target.sourceKind === 'ai' ? 'AI 검사 후보 검토' : '학생 검색 후보 검토'}</span>
-            <h3>{target.entryId ? `${target.expression} 자료 수정` : `${target.expression} 승격 내용 확인`}</h3>
-            {!target.entryId && <small>{target.classCount}학급 · {target.hitCount}회 근거</small>}
+            <span>{target.entryId ? '공통 자료 수정' : `${verdictLabel(target.verdict)} 후보 확인`}</span>
+            <h3>{target.entryId ? `${target.expression} 자료 수정` : `${target.expression} 반영 내용 확인`}</h3>
+            {!target.entryId && <small>{target.classCount}학급 · {target.hitCount}회 근거 · {(target.sourceKinds || []).map(sourceLabel).join(' + ')}</small>}
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={loading}>검토 닫기</Button>
     </div>
+    {!target.entryId && target.aiReason && <p className="admin-spelling__ai-reason"><b>AI 검수 의견</b>{target.aiReason}</p>}
     <div className="admin-spelling__editor-grid">
         <DraftInput label="틀린 표현" value={draft.wrong_expression} onChange={(wrong_expression) => setDraft({ ...draft, wrong_expression })} />
         <DraftInput label="바른 표현" value={draft.correct_expression} onChange={(correct_expression) => setDraft({ ...draft, correct_expression })} />
@@ -346,17 +325,15 @@ const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, 
     </div>
     <label className="admin-spelling__field">
         학생용 설명
-        <textarea value={draft.explanation} maxLength={600} rows={3}
-            onChange={(event) => setDraft({ ...draft, explanation: event.target.value })} />
+        <textarea value={draft.explanation} maxLength={600} rows={3} onChange={(event) => setDraft({ ...draft, explanation: event.target.value })} />
     </label>
     <label className="admin-spelling__field">
         바른 예문 <small>한 줄에 하나, 최대 4개</small>
-        <textarea value={(draft.examples || []).join('\n')} maxLength={600} rows={3}
-            onChange={(event) => setDraft({ ...draft, examples: event.target.value.split('\n').filter(Boolean).slice(0, 4) })} />
+        <textarea value={(draft.examples || []).join('\n')} maxLength={600} rows={3} onChange={(event) => setDraft({ ...draft, examples: event.target.value.split('\n').filter(Boolean).slice(0, 4) })} />
     </label>
     <p className="admin-spelling__warning">문맥에 따라 맞을 수도 있는 표현·사람 이름·지명은 게시하지 마세요. 게시 자료는 모든 학생 글에서 같은 표현을 찾습니다.</p>
     <div className="admin-spelling__editor-actions">
-        <Button type="button" variant="outline" onClick={onGenerate} disabled={loading || !draft.wrong_expression.trim()}>AI로 설명 초안</Button>
+        <Button type="button" variant="outline" onClick={onGenerate} disabled={loading || !draft.wrong_expression.trim()}>AI 초안 다시 만들기</Button>
         <Button type="button" onClick={onPublish} disabled={loading || !canPublish}>{target.entryId ? '수정 내용 전체 적용' : '공통 자료로 전체 적용'}</Button>
     </div>
 </section>;
@@ -365,20 +342,28 @@ const DraftInput = ({ label, value, onChange }) => <label className="admin-spell
     {label}<input value={value} maxLength={40} onChange={(event) => onChange(event.target.value)} />
 </label>;
 
-const CandidateList = ({ rows, sourceKind, loading, onReview, onReject }) => rows.length === 0
-    ? <EmptyState title="새 후보가 없습니다" description="현재 기준을 넘는 후보가 생기면 이곳에 표시됩니다." />
+const CandidateList = ({ rows, loading, onReview, onReject }) => rows.length === 0
+    ? <EmptyState title="해당 검수 결과가 없습니다" description="다른 검수 결과를 선택하거나 다음 주 자동 정리를 기다려 주세요." />
     : <div className="admin-spelling__list">
-        {rows.map((row) => <article className="admin-spelling__candidate" key={candidateKey(sourceKind, row)}>
-            <div className="admin-spelling__expression">
-                <strong>{row.expression}</strong>
-                {row.correction && <><span aria-hidden="true">→</span><b>{row.correction}</b></>}
+        {rows.map((row) => <article className={`admin-spelling__candidate is-${row.ai_verdict}`} key={row.id}>
+            <div className="admin-spelling__candidate-main">
+                <div className="admin-spelling__expression">
+                    <strong>{row.expression}</strong>
+                    {(row.ai_correct_expression || row.source_correction) && <><span aria-hidden="true">→</span><b>{row.ai_correct_expression || row.source_correction}</b></>}
+                </div>
+                <div className="admin-spelling__candidate-badges">
+                    <span className={`is-${row.ai_verdict}`}>{verdictLabel(row.ai_verdict)}</span>
+                    {(row.source_kinds || []).map((source) => <small key={source}>{sourceLabel(source)}</small>)}
+                    {row.cache_hit && <small>이전 검수 재사용</small>}
+                </div>
+                <p>{row.ai_reason}</p>
             </div>
             <div className="admin-spelling__evidence">
-                <b>{row.class_count}학급</b><span>{row.hit_count ?? row.search_count ?? 0}회</span><small>최근 {formatDate(row.last_seen_at)}</small>
+                <b>{row.class_count}학급</b><span>{row.hit_count || 0}회</span>
             </div>
             <div className="admin-spelling__row-actions">
-                <Button type="button" variant="ghost" size="sm" onClick={() => onReject(sourceKind, row)} disabled={loading}>보류</Button>
-                <Button type="button" size="sm" onClick={() => onReview(sourceKind, row)} disabled={loading}>내용 검토</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onReject(row)} disabled={loading}>보류</Button>
+                <Button type="button" size="sm" onClick={() => onReview(row)} disabled={loading}>내용 검토</Button>
             </div>
         </article>)}
     </div>;
