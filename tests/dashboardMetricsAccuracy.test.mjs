@@ -5,11 +5,12 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(path, 'utf8');
 
-const [migration, servicePanel, resourceStatus, adminDashboard, usagePanel, cards, classAnalysis] = await Promise.all([
+const [migration, servicePanel, resourceStatus, adminDashboard, adminOverview, usagePanel, cards, classAnalysis] = await Promise.all([
     read('supabase/migrations/20261163_dashboard_metrics_accuracy.sql'),
     read('src/components/admin/AdminServicePanel.jsx'),
     read('src/components/admin/AdminResourceStatus.jsx'),
     read('src/components/admin/AdminDashboard.jsx'),
+    read('src/components/admin/AdminDashboardOverview.jsx'),
     read('src/components/admin/AdminUsagePanel.jsx'),
     read('src/components/teacher/classOperationsCards.js'),
     read('src/components/teacher/ClassAnalysis.jsx'),
@@ -53,18 +54,13 @@ test('교사 학급 현황은 접속과 글쓰기 활동을 분리한다', () =>
 });
 
 test('관리자 요약의 이름과 집계 대상이 실제 의미와 같다', () => {
-    /*
-     * 2026-08-25: `승인된 선생님` 카드는 상단에서 `현황 > 사용량` 으로 내렸다(규모 지표라 매일 볼
-     * 필요가 없고, 사용량 탭에 이미 같은 값이 있었다).
-     *
-     * ⚠️ 이 검사가 지키던 것은 **이름이 집계 대상과 같은가** 이다. 자리를 옮겼어도 그 뜻은 남는다 —
-     *    사용량 탭에서 `가입 선생님`(전체)과 `승인 대기`(일부)를 **따로** 세는지 본다.
-     *    한 이름으로 뭉뚱그리면 관리자가 다른 수를 같은 것으로 읽는다.
-     */
-    assert.match(usagePanel, /label: '가입 선생님', value: `\$\{overview\.teacher_total\}명`/);
-    assert.match(usagePanel, /label: '승인 대기', value: `\$\{overview\.teacher_pending\}명`/);
+    assert.match(adminDashboard, /label: '가입 선생님', value: usage\.overview \? `\$\{usage\.overview\.teacher_total\}명`/);
+    assert.match(adminDashboard, /label: '신규 승인 대기', value: `\$\{newSignupCount\}명`/);
+    assert.match(adminDashboard, /label: '활동 교사', value: usage\.overview \? `\$\{usage\.overview\.teacher_active\}명`/);
     assert.doesNotMatch(adminDashboard, /label="활동 중인 선생님"/);
-    assert.match(usagePanel, /글쓰기 학생/);
+    assert.match(adminDashboard, /label: '글쓰기 학생'/);
+    assert.doesNotMatch(usagePanel, /const OverviewStrip/);
+    assert.match(adminOverview, /group\.items\.map/);
 
     const usageStart = migration.indexOf('CREATE OR REPLACE FUNCTION public.admin_get_teacher_usage');
     const usageEnd = migration.indexOf('CREATE OR REPLACE FUNCTION public.admin_get_usage_overview');

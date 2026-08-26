@@ -15,11 +15,11 @@ const SelectableTeacherTable = ({ rows, columns, selectedIds, onToggle, onToggle
     const allSelected = rows.every(row => selectedIds.includes(row.teacher_id));
 
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ maxHeight: '68vh', overflow: 'auto', scrollbarGutter: 'stable' }}>
             <table style={tableStyle}>
                 <thead>
                     <tr style={theadRowStyle}>
-                        <th style={{ ...thStyle, width: '48px' }}>
+                        <th style={{ ...thStyle, position: 'sticky', top: 0, zIndex: 2, width: '48px' }}>
                             <input
                                 type="checkbox"
                                 checked={allSelected}
@@ -27,9 +27,9 @@ const SelectableTeacherTable = ({ rows, columns, selectedIds, onToggle, onToggle
                                 title={allSelected ? '전체 선택 해제' : '전체 선택'}
                             />
                         </th>
-                        <th style={thLeftStyle}>선생님</th>
+                        <th style={{ ...thLeftStyle, position: 'sticky', top: 0, zIndex: 2 }}>선생님</th>
                         {columns.map(column => (
-                            <th key={column.key} style={column.align === 'left' ? thLeftStyle : thStyle}>
+                            <th key={column.key} style={{ ...(column.align === 'left' ? thLeftStyle : thStyle), position: 'sticky', top: 0, zIndex: 2 }}>
                                 {column.label}
                             </th>
                         ))}

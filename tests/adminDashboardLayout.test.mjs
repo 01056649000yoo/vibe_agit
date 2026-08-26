@@ -39,6 +39,7 @@ test('관리자 화면은 성격별 묶음으로 나뉘고 모든 화면이 어�
  */
 test('처리할 일은 묶음 배지와 요약 카드 양쪽에서 보인다', async () => {
     const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+    const overview = await read('src/components/admin/AdminDashboardOverview.jsx');
 
     assert.match(dashboard, /const tabBadges = useMemo\(/);
     assert.match(dashboard, /group\.tabs\.reduce\(\(sum, tab\) => sum \+ \(tabBadges\[tab\.id\] \|\| 0\), 0\)/);
@@ -46,14 +47,11 @@ test('처리할 일은 묶음 배지와 요약 카드 양쪽에서 보인다', a
         assert.ok(dashboard.includes(`${key}:`), `'${key}' 배지 개수가 없다`);
     }
 
-    // 요약 카드는 눌러서 그 일을 처리하는 화면으로 간다.
-    assert.match(dashboard, /const StatCard = \(\{ label, value, color, icon, onOpen \}\)/);
-    /*
-     * 2026-08-25: 상단을 **"지금 손대야 하나"에 답하는 값**으로 갈았다.
-     * 규모 지표(승인된 선생님·등록 학생)는 `현황 > 사용량` 에 이미 있어 중복이라 내렸다.
-     */
-    for (const tabId of ['service', 'pending', 'feedback']) {
-        assert.ok(dashboard.includes(`onOpen={() => setCurrentTab('${tabId}')}`), `요약 카드에서 '${tabId}' 로 가는 길이 없다`);
+    // 요약 항목은 눌러서 그 일을 처리하는 화면으로 간다.
+    assert.match(dashboard, /<AdminDashboardOverview groups=\{overviewGroups\}/);
+    assert.match(overview, /group\.items\.map/);
+    for (const tabId of ['service', 'pending', 'dormant', 'cleanup', 'feedback']) {
+        assert.ok(dashboard.includes(`onOpen: () => setCurrentTab('${tabId}')`), `요약 카드에서 '${tabId}' 로 가는 길이 없다`);
     }
 });
 
@@ -74,29 +72,19 @@ test('한 번 연 화면은 살려 두어 다시 열 때 서버를 다시 읽지
     }
 });
 
-/*
- * 2026-08-25: 늘 보이는 상단 카드 6개가 **전부 `사람 수`** 였다(신규 승인 대기·승인된 선생님·
- * 등록 학생수·장기 미접속·정리 대상·새 의견 제보). 서비스가 살아 있는지 알려주는 값이 하나도 없었고,
- * 디스크·컨테이너·경고는 `운영 > 서버 상태` **안에만** 있어 문제가 나도 그 탭을 열어야 알았다.
- */
-test('관리자 상단은 지금 손대야 하는 것만 보여 준다', async () => {
+/* 현황 안의 이용 규모와 기존 조치·서버 카드를 첫 화면 운영 요약 한 곳으로 합친다. */
+test('관리자 첫 화면은 조치·이용 현황·시스템 상태를 한 번에 보여 준다', async () => {
     const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+    const overview = await read('src/components/admin/AdminDashboardOverview.jsx');
 
-    // 건강 지표가 상단에 올라와 있다.
-    for (const label of ['컨테이너', '디스크 여유', '조치 필요']) {
-        assert.ok(dashboard.includes(`label="${label}"`), `상단에 '${label}' 이 없다`);
+    for (const label of ['서버 조치 필요', '장기 미접속', '정리 후보 전체', '가입 선생님', '운영 학급', '등록 학생', '컨테이너', '디스크 여유']) {
+        assert.ok(dashboard.includes(`label: '${label}'`), `첫 화면 요약에 '${label}' 이 없다`);
     }
-
-    /*
-     * ⚠️ 규모 지표는 상단에서 뺀다. 늘어나는 숫자는 **좋은 소식이지 조치가 필요한 신호가 아니다.**
-     *    `현황 > 사용량` 에 이미 같은 값이 있어 중복이기도 했다.
-     */
-    for (const gone of ['승인된 선생님', '등록 학생수', '장기 미접속', '정리 대상']) {
-        assert.doesNotMatch(dashboard, new RegExp(`label=\\{?["\`]${gone}`), `'${gone}' 이 상단에 다시 올라왔다`);
-    }
+    assert.match(dashboard, /currentTab === 'active' && <AdminDashboardOverview/);
+    assert.match(overview, /오늘 확인할 운영 요약/);
 
     // 이제 맥 본체 현재값을 직접 재므로 상단에서도 도커 값으로 짐작하지 않고 따로 보여 준다.
-    assert.match(dashboard, /label="맥 메모리"/);
+    assert.match(dashboard, /label: '맥 메모리\/스왑'/);
 
     // 서비스 현황 패널과 **같은 RPC** 를 쓴다. 같은 값을 두 곳에서 따로 세면 숫자가 갈린다.
     const hook = await read('src/components/admin/useAdminHealthSummary.js');

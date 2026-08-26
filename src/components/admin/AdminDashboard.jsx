@@ -11,6 +11,7 @@ import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
+import AdminDashboardOverview from './AdminDashboardOverview';
 import { useAdminHealthSummary } from './useAdminHealthSummary';
 import useAdminUsage from '../../hooks/useAdminUsage';
 import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
@@ -33,7 +34,7 @@ const TAB_GROUPS = [
         id: 'teachers',
         label: '👩‍🏫 선생님',
         tabs: [
-            { id: 'active', label: '활동 중' },
+            { id: 'active', label: '전체 명단' },
             { id: 'pending', label: '승인 대기' },
             { id: 'dormant', label: '장기 미접속' },
             { id: 'cleanup', label: '정리 대상' }
@@ -85,35 +86,36 @@ const KeepAlivePanel = ({ active, visited, children }) => {
 
 // --- Components ---
 
-/*
- * 위쪽 요약 카드. `onOpen` 을 주면 눌러서 해당 화면으로 바로 간다.
- * 숫자를 보고 "그래서 어디로 가야 하지" 를 다시 찾게 만들지 않기 위한 것이다.
- */
-const StatCard = ({ label, value, color, icon, onOpen }) => (
-    <div
-        onClick={onOpen}
-        role={onOpen ? 'button' : undefined}
-        tabIndex={onOpen ? 0 : undefined}
-        onKeyDown={onOpen ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(); } } : undefined}
-        style={{
-            background: 'white', borderRadius: '12px', padding: '20px',
-            border: '1px solid #E9ECEF', boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-            display: 'flex', alignItems: 'center', gap: '16px', flex: 1,
-            cursor: onOpen ? 'pointer' : 'default'
-        }}>
+const PaginationControls = ({ page, pageCount, totalCount, pageSize, onPageChange }) => {
+    if (totalCount <= pageSize) return null;
+    const start = ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, totalCount);
+
+    return (
         <div style={{
-            width: '48px', height: '48px', borderRadius: '12px',
-            background: `${color}15`, color: color,
-            display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem'
+            padding: '16px', borderTop: '1px solid #E9ECEF',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px',
+            flexWrap: 'wrap', background: '#F8F9FA'
         }}>
-            {icon}
+            <Button size="sm" variant="ghost" disabled={page === 1} onClick={() => onPageChange(page - 1)}>이전</Button>
+            <span style={{ color: '#4A5568', fontSize: '0.85rem', fontWeight: 700 }}>{start}–{end} / 총 {totalCount}명</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#718096', fontSize: '0.82rem' }}>
+                페이지
+                <select
+                    value={page}
+                    onChange={(event) => onPageChange(Number(event.target.value))}
+                    style={{ padding: '5px 8px', border: '1px solid #CBD5E0', borderRadius: '7px', background: 'white' }}
+                >
+                    {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+                        <option key={pageNumber} value={pageNumber}>{pageNumber}</option>
+                    ))}
+                </select>
+                / {pageCount}
+            </label>
+            <Button size="sm" variant="ghost" disabled={page === pageCount} onClick={() => onPageChange(page + 1)}>다음</Button>
         </div>
-        <div>
-            <div style={{ fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>{label}</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>{value}</div>
-        </div>
-    </div>
-);
+    );
+};
 
 const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, onForceWithdrawal }) => {
     const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
@@ -232,7 +234,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [currentTab, setCurrentTab] = useState('active');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
+    const ITEMS_PER_PAGE = 25;
 
     const teacherStatus = currentTab === 'active'
         ? 'APPROVED'
@@ -275,6 +277,47 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         : (hostMemoryPressureOpen
             ? '#E53E3E'
             : (health.summary.hostMemoryAvailablePct < 30 ? '#D69E2E' : '#48BB78'));
+
+    const overviewGroups = [
+        {
+            id: 'actions',
+            title: '지금 확인할 일',
+            description: '누르면 처리 화면으로 이동',
+            tone: 'actions',
+            items: [
+                { id: 'alerts', label: '서버 조치 필요', value: health.summary ? `${health.summary.openAlertCount}건` : '확인 중', color: health.summary?.openAlertCount > 0 ? '#E53E3E' : '#38A169', icon: '🚨', onOpen: () => setCurrentTab('service') },
+                { id: 'pending', label: '신규 승인 대기', value: `${newSignupCount}명`, color: '#DD6B20', icon: '⏳', onOpen: () => setCurrentTab('pending') },
+                { id: 'dormant', label: `장기 미접속 ${usage.dormantDays}일`, value: `${usage.dormantTeachers.length}명`, color: '#B7791F', icon: '😴', onOpen: () => setCurrentTab('dormant') },
+                { id: 'cleanup', label: '정리 후보 전체', value: `${usage.cleanupCandidates.length}명`, color: '#C53030', icon: '🧹', onOpen: () => setCurrentTab('cleanup') },
+                { id: 'feedback', label: '새 의견 제보', value: `${pendingFeedbackCount}건`, color: '#6B46C1', icon: '📢', onOpen: () => setCurrentTab('feedback') }
+            ]
+        },
+        {
+            id: 'usage',
+            title: '이용 현황',
+            description: `최근 ${usage.activityDays}일`,
+            tone: 'usage',
+            items: [
+                { id: 'teachers', label: '가입 선생님', value: usage.overview ? `${usage.overview.teacher_total}명` : '확인 중', color: '#2D3748', icon: '👩‍🏫', onOpen: () => setCurrentTab('usage') },
+                { id: 'active-teachers', label: '활동 교사', value: usage.overview ? `${usage.overview.teacher_active}명` : '확인 중', color: '#2F855A', icon: '🟢', onOpen: () => setCurrentTab('usage') },
+                { id: 'classes', label: '운영 학급', value: usage.overview ? `${usage.overview.class_total}개` : '확인 중', color: '#2B6CB0', icon: '🏫', onOpen: () => setCurrentTab('usage') },
+                { id: 'students', label: '등록 학생', value: usage.overview ? `${usage.overview.student_total}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('students') },
+                { id: 'writing-students', label: '글쓰기 학생', value: usage.overview ? `${usage.overview.student_active}명` : '확인 중', color: '#2F855A', icon: '✍️', onOpen: () => setCurrentTab('students') },
+                { id: 'posts', label: '작성 글', value: usage.overview ? `${usage.overview.post_recent}개` : '확인 중', color: '#2F855A', icon: '📝', onOpen: () => setCurrentTab('usage') }
+            ]
+        },
+        {
+            id: 'system',
+            title: '시스템 상태',
+            description: '최근 건강검진',
+            tone: 'system',
+            items: [
+                { id: 'containers', label: '컨테이너', value: health.summary ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}` : '확인 중', color: containerTone, icon: '📦', onOpen: () => setCurrentTab('service') },
+                { id: 'disk', label: '디스크 여유', value: health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중', color: diskTone, icon: '💾', onOpen: () => setCurrentTab('service') },
+                { id: 'memory', label: '맥 메모리/스왑', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') }
+            ]
+        }
+    ];
 
     const tabBadges = useMemo(() => ({
         pending: newSignupCount,
@@ -436,58 +479,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 </div>
             </header>
 
-            {/*
-              * 상단 요약 — **"지금 손대야 하나"에 답하는 값만** 둔다(2026-08-25 정리).
-              *
-              * 예전에는 여섯 칸이 전부 `사람 수` 였다(가입 교사·학급·승인된 선생님·등록 학생 …).
-              * 늘어나는 숫자는 좋은 소식이지 **조치가 필요한 신호가 아니다.** 그 값들은
-              * `현황 > 사용량` 으로 내렸다. 반대로 컨테이너·디스크·경고는 `운영 > 서버 상태` **안에만**
-              * 있어서, 문제가 나도 그 탭을 열어야 알았다. 자리를 맞바꾼 것이다.
-              *
-              * 맥 본체 메모리·스왑은 5분 현재값을 함께 재므로, 도커 VM 값으로 본체 상태를 짐작하지 않는다.
-              */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
-                <StatCard
-                    label="컨테이너"
-                    value={health.summary
-                        ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}`
-                        : '확인 중'}
-                    color={containerTone} icon="📦"
-                    onOpen={() => setCurrentTab('service')}
-                />
-                <StatCard
-                    label="디스크 여유"
-                    value={health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중'}
-                    color={diskTone} icon="💾"
-                    onOpen={() => setCurrentTab('service')}
-                />
-                <StatCard
-                    label="맥 메모리"
-                    value={health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null
-                        ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB`
-                        : '확인 중'}
-                    color={hostMemoryTone} icon="🧠"
-                    onOpen={() => setCurrentTab('service')}
-                />
-                <StatCard
-                    label="조치 필요"
-                    value={health.summary ? `${health.summary.openAlertCount}건` : '확인 중'}
-                    color={health.summary?.openAlertCount > 0 ? '#E53E3E' : '#48BB78'} icon="🚨"
-                    onOpen={() => setCurrentTab('service')}
-                />
-                <StatCard
-                    label="신규 승인 대기" value={`${newSignupCount}명`}
-                    color="#F6AD55" icon="⏳"
-                    onOpen={() => setCurrentTab('pending')}
-                />
-                {/* 의견 제보는 예전에는 탭 이름에만 배지가 붙어, 13개를 훑어야 알 수 있었다. */}
-                <StatCard
-                    label="새 의견 제보"
-                    value={`${pendingFeedbackCount}건`}
-                    color="#805AD5" icon="📢"
-                    onOpen={() => setCurrentTab('feedback')}
-                />
-            </div>
+            {currentTab === 'active' && <AdminDashboardOverview groups={overviewGroups} />}
 
             {/* Main Content Area */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -595,7 +587,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     {!teacherPage.loading && currentTab === 'active' && (
                         <div style={{ overflowX: 'auto', background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                             {teacherPage.items.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>활동 중인 선생님이 없습니다.</div>
+                                <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>등록된 선생님이 없습니다.</div>
                             ) : (
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: '800px' }}>
                                     <thead>
@@ -679,39 +671,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 </table>
                             )}
 
-                            {/* Pagination Controls */}
-                            {teacherPage.totalCount > ITEMS_PER_PAGE && (
-                                <div style={{
-                                    padding: '16px', borderTop: '1px solid #E9ECEF',
-                                    display: 'flex', justifyContent: 'center', gap: '8px', background: '#F8F9FA'
-                                }}>
-                                    <Button
-                                        size="sm" variant="ghost"
-                                        disabled={currentPage === 1}
-                                        onClick={() => setCurrentPage(prev => prev - 1)}
-                                    >이전</Button>
-
-                                    {Array.from({ length: teacherPageCount }, (_, i) => i + 1).map(page => (
-                                        <Button
-                                            key={page}
-                                            size="sm"
-                                            style={{
-                                                minWidth: '32px',
-                                                background: currentPage === page ? '#4299E1' : 'transparent',
-                                                color: currentPage === page ? 'white' : '#718096',
-                                                border: currentPage === page ? 'none' : '1px solid #E2E8F0'
-                                            }}
-                                            onClick={() => setCurrentPage(page)}
-                                        >{page}</Button>
-                                    ))}
-
-                                    <Button
-                                        size="sm" variant="ghost"
-                                        disabled={currentPage === teacherPageCount}
-                                        onClick={() => setCurrentPage(prev => prev + 1)}
-                                    >다음</Button>
-                                </div>
-                            )}
+                            <PaginationControls
+                                page={currentPage}
+                                pageCount={teacherPageCount}
+                                totalCount={teacherPage.totalCount}
+                                pageSize={ITEMS_PER_PAGE}
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                     )}
 
@@ -772,34 +738,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             );
                                         })}
 
-                                    {/* Pagination for Pending */}
-                                    {teacherPage.totalCount > ITEMS_PER_PAGE && (
-                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
-                                            <Button
-                                                size="sm" variant="ghost"
-                                                disabled={currentPage === 1}
-                                                onClick={() => setCurrentPage(prev => prev - 1)}
-                                            >이전</Button>
-                                            {Array.from({ length: teacherPageCount }, (_, i) => i + 1).map(page => (
-                                                <Button
-                                                    key={page}
-                                                    size="sm"
-                                                    style={{
-                                                        minWidth: '32px',
-                                                        background: currentPage === page ? '#4299E1' : 'white',
-                                                        color: currentPage === page ? 'white' : '#718096',
-                                                        border: '1px solid #E2E8F0'
-                                                    }}
-                                                    onClick={() => setCurrentPage(page)}
-                                                >{page}</Button>
-                                            ))}
-                                            <Button
-                                                size="sm" variant="ghost"
-                                                disabled={currentPage === teacherPageCount}
-                                                onClick={() => setCurrentPage(prev => prev + 1)}
-                                            >다음</Button>
-                                        </div>
-                                    )}
+                                    <PaginationControls
+                                        page={currentPage}
+                                        pageCount={teacherPageCount}
+                                        totalCount={teacherPage.totalCount}
+                                        pageSize={ITEMS_PER_PAGE}
+                                        onPageChange={setCurrentPage}
+                                    />
                                 </>
                             )}
                         </div>
@@ -808,7 +753,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     {currentTab === 'usage' && (
                         <AdminUsagePanel
                             teachers={usage.teachers}
-                            overview={usage.overview}
                             loading={usage.loading}
                             error={usage.error}
                             dormantDays={usage.dormantDays}

@@ -43,45 +43,13 @@ const sortRows = (rows, sortBy) => {
     }
 };
 
-const OverviewStrip = ({ overview, activityDays }) => {
-    if (!overview) return null;
-
-    const items = [
-        { label: '가입 선생님', value: `${overview.teacher_total}명`, color: '#2D3748' },
-        { label: '승인 대기', value: `${overview.teacher_pending}명`, color: '#DD6B20' },
-        { label: `최근 ${activityDays}일 활동 교사`, value: `${overview.teacher_active}명`, color: '#38A169' },
-        { label: '장기 미접속', value: `${overview.teacher_dormant}명`, color: '#D69E2E' },
-        { label: '정리 후보', value: `${overview.teacher_never_started + overview.teacher_no_student}명`, color: '#E53E3E' },
-        { label: '학급', value: `${overview.class_total}개`, color: '#2C5282' },
-        { label: '학생', value: `${overview.student_total}명`, color: '#2C5282' },
-        { label: `최근 ${activityDays}일 글쓰기 학생`, value: `${overview.student_active}명`, color: '#38A169' },
-        { label: `최근 ${activityDays}일 작성 글`, value: `${overview.post_recent}개`, color: '#38A169' }
-    ];
-
-    return (
-        <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: '1px', background: '#EDF2F7', borderBottom: '1px solid #EDF2F7'
-        }}>
-            {items.map(item => (
-                <div key={item.label} style={{ background: 'white', padding: '16px 18px' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#718096', fontWeight: 600, marginBottom: '6px' }}>
-                        {item.label}
-                    </div>
-                    <div style={{ fontSize: '1.35rem', fontWeight: 900, color: item.color }}>{item.value}</div>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 /**
  * 교사별 사용량 표.
  * "가입은 했는데 실제로 쓰고 있는가"를 한 줄로 판단할 수 있게
  * 학급·학생·미션·글·최근 활동을 한 화면에 놓는다.
  */
 const AdminUsagePanel = ({
-    teachers, overview, loading, error,
+    teachers, loading, error,
     dormantDays, setDormantDays, activityDays, setActivityDays, onRefresh
 }) => {
     const [statusFilter, setStatusFilter] = useState('ALL');
@@ -141,8 +109,6 @@ const AdminUsagePanel = ({
                         </>
                     )}
                 />
-
-                <OverviewStrip overview={overview} activityDays={activityDays} />
 
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',

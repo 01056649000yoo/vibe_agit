@@ -10,6 +10,12 @@ const GRACE_DAY_OPTIONS = [0, 7, 14, 30, 90];
 
 const GROUPS = [
     {
+        id: 'ALL',
+        label: '전체 정리 후보',
+        description: '학급 미개설과 학생 미등록 계정을 모두 봅니다. 가입일 기준은 필요할 때만 좁혀 보세요.',
+        deletable: true
+    },
+    {
         id: USAGE_STATUS.NEVER_STARTED,
         label: '학급 미개설',
         description: '가입만 하고 학급을 한 번도 만들지 않은 계정입니다. 지울 데이터가 없어 계정만 정리하면 됩니다.',
@@ -35,19 +41,22 @@ const GROUPS = [
  * 로그인 계정을 남기면 재로그인 시 프로필이 다시 만들어져 되살아나므로 함께 지운다.
  */
 const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
-    const [groupId, setGroupId] = useState(USAGE_STATUS.NEVER_STARTED);
-    const [graceDays, setGraceDays] = useState(14);
+    const [groupId, setGroupId] = useState('ALL');
+    const [graceDays, setGraceDays] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
     const [working, setWorking] = useState(false);
     const [lastResult, setLastResult] = useState(null);
 
     const activeGroup = GROUPS.find(group => group.id === groupId) || GROUPS[0];
 
     const rows = useMemo(() => {
+        const keyword = searchTerm.trim().toLowerCase();
         return cleanupCandidates
-            .filter(row => row.usage_status === groupId)
+            .filter(row => groupId === 'ALL' || row.usage_status === groupId)
             .filter(row => (row.days_since_signup || 0) >= graceDays)
+            .filter(row => !keyword || `${row.display_name} ${row.school_name} ${row.email}`.toLowerCase().includes(keyword))
             .sort((a, b) => (b.days_since_signup || 0) - (a.days_since_signup || 0));
-    }, [cleanupCandidates, groupId, graceDays]);
+    }, [cleanupCandidates, groupId, graceDays, searchTerm]);
 
     const groupCounts = useMemo(() => {
         const counts = new Map();
@@ -157,22 +166,34 @@ const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
                 title="🧹 미사용 계정 정리"
                 description={activeGroup.description}
                 right={(
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#4A5568' }}>
-                        가입 후 경과
-                        <select
-                            value={graceDays}
-                            disabled={loading || working}
-                            onChange={(e) => setGraceDays(Number(e.target.value))}
+                    <>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#4A5568' }}>
+                            가입 후 경과
+                            <select
+                                value={graceDays}
+                                disabled={loading || working}
+                                onChange={(e) => setGraceDays(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E0',
+                                    fontSize: '0.85rem', background: 'white', color: '#2D3748'
+                                }}
+                            >
+                                {GRACE_DAY_OPTIONS.map(day => (
+                                    <option key={day} value={day}>{day === 0 ? '전체' : `${day}일 이상`}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="🔍 이름·학교·이메일 검색"
+                            value={searchTerm}
+                            onChange={(event) => setSearchTerm(event.target.value)}
                             style={{
-                                padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E0',
-                                fontSize: '0.85rem', background: 'white', color: '#2D3748'
+                                padding: '8px 14px', borderRadius: '20px', border: '1px solid #CBD5E0',
+                                width: '240px', fontSize: '0.85rem', outline: 'none'
                             }}
-                        >
-                            {GRACE_DAY_OPTIONS.map(day => (
-                                <option key={day} value={day}>{day === 0 ? '전체' : `${day}일 이상`}</option>
-                            ))}
-                        </select>
-                    </label>
+                        />
+                    </>
                 )}
             />
 
@@ -191,7 +212,7 @@ const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
                                 color: isActive ? 'white' : '#4A5568'
                             }}
                         >
-                            {group.label} {groupCounts.get(group.id) || 0}
+                            {group.label} {group.id === 'ALL' ? cleanupCandidates.length : (groupCounts.get(group.id) || 0)}
                         </button>
                     );
                 })}
