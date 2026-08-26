@@ -107,6 +107,19 @@ test('기존 교사 학교 이름은 고유한 정확 일치일 때만 기본 �
   assert.match(schoolModal, /initialSchoolName/);
 });
 
+test('학교 변경 검색은 선택 해제와 학급 전환의 늦은 응답을 안전하게 처리한다', () => {
+  assert.match(schoolModal, /import ModalCloseButton from ['"]\.\.\/\.\.\/\.\.\/components\/common\/ModalCloseButton['"]/);
+  assert.match(schoolModal, /<ModalCloseButton onClick=\{onClose\} disabled=\{saving\} label="급식 학교 설정 닫기" \/>/);
+  assert.match(schoolModal, /onSelect=\{setSelectedSchool\}/);
+  assert.doesNotMatch(schoolModal, /setSchoolName\(school\.schoolName\)/);
+  assert.doesNotMatch(schoolModal, />×<|meal-icon-button/);
+  assert.match(entry, /const workspaceRequestRef = useRef\(0\)/);
+  assert.match(entry, /const requestId = workspaceRequestRef\.current \+ 1[\s\S]*mealBoardApi\.getWorkspace\(activeClass\.id\)[\s\S]*requestId !== workspaceRequestRef\.current/);
+  assert.match(entry, /return \(\) => \{ workspaceRequestRef\.current \+= 1; \}/);
+  assert.match(entry, /onClose=\{closeSchoolModal\}/);
+  assert.match(entry, /onClose=\{closeFullscreen\}/);
+});
+
 test('우리 반 비고는 기본으로 접혀 있고 접근 가능한 버튼으로 펼친다', () => {
   assert.match(entry, /const \[notesExpanded, setNotesExpanded\] = useState\(false\)/);
   assert.match(entry, /aria-expanded=\{notesExpanded\}/);

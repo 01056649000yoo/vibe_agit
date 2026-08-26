@@ -135,9 +135,12 @@ const TeacherCommentManager = ({ activeClass }) => {
     }, [load]);
 
     const loadMore = async () => {
+        const requestId = requestSequenceRef.current;
         setLoadingMore(true);
         const { data, error } = await fetchPage(items.length);
         setLoadingMore(false);
+        // 더 보기를 누른 뒤 검색·탭·학급이 바뀌면 이전 조건의 다음 페이지를 새 목록에 섞지 않는다.
+        if (requestId !== requestSequenceRef.current) return;
         if (error) {
             console.error('댓글 더 보기 실패:', error.message);
             return;

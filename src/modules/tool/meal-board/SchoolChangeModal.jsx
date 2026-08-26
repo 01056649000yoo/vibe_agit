@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
 import SchoolSearchField from '../../../components/common/SchoolSearchField';
 import { schoolSelectionFromWorkspace } from './mealBoardEngine';
@@ -36,17 +37,14 @@ export default function SchoolChangeModal({ currentSchool, initialSchoolName = '
             <h3 id="meal-school-title">학교를 바꿀 수 있어요</h3>
             <p>가입할 때 선택한 학교가 자동으로 연결되어 있습니다.</p>
           </div>
-          <button type="button" className="meal-icon-button" aria-label="닫기" disabled={saving} onClick={onClose}>×</button>
+          <ModalCloseButton onClick={onClose} disabled={saving} label="급식 학교 설정 닫기" />
         </header>
 
         <SchoolSearchField
           value={schoolName}
           onValueChange={handleNameChange}
           selectedSchool={selectedSchool}
-          onSelect={(school) => {
-            setSelectedSchool(school);
-            setSchoolName(school.schoolName);
-          }}
+          onSelect={setSelectedSchool}
           placeholder="예: 서울미래초등학교"
         />
 

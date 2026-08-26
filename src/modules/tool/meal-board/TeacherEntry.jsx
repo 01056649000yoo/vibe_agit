@@ -51,24 +51,34 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   const [schoolAutoLinking, setSchoolAutoLinking] = useState(false);
   const [schoolAutoLinkHint, setSchoolAutoLinkHint] = useState('');
   const [refreshToken, setRefreshToken] = useState(0);
+  const workspaceRequestRef = useRef(0);
   const autoLinkAttemptRef = useRef('');
   const closeStudentNote = useCallback(() => setSelectedStudent(null), []);
+  const closeSchoolModal = useCallback(() => setSchoolModalOpen(false), []);
+  const closeFullscreen = useCallback(() => setFullscreenOpen(false), []);
 
   const loadWorkspace = useCallback(async () => {
     if (!activeClass?.id) return;
+    const requestId = workspaceRequestRef.current + 1;
+    workspaceRequestRef.current = requestId;
     setLoading(true);
     setError('');
     try {
       const result = await mealBoardApi.getWorkspace(activeClass.id);
+      if (requestId !== workspaceRequestRef.current) return;
       setWorkspace(normalizeWorkspace(result));
     } catch (loadError) {
+      if (requestId !== workspaceRequestRef.current) return;
       setError(loadError.message || '급식 작업공간을 불러오지 못했습니다.');
     } finally {
-      setLoading(false);
+      if (requestId === workspaceRequestRef.current) setLoading(false);
     }
   }, [activeClass?.id]);
 
-  useEffect(() => { void loadWorkspace(); }, [loadWorkspace]);
+  useEffect(() => {
+    void loadWorkspace();
+    return () => { workspaceRequestRef.current += 1; };
+  }, [loadWorkspace]);
 
   const activeClassId = activeClass?.id || '';
   const teacherSchoolName = String(teacherInfo?.school_name || '').trim();
@@ -200,7 +210,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
     try {
       await mealBoardApi.saveSchool(activeClass.id, scope, school);
       if (scope === 'default') onTeacherSchoolChange?.(school);
-      setSchoolModalOpen(false);
+      closeSchoolModal();
       setRefreshToken(0);
       await loadWorkspace();
       setNotice(scope === 'default' ? '내 기본 학교와 현재 학급에 적용했습니다.' : '현재 학급의 급식 학교를 변경했습니다.');
@@ -217,7 +227,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
     setError('');
     try {
       await mealBoardApi.saveSchool(activeClass.id, 'use_default');
-      setSchoolModalOpen(false);
+      closeSchoolModal();
       setRefreshToken(0);
       await loadWorkspace();
       setNotice('가입할 때 선택한 기본 학교를 사용합니다.');
@@ -336,7 +346,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
     </div>
 
     {selectedStudent ? <StudentNoteModal student={selectedStudent} saving={savingStudent} onClose={closeStudentNote} onSave={saveNote} /> : null}
-    {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} initialSchoolName={teacherSchoolName} saving={savingSchool} onClose={() => setSchoolModalOpen(false)} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
-    {fullscreenOpen ? <MealFullscreen school={workspace?.school} date={date} meals={meals} allergenMap={allergenMap} onClose={() => setFullscreenOpen(false)} /> : null}
+    {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} initialSchoolName={teacherSchoolName} saving={savingSchool} onClose={closeSchoolModal} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
+    {fullscreenOpen ? <MealFullscreen school={workspace?.school} date={date} meals={meals} allergenMap={allergenMap} onClose={closeFullscreen} /> : null}
   </section>;
 }

@@ -27,6 +27,14 @@ test('검색 자동 조회와 수동 새로고침이 겹쳐도 중복·오래된
     assert.equal((source.match(/get_teacher_class_comments/g) || []).length, 1);
 });
 
+test('더 보기 응답은 검색·탭·학급이 바뀐 뒤 새 목록에 섞이지 않는다', async () => {
+    const source = await readFile(componentPath, 'utf8');
+    const loadMoreBlock = source.match(/const loadMore = async \(\) => \{[\s\S]*?\n    \};/)?.[0] || '';
+
+    assert.match(loadMoreBlock, /const requestId = requestSequenceRef\.current/);
+    assert.match(loadMoreBlock, /fetchPage\(items\.length\)[\s\S]*requestId !== requestSequenceRef\.current\) return;[\s\S]*setItems/);
+});
+
 test('검색창과 새로고침 버튼은 좁은 화면에서도 잘리지 않는다', async () => {
     const styles = await readFile(stylePath, 'utf8');
 
