@@ -4,13 +4,14 @@ import { TEACHER_SUBMISSION_BOARD_RECENT_LIMIT } from './teacherSubmissionBoardP
 export const TEACHER_SUBMISSION_HISTORY_LIMIT = 100;
 
 export const teacherSubmissionBoardApi = {
-    async getSnapshot(classId) {
-        const { data, error } = await supabase.rpc('get_teacher_assignment_submission_board_v1', {
+    async getSnapshot(classId, missionId = null) {
+        const { data, error } = await supabase.rpc('get_teacher_assignment_submission_board_v2', {
             p_class_id: classId,
+            p_mission_id: missionId || null,
             p_recent_limit: TEACHER_SUBMISSION_BOARD_RECENT_LIMIT
         });
         if (error) throw error;
-        if (Number(data?.version) !== 1) throw new Error('지원하지 않는 과제 제출 전광판 응답입니다.');
+        if (Number(data?.version) !== 2) throw new Error('지원하지 않는 과제 제출 전광판 응답입니다.');
         return data;
     },
 

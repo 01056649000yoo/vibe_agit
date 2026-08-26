@@ -6,6 +6,9 @@ import {
 
 const emptyBoard = (totalStudents = 0) => ({
     version: 1,
+    scope: 'all',
+    selected_mission_id: null,
+    selected_mission_title: null,
     generated_at: null,
     total_students: Number(totalStudents || 0),
     pending_total: 0,
@@ -13,6 +16,13 @@ const emptyBoard = (totalStudents = 0) => ({
     submission_counts: {},
     completion_counts: {},
     mission_statuses: {},
+    scope_summary: {
+        total_students: Number(totalStudents || 0),
+        confirmed_count: 0,
+        pending_count: 0,
+        rewriting_count: 0,
+        not_submitted_count: 0
+    },
     student_statuses: [],
     recent_submissions: []
 });
@@ -35,7 +45,24 @@ const normalizeStudentStatus = (status) => ({
     confirmed_count: numberOrZero(status?.confirmed_count),
     pending_count: numberOrZero(status?.pending_count),
     rewriting_count: numberOrZero(status?.rewriting_count),
-    not_submitted_count: numberOrZero(status?.not_submitted_count)
+    not_submitted_count: numberOrZero(status?.not_submitted_count),
+    status: ['confirmed', 'pending', 'rewriting', 'not_submitted'].includes(status?.status)
+        ? status.status
+        : null
+});
+
+const summarizeStudents = (students, totalStudents) => students.reduce((summary, student) => ({
+    ...summary,
+    confirmed_count: summary.confirmed_count + numberOrZero(student.confirmed_count),
+    pending_count: summary.pending_count + numberOrZero(student.pending_count),
+    rewriting_count: summary.rewriting_count + numberOrZero(student.rewriting_count),
+    not_submitted_count: summary.not_submitted_count + numberOrZero(student.not_submitted_count)
+}), {
+    total_students: numberOrZero(totalStudents),
+    confirmed_count: 0,
+    pending_count: 0,
+    rewriting_count: 0,
+    not_submitted_count: 0
 });
 
 const normalizeBoard = (value, fallback = {}) => {
@@ -61,18 +88,32 @@ const normalizeBoard = (value, fallback = {}) => {
         Object.entries(missionStatuses).map(([missionId, status]) => [missionId, status.submittedCount])
     );
 
+    const studentStatuses = Array.isArray(value?.student_statuses)
+        ? value.student_statuses.slice(0, 100).map(normalizeStudentStatus)
+        : [];
+
     return {
         ...emptyBoard(totalStudents),
         ...value,
+        scope: value?.scope === 'mission' ? 'mission' : 'all',
+        selected_mission_id: value?.selected_mission_id || null,
+        selected_mission_title: value?.selected_mission_title || null,
         total_students: totalStudents,
         pending_total: numberOrZero(value?.pending_total),
         submitted_total: numberOrZero(value?.submitted_total),
         submission_counts: submissionCounts,
         completion_counts: value?.completion_counts || {},
         mission_statuses: missionStatuses,
-        student_statuses: Array.isArray(value?.student_statuses)
-            ? value.student_statuses.slice(0, 100).map(normalizeStudentStatus)
-            : [],
+        scope_summary: value?.scope_summary
+            ? {
+                total_students: numberOrZero(value.scope_summary.total_students ?? totalStudents),
+                confirmed_count: numberOrZero(value.scope_summary.confirmed_count),
+                pending_count: numberOrZero(value.scope_summary.pending_count),
+                rewriting_count: numberOrZero(value.scope_summary.rewriting_count),
+                not_submitted_count: numberOrZero(value.scope_summary.not_submitted_count)
+            }
+            : summarizeStudents(studentStatuses, totalStudents),
+        student_statuses: studentStatuses,
         recent_submissions: Array.isArray(value?.recent_submissions) ? value.recent_submissions.slice(0, 8) : []
     };
 };
@@ -97,12 +138,16 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
     const [board, setBoard] = useState(() => emptyBoard());
     const [hasSnapshot, setHasSnapshot] = useState(false);
     const [pollError, setPollError] = useState(false);
+    const [selectedMissionId, setSelectedMissionId] = useState(null);
+    const [isScopeLoading, setIsScopeLoading] = useState(false);
     const localMutationVersionRef = useRef(0);
 
     useEffect(() => {
         setBoard(emptyBoard());
         setHasSnapshot(false);
         setPollError(false);
+        setSelectedMissionId(null);
+        setIsScopeLoading(false);
         localMutationVersionRef.current = 0;
     }, [classId]);
 
@@ -139,15 +184,21 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
             const startedAt = Date.now();
             const mutationVersionAtStart = localMutationVersionRef.current;
             try {
-                const nextBoard = await teacherSubmissionBoardApi.getSnapshot(classId);
+                const nextBoard = await teacherSubmissionBoardApi.getSnapshot(classId, selectedMissionId);
                 if (!stopped && mutationVersionAtStart === localMutationVersionRef.current) {
                     setBoard(normalizeBoard(nextBoard));
                 }
-                if (!stopped) setPollError(false);
+                if (!stopped) {
+                    setPollError(false);
+                    setIsScopeLoading(false);
+                }
                 failureCount = 0;
             } catch {
                 failureCount += 1;
-                if (!stopped) setPollError(true);
+                if (!stopped) {
+                    setPollError(true);
+                    setIsScopeLoading(false);
+                }
             } finally {
                 inFlight = false;
                 if (!stopped && document.visibilityState === 'visible') {
@@ -180,7 +231,15 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
             window.removeEventListener('online', pollOnReturn);
             document.removeEventListener('visibilitychange', pollOnReturn);
         };
-    }, [classId, enabled, hasSnapshot]);
+    }, [classId, enabled, hasSnapshot, selectedMissionId]);
+
+    const selectMissionScope = useCallback((missionId) => {
+        const nextMissionId = missionId || null;
+        if (selectedMissionId === nextMissionId) return;
+        setIsScopeLoading(true);
+        setPollError(false);
+        setSelectedMissionId(nextMissionId);
+    }, [selectedMissionId]);
 
     const transitionMissionStatus = useCallback((missionId, transition, count = 1, studentIds = []) => {
         const delta = TRANSITION_DELTAS.get(transition);
@@ -217,13 +276,22 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
                 rewritingCount,
                 notSubmittedCount: Math.max(0, total - submittedCount - rewritingCount)
             };
-            const studentStatuses = targetStudentIds.size > 0 && studentDelta
+            const canUpdateScopedStudents = current.scope !== 'mission'
+                || current.selected_mission_id === missionId;
+            const studentStatuses = targetStudentIds.size > 0 && studentDelta && canUpdateScopedStudents
                 ? current.student_statuses.map((student) => {
                     if (!targetStudentIds.has(student.student_id)) return student;
                     const nextStudent = { ...student };
                     Object.entries(studentDelta).forEach(([key, value]) => {
                         Reflect.set(nextStudent, key, Math.max(0, numberOrZero(Reflect.get(student, key)) + value));
                     });
+                    if (current.scope === 'mission') {
+                        nextStudent.status = nextStudent.confirmed_count > 0
+                            ? 'confirmed'
+                            : nextStudent.pending_count > 0
+                                ? 'pending'
+                                : nextStudent.rewriting_count > 0 ? 'rewriting' : 'not_submitted';
+                    }
                     return nextStudent;
                 })
                 : current.student_statuses;
@@ -235,6 +303,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
                 submission_counts: { ...current.submission_counts, [missionId]: submittedCount },
                 completion_counts: { ...current.completion_counts, [missionId]: confirmedCount },
                 mission_statuses: { ...current.mission_statuses, [missionId]: nextStatus },
+                scope_summary: summarizeStudents(studentStatuses, current.total_students),
                 student_statuses: studentStatuses
             };
         });
@@ -251,7 +320,10 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
         submissionCounts,
         hasSnapshot,
         pollError,
+        selectedMissionId,
+        isScopeLoading,
         hydrateBoard,
+        selectMissionScope,
         transitionMissionStatus,
         loadSubmissionHistory
     };

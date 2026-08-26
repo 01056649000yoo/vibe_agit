@@ -131,10 +131,11 @@ test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·
     assert.match(hook, /mutationVersionAtStart === localMutationVersionRef\.current/);
     assert.match(hook, /if \(!enabled \|\| !classId \|\| !hasSnapshot\)/);
     assert.match(hook, /schedule\(0\)/);
-    assert.match(hook, /\[classId, enabled, hasSnapshot\]/);
+    assert.match(hook, /\[classId, enabled, hasSnapshot, selectedMissionId\]/);
     assert.match(hook, /getTeacherSubmissionBoardNextDelay/);
     assert.doesNotMatch(hook, /setInterval\s*\(|\.channel\(|postgres_changes/);
-    assert.match(api, /get_teacher_assignment_submission_board_v1/);
+    assert.match(api, /get_teacher_assignment_submission_board_v2/);
+    assert.match(api, /p_mission_id:\s*missionId \|\| null/);
     assert.match(api, /p_recent_limit:\s*TEACHER_SUBMISSION_BOARD_RECENT_LIMIT/);
 
     const manager = await read('src/components/teacher/MissionManager.jsx');
@@ -143,10 +144,56 @@ test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·
     assert.match(managerHook, /enabled: submissionBoardPollingEnabled/);
 });
 
+test('전광판은 전체와 미션별 현황을 한 폴링으로 전환하고 갱신 변화를 눈에 보이게 표시한다', async () => {
+    const [board, styles, hook, api, manager, migration, smoke] = await Promise.all([
+        read('src/components/teacher/TeacherSubmissionBoard.jsx'),
+        read('src/components/teacher/TeacherSubmissionBoard.css'),
+        read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
+        read('src/modules/writing/submission-board/teacherSubmissionBoardApi.js'),
+        read('src/components/teacher/MissionManager.jsx'),
+        read('supabase/migrations/20261177_teacher_submission_board_mission_scope.sql'),
+        read('tests/sql/20261177_teacher_submission_board_mission_scope.smoke.sql')
+    ]);
+
+    assert.match(board, /현황 범위/);
+    assert.match(board, /전체 활성 글 과제/);
+    assert.match(board, /mission\.is_archived !== true && mission\.mission_type !== 'meeting'/);
+    assert.match(board, /MissionStudentStatusTable[\s\S]*현재 상태/);
+    assert.match(board, /학생 상태 필터[\s\S]*scopeSummary/);
+    assert.match(board, /previous\?\.scopeKey === scopeKey[\s\S]*previous\.version === 2/);
+    assert.match(board, /is-new-submission/);
+    assert.match(board, /is-status-changed/);
+    assert.match(board, /window\.setTimeout\([\s\S]*2200/);
+    assert.match(board, /aria-live="polite"/);
+    assert.match(board, /scopeKey = `\$\{classId \|\| 'none'\}:\$\{selectedMissionId \|\| 'all'\}`/);
+    assert.match(manager, /classId=\{activeClass\?\.id\}[\s\S]*selectedMissionId=\{submissionBoardMissionId\}/);
+    assert.match(styles, /teacher-submission-board__scope-toolbar/);
+    assert.match(styles, /teacher-submission-board__status-filters/);
+    assert.match(styles, /teacher-submission-board__status-table\.is-mission-scope/);
+    assert.match(styles, /teacher-submission-board__submission-group li\.is-new-submission button/);
+    assert.match(styles, /teacher-submission-board__status-table tr\.is-status-changed/);
+    assert.match(styles, /prefers-reduced-motion: reduce/);
+
+    assert.match(hook, /const \[selectedMissionId, setSelectedMissionId\] = useState\(null\)/);
+    assert.match(hook, /teacherSubmissionBoardApi\.getSnapshot\(classId, selectedMissionId\)/);
+    assert.match(hook, /let stopped = false/);
+    assert.match(api, /get_teacher_assignment_submission_board_v2/);
+    assert.match(migration, /teacher_assignment_submission_board_snapshot_v2/);
+    assert.match(migration, /scope_mission_rows AS MATERIALIZED/);
+    assert.match(migration, /p_mission_id IS NULL OR mission\.id = p_mission_id/);
+    assert.match(migration, /'scope_summary'/);
+    assert.match(migration, /'student_statuses'[\s\S]*LIMIT 100/);
+    assert.match(migration, /'recent_submissions'/);
+    assert.doesNotMatch(migration, /post_content|original_content|structured_content|ai_feedback|eval_comment/);
+    assert.match(smoke, /v_scoped->>'scope' <> 'mission'/);
+    assert.match(smoke, /jsonb_array_length\(v_scoped->'student_statuses'\) > 100/);
+});
+
 test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집계를 사용한다', async () => {
-    const [migration, studentStatusMigration, hook, harness] = await Promise.all([
+    const [migration, studentStatusMigration, missionScopeMigration, hook, harness] = await Promise.all([
         read('supabase/migrations/20261167_teacher_assignment_submission_board.sql'),
         read('supabase/migrations/20261176_teacher_submission_student_status_board.sql'),
+        read('supabase/migrations/20261177_teacher_submission_board_mission_scope.sql'),
         read('src/hooks/useMissionManager.js'),
         read('PERFORMANCE_HARNESS.md')
     ]);
@@ -166,6 +213,8 @@ test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집
     assert.match(studentStatusMigration, /recent_base AS MATERIALIZED[\s\S]*submission_number/);
     assert.match(studentStatusMigration, /attempt\.object_id = recent\.post_id/);
     assert.doesNotMatch(studentStatusMigration, /post_content|original_content|structured_content|ai_feedback|eval_comment/);
+    assert.match(missionScopeMigration, /get_teacher_assignment_submission_board_v2/);
+    assert.match(missionScopeMigration, /LEAST\(GREATEST\(COALESCE\(p_mission_limit, 100\), 1\), 100\)/);
     assert.match(hook, /hydrateSubmissionBoard\(overview\.submission_board/);
     assert.match(harness, /교사 과제 제출 전광판[\s\S]*12초당 경량 RPC 1회[\s\S]*학생별 네 상태 합계 최대 100명/);
 });

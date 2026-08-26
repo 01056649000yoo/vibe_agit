@@ -51,7 +51,9 @@ const MissionManager = ({
     const handledNavigationRef = useRef(null);
 
     const {
-        missions, submissionCounts, submissionBoard, submissionBoardPollError, loadSubmissionHistory,
+        missions, submissionCounts, submissionBoard, submissionBoardPollError,
+        submissionBoardMissionId, submissionBoardScopeLoading, selectSubmissionBoardMission,
+        loadSubmissionHistory,
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
@@ -88,6 +90,16 @@ const MissionManager = ({
         const timerId = window.setTimeout(() => setHighlightedMissionId(null), 5000);
         return () => window.clearTimeout(timerId);
     }, [highlightedMissionId]);
+
+    useEffect(() => {
+        if (!submissionBoardMissionId) return;
+        const isAvailable = missions.some((mission) => (
+            mission.id === submissionBoardMissionId
+            && mission.is_archived !== true
+            && mission.mission_type !== 'meeting'
+        ));
+        if (!isAvailable) selectSubmissionBoardMission(null);
+    }, [missions, selectSubmissionBoardMission, submissionBoardMissionId]);
 
     const handleWorkspaceTabKeyDown = (event, currentIndex) => {
         const lastIndex = MISSION_WORKSPACE_VIEW_OPTIONS.length - 1;
@@ -404,9 +416,13 @@ const MissionManager = ({
                 hidden={!isSubmissionBoardView}
             >
                 <TeacherSubmissionBoard
+                    classId={activeClass?.id}
                     missions={missions}
                     board={submissionBoard}
                     pollError={submissionBoardPollError}
+                    selectedMissionId={submissionBoardMissionId}
+                    isScopeLoading={submissionBoardScopeLoading}
+                    onSelectMission={selectSubmissionBoardMission}
                     onOpenPost={handleOpenSubmissionBoardPost}
                     onLoadHistory={loadSubmissionHistory}
                 />

@@ -19,7 +19,10 @@ export const useMissionManager = (
         board: submissionBoard,
         submissionCounts,
         pollError: submissionBoardPollError,
+        selectedMissionId: submissionBoardMissionId,
+        isScopeLoading: submissionBoardScopeLoading,
         hydrateBoard: hydrateSubmissionBoard,
+        selectMissionScope: selectSubmissionBoardMission,
         transitionMissionStatus,
         loadSubmissionHistory
     } = useTeacherSubmissionBoard(activeClass?.id, { enabled: submissionBoardPollingEnabled });
@@ -1135,7 +1138,9 @@ ${postArray.map((p, idx) => {
         : undefined;
 
     return {
-        missions, submissionCounts, submissionBoard, submissionBoardPollError, loadSubmissionHistory,
+        missions, submissionCounts, submissionBoard, submissionBoardPollError,
+        submissionBoardMissionId, submissionBoardScopeLoading, selectSubmissionBoardMission,
+        loadSubmissionHistory,
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,

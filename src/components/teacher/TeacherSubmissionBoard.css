@@ -92,6 +92,67 @@
     line-height: 1.4;
 }
 
+.teacher-submission-board__scope-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 13px;
+    padding: 11px 13px;
+    border: 1px solid #DBEAFE;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.teacher-submission-board__scope-toolbar label {
+    display: grid;
+    min-width: min(420px, 100%);
+    gap: 5px;
+}
+
+.teacher-submission-board__scope-toolbar label > span {
+    color: #475569;
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+}
+
+.teacher-submission-board__scope-toolbar select {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 34px 8px 11px;
+    overflow: hidden;
+    border: 1px solid #93C5FD;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #1E3A8A;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    text-overflow: ellipsis;
+}
+
+.teacher-submission-board__scope-toolbar select:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.24);
+    outline-offset: 2px;
+}
+
+.teacher-submission-board__scope-toolbar p {
+    margin: 0 0 3px;
+    color: #64748B;
+    font-size: var(--ui-text-xs);
+    font-weight: 750;
+    text-align: right;
+}
+
+.teacher-submission-board__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
 .teacher-submission-board__live {
     display: grid;
     grid-template-columns: auto auto;
@@ -261,6 +322,10 @@
     border-top: 1px solid #EEF2F7;
 }
 
+.teacher-submission-board__submission-group li.is-new-submission button {
+    animation: teacher-submission-new-row 2.2s ease-out;
+}
+
 .teacher-submission-board__submission-group li button {
     display: grid;
     grid-template-columns: minmax(76px, auto) minmax(0, max-content) minmax(0, 1fr) auto;
@@ -425,6 +490,46 @@
 .teacher-submission-board__legend .is-rewriting { color: #D97706; }
 .teacher-submission-board__legend .is-waiting { color: #64748B; }
 
+.teacher-submission-board__status-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+
+.teacher-submission-board__status-filters button {
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #CBD5E1;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #64748B;
+    cursor: pointer;
+    font-size: var(--ui-text-xs);
+    font-weight: 850;
+}
+
+.teacher-submission-board__status-filters button strong {
+    margin-left: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+.teacher-submission-board__status-filters button.is-confirmed { color: #15803D; }
+.teacher-submission-board__status-filters button.is-pending { color: #1D4ED8; }
+.teacher-submission-board__status-filters button.is-rewriting { color: #B45309; }
+.teacher-submission-board__status-filters button.is-waiting { color: #475569; }
+
+.teacher-submission-board__status-filters button.is-active {
+    border-color: currentColor;
+    background: #EFF6FF;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.teacher-submission-board__status-filters button:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.24);
+    outline-offset: 2px;
+}
+
 .teacher-submission-board__status-table-scroll {
     max-height: 560px;
     overflow: auto;
@@ -446,6 +551,10 @@
     border-spacing: 0;
     color: #334155;
     font-size: var(--ui-text-sm);
+}
+
+.teacher-submission-board__status-table.is-mission-scope {
+    min-width: 340px;
 }
 
 .teacher-submission-board__status-table th,
@@ -519,6 +628,42 @@
     font-weight: 750;
 }
 
+.teacher-submission-board__status-table.is-mission-scope thead th:last-child,
+.teacher-submission-board__status-table.is-mission-scope tbody td:last-child {
+    width: 48%;
+    text-align: left;
+}
+
+.teacher-submission-board__mission-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 104px;
+    min-height: 32px;
+    padding: 5px 10px;
+    border-radius: 9px;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    box-sizing: border-box;
+}
+
+.teacher-submission-board__mission-status > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.teacher-submission-board__mission-status.is-confirmed { background: #DCFCE7; color: #166534; }
+.teacher-submission-board__mission-status.is-pending { background: #DBEAFE; color: #1D4ED8; }
+.teacher-submission-board__mission-status.is-rewriting { background: #FEF3C7; color: #B45309; }
+.teacher-submission-board__mission-status.is-waiting { background: #E2E8F0; color: #475569; }
+
+.teacher-submission-board__status-table tr.is-status-changed > th,
+.teacher-submission-board__status-table tr.is-status-changed > td {
+    animation: teacher-submission-status-change 2.2s ease-out;
+}
+
 .teacher-submission-board__status-count {
     display: inline-grid;
     min-width: 38px;
@@ -553,6 +698,30 @@ td .teacher-submission-board__status-count.is-zero {
     text-align: center;
 }
 
+.teacher-submission-board__empty.is-loading {
+    border-color: #93C5FD;
+    background: #EFF6FF;
+    color: #1D4ED8;
+}
+
+.teacher-submission-board__empty.is-error {
+    border-color: #FCD34D;
+    background: #FFFBEB;
+    color: #92400E;
+}
+
+@keyframes teacher-submission-new-row {
+    0% { background: #BFDBFE; box-shadow: inset 4px 0 0 #2563EB; }
+    38% { background: #DBEAFE; box-shadow: inset 4px 0 0 #3B82F6; }
+    100% { background: transparent; box-shadow: inset 0 0 0 transparent; }
+}
+
+@keyframes teacher-submission-status-change {
+    0% { background: #FEF3C7; }
+    42% { background: #FFFBEB; }
+    100% { background: #FFFFFF; }
+}
+
 @media (max-width: 960px) {
     .teacher-submission-board__content {
         grid-template-columns: minmax(0, 1fr);
@@ -580,6 +749,20 @@ td .teacher-submission-board__status-count.is-zero {
     .teacher-submission-board__header {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .teacher-submission-board__scope-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .teacher-submission-board__scope-toolbar label {
+        min-width: 0;
+    }
+
+    .teacher-submission-board__scope-toolbar p {
+        text-align: left;
     }
 
     .teacher-submission-board__live {
@@ -636,6 +819,12 @@ td .teacher-submission-board__status-count.is-zero {
 
 @media (prefers-reduced-motion: reduce) {
     .teacher-submission-board__live-dot {
+        animation: none;
+    }
+
+    .teacher-submission-board__submission-group li.is-new-submission button,
+    .teacher-submission-board__status-table tr.is-status-changed > th,
+    .teacher-submission-board__status-table tr.is-status-changed > td {
         animation: none;
     }
 }
