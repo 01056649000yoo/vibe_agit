@@ -23,12 +23,10 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
     assert.match(uiPreview, /group\.id === 'class-agit'[\s\S]*<TeacherClassAgitHub activeClass=/);
 });
 
-test('준비 화면은 글쓰기 전·의견·학급 활동 방향과 교사 활성화 계획을 안내한다', () => {
+test('준비 화면은 정해지지 않은 활동 예시 없이 상단 배너만 보여 준다', () => {
     assert.match(hub, /Beta · 준비 중/);
-    assert.match(hub, /아이들 의견 모으기/);
-    assert.match(hub, /글쓰기 전 생각 열기/);
-    assert.match(hub, /우리 반 활동 돕기/);
-    assert.match(hub, /선택 → 활성화 → 마무리/);
-    assert.match(hub, /학생 화면이나 학급 데이터에는 아무 변화도 주지 않습니다/);
+    assert.match(hub, /을 위한 공간을 준비하고 있습니다/);
+    assert.doesNotMatch(hub, /아이들 의견 모으기|글쓰기 전 생각 열기|우리 반 활동 돕기/);
+    assert.doesNotMatch(hub, /선택 → 활성화 → 마무리|PREVIEW_AREAS|teacher-class-agit__areas|teacher-class-agit__plan/);
     assert.doesNotMatch(hub, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
 });

@@ -1,4 +1,4 @@
-/* 실제 활동이 붙기 전에는 방향만 보여 주고 어떤 설정도 저장하지 않는다. */
+/* 내용을 정하기 전에는 준비 배너만 보여 주고 어떤 설정도 저장하지 않는다. */
 .teacher-class-agit {
     width: min(100%, 980px);
     margin: 0 auto;
@@ -29,51 +29,9 @@
 }
 
 .teacher-class-agit__icon { display: block; margin-bottom: 10px; font-size: clamp(2.7rem, 5vw, 4rem); }
-.teacher-class-agit__eyebrow { margin: 0 0 5px; color: #4D7C68; font-size: var(--ui-text-sm); font-weight: 900; }
 .teacher-class-agit__hero h1 { margin: 0; color: #1E4637; font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 950; }
 .teacher-class-agit__summary { max-width: 660px; margin: 14px auto 0; color: #536579; font-size: var(--ui-text-md); font-weight: 700; line-height: 1.75; }
 
-.teacher-class-agit__areas {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-top: 20px;
-}
-
-.teacher-class-agit__area {
-    position: relative;
-    min-width: 0;
-    padding: 22px;
-    border: 1px solid #E2E8F0;
-    border-radius: 20px;
-    background: white;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
-}
-
-.teacher-class-agit__area > span { display: block; margin-bottom: 12px; font-size: 1.9rem; }
-.teacher-class-agit__area strong { color: #24324A; font-size: var(--ui-text-md); font-weight: 900; }
-.teacher-class-agit__area p { margin: 8px 0 28px; color: #64748B; font-size: var(--ui-text-sm); line-height: 1.65; }
-.teacher-class-agit__area small { position: absolute; right: 18px; bottom: 16px; color: #8090A3; font-size: var(--ui-text-xs); font-weight: 800; }
-
-.teacher-class-agit__plan {
-    display: flex;
-    margin-top: 20px;
-    padding: 20px 24px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    border-radius: 18px;
-    background: #24324A;
-    color: white;
-}
-
-.teacher-class-agit__plan strong { font-size: var(--ui-text-md); font-weight: 900; }
-.teacher-class-agit__plan p { margin: 5px 0 0; color: #D8E3EE; font-size: var(--ui-text-sm); line-height: 1.55; }
-.teacher-class-agit__plan > span { flex-shrink: 0; color: #BFE8D6; font-size: var(--ui-text-sm); font-weight: 900; }
-.teacher-class-agit__notice { margin: 14px 0 0; color: #718096; font-size: var(--ui-text-sm); text-align: center; }
-
 @media (max-width: 760px) {
     .teacher-class-agit__hero { padding: 62px 22px 30px; border-radius: 22px; }
-    .teacher-class-agit__areas { grid-template-columns: 1fr; }
-    .teacher-class-agit__plan { align-items: flex-start; flex-direction: column; }
 }
