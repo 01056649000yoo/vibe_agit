@@ -380,7 +380,11 @@ test('교사는 공통 자료를 읽기 전용으로 보고 자기 학급 자료
     assert.match(dynamicCommonMigration, /class\.teacher_id = auth\.uid\(\)/);
 });
 
-test('맞춤법 배움 데이터 도움말은 최신 후보 선별과 개인정보 보호 기준을 설명한다', () => {
+test('맞춤법 배움 데이터 도움말은 주간 공통 정선과 학급별 추가 흐름을 설명한다', () => {
+    assert.match(teacherGuides, /학생 검색과 AI 맞춤법 검사 결과는 주 1회/);
+    assert.match(teacherGuides, /AI 검수와 관리자 확인을 통과한 결과만 전체 공통 맞춤법 배움 데이터에 포함/);
+    assert.match(teacherGuides, /우리 반에서 자주 찾는데 아직 자료가 없는 표현은 학급 자료로 직접 등록/);
+    assert.match(teacherGuides, /관리자가 정선한 결과를 전체 공통 자료로 게시하면 모든 학급에 자동 적용/);
     assert.match(teacherGuides, /최근 30일의 추천 후보/);
     assert.match(teacherGuides, /학생 2명 이상.*3회 이상/);
     assert.match(teacherGuides, /2~15자의 한글 표현, 최대 2어절/);
