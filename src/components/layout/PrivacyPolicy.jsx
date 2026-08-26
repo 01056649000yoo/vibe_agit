@@ -28,18 +28,20 @@ const PrivacyPolicy = () => {
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제3조 (개인정보의 수집 항목 및 이용 목적)</h4>
-                <p>서비스 제공에 필요한 최소한의 정보만을 수집하며, 민감정보는 수집하지 않습니다.</p>
+                <p>서비스 제공에 필요한 최소한의 정보만을 수집합니다. 학생 건강 관련 정보는 교사가 급식 안전 기능을 선택해 사용하고 학교의 적법한 처리 근거와 내부 절차를 확인한 경우에만 제한적으로 처리합니다.</p>
                 <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
                     <p><strong>1. 수집 항목</strong></p>
                     <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
                         <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 성명(또는 닉네임)</li>
                         <li><strong>학생 (이용자):</strong> 필수항목 - 닉네임, 출석 번호 (모두 가명 처리, 개인식별 어려운 가상 번호 사용 필수, 교사가 생성)</li>
                         <li><strong>선택 항목:</strong> 포인트 정보, 퀘스트 정보, 학급 활동 데이터 등 서비스 이용 과정에서 생성되는 정보</li>
+                        <li><strong>급식 안전 기능 선택 항목:</strong> 학생별 급식 알레르기 항목 및 확인 상태(교사가 입력하며 학생에게 직접 수집하지 않음)</li>
                     </ul>
                     <p><strong>2. 이용 목적</strong></p>
                     <ul style={{ paddingLeft: '20px' }}>
                         <li>회원 가입 의사 확인 및 본인 식별</li>
                         <li>서비스 제공(학급 관리, 글쓰기 활동, 포인트 부여 등) 및 운영</li>
+                        <li>급식 안전을 위한 당일 식단과 학생별 알레르기 항목의 교사 확인</li>
                         <li>서비스 부정이용 방지 및 비인가 사용 방지</li>
                         <li>문의사항 처리 및 공지사항 전달</li>
                     </ul>
@@ -51,7 +53,8 @@ const PrivacyPolicy = () => {
                 <p>이용 목적 달성 시 즉시 파기 원칙을 준수하며, 특히 교사의 학급 운영 종료 시 학생 정보는 서버에서 영구 삭제됩니다.</p>
                 <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
                     <li><strong>교사 계정 정보:</strong> 회원 탈퇴 시까지</li>
-                    <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
+                        <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
+                        <li><strong>학생별 급식 알레르기 항목:</strong> 해당 학생 또는 학급 삭제 시 즉시 영구 삭제</li>
                     <li><strong>서비스 이용 기록:</strong> 3개월 (통신비밀보호법에 따름)</li>
                 </ul>
             </section>
@@ -133,13 +136,14 @@ const PrivacyPolicy = () => {
                 <ul style={{ paddingLeft: '20px', fontSize: '0.95rem' }}>
                     <li>교사(사용자)는 학생 계정 생성 시 실명, 주소 등 식별 가능한 개인정보를 입력하지 않아야 하며, 반드시 가명 정보를 활용해야 합니다.</li>
                     <li>교사(사용자)는 본인이 수집한 민감 정보에 대한 관리 책임을 지며, 계정 보안 관리에 철저를 기해야 합니다.</li>
+                    <li>학생별 급식 알레르기 항목은 학교가 급식 안전 목적으로 처리할 적법한 근거와 내부 절차를 갖춘 경우에만 입력하고, 다른 목적으로 이용하거나 공개 화면에 전재해서는 안 됩니다.</li>
                     <li>학급 운영 종료 시 반드시 '클래스 삭제' 기능을 사용하여 불필요한 데이터가 남지 않도록 해야 합니다.</li>
                 </ul>
             </section>
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제12조 (개인정보처리방침의 변경)</h4>
-                <p>이 개인정보처리방침은 2026년 1월 29일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
+                <p>이 개인정보처리방침은 2026년 8월 26일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
             </section>
 
             <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#EBF5FB', borderRadius: '8px', fontSize: '0.9rem' }}>

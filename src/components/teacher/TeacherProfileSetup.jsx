@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import SchoolSearchField from '../common/SchoolSearchField';
 import { supabase } from '../../lib/supabaseClient';
 import TermsOfService from '../layout/TermsOfService';
 import PrivacyPolicy from '../layout/PrivacyPolicy';
-import { searchSchools } from '../../utils/schoolApi';
+import { toTeacherSchoolColumns } from '../../utils/schoolApi';
 
 /**
  * 역할: 로그인 후 선생님 필수 정보(이름, 학교, 연락처) 설정 페이지 ✨
@@ -13,7 +14,6 @@ import { searchSchools } from '../../utils/schoolApi';
 const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
     const [step, setStep] = useState(1); // 1: 약관동의, 2: 정보입력
     const [loading, setLoading] = useState(false);
-    const [, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     // 약관 동의 상태
     const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -24,51 +24,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
     const [schoolName, setSchoolName] = useState(profile?.schoolName || '');
     const [phone, setPhone] = useState(profile?.phone || '');
 
-    // 학교 검색 관련 상태
-    const [schoolResults, setSchoolResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [showResults, setShowResults] = useState(false);
-    const [selectedSchool, setSelectedSchool] = useState(null); // [추가] 선택된 학교 정보 객체
-    const searchRef = useRef(null);
-
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 1024);
-        window.addEventListener('resize', handleResize);
-
-        // 검색창 외부 클릭 시 결과창 닫기
-        const handleClickOutside = (event) => {
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
-                setShowResults(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleSearch = async (val) => {
-        setSchoolName(val);
-        setSelectedSchool(null); // [추가] 타이핑 시 선택 상태 해제
-        if (val.trim().length >= 2) {
-            setIsSearching(true);
-            const results = await searchSchools(val);
-            setSchoolResults(results);
-            setShowResults(true);
-            setIsSearching(false);
-        } else {
-            setSchoolResults([]);
-            setShowResults(false);
-        }
-    };
-
-    const handleSelectSchool = (school) => {
-        setSchoolName(school.name);
-        setSelectedSchool(school); // [추가] 선택된 학교 정보 저장
-        setShowResults(false);
-    };
+    const [selectedSchool, setSelectedSchool] = useState(null);
 
     const handleNextStep = () => {
         if (!agreedToTerms || !agreedToPrivacy) {
@@ -111,7 +67,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
                 .upsert({
                     id: user.id,
                     name: teacherName.trim(),
-                    school_name: schoolName.trim(),
+                    ...toTeacherSchoolColumns(selectedSchool),
                     phone: phone.trim(),
                     email: user.email
                 });
@@ -244,52 +200,22 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
                             </div>
 
                             {/* 소속학교 */}
-                            <div style={{ position: 'relative' }} ref={searchRef}>
+                            <div style={{ position: 'relative' }}>
                                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '8px' }}>
                                     소속 학교명 (필수)
                                 </label>
-                                <input
-                                    type="text"
+                                <SchoolSearchField
                                     value={schoolName}
-                                    onChange={(e) => handleSearch(e.target.value)}
-                                    onFocus={() => schoolResults.length > 0 && setShowResults(true)}
-                                    placeholder="학교명을 입력해 주세요 (예: 서울고등학교)"
-                                    style={{
-                                        width: '100%', padding: '14px', borderRadius: '16px',
+                                    onValueChange={setSchoolName}
+                                    selectedSchool={selectedSchool}
+                                    onSelect={setSelectedSchool}
+                                    placeholder="학교명을 입력해 주세요 (예: 서울미래초등학교)"
+                                    inputStyle={{
+                                        padding: '14px', borderRadius: '16px',
                                         border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',
                                         boxSizing: 'border-box'
                                     }}
                                 />
-                                {isSearching && (
-                                    <div style={{ position: 'absolute', right: '15px', top: '42px', color: '#7FB3D5', fontSize: '0.8rem' }}>
-                                        검색 중...
-                                    </div>
-                                )}
-
-                                {showResults && schoolResults.length > 0 && (
-                                    <div style={{
-                                        position: 'absolute', top: '100%', left: 0, right: 0,
-                                        background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100,
-                                        maxHeight: '200px', overflowY: 'auto', marginTop: '5px'
-                                    }}>
-                                        {schoolResults.map((school, idx) => (
-                                            <div
-                                                key={idx}
-                                                onClick={() => handleSelectSchool(school)}
-                                                style={{
-                                                    padding: '12px 16px', borderBottom: idx === schoolResults.length - 1 ? 'none' : '1px solid #F1F3F5',
-                                                    cursor: 'pointer', hover: { background: '#F8F9FA' }
-                                                }}
-                                                onMouseEnter={(e) => e.target.style.background = '#F8F9FA'}
-                                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                            >
-                                                <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2C3E50' }}>{school.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#7F8C8D' }}>{school.region} | {school.address}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
 
                             {/* 전화번호 (선택) */}

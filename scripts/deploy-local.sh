@@ -78,4 +78,30 @@ else
     [ "$EDGE_CODE" = "400" ] || { echo "✗ Edge Function 이 400 을 주지 않습니다." >&2; exit 1; }
 fi
 
+# ── 나이스 급식 Edge Function 동기화 ─────────────────────────────────────
+NEIS_FN_SRC="supabase/functions/neis-meal/index.ts"
+NEIS_FN_DIR="$HOME/agit-supabase/volumes/functions/neis-meal"
+NEIS_FN_DST="$NEIS_FN_DIR/index.ts"
+if [ -f "$NEIS_FN_DST" ] && cmp -s "$NEIS_FN_SRC" "$NEIS_FN_DST"; then
+    echo "▶ 나이스 급식 Edge Function 그대로 (바뀐 것 없음)"
+else
+    echo "▶ 나이스 급식 Edge Function 교체"
+    mkdir -p "$NEIS_FN_DIR"
+    if [ -f "$NEIS_FN_DST" ]; then
+        cp "$NEIS_FN_DST" "$NEIS_FN_DST.bak-$(date +%Y%m%d-%H%M%S)"
+    fi
+    install -m 0644 "$NEIS_FN_SRC" "$NEIS_FN_DST"
+    (cd "$HOME/agit-supabase" && docker compose up -d --no-deps --force-recreate functions >/dev/null 2>&1) \
+        || docker restart agit-edge-functions >/dev/null
+
+    sleep 4
+    NEIS_EDGE_STATE=$(docker inspect -f '{{.State.Status}}' agit-edge-functions 2>/dev/null || echo "없음")
+    [ "$NEIS_EDGE_STATE" = "running" ] || { echo "✗ Edge Function 컨테이너가 뜨지 않았습니다($NEIS_EDGE_STATE)." >&2; exit 1; }
+    NEIS_EDGE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST http://127.0.0.1:8100/functions/v1/neis-meal \
+        -H 'Content-Type: application/json' -d '{}')
+    echo "▶ 나이스 급식 Edge Function 응답 $NEIS_EDGE_CODE"
+    [ "$NEIS_EDGE_CODE" = "401" ] || { echo "✗ 나이스 급식 Edge Function 이 401 을 주지 않습니다." >&2; exit 1; }
+fi
+
 echo "✓ 배포 완료"

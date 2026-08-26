@@ -19,7 +19,7 @@ const [workflow, dockerfile, dockerignore, caddy, localDeploy] = await Promise.a
     readText('scripts/deploy-local.sh')
 ]);
 
-test('로컬 배포도 CI와 같은 일을 한다 — 앱과 AI 함수를 함께 맞춘다', () => {
+test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
     // `vibe-ai` 는 앱 이미지 밖(맥미니 폴더)에서 돌기 때문에 따로 복사해야 반영된다.
     // 로컬 배포에만 이 단계가 없으면 "앱은 새것, 함수는 옛것"이 되고 200이 떠서 성공처럼 보인다.
     assert.match(localDeploy, /volumes\/functions\/vibe-ai\/index\.ts/);
@@ -31,6 +31,11 @@ test('로컬 배포도 CI와 같은 일을 한다 — 앱과 AI 함수를 함께
     assert.match(localDeploy, /EDGE_CODE" = "400"/);
     // 되돌릴 사본을 남긴다 — 이 폴더는 git 밖이라 복구 수단이 사본뿐이다.
     assert.match(localDeploy, /cp "\$FN_DST" "\$FN_DST\.bak-/);
+    assert.match(localDeploy, /volumes\/functions\/neis-meal/);
+    assert.match(localDeploy, /cmp -s "\$NEIS_FN_SRC" "\$NEIS_FN_DST"/);
+    assert.match(localDeploy, /install -m 0644 "\$NEIS_FN_SRC" "\$NEIS_FN_DST"/);
+    assert.match(localDeploy, /functions\/v1\/neis-meal/);
+    assert.match(localDeploy, /NEIS_EDGE_CODE" = "401"/);
 });
 
 test('main 푸시는 맥미니 self-hosted 러너의 단일 배포 작업을 시작한다', () => {
@@ -49,6 +54,10 @@ test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬
     assert.match(workflow, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
     assert.match(workflow, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/vibe-ai/);
     assert.match(workflow, /\[ "\$edge_code" = "400" \]/);
+    assert.match(workflow, /volumes\/functions\/neis-meal/);
+    assert.match(workflow, /install -m 0644 supabase\/functions\/neis-meal\/index\.ts/);
+    assert.match(workflow, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/neis-meal/);
+    assert.match(workflow, /\[ "\$neis_edge_code" = "401" \]/);
     assert.match(dockerfile, /npm run test:all/);
     assert.doesNotMatch(dockerignore, /^scripts\/\*/m);
     assert.doesNotMatch(dockerignore, /^\*\.md$/m);

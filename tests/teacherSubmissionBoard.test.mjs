@@ -6,7 +6,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
+const read = async (relativePath) => (await readFile(path.join(root, relativePath), 'utf8'))
+    .split('\r\n')
+    .join('\n');
 
 test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 독립 탭으로 분리된다', async () => {
     const [dashboard, hub, tab, manager, board, styles, missionList, workspace] = await Promise.all([
@@ -176,8 +178,8 @@ test('승인·회수·다시쓰기 동작은 추가 목록 조회 없이 전광�
  */
 test('최근 제출 줄은 읽히는 크기이고 같은 제목 과제를 가른다', async () => {
     const [board, styles] = await Promise.all([
-        readFile('src/components/teacher/TeacherSubmissionBoard.jsx', 'utf8'),
-        readFile('src/components/teacher/TeacherSubmissionBoard.css', 'utf8')
+        read('src/components/teacher/TeacherSubmissionBoard.jsx'),
+        read('src/components/teacher/TeacherSubmissionBoard.css')
     ]);
 
     // 이름·시간이 잔글씨로 되돌아가면 걸린다.

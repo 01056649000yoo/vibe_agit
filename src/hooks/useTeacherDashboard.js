@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { dataCache } from '../lib/cache';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../constants/aiPrompts';
+import { teacherSchoolToSelection, toTeacherSchoolColumns } from '../utils/schoolApi';
 
 const parsePromptTemplates = (storedPrompt) => {
     const rawPrompt = storedPrompt?.trim();
@@ -40,6 +41,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [editName, setEditName] = useState(initialTeacher.name || '');
     const [editSchool, setEditSchool] = useState(initialTeacher.school_name || '');
+    const [editSchoolSelection, setEditSchoolSelection] = useState(() => teacherSchoolToSelection(initialTeacher));
     const [editPhone, setEditPhone] = useState(initialTeacher.phone || '');
 
     const fetchTeacherInfo = useCallback(async () => {
@@ -48,7 +50,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             const data = await dataCache.get(`teacher_info_${session.user.id}`, async () => {
                 const { data, error } = await supabase
                     .from('teachers')
-                    .select('name, school_name, phone')
+                    .select('name, school_name, school_office_code, school_code, school_address, school_verified_at, phone')
                     .eq('id', session.user.id)
                     .single();
                 if (error) throw error;
@@ -59,6 +61,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 setTeacherInfo(data);
                 setEditName(data.name || '');
                 setEditSchool(data.school_name || '');
+                setEditSchoolSelection(teacherSchoolToSelection(data));
                 setEditPhone(data.phone || '');
             }
         } catch {
@@ -154,19 +157,24 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             alert('이름(별칭)을 입력해주세요! 😊');
             return;
         }
+        if (!editSchoolSelection) {
+            alert('학교를 검색한 뒤 목록에서 선택해 주세요! 🏫');
+            return;
+        }
         try {
+            const schoolColumns = toTeacherSchoolColumns(editSchoolSelection);
             const { error } = await supabase
                 .from('teachers')
                 .upsert({
                     id: session.user.id,
                     name: editName.trim(),
-                    school_name: editSchool.trim(),
+                    ...schoolColumns,
                     phone: editPhone.trim(),
                     email: session.user.email
                 });
 
             if (error) throw error;
-            setTeacherInfo({ name: editName.trim(), school_name: editSchool.trim(), phone: editPhone.trim() });
+            setTeacherInfo({ name: editName.trim(), ...schoolColumns, phone: editPhone.trim() });
             alert('프로필 정보가 업데이트되었습니다! ✨');
             setIsEditProfileOpen(false);
             if (onProfileUpdate) onProfileUpdate();
@@ -175,6 +183,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             alert('저장 중 오류가 발생했습니다.');
         }
     };
+
+    const handleTeacherSchoolChanged = useCallback((school) => {
+        if (!school?.schoolCode || !school?.officeCode) return;
+        const schoolColumns = toTeacherSchoolColumns(school);
+        setTeacherInfo((current) => ({ ...current, ...schoolColumns }));
+        setEditSchool(school.schoolName || '');
+        setEditSchoolSelection(school);
+        if (session?.user?.id) dataCache.invalidate(`teacher_info_${session.user.id}`);
+    }, [session?.user?.id]);
 
     const handleWithdrawal = async () => {
         if (!window.confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 시 모든 학급 데이터, 미션, 학생 정보가 영구적으로 삭제되며 복구할 수 없습니다.')) {
@@ -343,11 +360,12 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     return {
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
-        editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
+        editName, setEditName, editSchool, setEditSchool, editSchoolSelection, setEditSchoolSelection,
+        editPhone, setEditPhone,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         savingKey, testingKey,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
+        handleUpdateTeacherProfile, handleTeacherSchoolChanged, handleSaveTeacherSettings, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
     };

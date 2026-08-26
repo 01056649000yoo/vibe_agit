@@ -6,7 +6,7 @@ const stackRoot = '/Users/seunghyeonmaegmini/agit-supabase';
 const functionsRoot = `${stackRoot}/volumes/functions`;
 const expectedFunctions = new Set([
     '_shared', 'book-search', 'korean-dictionary-search', 'main',
-    'send-feedback', 'verify-admin-mode', 'vibe-ai'
+    'send-feedback', 'verify-admin-mode', 'vibe-ai', 'neis-meal'
 ]);
 
 const failures = [];

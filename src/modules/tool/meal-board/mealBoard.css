@@ -1,0 +1,253 @@
+.meal-board {
+  --meal-ink: #243129;
+  --meal-muted: #67746c;
+  --meal-green: #2f7552;
+  --meal-green-deep: #215a3e;
+  --meal-cream: #fbf8ef;
+  --meal-peach: #f8dac1;
+  --meal-line: #e6e8df;
+  color: var(--meal-ink);
+  width: 100%;
+}
+
+.meal-board button,
+.meal-board input { font: inherit; }
+
+.meal-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 8px 4px 22px;
+}
+
+.meal-board-header h2 {
+  margin: 5px 0 4px;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  letter-spacing: -.045em;
+  font-weight: 950;
+}
+
+.meal-board-header p,
+.meal-panel-heading p { margin: 0; color: var(--meal-muted); line-height: 1.55; }
+.meal-kicker { color: var(--meal-green); font-size: .76rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+
+.meal-board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, .94fr) minmax(380px, 1.06fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.meal-panel {
+  background: #fff;
+  border: 1px solid var(--meal-line);
+  border-radius: 26px;
+  padding: clamp(18px, 2.4vw, 26px);
+  box-shadow: 0 14px 38px rgba(51, 67, 57, .08);
+}
+
+.meal-today-panel { background: linear-gradient(150deg, #fff 45%, #fcf7e9); }
+.meal-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.meal-panel-heading h3 { margin: 4px 0 3px; font-size: 1.22rem; letter-spacing: -.03em; }
+.meal-panel-heading p { font-size: .84rem; }
+
+.meal-text-button,
+.meal-icon-button {
+  border: 1px solid #dce3dc;
+  background: #fff;
+  color: #456052;
+  font-weight: 850;
+  cursor: pointer;
+}
+.meal-text-button { padding: 8px 11px; border-radius: 10px; font-size: .78rem; white-space: nowrap; }
+.meal-icon-button { width: 38px; height: 38px; display: inline-grid; place-items: center; border-radius: 12px; font-size: 1.2rem; }
+.meal-text-button:hover,
+.meal-icon-button:hover { border-color: #91b29f; background: #f5faf6; }
+.meal-icon-button:disabled { cursor: not-allowed; opacity: .5; }
+
+.meal-date-toolbar {
+  display: flex;
+  gap: 7px;
+  margin: 20px 0 14px;
+  align-items: center;
+}
+.meal-date-toolbar input {
+  min-width: 0;
+  flex: 1;
+  height: 40px;
+  border: 1px solid #dce3dc;
+  border-radius: 11px;
+  padding: 0 11px;
+  color: var(--meal-ink);
+  background: #fff;
+}
+
+.meal-card-list { display: grid; gap: 10px; }
+.meal-menu-card { border: 1px solid #ebe8dc; border-radius: 18px; background: rgba(255,255,255,.85); padding: 16px; }
+.meal-menu-title { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed #e1ded3; padding-bottom: 10px; }
+.meal-menu-title strong { color: var(--meal-green-deep); font-size: 1.04rem; }
+.meal-menu-title span { color: #8a7868; font-size: .75rem; font-weight: 800; }
+.meal-menu-card ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 7px; }
+.meal-menu-card li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.meal-menu-card li > span { font-size: .92rem; font-weight: 750; }
+.meal-menu-card li small { color: #b26745; font-size: .68rem; text-align: right; }
+
+.meal-state-card {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed #dcd9cd;
+  border-radius: 18px;
+  padding: 28px;
+  background: rgba(255,255,255,.6);
+}
+.meal-state-card > span:not(.meal-loading-dot) { font-size: 2.4rem; }
+.meal-state-card h4 { margin: 11px 0 4px; }
+.meal-state-card p { margin: 0 0 14px; color: var(--meal-muted); font-size: .86rem; line-height: 1.5; }
+.meal-state-card.is-error { background: #fff8f6; border-color: #f0c8ba; }
+
+.meal-public-actions { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 15px; }
+.meal-public-actions p { margin: 0; color: #81756b; font-size: .72rem; line-height: 1.45; }
+.meal-button {
+  min-height: 40px;
+  border-radius: 12px;
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  font-weight: 900;
+  cursor: pointer;
+}
+.meal-button:disabled { cursor: not-allowed; opacity: .55; }
+.meal-button.is-primary { color: #fff; background: var(--meal-green); box-shadow: 0 7px 15px rgba(47,117,82,.2); }
+.meal-button.is-primary:hover { background: var(--meal-green-deep); }
+.meal-button.is-secondary { color: var(--meal-green-deep); background: #edf6f0; border-color: #cae2d2; }
+.meal-button.is-dark { color: #fff; background: #26382d; white-space: nowrap; }
+.meal-button.is-ghost { color: #657269; background: #fff; border-color: #dbe2dc; }
+
+.meal-roster-count { display: inline-grid; place-items: center; min-width: 48px; height: 34px; padding: 0 10px; border-radius: 99px; background: #edf6f0; color: var(--meal-green-deep); font-size: .8rem; font-weight: 900; }
+.meal-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 14px; }
+.meal-summary-grid div { background: #f7f8f5; border-radius: 14px; padding: 12px; text-align: center; }
+.meal-summary-grid strong { display: block; font-size: 1.22rem; color: #354f40; }
+.meal-summary-grid span { color: var(--meal-muted); font-size: .72rem; font-weight: 750; }
+
+.meal-filter-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; }
+.meal-filter-row button { border: 0; border-radius: 99px; padding: 7px 11px; color: #657269; background: #f0f2ee; cursor: pointer; font-size: .75rem; font-weight: 850; white-space: nowrap; }
+.meal-filter-row button.is-active { color: #fff; background: var(--meal-green); }
+
+.meal-roster-list { display: grid; max-height: 495px; overflow: auto; border-top: 1px solid #ecefe9; scrollbar-width: thin; }
+.meal-student-row { width: 100%; min-height: 57px; display: grid; grid-template-columns: 10px minmax(70px, .7fr) minmax(135px, 1.3fr) auto; align-items: center; gap: 9px; border: 0; border-bottom: 1px solid #eef0eb; background: transparent; color: var(--meal-ink); text-align: left; cursor: pointer; }
+.meal-student-row:hover { background: #f8faf7; }
+.meal-status-dot { width: 8px; height: 8px; border-radius: 99px; background: #b7c0b9; }
+.meal-status-dot.is-warning { background: #e2633e; box-shadow: 0 0 0 4px #fde9e1; }
+.meal-status-dot.is-safe { background: #47a774; }
+.meal-status-dot.is-registered { background: #6586c7; }
+.meal-status-dot.is-pending { background: #c8a35c; }
+.meal-student-name { font-weight: 900; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-student-status { font-size: .72rem; color: var(--meal-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-student-status.is-warning { color: #c04e2b; font-weight: 900; }
+.meal-student-edit { color: #789084; font-size: .7rem; font-weight: 850; }
+.meal-roster-empty { padding: 50px 20px; text-align: center; color: var(--meal-muted); font-size: .85rem; }
+
+.meal-privacy-gate { margin-top: 20px; padding: 20px; border: 1px solid #dbe4dd; border-radius: 18px; background: #f6f9f6; display: grid; grid-template-columns: auto 1fr; gap: 11px 13px; align-items: start; }
+.meal-privacy-gate > div { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: #e4efe7; }
+.meal-privacy-gate strong { font-size: .9rem; }
+.meal-privacy-gate p { margin: 5px 0 0; color: var(--meal-muted); font-size: .76rem; line-height: 1.6; }
+.meal-privacy-gate .meal-button { grid-column: 1 / -1; }
+
+.meal-alert { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; border-radius: 13px; padding: 10px 13px; font-size: .8rem; font-weight: 750; }
+.meal-alert > span { font-weight: 950; }
+.meal-alert button { margin-left: auto; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: .72rem; }
+.meal-alert.is-error { color: #9d3d24; background: #fff0eb; }
+.meal-alert.is-success { color: #276846; background: #eaf6ee; }
+
+.meal-board-empty { min-height: 420px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: 24px; border: 1px dashed #d8dfd8; background: #fafbf8; padding: 30px; }
+.meal-board-empty > span:not(.meal-loading-dot) { font-size: 3rem; }
+.meal-board-empty h2 { margin: 14px 0 4px; }
+.meal-board-empty p { margin: 0 0 18px; color: var(--meal-muted); }
+.meal-loading-dot { width: 24px; height: 24px; border: 3px solid #d4e4d9; border-top-color: var(--meal-green); border-radius: 50%; animation: meal-spin .75s linear infinite; }
+@keyframes meal-spin { to { transform: rotate(360deg); } }
+
+.meal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(25, 38, 30, .5);
+  backdrop-filter: blur(7px);
+}
+.meal-modal { width: min(620px, 100%); max-height: min(760px, calc(100vh - 36px)); overflow: auto; background: #fff; border-radius: 24px; padding: clamp(20px, 4vw, 30px); box-shadow: 0 26px 70px rgba(18, 32, 23, .26); }
+.meal-modal > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+.meal-modal h3 { margin: 4px 0; font-size: 1.35rem; letter-spacing: -.035em; }
+.meal-modal header p { margin: 0; color: var(--meal-muted); font-size: .82rem; line-height: 1.5; }
+.meal-modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; }
+.meal-modal-actions .meal-button.is-primary { margin-left: auto; }
+.meal-health-notice { color: #5b6e61; background: #f1f6f2; border-radius: 13px; padding: 11px 13px; font-size: .76rem; line-height: 1.55; margin-bottom: 14px; }
+.meal-allergen-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.meal-allergen-picker button { min-height: 47px; border: 1px solid #e0e5df; border-radius: 12px; background: #fff; color: #536158; text-align: left; padding: 9px; cursor: pointer; font-weight: 800; }
+.meal-allergen-picker button span { display: inline-grid; place-items: center; width: 21px; height: 21px; margin-right: 6px; border-radius: 7px; background: #f0f2ef; color: #718077; font-size: .65rem; }
+.meal-allergen-picker button.is-selected { color: #fff; background: var(--meal-green); border-color: var(--meal-green); box-shadow: 0 6px 14px rgba(47,117,82,.18); }
+.meal-allergen-picker button.is-selected span { color: var(--meal-green-deep); background: #dcece1; }
+
+.meal-school-scope { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
+.meal-school-scope label { display: flex; gap: 9px; padding: 13px; border: 1px solid #e0e5df; border-radius: 14px; cursor: pointer; }
+.meal-school-scope label.is-selected { border-color: #75a789; background: #f1f7f3; }
+.meal-school-scope input { accent-color: var(--meal-green); margin-top: 3px; }
+.meal-school-scope strong,
+.meal-school-scope small { display: block; }
+.meal-school-scope strong { font-size: .84rem; }
+.meal-school-scope small { margin-top: 4px; color: var(--meal-muted); line-height: 1.45; font-size: .7rem; }
+
+.meal-fullscreen { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-rows: auto 1fr auto; overflow: auto; color: #fff; background: radial-gradient(circle at 86% 4%, #487d5d, transparent 28%), linear-gradient(145deg, #193d2b, #28553a 58%, #1c402d); padding: clamp(22px, 4vw, 58px); }
+.meal-fullscreen-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.meal-fullscreen-header .meal-kicker { color: #bfe2ca; }
+.meal-fullscreen-header h2 { margin: 5px 0 2px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.06em; }
+.meal-fullscreen-header p { margin: 8px 0 0; color: #d3e5d9; font-size: clamp(.95rem, 1.7vw, 1.35rem); }
+.meal-icon-button.is-light { color: #fff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.1); }
+.meal-fullscreen-grid { display: grid; place-items: center; padding: clamp(25px, 4vw, 55px) 0; }
+.meal-fullscreen-grid.has-multiple { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px; align-items: stretch; }
+.meal-display-card { width: min(820px, 100%); border: 1px solid rgba(255,255,255,.18); border-radius: clamp(22px, 3vw, 38px); padding: clamp(22px, 4vw, 50px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }
+.has-multiple .meal-display-card { width: auto; }
+.meal-display-card-heading { display: flex; align-items: center; gap: 13px; border-bottom: 1px solid rgba(255,255,255,.17); padding-bottom: 16px; }
+.meal-display-card-heading > span { font-size: clamp(1.8rem, 4vw, 3rem); }
+.meal-display-card-heading h3 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.5rem); }
+.meal-display-card-heading em { margin-left: auto; color: #d6e8da; font-style: normal; font-weight: 800; }
+.meal-display-dishes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(13px, 2vw, 22px); margin-top: 22px; }
+.meal-display-dishes div { min-width: 0; }
+.meal-display-dishes strong { display: block; font-size: clamp(1.05rem, 2.15vw, 1.8rem); line-height: 1.35; word-break: keep-all; }
+.meal-display-dishes small { display: block; margin-top: 4px; color: #f2c9ae; font-size: clamp(.64rem, 1.2vw, .88rem); }
+.meal-fullscreen-empty { text-align: center; }
+.meal-fullscreen-empty > span { font-size: clamp(4rem, 10vw, 8rem); }
+.meal-fullscreen-empty h3 { margin: 16px 0 5px; font-size: clamp(1.8rem, 4vw, 3rem); }
+.meal-fullscreen-empty p { color: #cfe1d4; }
+.meal-fullscreen-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; color: #c8ddcf; font-size: clamp(.7rem, 1.1vw, .9rem); }
+.meal-fullscreen-footer strong { color: #fff; }
+
+@media (max-width: 980px) {
+  .meal-board-layout { grid-template-columns: 1fr; }
+  .meal-roster-list { max-height: 520px; }
+}
+
+@media (max-width: 620px) {
+  .meal-board-header { align-items: center; }
+  .meal-board-header p { font-size: .82rem; }
+  .meal-panel { border-radius: 20px; padding: 16px; }
+  .meal-public-actions { align-items: stretch; flex-direction: column; }
+  .meal-summary-grid div { padding: 10px 5px; }
+  .meal-student-row { grid-template-columns: 9px minmax(64px, .6fr) minmax(115px, 1.4fr); }
+  .meal-student-edit { display: none; }
+  .meal-allergen-picker { grid-template-columns: repeat(2, 1fr); }
+  .meal-school-scope { grid-template-columns: 1fr; }
+  .meal-modal-actions { flex-wrap: wrap; }
+  .meal-fullscreen { padding: 20px; }
+  .meal-display-dishes { grid-template-columns: 1fr; }
+  .meal-fullscreen-footer { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meal-loading-dot { animation-duration: 1.5s; }
+}

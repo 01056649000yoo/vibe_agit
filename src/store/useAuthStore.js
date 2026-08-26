@@ -120,6 +120,9 @@ export const useAuthStore = create((set, get) => ({
                     role: bootstrap.profile?.role || 'TEACHER',
                     teacherName: teacherData.name,
                     schoolName: teacherData.school_name,
+                    schoolOfficeCode: teacherData.school_office_code,
+                    schoolCode: teacherData.school_code,
+                    schoolAddress: teacherData.school_address,
                     phone: teacherData.phone
                 };
                 if (shouldTouchLogin) lastLoginTouchCache.set(userId, Date.now());

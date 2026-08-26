@@ -61,6 +61,19 @@ jobs:
           cd "$HOME/agit-supabase"
           docker compose up -d --no-deps --force-recreate functions
 
+      - name: Sync NEIS meal edge function
+        run: |
+          target_dir="$HOME/agit-supabase/volumes/functions/neis-meal"
+          target="$target_dir/index.ts"
+          if [ -f "$target" ] && cmp -s supabase/functions/neis-meal/index.ts "$target"; then
+            echo "neis-meal already current"
+            exit 0
+          fi
+          mkdir -p "$target_dir"
+          install -m 0644 supabase/functions/neis-meal/index.ts "$target"
+          cd "$HOME/agit-supabase"
+          docker compose up -d --no-deps --force-recreate functions
+
       - name: Verify
         run: |
           sleep 4
@@ -77,6 +90,11 @@ jobs:
             -H 'Content-Type: application/json' -d '{}' --max-time 10)
           echo "edge HTTP: $edge_code"
           [ "$edge_code" = "400" ] || exit 1
+          neis_edge_code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:8100/functions/v1/neis-meal \
+            -H 'Content-Type: application/json' -d '{}' --max-time 10)
+          echo "NEIS edge HTTP: $neis_edge_code"
+          [ "$neis_edge_code" = "401" ] || exit 1
 
       # 도커 VM 디스크는 31.3GB뿐이라 누적된 빌드 캐시가 채우면 Kong 건강검진과 Storage 업로드가 함께 죽는다.
       # 전부 비우면 다음 배포가 콜드 빌드가 되므로 상한만 두고 오래된 캐시부터 버린다.

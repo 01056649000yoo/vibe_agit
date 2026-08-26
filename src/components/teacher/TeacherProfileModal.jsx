@@ -1,6 +1,7 @@
 import React from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import SchoolSearchField from '../common/SchoolSearchField';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TeacherProfileModal = ({
@@ -10,6 +11,8 @@ const TeacherProfileModal = ({
     setEditName,
     editSchool,
     setEditSchool,
+    editSchoolSelection,
+    setEditSchoolSelection,
     editPhone,
     setEditPhone,
     handleUpdateTeacherProfile,
@@ -54,15 +57,12 @@ const TeacherProfileModal = ({
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>소속 학교명</label>
-                                    <input
-                                        type="text"
+                                    <SchoolSearchField
                                         value={editSchool}
-                                        onChange={(e) => setEditSchool(e.target.value)}
+                                        onValueChange={setEditSchool}
+                                        selectedSchool={editSchoolSelection}
+                                        onSelect={setEditSchoolSelection}
                                         placeholder="예: 서울미래초등학교"
-                                        style={{
-                                            width: '100%', padding: '12px', borderRadius: '12px',
-                                            border: '2px solid #ECEFF1', fontSize: '1rem', outline: 'none'
-                                        }}
                                     />
                                 </div>
                                 <div>

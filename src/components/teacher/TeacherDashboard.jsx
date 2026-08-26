@@ -112,10 +112,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const {
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
-        editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
+        editName, setEditName, editSchool, setEditSchool, editSchoolSelection, setEditSchoolSelection,
+        editPhone, setEditPhone,
         setPromptTemplate, reportPromptTemplate, setReportPromptTemplate,
         testingKey,
-        handleUpdateTeacherProfile, handleTestAIConnection,
+        handleUpdateTeacherProfile, handleTeacherSchoolChanged, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap);
@@ -458,7 +459,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'tools' ? (
-                        <TeachingToolsHub activeClass={activeClass} isMobile={isMobile} />
+                        <TeachingToolsHub activeClass={activeClass} isMobile={isMobile} onTeacherSchoolChange={handleTeacherSchoolChanged} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager
@@ -532,6 +533,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 onClose={() => setIsEditProfileOpen(false)}
                 editName={editName} setEditName={setEditName}
                 editSchool={editSchool} setEditSchool={setEditSchool}
+                editSchoolSelection={editSchoolSelection} setEditSchoolSelection={setEditSchoolSelection}
                 editPhone={editPhone} setEditPhone={setEditPhone}
                 handleUpdateTeacherProfile={handleUpdateTeacherProfile}
                 handleSwitchGoogleAccount={handleSwitchGoogleAccount}
