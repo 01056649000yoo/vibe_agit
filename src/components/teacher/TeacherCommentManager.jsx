@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { supabase } from '../../lib/supabaseClient';
@@ -61,8 +61,11 @@ const TeacherCommentManager = ({ activeClass }) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [busyId, setBusyId] = useState(null);
+    const requestSequenceRef = useRef(0);
+    const scheduledLoadRef = useRef(null);
 
     const activeView = VIEWS.find((item) => item.id === view) || VIEWS[0];
 
@@ -76,29 +79,60 @@ const TeacherCommentManager = ({ activeClass }) => {
         p_days: view === 'todo' ? null : (days || null)
     }), [classId, days, query, view]);
 
-    const load = useCallback(async () => {
+    const load = useCallback(async ({ keepContent = false } = {}) => {
         if (!classId) return;
-        setLoading(true);
+        const requestId = requestSequenceRef.current + 1;
+        requestSequenceRef.current = requestId;
+
+        if (keepContent) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+            setRefreshing(false);
+        }
         setErrorMessage('');
         const { data, error } = await fetchPage(0);
+
+        // 검색어나 탭이 바뀐 뒤 도착한 예전 응답이 최신 목록을 덮지 않게 한다.
+        if (requestId !== requestSequenceRef.current) return;
+
         if (error) {
             console.error('학생 댓글 목록 불러오기 실패:', error.message);
             setErrorMessage('댓글 목록을 불러오지 못했습니다.');
-            setItems([]);
-            setTotal(0);
+            if (!keepContent) {
+                setItems([]);
+                setTotal(0);
+            }
         } else {
             setCounts(data?.counts || {});
             setItems(Array.isArray(data?.items) ? data.items : []);
             setTotal(Number(data?.total || 0));
         }
         setLoading(false);
+        setRefreshing(false);
     }, [classId, fetchPage]);
 
     useEffect(() => {
+        // 조건이 바뀌는 즉시 진행 중인 이전 조건의 요청을 무효화한다.
+        requestSequenceRef.current += 1;
         if (!classId) return undefined;
-        const timerId = window.setTimeout(load, 250);
-        return () => window.clearTimeout(timerId);
+        scheduledLoadRef.current = window.setTimeout(() => {
+            scheduledLoadRef.current = null;
+            load();
+        }, 250);
+        return () => {
+            window.clearTimeout(scheduledLoadRef.current);
+            scheduledLoadRef.current = null;
+        };
     }, [classId, load]);
+
+    const refresh = useCallback(() => {
+        if (scheduledLoadRef.current !== null) {
+            window.clearTimeout(scheduledLoadRef.current);
+            scheduledLoadRef.current = null;
+        }
+        load({ keepContent: true });
+    }, [load]);
 
     const loadMore = async () => {
         setLoadingMore(true);
@@ -152,14 +186,29 @@ const TeacherCommentManager = ({ activeClass }) => {
                     </div>
                     <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
-                <input
-                    className="teacher-comments__search"
-                    type="search"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="학생 이름이나 댓글 내용으로 찾기"
-                    aria-label="학생 이름이나 댓글 내용으로 찾기"
-                />
+                <div className="teacher-comments__tools">
+                    <input
+                        className="teacher-comments__search"
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="학생 이름이나 댓글 내용으로 찾기"
+                        aria-label="학생 이름이나 댓글 내용으로 찾기"
+                    />
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="teacher-comments__refresh"
+                        onClick={refresh}
+                        loading={refreshing}
+                        loadingText="갱신 중..."
+                        disabled={loading || loadingMore || busyId !== null || !classId}
+                        aria-label="학생 댓글 목록 새로고침"
+                    >
+                        ↻ 새로고침
+                    </Button>
+                </div>
             </header>
 
             <div className="teacher-comments__filters" role="tablist" aria-label="댓글 보기">
