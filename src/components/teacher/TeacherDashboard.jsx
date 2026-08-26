@@ -17,6 +17,7 @@ const TeacherOperationsHub = lazy(() => import('./TeacherOperationsHub'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
 const TeacherGuideCenter = lazy(() => import('./TeacherGuideCenter'));
+const TeacherClassAgitHub = lazy(() => import('./TeacherClassAgitHub'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -519,6 +520,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
                             />
+                        ) : visibleTab === 'class-agit' ? (
+                            <TeacherClassAgitHub activeClass={activeClass} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}

@@ -28,6 +28,13 @@ export const TEACHER_NAV_GROUPS = [
         tabs: []
     },
     {
+        id: 'class-agit',
+        label: '우리반 아지트 (beta)',
+        icon: '🏡',
+        defaultTab: 'class-agit',
+        tabs: [{ id: 'class-agit', label: '우리반 아지트' }]
+    },
+    {
         id: 'operations',
         label: '학급 운영',
         icon: '📊',

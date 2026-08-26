@@ -10,6 +10,7 @@ import {
   WritingWorkspacePath,
 } from '../components/writing/WritingWorkspace'
 import WritingToolHost from '../modules/writing/tools/WritingToolHost'
+import TeacherClassAgitHub from '../components/teacher/TeacherClassAgitHub'
 import '../App.css'
 import './UiPreview.css'
 
@@ -263,6 +264,12 @@ function UiPreview() {
                   <span key={tab.id}>{tab.label}</span>
                 ))}
               </div>
+
+              {group.id === 'class-agit' && (
+                <div className="ui-preview__class-agit">
+                  <TeacherClassAgitHub activeClass={{ name: '미리보기 학급' }} />
+                </div>
+              )}
 
               {group.innerItems && (
                 <div className="ui-preview__inner">
