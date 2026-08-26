@@ -61,6 +61,13 @@ WHERE n.nspname = 'public'
        OR has_function_privilege('anon', p.oid, 'EXECUTE'))
 ORDER BY 1;`;
 
+/** DB 에 있는 모든 함수 이름. 허용 목록이 이미 없는 이름을 가리키는지 볼 때 쓴다. */
+const ALL_FUNCTIONS_SQL = `
+SELECT DISTINCT p.proname
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+ORDER BY 1;`;
+
 /** 더 높은 판이 있는데 아직 남아 있는 옛 판. */
 const SUPERSEDED_SQL = `
 WITH f AS (
@@ -144,7 +151,11 @@ const main = async () => {
     }
 
     // 허용 목록에 적어 뒀는데 이미 사라진 함수는 목록에서 빼도록 알려 준다.
-    const stale = [...allowed.keys()].filter((name) => !callable.includes(name));
+    // 클라이언트에 열려 있지 않아도(service_role 전용·내부 도우미) DB 에 있으면 살아 있는 것이다.
+    // 여기서 `callable` 만 보면 그런 항목을 "없어졌다"고 잘못 알려 주고,
+    // 그 말을 따라 지우면 이번엔 마이그레이션 검사가 막는다.
+    const allFunctions = parseNames(psql(ALL_FUNCTIONS_SQL));
+    const stale = [...allowed.keys()].filter((name) => !allFunctions.includes(name));
 
     if (unreachable.length) {
         console.log(`${YELLOW}· 꺼져 있어 확인하지 못한 앱: ${unreachable.map((c) => c.container).join(', ')}${OFF}`);
