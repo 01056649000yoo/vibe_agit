@@ -161,7 +161,7 @@ const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) =
     );
 };
 
-const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
+const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
     const classId = activeClass?.id;
     const [selectedId, setSelectedId] = useState('overview');
     const [enabledIds, setEnabledIds] = useState([]);
@@ -187,6 +187,15 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         loadSettings();
     }, [loadSettings]);
+
+    useEffect(() => {
+        if (navigationTarget?.tab !== 'playground' || !navigationTarget.requestId) return;
+        if (TEACHER_GAME_MODULES.some(({ module }) => module.id === navigationTarget.module)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSelectedId(navigationTarget.module);
+        }
+        onNavigationHandled?.(navigationTarget.requestId);
+    }, [navigationTarget, onNavigationHandled]);
 
     const selected = useMemo(
         () => TEACHER_GAME_MODULES.find(({ module }) => module.id === selectedId) || null,

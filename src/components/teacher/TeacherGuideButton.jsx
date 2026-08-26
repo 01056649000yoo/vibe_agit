@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from '../common/Modal';
 import ModalPortal from '../common/ModalPortal';
 import GuideInfoButton from '../common/GuideInfoButton';
-import { TEACHER_GUIDES } from '../../constants/teacherGuides';
+import TeacherGuideContent from './TeacherGuideContent';
+import { getTeacherGuide } from '../../guides/teacherGuideRegistry';
+import { getJourneysForGuide } from '../../guides/teacherGuideJourneys';
+import { openTeacherGuideCenter } from '../../guides/teacherGuideEvents';
 
 /**
  * 현재 화면 제목 옆 도움말 버튼 — 누르면 그 메뉴 사용법을 보여 준다.
@@ -21,22 +24,11 @@ import { TEACHER_GUIDES } from '../../constants/teacherGuides';
  */
 const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeSectionId, setActiveSectionId] = useState('');
     // 정해진 목록에서만 꺼낸다(Button.jsx 의 variant 조회와 같은 방식)
-    const guide = Reflect.get(TEACHER_GUIDES, tabId);
+    const guide = getTeacherGuide(tabId);
+    const relatedJourney = getJourneysForGuide(tabId)[0] || null;
 
     if (!guide) return null;
-
-    const sections = guide.sections || [];
-    const activeSection = sections.find((section) => section.id === activeSectionId)
-        || sections[0]
-        || guide;
-    const activeTabId = sections.length > 0
-        ? `${tabId}-${activeSection.id}-guide-tab`
-        : undefined;
-    const activePanelId = sections.length > 0
-        ? `${tabId}-${activeSection.id}-guide-panel`
-        : undefined;
 
     return (
         <>
@@ -47,7 +39,6 @@ const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
                 title={`${guide.title} 사용법`}
                 onClick={(event) => {
                     event.stopPropagation();
-                    setActiveSectionId(sections[0]?.id || '');
                     setIsOpen(true);
                 }}
             />
@@ -59,79 +50,27 @@ const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
                     title={`💡 ${guide.title} 도움말`}
                     maxWidth="620px"
                 >
-                    <div className="teacher-guide">
-                        <p className="teacher-guide__summary">{guide.summary}</p>
-
-                        {sections.length > 0 && (
-                            <div
-                                className="teacher-guide__tabs"
-                                role="tablist"
-                                aria-label={`${guide.title} 핵심 기능`}
-                            >
-                                {sections.map((section) => {
-                                    const isActive = section.id === activeSection.id;
-                                    const sectionTabId = `${tabId}-${section.id}-guide-tab`;
-                                    const sectionPanelId = `${tabId}-${section.id}-guide-panel`;
-
-                                    return (
-                                        <button
-                                            key={section.id}
-                                            type="button"
-                                            id={sectionTabId}
-                                            role="tab"
-                                            aria-selected={isActive}
-                                            aria-controls={sectionPanelId}
-                                            className={`teacher-guide__tab${isActive ? ' is-active' : ''}`}
-                                            onClick={() => setActiveSectionId(section.id)}
-                                        >
-                                            {section.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        <section
-                            className="teacher-guide__panel"
-                            role={sections.length > 0 ? 'tabpanel' : undefined}
-                            id={activePanelId}
-                            aria-labelledby={activeTabId}
+                    <TeacherGuideContent key={`${tabId}-${isOpen}`} guide={guide} />
+                    {relatedJourney && (
+                        <button
+                            type="button"
+                            className="teacher-guide__center-link"
+                            onClick={() => {
+                                setIsOpen(false);
+                                openTeacherGuideCenter({
+                                    guideId: tabId,
+                                    journeyId: relatedJourney.journey.id,
+                                    stepId: relatedJourney.step.id
+                                });
+                            }}
                         >
-                            {sections.length > 0 && (
-                                <p className="teacher-guide__section-summary">{activeSection.summary}</p>
-                            )}
-
-                            <h4 className="teacher-guide__heading">이 순서로 하면 됩니다</h4>
-                            <ol className="teacher-guide__steps">
-                                {activeSection.steps.map((step) => <li key={step}>{renderEmphasis(step)}</li>)}
-                            </ol>
-
-                            <h4 className="teacher-guide__heading">알아 두면 좋은 것</h4>
-                            <ul className="teacher-guide__notes">
-                                {activeSection.notes.map((note) => <li key={note}>{renderEmphasis(note)}</li>)}
-                            </ul>
-                        </section>
-                    </div>
+                            활용 안내서에서 전체 흐름 보기 →
+                        </button>
+                    )}
                 </Modal>
             </ModalPortal>
         </>
     );
 };
-
-/**
- * 안내문의 최소 표기 두 가지만 처리한다.
- *   `**굵게**` → 놓치면 사고 나는 문장 강조
- *   `` `버튼` `` → 화면에 실제로 있는 버튼·메뉴 이름
- * 표기를 안 풀면 별표와 백틱이 글자 그대로 보인다.
- */
-const renderEmphasis = (text) => text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((piece, index) => {
-    if (piece.startsWith('**') && piece.endsWith('**')) {
-        return <strong key={index}>{piece.slice(2, -2)}</strong>;
-    }
-    if (piece.startsWith('`') && piece.endsWith('`') && piece.length > 2) {
-        return <code key={index} className="teacher-guide__key">{piece.slice(1, -1)}</code>;
-    }
-    return <React.Fragment key={index}>{piece}</React.Fragment>;
-});
 
 export default TeacherGuideButton;

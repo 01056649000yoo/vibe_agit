@@ -25,6 +25,8 @@
     padding: 0 clamp(24px, 1.5vw, 48px);
 }
 
+.teacher-guide-center-trigger { margin-right: 0; }
+
 /* 헤더 왼쪽: 현재 학급 이름(고정) + 오른쪽 전환 버튼.
    이름을 박스로 감싸지 않는다 — 헤더가 무거워 보인다. 색과 굵기만으로 구분한다. */
 .teacher-class-bar {
@@ -311,6 +313,13 @@
         padding: 16px;
         scrollbar-gutter: auto;
     }
+
+    .teacher-guide-center-trigger {
+        width: 34px;
+        padding: 0;
+    }
+
+    .teacher-guide-center-trigger > span:last-child { display: none; }
 }
 
 @media (max-width: 600px) {

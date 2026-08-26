@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { TEACHER_TOOL_SECTION_LABEL } from '../../constants/teacherNav.js';
 import { getAllModules } from '../../modules/registry';
 
@@ -7,7 +7,14 @@ const TOOL_MODULES = getAllModules()
     .sort((a, b) => (a.tool?.order ?? 100) - (b.tool?.order ?? 100))
     .map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
 
-const TeachingToolsHub = ({ activeClass, teacherInfo, isMobile, onTeacherSchoolChange }) => {
+const TeachingToolsHub = ({
+    activeClass,
+    teacherInfo,
+    isMobile,
+    onTeacherSchoolChange,
+    navigationTarget,
+    onNavigationHandled
+}) => {
     const [selectedId, setSelectedId] = useState(() => {
         const requested = new URL(window.location.href).searchParams.get('tool');
         return TOOL_MODULES.some(({ module }) => module.id === requested)
@@ -18,6 +25,15 @@ const TeachingToolsHub = ({ activeClass, teacherInfo, isMobile, onTeacherSchoolC
         () => TOOL_MODULES.find(({ module }) => module.id === selectedId) || TOOL_MODULES[0] || null,
         [selectedId]
     );
+
+    useEffect(() => {
+        if (navigationTarget?.tab !== 'tools' || !navigationTarget.requestId) return;
+        if (TOOL_MODULES.some(({ module }) => module.id === navigationTarget.tool)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSelectedId(navigationTarget.tool);
+        }
+        onNavigationHandled?.(navigationTarget.requestId);
+    }, [navigationTarget, onNavigationHandled]);
 
     if (!selected) {
         return (

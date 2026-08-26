@@ -10,7 +10,7 @@ import './GuideInfoButton.css';
  * `size='sm'` 은 작은 글자 옆에 붙일 때만 쓴다(예: 학생 지도 카드의 `낱말 상태` 줄).
  * 기본 크기가 옆 글자보다 커 보이는 자리에서만 쓰고, 화면 제목 옆에는 기본 크기를 유지한다.
  */
-const GuideInfoButton = ({ label, title = label, className = '', onClick, variant = 'icon', size = 'md' }) => (
+const GuideInfoButton = ({ label, title = label, className = '', onClick, variant = 'icon', size = 'md', text = '도움말' }) => (
     <button
         type="button"
         className={`guide-info-button${variant === 'help' ? ' guide-info-button--help' : ''}${size === 'sm' ? ' guide-info-button--sm' : ''} ${className}`.trim()}
@@ -19,7 +19,7 @@ const GuideInfoButton = ({ label, title = label, className = '', onClick, varian
         onClick={onClick}
     >
         {variant === 'help' ? (
-            <><span aria-hidden="true">💡</span><span>도움말</span></>
+            <><span aria-hidden="true">💡</span><span>{text}</span></>
         ) : (
             <svg
                 className="guide-info-button__icon"

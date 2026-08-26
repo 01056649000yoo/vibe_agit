@@ -37,12 +37,23 @@ const TeacherSettingsHub = ({
     isMobile, session, classes, activeClass, setActiveClass, setClasses,
     profile, fetchAllClasses, fetchDeletedClasses, handleRestoreClass, handleSetPrimaryClass,
     handleTestAIConnection, testingKey,
-    setPromptTemplate, setReportPromptTemplate, onNavigate
+    setPromptTemplate, setReportPromptTemplate, onNavigate,
+    navigationTarget, onNavigationHandled
 }) => {
     const [section, setSection] = useState('class');
     const [promptKind, setPromptKind] = useState(PRESET_KIND.FEEDBACK);
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
     const SelectedModuleEntry = selected.Entry;
+
+    useEffect(() => {
+        if (navigationTarget?.tab !== 'settings' || !navigationTarget.requestId) return;
+        if (SETTINGS_ITEMS.some((item) => item.id === navigationTarget.section)) {
+            // 활용 안내서의 화면 바로가기를 현재 설정 항목과 동기화한다.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSection(navigationTarget.section);
+        }
+        onNavigationHandled?.(navigationTarget.requestId);
+    }, [navigationTarget, onNavigationHandled]);
 
     useEffect(() => {
         const preload = () => void loadTeacherWritingEditorManager();

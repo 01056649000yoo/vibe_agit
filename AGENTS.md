@@ -54,6 +54,8 @@
 - 화면에 사용법·도움말 같은 설명을 덧붙이는 정보 아이콘은 `src/components/common/GuideInfoButton.jsx`를
   반드시 사용한다. `ⓘ`·`!`·`?` 문자를 직접 버튼으로 만들거나 화면별 아이콘 버튼을 새로 만들지 않는다.
   교사 메뉴별 사용법은 이 버튼을 포함한 `TeacherGuideButton`과 `constants/teacherGuides.js`를 사용한다.
+  전체 교사 활용 안내서는 상세 내용을 복사하지 않고 `src/guides/teacherGuideJourneys.js`에서 `guideRef`로만
+  연결한다. 새 도움말은 `src/guides/README.md` 순서대로 실제 화면 이동 대상과 큰 흐름을 함께 등록한다.
 - **한 곳만 고치고 끝내지 않는다.** 같은 값을 두 군데 이상에서 쓰면 **원본을 한 곳으로 모은다**
   (`writerLevels.js`·`feedbackCategories.js` 처럼). 성격이 달라 못 모으면 **그 곳들을 한꺼번에 보는**
   **검사를 하나** 만든다 — 검사를 쪼개면 반쪽 수정을 못 잡는다.

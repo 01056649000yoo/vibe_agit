@@ -66,6 +66,7 @@ test('도움말이 말하는 글 종류·편지지 개수는 실제 목록과 �
 test('선생님 과제 도움말은 핵심 기능을 네 탭으로 나눠 현재 운영 흐름을 안내한다', () => {
     const text = guideText(TEACHER_GUIDES.dashboard);
     const guideButton = readFileSync('src/components/teacher/TeacherGuideButton.jsx', 'utf8');
+    const guideContent = readFileSync('src/components/teacher/TeacherGuideContent.jsx', 'utf8');
 
     assert.deepEqual(
         TEACHER_GUIDES.dashboard.sections.map(({ id, label }) => ({ id, label })),
@@ -92,9 +93,10 @@ test('선생님 과제 도움말은 핵심 기능을 네 탭으로 나눠 현재
     assert.match(text, /되돌리기.*회수한 글을 학생에게 다시 보내/);
     assert.match(text, /평가하기/);
     assert.match(text, /리포트/);
-    assert.match(guideButton, /guide\.sections \|\| \[\]/);
-    assert.match(guideButton, /role="tablist"[\s\S]*role="tab"[\s\S]*aria-selected/);
-    assert.match(guideButton, /role=\{sections\.length > 0 \? 'tabpanel' : undefined\}/);
+    assert.match(guideButton, /<TeacherGuideContent[\s\S]*guide=\{guide\}/);
+    assert.match(guideContent, /guide\?\.sections \|\| \[\]/);
+    assert.match(guideContent, /role="tablist"[\s\S]*role="tab"[\s\S]*aria-selected/);
+    assert.match(guideContent, /role=\{sections\.length > 0 \? 'tabpanel' : undefined\}/);
     assert.doesNotMatch(guideButton, /최근 업데이트|guide\.updates/);
 });
 

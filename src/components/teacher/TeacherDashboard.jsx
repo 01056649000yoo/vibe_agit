@@ -2,6 +2,7 @@ import { TEACHER_NAV_GROUPS } from '../../constants/teacherNav';
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import GuideInfoButton from '../common/GuideInfoButton';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +16,7 @@ const ActivityReport = lazy(() => import('./ActivityReport'));
 const TeacherOperationsHub = lazy(() => import('./TeacherOperationsHub'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
+const TeacherGuideCenter = lazy(() => import('./TeacherGuideCenter'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -30,6 +32,7 @@ import AnnouncementSpotlight from './AnnouncementSpotlight';
 import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
 import useAnnouncementSeen from './useAnnouncementSeen';
+import { TEACHER_GUIDE_CENTER_OPEN_EVENT } from '../../guides/teacherGuideEvents';
 import {
     DEFAULT_MISSION_CARD_SIZE,
     LEGACY_WRITING_CARD_LAYOUT_STORAGE_KEY,
@@ -107,6 +110,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [missionCardSize, setMissionCardSize] = useState(loadMissionCardSize);
     const [missionWorkspaceView, setMissionWorkspaceView] = useState(loadMissionWorkspaceView);
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
+    const [guideCenterRequest, setGuideCenterRequest] = useState(null);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -125,6 +129,17 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const handleOpenGuideCenter = (event) => {
+            setGuideCenterRequest({
+                ...(event.detail || {}),
+                requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+            });
+        };
+        window.addEventListener(TEACHER_GUIDE_CENTER_OPEN_EVENT, handleOpenGuideCenter);
+        return () => window.removeEventListener(TEACHER_GUIDE_CENTER_OPEN_EVENT, handleOpenGuideCenter);
     }, []);
 
     /*
@@ -280,6 +295,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             {teacherInfo.name || profile?.full_name} 선생님
                         </span>
                     )}
+                    <GuideInfoButton
+                        variant="help"
+                        text="활용 안내서"
+                        className="teacher-guide-center-trigger"
+                        label="끄적끄적 아지트 활용 안내서 열기"
+                        onClick={() => setGuideCenterRequest({
+                            requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                        })}
+                    />
                     {isAdmin && (
                         <Button variant="primary" size="sm" onClick={handleOpenAdminPasswordModal} style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}>
                             🛡️ 관리자
@@ -457,9 +481,21 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     ) : visibleTab === 'archive' ? (
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'playground' ? (
-                        <GameManager activeClass={activeClass} isMobile={isMobile} />
+                        <GameManager
+                            activeClass={activeClass}
+                            isMobile={isMobile}
+                            navigationTarget={workspaceTarget}
+                            onNavigationHandled={handleWorkspaceNavigationHandled}
+                        />
                     ) : visibleTab === 'tools' ? (
-                        <TeachingToolsHub activeClass={activeClass} teacherInfo={teacherInfo} isMobile={isMobile} onTeacherSchoolChange={handleTeacherSchoolChanged} />
+                        <TeachingToolsHub
+                            activeClass={activeClass}
+                            teacherInfo={teacherInfo}
+                            isMobile={isMobile}
+                            onTeacherSchoolChange={handleTeacherSchoolChanged}
+                            navigationTarget={workspaceTarget}
+                            onNavigationHandled={handleWorkspaceNavigationHandled}
+                        />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager
@@ -517,6 +553,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 testingKey={testingKey}
                                 setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                                 onNavigate={handleWorkspaceNavigate}
+                                navigationTarget={workspaceTarget}
+                                onNavigationHandled={handleWorkspaceNavigationHandled}
                             />
                         )
                     )}
@@ -545,6 +583,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 onClose={() => setIsFeedbackOpen(false)}
                 onRepliesSeen={() => setFeedbackReplyCount(0)}
             />
+
+            <Suspense fallback={null}>
+                <TeacherGuideCenter
+                    isOpen={Boolean(guideCenterRequest)}
+                    initialRequest={guideCenterRequest || {}}
+                    onClose={() => setGuideCenterRequest(null)}
+                    onNavigate={handleWorkspaceNavigate}
+                />
+            </Suspense>
 
             {/* 목록을 열면 그 안의 공지를 모두 읽은 것으로 본다. */}
             {showAnnouncementList && (
