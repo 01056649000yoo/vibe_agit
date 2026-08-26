@@ -73,6 +73,12 @@ const groupHistory = (logs) => logs.reduce((groups, log) => {
     return groups;
 }, []);
 
+const getHistoryReason = (log) => (
+    log.activity_type === 'comment_reward'
+        ? ACTIVITY_LABELS.comment_reward
+        : (log.reason || ACTIVITY_LABELS[log.activity_type] || '포인트 활동')
+);
+
 /**
  * 카드 전체가 콘텐츠를 여는 버튼이므로, 안내 버튼은 그 **안에 넣을 수 없다**(버튼 중첩 금지).
  * 바깥 상자를 두고 여는 버튼과 안내 버튼을 형제로 둔다.
@@ -144,7 +150,7 @@ const PointHistory = ({ state, onRetry }) => {
                                 {positive ? '+' : ''}{formatPoints(amount)}P
                             </span>
                             <span className="agit-point-history__reason">
-                                <strong>{log.reason || ACTIVITY_LABELS[log.activity_type] || '포인트 활동'}</strong>
+                                <strong>{getHistoryReason(log)}</strong>
                                 <small>{formatHistoryTime(log.created_at)}</small>
                             </span>
                         </li>
