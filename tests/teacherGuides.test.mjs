@@ -156,3 +156,30 @@ test('일기 도움말은 교사 확인 보상과 학생별 책장 내보내기�
     assert.match(text, /나만 보기.*작성 학생과 교사만 볼 수/);
     assert.doesNotMatch(text, /교사 확인 전에 이미 처리/);
 });
+
+test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을 함께 안내한다', () => {
+    const dashboard = guideText(TEACHER_GUIDES.dashboard);
+    const comments = guideText(TEACHER_GUIDES.comments);
+    const mealBoard = guideText(TEACHER_GUIDES['meal-board']);
+    const tools = guideText(TEACHER_GUIDES.tools);
+
+    assert.match(dashboard, /기본값인 `전체 활성 글 과제`.*학생별 표로 합산/);
+    assert.match(dashboard, /특정 미션[\s\S]*24명을 한눈에 볼 수 있는 상태 색상 카드/);
+    assert.match(dashboard, /실시간 크게 보기.*6×4 확대 화면/);
+    assert.match(dashboard, /12초 자동 갱신.*첫 제출.*다시 제출.*3회 제출/);
+    assert.match(dashboard, /최근 제출 행을 누르면 해당 글이 바로 열/);
+
+    assert.match(comments, /`처리할 것`.*기간 제한 없이/);
+    assert.match(comments, /`기록`.*최근 7일.*최근 3일·2주·30일·전체/);
+    assert.match(comments, /`새로고침` 중에는 보고 있던 목록을 유지.*현재 탭·기간·검색어/);
+    assert.match(comments, /`더 보기`.*같은 조건의 다음 댓글/);
+    assert.match(comments, /이전 조건에서 늦게 도착한 목록이나 `더 보기` 결과는 섞이지 않/);
+
+    assert.match(mealBoard, /가입할 때 선택한 학교의 급식이 자동으로 연결/);
+    assert.match(mealBoard, /`현재 학급만` 또는 `내 기본 학교로 저장`/);
+    assert.match(mealBoard, /기본으로 접혀 있는 `우리 반 비고`/);
+    assert.match(mealBoard, /전체화면 보기.*학생 이름과 비고가 포함되지 않/);
+    assert.match(tools, /수업과 학급 운영 중 바로 사용하는/);
+    assert.match(tools, /`QR 코드 관리`.*쌤링크/);
+    assert.match(tools, /`얘들아, 밥 먹자!`.*학생 정보가 빠진 급식판/);
+});
