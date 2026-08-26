@@ -23,22 +23,23 @@ test('서버 운영 정보는 운영 탭의 `서버 상태` 한 곳에 모인다
 test('자원 카드는 값과 함께 판단 기준을 보여 준다', () => {
     // 숫자만 있으면 "그래서 괜찮은가"를 운영자가 매번 스스로 판단해야 한다.
     for (const 문구 of [
-        '도커 메모리 할당을 올리세요',
-        '메모리가 모자라 디스크로 밀어냈습니다',
+        '실제 메모리 압박 신호가 감지됐습니다',
+        '잔여 스왑만으로는 이상이 아닙니다',
         'kong 워커를 2에서 늘리세요',
         '도커 캐시부터 정리하세요',
     ]) {
         assert.ok(resourceStatus.includes(문구), `판단 문구가 없다: ${문구}`);
     }
     // 기준값이 흐려지지 않게 못 박는다.
-    assert.match(resourceStatus, /memPercent < 15 \? 'bad' : memPercent < 30 \? 'watch'/);
-    assert.match(resourceStatus, /swapCurrent > 100 \? 'bad' : swapCurrent > 0 \? 'watch'/);
-    assert.match(resourceStatus, /hostSwapUsed > 1024 \? 'bad' : hostSwapUsed > 0 \? 'watch'/);
+    assert.match(resourceStatus, /dockerMemoryAlertOpen \|\| memPercent < 15 \? 'bad'/);
+    assert.match(resourceStatus, /const swapTone = [\s\S]*?dockerMemoryAlertOpen \? 'bad'[\s\S]*?: 'good'/);
+    assert.match(resourceStatus, /const hostSwapTone = [\s\S]*?hostMemoryAlertOpen \? 'bad'[\s\S]*?: 'good'/);
     assert.match(resourceStatus, /gatewayCpu > 70 \? 'bad' : gatewayCpu > 40 \? 'watch'/);
     assert.match(resourceStatus, /diskFree < 10 \? 'bad' : diskFree < 30 \? 'watch'/);
     // 기록이 없을 때 0으로 보이면 "정상"으로 오해한다.
     assert.match(resourceStatus, /none: \{[^}]*mark: '기록 없음'/);
-    assert.match(servicePanel, /<AdminResourceStatus latest=\{latest\} \/>/);
+    assert.match(servicePanel, /dockerMemoryAlertOpen=\{dockerMemoryAlertOpen\}/);
+    assert.match(servicePanel, /hostMemoryAlertOpen=\{hostMemoryAlertOpen\}/);
 });
 
 test('맥·도커 현재값과 도커의 오늘 최악값을 5분마다 함께 남긴다', () => {
@@ -60,11 +61,21 @@ test('맥·도커 현재값과 도커의 오늘 최악값을 5분마다 함께 �
     assert.match(currentMigration, /resource_sampled_at = NOW\(\)/, '5분 현재값의 실제 표본 시각이 따로 남아야 한다');
 });
 
-test('메모리가 모자라면 알림을 띄운다', () => {
-    // 2026-08-23 에 여유 10%·스왑 100% 였는데 아무도 보지 않아 사람이 손으로 찾았다.
-    assert.match(healthScript, /report memory_low true/);
-    assert.match(healthScript, /report memory_low false/);
-    assert.match(healthScript, /MEM_PCT" -lt 15 \] \|\| \[ "\$\{SWAP_USED:-0\}" -gt 100/);
+test('잔여 스왑이 아니라 실제 메모리 압박 신호로 출처별 알림을 띄운다', () => {
+    // 스왑된 차가운 페이지는 여유가 생겨도 남을 수 있다. 100MB 같은 총량 하나만으로 장애라 하면 안 된다.
+    assert.match(healthScript, /VM_MEM_CRITICAL_PCT="\$\{VM_MEM_CRITICAL_PCT:-15\}"/);
+    assert.match(healthScript, /VM_SWAP_NEAR_FULL_PCT="\$\{VM_SWAP_NEAR_FULL_PCT:-90\}"/);
+    assert.match(healthScript, /VM_SWAP_OUT_ALERT_MB="\$\{VM_SWAP_OUT_ALERT_MB:-64\}"/);
+    assert.match(healthScript, /VM_PSI_SOME_ALERT_PCT="\$\{VM_PSI_SOME_ALERT_PCT:-1\.0\}"/);
+    assert.match(healthScript, /pswpout/);
+    assert.match(healthScript, /\/proc\/pressure\/memory/);
+    assert.match(healthScript, /report docker_memory_pressure true/);
+    assert.match(healthScript, /report docker_memory_pressure false/);
+    assert.match(healthScript, /report host_memory_pressure true/);
+    assert.match(healthScript, /report host_memory_pressure false/);
+    assert.doesNotMatch(healthScript, /SWAP_USED:-0\}" -gt 100/);
+    assert.doesNotMatch(healthScript, /report memory_low true/);
+    assert.match(healthScript, /report memory_low false/, '기존에 열린 통합 경고는 새 기준 전환 때 닫아야 한다');
 });
 
 test('조회 RPC 가 새 값을 함께 내려 준다', () => {

@@ -44,7 +44,7 @@ const toFiniteNumber = (value) => {
     return Number.isFinite(number) ? number : null;
 };
 
-const AdminResourceStatus = ({ latest }) => {
+const AdminResourceStatus = ({ latest, dockerMemoryAlertOpen = false, hostMemoryAlertOpen = false }) => {
     if (!latest) {
         return (
             <div style={{ padding: '16px', background: '#F7FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', color: '#718096', fontSize: '0.85rem' }}>
@@ -70,10 +70,18 @@ const AdminResourceStatus = ({ latest }) => {
     const containers = toFiniteNumber(latest.container_total);
     const healthy = toFiniteNumber(latest.container_healthy);
 
-    const hostMemTone = hostMemPercent === null ? 'none' : hostMemPercent < 15 ? 'bad' : hostMemPercent < 30 ? 'watch' : 'good';
-    const hostSwapTone = !Number.isFinite(hostSwapUsed) ? 'none' : hostSwapUsed > 1024 ? 'bad' : hostSwapUsed > 0 ? 'watch' : 'good';
-    const memTone = memPercent === null ? 'none' : memPercent < 15 ? 'bad' : memPercent < 30 ? 'watch' : 'good';
-    const swapTone = !Number.isFinite(swapCurrent) ? 'none' : swapCurrent > 100 ? 'bad' : swapCurrent > 0 ? 'watch' : 'good';
+    const hostMemTone = hostMemPercent === null ? 'none'
+        : hostMemoryAlertOpen || hostMemPercent < 15 ? 'bad'
+            : hostMemPercent < 30 ? 'watch' : 'good';
+    const hostSwapTone = !Number.isFinite(hostSwapUsed) ? 'none'
+        : hostMemoryAlertOpen ? 'bad'
+            : 'good';
+    const memTone = memPercent === null ? 'none'
+        : dockerMemoryAlertOpen || memPercent < 15 ? 'bad'
+            : memPercent < 30 ? 'watch' : 'good';
+    const swapTone = !Number.isFinite(swapCurrent) ? 'none'
+        : dockerMemoryAlertOpen ? 'bad'
+            : 'good';
     const cpuTone = !Number.isFinite(gatewayCpu) ? 'none' : gatewayCpu > 70 ? 'bad' : gatewayCpu > 40 ? 'watch' : 'good';
     const diskTone = !Number.isFinite(diskFree) ? 'none' : diskFree < 10 ? 'bad' : diskFree < 30 ? 'watch' : 'good';
     const dbTone = Number.isFinite(dbSize) ? 'good' : 'none';
@@ -102,8 +110,8 @@ const AdminResourceStatus = ({ latest }) => {
                 unit={Number.isFinite(hostSwapUsed) ? 'MB' : ''}
                 tone={hostSwapTone}
                 note={hostSwapTone === 'none' ? '아직 재지 않았습니다.'
-                    : hostSwapTone === 'bad' ? '맥 본체가 디스크로 많이 밀어냈습니다.'
-                    : hostSwapTone === 'watch' ? '현재 스왑을 사용 중입니다.'
+                    : hostSwapTone === 'bad' ? '맥 메모리 여유와 스왑을 함께 볼 때 실제 압박 신호가 있습니다.'
+                    : hostSwapUsed > 0 ? '잔여 스왑만으로는 이상이 아닙니다. 맥 메모리 여유와 함께 감시합니다.'
                         : '현재 스왑을 쓰지 않습니다.'}
             />
             <Card
@@ -112,7 +120,7 @@ const AdminResourceStatus = ({ latest }) => {
                 unit={memPercent === null ? '' : `% · ${memCurrent.toLocaleString()}MB`}
                 tone={memTone}
                 note={memPercent === null ? '아직 재지 않았습니다.'
-                    : memTone === 'bad' ? '30% 아래로 오래 머무르면 도커 메모리 할당을 올리세요.'
+                    : memTone === 'bad' ? '실제 메모리 압박 신호가 감지됐습니다. 위 경고의 원인을 확인하세요.'
                         : memTone === 'watch' ? '수업 시간에 더 떨어지는지 지켜보세요.'
                             : `현재는 여유 있습니다.${Number.isFinite(memMinimumPercent) ? ` 오늘 최저 ${memMinimumPercent}%` : ''}`}
             />
@@ -122,8 +130,8 @@ const AdminResourceStatus = ({ latest }) => {
                 unit={Number.isFinite(swapCurrent) ? 'MB' : ''}
                 tone={swapTone}
                 note={swapTone === 'none' ? '아직 재지 않았습니다.'
-                    : swapTone === 'bad' ? '메모리가 모자라 디스크로 밀어냈습니다. 할당을 올릴 때입니다.'
-                    : swapTone === 'watch' ? '조금씩 쓰기 시작했습니다.'
+                    : swapTone === 'bad' ? '새 스왑 아웃·메모리 지연·남은 여유를 함께 볼 때 실제 압박 신호가 있습니다.'
+                    : swapCurrent > 0 ? `잔여 스왑만으로는 이상이 아닙니다.${Number.isFinite(swapMaximum) ? ` 오늘 최대 ${swapMaximum.toLocaleString()}MB` : ''}`
                         : `현재는 쓰지 않습니다.${Number.isFinite(swapMaximum) ? ` 오늘 최대 ${swapMaximum.toLocaleString()}MB` : ''}`}
             />
             <Card

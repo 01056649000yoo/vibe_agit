@@ -16,7 +16,9 @@ const ALERT_LABELS = {
     memory_low: '메모리 여유 부족',
     backup_failed: '백업 실패',
     container_down: '컨테이너 꺼짐',
-    db_down: 'DB 응답 없음'
+    db_down: 'DB 응답 없음',
+    docker_memory_pressure: '도커 메모리 압박',
+    host_memory_pressure: '맥 메모리 압박'
 };
 
 const formatWhen = (value) => {
@@ -90,6 +92,8 @@ const AdminServicePanel = () => {
     const latest = data?.latest || null;
     const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
     const openAlerts = alerts.filter((a) => a.status === 'open');
+    const dockerMemoryAlertOpen = openAlerts.some((alert) => alert.alert_key === 'docker_memory_pressure');
+    const hostMemoryAlertOpen = openAlerts.some((alert) => alert.alert_key === 'host_memory_pressure');
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -161,9 +165,14 @@ const AdminServicePanel = () => {
                 <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#2D3748' }}>서버 자원</h3>
                 <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: '#A0AEC0' }}>
                     맥·도커 메모리와 스왑, 디스크, 컨테이너, 게이트웨이는 5분마다 현재값을 갱신합니다.
+                    잔여 스왑량만으로 경고하지 않고 메모리 여유·새 스왑 아웃·지연을 함께 판단합니다.
                     도커 자원은 오늘의 가장 나쁜 순간도 함께 남기고, DB 크기와 트래픽은 04:50에 기록합니다.
                 </p>
-                <AdminResourceStatus latest={latest} />
+                <AdminResourceStatus
+                    latest={latest}
+                    dockerMemoryAlertOpen={dockerMemoryAlertOpen}
+                    hostMemoryAlertOpen={hostMemoryAlertOpen}
+                />
             </div>
 
             {/* 트래픽은 정확한 수치가 아니라 경향을 본다. 그리기는 전용 컴포넌트가 맡는다. */}

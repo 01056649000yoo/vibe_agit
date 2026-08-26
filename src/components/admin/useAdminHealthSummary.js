@@ -27,13 +27,15 @@ export const useAdminHealthSummary = () => {
         setError('');
         const latest = data?.latest || null;
         const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
+        const openAlerts = alerts.filter((alert) => alert.status === 'open');
         setSummary({
             containerHealthy: latest?.container_healthy ?? null,
             containerTotal: latest?.container_total ?? null,
             diskFreeGb: latest?.disk_free_gb ?? null,
             hostMemoryAvailablePct: latest?.host_mem_available_pct ?? null,
             hostSwapUsedMb: latest?.host_swap_used_mb ?? null,
-            openAlertCount: alerts.filter((alert) => alert.status === 'open').length,
+            openAlertCount: openAlerts.length,
+            openAlertKeys: openAlerts.map((alert) => alert.alert_key),
             resourceSampledAt: latest?.resource_sampled_at ?? null
         });
     }, []);

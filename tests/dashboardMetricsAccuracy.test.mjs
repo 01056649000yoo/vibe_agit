@@ -35,6 +35,8 @@ test('서비스 현황은 한국 날짜와 실제 제출 글을 같은 기간으
     assert.match(migration, /recorded_at = NOW\(\)/);
     assert.match(servicePanel, /label="제출된 글"/);
     assert.match(servicePanel, /memory_low: '메모리 여유 부족'/);
+    assert.match(servicePanel, /docker_memory_pressure: '도커 메모리 압박'/);
+    assert.match(servicePanel, /host_memory_pressure: '맥 메모리 압박'/);
 });
 
 test('교사 학급 현황은 접속과 글쓰기 활동을 분리한다', () => {

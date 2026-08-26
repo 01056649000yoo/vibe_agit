@@ -269,11 +269,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const diskTone = health.summary?.diskFreeGb == null
         ? '#A0AEC0'
         : (health.summary.diskFreeGb < 20 ? '#E53E3E' : health.summary.diskFreeGb < 50 ? '#D69E2E' : '#48BB78');
+    const hostMemoryPressureOpen = health.summary?.openAlertKeys?.includes('host_memory_pressure') === true;
     const hostMemoryTone = health.summary?.hostMemoryAvailablePct == null || health.summary?.hostSwapUsedMb == null
         ? '#A0AEC0'
-        : (health.summary.hostMemoryAvailablePct < 15 || health.summary.hostSwapUsedMb > 1024
+        : (hostMemoryPressureOpen
             ? '#E53E3E'
-            : (health.summary.hostMemoryAvailablePct < 30 || health.summary.hostSwapUsedMb > 0 ? '#D69E2E' : '#48BB78'));
+            : (health.summary.hostMemoryAvailablePct < 30 ? '#D69E2E' : '#48BB78'));
 
     const tabBadges = useMemo(() => ({
         pending: newSignupCount,

@@ -6,6 +6,16 @@ set -uo pipefail
 DOCKER="${DOCKER:-/Applications/Docker.app/Contents/Resources/bin/docker}"
 APP_URL="${APP_URL:-http://127.0.0.1:8300/}"
 DISK_MIN_GB="${DISK_MIN_GB:-10}"
+VM_MEM_CRITICAL_PCT="${VM_MEM_CRITICAL_PCT:-15}"
+VM_MEM_WATCH_PCT="${VM_MEM_WATCH_PCT:-30}"
+VM_SWAP_NEAR_FULL_PCT="${VM_SWAP_NEAR_FULL_PCT:-90}"
+VM_SWAP_OUT_ALERT_MB="${VM_SWAP_OUT_ALERT_MB:-64}"
+VM_PSI_SOME_ALERT_PCT="${VM_PSI_SOME_ALERT_PCT:-1.0}"
+VM_PSI_FULL_ALERT_PCT="${VM_PSI_FULL_ALERT_PCT:-0.1}"
+HOST_MEM_CRITICAL_PCT="${HOST_MEM_CRITICAL_PCT:-15}"
+HOST_MEM_WATCH_PCT="${HOST_MEM_WATCH_PCT:-30}"
+HOST_SWAP_HIGH_MB="${HOST_SWAP_HIGH_MB:-1024}"
+VM_SWAP_STATE_FILE="${VM_SWAP_STATE_FILE:-/tmp/agit-health-vmstat.state}"
 
 psql_exec() {
     "$DOCKER" exec -i agit-db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -t -A "$@"
@@ -18,6 +28,19 @@ report() {
         >/dev/null 2>&1; then
         echo "상태 기록 실패: ${key}" >&2
         return 1
+    fi
+}
+
+decimal_ge() {
+    awk -v value="${1:-0}" -v threshold="${2:-0}" 'BEGIN { exit !((value + 0) >= (threshold + 0)) }'
+}
+
+append_reason() {
+    local current="$1" next="$2"
+    if [ -n "$current" ]; then
+        printf '%s, %s' "$current" "$next"
+    else
+        printf '%s' "$next"
     fi
 }
 
@@ -73,12 +96,48 @@ fi
 # 아무도 보지 않아 사람이 손으로 `free` 를 돌려 보고서야 알았다.
 #
 # 새 컨테이너를 띄우지 않고 이미 도는 DB 컨테이너에서 읽는다(5분마다이므로 가볍게 간다).
-read -r MEM_TOTAL MEM_AVAIL SWAP_USED <<EOF
+read -r MEM_TOTAL MEM_AVAIL SWAP_TOTAL SWAP_USED <<EOF
 $("$DOCKER" exec agit-db sh -c "free -m" 2>/dev/null | awk '
 NR==2 { total=$2; avail=$7 }
-NR==3 { swap=$3 }
-END { printf "%d %d %d", total, avail, swap }')
+NR==3 { swap_total=$2; swap_used=$3 }
+END { printf "%d %d %d %d", total, avail, swap_total, swap_used }')
 EOF
+
+# 스왑 사용량에는 과거에 밀려난 차가운 페이지가 오래 남을 수 있다. 그래서 총량만 보지 않고
+# 실제 지연(PSI)과 직전 점검 이후 새로 밀려난 양(pswpout)을 함께 본다.
+read -r VM_PSI_SOME_AVG60 VM_PSI_FULL_AVG60 <<EOF
+$("$DOCKER" exec agit-db awk '
+/^some / {
+    for (i = 1; i <= NF; i += 1) if ($i ~ /^avg60=/) { sub(/^avg60=/, "", $i); some=$i }
+}
+/^full / {
+    for (i = 1; i <= NF; i += 1) if ($i ~ /^avg60=/) { sub(/^avg60=/, "", $i); full=$i }
+}
+END { printf "%.2f %.2f", some + 0, full + 0 }
+' /proc/pressure/memory 2>/dev/null)
+EOF
+
+VM_BOOT_ID="$("$DOCKER" exec agit-db cat /proc/sys/kernel/random/boot_id 2>/dev/null | tr -d '[:space:]')"
+VM_PSWPOUT_PAGES="$("$DOCKER" exec agit-db awk '$1 == "pswpout" { print $2 }' /proc/vmstat 2>/dev/null | tr -d '[:space:]')"
+VM_PAGE_SIZE="$("$DOCKER" exec agit-db getconf PAGESIZE 2>/dev/null | tr -d '[:space:]')"
+[[ "${VM_PAGE_SIZE:-}" =~ ^[0-9]+$ ]] || VM_PAGE_SIZE=4096
+
+SWAP_OUT_DELTA_KNOWN=false
+SWAP_OUT_DELTA_MB=0
+if [[ "${VM_PSWPOUT_PAGES:-}" =~ ^[0-9]+$ ]] && [ -n "${VM_BOOT_ID:-}" ]; then
+    if [ -r "$VM_SWAP_STATE_FILE" ]; then
+        read -r PREV_VM_BOOT_ID PREV_VM_PSWPOUT_PAGES < "$VM_SWAP_STATE_FILE" || true
+        if [ "$PREV_VM_BOOT_ID" = "$VM_BOOT_ID" ] \
+           && [[ "${PREV_VM_PSWPOUT_PAGES:-}" =~ ^[0-9]+$ ]] \
+           && [ "$VM_PSWPOUT_PAGES" -ge "$PREV_VM_PSWPOUT_PAGES" ]; then
+            SWAP_OUT_DELTA_PAGES=$(( VM_PSWPOUT_PAGES - PREV_VM_PSWPOUT_PAGES ))
+            SWAP_OUT_DELTA_MB=$(( SWAP_OUT_DELTA_PAGES * VM_PAGE_SIZE / 1024 / 1024 ))
+            SWAP_OUT_DELTA_KNOWN=true
+        fi
+    fi
+    printf '%s %s\n' "$VM_BOOT_ID" "$VM_PSWPOUT_PAGES" > "${VM_SWAP_STATE_FILE}.tmp.$$"
+    mv "${VM_SWAP_STATE_FILE}.tmp.$$" "$VM_SWAP_STATE_FILE"
+fi
 
 # 도커 VM 값만 보면 맥 본체가 굶어도 정상처럼 보인다. macOS 의 현재 메모리 여유와 스왑을
 # 별도로 재서 화면에서 출처를 분명히 표시한다. 둘 다 값만 저장하며 원문 시스템 로그는 남기지 않는다.
@@ -116,14 +175,54 @@ if [ -n "${MEM_TOTAL:-}" ] && [ "${MEM_TOTAL:-0}" -gt 0 ] 2>/dev/null; then
         );" >/dev/null 2>&1 || true
     fi
 
-    # 도커나 맥 본체 어느 쪽이든 여유가 15% 아래로 떨어지거나 스왑이 커지면 알린다.
     MEM_PCT=$(( MEM_AVAIL * 100 / MEM_TOTAL ))
-    if [ "$MEM_PCT" -lt 15 ] || [ "${SWAP_USED:-0}" -gt 100 ] \
-       || [ "${HOST_MEM_PCT:-100}" -lt 15 ] || [ "${HOST_SWAP_USED:-0}" -gt 1024 ]; then
-        report memory_low true "도커 여유 ${MEM_AVAIL}MB(${MEM_PCT}%)·스왑 ${SWAP_USED:-0}MB · 맥 여유 ${HOST_MEM_PCT:-?}%·스왑 ${HOST_SWAP_USED:-?}MB"
-    else
-        report memory_low false ""
+    SWAP_PCT=0
+    if [ "${SWAP_TOTAL:-0}" -gt 0 ] 2>/dev/null; then
+        SWAP_PCT=$(( SWAP_USED * 100 / SWAP_TOTAL ))
     fi
+
+    DOCKER_MEMORY_REASON=""
+    if [ "$MEM_PCT" -lt "$VM_MEM_CRITICAL_PCT" ]; then
+        DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "메모리 여유 ${VM_MEM_CRITICAL_PCT}% 미만")"
+    fi
+    if decimal_ge "$VM_PSI_SOME_AVG60" "$VM_PSI_SOME_ALERT_PCT" \
+       || decimal_ge "$VM_PSI_FULL_AVG60" "$VM_PSI_FULL_ALERT_PCT"; then
+        DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "메모리 지연 발생")"
+    fi
+    if [ "$SWAP_PCT" -ge "$VM_SWAP_NEAR_FULL_PCT" ] && [ "$MEM_PCT" -lt "$VM_MEM_WATCH_PCT" ]; then
+        DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "스왑 ${VM_SWAP_NEAR_FULL_PCT}% 이상과 여유 ${VM_MEM_WATCH_PCT}% 미만")"
+    fi
+    if [ "$SWAP_OUT_DELTA_KNOWN" = true ] \
+       && [ "$SWAP_OUT_DELTA_MB" -ge "$VM_SWAP_OUT_ALERT_MB" ] \
+       && [ "$MEM_PCT" -lt "$VM_MEM_WATCH_PCT" ]; then
+        DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "직전 점검 뒤 ${SWAP_OUT_DELTA_MB}MB 스왑 아웃")"
+    fi
+
+    if [ -n "$DOCKER_MEMORY_REASON" ]; then
+        report docker_memory_pressure true "${DOCKER_MEMORY_REASON} · 여유 ${MEM_AVAIL}MB(${MEM_PCT}%) · 스왑 ${SWAP_USED:-0}/${SWAP_TOTAL:-0}MB(${SWAP_PCT}%) · PSI ${VM_PSI_SOME_AVG60:-0}/${VM_PSI_FULL_AVG60:-0}%"
+    else
+        report docker_memory_pressure false ""
+    fi
+
+    HOST_MEMORY_REASON=""
+    if [ -n "${HOST_MEM_PCT:-}" ] && [ "$HOST_MEM_PCT" -lt "$HOST_MEM_CRITICAL_PCT" ] 2>/dev/null; then
+        HOST_MEMORY_REASON="$(append_reason "$HOST_MEMORY_REASON" "맥 메모리 여유 ${HOST_MEM_CRITICAL_PCT}% 미만")"
+    fi
+    if [ -n "${HOST_MEM_PCT:-}" ] && [ -n "${HOST_SWAP_USED:-}" ] \
+       && [ "$HOST_MEM_PCT" -lt "$HOST_MEM_WATCH_PCT" ] 2>/dev/null \
+       && [ "$HOST_SWAP_USED" -gt "$HOST_SWAP_HIGH_MB" ] 2>/dev/null; then
+        HOST_MEMORY_REASON="$(append_reason "$HOST_MEMORY_REASON" "맥 스왑 ${HOST_SWAP_HIGH_MB}MB 초과와 여유 ${HOST_MEM_WATCH_PCT}% 미만")"
+    fi
+
+    if [ -n "$HOST_MEMORY_REASON" ]; then
+        report host_memory_pressure true "${HOST_MEMORY_REASON} · 여유 ${HOST_MEM_PCT:-?}% · 스왑 ${HOST_SWAP_USED:-?}MB"
+    else
+        report host_memory_pressure false ""
+    fi
+
+    # 2026-08-26 이전에는 스왑 100MB만으로 도커·맥을 합친 이 경고를 열었다. 새 기준으로 전환하면서
+    # 과거에 열려 있던 행을 닫고, 이후에는 위의 출처별 경고만 사용한다.
+    report memory_low false ""
 fi
 
 echo "상태 기록 완료 $(date '+%H:%M') — 앱 ${CODE} · 디스크 ${FREE_GB:-?}GB · 도커 여유 ${MEM_AVAIL:-?}MB · 맥 여유 ${HOST_MEM_PCT:-?}% · 게이트웨이 CPU ${GW_CPU:-?}%"

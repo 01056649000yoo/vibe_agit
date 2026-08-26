@@ -103,6 +103,9 @@ test('관리자 상단은 지금 손대야 하는 것만 보여 준다', async (
     assert.match(hook, /admin_get_service_overview_v1/);
     assert.match(hook, /host_mem_available_pct/);
     assert.match(hook, /host_swap_used_mb/);
+    assert.match(hook, /openAlertKeys: openAlerts\.map/);
+    assert.match(dashboard, /openAlertKeys\?\.includes\('host_memory_pressure'\)/,
+        '상단 맥 메모리 색도 5분 건강검진의 실제 압박 판정을 재사용해야 한다');
     // 상단은 곁눈질용이라 추이까지 받지 않는다.
     assert.match(hook, /p_trend_days: 1/);
 });
