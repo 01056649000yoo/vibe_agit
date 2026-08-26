@@ -2,19 +2,23 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  findUniqueSchoolMatch,
   formatMealDate,
   getSeoulDateString,
   summarizeRoster
 } from '../src/modules/tool/meal-board/mealBoardEngine.js';
 
-const [manifest, entry, noteModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
+const [manifest, entry, noteModal, schoolModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboard, teachingToolsHub, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
   readFile('src/modules/tool/meal-board/manifest.js', 'utf8'),
   readFile('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/StudentNoteModal.jsx', 'utf8'),
+  readFile('src/modules/tool/meal-board/SchoolChangeModal.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/MealFullscreen.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/mealBoardApi.js', 'utf8'),
   readFile('src/utils/schoolApi.js', 'utf8'),
   readFile('src/components/teacher/TeacherProfileSetup.jsx', 'utf8'),
+  readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8'),
+  readFile('src/components/teacher/TeachingToolsHub.jsx', 'utf8'),
   readFile('src/hooks/useTeacherDashboard.js', 'utf8'),
   readFile('supabase/functions/neis-meal/index.ts', 'utf8'),
   readFile('supabase/migrations/20261175_meal_allergy_board.sql', 'utf8'),
@@ -81,6 +85,25 @@ test('가입 학교 코드를 저장해 급식 기본 학교로 쓰고 프로필
   assert.match(migration, /'source', 'teacher_default'/);
   assert.match(migration, /'source', 'class_override'/);
   assert.match(migration, /school_office_code = p_school_office_code/);
+});
+
+test('기존 교사 학교 이름은 고유한 정확 일치일 때만 기본 학교로 자동 연결한다', () => {
+  const first = { officeCode: 'B10', schoolCode: '7010001', schoolName: '서울미래초등학교' };
+  const duplicate = { officeCode: 'C10', schoolCode: '7020001', schoolName: '서울미래초등학교' };
+  assert.equal(findUniqueSchoolMatch('서울 미래 초', [first]), first);
+  assert.equal(findUniqueSchoolMatch('서울미래초등학교', [first, duplicate]), null);
+  assert.match(teacherDashboard, /<TeachingToolsHub[^>]*teacherInfo=\{teacherInfo\}/);
+  assert.match(teachingToolsHub, /<selected\.Entry[^>]*teacherInfo=\{teacherInfo\}/);
+  assert.match(entry, /searchSchools\(teacherSchoolName\)/);
+  assert.match(entry, /saveSchool\(activeClassId, 'default', matchedSchool\)/);
+  assert.match(schoolModal, /initialSchoolName/);
+});
+
+test('우리 반 비고는 접근 가능한 버튼으로 접고 펼친다', () => {
+  assert.match(entry, /aria-expanded=\{notesExpanded\}/);
+  assert.match(entry, /aria-controls="meal-roster-content"/);
+  assert.match(entry, /setNotesExpanded\(\(expanded\) => !expanded\)/);
+  assert.match(entry, /notesExpanded \? <div id="meal-roster-content">/);
 });
 
 test('학생 비고는 선택적 최소 수집이며 담당 교사 RPC로만 읽고 쓴다', () => {

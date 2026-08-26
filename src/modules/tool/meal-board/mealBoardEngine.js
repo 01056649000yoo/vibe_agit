@@ -31,6 +31,20 @@ export function summarizeRoster(students = []) {
   }, { total: 0, withNote: 0, withoutNote: 0 });
 }
 
+const normalizeSchoolMatchKey = (value) => String(value || '')
+  .trim()
+  .replace(/\s+/g, '')
+  .replace(/초등학교$/, '초')
+  .toLocaleLowerCase('ko-KR');
+
+export function findUniqueSchoolMatch(schoolName, schools = []) {
+  const target = normalizeSchoolMatchKey(schoolName);
+  if (!target) return null;
+  const matches = (Array.isArray(schools) ? schools : [])
+    .filter((school) => normalizeSchoolMatchKey(school?.schoolName) === target);
+  return matches.length === 1 ? matches[0] : null;
+}
+
 export function schoolSelectionFromWorkspace(school) {
   if (!school?.officeCode || !school?.schoolCode) return null;
   return {

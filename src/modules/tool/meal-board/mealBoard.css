@@ -127,7 +127,11 @@
 .meal-button.is-dark { color: #fff; background: #26382d; white-space: nowrap; }
 .meal-button.is-ghost { color: #657269; background: #fff; border-color: #dbe2dc; }
 
+.meal-roster-heading-actions { display: flex; align-items: center; gap: 7px; }
 .meal-roster-count { display: inline-grid; place-items: center; min-width: 48px; height: 34px; padding: 0 10px; border-radius: 99px; background: #edf6f0; color: var(--meal-green-deep); font-size: .8rem; font-weight: 900; }
+.meal-collapse-button { min-height: 34px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #dce3dc; border-radius: 10px; padding: 6px 9px; color: #52665a; background: #fff; cursor: pointer; font-size: .74rem; font-weight: 900; white-space: nowrap; }
+.meal-collapse-button:hover { border-color: #91b29f; background: #f5faf6; }
+.meal-collapse-button span { color: #789084; font-size: .8rem; }
 .meal-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 14px; }
 .meal-summary-grid div { background: #f7f8f5; border-radius: 14px; padding: 12px; text-align: center; }
 .meal-summary-grid strong { display: block; font-size: 1.22rem; color: #354f40; }

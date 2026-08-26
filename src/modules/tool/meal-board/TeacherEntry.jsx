@@ -1,14 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MealFullscreen from './MealFullscreen';
 import SchoolChangeModal from './SchoolChangeModal';
 import StudentNoteModal from './StudentNoteModal';
 import {
+  findUniqueSchoolMatch,
   formatMealDate,
   getSeoulDateString,
   summarizeRoster
 } from './mealBoardEngine';
 import { mealBoardApi } from './mealBoardApi';
+import { searchSchools } from '../../../utils/schoolApi';
 import './mealBoard.css';
 
 const FILTERS = [
@@ -23,7 +25,13 @@ function noteStatus(student) {
     : { tone: 'empty', text: '비고 없음' };
 }
 
-export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChange }) {
+const normalizeWorkspace = (result) => ({
+  school: result?.school || null,
+  allergens: Array.isArray(result?.allergens) ? result.allergens : [],
+  students: Array.isArray(result?.students) ? result.students : []
+});
+
+export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeacherSchoolChange }) {
   const [workspace, setWorkspace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,7 +46,11 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
   const [schoolModalOpen, setSchoolModalOpen] = useState(false);
   const [savingSchool, setSavingSchool] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(true);
+  const [schoolAutoLinking, setSchoolAutoLinking] = useState(false);
+  const [schoolAutoLinkHint, setSchoolAutoLinkHint] = useState('');
   const [refreshToken, setRefreshToken] = useState(0);
+  const autoLinkAttemptRef = useRef('');
 
   const loadWorkspace = useCallback(async () => {
     if (!activeClass?.id) return;
@@ -46,11 +58,7 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
     setError('');
     try {
       const result = await mealBoardApi.getWorkspace(activeClass.id);
-      setWorkspace({
-        school: result?.school || null,
-        allergens: Array.isArray(result?.allergens) ? result.allergens : [],
-        students: Array.isArray(result?.students) ? result.students : []
-      });
+      setWorkspace(normalizeWorkspace(result));
     } catch (loadError) {
       setError(loadError.message || '급식 작업공간을 불러오지 못했습니다.');
     } finally {
@@ -59,6 +67,55 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
   }, [activeClass?.id]);
 
   useEffect(() => { void loadWorkspace(); }, [loadWorkspace]);
+
+  const activeClassId = activeClass?.id || '';
+  const teacherSchoolName = String(teacherInfo?.school_name || '').trim();
+  const workspaceReady = workspace !== null;
+  const linkedOfficeCode = workspace?.school?.officeCode || '';
+  const linkedSchoolCode = workspace?.school?.schoolCode || '';
+
+  useEffect(() => {
+    if (!workspaceReady || !activeClassId || linkedOfficeCode || linkedSchoolCode) return undefined;
+    if (teacherSchoolName.length < 2) {
+      setSchoolAutoLinkHint('교사 프로필에서 학교를 검색해 연결해 주세요.');
+      return undefined;
+    }
+
+    const attemptKey = `${activeClassId}:${teacherSchoolName}`;
+    if (autoLinkAttemptRef.current === attemptKey) return undefined;
+    autoLinkAttemptRef.current = attemptKey;
+    let active = true;
+
+    const linkTeacherSchool = async () => {
+      setSchoolAutoLinking(true);
+      setSchoolAutoLinkHint('');
+      try {
+        const schools = await searchSchools(teacherSchoolName);
+        if (!active) return;
+        const matchedSchool = findUniqueSchoolMatch(teacherSchoolName, schools);
+        if (!matchedSchool) {
+          setSchoolAutoLinkHint(schools.length > 0
+            ? '같은 이름의 학교가 여러 곳일 수 있어 학교 설정에서 지역을 확인해 주세요.'
+            : '교사 프로필의 학교를 자동으로 찾지 못했어요. 학교 설정에서 선택해 주세요.');
+          return;
+        }
+
+        await mealBoardApi.saveSchool(activeClassId, 'default', matchedSchool);
+        const result = await mealBoardApi.getWorkspace(activeClassId);
+        if (!active) return;
+        setWorkspace(normalizeWorkspace(result));
+        onTeacherSchoolChange?.(matchedSchool);
+        setNotice(`${matchedSchool.schoolName}을(를) 교사 기본 학교로 자동 연결했습니다.`);
+      } catch (linkError) {
+        if (active) setSchoolAutoLinkHint(linkError.message || '교사 학교를 자동으로 연결하지 못했습니다.');
+      } finally {
+        if (active) setSchoolAutoLinking(false);
+      }
+    };
+
+    void linkTeacherSchool();
+    return () => { active = false; };
+  }, [activeClassId, linkedOfficeCode, linkedSchoolCode, onTeacherSchoolChange, teacherSchoolName, workspaceReady]);
 
   useEffect(() => {
     const school = workspace?.school;
@@ -216,7 +273,9 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
         </div>
 
         {!workspace?.school ? <div className="meal-state-card">
-          <span aria-hidden="true">🏫</span><h4>급식 학교 연결이 필요해요</h4><p>학교 설정에서 나이스 검색 결과를 선택해 주세요.</p>
+          {schoolAutoLinking ? <span className="meal-loading-dot" aria-hidden="true" /> : <span aria-hidden="true">🏫</span>}
+          <h4>{schoolAutoLinking ? '교사 학교를 자동으로 연결하고 있어요' : '급식 학교 연결이 필요해요'}</h4>
+          <p>{schoolAutoLinking ? `${teacherSchoolName}의 나이스 학교 정보를 확인하는 중입니다.` : schoolAutoLinkHint || '학교 설정에서 나이스 검색 결과를 선택해 주세요.'}</p>
           <button type="button" className="meal-button is-primary" onClick={() => setSchoolModalOpen(true)}>학교 찾기</button>
         </div> : mealLoading ? <div className="meal-state-card"><span className="meal-loading-dot" aria-hidden="true" /><h4>급식을 불러오는 중이에요</h4></div>
           : mealError ? <div className="meal-state-card is-error"><span aria-hidden="true">🥣</span><h4>급식을 불러오지 못했어요</h4><p>{mealError}</p><button type="button" className="meal-button is-secondary" onClick={() => setRefreshToken((value) => value + 1)}>다시 시도</button></div>
@@ -238,31 +297,44 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
       <article className="meal-panel meal-roster-panel">
         <div className="meal-panel-heading">
           <div><span className="meal-kicker">교사 전용 · 비공개</span><h3>우리 반 비고</h3><p>필요한 학생만 선택해 짧게 기록할 수 있어요.</p></div>
-          <span className="meal-roster-count">{summary.total}명</span>
+          <div className="meal-roster-heading-actions">
+            <span className="meal-roster-count">{summary.total}명</span>
+            <button
+              type="button"
+              className="meal-collapse-button"
+              aria-expanded={notesExpanded}
+              aria-controls="meal-roster-content"
+              onClick={() => setNotesExpanded((expanded) => !expanded)}
+            >
+              {notesExpanded ? '접기' : '펼치기'} <span aria-hidden="true">{notesExpanded ? '⌃' : '⌄'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="meal-note-guidance">학급 운영에 필요한 간단한 메모만 남겨 주세요. 알레르기·질병 등 민감한 건강정보는 입력하지 않습니다.</div>
-        <div className="meal-summary-grid">
-          <div><strong>{summary.total}</strong><span>전체 학생</span></div>
-          <div><strong>{summary.withNote}</strong><span>비고 있음</span></div>
-          <div><strong>{summary.withoutNote}</strong><span>비고 없음</span></div>
-        </div>
-        <div className="meal-filter-row" role="group" aria-label="학생 비고 필터">
-          {FILTERS.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>)}
-        </div>
-        <div className="meal-roster-list">
-          {roster.length === 0 ? <div className="meal-roster-empty">이 조건에 해당하는 학생이 없습니다.</div> : roster.map((student) => <button type="button" className="meal-student-row" key={student.id} onClick={() => setSelectedStudent(student)}>
-            <span className={`meal-status-dot is-${student.status.tone}`} aria-hidden="true" />
-            <span className="meal-student-name">{student.name}</span>
-            <span className={`meal-student-status is-${student.status.tone}`}>{student.status.text}</span>
-            <span className="meal-student-edit">{student.note ? '수정' : '입력'}</span>
-          </button>)}
-        </div>
+        {notesExpanded ? <div id="meal-roster-content">
+          <div className="meal-note-guidance">학급 운영에 필요한 간단한 메모만 남겨 주세요. 알레르기·질병 등 민감한 건강정보는 입력하지 않습니다.</div>
+          <div className="meal-summary-grid">
+            <div><strong>{summary.total}</strong><span>전체 학생</span></div>
+            <div><strong>{summary.withNote}</strong><span>비고 있음</span></div>
+            <div><strong>{summary.withoutNote}</strong><span>비고 없음</span></div>
+          </div>
+          <div className="meal-filter-row" role="group" aria-label="학생 비고 필터">
+            {FILTERS.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>)}
+          </div>
+          <div className="meal-roster-list">
+            {roster.length === 0 ? <div className="meal-roster-empty">이 조건에 해당하는 학생이 없습니다.</div> : roster.map((student) => <button type="button" className="meal-student-row" key={student.id} onClick={() => setSelectedStudent(student)}>
+              <span className={`meal-status-dot is-${student.status.tone}`} aria-hidden="true" />
+              <span className="meal-student-name">{student.name}</span>
+              <span className={`meal-student-status is-${student.status.tone}`}>{student.status.text}</span>
+              <span className="meal-student-edit">{student.note ? '수정' : '입력'}</span>
+            </button>)}
+          </div>
+        </div> : null}
       </article>
     </div>
 
     {selectedStudent ? <StudentNoteModal student={selectedStudent} saving={savingStudent} onClose={() => setSelectedStudent(null)} onSave={saveNote} /> : null}
-    {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} saving={savingSchool} onClose={() => setSchoolModalOpen(false)} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
+    {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} initialSchoolName={teacherSchoolName} saving={savingSchool} onClose={() => setSchoolModalOpen(false)} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
     {fullscreenOpen ? <MealFullscreen school={workspace?.school} date={date} meals={meals} allergenMap={allergenMap} onClose={() => setFullscreenOpen(false)} /> : null}
   </section>;
 }

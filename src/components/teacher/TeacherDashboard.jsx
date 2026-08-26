@@ -459,7 +459,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'tools' ? (
-                        <TeachingToolsHub activeClass={activeClass} isMobile={isMobile} onTeacherSchoolChange={handleTeacherSchoolChanged} />
+                        <TeachingToolsHub activeClass={activeClass} teacherInfo={teacherInfo} isMobile={isMobile} onTeacherSchoolChange={handleTeacherSchoolChanged} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager

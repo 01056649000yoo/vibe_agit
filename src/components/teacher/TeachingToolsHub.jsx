@@ -6,7 +6,7 @@ const TOOL_MODULES = getAllModules()
     .sort((a, b) => (a.tool?.order ?? 100) - (b.tool?.order ?? 100))
     .map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
 
-const TeachingToolsHub = ({ activeClass, isMobile, onTeacherSchoolChange }) => {
+const TeachingToolsHub = ({ activeClass, teacherInfo, isMobile, onTeacherSchoolChange }) => {
     const [selectedId, setSelectedId] = useState(() => {
         const requested = new URL(window.location.href).searchParams.get('tool');
         return TOOL_MODULES.some(({ module }) => module.id === requested)
@@ -71,7 +71,7 @@ const TeachingToolsHub = ({ activeClass, isMobile, onTeacherSchoolChange }) => {
 
                 <main style={{ minWidth: 0 }}>
                     <Suspense fallback={<div style={{ padding: '70px', textAlign: 'center', color: '#94A3B8' }}>{selected.module.name}을 불러오는 중입니다...</div>}>
-                        <selected.Entry activeClass={activeClass} isMobile={isMobile} module={selected.module} onTeacherSchoolChange={onTeacherSchoolChange} />
+                        <selected.Entry activeClass={activeClass} teacherInfo={teacherInfo} isMobile={isMobile} module={selected.module} onTeacherSchoolChange={onTeacherSchoolChange} />
                     </Suspense>
                 </main>
             </div>

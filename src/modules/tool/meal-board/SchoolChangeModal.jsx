@@ -3,9 +3,9 @@ import ModalPortal from '../../../components/common/ModalPortal';
 import SchoolSearchField from '../../../components/common/SchoolSearchField';
 import { schoolSelectionFromWorkspace } from './mealBoardEngine';
 
-export default function SchoolChangeModal({ currentSchool, onClose, onSave, onUseDefault, saving }) {
+export default function SchoolChangeModal({ currentSchool, initialSchoolName = '', onClose, onSave, onUseDefault, saving }) {
   const initialSchool = schoolSelectionFromWorkspace(currentSchool);
-  const [schoolName, setSchoolName] = useState(initialSchool?.schoolName || '');
+  const [schoolName, setSchoolName] = useState(initialSchool?.schoolName || initialSchoolName);
   const [selectedSchool, setSelectedSchool] = useState(initialSchool);
   const [scope, setScope] = useState('class');
 
