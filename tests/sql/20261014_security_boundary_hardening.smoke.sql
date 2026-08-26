@@ -84,9 +84,27 @@ DO $$ BEGIN
     IF public.auth_user_role() <> '' OR public.auth_user_class_id() IS NOT NULL OR public.auth_student_id() IS NOT NULL THEN
         RAISE EXCEPTION 'DB 연결이 없는 JWT 메타데이터가 권한으로 사용됐습니다.';
     END IF;
-    IF has_function_privilege('authenticated', 'public.consume_ai_request_v1(uuid,text)', 'EXECUTE')
-       OR has_function_privilege('authenticated', 'public.claim_comment_ai_review_v1(uuid,uuid)', 'EXECUTE') THEN
-        RAISE EXCEPTION '내부 AI 속도 제한 함수가 클라이언트에 공개됐습니다.';
+    -- 없어진 함수는 이 검사가 지키려는 상태를 이미 만족한다. 다만 `has_function_privilege` 는
+    -- 이름이 없으면 그 자리에서 오류를 내므로, 존재하는 것만 골라서 본다
+    -- (2026-08-26 `claim_comment_ai_review_v1` 을 지우자 이 검사가 통째로 깨졌다).
+    IF EXISTS (
+        SELECT 1
+        FROM (VALUES
+            ('public.consume_ai_request_v1(uuid,text)'),
+            ('public.claim_comment_ai_review_v1(uuid,uuid)'),
+            ('public.claim_next_comment_ai_review_v2()'),
+            ('public.complete_comment_ai_review_v2(uuid,uuid,boolean,text,text)'),
+            ('public.fail_comment_ai_review_v2(uuid,uuid,text)')
+        ) AS internal(signature)
+        WHERE to_regprocedure(internal.signature) IS NOT NULL
+          AND has_function_privilege('authenticated', internal.signature, 'EXECUTE')
+    ) THEN
+        RAISE EXCEPTION '내부 AI 속도 제한·댓글 판정 함수가 클라이언트에 공개됐습니다.';
+    END IF;
+
+    -- 학생이 스스로 댓글을 승인하던 구형 함수는 아예 없어야 한다.
+    IF to_regprocedure('public.record_comment_ai_review(uuid,boolean,text)') IS NOT NULL THEN
+        RAISE EXCEPTION '학생 자가 승인 함수가 되살아났습니다.';
     END IF;
     IF has_table_privilege('authenticated', 'public.ai_request_events', 'SELECT')
        OR has_table_privilege('authenticated', 'public.ai_request_events', 'INSERT') THEN

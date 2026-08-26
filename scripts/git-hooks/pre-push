@@ -25,7 +25,7 @@ RED=$'\033[31m'; YELLOW=$'\033[33m'; GREEN=$'\033[32m'; OFF=$'\033[0m'
 
 # --- 1. 올리지 않은 새 파일 ---
 # 코드가 사는 곳만 본다. 메모·임시 파일까지 막으면 성가시기만 하다.
-WATCHED='^\?\? (src|scripts|tests|supabase|public)/'
+WATCHED='^\?\? (src|scripts|tests|supabase|public|ops)/'
 UNTRACKED="$(git status --short | grep -E "$WATCHED" || true)"
 
 if [ -n "$UNTRACKED" ]; then
@@ -86,5 +86,17 @@ if MIGRATE_STATUS="$(npm run migrate:status --silent 2>/dev/null)"; then
     echo "${GREEN}✔ 안 넣은 마이그레이션 없음. 밀어도 좋습니다.${OFF}"
 else
     echo "${YELLOW}· 운영 DB를 보지 못해 마이그레이션 확인은 건너뜁니다.${OFF}"
+fi
+
+# --- 4. 정리하지 않은 RPC ---
+# 새 판(`_v2`, `_v3`)을 만들면서 옛 판을 안 지우면, 앱에는 안 보이는데 **권한은 열린 채** 쌓인다.
+# 2026-08-26 `record_comment_ai_review` 가 그랬다 — 학생이 브라우저에서 한 번 부르면 자기 댓글이
+# AI 검사 없이 승인됐다. 검사로는 못 잡는다. 코드에 없다는 것이 바로 위험 신호이기 때문이다.
+# 반대로 이 저장소에 없다고 다 죽은 것도 아니다(연구소가 쓰던 RPC 를 지울 뻔했다).
+# 그래서 DB·이 저장소·다른 앱을 한꺼번에 본다.
+if ! npm run check:rpc-surface --silent; then
+    echo
+    echo "  정말 이대로 밀어야 하면: ${YELLOW}git push --no-verify${OFF}"
+    exit 1
 fi
 exit 0

@@ -1,0 +1,58 @@
+{
+  "_읽는 법": [
+    "scripts/check-rpc-surface.mjs 가 쓰는 목록이다. `npm run check:rpc-surface` 로 돌린다.",
+    "클라이언트에 열려 있는데 쓰이지 않아 보이는 RPC 는 지우는 것이 원칙이다.",
+    "지울 수 없으면 여기에 이름과 **이유**를 적는다. 이유가 없으면 검사가 막는다.",
+    "이유에는 '언제 지울 수 있는지'까지 적는다. 그래야 다음 사람이 이어서 지울 수 있다."
+  ],
+
+  "externalConsumers": [
+    {
+      "container": "writing-helper-lab-app",
+      "설명": "글쓰기 연구소. 같은 아지트 API 를 부른다.",
+      "paths": ["/app/.next"]
+    },
+    {
+      "container": "samlink-app",
+      "설명": "샘링크.",
+      "paths": ["/app", "/usr/share/nginx"]
+    },
+    {
+      "container": "classroom-tools",
+      "설명": "클래스룸툴.",
+      "paths": ["/app", "/usr/share/nginx"]
+    },
+    {
+      "container": "jarvis-frontend",
+      "설명": "자비스.",
+      "paths": ["/app", "/usr/share/nginx"]
+    }
+  ],
+
+  "keep": [
+    {
+      "name": "get_student_spelling_entries_v1",
+      "reason": "연구소(writing-helper)를 _v2 로 옮겼지만 **아직 배포 전**이다. 지금 지우면 연구소가 오류 없이 빈 목록을 받아 학급 맞춤법 자료가 조용히 사라진다. 연구소 배포가 나간 것을 확인한 뒤 지운다."
+    },
+    {
+      "name": "get_spelling_learning_workspace_v2",
+      "reason": "죽은 것이 아니다. _v3 가 내부에서 이 함수를 부른다. _v3 가 스스로 다 계산하게 바꾸기 전에는 못 지운다."
+    },
+    {
+      "name": "admin_dashboard_snapshot",
+      "reason": "관리자 화면이 쓰지 않지만 운영 점검 때 psql 로 직접 부른다. 점검 절차를 RPC 없이 바꾸면 지운다."
+    },
+    {
+      "name": "auth_user_is_teacher_of",
+      "reason": "다른 SECURITY DEFINER 함수와 RLS 정책이 쓰는 내부 판정 도우미다. 앱이 직접 부르지 않는 것이 정상이다."
+    },
+    {
+      "name": "is_teacher_of_student",
+      "reason": "위와 같은 내부 판정 도우미. RLS 정책에서 쓴다."
+    },
+    {
+      "name": "get_my_role",
+      "reason": "구형 역할 조회. 앱은 부트스트랩 RPC 로 옮겼다. 외부 앱이 남아 있지 않은지 한 번 더 확인한 뒤 지운다."
+    }
+  ]
+}
