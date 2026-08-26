@@ -207,7 +207,6 @@
 .meal-fullscreen-header .meal-kicker { color: #bfe2ca; }
 .meal-fullscreen-header h2 { margin: 5px 0 2px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.06em; }
 .meal-fullscreen-header p { margin: 8px 0 0; color: #d3e5d9; font-size: clamp(.95rem, 1.7vw, 1.35rem); }
-.meal-icon-button.is-light { color: #fff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.1); }
 .meal-fullscreen-grid { display: grid; place-items: center; padding: clamp(25px, 4vw, 55px) 0; }
 .meal-fullscreen-grid.has-multiple { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px; align-items: stretch; }
 .meal-display-card { width: min(820px, 100%); border: 1px solid rgba(255,255,255,.18); border-radius: clamp(22px, 3vw, 38px); padding: clamp(22px, 4vw, 50px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }

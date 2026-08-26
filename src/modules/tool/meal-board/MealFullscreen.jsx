@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
 import { formatMealDate } from './mealBoardEngine';
 
@@ -22,7 +23,7 @@ export default function MealFullscreen({ school, date, meals, allergenMap, onClo
           <h2 id="meal-fullscreen-title">{school?.schoolName || '우리 학교'} 급식</h2>
           <p>{formatMealDate(date)}</p>
         </div>
-        <button type="button" className="meal-icon-button is-light" aria-label="전체화면 닫기" onClick={onClose}>×</button>
+        <ModalCloseButton onClick={onClose} label="전체화면 급식판 닫기" tone="onDark" />
       </header>
 
       <main className={`meal-fullscreen-grid ${meals.length > 1 ? 'has-multiple' : ''}`}>

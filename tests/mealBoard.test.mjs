@@ -60,6 +60,9 @@ test('교사 도구는 열 때만 최대 100명 RPC를 읽고 폴링·Realtime�
 test('공개 전체화면은 급식만 받고 학생 명단이나 비고를 전달받지 않는다', () => {
   assert.match(entry, /<MealFullscreen school=\{workspace\?\.school\} date=\{date\} meals=\{meals\}/);
   assert.match(fullscreen, /function MealFullscreen\(\{ school, date, meals, allergenMap, onClose \}\)/);
+  assert.match(fullscreen, /import ModalCloseButton from ['"]\.\.\/\.\.\/\.\.\/components\/common\/ModalCloseButton['"]/);
+  assert.match(fullscreen, /<ModalCloseButton onClick=\{onClose\} label="전체화면 급식판 닫기" tone="onDark" \/>/);
+  assert.doesNotMatch(fullscreen, /meal-icon-button|>×<|>횞</);
   assert.doesNotMatch(fullscreen, /student|roster|studentNote|healthAuthorization|allergenCodes\s*:\s*student/);
   assert.match(fullscreen, /학생 이름과 비고는 이 화면에 표시되지 않아요/);
 });
