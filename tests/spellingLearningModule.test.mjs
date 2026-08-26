@@ -15,6 +15,7 @@ const underlineTextarea = await readFile('src/modules/writing/tools/spelling-loo
 const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
 const adminPromotion = await readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8');
+const adminPromotionStyles = await readFile('src/components/admin/AdminSpellingPromotionPanel.css', 'utf8');
 const teacherGuides = await readFile('src/constants/teacherGuides.js', 'utf8');
 const { classifySpellingSearchQuery } = await import(
     '../src/modules/writing/spelling-learning/searchCandidate.js'
@@ -335,6 +336,22 @@ test('관리자 승격은 AI·검색 후보를 재배포 없는 공통 자료로
     assert.match(dynamicCommonMigration, /v_status TEXT := CASE WHEN[\s\S]*?'disabled'/);
     assert.match(dynamicCommonMigration, /auth_user_role\(\) <> 'ADMIN'/);
     assert.match(dynamicCommonMigration, /REVOKE ALL ON public\.spelling_common_reviews FROM PUBLIC, anon, authenticated/);
+});
+
+test('맞춤법 공통 자료 대시보드는 후보와 게시 자료를 나눠 짧게 훑을 수 있다', () => {
+    assert.match(adminPromotion, /맞춤법 공통 자료 관리/);
+    assert.match(adminPromotion, /activeView === 'candidates'/);
+    assert.match(adminPromotion, /activeView === 'common'/);
+    assert.match(adminPromotion, /activeSource === 'ai'/);
+    assert.match(adminPromotion, /activeSource === 'search'/);
+    assert.match(adminPromotion, /commonFilter === 'enabled'/);
+    assert.match(adminPromotion, /className="admin-spelling__metrics"/);
+    assert.match(adminPromotion, /className="admin-spelling__view-tabs" role="tablist"/);
+    assert.match(adminPromotion, /className="admin-spelling__source-tabs" role="tablist"/);
+    assert.match(adminPromotion, /className="admin-spelling__thresholds" onSubmit=\{applyFilters\}/);
+    assert.match(adminPromotionStyles, /max-height: min\(620px, 68vh\); overflow-y: auto/);
+    assert.match(adminPromotionStyles, /@media \(max-width: 620px\)/);
+    assert.doesNotMatch(adminPromotion, /style=\{\{/);
 });
 
 test('공통·학급 자료는 학생에게 한 목록으로 합치고 짧은 캐시 뒤 자동 갱신한다', () => {

@@ -1,0 +1,101 @@
+.admin-spelling { display: grid; gap: 14px; color: #1f2937; }
+.admin-spelling__header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 22px; border: 1px solid #ddd6fe; border-radius: 18px; background: linear-gradient(135deg, #faf5ff 0%, #fff 60%, #f0fdf4 100%); }
+.admin-spelling__intro h2, .admin-spelling__intro p { margin: 0; }
+.admin-spelling__eyebrow { color: #7c3aed; font-size: .74rem; font-weight: 900; }
+.admin-spelling__intro h2 { margin-top: 4px; color: #3b0764; font-size: 1.35rem; }
+.admin-spelling__intro p { max-width: 720px; margin-top: 8px; color: #64748b; font-size: .84rem; line-height: 1.6; }
+.admin-spelling__metrics { display: grid; grid-template-columns: repeat(3, minmax(92px, 1fr)); gap: 8px; }
+.admin-spelling__metric { display: grid; min-width: 96px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 13px; background: rgba(255, 255, 255, .84); }
+.admin-spelling__metric span { color: #64748b; font-size: .68rem; font-weight: 800; }
+.admin-spelling__metric strong { color: #334155; font-size: 1.35rem; line-height: 1.25; }
+.admin-spelling__metric small { color: #94a3b8; font-size: .66rem; white-space: nowrap; }
+.admin-spelling__metric.is-warning { border-color: #fed7aa; background: #fff7ed; }
+.admin-spelling__metric.is-warning strong { color: #c2410c; }
+.admin-spelling__metric.is-active { border-color: #bbf7d0; background: #f0fdf4; }
+.admin-spelling__metric.is-active strong { color: #15803d; }
+.admin-spelling__notice { margin: 0; padding: 10px 14px; border-radius: 10px; font-size: .8rem; line-height: 1.5; }
+.admin-spelling__notice.is-info { background: #eff6ff; color: #1e40af; }
+.admin-spelling__notice.is-success { background: #f0fdf4; color: #166534; }
+.admin-spelling__notice.is-error { background: #fef2f2; color: #b91c1c; }
+.admin-spelling__view-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 5px; border-radius: 14px; background: #eef2f7; }
+.admin-spelling__view-tabs button { min-height: 44px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: #64748b; font: inherit; font-size: .88rem; font-weight: 900; cursor: pointer; }
+.admin-spelling__view-tabs button b { display: inline-flex; align-items: center; justify-content: center; min-width: 23px; height: 23px; margin-left: 5px; padding: 0 6px; border-radius: 999px; background: #dbe2ea; color: #475569; font-size: .72rem; }
+.admin-spelling__view-tabs button.is-active { border-color: #ddd6fe; background: white; color: #6d28d9; box-shadow: 0 2px 8px rgba(76, 29, 149, .08); }
+.admin-spelling__view-tabs button.is-active b { background: #ede9fe; color: #6d28d9; }
+.admin-spelling__panel, .admin-spelling__editor { display: grid; gap: 14px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background: white; }
+.admin-spelling__panel-heading, .admin-spelling__editor-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.admin-spelling__panel-heading h3, .admin-spelling__editor-heading h3 { margin: 3px 0 0; color: #312e81; font-size: 1.1rem; }
+.admin-spelling__panel-heading > div:first-child > span, .admin-spelling__editor-heading > div > span { color: #7c3aed; font-size: .72rem; font-weight: 900; }
+.admin-spelling__editor-heading small { display: block; margin-top: 4px; color: #64748b; font-size: .72rem; }
+.admin-spelling__thresholds { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+.admin-spelling__number-filter { display: grid; grid-template-columns: auto 54px auto; gap: 5px; align-items: center; color: #64748b; font-size: .72rem; font-weight: 800; }
+.admin-spelling__number-filter input { box-sizing: border-box; width: 54px; padding: 7px 6px; border: 1px solid #cbd5e1; border-radius: 8px; color: #334155; font: inherit; text-align: center; }
+.admin-spelling__source-toolbar { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+.admin-spelling__source-tabs { display: flex; align-items: center; gap: 6px; }
+.admin-spelling__source-tabs button, .admin-spelling__common-filters button, .admin-spelling__refresh { min-height: 36px; padding: 7px 12px; border: 1px solid transparent; border-radius: 9px; background: #f1f5f9; color: #64748b; font: inherit; font-size: .78rem; font-weight: 850; cursor: pointer; }
+.admin-spelling__source-tabs button b { margin-left: 4px; }
+.admin-spelling__source-tabs button.is-active, .admin-spelling__common-filters button.is-active { border-color: #c4b5fd; background: #ede9fe; color: #6d28d9; }
+.admin-spelling__refresh { margin-left: auto; border-color: #cbd5e1; background: white; }
+.admin-spelling__source-guide, .admin-spelling__known { margin: 0; color: #64748b; font-size: .78rem; line-height: 1.55; }
+.admin-spelling__known { padding: 8px 10px; border-radius: 8px; background: #f8fafc; color: #475569; }
+.admin-spelling__results { display: grid; gap: 10px; }
+.admin-spelling__list { display: grid; gap: 7px; max-height: min(620px, 68vh); overflow-y: auto; overscroll-behavior: contain; }
+.admin-spelling__candidate, .admin-spelling__common-entry { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(150px, auto) auto; gap: 16px; align-items: center; min-height: 58px; padding: 11px 12px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
+.admin-spelling__candidate:hover { border-color: #c4b5fd; background: #fdfcff; }
+.admin-spelling__common-entry.is-enabled { border-color: #bbf7d0; background: #fbfffc; }
+.admin-spelling__expression { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.admin-spelling__expression strong, .admin-spelling__expression b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-spelling__expression strong { color: #b91c1c; font-size: .92rem; }
+.admin-spelling__expression span { color: #94a3b8; }
+.admin-spelling__expression b { color: #15803d; font-size: .92rem; }
+.admin-spelling__evidence { display: flex; align-items: center; justify-content: flex-end; gap: 7px; color: #64748b; font-size: .72rem; white-space: nowrap; }
+.admin-spelling__evidence b { color: #6d28d9; }
+.admin-spelling__evidence small { color: #94a3b8; }
+.admin-spelling__row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.admin-spelling__common-meta { display: grid; justify-items: end; gap: 3px; }
+.admin-spelling__common-meta span { padding: 4px 7px; border-radius: 999px; font-size: .68rem; font-weight: 900; }
+.admin-spelling__common-meta span.is-enabled { background: #dcfce7; color: #166534; }
+.admin-spelling__common-meta span.is-disabled { background: #f1f5f9; color: #64748b; }
+.admin-spelling__common-meta small { color: #64748b; font-size: .7rem; white-space: nowrap; }
+.admin-spelling__common-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-spelling__editor-anchor { scroll-margin-top: 16px; }
+.admin-spelling__editor { border-color: #bfdbfe; background: #f8fbff; }
+.admin-spelling__editor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.admin-spelling__field { display: grid; gap: 5px; color: #475569; font-size: .76rem; font-weight: 800; }
+.admin-spelling__field small { color: #94a3b8; font-weight: 600; }
+.admin-spelling__field input, .admin-spelling__field textarea { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #1f2937; font: inherit; line-height: 1.45; resize: vertical; }
+.admin-spelling__field input:focus, .admin-spelling__field textarea:focus, .admin-spelling__number-filter input:focus { border-color: #8b5cf6; outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
+.admin-spelling__warning { margin: 0; padding: 9px 11px; border-radius: 9px; background: #fff7ed; color: #9a3412; font-size: .75rem; line-height: 1.55; }
+.admin-spelling__editor-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
+.admin-spelling__empty { display: grid; justify-items: center; gap: 5px; padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 13px; background: #f8fafc; text-align: center; }
+.admin-spelling__empty strong { color: #475569; font-size: .9rem; }
+.admin-spelling__empty p { margin: 0; color: #94a3b8; font-size: .78rem; }
+
+@media (max-width: 900px) {
+    .admin-spelling__header { grid-template-columns: 1fr; }
+    .admin-spelling__metrics { width: 100%; }
+    .admin-spelling__panel-heading { flex-direction: column; }
+    .admin-spelling__thresholds { width: 100%; }
+    .admin-spelling__candidate, .admin-spelling__common-entry { grid-template-columns: minmax(0, 1fr) auto; }
+    .admin-spelling__evidence, .admin-spelling__common-meta { grid-column: 1; justify-content: flex-start; justify-items: start; }
+    .admin-spelling__row-actions { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+@media (max-width: 620px) {
+    .admin-spelling__header, .admin-spelling__panel, .admin-spelling__editor { padding: 15px; }
+    .admin-spelling__metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .admin-spelling__metric { min-width: 0; padding: 9px; }
+    .admin-spelling__metric small { overflow: hidden; text-overflow: ellipsis; }
+    .admin-spelling__view-tabs button { font-size: .8rem; }
+    .admin-spelling__source-toolbar { align-items: stretch; flex-direction: column; }
+    .admin-spelling__source-tabs { flex-wrap: wrap; }
+    .admin-spelling__refresh { margin-left: 0; }
+    .admin-spelling__editor-heading { flex-direction: column; }
+    .admin-spelling__editor-grid { grid-template-columns: 1fr; }
+    .admin-spelling__candidate, .admin-spelling__common-entry { grid-template-columns: 1fr; gap: 9px; }
+    .admin-spelling__evidence, .admin-spelling__common-meta, .admin-spelling__row-actions { grid-column: 1; grid-row: auto; }
+    .admin-spelling__row-actions { width: 100%; }
+    .admin-spelling__row-actions > button { flex: 1; }
+    .admin-spelling__editor-actions { flex-direction: column-reverse; }
+    .admin-spelling__editor-actions > button { width: 100%; }
+}
