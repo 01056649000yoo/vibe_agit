@@ -46,11 +46,12 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   const [schoolModalOpen, setSchoolModalOpen] = useState(false);
   const [savingSchool, setSavingSchool] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
-  const [notesExpanded, setNotesExpanded] = useState(true);
+  const [notesExpanded, setNotesExpanded] = useState(false);
   const [schoolAutoLinking, setSchoolAutoLinking] = useState(false);
   const [schoolAutoLinkHint, setSchoolAutoLinkHint] = useState('');
   const [refreshToken, setRefreshToken] = useState(0);
   const autoLinkAttemptRef = useRef('');
+  const closeStudentNote = useCallback(() => setSelectedStudent(null), []);
 
   const loadWorkspace = useCallback(async () => {
     if (!activeClass?.id) return;
@@ -333,7 +334,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
       </article>
     </div>
 
-    {selectedStudent ? <StudentNoteModal student={selectedStudent} saving={savingStudent} onClose={() => setSelectedStudent(null)} onSave={saveNote} /> : null}
+    {selectedStudent ? <StudentNoteModal student={selectedStudent} saving={savingStudent} onClose={closeStudentNote} onSave={saveNote} /> : null}
     {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} initialSchoolName={teacherSchoolName} saving={savingSchool} onClose={() => setSchoolModalOpen(false)} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
     {fullscreenOpen ? <MealFullscreen school={workspace?.school} date={date} meals={meals} allergenMap={allergenMap} onClose={() => setFullscreenOpen(false)} /> : null}
   </section>;

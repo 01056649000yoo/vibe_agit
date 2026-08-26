@@ -184,6 +184,10 @@
 .meal-modal > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
 .meal-modal h3 { margin: 4px 0; font-size: 1.35rem; letter-spacing: -.035em; }
 .meal-modal header p { margin: 0; color: var(--meal-muted); font-size: .82rem; line-height: 1.5; }
+.meal-note-modal { width: min(440px, 100%); padding: 22px; border-radius: 20px; }
+.meal-note-modal > header { margin-bottom: 14px; }
+.meal-note-modal h3 { font-size: 1.2rem; }
+.meal-note-modal header p { max-width: 330px; font-size: .78rem; }
 .meal-modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; }
 .meal-modal-actions .meal-button.is-primary { margin-left: auto; }
 .meal-note-notice { color: #735744; background: #fff6eb; border-radius: 13px; padding: 11px 13px; font-size: .76rem; line-height: 1.55; margin-bottom: 16px; }
@@ -192,6 +196,10 @@
 .meal-note-field textarea { width: 100%; resize: vertical; min-height: 125px; border: 1px solid #dce3dc; border-radius: 14px; padding: 12px 13px; color: var(--meal-ink); background: #fff; line-height: 1.55; box-sizing: border-box; }
 .meal-note-field textarea:focus { outline: 3px solid rgba(47,117,82,.13); border-color: #77a78b; }
 .meal-note-field small { justify-self: end; color: var(--meal-muted); font-size: .7rem; }
+.meal-note-modal .meal-note-notice { margin-bottom: 13px; padding: 9px 11px; }
+.meal-note-modal .meal-note-field { gap: 6px; }
+.meal-note-modal .meal-note-field textarea { min-height: 88px; max-height: 180px; border-radius: 12px; padding: 10px 11px; }
+.meal-note-modal .meal-modal-actions { margin-top: 16px; }
 
 .meal-school-scope { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
 .meal-school-scope label { display: flex; gap: 9px; padding: 13px; border: 1px solid #e0e5df; border-radius: 14px; cursor: pointer; }
@@ -241,6 +249,7 @@
   .meal-student-edit { display: none; }
   .meal-school-scope { grid-template-columns: 1fr; }
   .meal-modal-actions { flex-wrap: wrap; }
+  .meal-note-modal { padding: 18px; border-radius: 18px; }
   .meal-fullscreen { padding: 20px; }
   .meal-display-dishes { grid-template-columns: 1fr; }
   .meal-fullscreen-footer { flex-direction: column; align-items: flex-start; }

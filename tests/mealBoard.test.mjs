@@ -8,10 +8,11 @@ import {
   summarizeRoster
 } from '../src/modules/tool/meal-board/mealBoardEngine.js';
 
-const [manifest, entry, noteModal, schoolModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboard, teachingToolsHub, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
+const [manifest, entry, noteModal, mealCss, schoolModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboard, teachingToolsHub, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
   readFile('src/modules/tool/meal-board/manifest.js', 'utf8'),
   readFile('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/StudentNoteModal.jsx', 'utf8'),
+  readFile('src/modules/tool/meal-board/mealBoard.css', 'utf8'),
   readFile('src/modules/tool/meal-board/SchoolChangeModal.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/MealFullscreen.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/mealBoardApi.js', 'utf8'),
@@ -102,11 +103,21 @@ test('기존 교사 학교 이름은 고유한 정확 일치일 때만 기본 �
   assert.match(schoolModal, /initialSchoolName/);
 });
 
-test('우리 반 비고는 접근 가능한 버튼으로 접고 펼친다', () => {
+test('우리 반 비고는 기본으로 접혀 있고 접근 가능한 버튼으로 펼친다', () => {
+  assert.match(entry, /const \[notesExpanded, setNotesExpanded\] = useState\(false\)/);
   assert.match(entry, /aria-expanded=\{notesExpanded\}/);
   assert.match(entry, /aria-controls="meal-roster-content"/);
   assert.match(entry, /setNotesExpanded\(\(expanded\) => !expanded\)/);
   assert.match(entry, /notesExpanded \? <div id="meal-roster-content">/);
+});
+
+test('학생 비고 입력창은 작은 전용 크기와 공용 닫기 버튼을 사용한다', () => {
+  assert.match(noteModal, /import ModalCloseButton from ['"]\.\.\/\.\.\/\.\.\/components\/common\/ModalCloseButton['"]/);
+  assert.match(noteModal, /<ModalCloseButton onClick=\{onClose\} disabled=\{saving\}/);
+  assert.match(noteModal, /aria-describedby="meal-note-help"/);
+  assert.match(noteModal, /rows=\{3\}/);
+  assert.match(mealCss, /\.meal-note-modal \{ width: min\(440px, 100%\);/);
+  assert.match(mealCss, /\.meal-note-modal \.meal-note-field textarea \{ min-height: 88px; max-height: 180px;/);
 });
 
 test('학생 비고는 선택적 최소 수집이며 담당 교사 RPC로만 읽고 쓴다', () => {
