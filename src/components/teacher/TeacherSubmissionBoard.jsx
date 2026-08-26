@@ -1,18 +1,13 @@
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
 import CenteredDialog from '../common/CenteredDialog';
 import './TeacherSubmissionBoard.css';
 
-const EMPTY_STATUS = Object.freeze({
-    totalStudents: 0,
-    submittedCount: 0,
-    confirmedCount: 0,
-    pendingCount: 0,
-    rewritingCount: 0,
-    notSubmittedCount: 0
-});
-
-const percent = (count, total) => total > 0 ? Math.min(100, Math.max(0, count / total * 100)) : 0;
+const STUDENT_STATUS_COLUMNS = Object.freeze([
+    Object.freeze({ key: 'confirmed_count', label: '승인', className: 'is-confirmed' }),
+    Object.freeze({ key: 'pending_count', label: '확인 대기', className: 'is-pending' }),
+    Object.freeze({ key: 'rewriting_count', label: '다시쓰기', className: 'is-rewriting' }),
+    Object.freeze({ key: 'not_submitted_count', label: '미제출', className: 'is-waiting' })
+]);
 
 const formatClock = (value) => {
     if (!value) return '준비 중';
@@ -31,6 +26,18 @@ const formatRecentTime = (value, includeDate = false) => {
         });
     }
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+};
+
+const getSubmissionAttempt = (submission) => {
+    const suppliedNumber = Number(submission?.submission_number || 0);
+    if (suppliedNumber > 0) return Math.floor(suppliedNumber);
+    return submission?.event_type === 'post_resubmitted' ? 2 : 1;
+};
+
+const getSubmissionAttemptLabel = (attempt) => {
+    if (attempt <= 1) return '첫 제출';
+    if (attempt === 2) return '다시 제출';
+    return `${attempt}회 제출`;
 };
 
 /*
@@ -90,8 +97,11 @@ const SubmissionEventGroups = memo(({
                 </header>
                 <ol>
                     {group.submissions.map((item) => {
-                        const isResubmission = item.event_type === 'post_resubmitted';
-                        const submissionLabel = isResubmission ? '다시 제출' : '첫 제출';
+                        const submissionAttempt = getSubmissionAttempt(item);
+                        const submissionLabel = getSubmissionAttemptLabel(submissionAttempt);
+                        const submissionStatusClass = submissionAttempt <= 1
+                            ? 'is-first'
+                            : submissionAttempt === 2 ? 'is-resubmitted' : 'is-repeated';
                         const isOpening = openingPostId === item.post_id;
                         return (
                             <li key={item.event_id}>
@@ -104,10 +114,8 @@ const SubmissionEventGroups = memo(({
                                 >
                                     <time dateTime={item.occurred_at}>{formatRecentTime(item.occurred_at, includeDate)}</time>
                                     <strong>{item.student_name || '학생'}</strong>
-                                    {/* 이름이 남는 폭을 다 먹어 오른쪽이 비어 보였다(2026-08-25 지적).
-                                        이름은 필요한 만큼만 쓰고 남는 자리는 이 칸이 흡수한다. */}
-                                    <span aria-hidden="true" />
-                                    <span className={`teacher-submission-board__recent-status${isResubmission ? ' is-resubmitted' : ' is-first'}`}>
+                                    <span className="teacher-submission-board__row-spacer" aria-hidden="true" />
+                                    <span className={`teacher-submission-board__recent-status ${submissionStatusClass}`}>
                                         {isOpening ? '여는 중' : submissionLabel}
                                     </span>
                                 </button>
@@ -122,65 +130,51 @@ const SubmissionEventGroups = memo(({
 
 SubmissionEventGroups.displayName = 'SubmissionEventGroups';
 
-const MissionStatusRow = memo(({ mission, status, onOpen }) => {
-    const isMeeting = resolveGenreMissionTypeId(mission) === 'meeting';
-    const total = Number(status.totalStudents || 0);
-    const submitted = Number(status.submittedCount || 0);
-    const confirmed = Number(status.confirmedCount || 0);
-    const pending = Number(status.pendingCount || 0);
-    const rewriting = Number(status.rewritingCount || 0);
+const StudentStatusTable = memo(({ students }) => (
+    <div className="teacher-submission-board__status-table-scroll" tabIndex={0} role="region" aria-label="학생별 제출 상태표">
+        <table className="teacher-submission-board__status-table">
+            <thead>
+                <tr>
+                    <th scope="col">학생</th>
+                    {STUDENT_STATUS_COLUMNS.map((column) => (
+                        <th key={column.key} scope="col" className={column.className}>
+                            <span aria-hidden="true" />
+                            {column.label}
+                        </th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody>
+                {students.map((student) => (
+                    <tr key={student.student_id}>
+                        <th scope="row">
+                            <strong>{student.student_name || '학생'}</strong>
+                            <small>{Number(student.assignment_count || 0)}개 과제</small>
+                        </th>
+                        {STUDENT_STATUS_COLUMNS.map((column) => {
+                            const value = Number(Reflect.get(student, column.key) || 0);
+                            return (
+                                <td key={column.key} className={column.className}>
+                                    <span
+                                        className={`teacher-submission-board__status-count${value === 0 ? ' is-zero' : ''}`}
+                                        aria-label={`${student.student_name || '학생'} ${column.label} ${value}개`}
+                                    >
+                                        {value}
+                                    </span>
+                                </td>
+                            );
+                        })}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+));
 
-    return (
-        <article className={`teacher-submission-board__mission${pending > 0 ? ' has-pending' : ''}`}>
-            <div className="teacher-submission-board__mission-heading">
-                <div>
-                    <strong>{mission.title || '제목 없는 과제'}</strong>
-                    <span>{isMeeting ? `제안 ${submitted}건` : `제출 ${submitted}/${total}`}</span>
-                </div>
-                <button type="button" onClick={() => onOpen(mission)}>
-                    {isMeeting ? '제안 보기' : '글 확인'}
-                </button>
-            </div>
-
-            <div
-                className="teacher-submission-board__progress"
-                role="img"
-                aria-label={isMeeting
-                    ? `${mission.title}, 제안 ${submitted}건`
-                    : `${mission.title}, 전체 ${total}명 중 제출 ${submitted}명, 승인 ${confirmed}명, 확인 대기 ${pending}명, 다시쓰기 ${rewriting}명`}
-            >
-                {isMeeting ? (
-                    <span className="is-meeting" style={{ width: `${percent(submitted, total)}%` }} />
-                ) : (
-                    <>
-                        <span className="is-confirmed" style={{ width: `${percent(confirmed, total)}%` }} />
-                        <span className="is-pending" style={{ width: `${percent(pending, total)}%` }} />
-                        <span className="is-rewriting" style={{ width: `${percent(rewriting, total)}%` }} />
-                    </>
-                )}
-            </div>
-
-            {isMeeting ? (
-                <div className="teacher-submission-board__counts is-meeting-count">
-                    <span>💡 학생 제안 {submitted}건</span>
-                    <span>전체 {total}명</span>
-                </div>
-            ) : (
-                <div className="teacher-submission-board__counts">
-                    <span className="is-confirmed">승인 {confirmed}</span>
-                    <span className="is-pending">확인 대기 {pending}</span>
-                    <span className="is-rewriting">다시쓰기 {rewriting}</span>
-                    <span className="is-waiting">미제출 {status.notSubmittedCount || 0}</span>
-                </div>
-            )}
-        </article>
-    );
-});
-
-MissionStatusRow.displayName = 'MissionStatusRow';
+StudentStatusTable.displayName = 'StudentStatusTable';
 
 const TeacherSubmissionBoard = ({
-    missions, board, pollError, onOpenMission, onOpenPost, onLoadHistory
+    missions, board, pollError, onOpenPost, onLoadHistory
 }) => {
     const [openingPostId, setOpeningPostId] = useState(null);
     const [historyState, setHistoryState] = useState({
@@ -191,19 +185,14 @@ const TeacherSubmissionBoard = ({
         hasMore: false
     });
     const historyRequestIdRef = useRef(0);
-    const statuses = useMemo(() => board?.mission_statuses || {}, [board?.mission_statuses]);
     const missionsById = useMemo(
         () => new Map(missions.map((mission) => [mission.id, mission])),
         [missions]
     );
-    const orderedMissions = useMemo(() => {
-        return [...missions].sort((left, right) => {
-            const leftPending = Number(statuses[left.id]?.pendingCount || 0);
-            const rightPending = Number(statuses[right.id]?.pendingCount || 0);
-            if (leftPending !== rightPending) return rightPending - leftPending;
-            return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
-        });
-    }, [missions, statuses]);
+    const studentStatuses = useMemo(
+        () => (board?.student_statuses || []).slice(0, 100),
+        [board?.student_statuses]
+    );
     const recentSubmissions = useMemo(
         () => (board?.recent_submissions || []).slice(0, 8),
         [board?.recent_submissions]
@@ -276,21 +265,6 @@ const TeacherSubmissionBoard = ({
                 </div>
             </header>
 
-            <section className="teacher-submission-board__summary" aria-label="현재 제출 요약">
-                <div>
-                    <span>확인할 글</span>
-                    <strong>{Number(board?.pending_total || 0)}<small>건</small></strong>
-                </div>
-                <div>
-                    <span>활성 과제</span>
-                    <strong>{missions.length}<small>개</small></strong>
-                </div>
-                <div>
-                    <span>학생</span>
-                    <strong>{Number(board?.total_students || 0)}<small>명</small></strong>
-                </div>
-            </section>
-
             <div className="teacher-submission-board__content">
                 <section className="teacher-submission-board__recent" aria-labelledby="teacher-submission-recent-title">
                     <div className="teacher-submission-board__section-title">
@@ -311,28 +285,23 @@ const TeacherSubmissionBoard = ({
                     )}
                 </section>
 
-                <section className="teacher-submission-board__missions" aria-labelledby="teacher-submission-missions-title">
+                <section className="teacher-submission-board__student-statuses" aria-labelledby="teacher-submission-students-title">
                     <div className="teacher-submission-board__section-title">
-                        <h5 id="teacher-submission-missions-title">과제별 진행 현황</h5>
+                        <div>
+                            <h5 id="teacher-submission-students-title">학생별 제출 현황</h5>
+                            <p>활성 글 과제를 학생별로 합산했습니다.</p>
+                        </div>
                         <div className="teacher-submission-board__legend" aria-label="진행 상태 색상 안내">
                             <span className="is-confirmed">승인</span>
-                            <span className="is-pending">대기</span>
+                            <span className="is-pending">확인 대기</span>
                             <span className="is-rewriting">다시쓰기</span>
+                            <span className="is-waiting">미제출</span>
                         </div>
                     </div>
-                    {orderedMissions.length > 0 ? (
-                        <div className="teacher-submission-board__mission-list">
-                            {orderedMissions.map((mission) => (
-                                <MissionStatusRow
-                                    key={mission.id}
-                                    mission={mission}
-                                    status={statuses[mission.id] || { ...EMPTY_STATUS, totalStudents: board?.total_students || 0 }}
-                                    onOpen={onOpenMission}
-                                />
-                            ))}
-                        </div>
+                    {studentStatuses.length > 0 ? (
+                        <StudentStatusTable students={studentStatuses} />
                     ) : (
-                        <p className="teacher-submission-board__empty">활성 과제를 만들면 진행 현황이 여기에 표시됩니다.</p>
+                        <p className="teacher-submission-board__empty">활성 글 과제를 만들면 학생별 현황이 여기에 표시됩니다.</p>
                     )}
                 </section>
             </div>

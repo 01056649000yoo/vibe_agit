@@ -31,11 +31,11 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.doesNotMatch(manager, /teacher-mission-live-layout|splitView/);
     const contentRule = styles.match(/\.teacher-submission-board__content\s*\{([^}]*)\}/)?.[1];
     assert.ok(contentRule, '전광판 콘텐츠 레이아웃 규칙이 있어야 한다');
-    assert.match(contentRule, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
-    assert.match(styles, /teacher-submission-board__mission-list[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+    assert.match(contentRule, /grid-template-columns:\s*minmax\(260px, 0\.68fr\) minmax\(0, 1\.62fr\)/);
     assert.match(styles, /@media \(max-width: 960px\)[\s\S]*teacher-submission-board__content[\s\S]*minmax\(0, 1fr\)/);
     assert.match(missionList, /getMissionCardColumns\(missionCardSize\)/);
-    assert.doesNotMatch(styles, /teacher-submission-board\s*\{[\s\S]*position:\s*sticky/);
+    const boardRule = styles.match(/\.teacher-submission-board\s*\{([^}]*)\}/)?.[1] || '';
+    assert.doesNotMatch(boardRule, /position:\s*sticky/);
     assert.match(board, /실시간 제출 전광판/);
 
     for (const source of [dashboard, hub, tab, manager]) {
@@ -46,7 +46,7 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
-test('전광판은 과제별 제출 상태와 과제명 반복을 줄인 최근 제출 학생 8명을 표시한다', async () => {
+test('전광판은 좁은 최근 제출 목록과 넓은 학생별 상태표를 표시한다', async () => {
     const [board, styles, hook, missionList, manager, ideaMarket] = await Promise.all([
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
         read('src/components/teacher/TeacherSubmissionBoard.css'),
@@ -60,10 +60,14 @@ test('전광판은 과제별 제출 상태와 과제명 반복을 줄인 최근 
     assert.match(board, /확인 대기/);
     assert.match(board, /다시쓰기/);
     assert.match(board, /미제출/);
+    assert.doesNotMatch(board, /teacher-submission-board__summary/);
+    assert.match(board, /StudentStatusTable[\s\S]*학생별 제출 현황/);
+    assert.match(board, /STUDENT_STATUS_COLUMNS[\s\S]*confirmed_count[\s\S]*pending_count[\s\S]*rewriting_count[\s\S]*not_submitted_count/);
+    assert.match(board, /student_statuses[\s\S]*slice\(0, 100\)/);
     assert.match(board, /recent_submissions[\s\S]*slice\(0, 8\)/);
     assert.match(board, /groupSubmissionsByMission[\s\S]*groupByMission[\s\S]*group\.submissions\.push/);
     assert.match(board, /mission\?\.title \|\| submission\.mission_title/);
-    assert.match(board, /post_resubmitted[\s\S]*다시 제출[\s\S]*첫 제출/);
+    assert.match(board, /submission_number[\s\S]*첫 제출[\s\S]*다시 제출[\s\S]*회 제출/);
     assert.match(board, /new Map\(missions\.map/);
     assert.match(board, /missionsById\.get\(missionId\)/);
     assert.match(board, /onClick=\{\(\) => onOpenPost\(item\)\}/);
@@ -71,9 +75,10 @@ test('전광판은 과제별 제출 상태와 과제명 반복을 줄인 최근 
     assert.match(manager, /handleReviewMission\(mission, submission\.post_id\)/);
     assert.match(manager, /initialPostId: activeGenreReviewPostId/);
     assert.match(ideaMarket, /ideas\.find\(\(idea\) => idea\.id === postId\)[\s\S]*setDetailModal\(targetIdea\)/);
-    assert.match(styles, /recent-status\.is-first[\s\S]*recent-status\.is-resubmitted/);
+    assert.match(styles, /recent-status\.is-first[\s\S]*recent-status\.is-resubmitted[\s\S]*recent-status\.is-repeated/);
     assert.match(styles, /submission-group > header[\s\S]*submission-group li button/);
-    assert.match(board, /resolveGenreMissionTypeId\(mission\) === 'meeting'/);
+    assert.match(styles, /grid-template-columns: minmax\(260px, 0\.68fr\) minmax\(0, 1\.62fr\)/);
+    assert.match(styles, /status-table[\s\S]*td\.is-confirmed[\s\S]*td\.is-pending[\s\S]*td\.is-rewriting[\s\S]*td\.is-waiting/);
     assert.match(missionList, /제출 \$\{submittedCount\}\/\$\{totalStudentCount\}/);
     assert.doesNotMatch(missionList, /명 완료/);
     assert.match(hook, /TRANSITION_DELTAS[\s\S]*request-rewrite[\s\S]*undo-recall/);
@@ -139,8 +144,9 @@ test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·
 });
 
 test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집계를 사용한다', async () => {
-    const [migration, hook, harness] = await Promise.all([
+    const [migration, studentStatusMigration, hook, harness] = await Promise.all([
         read('supabase/migrations/20261167_teacher_assignment_submission_board.sql'),
+        read('supabase/migrations/20261176_teacher_submission_student_status_board.sql'),
         read('src/hooks/useMissionManager.js'),
         read('PERFORMANCE_HARNESS.md')
     ]);
@@ -155,17 +161,26 @@ test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집
     assert.match(migration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_teacher_assignment_submission_board_v1/);
     assert.match(migration, /'submission_board', v_submission_board/);
+    assert.match(studentStatusMigration, /student_assignment_rows AS MATERIALIZED[\s\S]*student_status_rows AS MATERIALIZED/);
+    assert.match(studentStatusMigration, /'student_statuses'[\s\S]*LIMIT 100/);
+    assert.match(studentStatusMigration, /recent_base AS MATERIALIZED[\s\S]*submission_number/);
+    assert.match(studentStatusMigration, /attempt\.object_id = recent\.post_id/);
+    assert.doesNotMatch(studentStatusMigration, /post_content|original_content|structured_content|ai_feedback|eval_comment/);
     assert.match(hook, /hydrateSubmissionBoard\(overview\.submission_board/);
-    assert.match(harness, /교사 과제 제출 전광판[\s\S]*12초당 경량 RPC 1회/);
+    assert.match(harness, /교사 과제 제출 전광판[\s\S]*12초당 경량 RPC 1회[\s\S]*학생별 네 상태 합계 최대 100명/);
 });
 
 test('승인·회수·다시쓰기 동작은 추가 목록 조회 없이 전광판 상태를 즉시 바꾼다', async () => {
-    const managerHook = await read('src/hooks/useMissionManager.js');
+    const [managerHook, boardHook] = await Promise.all([
+        read('src/hooks/useMissionManager.js'),
+        read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js')
+    ]);
 
-    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'approve', 1\)/);
-    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'recover', 1\)/);
-    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'request-rewrite', 1\)/);
-    assert.match(managerHook, /transitionMissionStatus\(selectedMission\?\.id \|\| list\[0\]\?\.mission_id, 'recall', count\)/);
+    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'approve', 1, \[post\.student_id\]\)/);
+    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'recover', 1, \[post\.student_id\]\)/);
+    assert.match(managerHook, /transitionMissionStatus\(post\.mission_id, 'request-rewrite', 1, \[post\.student_id\]\)/);
+    assert.match(managerHook, /'recall',[\s\S]*\(updated \|\| \[\]\)\.map\(\(post\) => post\.student_id\)/);
+    assert.match(boardHook, /STUDENT_TRANSITION_DELTAS[\s\S]*student_statuses: studentStatuses/);
     assert.doesNotMatch(managerHook, /setSubmissionCounts/);
 });
 
@@ -187,9 +202,9 @@ test('최근 제출 줄은 읽히는 크기이고 같은 제목 과제를 가른
     assert.doesNotMatch(styles, /font-size: 0\.78rem;/);
     assert.doesNotMatch(styles, /font-size: 0\.65rem;/);
 
-    // 이름이 남는 폭을 다 먹지 않도록 빈 칸이 남는 자리를 흡수한다.
-    assert.match(styles, /grid-template-columns: minmax\(76px, auto\) minmax\(0, max-content\) minmax\(0, 1fr\) auto;/);
-    assert.match(board, /<span aria-hidden="true" \/>/);
+    // 좁아진 최근 제출 칸은 이름·시간과 제출 차수 두 열만 사용한다.
+    assert.match(styles, /__recent \.teacher-submission-board__submission-group li button \{\n    grid-template-columns: minmax\(0, 1fr\) auto;/);
+    assert.match(board, /teacher-submission-board__row-spacer/);
 
     // 같은 제목이 **둘 이상일 때만** 날짜를 붙인다. 늘 붙이면 쓸데없는 글자가 는다.
     assert.match(board, /titleCounts\.get\(group\.title\) > 1 && group\.createdAt/);

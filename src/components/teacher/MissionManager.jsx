@@ -151,15 +151,6 @@ const MissionManager = ({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleOpenSubmissionBoardMission = (mission) => {
-        const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
-        if (missionType?.teacherReview) {
-            handleReviewMission(mission);
-            return;
-        }
-        fetchPostsForMission(mission);
-    };
-
     const handleOpenSubmissionBoardPost = async (submission) => {
         const mission = missions.find((item) => item.id === submission?.mission_id);
         if (!mission || !submission?.post_id) {
@@ -416,7 +407,6 @@ const MissionManager = ({
                     missions={missions}
                     board={submissionBoard}
                     pollError={submissionBoardPollError}
-                    onOpenMission={handleOpenSubmissionBoardMission}
                     onOpenPost={handleOpenSubmissionBoardPost}
                     onLoadHistory={loadSubmissionHistory}
                 />

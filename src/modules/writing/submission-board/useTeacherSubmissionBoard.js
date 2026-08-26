@@ -13,6 +13,7 @@ const emptyBoard = (totalStudents = 0) => ({
     submission_counts: {},
     completion_counts: {},
     mission_statuses: {},
+    student_statuses: [],
     recent_submissions: []
 });
 
@@ -25,6 +26,16 @@ const normalizeStatus = (status, totalStudents) => ({
     pendingCount: numberOrZero(status?.pendingCount),
     rewritingCount: numberOrZero(status?.rewritingCount),
     notSubmittedCount: numberOrZero(status?.notSubmittedCount)
+});
+
+const normalizeStudentStatus = (status) => ({
+    student_id: status?.student_id || null,
+    student_name: status?.student_name || '학생',
+    assignment_count: numberOrZero(status?.assignment_count),
+    confirmed_count: numberOrZero(status?.confirmed_count),
+    pending_count: numberOrZero(status?.pending_count),
+    rewriting_count: numberOrZero(status?.rewriting_count),
+    not_submitted_count: numberOrZero(status?.not_submitted_count)
 });
 
 const normalizeBoard = (value, fallback = {}) => {
@@ -59,6 +70,9 @@ const normalizeBoard = (value, fallback = {}) => {
         submission_counts: submissionCounts,
         completion_counts: value?.completion_counts || {},
         mission_statuses: missionStatuses,
+        student_statuses: Array.isArray(value?.student_statuses)
+            ? value.student_statuses.slice(0, 100).map(normalizeStudentStatus)
+            : [],
         recent_submissions: Array.isArray(value?.recent_submissions) ? value.recent_submissions.slice(0, 8) : []
     };
 };
@@ -69,6 +83,14 @@ const TRANSITION_DELTAS = new Map([
     ['request-rewrite', Object.freeze({ submittedCount: -1, pendingCount: -1, rewritingCount: 1 })],
     ['recall', Object.freeze({ submittedCount: 1, pendingCount: 1, rewritingCount: -1 })],
     ['undo-recall', Object.freeze({ submittedCount: -1, pendingCount: -1, rewritingCount: 1 })]
+]);
+
+const STUDENT_TRANSITION_DELTAS = new Map([
+    ['approve', Object.freeze({ confirmed_count: 1, pending_count: -1 })],
+    ['recover', Object.freeze({ confirmed_count: -1, pending_count: 1 })],
+    ['request-rewrite', Object.freeze({ pending_count: -1, rewriting_count: 1 })],
+    ['recall', Object.freeze({ pending_count: 1, rewriting_count: -1 })],
+    ['undo-recall', Object.freeze({ pending_count: -1, rewriting_count: 1 })]
 ]);
 
 export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => {
@@ -160,10 +182,14 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
         };
     }, [classId, enabled, hasSnapshot]);
 
-    const transitionMissionStatus = useCallback((missionId, transition, count = 1) => {
+    const transitionMissionStatus = useCallback((missionId, transition, count = 1, studentIds = []) => {
         const delta = TRANSITION_DELTAS.get(transition);
+        const studentDelta = STUDENT_TRANSITION_DELTAS.get(transition);
         const amount = Math.max(0, Number(count || 0));
         if (!missionId || !delta || amount === 0) return;
+        const targetStudentIds = new Set(
+            (Array.isArray(studentIds) ? studentIds : [studentIds]).filter(Boolean)
+        );
 
         localMutationVersionRef.current += 1;
         setBoard((current) => {
@@ -191,6 +217,16 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
                 rewritingCount,
                 notSubmittedCount: Math.max(0, total - submittedCount - rewritingCount)
             };
+            const studentStatuses = targetStudentIds.size > 0 && studentDelta
+                ? current.student_statuses.map((student) => {
+                    if (!targetStudentIds.has(student.student_id)) return student;
+                    const nextStudent = { ...student };
+                    Object.entries(studentDelta).forEach(([key, value]) => {
+                        Reflect.set(nextStudent, key, Math.max(0, numberOrZero(Reflect.get(student, key)) + value));
+                    });
+                    return nextStudent;
+                })
+                : current.student_statuses;
 
             return {
                 ...current,
@@ -198,7 +234,8 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
                 submitted_total: Math.max(0, numberOrZero(current.submitted_total) - currentStatus.submittedCount + submittedCount),
                 submission_counts: { ...current.submission_counts, [missionId]: submittedCount },
                 completion_counts: { ...current.completion_counts, [missionId]: confirmedCount },
-                mission_statuses: { ...current.mission_statuses, [missionId]: nextStatus }
+                mission_statuses: { ...current.mission_statuses, [missionId]: nextStatus },
+                student_statuses: studentStatuses
             };
         });
     }, []);
