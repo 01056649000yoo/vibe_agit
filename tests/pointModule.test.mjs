@@ -83,15 +83,16 @@ test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차�
 });
 
 test('포인트 활동 유형 계약은 DB 엔진 허용 목록과 같다', async () => {
-    const migrations = await Promise.all([
-        read('supabase/migrations/20261005_assignment_approval_integrity.sql'),
-        read('supabase/migrations/20261180_comment_ai_review_queue.sql')
-    ]);
-    const migration = migrations.join('\n');
+    const migration = await read('supabase/migrations/20261181_retire_comment_point_reward.sql');
+    const pointEngine = migration.slice(
+        migration.indexOf('CREATE OR REPLACE FUNCTION public.point_engine_apply'),
+        migration.indexOf('REVOKE ALL ON FUNCTION public.point_engine_apply')
+    );
     for (const activityType of Object.values(POINT_ACTIVITY_TYPES)) {
         assert.ok(
-            migration.includes(`'${activityType}'`),
+            pointEngine.includes(`'${activityType}'`),
             `${activityType}이 DB 포인트 엔진 허용 목록에 없습니다.`
         );
     }
+    assert.doesNotMatch(pointEngine, /comment_reward/);
 });

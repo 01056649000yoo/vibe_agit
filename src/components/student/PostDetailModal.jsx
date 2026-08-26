@@ -580,7 +580,7 @@ const PostDetailModal = ({
                                         submitting={submittingComment}
                                         editing={Boolean(editingCommentId)}
                                         onCancelEdit={() => { setEditingCommentId(null); setCommentInput(''); }}
-                                        placeholder={editingCommentId ? '댓글을 수정하고 있어요...' : '따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨'}
+                                        placeholder={editingCommentId ? '댓글을 수정하고 있어요...' : '친구 글의 좋은 점이나 느낀 점을 남겨주세요... ✨'}
                                     />
                                     <div style={{ marginTop: '10px', fontSize: 'var(--ui-text-sm)', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                         <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
