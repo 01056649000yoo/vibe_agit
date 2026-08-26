@@ -3,6 +3,8 @@ import { findSpellingIssues, MAX_SPELLING_ISSUES } from './spellingDetectionRule
 import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSettingsContext';
 import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
 import { loadElementarySpellingDetector } from './elementarySpellingDetectorLoader';
+import { spellingLearningApi } from '../../spelling-learning/api';
+import { findClassSpellingIssues } from '../../spelling-learning/detection';
 import './SpellingUnderlineTextarea.css';
 
 const buildHighlightedTitle = (text, issues) => {
@@ -36,6 +38,7 @@ const SpellingUnderlineInput = forwardRef(function SpellingUnderlineInput({
     // 본문과 같은 이유로 완성형(NFC)으로 맞춘 뒤 찾고 그린다.
     const normalizedValue = useMemo(() => String(value || '').normalize('NFC'), [value]);
     const [elementaryDetector, setElementaryDetector] = useState(null);
+    const [dynamicEntries, setDynamicEntries] = useState([]);
     useEffect(() => {
         if (!spellingLookupEnabled) return undefined;
         let active = true;
@@ -44,18 +47,34 @@ const SpellingUnderlineInput = forwardRef(function SpellingUnderlineInput({
             .catch(() => {});
         return () => { active = false; };
     }, [spellingLookupEnabled]);
+    useEffect(() => {
+        if (!spellingLookupEnabled) return undefined;
+        let active = true;
+        spellingLearningApi.getStudentEntries()
+            .then((entries) => { if (active) setDynamicEntries(Array.isArray(entries) ? entries : []); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [spellingLookupEnabled]);
     const issues = useMemo(() => {
         if (!spellingLookupEnabled) return [];
         const staticIssues = findSpellingIssues(normalizedValue);
-        if (!elementaryDetector) return staticIssues;
         const found = [...staticIssues];
-        for (const candidate of elementaryDetector(normalizedValue, MAX_SPELLING_ISSUES)) {
+        const elementaryIssues = elementaryDetector
+            ? elementaryDetector(normalizedValue, MAX_SPELLING_ISSUES)
+            : [];
+        for (const candidate of elementaryIssues) {
+            if (found.length >= MAX_SPELLING_ISSUES) break;
+            const overlaps = found.some((item) => candidate.start < item.end && candidate.end > item.start);
+            if (!overlaps) found.push(candidate);
+        }
+        const remaining = Math.max(0, MAX_SPELLING_ISSUES - found.length);
+        for (const candidate of findClassSpellingIssues(normalizedValue, dynamicEntries, remaining)) {
             if (found.length >= MAX_SPELLING_ISSUES) break;
             const overlaps = found.some((item) => candidate.start < item.end && candidate.end > item.start);
             if (!overlaps) found.push(candidate);
         }
         return found.sort((left, right) => left.start - right.start);
-    }, [elementaryDetector, normalizedValue, spellingLookupEnabled]);
+    }, [dynamicEntries, elementaryDetector, normalizedValue, spellingLookupEnabled]);
     useImperativeHandle(forwardedRef, () => inputRef.current);
 
     const sharedStyle = {

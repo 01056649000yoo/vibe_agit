@@ -45,6 +45,7 @@
 .spelling-learning-entry-list { display: grid; gap: 8px; }
 .spelling-learning-entry { overflow: hidden; border: 1px solid #ede9fe; border-radius: 13px; background: #fdfcff; }
 .spelling-learning-entry.is-built-in { border-color: #dbeafe; background: #f8fbff; }
+.spelling-learning-entry.is-common { border-color: #ddd6fe; background: #faf5ff; }
 .spelling-learning-card button.spelling-learning-entry-summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-height: 54px; padding: 11px 13px; border-radius: 0; background: transparent; color: #1e293b; text-align: left; }
 .spelling-learning-card button.spelling-learning-entry-summary:hover { background: rgba(124, 58, 237, .04); }
 .spelling-learning-entry-expression { display: flex; align-items: center; gap: 9px; min-width: 0; }
@@ -53,6 +54,7 @@
 .spelling-learning-entry-meta { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
 .spelling-learning-source { padding: 5px 8px; border-radius: 999px; font-size: var(--ui-text-xs); font-weight: 900; }
 .spelling-learning-source.is-built-in { background: #dbeafe; color: #1d4ed8; }
+.spelling-learning-source.is-common { background: #ede9fe; color: #6d28d9; }
 .spelling-learning-source.is-class { background: #dcfce7; color: #15803d; }
 .spelling-learning-expand { width: 20px; color: #64748b; font-size: var(--ui-text-md); text-align: center; }
 .spelling-learning-entry-detail { display: grid; gap: 10px; padding: 0 14px 14px; border-top: 1px solid rgba(226, 232, 240, .7); }

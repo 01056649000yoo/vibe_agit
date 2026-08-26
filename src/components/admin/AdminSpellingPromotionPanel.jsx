@@ -3,43 +3,37 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import { getElementarySpellingEntries } from '../../modules/writing/tools/spelling-lookup/elementarySpellingEntries';
+import { spellingLearningApi } from '../../modules/writing/spelling-learning/api';
 
-/**
- * 한 달에 한 번, 모인 표현을 훑어 기본 자료 500개로 올릴 것을 고르는 화면.
- *
- * **기준은 "여러 학급에서 되풀이"다.** 한 학급에서만 많이 나온 표현은 그 반의 유행이거나
- * 한 학생의 버릇일 수 있다. 서로 다른 학급에서 되풀이될 때 비로소 우리 학생 전체가
- * 헷갈리는 표현이라고 말할 수 있다.
- *
- * ⚠️ 이 화면은 **카탈로그를 직접 고치지 않는다.** 기본 자료는 소스 코드(`catalog/*.js`)라
- * 화면이 손댈 수 없다. 여기서는 ①고를 것을 정해 기록하고 ②저장소에 붙여 넣을 코드 조각을 만든다.
- * 실제 반영은 그 조각을 카탈로그 파일에 넣고 배포하는 것으로 끝난다.
- */
+const EMPTY_DATA = { ai_findings: [], searched: [], common_entries: [], reviewed_recent: [] };
+const EMPTY_DRAFT = {
+    wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: []
+};
+
 const normalize = (value) => String(value || '').normalize('NFC').replace(/\s+/g, '');
+const candidateKey = (sourceKind, row) => `${sourceKind}:${row.expression}:${row.correction || ''}`;
 
+/** AI 검사·학생 검색 후보를 검토해 모든 학급의 동적 맞춤법 자료로 게시한다. */
 const AdminSpellingPromotionPanel = () => {
     const [minClasses, setMinClasses] = useState(2);
     const [minHits, setMinHits] = useState(3);
-    const [data, setData] = useState({ ai_findings: [], searched: [], decided_recent: [] });
-    const [selected, setSelected] = useState(() => new Set());
+    const [data, setData] = useState(EMPTY_DATA);
+    const [reviewTarget, setReviewTarget] = useState(null);
+    const [draft, setDraft] = useState(EMPTY_DRAFT);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const [snippet, setSnippet] = useState('');
 
     const load = useCallback(async () => {
         setLoading(true);
         setMessage('');
         try {
-            const { data: result, error } = await supabase.rpc('get_spelling_promotion_candidates_v1', {
-                p_min_classes: minClasses,
-                p_min_hits: minHits,
-                p_limit: 200
+            const { data: result, error } = await supabase.rpc('admin_get_spelling_promotion_workspace_v2', {
+                p_min_classes: minClasses, p_min_hits: minHits, p_limit: 200
             });
             if (error) throw error;
-            setData(result || { ai_findings: [], searched: [], decided_recent: [] });
-            setSelected(new Set());
+            setData(result || EMPTY_DATA);
         } catch (error) {
-            setMessage(error.message || '후보를 불러오지 못했습니다.');
+            setMessage(error.message || '맞춤법 승격 데이터를 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }
@@ -47,7 +41,6 @@ const AdminSpellingPromotionPanel = () => {
 
     useEffect(() => { load(); }, [load]);
 
-    // 이미 기본 자료 500개에 있는 표현인지 화면에서 대조한다(카탈로그는 코드라 서버가 모른다).
     const builtInIndex = useMemo(() => {
         const index = new Set();
         for (const entry of getElementarySpellingEntries()) {
@@ -58,198 +51,283 @@ const AdminSpellingPromotionPanel = () => {
         return index;
     }, []);
 
-    const findings = useMemo(() => (data.ai_findings || []).map((row) => ({
-        ...row,
-        alreadyKnown: builtInIndex.has(normalize(row.expression))
-    })), [builtInIndex, data.ai_findings]);
+    const aiFindings = useMemo(() => (data.ai_findings || []).filter(
+        (row) => !builtInIndex.has(normalize(row.expression))
+    ), [builtInIndex, data.ai_findings]);
+    const searched = useMemo(() => (data.searched || []).filter(
+        (row) => !builtInIndex.has(normalize(row.expression))
+    ), [builtInIndex, data.searched]);
+    const hiddenKnownCount = (data.ai_findings || []).length - aiFindings.length
+        + (data.searched || []).length - searched.length;
 
-    const newFindings = findings.filter((row) => !row.alreadyKnown);
-    const keyOf = (row) => `${row.expression}→${row.correction}`;
-
-    const toggle = (row) => {
-        setSelected((current) => {
-            const next = new Set(current);
-            const key = keyOf(row);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
-            return next;
+    const startCandidateReview = (sourceKind, row) => {
+        setReviewTarget({
+            key: candidateKey(sourceKind, row), sourceKind, expression: row.expression,
+            sourceCorrection: row.correction || '', classCount: row.class_count || 0,
+            hitCount: row.hit_count || row.search_count || 0, entryId: null
         });
+        setDraft({
+            ...EMPTY_DRAFT,
+            wrong_expression: row.expression || '',
+            correct_expression: row.correction || '',
+            label: row.label && row.label !== '미등록 표현' ? row.label : '미분류'
+        });
+        setMessage('후보의 바른 표현·설명·예문을 확인한 뒤 전체 학급에 적용하세요.');
     };
 
-    const selectedRows = newFindings.filter((row) => selected.has(keyOf(row)));
+    const startCommonEdit = (entry) => {
+        setReviewTarget({
+            key: `common:${entry.id}`,
+            sourceKind: ['ai', 'search', 'manual'].includes(entry.source_kind) ? entry.source_kind : 'manual',
+            expression: entry.wrong_expression, sourceCorrection: entry.correct_expression,
+            classCount: 0, hitCount: 0, entryId: entry.id
+        });
+        setDraft({
+            wrong_expression: entry.wrong_expression || '', correct_expression: entry.correct_expression || '',
+            label: entry.label || '미분류', explanation: entry.explanation || '',
+            examples: Array.isArray(entry.examples) ? entry.examples : []
+        });
+        setMessage('전체 학급에 적용되는 공통 자료를 수정하고 있습니다.');
+    };
 
-    const decide = async (decision) => {
-        if (selectedRows.length === 0) return;
+    const cancelReview = () => {
+        setReviewTarget(null);
+        setDraft(EMPTY_DRAFT);
+        setMessage('');
+    };
+
+    const generateDraft = async () => {
+        if (!draft.wrong_expression.trim()) return;
         setLoading(true);
         setMessage('');
         try {
-            const { error } = await supabase.rpc('record_spelling_promotion_decisions_v1', {
-                p_items: selectedRows.map((row) => ({ expression: row.expression, correction: row.correction })),
-                p_decision: decision
-            });
-            if (error) throw error;
-            if (decision === 'accepted') setSnippet(buildCatalogSnippet(selectedRows));
-            setMessage(decision === 'accepted'
-                ? `${selectedRows.length}개를 반영 대상으로 기록했습니다. 아래 코드를 카탈로그에 붙여 넣고 배포하면 끝납니다.`
-                : `${selectedRows.length}개를 보류로 기록했습니다. 다음 검토에서 다시 보이지 않습니다.`);
-            await load();
+            const generated = await spellingLearningApi.generateDraft(draft.wrong_expression.trim());
+            setDraft((current) => ({
+                ...current, ...generated,
+                wrong_expression: current.wrong_expression.trim(),
+                correct_expression: current.correct_expression.trim() || generated.correct_expression || ''
+            }));
+            setMessage('AI 초안을 만들었습니다. 오탐이 없는지 직접 확인해 주세요.');
         } catch (error) {
-            setMessage(error.message || '결정을 기록하지 못했습니다.');
+            setMessage(error.message || 'AI 초안을 만들지 못했습니다.');
         } finally {
             setLoading(false);
         }
     };
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <Card style={{ padding: '24px', borderLeft: '5px solid #805AD5' }}>
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#2D3748' }}>🔤 맞춤법 기본 자료 승격 검토</h3>
-                <p style={{ margin: '0 0 16px 0', color: '#718096', fontSize: '0.9rem', lineHeight: 1.7 }}>
-                    학생이 찾아본 표현과 AI 검사가 찾아낸 표현이 계속 쌓입니다. <strong>한 달에 한 번</strong> 훑어보고,
-                    <strong> 서로 다른 학급에서 되풀이되는 것만</strong> 기본 자료로 올립니다.
-                    한 학급에서만 많이 나온 표현은 그 반의 유행일 수 있어 기준에서 뺍니다.
-                </p>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                    <label style={{ display: 'grid', gap: '4px', fontSize: '0.82rem', fontWeight: 700, color: '#4A5568' }}>
-                        최소 학급 수
-                        <input type="number" min={1} max={20} value={minClasses}
-                            onChange={(event) => setMinClasses(Number(event.target.value) || 1)}
-                            style={{ width: '90px', padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: '8px' }} />
-                    </label>
-                    <label style={{ display: 'grid', gap: '4px', fontSize: '0.82rem', fontWeight: 700, color: '#4A5568' }}>
-                        최소 횟수
-                        <input type="number" min={1} max={100} value={minHits}
-                            onChange={(event) => setMinHits(Number(event.target.value) || 1)}
-                            style={{ width: '90px', padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: '8px' }} />
-                    </label>
-                    <Button type="button" variant="outline" onClick={load} disabled={loading}>
-                        {loading ? '불러오는 중…' : '다시 불러오기'}
-                    </Button>
-                </div>
-                {(() => {
-                    // 한 달에 한 번 하는 일이라, 마지막 검토가 언제였는지를 눈에 보이게 둔다.
-                    const last = (data.decided_recent || [])[0]?.decided_at;
-                    if (!last) return <p style={{ margin: '14px 0 0', color: '#805AD5', fontSize: '0.85rem', fontWeight: 700 }}>아직 검토한 기록이 없습니다. 첫 검토를 해 보세요.</p>;
-                    const days = Math.floor((Date.now() - new Date(last).getTime()) / 86400000);
-                    const overdue = days >= 30;
-                    return (
-                        <p style={{ margin: '14px 0 0', color: overdue ? '#C05621' : '#718096', fontSize: '0.85rem', fontWeight: overdue ? 800 : 600 }}>
-                            마지막 검토: {new Date(last).toLocaleDateString('ko-KR')} ({days}일 전)
-                            {overdue && ' — 한 달이 지났어요. 이번 달 검토를 해 주세요.'}
-                        </p>
-                    );
-                })()}
-                {message && <p style={{ margin: '14px 0 0', padding: '10px 12px', borderRadius: '8px', background: '#EBF8FF', color: '#2C5282', fontSize: '0.85rem' }}>{message}</p>}
-            </Card>
+    const publish = async () => {
+        if (!reviewTarget) return;
+        setLoading(true);
+        setMessage('');
+        try {
+            const { error } = await supabase.rpc('admin_publish_common_spelling_entry_v1', {
+                p_source_kind: reviewTarget.sourceKind,
+                p_expression: reviewTarget.expression,
+                p_source_correction: reviewTarget.sourceCorrection,
+                p_entry: draft,
+                p_entry_id: reviewTarget.entryId
+            });
+            if (error) throw error;
+            setReviewTarget(null);
+            setDraft(EMPTY_DRAFT);
+            await load();
+            setMessage('공통 맞춤법 자료로 게시했습니다. 모든 학급이 다음 자료 갱신부터 사용합니다.');
+        } catch (error) {
+            setMessage(error.message || '공통 맞춤법 자료를 게시하지 못했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            <Card style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                    <h4 style={{ margin: 0, fontSize: '1rem', color: '#2D3748' }}>
-                        AI 검사가 찾은 표현 <span style={{ color: '#805AD5' }}>{newFindings.length}개</span>
-                        {findings.length - newFindings.length > 0 && (
-                            <span style={{ marginLeft: '8px', fontSize: '0.8rem', color: '#A0AEC0' }}>
-                                (이미 기본 자료에 있는 {findings.length - newFindings.length}개는 숨김)
-                            </span>
-                        )}
-                    </h4>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button type="button" variant="outline" size="sm" disabled={loading || selectedRows.length === 0} onClick={() => decide('rejected')}>
-                            보류 {selectedRows.length > 0 && `(${selectedRows.length})`}
-                        </Button>
-                        <Button type="button" size="sm" disabled={loading || selectedRows.length === 0} onClick={() => decide('accepted')}>
-                            반영 대상으로 확정 {selectedRows.length > 0 && `(${selectedRows.length})`}
-                        </Button>
-                    </div>
-                </div>
+    const rejectCandidate = async (sourceKind, row) => {
+        setLoading(true);
+        setMessage('');
+        try {
+            const { error } = await supabase.rpc('admin_reject_spelling_candidate_v1', {
+                p_source_kind: sourceKind,
+                p_expression: row.expression,
+                p_source_correction: row.correction || ''
+            });
+            if (error) throw error;
+            if (reviewTarget?.key === candidateKey(sourceKind, row)) {
+                setReviewTarget(null);
+                setDraft(EMPTY_DRAFT);
+            }
+            await load();
+            setMessage('이 후보를 보류했습니다. 같은 근거로는 다시 추천하지 않습니다.');
+        } catch (error) {
+            setMessage(error.message || '후보를 보류하지 못했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                {newFindings.length === 0 ? (
-                    <p style={{ margin: 0, padding: '24px', textAlign: 'center', color: '#A0AEC0', fontSize: '0.9rem' }}>
-                        기준을 넘는 새 표현이 없습니다. 기준을 낮추거나 다음 달에 다시 확인해 주세요.
-                    </p>
-                ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                            <thead>
-                                <tr style={{ background: '#F7FAFC', textAlign: 'left' }}>
-                                    <th style={{ padding: '8px' }}>고름</th>
-                                    <th style={{ padding: '8px' }}>틀린 표현</th>
-                                    <th style={{ padding: '8px' }}>바른 표현</th>
-                                    <th style={{ padding: '8px' }}>학급</th>
-                                    <th style={{ padding: '8px' }}>횟수</th>
-                                    <th style={{ padding: '8px' }}>마지막</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {newFindings.map((row) => (
-                                    <tr key={keyOf(row)} style={{ borderBottom: '1px solid #EDF2F7' }}>
-                                        <td style={{ padding: '8px' }}>
-                                            <input type="checkbox" checked={selected.has(keyOf(row))} onChange={() => toggle(row)} />
-                                        </td>
-                                        <td style={{ padding: '8px', color: '#C53030', fontWeight: 700 }}>{row.expression}</td>
-                                        <td style={{ padding: '8px', color: '#2F855A', fontWeight: 700 }}>{row.correction}</td>
-                                        <td style={{ padding: '8px' }}>{row.class_count}학급</td>
-                                        <td style={{ padding: '8px' }}>{row.hit_count}회</td>
-                                        <td style={{ padding: '8px', color: '#718096' }}>{new Date(row.last_seen_at).toLocaleDateString('ko-KR')}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </Card>
+    const setCommonEnabled = async (entry, enabled) => {
+        if (!enabled && !window.confirm(`‘${entry.wrong_expression}’ 공통 자료를 모든 학급에서 중지할까요?`)) return;
+        setLoading(true);
+        setMessage('');
+        try {
+            const { error } = await supabase.rpc('admin_set_common_spelling_entry_status_v1', {
+                p_entry_id: entry.id, p_enabled: enabled
+            });
+            if (error) throw error;
+            await load();
+            setMessage(enabled ? '공통 자료를 다시 적용했습니다.' : '공통 자료 적용을 중지했습니다.');
+        } catch (error) {
+            setMessage(error.message || '공통 자료 상태를 바꾸지 못했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            {snippet && (
-                <Card style={{ padding: '24px', borderLeft: '5px solid #38A169' }}>
-                    <h4 style={{ margin: '0 0 6px 0', fontSize: '1rem', color: '#2D3748' }}>📋 카탈로그에 붙여 넣을 코드</h4>
-                    <p style={{ margin: '0 0 12px 0', color: '#718096', fontSize: '0.85rem', lineHeight: 1.7 }}>
-                        알맞은 분류 파일(`catalog/wordCatalog.js` 등)에 넣고 `sortOrder`·`id`를 이어지는 값으로 고친 뒤,
-                        <strong> `npm run spelling:check`</strong>를 돌려 오탐이 없는지 확인하고 배포합니다.
-                    </p>
-                    <textarea readOnly value={snippet} rows={Math.min(14, snippet.split('\n').length + 1)}
-                        style={{ width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #CBD5E0', borderRadius: '10px', fontFamily: 'monospace', fontSize: '0.8rem', lineHeight: 1.6 }} />
-                    <Button type="button" variant="outline" size="sm" style={{ marginTop: '10px' }}
-                        onClick={() => navigator.clipboard?.writeText(snippet)}>
-                        복사하기
-                    </Button>
-                </Card>
-            )}
+    const canPublish = reviewTarget
+        && draft.wrong_expression.trim()
+        && draft.correct_expression.trim()
+        && draft.explanation.trim()
+        && normalize(draft.wrong_expression) !== normalize(draft.correct_expression);
 
-            <Card style={{ padding: '24px' }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: '#2D3748' }}>
-                    학생이 직접 찾아본 표현 <span style={{ color: '#805AD5' }}>{(data.searched || []).length}개</span>
-                </h4>
-                <p style={{ margin: '0 0 12px 0', color: '#718096', fontSize: '0.85rem' }}>
-                    수첩에서 찾았지만 우리 자료에 없던 표현입니다. 바른 표현이 없어 참고용으로만 보여 줍니다.
-                </p>
-                {(data.searched || []).length === 0 ? (
-                    <p style={{ margin: 0, color: '#A0AEC0', fontSize: '0.88rem' }}>기준을 넘는 표현이 없습니다.</p>
-                ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {(data.searched || []).map((row) => (
-                            <span key={row.expression} style={{ padding: '6px 12px', borderRadius: '999px', background: '#FAF5FF', color: '#553C9A', fontSize: '0.82rem', fontWeight: 700 }}>
-                                {row.expression} <span style={{ color: '#805AD5' }}>{row.class_count}학급 · {row.search_count}회</span>
-                            </span>
-                        ))}
-                    </div>
-                )}
-            </Card>
-        </div>
-    );
+    return <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <Card style={{ padding: '24px', borderLeft: '5px solid #805AD5' }}>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#2D3748' }}>🔤 맞춤법 공통 자료 승격</h3>
+            <p style={{ margin: '0 0 16px 0', color: '#718096', fontSize: '0.9rem', lineHeight: 1.7 }}>
+                학생 검색과 AI 맞춤법 검사에서 반복된 표현을 모읍니다. 관리자가 내용을 확인해 게시하면
+                <strong> 재배포 없이 모든 학급에 적용</strong>되고, 교사는 자기 학급 전용 자료를 따로 추가할 수 있습니다.
+            </p>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <NumberFilter label="최소 학급 수" value={minClasses} max={20} onChange={setMinClasses} />
+                <NumberFilter label="최소 횟수" value={minHits} max={100} onChange={setMinHits} />
+                <Button type="button" variant="outline" onClick={load} disabled={loading}>
+                    {loading ? '불러오는 중…' : '다시 불러오기'}
+                </Button>
+            </div>
+            {hiddenKnownCount > 0 && <p style={{ margin: '12px 0 0', color: '#718096', fontSize: '0.82rem' }}>
+                이미 기본 500개 자료에 있는 후보 {hiddenKnownCount}개는 목록에서 제외했습니다.
+            </p>}
+            {message && <p style={{ margin: '14px 0 0', padding: '10px 12px', borderRadius: '8px', background: '#EBF8FF', color: '#2C5282', fontSize: '0.85rem' }}>{message}</p>}
+        </Card>
+
+        {reviewTarget && <ReviewEditor
+            target={reviewTarget} draft={draft} setDraft={setDraft} loading={loading}
+            onCancel={cancelReview} onGenerate={generateDraft} onPublish={publish} canPublish={canPublish}
+        />}
+
+        <CandidateCard
+            title="AI 맞춤법 검사가 찾은 표현"
+            description="AI가 학생 글에서 제안한 틀린 표현과 바른 표현입니다. 여러 학급·횟수는 검토 우선순위일 뿐 자동 게시 기준은 아닙니다."
+            rows={aiFindings} sourceKind="ai" loading={loading}
+            onReview={startCandidateReview} onReject={rejectCandidate}
+        />
+        <CandidateCard
+            title="학생이 직접 검색한 표현"
+            description="학생이 궁금해한 표현이라 틀렸다고 단정할 수 없습니다. 검토할 때 바른 표현과 설명을 직접 확인하세요."
+            rows={searched} sourceKind="search" loading={loading}
+            onReview={startCandidateReview} onReject={rejectCandidate}
+        />
+        <CommonEntriesCard
+            entries={data.common_entries || []} loading={loading}
+            onEdit={startCommonEdit} onSetEnabled={setCommonEnabled}
+        />
+    </div>;
 };
 
-/** 카탈로그에 붙여 넣을 `reference(...)` 줄을 만든다. id·sortOrder 는 사람이 채운다. */
-function buildCatalogSnippet(rows) {
-    const lines = rows.map((row) => {
-        const question = `${row.expression} / ${row.correction}`;
-        return `    reference(0, "TODO-id", "general", "exact", "expansion", ${JSON.stringify(question)}, ${JSON.stringify(row.correction)},`
-            + `\n        "학생이 헷갈린 표현입니다. 설명을 다듬어 주세요.",`
-            + `\n        ["${row.correction}을(를) 넣은 바른 예문 1", "${row.correction}을(를) 넣은 바른 예문 2"],`
-            + `\n        { searchable: [${JSON.stringify(row.expression)}, ${JSON.stringify(row.correction)}] }),`;
-    });
-    return [
-        '// 승격 후보 — sortOrder 와 id 를 이어지는 값으로 고치고 설명·예문을 손봐 주세요.',
-        ...lines
-    ].join('\n');
-}
+const NumberFilter = ({ label, value, max, onChange }) => <label style={{ display: 'grid', gap: '4px', fontSize: '0.82rem', fontWeight: 700, color: '#4A5568' }}>
+    {label}
+    <input type="number" min={1} max={max} value={value}
+        onChange={(event) => onChange(Number(event.target.value) || 1)}
+        style={{ width: '90px', padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: '8px' }} />
+</label>;
+
+const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, onPublish, canPublish }) => <Card style={{ padding: '24px', borderLeft: '5px solid #3182CE' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+        <div>
+            <span style={{ color: '#805AD5', fontSize: '0.8rem', fontWeight: 800 }}>
+                {target.entryId ? '공통 자료 수정' : target.sourceKind === 'ai' ? 'AI 검사 후보' : '학생 검색 후보'}
+            </span>
+            <h4 style={{ margin: '4px 0 0', color: '#2D3748' }}>전체 학급 적용 내용 확인</h4>
+            {!target.entryId && <small style={{ color: '#718096' }}>{target.classCount}학급 · {target.hitCount}회 근거</small>}
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={loading}>취소</Button>
+    </div>
+    <div style={{ display: 'grid', gap: '12px', marginTop: '18px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+            <DraftInput label="틀린 표현" value={draft.wrong_expression} onChange={(wrong_expression) => setDraft({ ...draft, wrong_expression })} />
+            <DraftInput label="바른 표현" value={draft.correct_expression} onChange={(correct_expression) => setDraft({ ...draft, correct_expression })} />
+            <DraftInput label="배움 라벨" value={draft.label} onChange={(label) => setDraft({ ...draft, label })} />
+        </div>
+        <label style={fieldLabelStyle}>
+            학생용 설명
+            <textarea value={draft.explanation} maxLength={600} rows={3}
+                onChange={(event) => setDraft({ ...draft, explanation: event.target.value })} style={textareaStyle} />
+        </label>
+        <label style={fieldLabelStyle}>
+            바른 예문 <small style={{ fontWeight: 500 }}>한 줄에 하나, 최대 4개</small>
+            <textarea value={(draft.examples || []).join('\n')} maxLength={600} rows={3}
+                onChange={(event) => setDraft({ ...draft, examples: event.target.value.split('\n').filter(Boolean).slice(0, 4) })}
+                style={textareaStyle} />
+        </label>
+        <p style={{ margin: 0, color: '#C05621', fontSize: '0.82rem', lineHeight: 1.6 }}>
+            문맥에 따라 맞을 수도 있는 표현·사람 이름·지명은 게시하지 마세요. 게시 자료는 모든 학생 글에서 같은 표현을 찾습니다.
+        </p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <Button type="button" variant="outline" onClick={onGenerate} disabled={loading || !draft.wrong_expression.trim()}>AI로 설명 초안 만들기</Button>
+            <Button type="button" onClick={onPublish} disabled={loading || !canPublish}>
+                {target.entryId ? '수정 내용 전체 적용' : '공통 자료로 전체 적용'}
+            </Button>
+        </div>
+    </div>
+</Card>;
+
+const fieldLabelStyle = { display: 'grid', gap: '5px', fontSize: '0.84rem', fontWeight: 700, color: '#4A5568' };
+const inputStyle = { padding: '10px', border: '1px solid #CBD5E0', borderRadius: '8px' };
+const textareaStyle = { ...inputStyle, resize: 'vertical' };
+const DraftInput = ({ label, value, onChange }) => <label style={fieldLabelStyle}>
+    {label}<input value={value} maxLength={40} onChange={(event) => onChange(event.target.value)} style={inputStyle} />
+</label>;
+
+const CandidateCard = ({ title, description, rows, sourceKind, loading, onReview, onReject }) => <Card style={{ padding: '24px' }}>
+    <h4 style={{ margin: '0 0 6px', color: '#2D3748' }}>{title} <span style={{ color: '#805AD5' }}>{rows.length}개</span></h4>
+    <p style={{ margin: '0 0 14px', color: '#718096', fontSize: '0.85rem', lineHeight: 1.6 }}>{description}</p>
+    {rows.length === 0 ? <EmptyText>현재 기준을 넘는 새 후보가 없습니다.</EmptyText> : <div style={{ display: 'grid', gap: '8px' }}>
+        {rows.map((row) => <div key={candidateKey(sourceKind, row)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', border: '1px solid #E2E8F0', borderRadius: '10px', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0, flex: '1 1 220px' }}>
+                <strong style={{ color: '#C53030' }}>{row.expression}</strong>
+                {row.correction && <><span style={{ margin: '0 8px', color: '#A0AEC0' }}>→</span><strong style={{ color: '#2F855A' }}>{row.correction}</strong></>}
+                <small style={{ display: 'block', marginTop: '4px', color: '#718096' }}>
+                    {row.class_count}학급 · {row.hit_count || row.search_count}회 · 마지막 {new Date(row.last_seen_at).toLocaleDateString('ko-KR')}
+                </small>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <Button type="button" variant="outline" size="sm" onClick={() => onReject(sourceKind, row)} disabled={loading}>보류</Button>
+                <Button type="button" size="sm" onClick={() => onReview(sourceKind, row)} disabled={loading}>검토</Button>
+            </div>
+        </div>)}
+    </div>}
+</Card>;
+
+const CommonEntriesCard = ({ entries, loading, onEdit, onSetEnabled }) => <Card style={{ padding: '24px' }}>
+    <h4 style={{ margin: '0 0 6px', color: '#2D3748' }}>전체 학급 공통 자료 <span style={{ color: '#805AD5' }}>{entries.length}개</span></h4>
+    <p style={{ margin: '0 0 14px', color: '#718096', fontSize: '0.85rem', lineHeight: 1.6 }}>
+        게시된 자료는 모든 학급에 적용됩니다. 문제가 있으면 삭제하지 않고 중지해 언제든 되돌릴 수 있습니다.
+    </p>
+    {entries.length === 0 ? <EmptyText>아직 관리자가 게시한 공통 자료가 없습니다.</EmptyText> : <div style={{ display: 'grid', gap: '8px' }}>
+        {entries.map((entry) => {
+            const enabled = entry.status === 'approved';
+            return <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '12px', border: '1px solid #E2E8F0', borderRadius: '10px', background: enabled ? '#F0FFF4' : '#F7FAFC', flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                    <strong style={{ color: '#C53030' }}>{entry.wrong_expression}</strong><span style={{ margin: '0 8px', color: '#A0AEC0' }}>→</span><strong style={{ color: '#2F855A' }}>{entry.correct_expression}</strong>
+                    <small style={{ display: 'block', marginTop: '4px', color: '#718096' }}>
+                        {enabled ? '전체 적용 중' : '적용 중지'} · {entry.label} · {entry.source_kind === 'ai' ? 'AI 검사 근거' : entry.source_kind === 'search' ? '학생 검색 근거' : '관리자 등록'}
+                    </small>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button type="button" variant="outline" size="sm" onClick={() => onEdit(entry)} disabled={loading}>수정</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => onSetEnabled(entry, !enabled)} disabled={loading}>{enabled ? '전체 적용 중지' : '다시 전체 적용'}</Button>
+                </div>
+            </div>;
+        })}
+    </div>}
+</Card>;
+
+const EmptyText = ({ children }) => <p style={{ margin: 0, padding: '20px', textAlign: 'center', color: '#A0AEC0', fontSize: '0.88rem' }}>{children}</p>;
 
 export default AdminSpellingPromotionPanel;

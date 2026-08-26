@@ -85,7 +85,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                 explanation: entry.explanation,
                 examples: entry.examples || [],
                 label: entry.label,
-                source: { label: '우리 반 맞춤법 수첩', url: '#' }
+                source: { label: entry.scope === 'common' ? '공통 맞춤법 자료' : '우리 반 맞춤법 수첩', url: '#' }
             }));
         return [...custom, ...searchElementarySpelling(searchedQuery)].slice(0, 20);
     }, [classEntries, searchedQuery]);

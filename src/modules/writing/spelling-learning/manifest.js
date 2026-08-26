@@ -1,7 +1,7 @@
 export const spellingLearningManifest = {
     id: 'spelling-learning',
     name: '맞춤법 배움 데이터',
-    description: '우리 반이 자주 헷갈리는 표현을 만들고 살펴봅니다.',
+    description: '전체 공통 자료를 확인하고 우리 반에 필요한 맞춤법 자료를 더합니다.',
     icon: '✍️',
     part: 'writing',
     audience: 'teacher',
@@ -10,7 +10,7 @@ export const spellingLearningManifest = {
     settings: {
         order: 50,
         label: '맞춤법 배움 데이터',
-        description: '우리 반 맞춤법 항목과 추천 후보'
+        description: '전체 공통·우리 반 맞춤법 항목과 추천 후보'
     },
     performance: {
         home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100

@@ -5,6 +5,7 @@ import test from 'node:test';
 const migration = await readFile('supabase/migrations/20261017_spelling_learning_module.sql', 'utf8');
 const candidateMigration = await readFile('supabase/migrations/20261144_spelling_search_candidate_filtering.sql', 'utf8');
 const hardeningMigration = await readFile('supabase/migrations/20261145_spelling_search_legacy_hardening.sql', 'utf8');
+const dynamicCommonMigration = await readFile('supabase/migrations/20261178_dynamic_common_spelling_promotion.sql', 'utf8');
 const manifest = await readFile('src/modules/writing/spelling-learning/manifest.js', 'utf8');
 const learningApi = await readFile('src/modules/writing/spelling-learning/api.js', 'utf8');
 const searchSession = await readFile('src/modules/writing/spelling-learning/searchSession.js', 'utf8');
@@ -13,6 +14,7 @@ const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup
 const underlineTextarea = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea.jsx', 'utf8');
 const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
+const adminPromotion = await readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8');
 const teacherGuides = await readFile('src/constants/teacherGuides.js', 'utf8');
 const { classifySpellingSearchQuery } = await import(
     '../src/modules/writing/spelling-learning/searchCandidate.js'
@@ -310,7 +312,7 @@ test('구버전 검색 기록은 학생에게 닫고 누적·관리자 후보에
 });
 
 test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 숫자로 요약한다', () => {
-    assert.match(learningApi, /get_spelling_learning_workspace_v2/);
+    assert.match(learningApi, /get_spelling_learning_workspace_v3/);
     assert.match(candidateMigration, /idx_class_spelling_student_entry_date/);
     assert.match(candidateMigration, /candidate_students AS MATERIALIZED/);
     assert.match(candidateMigration, /LEFT JOIN candidate_students students USING \(entry_key\)/);
@@ -320,6 +322,42 @@ test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 �
     assert.match(teacherEntry, /기존 자료로 해결/);
     assert.match(teacherEntry, /문장 검색 제외/);
     assert.doesNotMatch(teacherEntry, /workspace\.top_searches/);
+});
+
+test('관리자 승격은 AI·검색 후보를 재배포 없는 공통 자료로 게시하고 되돌릴 수 있다', () => {
+    assert.match(adminPromotion, /admin_get_spelling_promotion_workspace_v2/);
+    assert.match(adminPromotion, /admin_publish_common_spelling_entry_v1/);
+    assert.match(adminPromotion, /admin_set_common_spelling_entry_status_v1/);
+    assert.match(adminPromotion, /재배포 없이 모든 학급에 적용/);
+    assert.match(adminPromotion, /문맥에 따라 맞을 수도 있는 표현/);
+    assert.doesNotMatch(adminPromotion, /buildCatalogSnippet|카탈로그에 붙여 넣을 코드/);
+    assert.match(dynamicCommonMigration, /scope = 'common'/);
+    assert.match(dynamicCommonMigration, /v_status TEXT := CASE WHEN[\s\S]*?'disabled'/);
+    assert.match(dynamicCommonMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(dynamicCommonMigration, /REVOKE ALL ON public\.spelling_common_reviews FROM PUBLIC, anon, authenticated/);
+});
+
+test('공통·학급 자료는 학생에게 한 목록으로 합치고 짧은 캐시 뒤 자동 갱신한다', () => {
+    assert.match(learningApi, /get_student_spelling_entries_v2/);
+    assert.match(learningApi, /STUDENT_ENTRIES_CACHE_MS = 60_000/);
+    assert.match(learningApi, /supabase\.auth\.getSession\(\)/);
+    assert.match(learningApi, /studentEntriesCacheUserId !== currentUserId/);
+    assert.match(learningApi, /studentEntriesCacheUserId === requestUserId/);
+    assert.doesNotMatch(learningApi, /setInterval|postgres_changes/);
+    assert.match(dynamicCommonMigration, /PARTITION BY lower\(btrim\(entry\.wrong_expression\)\)/);
+    assert.match(dynamicCommonMigration, /CASE WHEN entry\.scope = 'common' THEN 0 ELSE 1 END/);
+    assert.match(dynamicCommonMigration, /LIMIT 100/);
+    assert.match(underlineTextarea, /findClassSpellingIssues\(scannedValue, classEntries, remaining\)/);
+    assert.match(underlineInput, /findClassSpellingIssues\(normalizedValue, dynamicEntries, remaining\)/);
+    assert.match(lookup, /entry\.scope === 'common' \? '공통 맞춤법 자료'/);
+});
+
+test('교사는 공통 자료를 읽기 전용으로 보고 자기 학급 자료만 추가한다', () => {
+    assert.match(teacherEntry, /전체 공통 자료/);
+    assert.match(teacherEntry, /commonEntries/);
+    assert.match(teacherEntry, /!isBuiltIn && !isCommon/);
+    assert.match(dynamicCommonMigration, /이미 모든 학급에 적용되는 공통 맞춤법 자료가 있습니다/);
+    assert.match(dynamicCommonMigration, /class\.teacher_id = auth\.uid\(\)/);
 });
 
 test('맞춤법 배움 데이터 도움말은 최신 후보 선별과 개인정보 보호 기준을 설명한다', () => {

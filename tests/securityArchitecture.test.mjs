@@ -34,6 +34,9 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261146_self_writing_draft_bulk_cleanup.sql', 'utf8'),
     readFile('supabase/migrations/20261166_priority_writing_notification_poll.sql', 'utf8')
 ]);
+const dynamicCommonSpellingMigration = await readFile(
+    'supabase/migrations/20261178_dynamic_common_spelling_promotion.sql', 'utf8'
+);
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
     assert.match(vibeAi, /profile\.is_approved === true/);
@@ -74,6 +77,16 @@ test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록
     // 서버 소유 열이라 학생이 직접 지울 수 없어야 한다.
     assert.match(spellCheckMigration, /NEW\.spell_check_used_at := OLD\.spell_check_used_at/);
     assert.match(spellCheckMigration, /NEW\.spell_check_result := OLD\.spell_check_result/);
+});
+
+test('맞춤법 공통 승격은 관리자 전용이며 학생에게 승인 자료만 제한해 반환한다', () => {
+    assert.equal((dynamicCommonSpellingMigration.match(/auth_user_role\(\) <> 'ADMIN'/g) ?? []).length, 4);
+    assert.match(dynamicCommonSpellingMigration, /ALTER TABLE public\.spelling_common_reviews ENABLE ROW LEVEL SECURITY/);
+    assert.match(dynamicCommonSpellingMigration, /REVOKE ALL ON public\.spelling_common_reviews FROM PUBLIC, anon, authenticated/);
+    assert.match(dynamicCommonSpellingMigration, /entry\.status = 'approved'/);
+    assert.match(dynamicCommonSpellingMigration, /student\.auth_id = auth\.uid\(\)/);
+    assert.match(dynamicCommonSpellingMigration, /LIMIT 100/);
+    assert.doesNotMatch(dynamicCommonSpellingMigration, /student_posts|post_content|student_id TEXT/);
 });
 
 test('맞춤법 구버전 기록과 일기 임시본 정리는 학생 권한 경계를 지킨다', () => {

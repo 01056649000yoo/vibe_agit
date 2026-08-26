@@ -16,11 +16,13 @@ const BUILT_IN_ENTRIES = getElementarySpellingEntries().map((entry) => ({
 const DATA_FILTERS = [
     { id: 'all', label: '전체' },
     { id: 'built-in', label: '기본 자료' },
+    { id: 'common', label: '전체 공통' },
     { id: 'class', label: '우리 반 자료' }
 ];
 const PAGE_SIZE = 20;
 const EMPTY_WORKSPACE = {
     entries: [],
+    common_entries: [],
     candidate_searches: [],
     search_summary: { total: 0, covered: 0, dictionary: 0, filtered: 0, recommended: 0, observing: 0 }
 };
@@ -79,6 +81,10 @@ const TeacherEntry = ({ activeClass }) => {
         () => (workspace.entries || []).map((entry) => ({ ...entry, kind: 'class' })),
         [workspace.entries]
     );
+    const commonEntries = useMemo(
+        () => (workspace.common_entries || []).map((entry) => ({ ...entry, kind: 'common' })),
+        [workspace.common_entries]
+    );
 
     const searchRows = workspace.candidate_searches || [];
     const searchSummary = workspace.search_summary || EMPTY_WORKSPACE.search_summary;
@@ -88,7 +94,10 @@ const TeacherEntry = ({ activeClass }) => {
         setMessage('학생이 찾아본 표현을 가져왔어요. `AI로 내용 만들기`를 눌러 보세요.');
         setActiveTab('create');
     };
-    const entries = useMemo(() => [...classEntries, ...BUILT_IN_ENTRIES], [classEntries]);
+    const entries = useMemo(
+        () => [...classEntries, ...commonEntries, ...BUILT_IN_ENTRIES],
+        [classEntries, commonEntries]
+    );
     const filteredEntries = useMemo(() => {
         const normalizedQuery = normalizeSearchValue(searchQuery);
         const terms = normalizedQuery ? normalizedQuery.split(' ') : [];
@@ -175,7 +184,7 @@ const TeacherEntry = ({ activeClass }) => {
                     <strong>✨ 항목 만들기</strong><small>우리 반 맞춤법 자료 등록</small>
                 </button>
                 <button type="button" role="tab" aria-selected={activeTab === 'data'} className={activeTab === 'data' ? 'is-active' : ''} onClick={() => setActiveTab('data')}>
-                    <strong>📚 등록 데이터</strong><small>기본 {BUILT_IN_ENTRIES.length}개 · 우리 반 {classEntries.length}개</small>
+                    <strong>📚 등록 데이터</strong><small>기본 {BUILT_IN_ENTRIES.length}개 · 공통 {commonEntries.length}개 · 우리 반 {classEntries.length}개</small>
                 </button>
             </div>
 
@@ -254,7 +263,7 @@ const TeacherEntry = ({ activeClass }) => {
             {activeTab === 'data' && <section className="spelling-learning-card spelling-learning-data" role="tabpanel">
                 <div className="spelling-learning-data-heading">
                     <div><span>맞춤법 수첩 현황</span><h3>등록된 맞춤법 자료 찾기</h3><p>기본 자료는 읽기 전용이며, 우리 반에서 추가한 자료는 펼쳐서 수정할 수 있습니다.</p></div>
-                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{BUILT_IN_ENTRIES.length}</b>기본</span><span><b>{classEntries.length}</b>우리 반</span></div>
+                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{BUILT_IN_ENTRIES.length}</b>기본</span><span><b>{commonEntries.length}</b>공통</span><span><b>{classEntries.length}</b>우리 반</span></div>
                 </div>
                 <label className="spelling-learning-search">
                     <span>등록 데이터 검색</span>
@@ -263,7 +272,11 @@ const TeacherEntry = ({ activeClass }) => {
                 <div className="spelling-learning-filter-row">
                     <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 종류 필터">
                         {DATA_FILTERS.map((filter) => {
-                            const count = filter.id === 'all' ? entries.length : filter.id === 'built-in' ? BUILT_IN_ENTRIES.length : classEntries.length;
+                            const count = filter.id === 'all'
+                                ? entries.length
+                                : filter.id === 'built-in'
+                                    ? BUILT_IN_ENTRIES.length
+                                    : filter.id === 'common' ? commonEntries.length : classEntries.length;
                             return <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => {
                                 setDataFilter(filter.id);
                                 if (filter.id !== 'built-in') setCategoryFilter('all');
@@ -272,7 +285,7 @@ const TeacherEntry = ({ activeClass }) => {
                     </div>
                     <span className="spelling-learning-result-count">{filteredEntries.length}개 찾음</span>
                 </div>
-                {dataFilter !== 'class' && <div className="spelling-learning-category-filters" role="group" aria-label="기본 맞춤법 분류 필터">
+                {(dataFilter === 'all' || dataFilter === 'built-in') && <div className="spelling-learning-category-filters" role="group" aria-label="기본 맞춤법 분류 필터">
                     <span>기본 자료 분류</span>
                     <div className="spelling-learning-filters">
                         <button type="button" className={categoryFilter === 'all' ? 'is-active' : ''} onClick={() => setCategoryFilter('all')}>전체 <b>{BUILT_IN_ENTRIES.length}</b></button>
@@ -288,13 +301,14 @@ const TeacherEntry = ({ activeClass }) => {
                 <div className="spelling-learning-entry-list">
                     {visibleEntries.map((entry) => {
                         const isBuiltIn = entry.kind === 'built-in';
+                        const isCommon = entry.kind === 'common';
                         const isExpanded = expandedEntryId === entry.id;
                         const leftText = isBuiltIn ? entry.question : entry.wrong_expression;
                         const rightText = isBuiltIn ? entry.answer : entry.correct_expression;
-                        return <article className={`spelling-learning-entry${isBuiltIn ? ' is-built-in' : ''}`} key={entry.id}>
+                        return <article className={`spelling-learning-entry${isBuiltIn ? ' is-built-in' : isCommon ? ' is-common' : ''}`} key={entry.id}>
                             <button type="button" className="spelling-learning-entry-summary" aria-expanded={isExpanded} onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
                                 <span className="spelling-learning-entry-expression"><b>{leftText}</b><span aria-hidden="true">→</span><strong>{rightText}</strong></span>
-                                <span className="spelling-learning-entry-meta"><span className={`spelling-learning-source is-${entry.kind}`}>{isBuiltIn ? '기본 자료' : '우리 반 자료'}</span><span className="spelling-learning-expand" aria-hidden="true">{isExpanded ? '−' : '+'}</span></span>
+                                <span className="spelling-learning-entry-meta"><span className={`spelling-learning-source is-${entry.kind}`}>{isBuiltIn ? '기본 자료' : isCommon ? '전체 공통 자료' : '우리 반 자료'}</span><span className="spelling-learning-expand" aria-hidden="true">{isExpanded ? '−' : '+'}</span></span>
                             </button>
                             {isExpanded && <div className="spelling-learning-entry-detail">
                                 <div className="spelling-learning-entry-labels">
@@ -304,7 +318,7 @@ const TeacherEntry = ({ activeClass }) => {
                                 </div>
                                 {entry.explanation && <p>{entry.explanation}</p>}
                                 {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}
-                                {!isBuiltIn && <div className="spelling-learning-entry-actions"><button type="button" className="secondary" onClick={() => editEntry(entry)}>수정</button></div>}
+                                {!isBuiltIn && !isCommon && <div className="spelling-learning-entry-actions"><button type="button" className="secondary" onClick={() => editEntry(entry)}>수정</button></div>}
                             </div>}
                         </article>;
                     })}
