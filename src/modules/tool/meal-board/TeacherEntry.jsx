@@ -327,7 +327,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
               <span className={`meal-status-dot is-${student.status.tone}`} aria-hidden="true" />
               <span className="meal-student-name">{student.name}</span>
               <span className={`meal-student-status is-${student.status.tone}`}>{student.status.text}</span>
-              <span className="meal-student-edit">{student.note ? '수정' : '입력'}</span>
+              <span className="meal-student-edit">{student.note ? '수정' : '비고 입력'}</span>
             </button>)}
           </div>
         </div> : null}

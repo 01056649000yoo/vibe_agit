@@ -152,7 +152,8 @@
 .meal-student-name { font-weight: 900; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meal-student-status { font-size: .72rem; color: var(--meal-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meal-student-status.is-warning { color: #c04e2b; font-weight: 900; }
-.meal-student-edit { color: #789084; font-size: .7rem; font-weight: 850; }
+.meal-student-edit { justify-self: end; min-width: 52px; padding: 6px 9px; border: 1px solid #cae2d2; border-radius: 9px; color: var(--meal-green-deep); background: #edf6f0; text-align: center; font-size: .72rem; font-weight: 900; white-space: nowrap; }
+.meal-student-row:hover .meal-student-edit { border-color: #a9cfb7; background: #dfeee4; }
 .meal-roster-empty { padding: 50px 20px; text-align: center; color: var(--meal-muted); font-size: .85rem; }
 
 .meal-note-guidance { margin-top: 18px; padding: 11px 13px; color: #657269; background: #f6f8f5; border-radius: 13px; font-size: .74rem; line-height: 1.55; }
@@ -245,8 +246,7 @@
   .meal-panel { border-radius: 20px; padding: 16px; }
   .meal-public-actions { align-items: stretch; flex-direction: column; }
   .meal-summary-grid div { padding: 10px 5px; }
-  .meal-student-row { grid-template-columns: 9px minmax(64px, .6fr) minmax(115px, 1.4fr); }
-  .meal-student-edit { display: none; }
+  .meal-student-row { grid-template-columns: 9px minmax(58px, .7fr) minmax(0, 1.3fr) auto; gap: 7px; }
   .meal-school-scope { grid-template-columns: 1fr; }
   .meal-modal-actions { flex-wrap: wrap; }
   .meal-note-modal { padding: 18px; border-radius: 18px; }

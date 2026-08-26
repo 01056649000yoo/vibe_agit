@@ -111,6 +111,9 @@ test('우리 반 비고는 기본으로 접혀 있고 접근 가능한 버튼으
   assert.match(entry, /aria-controls="meal-roster-content"/);
   assert.match(entry, /setNotesExpanded\(\(expanded\) => !expanded\)/);
   assert.match(entry, /notesExpanded \? <div id="meal-roster-content">/);
+  assert.match(entry, /student\.note \? '수정' : '비고 입력'/);
+  assert.match(mealCss, /\.meal-student-edit \{[^}]*color: var\(--meal-green-deep\); background: #edf6f0;/);
+  assert.doesNotMatch(mealCss, /\.meal-student-edit \{ display: none; \}/);
 });
 
 test('학생 비고 입력창은 작은 전용 크기와 공용 닫기 버튼을 사용한다', () => {
