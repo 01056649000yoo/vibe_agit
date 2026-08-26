@@ -36,6 +36,19 @@
 
 ## 🧭 현재 위치
 
+### 쓰지 않는 RPC 정리와 재발 방지 (2026-08-26~27)
+
+- [x] 학생이 자기 댓글을 스스로 승인하던 `record_comment_ai_review` 제거 — 운영 DB 롤백 트랜잭션에서 재현 확인
+- [x] 새 판으로 옮긴 뒤 남아 있던 구형 RPC 정리 (클라이언트 공개 219개 → 211개)
+- [x] 연구소를 `get_student_spelling_entries_v2` 로 옮겨 배포한 뒤 `_v1` 제거
+- [x] `tests/migrationVersionCleanup.test.mjs` — 마이그레이션 파일만 보고 옛 판 처리를 강제(도커 없이 어디서나)
+- [x] `npm run check:rpc-surface` — 운영 DB·이 저장소·다른 앱을 함께 봐 이름이 다른 교체까지 확인
+- [x] `ops/rpc-surface-allowlist.json` — 남기려면 이유와 언제 지울 수 있는지를 적어야 통과
+- [x] 두 검사를 `test:all`·푸시 전 훅·`test:security` 에 연결하고 AGENTS.md 절대 규칙에 기록
+- **다음 작업**: 허용 목록 8개 중 `get_my_role`(외부 앱 확인 후), `get_spelling_learning_workspace_v2`
+  (`_v3` 가 스스로 계산하게 바꾼 뒤), `get_reading_marathon_snapshot`(DB 함수 셋을 `_v2` 로 옮긴 뒤),
+  `record_system_daily_metric_v1`(지표 스크립트 되돌림 경로 정리 뒤)을 순서대로 지운다.
+
 ### 우리반 아지트 Beta 준비 탭 (2026-08-26)
 
 - [x] 교사 상단 `글쓰기 연구소` 바로 다음에 내부 탭 `우리반 아지트 (beta)` 추가
