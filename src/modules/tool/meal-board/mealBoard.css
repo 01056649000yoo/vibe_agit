@@ -225,8 +225,8 @@
 .meal-display-card-heading em { margin-left: auto; color: #d6e8da; font-style: normal; font-weight: 800; }
 .meal-display-dishes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(13px, 2vw, 22px); margin-top: 22px; }
 .meal-display-dishes div { min-width: 0; }
-.meal-display-dishes strong { display: block; font-size: clamp(1.05rem, 2.15vw, 1.8rem); line-height: 1.35; word-break: keep-all; }
-.meal-display-dishes small { display: block; margin-top: 4px; color: #f2c9ae; font-size: clamp(.64rem, 1.2vw, .88rem); }
+.meal-display-dishes strong { display: block; font-size: clamp(1.35rem, 2.7vw, 2.25rem); line-height: 1.32; letter-spacing: -.025em; word-break: keep-all; }
+.meal-display-dishes small { display: block; margin-top: 7px; color: #ffe0cb; font-size: clamp(.82rem, 1.4vw, 1.05rem); font-weight: 750; line-height: 1.45; }
 .meal-fullscreen-empty { text-align: center; }
 .meal-fullscreen-empty > span { font-size: clamp(4rem, 10vw, 8rem); }
 .meal-fullscreen-empty h3 { margin: 16px 0 5px; font-size: clamp(1.8rem, 4vw, 3rem); }
