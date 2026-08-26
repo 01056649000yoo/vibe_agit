@@ -21,6 +21,23 @@
 
 ---
 
+## 2026-08-26 — Docker 9.5GB 증설 후 전체 서비스 복구 (Codex)
+
+- **한 일**: 사용자가 Docker Desktop 메모리를 9.5GB로 올리고 재시작한 뒤 할당값·스왑·
+  컨테이너·앱·DB·Caddy 상태를 확인했다. Docker VM에는 약 9.21GiB가 반영됐지만 35개
+  컨테이너가 모두 정지 상태로 남아 기존 환경변수·볼륨을 그대로 둔 채 다시 시작했다.
+- **변경**: git 밖 Docker Desktop 메모리 할당은 사용자가 9.5GB로 변경했다. 재시작 틈에
+  `com.jarvis.survival` LaunchAgent가 구 클래스룸툴 Vite preview를 3001번으로 먼저 띄워
+  `writing-helper-lab-app`과 충돌한 예전 문제가 반복됐다. 해당 LaunchAgent를 현재 세션에서
+  `bootout`하고 통합 연구소 컨테이너를 복구했다. plist 파일은 삭제·이동하지 않았다.
+- **결과/검증**: 컨테이너 35/35 실행·정지 0개, 두 DB healthy·`agit-db` 접속 수락,
+  아지트 8300·서바이벌 8080·Caddy 실도메인 경로 HTTP 200, 연구소 `/lab` 307 정상 리다이렉트를
+  확인했다. Docker VM은 약 4.0GiB 사용 가능·스왑 0, macOS는 메모리 여유 45%·스왑
+  246MB였다.
+- **남은 것 / 다음**: `com.jarvis.survival` plist가 `RunAtLoad+KeepAlive`로 남아 다음 macOS 로그인 시
+  동일한 3001번 충돌이 재발할 수 있다. 현재 서바이벌은 Docker 8080이 정식 배포처이므로, 사용자
+  확인 후 구 LaunchAgent를 복구 가능한 위치로 옮겨 영구 비활성화한다.
+
 ## 2026-08-26 — 학생 댓글 재확인과 AI 전역 3건 대기열 (Codex)
 
 - **한 일**: 학생이 Enter를 한 번 눌렀을 때 댓글과 AI 검사가 바로 실행되던 흐름을
