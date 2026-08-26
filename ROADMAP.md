@@ -164,9 +164,9 @@
 - [x] 실제 `agit-db` 스키마에서 `20261168_teacher_assignment_submission_history.sql` 권한·100건 상한 스모크 전체 ROLLBACK 통과
 - [x] 운영 `agit-db`에 `20261168_teacher_assignment_submission_history.sql` 적용
 - [x] 실제 `agit-db` 스키마에서 `20261176_teacher_submission_student_status_board.sql` 학생별 상태·제출 차수 스모크 전체 ROLLBACK 통과
-- [ ] 운영 `agit-db`에 `20261176_teacher_submission_student_status_board.sql` 적용
+- [x] 운영 `agit-db`에 `20261176_teacher_submission_student_status_board.sql` 적용
 - [ ] 교사 실계정에서 학생별 색상 상태표·1/2/3회 제출·긴 이름·표 스크롤·모바일 배치 확인
-- **다음 작업**: `20261176` 운영 적용 후 교사·학생 실계정 두 창으로 최초 제출→다시쓰기→재제출→승인 흐름과 학생별 상태표 변화를 확인한다.
+- **다음 작업**: 교사·학생 실계정 두 창으로 최초 제출→다시쓰기→재제출→승인 흐름과 학생별 상태표 변화를 확인한다.
 
 ### 교사 수업용 학생 작품 전체 화면 감상 (2026-08-25)
 
