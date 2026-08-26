@@ -2,14 +2,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
-  getMealAllergenCodes,
-  getStudentMealMatches,
+  formatMealDate,
+  getSeoulDateString,
   summarizeRoster
 } from '../src/modules/tool/meal-board/mealBoardEngine.js';
 
-const [manifest, entry, fullscreen, api, schoolApi, teacherSetup, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
+const [manifest, entry, noteModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
   readFile('src/modules/tool/meal-board/manifest.js', 'utf8'),
   readFile('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8'),
+  readFile('src/modules/tool/meal-board/StudentNoteModal.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/MealFullscreen.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/mealBoardApi.js', 'utf8'),
   readFile('src/utils/schoolApi.js', 'utf8'),
@@ -21,29 +22,22 @@ const [manifest, entry, fullscreen, api, schoolApi, teacherSetup, teacherDashboa
   readFile('.github/workflows/deploy.yml', 'utf8')
 ]);
 
-test('급식의 알레르기 코드와 학생별 오늘 일치 항목을 한 번에 계산한다', () => {
-  const meals = [
-    { dishes: [{ name: '우유', allergenCodes: [2] }], mealType: '중식' },
-    { dishes: [{ name: '빵', allergenCodes: [6, 2, 99] }], mealType: '석식' }
-  ];
-  const codes = getMealAllergenCodes(meals);
-  assert.deepEqual(codes, [2, 6]);
-  assert.deepEqual(getStudentMealMatches({ allergenCodes: [1, 2, 6] }, codes), [2, 6]);
+test('급식 날짜는 서울 날짜와 한국어 표시를 사용한다', () => {
+  assert.equal(getSeoulDateString(new Date('2026-08-25T15:30:00Z')), '2026-08-26');
+  assert.match(formatMealDate('2026-08-26'), /8월 26일/);
 });
 
-test('학급 요약은 미확인·등록·오늘 주의를 분리한다', () => {
+test('학급 요약은 비고 유무만 집계한다', () => {
   const summary = summarizeRoster([
-    { confirmationStatus: 'unconfirmed', allergenCodes: [] },
-    { confirmationStatus: 'confirmed_none', allergenCodes: [] },
-    { confirmationStatus: 'has_items', allergenCodes: [2] },
-    { confirmationStatus: 'has_items', allergenCodes: [3] }
-  ], [2, 6]);
+    { note: '' },
+    { note: '도시락 지참' },
+    { note: '   ' },
+    { note: '급식 후 상담' }
+  ]);
   assert.deepEqual(summary, {
     total: 4,
-    unconfirmed: 1,
-    confirmedNone: 1,
-    hasItems: 2,
-    mealMatches: 1
+    withNote: 2,
+    withoutNote: 2
   });
 });
 
@@ -59,11 +53,11 @@ test('교사 도구는 열 때만 최대 100명 RPC를 읽고 폴링·Realtime�
   assert.doesNotMatch(api, /\.from\(/);
 });
 
-test('공개 전체화면은 급식만 받고 학생 명단이나 건강 프로필을 전달받지 않는다', () => {
+test('공개 전체화면은 급식만 받고 학생 명단이나 비고를 전달받지 않는다', () => {
   assert.match(entry, /<MealFullscreen school=\{workspace\?\.school\} date=\{date\} meals=\{meals\}/);
   assert.match(fullscreen, /function MealFullscreen\(\{ school, date, meals, allergenMap, onClose \}\)/);
-  assert.doesNotMatch(fullscreen, /student|roster|healthAuthorization|allergenCodes\s*:\s*student/);
-  assert.match(fullscreen, /학생 이름과 개인 건강 항목은 이 화면에 표시되지 않아요/);
+  assert.doesNotMatch(fullscreen, /student|roster|studentNote|healthAuthorization|allergenCodes\s*:\s*student/);
+  assert.match(fullscreen, /학생 이름과 비고는 이 화면에 표시되지 않아요/);
 });
 
 test('나이스 키는 서버 환경변수에서만 읽고 브라우저는 Edge 함수를 호출한다', () => {
@@ -89,15 +83,20 @@ test('가입 학교 코드를 저장해 급식 기본 학교로 쓰고 프로필
   assert.match(migration, /school_office_code = p_school_office_code/);
 });
 
-test('학생 건강 항목은 직접 공개하지 않고 담당 교사 RPC와 처리 근거 확인으로 잠근다', () => {
-  assert.match(migration, /ALTER TABLE public\.student_meal_health_profiles ENABLE ROW LEVEL SECURITY/);
-  assert.match(migration, /REVOKE ALL ON TABLE public\.student_meal_health_profiles FROM PUBLIC, anon, authenticated/);
+test('학생 비고는 선택적 최소 수집이며 담당 교사 RPC로만 읽고 쓴다', () => {
+  assert.match(migration, /ALTER TABLE public\.student_meal_notes ENABLE ROW LEVEL SECURITY/);
+  assert.match(migration, /REVOKE ALL ON TABLE public\.student_meal_notes FROM PUBLIC, anon, authenticated/);
   assert.match(migration, /class\.teacher_id = auth\.uid\(\)/);
-  assert.match(migration, /class_meal_health_authorizations/);
-  assert.match(migration, /민감정보 처리 근거와 학교 내부 절차를 먼저 확인/);
+  assert.match(migration, /save_teacher_student_meal_note_v1/);
+  assert.match(migration, /CHAR_LENGTH\(v_note\) > 300/);
+  assert.match(migration, /IF v_note = '' THEN[\s\S]*DELETE FROM public\.student_meal_notes/);
   assert.match(migration, /LIMIT 100/);
+  assert.doesNotMatch(migration, /student_meal_health_profiles|class_meal_health_authorizations|allergen_codes/);
   assert.doesNotMatch(migration, /auth\.jwt|app_metadata/);
-  assert.match(privacyPolicy, /학생별 급식 알레르기 항목/);
+  assert.match(noteModal, /알레르기·질병 등 민감한 건강정보는 입력하지 마세요/);
+  assert.match(noteModal, /maxLength=\{NOTE_MAX_LENGTH\}/);
+  assert.match(privacyPolicy, /학생별 짧은 비고/);
+  assert.doesNotMatch(entry, /개인 건강 항목|건강 항목을 관리/);
 });
 
 test('나이스 함수는 운영 동기화와 무인증 401 검증 대상이다', () => {

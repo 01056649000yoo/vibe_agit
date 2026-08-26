@@ -22,34 +22,13 @@ export function formatMealDate(dateString) {
   }).format(new Date(Date.UTC(year, month - 1, day, 3)));
 }
 
-export function getMealAllergenCodes(meals = []) {
-  return [...new Set(
-    (Array.isArray(meals) ? meals : [])
-      .flatMap((meal) => Array.isArray(meal?.dishes) ? meal.dishes : [])
-      .flatMap((dish) => Array.isArray(dish?.allergenCodes) ? dish.allergenCodes : [])
-      .map(Number)
-      .filter((code) => Number.isInteger(code) && code >= 1 && code <= 19)
-  )].sort((a, b) => a - b);
-}
-
-export function getStudentMealMatches(student, mealCodes) {
-  const mealSet = mealCodes instanceof Set ? mealCodes : new Set(mealCodes || []);
-  return (Array.isArray(student?.allergenCodes) ? student.allergenCodes : [])
-    .map(Number)
-    .filter((code) => mealSet.has(code));
-}
-
-export function summarizeRoster(students = [], mealCodes = []) {
-  const mealSet = new Set(mealCodes);
+export function summarizeRoster(students = []) {
   return (Array.isArray(students) ? students : []).reduce((summary, student) => {
-    const matches = getStudentMealMatches(student, mealSet);
     summary.total += 1;
-    if (student.confirmationStatus === 'unconfirmed') summary.unconfirmed += 1;
-    if (student.confirmationStatus === 'confirmed_none') summary.confirmedNone += 1;
-    if (student.confirmationStatus === 'has_items') summary.hasItems += 1;
-    if (matches.length > 0) summary.mealMatches += 1;
+    if (String(student?.note || '').trim()) summary.withNote += 1;
+    else summary.withoutNote += 1;
     return summary;
-  }, { total: 0, unconfirmed: 0, confirmedNone: 0, hasItems: 0, mealMatches: 0 });
+  }, { total: 0, withNote: 0, withoutNote: 0 });
 }
 
 export function schoolSelectionFromWorkspace(school) {

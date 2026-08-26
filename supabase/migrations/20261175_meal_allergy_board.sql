@@ -1,9 +1,9 @@
 -- ============================================================================
--- 얘들아, 밥 먹자! — 교사용 급식·개인 건강 항목 확인 도구
+-- 얘들아, 밥 먹자! — 교사용 급식·학생 비고 도구
 --
--- 공개 급식과 학생별 건강 항목은 성격에 맞게 분리한다.
+-- 공개 급식과 학생별 선택 비고는 성격에 맞게 분리한다.
 --   * 나이스 급식 응답은 서버 전용 캐시에만 둔다.
---   * 학생별 건강 항목은 담당 교사가 전용 RPC로만 읽고 쓴다.
+--   * 비고는 담당 교사가 전용 RPC로만 읽고 쓰며 빈 값은 저장하지 않는다.
 --   * 학급별 급식 학교가 없으면 가입 시 선택한 교사 기본 학교를 쓴다.
 -- ============================================================================
 
@@ -49,15 +49,6 @@ CREATE TABLE IF NOT EXISTS public.class_meal_school_settings (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 민감정보 입력 전 교사가 학교의 적법한 처리 근거와 내부 절차를 확인한 기록이다.
-CREATE TABLE IF NOT EXISTS public.class_meal_health_authorizations (
-    class_id UUID PRIMARY KEY REFERENCES public.classes(id) ON DELETE CASCADE,
-    notice_version TEXT NOT NULL DEFAULT '2026-08-26'
-        CHECK (notice_version = '2026-08-26'),
-    confirmed_by UUID NOT NULL,
-    confirmed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- 급식 표시 표준 19종의 단일 원본. 화면은 이 목록을 RPC로 받아 쓴다.
 CREATE TABLE IF NOT EXISTS public.meal_allergen_catalog (
     code SMALLINT PRIMARY KEY CHECK (code BETWEEN 1 AND 19),
@@ -75,31 +66,24 @@ ON CONFLICT (code) DO UPDATE SET label = EXCLUDED.label;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_students_id_class_unique
     ON public.students (id, class_id);
 
-CREATE TABLE IF NOT EXISTS public.student_meal_health_profiles (
+CREATE TABLE IF NOT EXISTS public.student_meal_notes (
     class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
     student_id UUID NOT NULL,
-    confirmation_status TEXT NOT NULL DEFAULT 'unconfirmed'
-        CHECK (confirmation_status IN ('unconfirmed', 'confirmed_none', 'has_items')),
-    allergen_codes SMALLINT[] NOT NULL DEFAULT '{}'::SMALLINT[],
+    note TEXT NOT NULL CHECK (
+        CHAR_LENGTH(note) BETWEEN 1 AND 300
+        AND note = BTRIM(note)
+    ),
     updated_by UUID NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (class_id, student_id),
-    CONSTRAINT student_meal_health_student_scope
+    CONSTRAINT student_meal_note_student_scope
         FOREIGN KEY (student_id, class_id)
         REFERENCES public.students(id, class_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT student_meal_health_codes_valid CHECK (
-        CARDINALITY(allergen_codes) <= 19
-        AND allergen_codes <@ ARRAY[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]::SMALLINT[]
-        AND (
-            (confirmation_status = 'has_items' AND CARDINALITY(allergen_codes) > 0)
-            OR (confirmation_status <> 'has_items' AND CARDINALITY(allergen_codes) = 0)
-        )
-    )
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_student_meal_health_class_updated
-    ON public.student_meal_health_profiles (class_id, updated_at DESC, student_id);
+CREATE INDEX IF NOT EXISTS idx_student_meal_notes_class_updated
+    ON public.student_meal_notes (class_id, updated_at DESC, student_id);
 
 -- Edge 함수만 사용하는 공개 급식 캐시. 학생 개인정보는 넣지 않는다.
 CREATE TABLE IF NOT EXISTS public.neis_meal_cache (
@@ -119,15 +103,13 @@ CREATE INDEX IF NOT EXISTS idx_neis_meal_cache_expires
     ON public.neis_meal_cache (expires_at);
 
 ALTER TABLE public.class_meal_school_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.class_meal_health_authorizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meal_allergen_catalog ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_meal_health_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_meal_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.neis_meal_cache ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE public.class_meal_school_settings FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON TABLE public.class_meal_health_authorizations FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON TABLE public.meal_allergen_catalog FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON TABLE public.student_meal_health_profiles FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON TABLE public.student_meal_notes FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON TABLE public.neis_meal_cache FROM PUBLIC, anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.neis_meal_cache TO service_role;
 
@@ -140,7 +122,6 @@ AS $$
 DECLARE
     v_teacher_id UUID;
     v_school JSONB;
-    v_authorization JSONB;
     v_result JSONB;
 BEGIN
     SELECT class.teacher_id
@@ -180,16 +161,7 @@ BEGIN
     WHERE teacher.id = v_teacher_id;
 
     SELECT JSONB_BUILD_OBJECT(
-        'noticeVersion', health_auth.notice_version,
-        'confirmedAt', health_auth.confirmed_at
-    )
-    INTO v_authorization
-    FROM public.class_meal_health_authorizations health_auth
-    WHERE health_auth.class_id = p_class_id;
-
-    SELECT JSONB_BUILD_OBJECT(
         'school', v_school,
-        'healthAuthorization', v_authorization,
         'allergens', COALESCE((
             SELECT JSONB_AGG(JSONB_BUILD_OBJECT('code', catalog.code, 'label', catalog.label) ORDER BY catalog.code)
             FROM public.meal_allergen_catalog catalog
@@ -198,9 +170,8 @@ BEGIN
             SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
                 'id', roster.id,
                 'name', roster.name,
-                'confirmationStatus', COALESCE(profile.confirmation_status, 'unconfirmed'),
-                'allergenCodes', COALESCE(TO_JSONB(profile.allergen_codes), '[]'::JSONB),
-                'updatedAt', profile.updated_at
+                'note', COALESCE(student_note.note, ''),
+                'updatedAt', student_note.updated_at
             ) ORDER BY LOWER(roster.name), roster.id)
             FROM (
                 SELECT student.id, student.name
@@ -211,9 +182,9 @@ BEGIN
                 ORDER BY LOWER(student.name), student.id
                 LIMIT 100
             ) roster
-            LEFT JOIN public.student_meal_health_profiles profile
-              ON profile.class_id = p_class_id
-             AND profile.student_id = roster.id
+            LEFT JOIN public.student_meal_notes student_note
+              ON student_note.class_id = p_class_id
+             AND student_note.student_id = roster.id
         ), '[]'::JSONB)
     ) INTO v_result;
 
@@ -221,48 +192,10 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.confirm_teacher_meal_health_authorization_v1(p_class_id UUID)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    v_confirmed_at TIMESTAMPTZ;
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM public.classes class
-        WHERE class.id = p_class_id
-          AND class.deleted_at IS NULL
-          AND class.teacher_id = auth.uid()
-    ) THEN
-        RAISE EXCEPTION '담당 학급의 처리 근거만 확인할 수 있습니다.' USING ERRCODE = '42501';
-    END IF;
-
-    INSERT INTO public.class_meal_health_authorizations (
-        class_id, notice_version, confirmed_by, confirmed_at
-    ) VALUES (
-        p_class_id, '2026-08-26', auth.uid(), NOW()
-    )
-    ON CONFLICT (class_id) DO UPDATE SET
-        notice_version = EXCLUDED.notice_version,
-        confirmed_by = EXCLUDED.confirmed_by,
-        confirmed_at = EXCLUDED.confirmed_at
-    RETURNING confirmed_at INTO v_confirmed_at;
-
-    RETURN JSONB_BUILD_OBJECT(
-        'noticeVersion', '2026-08-26',
-        'confirmedAt', v_confirmed_at
-    );
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.save_teacher_student_meal_health_v1(
+CREATE OR REPLACE FUNCTION public.save_teacher_student_meal_note_v1(
     p_class_id UUID,
     p_student_id UUID,
-    p_confirmation_status TEXT,
-    p_allergen_codes SMALLINT[] DEFAULT '{}'::SMALLINT[]
+    p_note TEXT DEFAULT ''
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -270,7 +203,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-    v_codes SMALLINT[];
+    v_note TEXT := BTRIM(COALESCE(p_note, ''));
     v_updated_at TIMESTAMPTZ;
 BEGIN
     IF NOT EXISTS (
@@ -280,16 +213,7 @@ BEGIN
           AND class.deleted_at IS NULL
           AND class.teacher_id = auth.uid()
     ) THEN
-        RAISE EXCEPTION '담당 학급의 건강 항목만 수정할 수 있습니다.' USING ERRCODE = '42501';
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM public.class_meal_health_authorizations health_auth
-        WHERE health_auth.class_id = p_class_id
-          AND health_auth.notice_version = '2026-08-26'
-    ) THEN
-        RAISE EXCEPTION '민감정보 처리 근거와 학교 내부 절차를 먼저 확인해 주세요.' USING ERRCODE = '42501';
+        RAISE EXCEPTION '담당 학급의 비고만 수정할 수 있습니다.' USING ERRCODE = '42501';
     END IF;
 
     IF NOT EXISTS (
@@ -303,44 +227,31 @@ BEGIN
         RAISE EXCEPTION '현재 학급의 학생만 수정할 수 있습니다.' USING ERRCODE = '42501';
     END IF;
 
-    IF p_confirmation_status NOT IN ('unconfirmed', 'confirmed_none', 'has_items') THEN
-        RAISE EXCEPTION '건강 항목 확인 상태가 올바르지 않습니다.' USING ERRCODE = '22023';
+    IF CHAR_LENGTH(v_note) > 300 THEN
+        RAISE EXCEPTION '비고는 300자 이하로 입력해 주세요.' USING ERRCODE = '22023';
     END IF;
 
-    SELECT COALESCE(ARRAY_AGG(code ORDER BY code), '{}'::SMALLINT[])
-    INTO v_codes
-    FROM (
-        SELECT DISTINCT item.raw_code AS code
-        FROM UNNEST(COALESCE(p_allergen_codes, '{}'::SMALLINT[])) AS item(raw_code)
-        WHERE item.raw_code BETWEEN 1 AND 19
-    ) normalized;
-
-    IF CARDINALITY(COALESCE(p_allergen_codes, '{}'::SMALLINT[])) <> CARDINALITY(v_codes) THEN
-        RAISE EXCEPTION '지원하지 않거나 중복된 건강 항목이 있습니다.' USING ERRCODE = '22023';
+    IF v_note = '' THEN
+        DELETE FROM public.student_meal_notes
+        WHERE class_id = p_class_id
+          AND student_id = p_student_id;
+        v_updated_at := NULL;
+    ELSE
+        INSERT INTO public.student_meal_notes (
+            class_id, student_id, note, updated_by, updated_at
+        ) VALUES (
+            p_class_id, p_student_id, v_note, auth.uid(), NOW()
+        )
+        ON CONFLICT (class_id, student_id) DO UPDATE SET
+            note = EXCLUDED.note,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = EXCLUDED.updated_at
+        RETURNING updated_at INTO v_updated_at;
     END IF;
-    IF p_confirmation_status = 'has_items' AND CARDINALITY(v_codes) = 0 THEN
-        RAISE EXCEPTION '건강 항목을 하나 이상 선택해 주세요.' USING ERRCODE = '22023';
-    END IF;
-    IF p_confirmation_status <> 'has_items' AND CARDINALITY(v_codes) <> 0 THEN
-        RAISE EXCEPTION '선택 항목과 확인 상태가 일치하지 않습니다.' USING ERRCODE = '22023';
-    END IF;
-
-    INSERT INTO public.student_meal_health_profiles (
-        class_id, student_id, confirmation_status, allergen_codes, updated_by, updated_at
-    ) VALUES (
-        p_class_id, p_student_id, p_confirmation_status, v_codes, auth.uid(), NOW()
-    )
-    ON CONFLICT (class_id, student_id) DO UPDATE SET
-        confirmation_status = EXCLUDED.confirmation_status,
-        allergen_codes = EXCLUDED.allergen_codes,
-        updated_by = EXCLUDED.updated_by,
-        updated_at = EXCLUDED.updated_at
-    RETURNING updated_at INTO v_updated_at;
 
     RETURN JSONB_BUILD_OBJECT(
         'studentId', p_student_id,
-        'confirmationStatus', p_confirmation_status,
-        'allergenCodes', TO_JSONB(v_codes),
+        'note', v_note,
         'updatedAt', v_updated_at
     );
 END;
@@ -427,12 +338,10 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.get_teacher_meal_board_workspace_v1(UUID) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.confirm_teacher_meal_health_authorization_v1(UUID) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.save_teacher_student_meal_health_v1(UUID, UUID, TEXT, SMALLINT[]) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.save_teacher_student_meal_note_v1(UUID, UUID, TEXT) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.save_teacher_meal_school_v1(UUID, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_teacher_meal_board_workspace_v1(UUID) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.confirm_teacher_meal_health_authorization_v1(UUID) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.save_teacher_student_meal_health_v1(UUID, UUID, TEXT, SMALLINT[]) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.save_teacher_student_meal_note_v1(UUID, UUID, TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.save_teacher_meal_school_v1(UUID, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
 
 -- 최신 교사 부트스트랩(20261149)의 공지 팝업 계약을 보존하며 학교 코드만 추가한다.

@@ -49,7 +49,7 @@ export default function MealFullscreen({ school, date, meals, allergenMap, onClo
 
       <footer className="meal-fullscreen-footer">
         <span>알레르기 표시는 학교 제공 급식 정보를 바탕으로 합니다.</span>
-        <strong>학생 이름과 개인 건강 항목은 이 화면에 표시되지 않아요.</strong>
+        <strong>학생 이름과 비고는 이 화면에 표시되지 않아요.</strong>
       </footer>
     </div>
   </ModalPortal>;

@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
-import HealthProfileModal from './HealthProfileModal';
 import MealFullscreen from './MealFullscreen';
 import SchoolChangeModal from './SchoolChangeModal';
+import StudentNoteModal from './StudentNoteModal';
 import {
   formatMealDate,
-  getMealAllergenCodes,
   getSeoulDateString,
-  getStudentMealMatches,
   summarizeRoster
 } from './mealBoardEngine';
 import { mealBoardApi } from './mealBoardApi';
@@ -15,21 +13,14 @@ import './mealBoard.css';
 
 const FILTERS = [
   { id: 'all', label: '전체' },
-  { id: 'match', label: '오늘 주의' },
-  { id: 'unconfirmed', label: '미확인' },
-  { id: 'has_items', label: '항목 있음' }
+  { id: 'has_note', label: '비고 있음' },
+  { id: 'no_note', label: '비고 없음' }
 ];
 
-function statusLabel(student, matches, allergenMap) {
-  if (student.confirmationStatus === 'unconfirmed') return { tone: 'pending', text: '아직 확인 전' };
-  if (matches.length > 0) {
-    return {
-      tone: 'warning',
-      text: `오늘 ${matches.map((code) => allergenMap.get(code) || code).join(' · ')} 확인`
-    };
-  }
-  if (student.confirmationStatus === 'has_items') return { tone: 'registered', text: '항목 등록됨 · 오늘 일치 없음' };
-  return { tone: 'safe', text: '확인 완료 · 해당 없음' };
+function noteStatus(student) {
+  return student.note
+    ? { tone: 'registered', text: student.note }
+    : { tone: 'empty', text: '비고 없음' };
 }
 
 export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChange }) {
@@ -47,7 +38,6 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
   const [schoolModalOpen, setSchoolModalOpen] = useState(false);
   const [savingSchool, setSavingSchool] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
-  const [authorizing, setAuthorizing] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
 
   const loadWorkspace = useCallback(async () => {
@@ -58,7 +48,6 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
       const result = await mealBoardApi.getWorkspace(activeClass.id);
       setWorkspace({
         school: result?.school || null,
-        healthAuthorization: result?.healthAuthorization || null,
         allergens: Array.isArray(result?.allergens) ? result.allergens : [],
         students: Array.isArray(result?.students) ? result.students : []
       });
@@ -105,31 +94,28 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
     [allergens]
   );
   const meals = useMemo(() => Array.isArray(mealData?.meals) ? mealData.meals : [], [mealData?.meals]);
-  const mealCodes = useMemo(() => getMealAllergenCodes(meals), [meals]);
   const summary = useMemo(
-    () => summarizeRoster(workspace?.students || [], mealCodes),
-    [mealCodes, workspace?.students]
+    () => summarizeRoster(workspace?.students || []),
+    [workspace?.students]
   );
-  const roster = useMemo(() => (workspace?.students || []).map((student) => {
-    const matches = getStudentMealMatches(student, mealCodes);
-    return { ...student, matches, status: statusLabel(student, matches, allergenMap) };
-  }).filter((student) => {
-    if (filter === 'match') return student.matches.length > 0;
-    if (filter === 'unconfirmed') return student.confirmationStatus === 'unconfirmed';
-    if (filter === 'has_items') return student.confirmationStatus === 'has_items';
+  const roster = useMemo(() => (workspace?.students || []).map((student) => ({
+    ...student,
+    status: noteStatus(student)
+  })).filter((student) => {
+    if (filter === 'has_note') return Boolean(student.note);
+    if (filter === 'no_note') return !student.note;
     return true;
-  }), [allergenMap, filter, mealCodes, workspace?.students]);
+  }), [filter, workspace?.students]);
 
-  const saveHealth = async (confirmationStatus, allergenCodes) => {
+  const saveNote = async (note) => {
     if (!selectedStudent || !activeClass?.id) return;
     setSavingStudent(true);
     setError('');
     try {
-      const saved = await mealBoardApi.saveStudentHealth(
+      const saved = await mealBoardApi.saveStudentNote(
         activeClass.id,
         selectedStudent.id,
-        confirmationStatus,
-        allergenCodes
+        note
       );
       setWorkspace((current) => ({
         ...current,
@@ -138,30 +124,13 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
           : student)
       }));
       setSelectedStudent(null);
-      setNotice(`${selectedStudent.name} 학생의 건강 항목을 저장했습니다.`);
+      setNotice(saved.note
+        ? `${selectedStudent.name} 학생의 비고를 저장했습니다.`
+        : `${selectedStudent.name} 학생의 비고를 삭제했습니다.`);
     } catch (saveError) {
-      setError(saveError.message || '학생 건강 항목을 저장하지 못했습니다.');
+      setError(saveError.message || '학생 비고를 저장하지 못했습니다.');
     } finally {
       setSavingStudent(false);
-    }
-  };
-
-  const confirmAuthorization = async () => {
-    if (!activeClass?.id || authorizing) return;
-    const confirmed = window.confirm(
-      '학교가 급식 안전 목적의 학생 건강 정보 처리에 필요한 적법한 근거와 내부 절차를 갖추었는지 확인하셨나요?'
-    );
-    if (!confirmed) return;
-    setAuthorizing(true);
-    setError('');
-    try {
-      const authorization = await mealBoardApi.confirmHealthAuthorization(activeClass.id);
-      setWorkspace((current) => ({ ...current, healthAuthorization: authorization }));
-      setNotice('처리 근거 확인을 기록했습니다. 이제 학생별 항목을 관리할 수 있습니다.');
-    } catch (authorizationError) {
-      setError(authorizationError.message || '확인 기록을 저장하지 못했습니다.');
-    } finally {
-      setAuthorizing(false);
     }
   };
 
@@ -219,9 +188,9 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
   return <section className="meal-board">
     <header className="meal-board-header">
       <div>
-        <span className="meal-kicker">수업 도구 · 급식 안전</span>
+        <span className="meal-kicker">수업 도구 · 급식 확인</span>
         <h2>얘들아, 밥 먹자! <span aria-hidden="true">🍱</span></h2>
-        <p>오늘 급식과 우리 반 개인별 건강 항목을 관리해요</p>
+        <p>오늘 급식과 우리 반 학생별 비고를 확인해요</p>
       </div>
       <TeacherGuideButton tabId="meal-board" variant="help" />
     </header>
@@ -268,36 +237,31 @@ export default function MealBoardTeacherEntry({ activeClass, onTeacherSchoolChan
 
       <article className="meal-panel meal-roster-panel">
         <div className="meal-panel-heading">
-          <div><span className="meal-kicker">교사 전용 · 비공개</span><h3>우리 반 개인 건강 항목</h3><p>학급 명단은 자동으로 연결됩니다.</p></div>
+          <div><span className="meal-kicker">교사 전용 · 비공개</span><h3>우리 반 비고</h3><p>필요한 학생만 선택해 짧게 기록할 수 있어요.</p></div>
           <span className="meal-roster-count">{summary.total}명</span>
         </div>
 
-        {!workspace?.healthAuthorization ? <div className="meal-privacy-gate">
-          <div aria-hidden="true">🔒</div>
-          <section><strong>민감정보 처리 전 확인이 필요해요</strong><p>학교가 급식 안전 목적의 적법한 처리 근거와 내부 절차를 갖춘 경우에만 학생별 항목을 입력해 주세요. 공개 급식판에는 이 정보가 나오지 않습니다.</p></section>
-          <button type="button" className="meal-button is-primary" disabled={authorizing} onClick={confirmAuthorization}>{authorizing ? '기록 중…' : '확인하고 시작'}</button>
-        </div> : <>
-          <div className="meal-summary-grid">
-            <div><strong>{summary.mealMatches}</strong><span>오늘 주의</span></div>
-            <div><strong>{summary.hasItems}</strong><span>항목 있음</span></div>
-            <div><strong>{summary.unconfirmed}</strong><span>미확인</span></div>
-          </div>
-          <div className="meal-filter-row" role="group" aria-label="학생 건강 항목 필터">
-            {FILTERS.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>)}
-          </div>
-          <div className="meal-roster-list">
-            {roster.length === 0 ? <div className="meal-roster-empty">이 조건에 해당하는 학생이 없습니다.</div> : roster.map((student) => <button type="button" className="meal-student-row" key={student.id} onClick={() => setSelectedStudent(student)}>
-              <span className={`meal-status-dot is-${student.status.tone}`} aria-hidden="true" />
-              <span className="meal-student-name">{student.name}</span>
-              <span className={`meal-student-status is-${student.status.tone}`}>{student.status.text}</span>
-              <span className="meal-student-edit">수정</span>
-            </button>)}
-          </div>
-        </>}
+        <div className="meal-note-guidance">학급 운영에 필요한 간단한 메모만 남겨 주세요. 알레르기·질병 등 민감한 건강정보는 입력하지 않습니다.</div>
+        <div className="meal-summary-grid">
+          <div><strong>{summary.total}</strong><span>전체 학생</span></div>
+          <div><strong>{summary.withNote}</strong><span>비고 있음</span></div>
+          <div><strong>{summary.withoutNote}</strong><span>비고 없음</span></div>
+        </div>
+        <div className="meal-filter-row" role="group" aria-label="학생 비고 필터">
+          {FILTERS.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>)}
+        </div>
+        <div className="meal-roster-list">
+          {roster.length === 0 ? <div className="meal-roster-empty">이 조건에 해당하는 학생이 없습니다.</div> : roster.map((student) => <button type="button" className="meal-student-row" key={student.id} onClick={() => setSelectedStudent(student)}>
+            <span className={`meal-status-dot is-${student.status.tone}`} aria-hidden="true" />
+            <span className="meal-student-name">{student.name}</span>
+            <span className={`meal-student-status is-${student.status.tone}`}>{student.status.text}</span>
+            <span className="meal-student-edit">{student.note ? '수정' : '입력'}</span>
+          </button>)}
+        </div>
       </article>
     </div>
 
-    {selectedStudent ? <HealthProfileModal student={selectedStudent} allergens={allergens} saving={savingStudent} onClose={() => setSelectedStudent(null)} onSave={saveHealth} /> : null}
+    {selectedStudent ? <StudentNoteModal student={selectedStudent} saving={savingStudent} onClose={() => setSelectedStudent(null)} onSave={saveNote} /> : null}
     {schoolModalOpen ? <SchoolChangeModal currentSchool={workspace?.school} saving={savingSchool} onClose={() => setSchoolModalOpen(false)} onSave={saveSchool} onUseDefault={useDefaultSchool} /> : null}
     {fullscreenOpen ? <MealFullscreen school={workspace?.school} date={date} meals={meals} allergenMap={allergenMap} onClose={() => setFullscreenOpen(false)} /> : null}
   </section>;

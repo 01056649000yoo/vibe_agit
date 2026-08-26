@@ -2,12 +2,11 @@
 
 DO $$
 BEGIN
-    IF has_table_privilege('authenticated', 'public.student_meal_health_profiles', 'SELECT')
+    IF has_table_privilege('authenticated', 'public.student_meal_notes', 'SELECT')
        OR has_table_privilege('authenticated', 'public.class_meal_school_settings', 'UPDATE')
-       OR has_table_privilege('authenticated', 'public.class_meal_health_authorizations', 'SELECT')
        OR has_table_privilege('authenticated', 'public.meal_allergen_catalog', 'SELECT')
        OR has_table_privilege('authenticated', 'public.neis_meal_cache', 'SELECT') THEN
-        RAISE EXCEPTION '급식·건강 내부 테이블이 브라우저 역할에 직접 공개되었습니다.';
+        RAISE EXCEPTION '급식·비고 내부 테이블이 브라우저 역할에 직접 공개되었습니다.';
     END IF;
     IF NOT has_table_privilege('service_role', 'public.neis_meal_cache', 'SELECT')
        OR NOT has_table_privilege('service_role', 'public.neis_meal_cache', 'INSERT') THEN
@@ -64,35 +63,42 @@ BEGIN
        OR JSONB_ARRAY_LENGTH(v_workspace->'students') < 1
        OR JSONB_ARRAY_LENGTH(v_workspace->'students') > 100
        OR JSONB_ARRAY_LENGTH(v_workspace->'allergens') <> 19
-       OR v_workspace->'healthAuthorization' IS DISTINCT FROM 'null'::JSONB THEN
+       OR v_workspace ? 'healthAuthorization' THEN
         RAISE EXCEPTION '급식 도구 작업공간 형식 또는 목록 상한이 올바르지 않습니다.';
     END IF;
 
+    v_saved := public.save_teacher_student_meal_note_v1(
+        current_setting('test.meal_class_id')::UUID,
+        current_setting('test.meal_student_id')::UUID,
+        '  도시락 지참  '
+    );
+    IF v_saved->>'note' <> '도시락 지참' THEN
+        RAISE EXCEPTION '학생 비고가 정규화되어 저장되지 않았습니다.';
+    END IF;
+
+    v_workspace := public.get_teacher_meal_board_workspace_v1(
+        current_setting('test.meal_class_id')::UUID
+    );
+    IF NOT EXISTS (
+        SELECT 1
+        FROM JSONB_ARRAY_ELEMENTS(v_workspace->'students') student
+        WHERE student->>'id' = current_setting('test.meal_student_id')
+          AND student->>'note' = '도시락 지참'
+    ) THEN
+        RAISE EXCEPTION '학생 비고가 작업공간에 반영되지 않았습니다.';
+    END IF;
+
     BEGIN
-        PERFORM public.save_teacher_student_meal_health_v1(
+        PERFORM public.save_teacher_student_meal_note_v1(
             current_setting('test.meal_class_id')::UUID,
             current_setting('test.meal_student_id')::UUID,
-            'confirmed_none',
-            '{}'::SMALLINT[]
+            REPEAT('가', 301)
         );
-    EXCEPTION WHEN insufficient_privilege THEN
+    EXCEPTION WHEN invalid_parameter_value THEN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
-        RAISE EXCEPTION '처리 근거 확인 전 학생 건강 항목이 저장되었습니다.';
-    END IF;
-
-    PERFORM public.confirm_teacher_meal_health_authorization_v1(
-        current_setting('test.meal_class_id')::UUID
-    );
-    v_saved := public.save_teacher_student_meal_health_v1(
-        current_setting('test.meal_class_id')::UUID,
-        current_setting('test.meal_student_id')::UUID,
-        'has_items',
-        ARRAY[2, 6]::SMALLINT[]
-    );
-    IF v_saved->'allergenCodes' <> '[2,6]'::JSONB THEN
-        RAISE EXCEPTION '학생 건강 항목이 정규화되어 저장되지 않았습니다.';
+        RAISE EXCEPTION '300자를 넘는 학생 비고가 저장되었습니다.';
     END IF;
 
     PERFORM public.save_teacher_meal_school_v1(
@@ -103,9 +109,8 @@ BEGIN
         current_setting('test.meal_class_id')::UUID
     );
     IF v_workspace#>>'{school,source}' <> 'class_override'
-       OR v_workspace#>>'{school,schoolCode}' <> '7010001'
-       OR v_workspace->'healthAuthorization' IS NULL THEN
-        RAISE EXCEPTION '학급별 급식 학교 또는 처리 근거 확인 기록이 적용되지 않았습니다.';
+       OR v_workspace#>>'{school,schoolCode}' <> '7010001' THEN
+        RAISE EXCEPTION '학급별 급식 학교가 적용되지 않았습니다.';
     END IF;
 
     PERFORM public.save_teacher_meal_school_v1(
@@ -118,6 +123,23 @@ BEGIN
     IF v_workspace#>>'{school,source}' <> 'teacher_default'
        OR v_workspace#>>'{school,schoolCode}' <> '7010002' THEN
         RAISE EXCEPTION '교사 기본 학교 자동 연동이 올바르지 않습니다.';
+    END IF;
+
+    v_saved := public.save_teacher_student_meal_note_v1(
+        current_setting('test.meal_class_id')::UUID,
+        current_setting('test.meal_student_id')::UUID,
+        ''
+    );
+    v_workspace := public.get_teacher_meal_board_workspace_v1(
+        current_setting('test.meal_class_id')::UUID
+    );
+    IF v_saved->>'note' <> '' OR NOT EXISTS (
+        SELECT 1
+        FROM JSONB_ARRAY_ELEMENTS(v_workspace->'students') student
+        WHERE student->>'id' = current_setting('test.meal_student_id')
+          AND student->>'note' = ''
+    ) THEN
+        RAISE EXCEPTION '빈 학생 비고가 저장 행으로 남았습니다.';
     END IF;
 END;
 $$;
@@ -151,7 +173,7 @@ BEGIN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
-        RAISE EXCEPTION '다른 교사가 급식·건강 작업공간을 조회했습니다.';
+        RAISE EXCEPTION '다른 교사가 급식·비고 작업공간을 조회했습니다.';
     END IF;
 END;
 $$;
@@ -186,7 +208,7 @@ BEGIN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
-        RAISE EXCEPTION '학생이 교사용 급식·건강 작업공간을 조회했습니다.';
+        RAISE EXCEPTION '학생이 교사용 급식·비고 작업공간을 조회했습니다.';
     END IF;
 END;
 $$;
@@ -198,8 +220,7 @@ DECLARE
     v_function TEXT;
 BEGIN
     SELECT pg_get_functiondef('public.get_teacher_meal_board_workspace_v1(uuid)'::REGPROCEDURE)
-        || pg_get_functiondef('public.confirm_teacher_meal_health_authorization_v1(uuid)'::REGPROCEDURE)
-        || pg_get_functiondef('public.save_teacher_student_meal_health_v1(uuid,uuid,text,smallint[])'::REGPROCEDURE)
+        || pg_get_functiondef('public.save_teacher_student_meal_note_v1(uuid,uuid,text)'::REGPROCEDURE)
         || pg_get_functiondef('public.save_teacher_meal_school_v1(uuid,text,text,text,text,text)'::REGPROCEDURE)
     INTO v_function;
     IF v_function ~ 'auth\.jwt|app_metadata' THEN

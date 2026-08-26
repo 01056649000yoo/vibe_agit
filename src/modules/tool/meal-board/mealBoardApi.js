@@ -26,16 +26,11 @@ export const mealBoardApi = Object.freeze({
     return data;
   },
 
-  confirmHealthAuthorization(classId) {
-    return call('confirm_teacher_meal_health_authorization_v1', { p_class_id: classId });
-  },
-
-  saveStudentHealth(classId, studentId, confirmationStatus, allergenCodes) {
-    return call('save_teacher_student_meal_health_v1', {
+  saveStudentNote(classId, studentId, note) {
+    return call('save_teacher_student_meal_note_v1', {
       p_class_id: classId,
       p_student_id: studentId,
-      p_confirmation_status: confirmationStatus,
-      p_allergen_codes: allergenCodes
+      p_note: note
     });
   },
 

@@ -151,11 +151,7 @@
 .meal-student-edit { color: #789084; font-size: .7rem; font-weight: 850; }
 .meal-roster-empty { padding: 50px 20px; text-align: center; color: var(--meal-muted); font-size: .85rem; }
 
-.meal-privacy-gate { margin-top: 20px; padding: 20px; border: 1px solid #dbe4dd; border-radius: 18px; background: #f6f9f6; display: grid; grid-template-columns: auto 1fr; gap: 11px 13px; align-items: start; }
-.meal-privacy-gate > div { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: #e4efe7; }
-.meal-privacy-gate strong { font-size: .9rem; }
-.meal-privacy-gate p { margin: 5px 0 0; color: var(--meal-muted); font-size: .76rem; line-height: 1.6; }
-.meal-privacy-gate .meal-button { grid-column: 1 / -1; }
+.meal-note-guidance { margin-top: 18px; padding: 11px 13px; color: #657269; background: #f6f8f5; border-radius: 13px; font-size: .74rem; line-height: 1.55; }
 
 .meal-alert { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; border-radius: 13px; padding: 10px 13px; font-size: .8rem; font-weight: 750; }
 .meal-alert > span { font-weight: 950; }
@@ -186,12 +182,12 @@
 .meal-modal header p { margin: 0; color: var(--meal-muted); font-size: .82rem; line-height: 1.5; }
 .meal-modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; }
 .meal-modal-actions .meal-button.is-primary { margin-left: auto; }
-.meal-health-notice { color: #5b6e61; background: #f1f6f2; border-radius: 13px; padding: 11px 13px; font-size: .76rem; line-height: 1.55; margin-bottom: 14px; }
-.meal-allergen-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.meal-allergen-picker button { min-height: 47px; border: 1px solid #e0e5df; border-radius: 12px; background: #fff; color: #536158; text-align: left; padding: 9px; cursor: pointer; font-weight: 800; }
-.meal-allergen-picker button span { display: inline-grid; place-items: center; width: 21px; height: 21px; margin-right: 6px; border-radius: 7px; background: #f0f2ef; color: #718077; font-size: .65rem; }
-.meal-allergen-picker button.is-selected { color: #fff; background: var(--meal-green); border-color: var(--meal-green); box-shadow: 0 6px 14px rgba(47,117,82,.18); }
-.meal-allergen-picker button.is-selected span { color: var(--meal-green-deep); background: #dcece1; }
+.meal-note-notice { color: #735744; background: #fff6eb; border-radius: 13px; padding: 11px 13px; font-size: .76rem; line-height: 1.55; margin-bottom: 16px; }
+.meal-note-field { display: grid; gap: 8px; }
+.meal-note-field > span { color: #405047; font-size: .82rem; font-weight: 900; }
+.meal-note-field textarea { width: 100%; resize: vertical; min-height: 125px; border: 1px solid #dce3dc; border-radius: 14px; padding: 12px 13px; color: var(--meal-ink); background: #fff; line-height: 1.55; box-sizing: border-box; }
+.meal-note-field textarea:focus { outline: 3px solid rgba(47,117,82,.13); border-color: #77a78b; }
+.meal-note-field small { justify-self: end; color: var(--meal-muted); font-size: .7rem; }
 
 .meal-school-scope { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
 .meal-school-scope label { display: flex; gap: 9px; padding: 13px; border: 1px solid #e0e5df; border-radius: 14px; cursor: pointer; }
@@ -240,7 +236,6 @@
   .meal-summary-grid div { padding: 10px 5px; }
   .meal-student-row { grid-template-columns: 9px minmax(64px, .6fr) minmax(115px, 1.4fr); }
   .meal-student-edit { display: none; }
-  .meal-allergen-picker { grid-template-columns: repeat(2, 1fr); }
   .meal-school-scope { grid-template-columns: 1fr; }
   .meal-modal-actions { flex-wrap: wrap; }
   .meal-fullscreen { padding: 20px; }
