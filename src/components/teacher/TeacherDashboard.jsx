@@ -1,6 +1,5 @@
 import { TEACHER_NAV_GROUPS } from '../../constants/teacherNav';
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
-import Card from '../common/Card';
 import Button from '../common/Button';
 import GuideInfoButton from '../common/GuideInfoButton';
 import { supabase } from '../../lib/supabaseClient';

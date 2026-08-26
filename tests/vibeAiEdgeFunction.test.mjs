@@ -9,6 +9,7 @@ const openaiClientSource = await readFile('src/lib/openai.js', 'utf8');
 const interactionMigration = await readFile('supabase/migrations/20261010_friend_interaction_writes.sql', 'utf8');
 const queueMigration = await readFile('supabase/migrations/20261180_comment_ai_review_queue.sql', 'utf8');
 const labBridgeMigration = await readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8');
+const bypassMigration = await readFile('supabase/migrations/20261183_close_legacy_comment_review_bypass.sql', 'utf8');
 
 test('vibe-ai는 클라이언트 API 키·모드·모델 오버라이드를 받지 않는다', () => {
     assert.doesNotMatch(edgeSource, /overrideApiKey|overrideApiMode/);
@@ -32,6 +33,15 @@ test('댓글 판정은 서버가 본인 pending 댓글을 읽어 상태까지 �
     assert.match(safetySource, /callAI\(\{ commentId, type: 'SAFETY_CHECK' \}\)/);
     assert.doesNotMatch(safetySource, /callAI\(\{ content,/);
     assert.doesNotMatch(interactionSource, /record_comment_ai_review/);
+});
+
+test('학생이 스스로 댓글을 승인하던 구형 판정 함수는 DB에서 지워 둔다', () => {
+    // 앱이 부르지 않는 것만으로는 부족하다 — 이 함수는 SECURITY DEFINER 인데 `authenticated` 에게
+    // 열려 있어서, 브라우저에서 한 번 부르면 자기 pending 댓글이 곧바로 approved 가 됐다.
+    // 대기열이 유일한 판정 경로가 되도록 함수 자체를 지운 상태를 못 박는다.
+    assert.match(bypassMigration, /DROP FUNCTION IF EXISTS public\.record_comment_ai_review\(UUID, BOOLEAN, TEXT\)/);
+    assert.match(bypassMigration, /DROP FUNCTION IF EXISTS public\.claim_comment_ai_review_v1\(UUID, UUID\)/);
+    assert.match(bypassMigration, /RAISE EXCEPTION '구형 댓글 판정 함수가 남아 있습니다\.'/);
 });
 
 test('commentId 없는 구버전 댓글 판정 경로는 더 이상 허용하지 않는다', () => {

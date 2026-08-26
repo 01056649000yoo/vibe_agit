@@ -10,6 +10,16 @@ const LOW_EFFORT_COMMENTS = new Set([
     '와!', '오!'
 ]);
 
+// RPC 가 직접 올린 안내는 이미 아이가 읽을 수 있는 말이라 그대로 보여 준다.
+// 그 밖의 실패(통신 끊김 등)는 원인을 숨기고 다시 해 보라고만 알린다.
+// 이게 없으면 저장이 실패해도 화면에 아무 말도 뜨지 않아 아이는 왜 안 되는지 알 수 없다.
+const RAISED_BY_RPC = new Set(['22023', '42501', '55000', 'P0001', 'P0002']);
+
+const commentErrorMessage = (error) => {
+    if (RAISED_BY_RPC.has(String(error?.code || '')) && error?.message) return error.message;
+    return '지금은 댓글을 저장하지 못했어요. 잠시 뒤에 다시 해 주세요.';
+};
+
 const validateCommentQuality = (content) => {
     const trimmed = content.trim();
     const compact = trimmed.replace(/\s+/g, '');
@@ -195,7 +205,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         }
 
         if (checkBadWords(content)) {
-            alert('깨끗한 교실을 위해 나쁜 말을 사용해 주세요! 🚫\n(비속어나 욕설은 등록할 수 없어요)');
+            alert('깨끗한 교실을 위해 고운 말을 사용해 주세요! 🚫\n(비속어나 욕설은 등록할 수 없어요)');
             return false;
         }
 
@@ -230,6 +240,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         } catch (err) {
             console.error('댓글 등록 실패:', err.message);
             setComments((current) => current.filter((comment) => comment.id !== tempId));
+            alert(commentErrorMessage(err));
             void fetchInteractions();
             return false;
         }
@@ -245,7 +256,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         }
 
         if (checkBadWords(newContent)) {
-            alert('깨끗한 교실을 위해 나쁜 말을 사용해 주세요! 🚫\n(비속어나 욕설은 입력할 수 없어요)');
+            alert('깨끗한 교실을 위해 고운 말을 사용해 주세요! 🚫\n(비속어나 욕설은 입력할 수 없어요)');
             return false;
         }
 
@@ -266,6 +277,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             return true;
         } catch (err) {
             console.error('댓글 수정 실패:', err.message);
+            alert(commentErrorMessage(err));
             void fetchInteractions();
             return false;
         }

@@ -21,6 +21,29 @@
 
 ---
 
+## 2026-08-26 — 댓글 AI 검사 우회 차단과 사문화 코드 정리 (Claude)
+
+- **한 일**: 오늘 작업분(48커밋·127파일·+11,298/−1,308) 전체를 점검하다가, 학생이 자기 댓글을 스스로
+  승인해 AI 검사를 통째로 건너뛸 수 있는 경로를 찾았다. 20260916이 만든 `record_comment_ai_review`가
+  SECURITY DEFINER인데 `authenticated`에게 계속 열려 있어, 브라우저에서 한 번 부르면 자기 pending 댓글이
+  곧바로 `approved`가 되고 `moderated_by`도 `ai`로 찍혀 교사 화면에서 진짜 AI 승인과 구분되지 않았다.
+  20261180이 판정을 서버 대기열로 옮겼지만 이 옛 경로를 닫지 않아 우회가 그대로 남아 있었다.
+- **변경**: `20261183`으로 `record_comment_ai_review`와 사문화된 `claim_comment_ai_review_v1`을 제거하고,
+  `20261184`로 `get_spelling_learning_workspace_v1`·`record_spelling_promotion_decisions_v1`을 제거한다.
+  둘 다 실제 DB 롤백 스모크를 함께 넣었다. 프론트에서는 죽은 import 3개(`Button`·`AnimatePresence`·`Card`)를
+  걷어내고, 댓글 저장 실패가 화면에 아무 말도 남기지 않던 것을 RPC 안내 그대로 보여 주도록 고쳤다.
+  뒤집혀 있던 문구 `나쁜 말을 사용해 주세요` 두 곳도 `고운 말을 사용해 주세요`로 바로잡았다.
+- **결과/검증**: 운영 `agit-db` 롤백 트랜잭션에서 우회를 **실제 재현**했다(작성 직후 `pending` →
+  구형 RPC 호출 후 `approved`/`moderated_by=ai`). 신규 회귀 검사는 마이그레이션에서 DROP 한 줄을
+  일부러 빼면 실패하고 원복하면 통과한다. 전체 회귀 529/529, ESLint 오류 0건(기존 경고 11건),
+  Vite 빌드, 보안 묶음, 새 SQL 2개의 실제 스키마 검증이 모두 통과했다.
+- **남은 것 / 다음**: **마이그레이션 두 개는 아직 운영 DB에 적용하지 않았다** — 적용 전까지 우회는 열려
+  있다. `get_student_spelling_entries_v1`은 지우려다 멈췄다. 연구소 배포본(`writing-helper-lab-app`)의
+  `/app/.next`가 아직 이 RPC를 직접 부르고 `.catch(()=>[])`로 감싸고 있어, 지우면 오류도 없이 학급 맞춤법
+  항목이 빈 목록이 된다. 연구소를 `_v2`로 옮긴 뒤에 지운다. `get_teacher_assignment_submission_board_v1`,
+  `submit_teacher_feedback_v1`, `admin_get_spelling_promotion_workspace_v2`,
+  `admin_reject_spelling_candidate_v1`은 아직 tests/sql 스모크가 직접 부르므로 그 검사와 함께 옮긴다.
+
 ## 2026-08-26 — 우리반 아지트 미정 활동 안내 제거 (Codex)
 
 - **한 일**: `우리반 아지트 (beta)`의 세부 내용이 아직 정해지지 않았으므로, 의견 모으기·글쓰기 전

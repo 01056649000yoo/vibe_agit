@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
-import Button from '../common/Button';
 import CommentComposer from './CommentComposer';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
