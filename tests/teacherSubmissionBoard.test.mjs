@@ -158,7 +158,7 @@ test('전광판은 전체와 미션별 현황을 한 폴링으로 전환하고 �
     assert.match(board, /현황 범위/);
     assert.match(board, /전체 활성 글 과제/);
     assert.match(board, /mission\.is_archived !== true && mission\.mission_type !== 'meeting'/);
-    assert.match(board, /MissionStudentStatusTable[\s\S]*현재 상태/);
+    assert.match(board, /MissionStudentStatusCards[\s\S]*현재 상태 \$\{column\.label\}/);
     assert.match(board, /학생 상태 필터[\s\S]*scopeSummary/);
     assert.match(board, /previous\?\.scopeKey === scopeKey[\s\S]*previous\.version === 2/);
     assert.match(board, /is-new-submission/);
@@ -169,9 +169,9 @@ test('전광판은 전체와 미션별 현황을 한 폴링으로 전환하고 �
     assert.match(manager, /classId=\{activeClass\?\.id\}[\s\S]*selectedMissionId=\{submissionBoardMissionId\}/);
     assert.match(styles, /teacher-submission-board__scope-toolbar/);
     assert.match(styles, /teacher-submission-board__status-filters/);
-    assert.match(styles, /teacher-submission-board__status-table\.is-mission-scope/);
+    assert.match(styles, /teacher-submission-board__mission-card-grid/);
     assert.match(styles, /teacher-submission-board__submission-group li\.is-new-submission button/);
-    assert.match(styles, /teacher-submission-board__status-table tr\.is-status-changed/);
+    assert.match(styles, /teacher-submission-board__mission-card\.is-status-changed/);
     assert.match(styles, /prefers-reduced-motion: reduce/);
 
     assert.match(hook, /const \[selectedMissionId, setSelectedMissionId\] = useState\(null\)/);
@@ -187,6 +187,32 @@ test('전광판은 전체와 미션별 현황을 한 폴링으로 전환하고 �
     assert.doesNotMatch(migration, /post_content|original_content|structured_content|ai_feedback|eval_comment/);
     assert.match(smoke, /v_scoped->>'scope' <> 'mission'/);
     assert.match(smoke, /jsonb_array_length\(v_scoped->'student_statuses'\) > 100/);
+});
+
+test('미션별 학생 현황은 24명 카드 배치와 같은 실시간 데이터의 확대 모달을 제공한다', async () => {
+    const [board, styles, dialog] = await Promise.all([
+        read('src/components/teacher/TeacherSubmissionBoard.jsx'),
+        read('src/components/teacher/TeacherSubmissionBoard.css'),
+        read('src/components/common/CenteredDialog.jsx')
+    ]);
+
+    assert.match(board, /실시간 크게 보기/);
+    assert.match(board, /const \[isStatusExpanded, setIsStatusExpanded\] = useState\(false\)/);
+    assert.match(board, /isOpen=\{isStatusExpanded && isMissionScope\}/);
+    assert.match(board, /24명 기준 카드 배치/);
+    assert.match(board, /12초 이내로 자동 갱신/);
+    assert.match(board, /maxWidth="1440px"[\s\S]*maxHeight="calc\(100dvh - 40px\)"/);
+    assert.match(board, /MissionStatusFilters[\s\S]*expanded[\s\S]*MissionStudentStatusCards[\s\S]*expanded/);
+    assert.match(board, /students=\{filteredStudentStatuses\}[\s\S]*highlightedStudentIds=\{highlights\.studentIds\}/);
+    assert.doesNotMatch(board, /supabase\.|getSnapshot\(|setInterval\s*\(/);
+
+    assert.match(styles, /mission-card-grid \{[\s\S]*repeat\(4, minmax\(0, 1fr\)\)[\s\S]*minmax\(62px, auto\)[\s\S]*max-height: 440px/);
+    assert.match(styles, /mission-card-grid\.is-expanded \{[\s\S]*repeat\(6, minmax\(0, 1fr\)\)[\s\S]*minmax\(88px, auto\)/);
+    assert.match(styles, /mission-card\.is-confirmed[\s\S]*mission-card\.is-pending[\s\S]*mission-card\.is-rewriting[\s\S]*mission-card\.is-waiting/);
+    assert.match(styles, /mission-card\.is-status-changed[\s\S]*teacher-submission-card-change 2\.2s/);
+    assert.match(styles, /@media \(max-width: 640px\)[\s\S]*mission-card-grid\.is-expanded[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(dialog, /ModalCloseButton[\s\S]*tone="onDark"/);
+    assert.match(dialog, /document\.body\.style\.overflow = 'hidden'[\s\S]*event\.key === 'Escape'/);
 });
 
 test('최초 과제 개요와 경량 폴링은 권한이 제한된 동일 DB 집계를 사용한다', async () => {

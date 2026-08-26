@@ -10,6 +10,7 @@ const STUDENT_STATUS_COLUMNS = Object.freeze([
 ]);
 const STATUS_COLUMN_BY_VALUE = new Map(STUDENT_STATUS_COLUMNS.map((column) => [column.status, column]));
 const EMPTY_HIGHLIGHTS = Object.freeze({ studentIds: new Set(), eventIds: new Set() });
+const EMPTY_SCOPE_SUMMARY = Object.freeze({});
 
 const getStudentSnapshotSignature = (student, isMissionScope) => isMissionScope
     ? student.status || 'not_submitted'
@@ -185,40 +186,64 @@ const StudentStatusTable = memo(({ students, highlightedStudentIds }) => (
 
 StudentStatusTable.displayName = 'StudentStatusTable';
 
-const MissionStudentStatusTable = memo(({ students, highlightedStudentIds }) => (
-    <div className="teacher-submission-board__status-table-scroll" tabIndex={0} role="region" aria-label="선택 미션 학생별 상태표">
-        <table className="teacher-submission-board__status-table is-mission-scope">
-            <thead>
-                <tr>
-                    <th scope="col">학생</th>
-                    <th scope="col">현재 상태</th>
-                </tr>
-            </thead>
-            <tbody>
-                {students.map((student) => {
-                    const column = STATUS_COLUMN_BY_VALUE.get(student.status)
-                        || STATUS_COLUMN_BY_VALUE.get('not_submitted');
-                    return (
-                        <tr
-                            key={student.student_id}
-                            className={highlightedStudentIds.has(student.student_id) ? 'is-status-changed' : undefined}
-                        >
-                            <th scope="row"><strong>{student.student_name || '학생'}</strong></th>
-                            <td>
-                                <span className={`teacher-submission-board__mission-status ${column.className}`}>
-                                    <span aria-hidden="true" />
-                                    {column.label}
-                                </span>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
+const MissionStatusFilters = memo(({ summary, statusFilter, onChange, expanded = false }) => (
+    <div
+        className={`teacher-submission-board__status-filters${expanded ? ' is-expanded' : ''}`}
+        role="group"
+        aria-label="학생 상태 필터"
+    >
+        <button
+            type="button"
+            className={statusFilter === 'all' ? 'is-active' : undefined}
+            aria-pressed={statusFilter === 'all'}
+            onClick={() => onChange('all')}
+        >
+            전체 <strong>{Number(summary.total_students || 0)}</strong>
+        </button>
+        {STUDENT_STATUS_COLUMNS.map((column) => (
+            <button
+                type="button"
+                key={column.status}
+                className={`${column.className}${statusFilter === column.status ? ' is-active' : ''}`}
+                aria-pressed={statusFilter === column.status}
+                onClick={() => onChange(column.status)}
+            >
+                {column.label} <strong>{Number(Reflect.get(summary, column.key) || 0)}</strong>
+            </button>
+        ))}
     </div>
 ));
 
-MissionStudentStatusTable.displayName = 'MissionStudentStatusTable';
+MissionStatusFilters.displayName = 'MissionStatusFilters';
+
+const MissionStudentStatusCards = memo(({
+    students, highlightedStudentIds, expanded = false
+}) => (
+    <ul
+        className={`teacher-submission-board__mission-card-grid${expanded ? ' is-expanded' : ''}`}
+        aria-label={expanded ? '확대된 선택 미션 학생별 상태 카드' : '선택 미션 학생별 상태 카드'}
+    >
+        {students.map((student) => {
+            const column = STATUS_COLUMN_BY_VALUE.get(student.status)
+                || STATUS_COLUMN_BY_VALUE.get('not_submitted');
+            const studentName = student.student_name || '학생';
+            return (
+                <li
+                    key={student.student_id}
+                    className={`teacher-submission-board__mission-card ${column.className}${
+                        highlightedStudentIds.has(student.student_id) ? ' is-status-changed' : ''
+                    }`}
+                    aria-label={`${studentName}, 현재 상태 ${column.label}`}
+                >
+                    <strong title={studentName}>{studentName}</strong>
+                    <span><i aria-hidden="true" />{column.label}</span>
+                </li>
+            );
+        })}
+    </ul>
+));
+
+MissionStudentStatusCards.displayName = 'MissionStudentStatusCards';
 
 const TeacherSubmissionBoard = ({
     classId, missions, board, pollError, selectedMissionId, isScopeLoading,
@@ -226,6 +251,7 @@ const TeacherSubmissionBoard = ({
 }) => {
     const [openingPostId, setOpeningPostId] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
+    const [isStatusExpanded, setIsStatusExpanded] = useState(false);
     const [highlights, setHighlights] = useState(EMPTY_HIGHLIGHTS);
     const [liveMessage, setLiveMessage] = useState('');
     const [historyState, setHistoryState] = useState({
@@ -271,10 +297,11 @@ const TeacherSubmissionBoard = ({
         if (!isMissionScope || statusFilter === 'all') return studentStatuses;
         return studentStatuses.filter((student) => student.status === statusFilter);
     }, [isMissionScope, statusFilter, studentStatuses]);
-    const scopeSummary = board?.scope_summary || {};
+    const scopeSummary = board?.scope_summary || EMPTY_SCOPE_SUMMARY;
 
     useEffect(() => {
         setStatusFilter('all');
+        setIsStatusExpanded(false);
     }, [selectedMissionId]);
 
     useEffect(() => {
@@ -368,6 +395,9 @@ const TeacherSubmissionBoard = ({
         setHistoryState((current) => ({ ...current, isOpen: false }));
     }, []);
 
+    const handleOpenStatusExpanded = useCallback(() => setIsStatusExpanded(true), []);
+    const handleCloseStatusExpanded = useCallback(() => setIsStatusExpanded(false), []);
+
     const handleSelectMission = useCallback((event) => {
         setStatusFilter('all');
         onSelectMission(event.target.value || null);
@@ -448,44 +478,36 @@ const TeacherSubmissionBoard = ({
                                 ? selectedMission?.title || board?.selected_mission_title
                                 : '활성 글 과제를 학생별로 합산했습니다.'}</p>
                         </div>
-                        {!isMissionScope && (
+                        {isMissionScope && scopeMatches && !isScopeLoading && studentStatuses.length > 0 ? (
+                            <button
+                                type="button"
+                                className="teacher-submission-board__expand-button"
+                                onClick={handleOpenStatusExpanded}
+                            >
+                                실시간 크게 보기
+                            </button>
+                        ) : !isMissionScope ? (
                             <div className="teacher-submission-board__legend" aria-label="진행 상태 색상 안내">
                                 <span className="is-confirmed">승인</span>
                                 <span className="is-pending">확인 대기</span>
                                 <span className="is-rewriting">다시쓰기</span>
                                 <span className="is-waiting">미제출</span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                     {isMissionScope && scopeMatches && !isScopeLoading && (
-                        <div className="teacher-submission-board__status-filters" role="group" aria-label="학생 상태 필터">
-                            <button
-                                type="button"
-                                className={statusFilter === 'all' ? 'is-active' : undefined}
-                                aria-pressed={statusFilter === 'all'}
-                                onClick={() => setStatusFilter('all')}
-                            >
-                                전체 <strong>{Number(scopeSummary.total_students || 0)}</strong>
-                            </button>
-                            {STUDENT_STATUS_COLUMNS.map((column) => (
-                                <button
-                                    type="button"
-                                    key={column.status}
-                                    className={`${column.className}${statusFilter === column.status ? ' is-active' : ''}`}
-                                    aria-pressed={statusFilter === column.status}
-                                    onClick={() => setStatusFilter(column.status)}
-                                >
-                                    {column.label} <strong>{Number(Reflect.get(scopeSummary, column.key) || 0)}</strong>
-                                </button>
-                            ))}
-                        </div>
+                        <MissionStatusFilters
+                            summary={scopeSummary}
+                            statusFilter={statusFilter}
+                            onChange={setStatusFilter}
+                        />
                     )}
                     {isScopeLoading ? (
                         <p className="teacher-submission-board__empty is-loading">학생별 상태를 불러오는 중입니다.</p>
                     ) : !scopeMatches ? (
                         <p className="teacher-submission-board__empty is-error">선택한 미션의 학생 상태를 불러오지 못했습니다.</p>
                     ) : filteredStudentStatuses.length > 0 ? isMissionScope ? (
-                        <MissionStudentStatusTable
+                        <MissionStudentStatusCards
                             students={filteredStudentStatuses}
                             highlightedStudentIds={highlights.studentIds}
                         />
@@ -501,6 +523,50 @@ const TeacherSubmissionBoard = ({
                     )}
                 </section>
             </div>
+
+            <CenteredDialog
+                isOpen={isStatusExpanded && isMissionScope}
+                onClose={handleCloseStatusExpanded}
+                eyebrow="실시간 제출 전광판"
+                title={`${selectedMission?.title || board?.selected_mission_title || '선택 미션'} 제출 현황`}
+                description="24명 기준 카드 배치로 현재 상태를 크게 봅니다. 이 창을 열어 둔 동안에도 12초 이내로 자동 갱신됩니다."
+                maxWidth="1440px"
+                maxHeight="calc(100dvh - 40px)"
+                bodyPadding="14px"
+            >
+                <div className="teacher-submission-board__expanded-summary">
+                    <div>
+                        <strong>{filteredStudentStatuses.length}명 표시</strong>
+                        <span>전체 {Number(scopeSummary.total_students || 0)}명</span>
+                    </div>
+                    <div className={`teacher-submission-board__live${pollError ? ' has-error' : ''}`}>
+                        <span className="teacher-submission-board__live-dot" aria-hidden="true" />
+                        <strong>{isScopeLoading ? '불러오는 중' : pollError ? '재연결 중' : '자동 갱신'}</strong>
+                        <time dateTime={board?.generated_at || undefined}>{formatClock(board?.generated_at)}</time>
+                    </div>
+                </div>
+                <MissionStatusFilters
+                    summary={scopeSummary}
+                    statusFilter={statusFilter}
+                    onChange={setStatusFilter}
+                    expanded
+                />
+                {isScopeLoading ? (
+                    <p className="teacher-submission-board__empty is-loading">학생별 상태를 불러오는 중입니다.</p>
+                ) : !scopeMatches ? (
+                    <p className="teacher-submission-board__empty is-error">선택한 미션의 학생 상태를 불러오지 못했습니다.</p>
+                ) : filteredStudentStatuses.length > 0 ? (
+                    <MissionStudentStatusCards
+                        students={filteredStudentStatuses}
+                        highlightedStudentIds={highlights.studentIds}
+                        expanded
+                    />
+                ) : studentStatuses.length > 0 ? (
+                    <p className="teacher-submission-board__empty">이 상태에 해당하는 학생이 없습니다.</p>
+                ) : (
+                    <p className="teacher-submission-board__empty">표시할 학생이 없습니다.</p>
+                )}
+            </CenteredDialog>
 
             <CenteredDialog
                 isOpen={historyState.isOpen}
