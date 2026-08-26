@@ -40,10 +40,6 @@
   ],
   "keep": [
     {
-      "name": "get_spelling_learning_workspace_v2",
-      "reason": "죽은 것이 아니다. _v3 가 내부에서 이 함수를 부른다. _v3 가 스스로 다 계산하게 바꾸기 전에는 못 지운다."
-    },
-    {
       "name": "admin_dashboard_snapshot",
       "reason": "관리자 화면이 쓰지 않지만 운영 점검 때 psql 로 직접 부른다. 점검 절차를 RPC 없이 바꾸면 지운다."
     },
@@ -52,12 +48,28 @@
       "reason": "다른 SECURITY DEFINER 함수와 RLS 정책이 쓰는 내부 판정 도우미다. 앱이 직접 부르지 않는 것이 정상이다."
     },
     {
+      "name": "get_my_role",
+      "reason": "구형 역할 조회. 앱은 부트스트랩 RPC 로 옮겼다. 외부 앱이 남아 있지 않은지 한 번 더 확인한 뒤 지운다."
+    },
+    {
+      "name": "get_reading_marathon_snapshot",
+      "reason": "죽은 것이 아니다. 앱은 _v2 를 부르지만 finish_teacher_reading_marathon·save_teacher_reading_marathon_v2·set_teacher_reading_book_page_count 세 DB 함수가 아직 이 이름을 부른다. 그 셋을 _v2 로 옮길 때 함께 지운다."
+    },
+    {
+      "name": "get_spelling_learning_workspace_v2",
+      "reason": "죽은 것이 아니다. _v3 가 내부에서 이 함수를 부른다. _v3 가 스스로 다 계산하게 바꾸기 전에는 못 지운다."
+    },
+    {
       "name": "is_teacher_of_student",
       "reason": "위와 같은 내부 판정 도우미. RLS 정책에서 쓴다."
     },
     {
-      "name": "get_my_role",
-      "reason": "구형 역할 조회. 앱은 부트스트랩 RPC 로 옮겼다. 외부 앱이 남아 있지 않은지 한 번 더 확인한 뒤 지운다."
+      "name": "record_system_daily_metric_v1",
+      "reason": "죽은 것이 아니다. scripts/record-system-metrics.sh 가 _v2 호출이 실패하면 이 함수로 되돌린다 — 스크립트가 마이그레이션보다 먼저 배포돼도 일일 기록이 끊기지 않게 하는 안전장치다. 그 되돌림 경로를 없앨 때 함께 지운다."
+    },
+    {
+      "name": "teacher_assignment_submission_board_snapshot_v1",
+      "reason": "죽은 것이 아니다. get_teacher_mission_overview_v1 이 내부에서 이 함수를 부른다. 그 RPC 를 새 판으로 옮길 때 함께 지운다."
     }
   ]
 }

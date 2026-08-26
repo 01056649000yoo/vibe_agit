@@ -1,6 +1,10 @@
 DO $$
 BEGIN
-    IF has_function_privilege('authenticated', 'public.record_spelling_search_batch_v1(jsonb)', 'EXECUTE') THEN
+    -- 지워진 함수는 이 검사가 지키려는 상태를 이미 만족한다. 다만 `has_function_privilege` 는
+    -- 이름이 없으면 그 자리에서 오류를 내므로 존재할 때만 본다
+    -- (2026-08-26 다른 스모크가 같은 이유로 통째로 깨졌다).
+    IF to_regprocedure('public.record_spelling_search_batch_v1(jsonb)') IS NOT NULL
+       AND has_function_privilege('authenticated', 'public.record_spelling_search_batch_v1(jsonb)', 'EXECUTE') THEN
         RAISE EXCEPTION '인증 학생에게 구버전 맞춤법 기록 RPC 실행 권한이 남아 있습니다.';
     END IF;
 

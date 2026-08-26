@@ -67,7 +67,10 @@
   `authenticated` 에게 열려 있어, 학생이 브라우저에서 한 번 부르면 자기 댓글이 **AI 검사 없이 승인**됐다
   (2026-08-26). 앱 코드가 안 부르는지 보는 검사로는 못 잡는다 — 코드에 없다는 것이 바로 위험 신호다.
   못 지우면 `ops/rpc-surface-allowlist.json` 에 **이유와 언제 지울 수 있는지**를 적는다.
-  `npm run check:rpc-surface` 가 매 푸시마다 DB·이 저장소·다른 앱을 한꺼번에 본다.
+  검사는 두 겹이다. `tests/migrationVersionCleanup.test.mjs` 가 **마이그레이션 파일만 보고**
+  `npm run test:all` 안에서 즉시 잡고(도커 없이 어디서나 돈다), `npm run check:rpc-surface` 가
+  매 푸시마다 **운영 DB·이 저장소·다른 앱**을 함께 봐 이름이 다른 교체까지 잡는다.
+  첫 판에는 번호를 안 붙이므로 `X` 와 `X_v2` 도 같은 짝으로 본다.
 - **DB 함수를 지우기 전에 다른 앱의 배포본까지 확인한다.** 이 DB 는 아지트만 쓰지 않는다 —
   연구소·샘링크·클래스룸툴·자비스가 같은 API 를 부른다. `get_student_spelling_entries_v1` 은
   이 저장소에 참조가 하나도 없었지만 연구소가 쓰고 있었고, 그쪽은 `.catch(()=>[])` 라서

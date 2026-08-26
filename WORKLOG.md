@@ -21,6 +21,26 @@
 
 ---
 
+## 2026-08-27 — 새 판을 만들 때 옛 판 처리를 강제하는 검사 (Claude)
+
+- **한 일**: 어제 만든 `check:rpc-surface` 는 운영 DB 를 읽어 **푸시할 때** 잡는다. 도커가 꺼진
+  컴퓨터에서는 건너뛰고 배포 컨테이너에서도 안 돌며, 무엇보다 마이그레이션을 다 쓴 뒤에야 걸린다.
+  마이그레이션 파일만 읽는 `tests/migrationVersionCleanup.test.mjs` 를 더해 `npm run test:all` 안에서,
+  즉 어디서나 즉시 걸리게 했다. 새 판을 만들었으면 **지우거나 이유를 적거나** 해야 통과한다.
+- **변경**: 처음엔 `_vN` 끼리만 견줬는데 변이 검사에서 `get_post_interactions` + `_v2` 를 놓쳤다.
+  첫 판에는 번호를 안 붙이는 것이 이 저장소의 습관이라 오히려 그 경우가 흔하다. 번호 없는 이름을
+  **0판**으로 보게 고치자 실제 잔재 넷이 드러났다. `20261187` 로 셋을 지우고
+  (`save_teacher_self_writing_review`·`save_teacher_reading_marathon`·`save_teacher_reading_log_reviews_bulk`,
+  그리고 `record_spelling_search_batch_v1`), `get_reading_marathon_snapshot` 은 DB 함수 셋이 아직 부르므로
+  이유를 적어 남겼다. `20261145` 스모크도 어제와 같은 `has_function_privilege` 함정을 미리 고쳤다.
+- **결과/검증**: 옛 판을 안 지운 채 새 판을 넣으면 검사가 막고 지우면 통과하는 변이 검사, 허용 목록의
+  이유를 지우면 막히는 변이 검사를 모두 확인했다. 마이그레이션의 새 판 존재 확인 가드가 내가 잘못 적은
+  `_v2` 서명을 실제로 잡아냈다. 전체 회귀 531/531, 보안 묶음, Vite 빌드, RPC 표면 검사(공개 211개 ·
+  이유 남긴 것 8개)가 통과했다. 운영 마이그레이션은 229/229다.
+- **남은 것 / 다음**: 이름이 아예 다른 교체(`record_comment_ai_review` → 대기열 RPC)는 파일만 봐서는
+  알 수 없다. 그건 `check:rpc-surface` 가 "제품 코드·다른 DB 함수·다른 앱 어디에도 없음"으로 잡는
+  몫이다. 두 검사는 겹치지 않고 서로의 빈틈을 메운다.
+
 ## 2026-08-26 — 연구소 _v2 전환 배포와 마지막 구형 판 제거 (Claude)
 
 - **한 일**: 연구소(`writing-helper`)를 `get_student_spelling_entries_v2` 로 옮겨 배포하고, 배포본이
