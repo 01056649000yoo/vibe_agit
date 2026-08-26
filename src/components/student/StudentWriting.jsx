@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import CommentComposer from './CommentComposer';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -526,8 +527,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         return savedPostId || false;
     };
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
+    const handleCommentConfirm = async () => {
         if (!commentInput.trim() || submittingComment) return;
 
         setSubmittingComment(true);
@@ -537,22 +537,28 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 if (success) {
                     setEditingCommentId(null);
                     setCommentInput('');
+                    return true;
                 }
             } else {
                 const alreadyCommented = comments.some(c => c.student_id === studentSession?.id);
                 if (alreadyCommented) {
                     alert('댓글은 하나만 작성할 수 있어요! 😊');
                     setSubmittingComment(false);
-                    return;
+                    return false;
                 }
                 const success = await addComment(commentInput);
-                if (success) setCommentInput('');
+                if (success) {
+                    setCommentInput('');
+                    return true;
+                }
             }
         } catch (err) {
             console.error('댓글 작업 실패:', err.message);
+            return false;
         } finally {
             setSubmittingComment(false);
         }
+        return false;
     };
 
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
@@ -979,16 +985,16 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             )}
 
                             {/* 댓글 입력창 (내 글이지만 나도 댓글 달 수 있게 하거나, 혹은 보기만 하거나 선택 가능) */}
-                            <form onSubmit={handleCommentSubmit} style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                                <input
-                                    type="text"
-                                    value={commentInput}
-                                    onChange={e => setCommentInput(e.target.value)}
-                                    placeholder="친구들에게 답글을 남겨보세요... ✨"
-                                    style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', border: '2px solid #F1F3F5', outline: 'none' }}
-                                />
-                                <Button type="submit" disabled={submittingComment}>{editingCommentId ? '수정' : '보내기'}</Button>
-                            </form>
+                            <CommentComposer
+                                key={`${postId || ''}:${editingCommentId || 'new'}`}
+                                value={commentInput}
+                                onChange={setCommentInput}
+                                onConfirm={handleCommentConfirm}
+                                submitting={submittingComment}
+                                editing={Boolean(editingCommentId)}
+                                onCancelEdit={() => { setEditingCommentId(null); setCommentInput(''); }}
+                                placeholder={editingCommentId ? '댓글을 수정하고 있어요...' : '친구들에게 답글을 남겨보세요... ✨'}
+                            />
                             <div style={{ marginTop: '10px', fontSize: 'var(--ui-text-sm)', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
                             </div>

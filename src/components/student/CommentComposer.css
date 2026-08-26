@@ -1,0 +1,90 @@
+.comment-composer {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 10px;
+    border: 2px solid #f1f3f5;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
+}
+
+.comment-composer.is-editing {
+    border-color: #3498db;
+}
+
+.comment-composer input {
+    min-width: 0;
+    flex: 1;
+    padding: 12px 10px;
+    border: 0;
+    outline: 0;
+    color: #2d3436;
+    font-size: var(--ui-text-lg);
+}
+
+.comment-composer-review {
+    margin-top: 16px;
+    padding: 16px;
+    border: 2px solid #bfdbfe;
+    border-radius: 20px;
+    background: #eff6ff;
+}
+
+.comment-composer-review__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #1e3a5f;
+}
+
+.comment-composer-review__heading > span {
+    font-size: 1.35rem;
+}
+
+.comment-composer-review__heading strong,
+.comment-composer-review__heading small {
+    display: block;
+}
+
+.comment-composer-review__heading small {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: var(--ui-text-sm);
+}
+
+.comment-composer-review__content {
+    margin: 12px 0;
+    padding: 13px 15px;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #fff;
+    color: #1f2937;
+    font-size: var(--ui-text-lg);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.comment-composer-review__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+    .comment-composer {
+        flex-wrap: wrap;
+    }
+
+    .comment-composer input {
+        flex-basis: 100%;
+    }
+
+    .comment-composer > button {
+        flex: 1;
+    }
+
+    .comment-composer-review__actions button {
+        flex: 1;
+    }
+}

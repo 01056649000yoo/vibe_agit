@@ -40,6 +40,9 @@ const dynamicCommonSpellingMigration = await readFile(
 const weeklySpellingReviewMigration = await readFile(
     'supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'
 );
+const commentQueueMigration = await readFile(
+    'supabase/migrations/20261180_comment_ai_review_queue.sql', 'utf8'
+);
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
     assert.match(vibeAi, /profile\.is_approved === true/);
@@ -52,7 +55,7 @@ test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글
 });
 
 test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록 선점한다', () => {
-    const fetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
+    const fetchIndex = vibeAi.lastIndexOf("fetch('https://api.openai.com");
     // 본문은 클라이언트가 보내지 않는다 — 내 글인지 확인한 뒤 DB 에서 읽는다.
     assert.match(vibeAi, /\.from\('student_posts'\)[\s\S]{0,200}\.eq\('student_id', studentId\)/);
     // 사용 표시 선점과 분당 상한이 모두 AI 호출보다 먼저다.
@@ -63,7 +66,7 @@ test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록
     assert.match(vibeAi, /if \(!post\.is_returned\) \{/);
     // 아무 글자나 적은 글에 "잘 썼어요"가 뜨지 않게 먼저 거르고, 그때는 기회를 쓰지 않는다.
     assert.match(vibeAi, /function looksLikeGibberish/);
-    assert.ok(vibeAi.indexOf('looksLikeGibberish(body)') < vibeAi.indexOf("fetch('https://api.openai.com"));
+    assert.ok(vibeAi.indexOf('looksLikeGibberish(body)') < fetchIndex);
     assert.match(vibeAi, /notWriting: true/);
     // 도중에 실패하면 한 번뿐인 기회를 돌려준다(AI 오류로 기회를 잃지 않게).
     assert.match(vibeAi, /if \(spellCheckPostId\) \{[\s\S]{0,200}spell_check_used_at: null/);
@@ -112,17 +115,20 @@ test('맞춤법 구버전 기록과 일기 임시본 정리는 학생 권한 경
 });
 
 test('AI 비용 호출 전 DB 속도 제한과 원자적 댓글 선점을 거친다', () => {
-    const fetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
-    assert.ok(vibeAi.indexOf("rpc('claim_comment_ai_review_v1'") < fetchIndex);
-    assert.ok(vibeAi.indexOf("rpc('consume_ai_request_v1'") < fetchIndex);
-    assert.match(vibeAi, /\.eq\('ai_review_token', reviewToken\)/);
+    const safetyFetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
+    assert.ok(vibeAi.indexOf("rpc('claim_next_comment_ai_review_v2'") < safetyFetchIndex);
+    assert.ok(vibeAi.indexOf("p_scope: 'comment_safety'") < safetyFetchIndex);
+    assert.match(commentQueueMigration, /FOR UPDATE SKIP LOCKED/);
+    assert.match(commentQueueMigration, /slot_no BETWEEN 1 AND 3/);
+    assert.match(commentQueueMigration, /auth\.role\(\) <> 'service_role'/);
+    assert.match(commentQueueMigration, /REVOKE ALL ON TABLE public\.comment_ai_review_slots FROM PUBLIC, anon, authenticated, service_role/);
     assert.match(migration, /pg_advisory_xact_lock/);
 });
 
 test('연구소 AI 브리지는 연구소 세션·서버 전용 매핑·실제 승인 상태를 확인한다', () => {
     const resolveIndex = vibeAi.indexOf("rpc('resolve_lab_ai_teacher_v1'");
-    const rateIndex = vibeAi.indexOf("rpc('consume_ai_request_v1'");
-    const fetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
+    const rateIndex = vibeAi.indexOf("rpc('consume_ai_request_v1'", resolveIndex);
+    const fetchIndex = vibeAi.lastIndexOf("fetch('https://api.openai.com");
     assert.ok(resolveIndex > -1 && resolveIndex < rateIndex && rateIndex < fetchIndex);
     assert.match(vibeAi, /X-Lab-Auth/);
     assert.match(vibeAi, /\/auth\/v1\/user/);

@@ -33,6 +33,7 @@ const ACTIVITY_LABELS = Object.freeze({
     dragon_care: '수호룡 돌보기',
     hideout_purchase: '아지트 꾸미기',
     starting_bonus: '첫 포인트',
+    comment_reward: '친구 댓글 보상',
     private_adjustment: '선생님 포인트 조정'
 });
 

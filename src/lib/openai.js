@@ -29,9 +29,9 @@ const callOpenAI = async (payload, options = {}, retryCount = 0) => {
             body.studentId = studentSession.id;
         }
 
-        // [진단] 401 에러 추적용 로그
+        // 댓글 내용·학생 ID는 로그에 남기지 않는다. 진단에는 기능 종류만 충분하다.
         if (retryCount === 0) {
-            console.log(`📡 AI 호출 시작 (로그인됨=${!!session}, 학생ID=${studentSession?.id})`);
+            console.log(`📡 AI 호출 시작 (종류=${body.type || 'GENERAL'}, 로그인됨=${!!session})`);
         }
 
         // 2. Edge Function 호출
@@ -72,7 +72,9 @@ const callOpenAI = async (payload, options = {}, retryCount = 0) => {
             }
 
             // [핵심] 429 (Rate Limit) 또는 "Too Many Requests" 발생 시 지수 백오프 재시도
-            if ((statusCode === 429 || serverMsg.includes("Too Many Requests")) && retryCount < 3) {
+            if (body.type !== 'SAFETY_CHECK'
+                && (statusCode === 429 || serverMsg.includes("Too Many Requests"))
+                && retryCount < 3) {
                 const delay = Math.pow(2, retryCount) * 1500 + Math.random() * 1000;
                 console.warn(`⏳ AI 속도 제한(429) 감지 - ${Math.round(delay)}ms 후 재시도합니다... (재시도: ${retryCount + 1}/3)`);
                 await new Promise(resolve => setTimeout(resolve, delay));

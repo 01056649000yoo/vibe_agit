@@ -83,7 +83,11 @@ test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차�
 });
 
 test('포인트 활동 유형 계약은 DB 엔진 허용 목록과 같다', async () => {
-    const migration = await read('supabase/migrations/20261005_assignment_approval_integrity.sql');
+    const migrations = await Promise.all([
+        read('supabase/migrations/20261005_assignment_approval_integrity.sql'),
+        read('supabase/migrations/20261180_comment_ai_review_queue.sql')
+    ]);
+    const migration = migrations.join('\n');
     for (const activityType of Object.values(POINT_ACTIVITY_TYPES)) {
         assert.ok(
             migration.includes(`'${activityType}'`),

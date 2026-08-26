@@ -5,6 +5,7 @@ import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
+import CommentComposer from './CommentComposer';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
@@ -275,8 +276,7 @@ const PostDetailModal = ({
         };
     }, [enforcePublicAccess, onClose, post?.id]);
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
+    const handleCommentConfirm = async () => {
         if (!commentInput.trim() || submittingComment) return;
 
         setSubmittingComment(true);
@@ -287,26 +287,30 @@ const PostDetailModal = ({
                     setEditingCommentId(null);
                     setCommentInput('');
                     alert('댓글이 수정되었습니다! ✨');
+                    return true;
                 }
             } else {
                 const alreadyCommented = comments.some(c => c.student_id === studentSession?.id);
                 if (alreadyCommented) {
                     alert('댓글은 하나만 작성할 수 있어요! 기존 댓글을 수정해 주세요! ✍️');
                     setSubmittingComment(false);
-                    return;
+                    return false;
                 }
 
                 const success = await addComment(commentInput);
                 if (success) {
                     setCommentInput('');
-                    alert('의견이 등록되었습니다! 💬\nAI 보안관이 확인 후 친구들에게 공개할게요!');
+                    alert('댓글을 등록했어요! 💬\nAI 보안관이 확인 후 친구들에게 공개할게요!');
+                    return true;
                 }
             }
         } catch (err) {
             console.error('댓글 작업 실패:', err.message);
+            return false;
         } finally {
             setSubmittingComment(false);
         }
+        return false;
     };
 
     const handleEditComment = (comment) => {
@@ -568,28 +572,16 @@ const PostDetailModal = ({
                                         )}
                                     </div>
 
-                                    <form onSubmit={handleCommentSubmit} style={{ display: 'flex', gap: '14px', background: 'white', padding: '10px', borderRadius: '22px', border: editingCommentId ? '2px solid #3498DB' : '2px solid #F1F3F5', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
-                                        <input
-                                            type="text"
-                                            value={commentInput}
-                                            onChange={e => setCommentInput(e.target.value)}
-                                            placeholder={editingCommentId ? "댓글을 수정하고 있어요..." : "따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"}
-                                            style={{ flex: 1, padding: '14px 20px', border: 'none', outline: 'none', fontSize: 'var(--ui-text-lg)', color: '#2D3436' }}
-                                        />
-                                        {editingCommentId && (
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setCommentInput(''); }}>취소</Button>
-                                        )}
-                                        <Button
-                                            type="submit"
-                                            size="sm"
-                                            style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900', minWidth: '80px' }}
-                                            disabled={submittingComment}
-                                            loading={submittingComment}
-                                            loadingText="AI 보안관이 확인 중... 🛡️"
-                                        >
-                                            {editingCommentId ? '수정' : '보내기'}
-                                        </Button>
-                                    </form>
+                                    <CommentComposer
+                                        key={`${post?.id || ''}:${editingCommentId || 'new'}`}
+                                        value={commentInput}
+                                        onChange={setCommentInput}
+                                        onConfirm={handleCommentConfirm}
+                                        submitting={submittingComment}
+                                        editing={Boolean(editingCommentId)}
+                                        onCancelEdit={() => { setEditingCommentId(null); setCommentInput(''); }}
+                                        placeholder={editingCommentId ? '댓글을 수정하고 있어요...' : '따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨'}
+                                    />
                                     <div style={{ marginTop: '10px', fontSize: 'var(--ui-text-sm)', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                         <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
                                     </div>

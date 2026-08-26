@@ -14,6 +14,7 @@ const POINT_LABELS = {
     hideout_purchase: '아지트 꾸미기',
     meeting_activity: '회의 활동',
     starting_bonus: '시작 보너스',
+    comment_reward: '친구 댓글',
     private_adjustment: '선생님 조정',
     etc: '기타'
 };

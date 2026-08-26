@@ -28,6 +28,12 @@ const formatWhen = (value) => {
     return date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
+const formatWait = (seconds) => {
+    const value = Math.max(0, Number(seconds || 0));
+    if (value < 60) return `${Math.floor(value)}초`;
+    return `${Math.floor(value / 60)}분 ${Math.floor(value % 60)}초`;
+};
+
 const Stat = ({ label, value, sub }) => (
     <div style={{
         flex: 1, minWidth: '120px', padding: '16px',
@@ -90,6 +96,7 @@ const AdminServicePanel = () => {
     const today = data?.today || {};
     const week = data?.week || {};
     const latest = data?.latest || null;
+    const commentQueue = data?.comment_ai_queue || {};
     const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
     const openAlerts = alerts.filter((a) => a.status === 'open');
     const dockerMemoryAlertOpen = openAlerts.some((alert) => alert.alert_key === 'docker_memory_pressure');
@@ -157,6 +164,23 @@ const AdminServicePanel = () => {
                             value={`${Reflect.get(data?.ai_scopes || {}, scope) ?? 0}회`}
                         />
                     ))}
+                </div>
+            </div>
+
+            <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#2D3748' }}>댓글 AI 검사 대기열</h3>
+                <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: '#A0AEC0' }}>
+                    댓글은 먼저 확인 중으로 저장하고 최대 3건씩 검사합니다. 두 번 실패한 댓글은 자동 공개하지 않고 교사 확인으로 남깁니다.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <Stat label="검사 대기" value={`${commentQueue.queued ?? 0}건`} sub={`가장 오래 ${formatWait(commentQueue.oldest_wait_seconds)}`} />
+                    <Stat label="현재 처리" value={`${commentQueue.processing ?? 0}/${commentQueue.limit ?? 3}건`} sub="댓글 검사만 별도 제한" />
+                    <Stat label="오늘 완료" value={`${commentQueue.completed_today ?? 0}건`} />
+                    <Stat
+                        label="교사 확인 필요"
+                        value={`${commentQueue.needs_teacher ?? 0}건`}
+                        sub={Number(commentQueue.needs_teacher || 0) > 0 ? '학생 댓글 메뉴에서 확인' : '재시도 실패 없음'}
+                    />
                 </div>
             </div>
 

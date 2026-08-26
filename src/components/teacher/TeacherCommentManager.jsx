@@ -22,7 +22,7 @@ const VIEWS = [
         id: 'todo',
         label: '🛠️ 처리할 것',
         countKey: 'todo',
-        hint: 'AI가 막았거나 판정이 끝나지 않아 친구에게 보이지 않는 댓글이에요. 확인해서 풀어 주거나 지워 주세요.',
+        hint: '자동 검사가 막았거나 판정이 끝나지 않아 친구에게 보이지 않는 댓글이에요. 확인해서 풀어 주거나 지워 주세요.',
         empty: '처리할 댓글이 없어요. 모두 확인하셨습니다. ✅',
         usePeriod: false
     },
@@ -187,7 +187,7 @@ const TeacherCommentManager = ({ activeClass }) => {
                         <h2>🗨️ 학생 댓글 관리</h2>
                         <TeacherGuideButton tabId="comments" variant="help" />
                     </div>
-                    <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 주거나 지울 수 있어요.</p>
+                    <p>친구 글에 남긴 댓글을 한자리에서 보고, 자동 검사가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
                 <div className="teacher-comments__tools">
                     <input
@@ -275,7 +275,7 @@ const TeacherCommentManager = ({ activeClass }) => {
 
                                 {comment.moderation_reason && (
                                     <p className="teacher-comments__reason">
-                                        <span>AI 판단</span> {comment.moderation_reason}
+                                        <span>자동 검사</span> {comment.moderation_reason}
                                     </p>
                                 )}
 

@@ -7,6 +7,7 @@ const interactionSource = await readFile('src/hooks/usePostInteractions.js', 'ut
 const safetySource = await readFile('src/utils/aiSafety.js', 'utf8');
 const openaiClientSource = await readFile('src/lib/openai.js', 'utf8');
 const interactionMigration = await readFile('supabase/migrations/20261010_friend_interaction_writes.sql', 'utf8');
+const queueMigration = await readFile('supabase/migrations/20261180_comment_ai_review_queue.sql', 'utf8');
 const labBridgeMigration = await readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8');
 
 test('vibe-ai는 클라이언트 API 키·모드·모델 오버라이드를 받지 않는다', () => {
@@ -22,14 +23,14 @@ test('vibe-ai는 검증되지 않은 JWT 수동 디코딩과 키 일부 로그�
 });
 
 test('댓글 판정은 서버가 본인 pending 댓글을 읽어 상태까지 기록한다', () => {
-    assert.match(edgeSource, /claim_comment_ai_review_v1/);
-    assert.match(edgeSource, /p_comment_id: commentId/);
-    assert.match(edgeSource, /p_student_id: studentId/);
-    assert.match(edgeSource, /finalPrompt = claim\.content/);
-    assert.match(edgeSource, /moderated_by:\s*'ai'/);
-    assert.match(edgeSource, /\.eq\('status', 'pending'\)/);
-    assert.match(edgeSource, /\.eq\('ai_review_token', reviewToken\)/);
-    assert.match(safetySource, /callAI\(\{ content, commentId, type: 'SAFETY_CHECK' \}\)/);
+    assert.match(edgeSource, /\.from\('post_comments'\)[\s\S]{0,180}\.eq\('student_id', studentId\)/);
+    assert.match(edgeSource, /EdgeRuntime\.waitUntil\(drainCommentSafetyQueue\(supabaseAdmin\)\)/);
+    assert.match(edgeSource, /claim_next_comment_ai_review_v2/);
+    assert.match(edgeSource, /complete_comment_ai_review_v2/);
+    assert.match(edgeSource, /fail_comment_ai_review_v2/);
+    assert.match(queueMigration, /WHERE id = p_comment_id[\s\S]{0,180}ai_review_token = p_review_token/);
+    assert.match(safetySource, /callAI\(\{ commentId, type: 'SAFETY_CHECK' \}\)/);
+    assert.doesNotMatch(safetySource, /callAI\(\{ content,/);
     assert.doesNotMatch(interactionSource, /record_comment_ai_review/);
 });
 
@@ -51,10 +52,12 @@ test('맞춤법 초안은 승인 교사 전용 속도 제한과 짧은 입력 �
 test('댓글 수정은 먼저 pending으로 되돌리고 같은 댓글 ID로 다시 판정한다', () => {
     assert.match(interactionSource, /update_my_post_comment_v1/);
     assert.match(interactionMigration, /SET content=v_content,status='pending'/);
-    assert.match(interactionSource, /checkContentSafety\(newContent, \{ commentId \}\)/);
+    assert.match(queueMigration, /status = 'pending'[\s\S]{0,300}ai_review_attempts = 0/);
+    assert.match(interactionSource, /checkContentSafety\('', \{ commentId \}\)/);
 });
 
 test('댓글 판정은 100토큰·온도 0, 맞춤법 검사는 900토큰, 일반 AI는 1000토큰이다', () => {
+    assert.match(edgeSource, /max_tokens: 100,[\s\S]{0,40}temperature: 0/);
     assert.match(edgeSource, /max_tokens: type === 'SPELL_CHECK' \? 900 : \(isStudentRequest \? 100 : 1000\)/);
     assert.match(edgeSource, /isStudentRequest \? \{ temperature: 0 \}/);
 });

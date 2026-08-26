@@ -108,18 +108,17 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     .filter(shouldShowComment)
             );
 
-            // 탭을 닫거나 통신이 끊겨 판정이 끝나지 않은 **내** 댓글을 다시 물어본다.
-            // 이게 없으면 그 댓글은 영영 `pending` 으로 남아 친구에게 보이지 않는다
-            // (운영에서 112건이 3~4개월 묶여 있었다). 한 번에 3건까지만 처리해 몰아치지 않게 한다.
+            // 탭을 닫거나 통신이 끊겨 대기열을 못 깨운 **내** 댓글이 있으면 한 번만 다시 알린다.
+            // 서버 작업기 하나가 전역 대기열을 이어서 비우므로 댓글마다 반복 호출할 필요는 없다.
             normalizedComments
                 .filter((comment) => comment.status === 'pending'
                     && comment.student_id === latestContextRef.current.studentId)
-                .slice(0, 3)
+                .slice(0, 1)
                 .forEach((comment) => {
-                    checkContentSafety(comment.content, { commentId: comment.id }).catch(() => {});
+                    checkContentSafety('', { commentId: comment.id }).catch(() => {});
                 });
         } catch (err) {
-            console.error('[usePostInteractions] ??? ?? ??:', err.message);
+            console.error('[usePostInteractions] 상호작용을 불러오지 못했습니다:', err.message);
         } finally {
             isFetchingRef.current = false;
             setLoading(false);
@@ -208,52 +207,32 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             content: content.trim(),
             created_at: new Date().toISOString(),
             isOptimistic: true,
+            status: 'pending',
             students: { name: studentName || '익명' }
         };
         setComments(prev => [...prev, optimisticComment]);
 
-        (async () => {
-            try {
-                const { data: result, error } = await supabase.rpc('create_my_post_comment_v1', {
-                    p_post_id: postId,
-                    p_content: content.trim()
-                });
+        try {
+            const { data: result, error } = await supabase.rpc('create_my_post_comment_v1', {
+                p_post_id: postId,
+                p_content: content.trim()
+            });
+            if (error) throw error;
+            const newCommentId = result?.comment?.id;
+            if (!newCommentId) throw new Error('저장된 댓글 ID를 받지 못했습니다.');
+            setComments((current) => current.map((comment) => (
+                comment.id === tempId ? { ...comment, ...result.comment, id: newCommentId, isOptimistic: false } : comment
+            )));
 
-                if (error) throw error;
-                const newCommentId = result?.comment?.id;
-                if (!newCommentId) throw new Error('저장된 댓글 ID를 받지 못했습니다.');
-                setComments((current) => current.map((comment) => (
-                    comment.id === tempId ? { ...comment, ...result.comment, id: newCommentId, isOptimistic: false } : comment
-                )));
-
-                checkContentSafety(content, { commentId: newCommentId }).then(async (safety) => {
-                    // 예전에는 부적절 판정이면 댓글을 지웠다. 그러면 학생은 애써 쓴 글을 잃고,
-                    // 교사는 무엇이 막혔는지 모르고, 오탐률도 잴 수 없다.
-                    // 이제 Edge Function이 지우지 않고 `blocked` 로 기록해 선생님이 보고 풀 수 있게 한다.
-
-                    if (!safety.is_appropriate) {
-                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n선생님이 확인한 뒤 친구들에게 보여요.`);
-                        fetchInteractions();
-                    } else {
-
-                        supabase.rpc('reward_for_comment', { p_post_id: postId }).then(({ data, error: rpcErr }) => {
-                            if (!rpcErr && data?.success) {
-                                console.log(`✨ [AI 보안관] 안전한 댓글 확인 -> +${data.points_awarded}P 지급 완료!`);
-                            }
-                        });
-                    }
-                }).catch(err => {
-                    console.error('AI Check failed:', err);
-                    fetchInteractions();
-                });
-
-            } catch (err) {
-                console.error('댓글 비동기 처리 오류:', err.message);
-                fetchInteractions();
-            }
-        })();
-
-        return true;
+            // 응답을 기다리지 않는다. 서버는 즉시 202를 돌려주고 전역 3칸 대기열에서 검사한다.
+            void checkContentSafety('', { commentId: newCommentId });
+            return true;
+        } catch (err) {
+            console.error('댓글 등록 실패:', err.message);
+            setComments((current) => current.filter((comment) => comment.id !== tempId));
+            void fetchInteractions();
+            return false;
+        }
     }, [postId, studentId, studentName, fetchInteractions]);
 
     const updateComment = useCallback(async (commentId, newContent) => {
@@ -272,33 +251,24 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
         setComments(prev => prev.map(c => c.id === commentId ? { ...c, content: newContent.trim(), isOptimistic: true } : c));
 
-        (async () => {
-            try {
-                const { error } = await supabase.rpc('update_my_post_comment_v1', {
-                    p_comment_id: commentId,
-                    p_content: newContent.trim()
-                });
-                if (error) throw error;
-
-                checkContentSafety(newContent, { commentId }).then(async (safety) => {
-                    if (!safety.is_appropriate) {
-                        fetchInteractions(); 
-                        console.log(`💬 [AI 보안관] 부적절한 수정 감지 -> 친구 공개 보류: ${newContent}`);
-                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n선생님이 확인한 뒤 친구들에게 보여요.`);
-                    }
-                    fetchInteractions();
-                }).catch(err => {
-                    console.error('AI Check failed:', err);
-                    fetchInteractions();
-                });
-
-            } catch (err) {
-                console.error('댓글 비동기 수정 오류:', err.message);
-                fetchInteractions();
-            }
-        })();
-
-        return true;
+        try {
+            const { data: result, error } = await supabase.rpc('update_my_post_comment_v1', {
+                p_comment_id: commentId,
+                p_content: newContent.trim()
+            });
+            if (error) throw error;
+            setComments((current) => current.map((comment) => (
+                comment.id === commentId
+                    ? { ...comment, ...result?.comment, content: newContent.trim(), status: 'pending', isOptimistic: false }
+                    : comment
+            )));
+            void checkContentSafety('', { commentId });
+            return true;
+        } catch (err) {
+            console.error('댓글 수정 실패:', err.message);
+            void fetchInteractions();
+            return false;
+        }
     }, [studentId, fetchInteractions]);
 
     const deleteComment = useCallback(async (commentId) => {

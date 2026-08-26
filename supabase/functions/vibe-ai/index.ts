@@ -60,6 +60,132 @@ function looksLikeGibberish(text: string): boolean {
     return longestRun >= 25
 }
 
+const LOW_EFFORT_COMMENTS = new Set([
+    '와', '우와', '오', '오오', '우웅', '헉', '대박', '굿', 'good', 'nice', '멋져', '최고', '짱',
+    'ㅋㅋ', 'ㅎㅎ', '^^', '👍', '👏', '❤️', '😆', '😍', '😊', '와!', '오!'
+])
+
+const commentLocalRejectionReason = (content: string): string | null => {
+    const compact = content.trim().replace(/\s+/g, '')
+    if (compact.length < 8 || LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
+        return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
+    }
+    if (/^(.)\1{7,}$/u.test(compact) || /(.{1,8})\1{3,}/u.test(compact) || looksLikeGibberish(content)) {
+        return '같은 말이나 의미 없는 글자를 반복하지 말고 친구에게 전하고 싶은 내용을 문장으로 써 주세요.'
+    }
+    return null
+}
+
+const commentSafetyPrompt = (content: string) => {
+    const textToCheck = content.replace(/"/g, "'")
+    return `너는 초등학교 선생님이야. 다음 학생 댓글이 학급 커뮤니티에 적절한지 판단해줘.
+욕설, 비꼼, 따돌림, 무시, 의미 없는 무작위 문자열이나 도배가 하나라도 있으면 부적절해.
+반드시 {"is_appropriate":boolean,"reason":"부적절할 때 다정한 2~3문장 안내"} JSON만 답해줘.
+분석할 내용: "${textToCheck}"`
+}
+
+const queueErrorCode = (error: unknown) => {
+    if (error instanceof HttpError) {
+        if (error.status === 429) return 'upstream_429'
+        if (error.status >= 500) return 'upstream_error'
+    }
+    if (error instanceof SyntaxError) return 'invalid_json'
+    return 'worker_error'
+}
+
+const drainCommentSafetyQueue = async (supabaseAdmin: ReturnType<typeof createClient>) => {
+    const startedAt = Date.now()
+    const apiKey = (Deno.env.get('OPENAI_API_KEY') ?? '').replace(/[^\x20-\x7E]/g, '').trim()
+    if (!apiKey) return
+
+    const { data: setting } = await supabaseAdmin
+        .from('system_settings').select('value').eq('key', 'public_api_enabled').maybeSingle()
+    if (setting && setting.value !== true) return
+
+    // 한 배경 작업이 런타임을 오래 붙들지 않는다. 동시에 시작한 세 작업이 슬롯을 하나씩 잡고
+    // 순서대로 다음 댓글을 이어 받으므로 일반적인 한 학급의 동시 입력은 한 번에 모두 비워진다.
+    for (let processed = 0; processed < 60 && Date.now() - startedAt < 90_000; processed += 1) {
+        const { data: claim, error: claimError } = await supabaseAdmin.rpc('claim_next_comment_ai_review_v2')
+        if (claimError) {
+            console.error('[vibe-ai] 댓글 대기열 선점 실패')
+            return
+        }
+        if (!claim?.claimed) return
+
+        const commentId = String(claim.comment_id ?? '')
+        const studentId = String(claim.student_id ?? '')
+        const reviewToken = String(claim.review_token ?? '')
+
+        try {
+            const content = String(claim.content ?? '').trim().slice(0, 1000)
+            const localReason = commentLocalRejectionReason(content)
+            if (localReason) {
+                const { error: completeError } = await supabaseAdmin.rpc('complete_comment_ai_review_v2', {
+                    p_comment_id: commentId,
+                    p_review_token: reviewToken,
+                    p_is_appropriate: false,
+                    p_reason: localReason,
+                    p_review_source: 'local_rule'
+                })
+                if (completeError) throw completeError
+                continue
+            }
+
+            // 실제 외부 AI를 부르기 직전에만 호출 원장을 적는다. 로컬 규칙으로 끝난 댓글은 AI 호출 수가 아니다.
+            const { data: rate, error: rateError } = await supabaseAdmin.rpc('consume_ai_request_v1', {
+                p_actor_id: studentId,
+                p_scope: 'comment_safety'
+            })
+            if (rateError) throw rateError
+            if (!rate?.allowed) throw new HttpError(429, '댓글 검사 요청이 몰렸습니다.')
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: commentSafetyPrompt(content) }],
+                    max_tokens: 100,
+                    temperature: 0
+                }),
+                signal: AbortSignal.timeout(20_000)
+            })
+            if (!response.ok) {
+                throw new HttpError(response.status === 429 ? 429 : 502, '댓글 AI 응답 오류')
+            }
+            const responseData = await response.json()
+            const resultText = String(responseData.choices?.[0]?.message?.content ?? '')
+            const jsonMatch = resultText.match(/\{.*\}/s)
+            if (!jsonMatch) throw new SyntaxError('댓글 판정 JSON 없음')
+            const safetyResult = JSON.parse(jsonMatch[0])
+            if (typeof safetyResult.is_appropriate !== 'boolean') throw new SyntaxError('댓글 판정 값 오류')
+
+            const { error: completeError } = await supabaseAdmin.rpc('complete_comment_ai_review_v2', {
+                p_comment_id: commentId,
+                p_review_token: reviewToken,
+                p_is_appropriate: safetyResult.is_appropriate,
+                p_reason: String(safetyResult.reason || '').trim().slice(0, 500) || null,
+                p_review_source: 'ai'
+            })
+            if (completeError) throw completeError
+        } catch (error) {
+            const { data: released, error: releaseError } = await supabaseAdmin.rpc('fail_comment_ai_review_v2', {
+                p_comment_id: commentId,
+                p_review_token: reviewToken,
+                p_error_code: queueErrorCode(error)
+            })
+            if (releaseError) {
+                console.error('[vibe-ai] 댓글 대기열 작업 해제 실패')
+                return
+            }
+            if (released?.will_retry && Date.now() - startedAt < 30_000) {
+                await new Promise((resolve) => setTimeout(resolve, 15_000))
+                continue
+            }
+        }
+    }
+}
+
 const isUuid = (value: string) => (
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 )
@@ -89,9 +215,6 @@ Deno.serve(async (req) => {
     // 맞춤법 검사에서 선점한 글. 도중에 실패하면 **한 번뿐인 기회를 돌려줘야** 해서 바깥에 둔다.
     let spellCheckPostId: string | null = null
     let studentClassId: string | null = null
-    let claimedCommentId: string | null = null
-    let claimedStudentId: string | null = null
-    let reviewToken: string | null = null
 
     try {
         const payload = await req.json().catch(() => { throw new HttpError(400, '요청 형식이 올바르지 않습니다.') })
@@ -199,26 +322,30 @@ Deno.serve(async (req) => {
             if (typeof commentId !== 'string' || !commentId) {
                 throw new HttpError(400, '댓글 ID가 필요합니다.')
             }
-            const { data: claim, error: claimError } = await supabaseAdmin.rpc('claim_comment_ai_review_v1', {
-                p_comment_id: commentId,
-                p_student_id: studentId
-            })
-            if (claimError) throw claimError
-            if (!claim?.claimed) {
-                if (claim?.status === 'rate_limited') throw new HttpError(429, '잠시 후 다시 확인해주세요.')
-                if (claim?.status === 'pending') throw new HttpError(409, '이미 이 댓글을 확인하고 있습니다.')
-                const existingResult = {
-                    is_appropriate: claim?.status === 'approved',
-                    reason: claim?.moderation_reason || ''
-                }
+            // 요청 학생의 댓글인지 확인한 뒤 배경 작업만 깨운다. 실제 내용은 대기열 RPC가 DB에서 읽는다.
+            const { data: comment, error: commentError } = await supabaseAdmin
+                .from('post_comments')
+                .select('id,status,moderation_reason')
+                .eq('id', commentId)
+                .eq('student_id', studentId)
+                .maybeSingle()
+            if (commentError || !comment) throw new HttpError(403, '내 댓글만 확인할 수 있습니다.')
+            if (comment.status !== 'pending') {
                 return jsonResponse({
-                    text: JSON.stringify(existingResult), reviewRecorded: false, currentStatus: claim?.status
+                    text: JSON.stringify({
+                        queued: false,
+                        is_appropriate: comment.status === 'approved',
+                        reason: comment.moderation_reason || ''
+                    }),
+                    currentStatus: comment.status
                 }, 200, headers)
             }
-            claimedCommentId = commentId
-            claimedStudentId = studentId
-            reviewToken = claim.review_token
-            finalPrompt = claim.content
+            EdgeRuntime.waitUntil(drainCommentSafetyQueue(supabaseAdmin))
+            return jsonResponse({
+                text: JSON.stringify({ queued: true, status: 'pending' }),
+                queued: true,
+                currentStatus: 'pending'
+            }, 202, headers)
         } else if (type !== 'DIAG') {
             if (!targetTeacherId) throw new HttpError(403, 'AI 사용 권한을 확인할 수 없습니다.')
             const { data: rate, error: rateError } = await supabaseAdmin.rpc('consume_ai_request_v1', {
@@ -319,13 +446,7 @@ Deno.serve(async (req) => {
         if (!finalPrompt.trim()) throw new HttpError(400, 'AI에게 전달할 내용이 없습니다.')
         if (finalPrompt.length > maxPromptLength) throw new HttpError(400, '내용이 너무 깁니다.')
 
-        if (isStudentRequest && type === 'SAFETY_CHECK') {
-            const textToCheck = finalPrompt.replace(/"/g, "'")
-            finalPrompt = `너는 초등학교 선생님이야. 다음 학생 댓글이 학급 커뮤니티에 적절한지 판단해줘.
-욕설, 비꼼, 따돌림, 무시, 의미 없는 무작위 문자열이나 도배가 하나라도 있으면 부적절해.
-반드시 {"is_appropriate":boolean,"reason":"부적절할 때 다정한 2~3문장 안내"} JSON만 답해줘.
-분석할 내용: "${textToCheck}"`
-        } else if (type === 'SPELLING_DRAFT') {
+        if (type === 'SPELLING_DRAFT') {
             const expression = finalPrompt.replace(/["\\]/g, '').trim()
             finalPrompt = `초등학생 맞춤법 수첩에 넣을 교사용 검토 초안을 만들어줘.
 입력된 문제 표현만 분석하고 개인정보나 문장을 추측하지 마.
@@ -407,35 +528,6 @@ Deno.serve(async (req) => {
             return jsonResponse({ alreadyUsed: false, result }, 200, headers)
         }
 
-        if (isStudentRequest && claimedCommentId && claimedStudentId && reviewToken) {
-            const jsonMatch = resultText.match(/\{.*\}/s)
-            if (!jsonMatch) throw new HttpError(502, 'AI 댓글 판정 형식이 올바르지 않습니다.')
-            const safetyResult = JSON.parse(jsonMatch[0])
-            if (typeof safetyResult.is_appropriate !== 'boolean') {
-                throw new HttpError(502, 'AI 댓글 판정 값이 올바르지 않습니다.')
-            }
-            const nextStatus = safetyResult.is_appropriate ? 'approved' : 'blocked'
-            const { data: recorded, error: recordError } = await supabaseAdmin
-                .from('post_comments')
-                .update({
-                    status: nextStatus,
-                    moderation_reason: safetyResult.is_appropriate ? null : String(safetyResult.reason || '').trim() || null,
-                    moderated_at: new Date().toISOString(),
-                    moderated_by: 'ai',
-                    ai_review_token: null
-                })
-                .eq('id', claimedCommentId)
-                .eq('student_id', claimedStudentId)
-                .eq('status', 'pending')
-                .eq('ai_review_token', reviewToken)
-                .select('id')
-                .maybeSingle()
-            if (recordError) throw recordError
-            return jsonResponse({
-                text: resultText, reviewRecorded: !!recorded, currentStatus: nextStatus
-            }, 200, headers)
-        }
-
         return jsonResponse({ text: resultText }, 200, headers)
     } catch (error) {
         // AI 가 실패했는데 사용 표시가 남으면 학생은 한 번뿐인 기회를 잃는다. 되돌려 준다.
@@ -446,12 +538,6 @@ Deno.serve(async (req) => {
                 .update({ spell_check_used_at: null })
                 .eq('id', spellCheckPostId)
                 .is('spell_check_result', null)
-        }
-        if (claimedCommentId && claimedStudentId && reviewToken) {
-            await supabaseAdmin.from('post_comments').update({
-                moderated_at: null, moderated_by: null, ai_review_token: null
-            }).eq('id', claimedCommentId).eq('student_id', claimedStudentId)
-                .eq('status', 'pending').eq('ai_review_token', reviewToken)
         }
         const status = error instanceof HttpError ? error.status : 400
         const message = error instanceof Error ? error.message : 'AI 요청을 처리하지 못했습니다.'
