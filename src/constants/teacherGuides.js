@@ -1,3 +1,5 @@
+import { TEACHER_TOOL_SECTION_LABEL } from './teacherNav.js';
+
 /**
  * 교사 메뉴별 사용 안내.
  *
@@ -391,7 +393,7 @@ export const TEACHER_GUIDES = {
     },
 
     tools: {
-        title: '수업 도구',
+        title: TEACHER_TOOL_SECTION_LABEL,
         summary: '수업 중 바로 사용하는 교사용 도구를 한곳에서 엽니다.',
         steps: [
             '왼쪽 또는 위쪽 목록에서 사용할 도구를 고릅니다.',

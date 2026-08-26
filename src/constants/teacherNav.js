@@ -4,6 +4,8 @@
  * 대시보드와 UI 작업실(`src/dev/UiPreview.jsx`)이 같은 정의를 보도록 분리했다.
  * 메뉴를 고칠 때 두 곳이 어긋나지 않게 하려는 목적이다.
  */
+export const TEACHER_TOOL_SECTION_LABEL = '학급운영도구';
+
 export const TEACHER_NAV_GROUPS = [
     {
         id: 'writing',
@@ -78,10 +80,10 @@ export const TEACHER_NAV_GROUPS = [
     },
     {
         id: 'tools',
-        label: '수업 도구',
+        label: TEACHER_TOOL_SECTION_LABEL,
         icon: '🧰',
         defaultTab: 'tools',
-        tabs: [{ id: 'tools', label: '수업 도구' }]
+        tabs: [{ id: 'tools', label: TEACHER_TOOL_SECTION_LABEL }]
     },
     {
         id: 'settings',

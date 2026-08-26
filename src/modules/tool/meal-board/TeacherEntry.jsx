@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TEACHER_TOOL_SECTION_LABEL } from '../../../constants/teacherNav.js';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MealFullscreen from './MealFullscreen';
 import SchoolChangeModal from './SchoolChangeModal';
@@ -246,7 +247,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   return <section className="meal-board">
     <header className="meal-board-header">
       <div>
-        <span className="meal-kicker">수업 도구 · 급식 확인</span>
+        <span className="meal-kicker">{TEACHER_TOOL_SECTION_LABEL} · 급식 확인</span>
         <h2>얘들아, 밥 먹자! <span aria-hidden="true">🍱</span></h2>
         <p>오늘 급식과 우리 반 학생별 비고를 확인해요</p>
       </div>

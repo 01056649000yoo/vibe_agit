@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useMemo, useState } from 'react';
+import { TEACHER_TOOL_SECTION_LABEL } from '../../constants/teacherNav.js';
 import { getAllModules } from '../../modules/registry';
 
 const TOOL_MODULES = getAllModules()
@@ -22,7 +23,7 @@ const TeachingToolsHub = ({ activeClass, teacherInfo, isMobile, onTeacherSchoolC
         return (
             <section style={{ padding: isMobile ? '36px 20px' : '58px', borderRadius: '24px', border: '1px dashed #C4B5FD', background: 'linear-gradient(135deg,#FAF5FF,#F5F3FF)', textAlign: 'center' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔗</div>
-                <h2 style={{ margin: 0, color: '#5B21B6', fontSize: 'var(--ui-text-xl)' }}>수업 도구를 준비하고 있습니다.</h2>
+                <h2 style={{ margin: 0, color: '#5B21B6', fontSize: 'var(--ui-text-xl)' }}>{TEACHER_TOOL_SECTION_LABEL}를 준비하고 있습니다.</h2>
                 <p style={{ margin: '10px auto 0', color: '#7C3AED', lineHeight: 1.65, fontSize: 'var(--ui-text-md)' }}>새 도구가 등록되면 이곳에서 바로 실행할 수 있습니다.</p>
             </section>
         );
@@ -43,11 +44,11 @@ const TeachingToolsHub = ({ activeClass, teacherInfo, isMobile, onTeacherSchoolC
                 }}>
                     {!isMobile && (
                         <div style={{ padding: '8px 10px 14px' }}>
-                            <div style={{ color: '#172033', fontWeight: '950', fontSize: 'var(--ui-text-lg)' }}>🧰 수업 도구</div>
+                            <div style={{ color: '#172033', fontWeight: '950', fontSize: 'var(--ui-text-lg)' }}>🧰 {TEACHER_TOOL_SECTION_LABEL}</div>
                             <div style={{ marginTop: '6px', color: '#475569', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>도구를 선택하면 바로 실행됩니다.</div>
                         </div>
                     )}
-                    <nav aria-label="수업 도구 목록" style={{
+                    <nav aria-label={`${TEACHER_TOOL_SECTION_LABEL} 목록`} style={{
                         display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '7px',
                         overflowX: isMobile ? 'auto' : 'visible', scrollbarWidth: 'thin'
                     }}>
