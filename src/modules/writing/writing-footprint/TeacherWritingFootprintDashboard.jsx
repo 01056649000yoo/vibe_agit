@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import { supabase } from '../../../lib/supabaseClient';
 import { classKey, dataCache } from '../../../lib/cache';
 import DashboardCardHost from '../../dashboard/DashboardCardHost';
@@ -400,6 +401,8 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             <div style={{ minWidth: 0 }}>
                 <p style={{ margin: '0 0 3px', fontSize: isExpanded ? 'var(--footprint-fs-sm, .6rem)' : '.78rem', fontWeight: 800, opacity: .82 }}>{schoolYearLabel}</p>
                 <h2 style={{ margin: 0, fontSize: isExpanded ? 'var(--footprint-fs-lg, 1rem)' : (isMobile ? '1.35rem' : '1.6rem'), fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>👣 {activeClass?.name} 글쓰기 발자국</h2>
+                {/* 전체화면에서는 교실 화면에 띄우는 중이라 도움말 버튼을 감춘다. */}
+                {isExpanded ? null : <TeacherGuideButton tabId="footprints" variant="help" />}
                 {!isExpanded && <p style={{ margin: '8px 0 0', fontSize: 'var(--ui-text-sm)', opacity: .9 }}>칭호를 제외한 글쓰기 성장과 포인트·교류 기록을 학급 단위로 모았습니다.</p>}
             </div>
             <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>

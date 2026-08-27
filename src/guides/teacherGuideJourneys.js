@@ -71,8 +71,10 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         summary: '학생 활동을 살피고 교실에서 바로 쓰는 도구를 현재 학급과 연결합니다.',
         estimatedTime: '필요할 때',
         steps: [
+            step('recent-activity', '최근 활동 훑어보기', '학급에서 방금 올라온 글·독서록·댓글을 갈래와 기간으로 좁혀 봅니다.', 'recent-activity'),
             step('student-agits', '학생 아지트 살펴보기', '학생별 아지트와 글 활동을 읽기 전용으로 확인합니다.', 'student-agits'),
             step('comments', '학생 댓글 관리', '처리할 댓글을 찾고 현재 조건을 유지하며 확인 기록을 남깁니다.', 'comments'),
+            step('class-footprints', '학급 발자국 확인', '학급이 쌓은 글쓰기 양과 흐름, 포인트 오고 감을 한 화면에서 봅니다.', 'footprints'),
             step('tool-overview', '학급운영도구 고르기', '현재 학급 명부를 사용하는 수업 도구를 한곳에서 엽니다.', 'tools'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
             step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat'),
@@ -86,6 +88,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         summary: '학생 화면 노출을 조절하고 성장·학습 보상의 기준을 오해 없이 운영합니다.',
         estimatedTime: '학기 초 설정',
         steps: [
+            step('playground-modules', '놀이 활동 켜고 끄기', '학급 학생에게 보여 줄 놀이 활동을 고르고 각 활동 설정으로 들어갑니다.', 'playground'),
             step('dragon', '작가 수호룡 운영', '글쓰기 성장과 학기별 시즌 마감 순서를 확인합니다.', 'dragon'),
             step('vocab-tower', '어휘의 탑 운영', '익힘·도전·포인트 기준을 정하고 학생의 단계별 학습을 지원합니다.', 'vocab-tower')
         ]

@@ -64,8 +64,10 @@ test('활용 안내서는 교사의 목적에 따른 여덟 개 큰 흐름을 �
     }
 });
 
-test('기존 교사 도움말 20개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
-    assert.equal(Object.keys(TEACHER_GUIDES).length, 20);
+test('기존 교사 도움말 23개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
+    // 개수를 못 박는 이유는 도움말이 조용히 사라지는 것을 잡기 위해서다.
+    // 아래 반복문이 "새로 넣고 연결 안 함"을 잡고, 이 숫자가 "있던 것이 없어짐"을 잡는다.
+    assert.equal(Object.keys(TEACHER_GUIDES).length, 23);
     for (const guideId of Object.keys(TEACHER_GUIDES)) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);
         assert.ok(TEACHER_GUIDE_TARGETS[guideId], `${guideId}: 실제 화면 이동 대상이 없다`);

@@ -1,5 +1,6 @@
 import React from 'react';
 import RegisteredGameModuleCards from '../../modules/game/teacher/RegisteredGameModuleCards';
+import TeacherGuideButton from './TeacherGuideButton';
 
 /**
  * 아지트 놀이터 교사 관리 셸.
@@ -11,6 +12,11 @@ const GameManager = ({ activeClass, isMobile, navigationTarget, onNavigationHand
 
     return (
         <div style={{ width: '100%', padding: isMobile ? '10px' : '0', boxSizing: 'border-box' }}>
+            {/* 이 화면은 메뉴가 하나뿐이라 공용 탭 머리말이 그려지지 않는다. 도움말은 여기서 연다. */}
+            <div className="teacher-tab-heading">
+                <h2>🎡 아지트 놀이터</h2>
+                <TeacherGuideButton tabId="playground" variant="help" />
+            </div>
             <RegisteredGameModuleCards
                 activeClass={activeClass}
                 isMobile={isMobile}

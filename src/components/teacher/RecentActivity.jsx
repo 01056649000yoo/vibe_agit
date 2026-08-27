@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
+import TeacherGuideButton from './TeacherGuideButton';
 
 const PAGE_SIZE = 20;
 const CACHE_TTL_MS = 30000;
@@ -164,7 +165,10 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
         <div style={{ width: '100%', minWidth: 0 }}>
             <header style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', gap: '12px', marginBottom: '16px' }}>
                 <div>
-                    <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#1E293B', fontWeight: '900' }}>🔔 최근 활동</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#1E293B', fontWeight: '900' }}>🔔 최근 활동</h3>
+                        <TeacherGuideButton tabId="recent-activity" variant="help" />
+                    </div>
                     <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.74rem', lineHeight: 1.45 }}>
                         우리 반 학생이 올린 글, 독서록과 승인된 댓글을 시간순으로 확인합니다.
                     </p>
