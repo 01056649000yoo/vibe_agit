@@ -1,9 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
-import { formatMealDate } from './mealBoardEngine';
+import { readLocalStorageJson } from '../../../lib/browserStorage';
+import {
+  MEAL_COLUMN_OPTIONS,
+  MEAL_TEXT_STEPS,
+  MEAL_VIEW_STORAGE_KEY,
+  formatMealDate,
+  mealTextScale,
+  normalizeMealView
+} from './mealBoardEngine';
 
 export default function MealFullscreen({ school, date, meals, allergenMap, onClose }) {
+  const [view, setView] = useState(() => normalizeMealView(readLocalStorageJson(MEAL_VIEW_STORAGE_KEY, null)));
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(MEAL_VIEW_STORAGE_KEY, JSON.stringify(view));
+    } catch {
+      // 저장소가 막힌 환경에서도 지금 보고 있는 화면 설정은 그대로 유지한다.
+    }
+  }, [view]);
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event) => { if (event.key === 'Escape') onClose(); };
@@ -23,7 +41,29 @@ export default function MealFullscreen({ school, date, meals, allergenMap, onClo
           <h2 id="meal-fullscreen-title">{school?.schoolName || '우리 학교'} 급식</h2>
           <p>{formatMealDate(date)}</p>
         </div>
-        <ModalCloseButton onClick={onClose} label="전체화면 급식판 닫기" tone="onDark" />
+        <div className="meal-fullscreen-tools">
+          <div className="meal-view-control" role="group" aria-label="글자 크기">
+            <span>글자</span>
+            {MEAL_TEXT_STEPS.map((step) => <button
+              type="button"
+              key={step.id}
+              className={view.textStep === step.id ? 'is-selected' : ''}
+              aria-pressed={view.textStep === step.id}
+              onClick={() => setView((current) => ({ ...current, textStep: step.id }))}
+            >{step.label}</button>)}
+          </div>
+          <div className="meal-view-control" role="group" aria-label="열 수">
+            <span>열</span>
+            {MEAL_COLUMN_OPTIONS.map((columns) => <button
+              type="button"
+              key={columns}
+              className={view.columns === columns ? 'is-selected' : ''}
+              aria-pressed={view.columns === columns}
+              onClick={() => setView((current) => ({ ...current, columns }))}
+            >{columns}열</button>)}
+          </div>
+          <ModalCloseButton onClick={onClose} label="전체화면 급식판 닫기" tone="onDark" />
+        </div>
       </header>
 
       <main className={`meal-fullscreen-grid ${meals.length > 1 ? 'has-multiple' : ''}`}>
@@ -31,7 +71,11 @@ export default function MealFullscreen({ school, date, meals, allergenMap, onClo
           <span aria-hidden="true">🍽️</span>
           <h3>등록된 급식이 없어요</h3>
           <p>방학·휴일이거나 학교에서 아직 급식을 등록하지 않았을 수 있어요.</p>
-        </section> : meals.map((meal, index) => <article className="meal-display-card" key={`${meal.mealType}-${index}`}>
+        </section> : meals.map((meal, index) => <article
+          className="meal-display-card"
+          style={{ '--dish-cols': view.columns, '--dish-scale': mealTextScale(view.textStep) }}
+          key={`${meal.mealType}-${index}`}
+        >
           <div className="meal-display-card-heading">
             <span>{index === 0 ? '🍚' : index === 1 ? '🥗' : '🍲'}</span>
             <h3>{meal.mealType || '급식'}</h3>

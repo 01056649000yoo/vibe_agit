@@ -216,24 +216,61 @@
 .meal-fullscreen-header .meal-kicker { color: #bfe2ca; }
 .meal-fullscreen-header h2 { margin: 5px 0 2px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.06em; }
 .meal-fullscreen-header p { margin: 8px 0 0; color: #d3e5d9; font-size: clamp(.95rem, 1.7vw, 1.35rem); }
-.meal-fullscreen-grid { display: grid; place-items: center; padding: clamp(25px, 4vw, 55px) 0; }
+/* min-height:0 이 없으면 1fr 칸이 내용만큼 늘어나 카드가 화면 밖으로 나간다. */
+.meal-fullscreen-grid { display: grid; place-items: center; min-height: 0; padding: clamp(25px, 4vw, 55px) 0; }
 .meal-fullscreen-grid.has-multiple { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px; align-items: stretch; }
-.meal-display-card { width: min(1080px, 100%); min-height: clamp(440px, 62vh, 680px); display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.18); border-radius: clamp(24px, 3.4vw, 44px); padding: clamp(28px, 4.5vw, 64px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }
+.meal-display-card { width: min(1080px, 100%); min-height: min(clamp(440px, 62vh, 680px), 100%); max-height: 100%; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.18); border-radius: clamp(24px, 3.4vw, 44px); padding: clamp(28px, 4.5vw, 64px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }
 .has-multiple .meal-display-card { width: auto; }
 .meal-display-card-heading { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid rgba(255,255,255,.17); padding-bottom: 20px; }
 .meal-display-card-heading > span { font-size: clamp(2.1rem, 4.4vw, 3.5rem); }
 .meal-display-card-heading h3 { margin: 0; font-size: clamp(1.8rem, 3.4vw, 3rem); }
 .meal-display-card-heading em { margin-left: auto; color: #d6e8da; font-size: clamp(1rem, 1.5vw, 1.25rem); font-style: normal; font-weight: 800; }
-.meal-display-dishes { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: clamp(16px, 2.4vw, 28px); margin-top: 28px; }
-.meal-display-dishes div { min-width: 0; }
-.meal-display-dishes strong { display: block; font-size: clamp(1.65rem, 3.1vw, 2.85rem); line-height: 1.3; letter-spacing: -.025em; word-break: keep-all; }
-.meal-display-dishes small { display: block; margin-top: 8px; color: #ffe0cb; font-size: clamp(1rem, 1.6vw, 1.28rem); font-weight: 750; line-height: 1.45; }
+/* 전체화면 급식판은 교실 프로젝터용이라 스크롤이 생기면 뒷자리 아이가 못 본다.
+   급식 메뉴는 보통 10개 이내라 3열이면 네 줄 안에 담긴다. 그래서 열을 더 늘려 글자를 줄이는
+   대신 3열 하나로 두고 글자를 크게 유지한다(2026-08-27 결정).
+   2열 고정이던 때는 9개부터 카드가 화면보다 길어져 잘렸다. */
+.meal-display-card { --dish-cols: 3; --dish-name: clamp(1.7rem, 3.2vw, 3.3rem); --dish-allergen: clamp(1.05rem, 1.6vw, 1.38rem); --dish-gap: clamp(14px, 2vw, 26px); --dish-top: 20px; padding: clamp(20px, 2.6vw, 38px); }
+/* 급식이 여러 개면 카드가 나란히 놓여 한 카드의 폭이 좁아지므로 열을 하나 줄인다. */
+.has-multiple .meal-display-card { --dish-cols: 2; --dish-name: clamp(1.3rem, 2vw, 2rem); }
+/* overflow:auto 는 안전장치다 — 위 단계로도 안 담기는 드문 경우에 글자가 잘리는 대신 카드 안에서만 스크롤된다. */
+.meal-display-dishes { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(var(--dish-cols), minmax(0, 1fr)); align-content: center; gap: var(--dish-gap); margin-top: var(--dish-top); }
+/* 음식 이름 길이가 제각각이라 왼쪽 정렬이면 오른쪽 끝이 들쭉날쭉해 불안해 보인다.
+   칸 가운데로 모으면 열이 또렷하게 선다(2026-08-27). */
+.meal-display-dishes div { min-width: 0; text-align: center; }
+/* --dish-scale 은 선생님이 고른 글자 크기 단계다. 카드에 인라인으로 붙어 기본 크기에 곱해진다.
+   크게 골라 안 담기면 카드 안에서만 스크롤된다 — 고른 사람이 그걸 의도한 것이므로 막지 않는다. */
+.meal-display-dishes strong { display: block; font-size: calc(var(--dish-name) * var(--dish-scale, 1)); line-height: 1.3; letter-spacing: -.025em; word-break: keep-all; }
+.meal-display-dishes small { display: block; margin-top: 8px; color: #ffe0cb; font-size: calc(var(--dish-allergen) * var(--dish-scale, 1)); font-weight: 750; line-height: 1.45; }
+
+/* 전체화면 우측 상단의 보기 조절. 교실 화면에 띄운 채로 눌러야 하므로 크게 잡는다. */
+.meal-fullscreen-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.meal-view-control { display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.22); border-radius: 99px; padding: 4px 4px 4px 12px; background: rgba(255,255,255,.1); backdrop-filter: blur(8px); }
+.meal-view-control > span { margin-right: 2px; color: #cfe3d6; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+.meal-view-control button { min-height: 34px; border: 0; border-radius: 99px; padding: 7px 12px; color: #e6f2ea; background: transparent; cursor: pointer; font-size: .82rem; font-weight: 850; white-space: nowrap; }
+.meal-view-control button:hover { background: rgba(255,255,255,.16); }
+.meal-view-control button.is-selected { color: #1c402d; background: #eaf6ee; }
 .meal-fullscreen-empty { text-align: center; }
 .meal-fullscreen-empty > span { font-size: clamp(4rem, 10vw, 8rem); }
 .meal-fullscreen-empty h3 { margin: 16px 0 5px; font-size: clamp(1.8rem, 4vw, 3rem); }
 .meal-fullscreen-empty p { color: #cfe1d4; }
 .meal-fullscreen-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; color: #c8ddcf; font-size: clamp(.7rem, 1.1vw, .9rem); }
 .meal-fullscreen-footer strong { color: #fff; }
+
+/* 화면이 낮으면 높이가 모자라진다. 두 단계로 나눈 것은 실측 때문이다(2026-08-27) —
+   1600x900 은 **여백만 줄여도** 큰 글자가 들어가지만(글자까지 줄이면 괜히 작아진다),
+   1440x810 부터는 글자도 줄여야 담긴다. 1920x1080 에서는 둘 다 걸리지 않는다. */
+@media (max-height: 950px) {
+  .meal-fullscreen-grid { padding: clamp(14px, 2vw, 26px) 0; }
+  .meal-display-card { --dish-gap: clamp(12px, 1.6vw, 20px); --dish-top: 14px; padding: clamp(16px, 2.2vw, 30px); }
+  .meal-display-card-heading { padding-bottom: 10px; }
+  .meal-display-card-heading > span { font-size: clamp(1.5rem, 2.4vw, 2rem); }
+  .meal-display-card-heading h3 { font-size: clamp(1.3rem, 2vw, 1.8rem); }
+}
+
+/* 여백만으로 부족한 높이 — 여기서부터 글자도 줄인다. */
+@media (max-height: 860px) {
+  .meal-display-card { --dish-name: clamp(1.25rem, 2.3vw, 2.2rem); --dish-allergen: clamp(.88rem, 1.3vw, 1.05rem); --dish-gap: clamp(12px, 1.6vw, 18px); }
+}
 
 @media (max-width: 980px) {
   .meal-board-layout { grid-template-columns: 1fr; }
@@ -251,7 +288,8 @@
   .meal-modal-actions { flex-wrap: wrap; }
   .meal-note-modal { padding: 18px; border-radius: 18px; }
   .meal-fullscreen { padding: 20px; }
-  .meal-display-dishes { grid-template-columns: 1fr; }
+  /* 좁은 화면은 1열이 기본이지만, 음식이 많으면 2열로 두어 스크롤을 줄인다. */
+  .meal-display-card { --dish-cols: 1; }
   .meal-fullscreen-footer { flex-direction: column; align-items: flex-start; }
 }
 
