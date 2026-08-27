@@ -50,6 +50,8 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [schoolAutoLinking, setSchoolAutoLinking] = useState(false);
   const [schoolAutoLinkHint, setSchoolAutoLinkHint] = useState('');
+  // 자동 연결을 다시 돌리는 열쇠. 이 값이 바뀌어야 아래 효과가 다시 실행된다.
+  const [schoolAutoLinkRetry, setSchoolAutoLinkRetry] = useState(0);
   const [refreshToken, setRefreshToken] = useState(0);
   const workspaceRequestRef = useRef(0);
   const autoLinkAttemptRef = useRef('');
@@ -93,7 +95,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
       return undefined;
     }
 
-    const attemptKey = `${activeClassId}:${teacherSchoolName}`;
+    const attemptKey = `${activeClassId}:${teacherSchoolName}:${schoolAutoLinkRetry}`;
     if (autoLinkAttemptRef.current === attemptKey) return undefined;
     autoLinkAttemptRef.current = attemptKey;
     let active = true;
@@ -113,13 +115,19 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
         }
 
         await mealBoardApi.saveSchool(activeClassId, 'default', matchedSchool);
-        const result = await mealBoardApi.getWorkspace(activeClassId);
         if (!active) return;
-        setWorkspace(normalizeWorkspace(result));
+        // 작업공간은 반드시 loadWorkspace 로 다시 읽는다. 여기서 직접 setWorkspace 하면
+        // 요청 순번 가드를 건너뛰어, 먼저 떠 있던 조회 응답이 뒤늦게 도착할 때
+        // **방금 연결한 학교가 연결 전 상태로 덮여 사라진다**(2026-08-27).
+        await loadWorkspace();
+        if (!active) return;
         onTeacherSchoolChange?.(matchedSchool);
         setNotice(`${matchedSchool.schoolName}을(를) 교사 기본 학교로 자동 연결했습니다.`);
       } catch (linkError) {
-        if (active) setSchoolAutoLinkHint(linkError.message || '교사 학교를 자동으로 연결하지 못했습니다.');
+        // 속도 제한·나이스 지연 같은 일시적 실패다. 시도 표시를 지워 두지 않으면
+        // 그 세션에서는 새로고침 전까지 자동 연결을 영영 다시 하지 않는다(2026-08-27).
+        autoLinkAttemptRef.current = '';
+        if (active) setSchoolAutoLinkHint(`${linkError.message || '교사 학교를 자동으로 연결하지 못했습니다.'} 잠시 뒤 다시 시도할 수 있어요.`);
       } finally {
         if (active) setSchoolAutoLinking(false);
       }
@@ -127,7 +135,7 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
 
     void linkTeacherSchool();
     return () => { active = false; };
-  }, [activeClassId, linkedOfficeCode, linkedSchoolCode, onTeacherSchoolChange, teacherSchoolName, workspaceReady]);
+  }, [activeClassId, linkedOfficeCode, linkedSchoolCode, loadWorkspace, onTeacherSchoolChange, schoolAutoLinkRetry, teacherSchoolName, workspaceReady]);
 
   useEffect(() => {
     const school = workspace?.school;
@@ -288,7 +296,14 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
           {schoolAutoLinking ? <span className="meal-loading-dot" aria-hidden="true" /> : <span aria-hidden="true">🏫</span>}
           <h4>{schoolAutoLinking ? '교사 학교를 자동으로 연결하고 있어요' : '급식 학교 연결이 필요해요'}</h4>
           <p>{schoolAutoLinking ? `${teacherSchoolName}의 나이스 학교 정보를 확인하는 중입니다.` : schoolAutoLinkHint || '학교 설정에서 나이스 검색 결과를 선택해 주세요.'}</p>
-          <button type="button" className="meal-button is-primary" onClick={() => setSchoolModalOpen(true)}>학교 찾기</button>
+          <div className="meal-modal-actions">
+            {!schoolAutoLinking && schoolAutoLinkHint && teacherSchoolName.length >= 2 ? <button
+              type="button"
+              className="meal-button is-secondary"
+              onClick={() => { setSchoolAutoLinkHint(''); setSchoolAutoLinkRetry((value) => value + 1); }}
+            >자동 연결 다시 시도</button> : null}
+            <button type="button" className="meal-button is-primary" onClick={() => setSchoolModalOpen(true)}>학교 찾기</button>
+          </div>
         </div> : mealLoading ? <div className="meal-state-card"><span className="meal-loading-dot" aria-hidden="true" /><h4>급식을 불러오는 중이에요</h4></div>
           : mealError ? <div className="meal-state-card is-error"><span aria-hidden="true">🥣</span><h4>급식을 불러오지 못했어요</h4><p>{mealError}</p><button type="button" className="meal-button is-secondary" onClick={() => setRefreshToken((value) => value + 1)}>다시 시도</button></div>
             : meals.length === 0 ? <div className="meal-state-card"><span aria-hidden="true">🍽️</span><h4>등록된 급식이 없어요</h4><p>방학·휴일이거나 아직 학교에서 등록하지 않았을 수 있어요.</p></div>

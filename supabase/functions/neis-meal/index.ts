@@ -13,6 +13,17 @@ const REQUEST_TIMEOUT_MS = 8_000
 const MEAL_CACHE_TTL_MS = 6 * 60 * 60 * 1_000
 const SEARCH_CACHE_TTL_MS = 24 * 60 * 60 * 1_000
 const SEARCH_CACHE_MAX = 200
+/** 나이스에서 받아 오는 수. 거르기 전이므로 넉넉히 받는다. */
+const SCHOOL_FETCH_SIZE = 100
+/** 화면에 돌려주는 수. 선택 목록이 너무 길면 오히려 고르기 어렵다. */
+const SCHOOL_RESULT_MAX = 20
+
+/** 학교 이름 비교용 정규화. 클라이언트의 findUniqueSchoolMatch 와 같은 규칙을 쓴다. */
+const normalizeSchoolName = (value: unknown) => String(value || '')
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/초등학교$/, '초')
+    .toLocaleLowerCase('ko-KR')
 const RATE_LIMIT_CACHE_MAX = 1_000
 const SEARCH_MIN_INTERVAL_MS = 500
 const MEAL_MIN_INTERVAL_MS = 1_000
@@ -190,15 +201,18 @@ async function searchSchools(query: string) {
     const cached = searchCache.get(cacheKey)
     if (cached && cached.expiresAt > Date.now()) return cached.items
 
+    // 나이스는 SCHUL_NM 이 일부만 맞아도 걸리므로 "중앙초등학교" 같은 흔한 이름은 전국에 수십 곳이다.
+    // 예전에는 20개만 받아 온 뒤 걸러서 또 20개로 잘라, **선생님의 학교가 그 안에 없으면**
+    // "일치하는 초등학교가 없습니다"가 떴다. 넉넉히 받아 거른 뒤에 자른다(2026-08-27).
     const url = new URL('https://open.neis.go.kr/hub/schoolInfo')
     url.searchParams.set('KEY', NEIS_API_KEY)
     url.searchParams.set('Type', 'json')
     url.searchParams.set('pIndex', '1')
-    url.searchParams.set('pSize', '20')
+    url.searchParams.set('pSize', String(SCHOOL_FETCH_SIZE))
     url.searchParams.set('SCHUL_NM', query)
     url.searchParams.set('SCHUL_KND_SC_NM', '초등학교')
     const payload = await fetchNeis(url)
-    const items = rowsFrom(payload, 'schoolInfo')
+    const matched = rowsFrom(payload, 'schoolInfo')
         .filter((row) => cleanText(row.SCHUL_KND_SC_NM, 30) === '초등학교')
         .map((row) => ({
             officeCode: cleanText(row.ATPT_OFCDC_SC_CODE, 3),
@@ -209,7 +223,15 @@ async function searchSchools(query: string) {
             schoolKind: cleanText(row.SCHUL_KND_SC_NM, 30)
         }))
         .filter((school) => validSchoolCodes(school.officeCode, school.schoolCode) && school.schoolName)
-        .slice(0, 20)
+
+    // 이름이 정확히 같은 학교를 앞으로 올린 뒤에 자른다. 이것이 자동 연결의 안전장치이기도 하다 —
+    // 동명 학교가 둘 이상이면 둘 다 앞쪽에 남으므로, 클라이언트의 "정확히 한 곳일 때만 연결"이
+    // 잘린 목록을 보고 엉뚱한 학교를 고르는 일이 없다.
+    const target = normalizeSchoolName(query)
+    const items = [...matched]
+        .sort((a, b) => Number(normalizeSchoolName(a.schoolName) !== target)
+            - Number(normalizeSchoolName(b.schoolName) !== target))
+        .slice(0, SCHOOL_RESULT_MAX)
 
     if (searchCache.size >= SEARCH_CACHE_MAX) {
         const oldestKey = searchCache.keys().next().value

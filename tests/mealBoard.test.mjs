@@ -2,9 +2,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  DEFAULT_MEAL_VIEW,
+  MEAL_COLUMN_OPTIONS,
+  MEAL_TEXT_STEPS,
   findUniqueSchoolMatch,
   formatMealDate,
   getSeoulDateString,
+  mealTextScale,
+  normalizeMealView,
   summarizeRoster
 } from '../src/modules/tool/meal-board/mealBoardEngine.js';
 
@@ -30,6 +35,111 @@ const [manifest, entry, noteModal, mealCss, schoolModal, fullscreen, api, school
 test('급식 날짜는 서울 날짜와 한국어 표시를 사용한다', () => {
   assert.equal(getSeoulDateString(new Date('2026-08-25T15:30:00Z')), '2026-08-26');
   assert.match(formatMealDate('2026-08-26'), /8월 26일/);
+});
+
+test('학교 자동 연결은 요청 순번 가드를 거치고 실패해도 다시 시도할 수 있다', () => {
+  // ⓓ 자동 연결이 직접 setWorkspace 하면 요청 순번 가드를 건너뛰어, 먼저 떠 있던 조회 응답이
+  // 뒤늦게 도착할 때 방금 연결한 학교가 연결 전 상태로 덮여 사라진다.
+  const autoLink = entry.slice(entry.indexOf('const linkTeacherSchool'), entry.indexOf('void linkTeacherSchool'));
+  assert.match(autoLink, /await loadWorkspace\(\)/, '자동 연결도 loadWorkspace 로 다시 읽어야 한다');
+  assert.doesNotMatch(autoLink, /setWorkspace\(/, '자동 연결이 작업공간을 직접 덮어쓰면 안 된다');
+  assert.match(autoLink, /await mealBoardApi\.saveSchool\(activeClassId, 'default', matchedSchool\)/);
+  // 요청 순번 가드는 loadWorkspace 안에만 있어야 하고 계속 살아 있어야 한다.
+  assert.match(entry, /const requestId = workspaceRequestRef\.current \+ 1/);
+  assert.match(entry, /if \(requestId !== workspaceRequestRef\.current\) return/);
+
+  // ⓐ 일시적 실패(속도 제한·나이스 지연) 뒤에도 다시 시도할 수 있어야 한다.
+  assert.match(autoLink, /autoLinkAttemptRef\.current = ''/, '실패하면 시도 표시를 지워야 한다');
+  assert.match(entry, /schoolAutoLinkRetry/, '다시 시도 열쇠가 효과의 의존 값에 있어야 한다');
+  assert.match(entry, /`\$\{activeClassId\}:\$\{teacherSchoolName\}:\$\{schoolAutoLinkRetry\}`/);
+  assert.match(entry, /setSchoolAutoLinkRetry\(\(value\) => value \+ 1\)/);
+  assert.match(entry, /자동 연결 다시 시도/);
+});
+
+test('학교 검색은 넉넉히 받아 거른 뒤 자르고 정확히 같은 이름을 앞에 둔다', () => {
+  // ⓑ 예전에는 20개만 받아 거른 뒤 또 20개로 잘라, 흔한 이름이면 선생님 학교가 목록에서 빠졌다.
+  assert.match(edgeFunction, /const SCHOOL_FETCH_SIZE = 100/);
+  assert.match(edgeFunction, /const SCHOOL_RESULT_MAX = 20/);
+  assert.match(edgeFunction, /pSize', String\(SCHOOL_FETCH_SIZE\)/);
+  assert.doesNotMatch(edgeFunction, /pSize', '20'/);
+  // 거르기가 자르기보다 먼저여야 한다.
+  const search = edgeFunction.slice(edgeFunction.indexOf('async function searchSchools'));
+  assert.ok(search.indexOf('validSchoolCodes(school.officeCode') < search.indexOf('SCHOOL_RESULT_MAX)'),
+    '거른 뒤에 잘라야 상한이 유효한 결과에 적용된다');
+
+  // ⓒ 정확히 같은 이름을 앞으로 올려야, 동명 학교가 둘 이상일 때 둘 다 남아
+  // 클라이언트의 "정확히 한 곳일 때만 연결"이 엉뚱한 학교를 고르지 않는다.
+  assert.match(edgeFunction, /\.replace\(\/초등학교\$\/, '초'\)/, '클라이언트와 같은 정규화 규칙을 써야 한다');
+  assert.ok(search.indexOf('.sort(') < search.indexOf('.slice(0, SCHOOL_RESULT_MAX)'),
+    '정렬이 자르기보다 먼저여야 정확히 같은 이름이 살아남는다');
+  // 정렬이 실제로 "검색어와 정확히 같은 이름"을 앞으로 보내는지 본다.
+  // 순서만 보면 비교식을 망가뜨려도 통과한다(2026-08-27 변이 검사로 확인).
+  assert.match(search, /const target = normalizeSchoolName\(query\)/);
+  const sortBody = search.slice(search.indexOf('.sort('), search.indexOf('.slice(0, SCHOOL_RESULT_MAX)'));
+  assert.match(sortBody, /normalizeSchoolName\(a\.schoolName\) !== target/);
+  assert.match(sortBody, /normalizeSchoolName\(b\.schoolName\) !== target/);
+  assert.doesNotMatch(sortBody, /0\s*\*/, '비교식을 0 으로 눌러 두면 정렬이 무의미해진다');
+});
+
+test('전체화면 급식판의 글자 크기·열 선택은 브라우저에 자동 저장된다', () => {
+  // 교실마다 프로젝터와 뒷자리 거리가 달라 알맞은 크기가 하나로 정해지지 않는다.
+  assert.deepEqual(MEAL_COLUMN_OPTIONS, [2, 3]);
+  assert.equal(MEAL_TEXT_STEPS.length, 4);
+  assert.equal(MEAL_TEXT_STEPS[0].scale, 1, '첫 단계는 기본 크기 그대로여야 한다');
+  assert.ok(MEAL_TEXT_STEPS.every((step, index, all) => index === 0 || step.scale > all[index - 1].scale),
+    '단계는 갈수록 커져야 한다');
+
+  // 저장된 값이 깨졌거나 예전 판이어도 화면이 망가지지 않고 기본값으로 돌아간다.
+  assert.deepEqual(normalizeMealView(null), DEFAULT_MEAL_VIEW);
+  assert.deepEqual(normalizeMealView('깨진값'), DEFAULT_MEAL_VIEW);
+  assert.deepEqual(normalizeMealView({ textStep: '없는단계', columns: 99 }), DEFAULT_MEAL_VIEW);
+  assert.deepEqual(normalizeMealView({ textStep: 'xxlarge', columns: 2 }), { textStep: 'xxlarge', columns: 2 });
+  assert.equal(mealTextScale('xxlarge'), 1.5);
+  assert.equal(mealTextScale('없는단계'), 1, '모르는 단계는 기본 배율로 되돌린다');
+
+  // 화면이 저장하고 다시 읽어야 다음에 열 때 그대로 나온다.
+  assert.match(fullscreen, /window\.localStorage\.setItem\(MEAL_VIEW_STORAGE_KEY/);
+  assert.match(fullscreen, /normalizeMealView\(readLocalStorageJson\(MEAL_VIEW_STORAGE_KEY/);
+  // 고른 값은 카드에 붙어 CSS 가 쓴다.
+  assert.match(fullscreen, /'--dish-cols': view\.columns/);
+  assert.match(fullscreen, /'--dish-scale': mealTextScale\(view\.textStep\)/);
+  assert.match(mealCss, /font-size: calc\(var\(--dish-name\) \* var\(--dish-scale, 1\)\)/);
+  // 보기 설정일 뿐이므로 DB 나 RPC 를 건드리지 않는다.
+  assert.doesNotMatch(fullscreen, /supabase|rpc\(|mealBoardApi/);
+});
+
+test('전체화면 급식판은 3열 고정으로 음식 12개까지 한 화면에 담는다', () => {
+  // 2열 고정이던 때 9개부터 카드가 화면 밖으로 나갔다. 급식 메뉴는 보통 10개 이내라
+  // 열을 더 늘려 글자를 줄이는 대신 3열 하나로 두고 글자를 크게 유지한다(2026-08-27).
+  assert.match(mealCss, /\.meal-display-card \{[^}]*--dish-cols: 3/);
+  assert.match(mealCss, /grid-template-columns: repeat\(var\(--dish-cols\)/);
+  assert.doesNotMatch(mealCss, /\.meal-display-dishes \{[^}]*grid-template-columns: repeat\(2,/);
+  // 급식이 여럿이면 카드가 좁아지므로 그때만 2열로 준다.
+  assert.match(mealCss, /\.has-multiple \.meal-display-card \{[^}]*--dish-cols: 2/);
+  // 음식 이름 길이가 제각각이라 왼쪽 정렬이면 오른쪽 끝이 들쭉날쭉해 불안해 보인다.
+  assert.match(mealCss, /\.meal-display-dishes div \{[^}]*text-align: center/);
+
+  // 1fr 칸과 카드가 화면 높이를 넘지 못하게 막아 둔다 — 없으면 카드가 화면 밖으로 나간다.
+  assert.match(mealCss, /\.meal-fullscreen-grid \{[^}]*min-height: 0/);
+  assert.match(mealCss, /\.meal-display-card \{[^}]*max-height: 100%/);
+  assert.match(mealCss, /\.meal-display-dishes \{[^}]*overflow: auto/);
+
+  // 낮은 화면은 높이가 모자라다. 두 단계인 이유는 실측 때문이다 —
+  // 1600x900 은 여백만 줄여도 큰 글자가 들어가고, 1440x810 부터는 글자도 줄여야 담긴다.
+  assert.match(mealCss, /@media \(max-height: 950px\)/);
+  assert.match(mealCss, /@media \(max-height: 860px\)/);
+  const padStep = mealCss.slice(mealCss.indexOf('@media (max-height: 950px)'), mealCss.indexOf('@media (max-height: 860px)'));
+  assert.match(padStep, /\.meal-fullscreen-grid \{[^}]*padding: clamp\(14px/);
+  assert.doesNotMatch(padStep, /--dish-name/, '900px 대에서 글자까지 줄이면 괜히 작아진다');
+  const fontStep = mealCss.slice(mealCss.indexOf('@media (max-height: 860px)'));
+  assert.match(fontStep, /\.meal-display-card \{[^}]*--dish-name/);
+
+  // 프로젝터 가독성 — 음식명은 1920x1080 에서 53px(3.3rem)까지 커진다.
+  assert.match(mealCss, /--dish-name: clamp\(1\.7rem, 3\.2vw, 3\.3rem\)/);
+  // 아이가 태블릿에서 읽을 수 있는 바닥(0.8rem) 아래로 내려가지 않는다.
+  const floors = [...mealCss.matchAll(/--dish-(?:name|allergen): clamp\(([\d.]+)rem/g)].map((m) => Number(m[1]));
+  assert.ok(floors.length >= 4);
+  assert.ok(Math.min(...floors) >= 0.8, `가장 작은 글자 ${Math.min(...floors)}rem 이 0.8rem 아래다`);
 });
 
 test('학급 요약은 비고 유무만 집계한다', () => {
@@ -66,10 +176,12 @@ test('공개 전체화면은 급식만 받고 학생 명단이나 비고를 전�
   assert.doesNotMatch(fullscreen, /meal-icon-button|>×<|>횞</);
   assert.doesNotMatch(fullscreen, /student|roster|studentNote|healthAuthorization|allergenCodes\s*:\s*student/);
   assert.match(fullscreen, /학생 이름과 비고는 이 화면에 표시되지 않아요/);
-  assert.match(mealCss, /\.meal-display-card \{[^}]*width: min\(1080px, 100%\); min-height: clamp\(440px, 62vh, 680px\);/);
+  // 프로젝터 가독성 — 2026-08-27부터 값은 --dish-* 변수에 있고, 3열로 바꾸면서 오히려 더 키웠다
+  // (1920x1080 기준 음식명 34px → 53px). 카드 높이는 화면을 넘지 못하게 min()/max-height 로 묶었다.
+  assert.match(mealCss, /\.meal-display-card \{[^}]*width: min\(1080px, 100%\); min-height: min\(clamp\(440px, 62vh, 680px\), 100%\); max-height: 100%;/);
   assert.match(mealCss, /\.meal-display-dishes \{[^}]*flex: 1;[^}]*align-content: center;/);
-  assert.match(mealCss, /\.meal-display-dishes strong \{[^}]*font-size: clamp\(1\.65rem, 3\.1vw, 2\.85rem\)/);
-  assert.match(mealCss, /\.meal-display-dishes small \{[^}]*font-size: clamp\(1rem, 1\.6vw, 1\.28rem\); font-weight: 750; line-height: 1\.45/);
+  assert.match(mealCss, /\.meal-display-card \{[^}]*--dish-allergen: clamp\(1\.05rem, 1\.6vw, 1\.38rem\)/);
+  assert.match(mealCss, /\.meal-display-dishes small \{[^}]*font-weight: 750; line-height: 1\.45/);
 });
 
 test('나이스 키는 서버 환경변수에서만 읽고 브라우저는 Edge 함수를 호출한다', () => {
