@@ -80,6 +80,17 @@
   color: #177667;
 }
 
+/* 이 앱이 무엇인지 말하는 한 줄. 큰 제목보다 작지만 반드시 읽히는 크기를 지킨다. */
+.landing-promise-identity {
+  margin: 7px 0 0;
+  color: #5a5148;
+  font-size: clamp(0.86rem, 2.1vw, 0.98rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
 .landing-entry {
   padding: 10px 10px 0;
 }
@@ -210,6 +221,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 부제가 `아지트` 뜻풀이로 길어졌다. 좁은 화면에서 눌리지 않게 줄을 바꾸도록 둔다. */
+  flex-wrap: wrap;
   gap: 9px;
   margin-bottom: 9px;
 }
@@ -228,6 +241,7 @@
   color: #a0968d;
   font-size: 0.82rem;
   font-weight: 800;
+  word-break: keep-all;
 }
 
 .landing-experiences-heading span::before {

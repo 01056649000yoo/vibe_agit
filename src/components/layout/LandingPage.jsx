@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import LandingFeatureModal, { landingExperiences } from './LandingFeatureModal';
+import { AGIT_MEANING, HERO_IMAGE_ALT, SERVICE_IDENTITY_LINE } from '../../constants/serviceIdentity';
 import './LandingPage.css';
 
 const LandingPage = ({ onStudentLoginClick }) => {
@@ -37,7 +38,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
           <img
             className="landing-hero-image"
             src="/assets/landing-hero-reference.jpg"
-            alt="끄적끄적 아지트, 글쓰기를 중심으로 문해력 활동을 이어가는 공간"
+            alt={HERO_IMAGE_ALT}
             width="1723"
             height="913"
             fetchPriority="high"
@@ -48,6 +49,9 @@ const LandingPage = ({ onStudentLoginClick }) => {
           <h1 id="landing-promise-title">
             쓰고, 읽고, 키우며 <span>함께 자라는 우리 반 아지트</span>
           </h1>
+          {/* 분위기만 전하던 큰 제목 아래에 **이 앱이 무엇인지**를 눈에 보이게 둔다.
+              전에는 이 문장이 히어로 이미지의 alt 안에만 있어 화면에 `글쓰기` 가 없었다. */}
+          <p className="landing-promise-identity">{SERVICE_IDENTITY_LINE}</p>
         </section>
 
         <section className="landing-entry" aria-label="로그인 선택">
@@ -93,7 +97,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
         <section className="landing-experiences" aria-labelledby="landing-experiences-title">
           <div className="landing-experiences-heading">
             <h2 id="landing-experiences-title">아지트에서는 이렇게 활동해요</h2>
-            <span>세 영역을 눌러 자세히 보기</span>
+            <span>{AGIT_MEANING}</span>
           </div>
           <div className="landing-experience-grid">
             {landingExperiences.map((experience) => (
