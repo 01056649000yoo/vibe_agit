@@ -13,7 +13,9 @@ import {
   summarizeRoster
 } from '../src/modules/tool/meal-board/mealBoardEngine.js';
 
-const [manifest, entry, noteModal, mealCss, schoolModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboard, teachingToolsHub, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment] = await Promise.all([
+const [manifest, entry, noteModal, mealCss, schoolModal, fullscreen, api, schoolApi, teacherSetup, teacherDashboard, teachingToolsHub, teacherDashboardHook, edgeFunction, migration, privacyPolicy, deployment,
+  teacherGuides
+] = await Promise.all([
   readFile('src/modules/tool/meal-board/manifest.js', 'utf8'),
   readFile('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8'),
   readFile('src/modules/tool/meal-board/StudentNoteModal.jsx', 'utf8'),
@@ -29,7 +31,8 @@ const [manifest, entry, noteModal, mealCss, schoolModal, fullscreen, api, school
   readFile('supabase/functions/neis-meal/index.ts', 'utf8'),
   readFile('supabase/migrations/20261175_meal_allergy_board.sql', 'utf8'),
   readFile('src/components/layout/PrivacyPolicy.jsx', 'utf8'),
-  readFile('.github/workflows/deploy.yml', 'utf8')
+  readFile('.github/workflows/deploy.yml', 'utf8'),
+  readFile('src/constants/teacherGuides.js', 'utf8')
 ]);
 
 test('급식 날짜는 서울 날짜와 한국어 표시를 사용한다', () => {
@@ -280,4 +283,23 @@ test('나이스 함수는 운영 동기화와 무인증 401 검증 대상이다'
   assert.match(deployment, /volumes\/functions\/neis-meal/);
   assert.match(deployment, /functions\/v1\/neis-meal/);
   assert.match(deployment, /neis_edge_code" = "401"/);
+});
+
+test('교사 도움말이 전체화면 조작과 자동 연결 다시 시도를 안내한다', () => {
+  // 기능만 넣고 도움말을 두면 선생님은 있는 줄 모르고 못 쓴다.
+  // 교실 프로젝터에 맞추라고 만든 조작이라 특히 그렇다(2026-08-27 미반영 상태로 발견).
+  const guide = teacherGuides.slice(
+    teacherGuides.indexOf("'meal-board': {"),
+    teacherGuides.indexOf("    tools: {")
+  );
+  assert.match(guide, /글자.*보통·크게·더 크게·가장 크게/);
+  assert.match(guide, /열.*2열·3열/);
+  assert.match(guide, /고른 값은 그 기기에 남아/);
+  // 실패해도 다시 시도할 수 있게 바뀌었으므로 `첫 실행에서만` 이라는 옛 설명은 남아 있으면 안 된다.
+  assert.match(guide, /자동 연결 다시 시도/);
+  assert.doesNotMatch(guide, /첫 실행에서 자동 연결/);
+  // 화면의 실제 단추 이름과 어긋나면 안내가 거짓말이 된다.
+  assert.match(fullscreen, /aria-label="글자 크기"/);
+  assert.match(fullscreen, /aria-label="열 수"/);
+  assert.match(entry, /자동 연결 다시 시도/);
 });
