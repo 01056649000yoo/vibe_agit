@@ -280,6 +280,17 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     const overviewGroups = [
         {
+            id: 'today',
+            title: '오늘 이용 현황',
+            description: '한국 시간 0시부터 지금까지',
+            tone: 'today',
+            items: [
+                { id: 'today-teachers', label: '오늘 접속 교사', value: health.summary?.todayTeachers != null ? `${health.summary.todayTeachers}명` : '확인 중', color: '#2F855A', icon: '👩‍🏫', onOpen: () => setCurrentTab('service') },
+                { id: 'today-students', label: '오늘 접속 학생', value: health.summary?.todayStudents != null ? `${health.summary.todayStudents}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('service') },
+                { id: 'today-posts', label: '오늘 제출글', value: health.summary?.todaySubmittedPosts != null ? `${health.summary.todaySubmittedPosts}편` : '확인 중', color: '#6B46C1', icon: '📝', onOpen: () => setCurrentTab('service') }
+            ]
+        },
+        {
             id: 'actions',
             title: '지금 확인할 일',
             description: '누르면 처리 화면으로 이동',

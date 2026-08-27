@@ -40,6 +40,18 @@ test('서비스 현황은 한국 날짜와 실제 제출 글을 같은 기간으
     assert.match(servicePanel, /host_memory_pressure: '맥 메모리 압박'/);
 });
 
+test('관리자 첫 화면은 서비스 현황의 오늘 집계를 그대로 재사용한다', async () => {
+    const healthHook = await read('src/components/admin/useAdminHealthSummary.js');
+
+    assert.match(healthHook, /admin_get_service_overview_v1/);
+    assert.match(healthHook, /todayTeachers: data\?\.today\?\.teachers \?\? null/);
+    assert.match(healthHook, /todayStudents: data\?\.today\?\.students \?\? null/);
+    assert.match(healthHook, /todaySubmittedPosts: data\?\.today\?\.posts \?\? null/);
+    assert.match(adminDashboard, /label: '오늘 접속 교사'/);
+    assert.match(adminDashboard, /label: '오늘 접속 학생'/);
+    assert.match(adminDashboard, /label: '오늘 제출글'/);
+});
+
 test('교사 학급 현황은 접속과 글쓰기 활동을 분리한다', () => {
     assert.match(cards, /label: '접속 학생'/);
     assert.match(cards, /numeratorPath: 'summary\.accessed_students'/);

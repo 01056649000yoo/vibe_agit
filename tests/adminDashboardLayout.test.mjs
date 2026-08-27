@@ -97,3 +97,27 @@ test('관리자 첫 화면은 조치·이용 현황·시스템 상태를 한 번
     // 상단은 곁눈질용이라 추이까지 받지 않는다.
     assert.match(hook, /p_trend_days: 1/);
 });
+
+test('관리자 첫 화면 맨 위에서 오늘 교사·학생 접속과 제출글을 바로 본다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+    const overviewCss = await read('src/components/admin/AdminDashboardOverview.css');
+    const healthHook = await read('src/components/admin/useAdminHealthSummary.js');
+
+    for (const [label, field, unit] of [
+        ['오늘 접속 교사', 'todayTeachers', '명'],
+        ['오늘 접속 학생', 'todayStudents', '명'],
+        ['오늘 제출글', 'todaySubmittedPosts', '편']
+    ]) {
+        assert.ok(dashboard.includes(`label: '${label}'`), `첫 화면에 '${label}' 카드가 없다`);
+        const valueExpression = 'health.summary?.' + field
+            + ' != null ? `${health.summary.' + field + '}' + unit + '`';
+        assert.ok(dashboard.includes(valueExpression), `'${label}' 카드가 서버 집계 값을 쓰지 않는다`);
+    }
+
+    // 서버 상태 화면과 같은 RPC 결과를 재사용한다. 같은 숫자를 위한 별도 조회를 만들지 않는다.
+    assert.match(healthHook, /todayTeachers: data\?\.today\?\.teachers \?\? null/);
+    assert.match(healthHook, /todayStudents: data\?\.today\?\.students \?\? null/);
+    assert.match(healthHook, /todaySubmittedPosts: data\?\.today\?\.posts \?\? null/);
+    assert.match(dashboard, /id: 'today',[\s\S]*?id: 'actions'/, '오늘 현황이 첫 요약 묶음이어야 한다');
+    assert.match(overviewCss, /admin-overview__group--today[\s\S]*?grid-column: 1 \/ -1/);
+});
