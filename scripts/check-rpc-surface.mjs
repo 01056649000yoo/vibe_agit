@@ -114,6 +114,29 @@ const main = async () => {
     const allowed = new Map((allowlist.keep || []).map((item) => [item.name, item]));
     const consumers = allowlist.externalConsumers || [];
 
+    // 이유는 썩는다. 부르던 쪽이 새 판으로 옮겨 가면 이유는 조용히 거짓이 되는데,
+    // 목록의 값어치는 통째로 "적힌 이유는 믿을 수 있다"에 걸려 있다.
+    // 실제로 2026-08-27 점검에서 이유 8개 중 3개가 사실과 달랐다.
+    // DB 없이도 돌아야 하므로 아래 DB 조회보다 먼저 본다.
+    const STALE_AFTER_DAYS = 120;
+    const today = new Date();
+    const unchecked = [];
+    const staleReasons = [];
+    for (const item of allowed.values()) {
+        if (!item.reasonCheckedAt) {
+            unchecked.push(item.name);
+            continue;
+        }
+        const days = Math.floor((today - new Date(item.reasonCheckedAt)) / 86400000);
+        if (days > STALE_AFTER_DAYS) staleReasons.push(`${item.name}(${days}일 전)`);
+    }
+    if (unchecked.length || staleReasons.length) {
+        console.log(`${YELLOW}· 허용 목록의 이유를 다시 확인할 때가 됐습니다.${OFF}`);
+        if (unchecked.length) console.log(`  확인 날짜 없음: ${unchecked.join(', ')}`);
+        if (staleReasons.length) console.log(`  ${STALE_AFTER_DAYS}일 넘게 확인 안 함: ${staleReasons.join(', ')}`);
+        console.log('  이유에 적힌 "누가 부른다"가 아직 사실인지 보고 reasonCheckedAt 을 갱신하세요.');
+    }
+
     const callableRaw = psql(CALLABLE_SQL);
     if (callableRaw === null) {
         console.log(`${YELLOW}· 운영 DB를 보지 못해 RPC 표면 검사는 건너뜁니다.${OFF}`);

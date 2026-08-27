@@ -3,7 +3,16 @@
     "scripts/check-rpc-surface.mjs 가 쓰는 목록이다. `npm run check:rpc-surface` 로 돌린다.",
     "클라이언트에 열려 있는데 쓰이지 않아 보이는 RPC 는 지우는 것이 원칙이다.",
     "지울 수 없으면 여기에 이름과 **이유**를 적는다. 이유가 없으면 검사가 막는다.",
-    "이유에는 '언제 지울 수 있는지'까지 적는다. 그래야 다음 사람이 이어서 지울 수 있다."
+    "이유에는 '언제 지울 수 있는지'까지 적는다. 그래야 다음 사람이 이어서 지울 수 있다.",
+    "",
+    "**이유는 확인할 수 있게 적는다.** 이 목록의 값어치는 통째로 '적힌 이유는 믿을 수 있다'에 걸려 있다.",
+    "틀린 이유가 하나 통과하면 검사는 그 함수를 영원히 초록불로 봐주고 다음 사람은 다시 안 캔다.",
+    "  좋은 이유: '<이름> 이 부른다' — 누가 부르는지 이름을 적으면 DB·저장소에 물어 참·거짓을 가릴 수 있다.",
+    "  나쁜 이유: '내부 도우미라서', '혹시 몰라서', 'RLS 가 쓴다'(어느 정책인지 없음) — 확인할 수가 없다.",
+    "**이유는 썩는다.** 부르던 쪽이 새 판으로 옮겨 가면 이유는 조용히 거짓이 된다.",
+    "적을 때와 확인할 때마다 `reasonCheckedAt` 에 날짜를 남긴다.",
+    "실제 사고: 2026-08-27 점검에서 이유 8개 중 3개가 사실과 달랐다. auth_user_is_teacher_of 와",
+    "is_teacher_of_student 는 'RLS 정책이 쓴다'고 적혀 있었지만 정책 64개 중 0개가 쓰고 있었다."
   ],
   "externalConsumers": [
     {
@@ -45,7 +54,8 @@
     },
     {
       "name": "auth_user_is_teacher_of",
-      "reason": "다른 SECURITY DEFINER 함수와 RLS 정책이 쓰는 내부 판정 도우미다. 앱이 직접 부르지 않는 것이 정상이다."
+      "reason": "쓰는 곳이 없다. 2026-08-27 확인: RLS 정책 64개 중 0개, 부르는 DB 함수 0개, 저장소 참조 0개. 이 저장소에는 이 함수를 만드는 마이그레이션조차 없다 — 손으로 만들어져 기록이 안 남은 함수다. 위험하지 않아 급히 지우지 않기로 했다(auth.uid() 기준 '내가 이 학급 담임인가'만 boolean 으로 돌려주므로 부르는 사람이 이미 아는 사실 외에는 새지 않는다). 다음 정리 때 is_teacher_of_student 와 함께 DROP IF EXISTS 로 지운다.",
+      "reasonCheckedAt": "2026-08-27"
     },
     {
       "name": "get_my_role",
@@ -53,23 +63,28 @@
     },
     {
       "name": "get_reading_marathon_snapshot",
-      "reason": "죽은 것이 아니다. 앱은 _v2 를 부르지만 finish_teacher_reading_marathon·save_teacher_reading_marathon_v2·set_teacher_reading_book_page_count 세 DB 함수가 아직 이 이름을 부른다. 그 셋을 _v2 로 옮길 때 함께 지운다."
+      "reason": "죽은 것이 아니다. 앱은 _v2 를 부르지만 finish_teacher_reading_marathon·set_teacher_reading_book_page_count **두** DB 함수가 아직 이 이름을 부른다. 그 둘을 _v2 로 옮길 때 함께 지운다. (2026-08-27 정정: 원래 save_teacher_reading_marathon_v2 를 포함해 셋으로 적혀 있었으나 그 함수는 이 이름을 부르지 않는다. 결론은 그대로다.)",
+      "reasonCheckedAt": "2026-08-27"
     },
     {
       "name": "get_spelling_learning_workspace_v2",
-      "reason": "죽은 것이 아니다. _v3 가 내부에서 이 함수를 부른다. _v3 가 스스로 다 계산하게 바꾸기 전에는 못 지운다."
+      "reason": "죽은 것이 아니다. _v3 가 내부에서 이 함수를 부른다. _v3 가 스스로 다 계산하게 바꾸기 전에는 못 지운다.",
+      "reasonCheckedAt": "2026-08-27"
     },
     {
       "name": "is_teacher_of_student",
-      "reason": "위와 같은 내부 판정 도우미. RLS 정책에서 쓴다."
+      "reason": "쓰는 곳이 없다. auth_user_is_teacher_of 와 사정이 같다 — 2026-08-27 확인: RLS 정책 0개, 부르는 DB 함수 0개, 저장소 참조 0개, 만드는 마이그레이션도 없다. 마찬가지로 auth.uid() 기준 boolean 이라 위험하지 않아 다음 정리 때 함께 지운다.",
+      "reasonCheckedAt": "2026-08-27"
     },
     {
       "name": "record_system_daily_metric_v1",
-      "reason": "죽은 것이 아니다. scripts/record-system-metrics.sh 가 _v2 호출이 실패하면 이 함수로 되돌린다 — 스크립트가 마이그레이션보다 먼저 배포돼도 일일 기록이 끊기지 않게 하는 안전장치다. 그 되돌림 경로를 없앨 때 함께 지운다."
+      "reason": "죽은 것이 아니다. scripts/record-system-metrics.sh 가 _v2 호출이 실패하면 이 함수로 되돌린다(130행 _v2 → 142행 _v1) — 스크립트가 마이그레이션보다 먼저 배포돼도 일일 기록이 끊기지 않게 하는 안전장치다. 그 되돌림 경로를 없앨 때 함께 지운다.",
+      "reasonCheckedAt": "2026-08-27"
     },
     {
       "name": "teacher_assignment_submission_board_snapshot_v1",
-      "reason": "죽은 것이 아니다. get_teacher_mission_overview_v1 이 내부에서 이 함수를 부른다. 그 RPC 를 새 판으로 옮길 때 함께 지운다."
+      "reason": "죽은 것이 아니다. get_teacher_mission_overview_v1 이 내부에서 이 함수를 부른다. 그 RPC 를 새 판으로 옮길 때 함께 지운다.",
+      "reasonCheckedAt": "2026-08-27"
     }
   ]
 }
