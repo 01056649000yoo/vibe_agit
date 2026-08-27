@@ -73,6 +73,8 @@ export default function MealFullscreen({ school, date, meals, allergenMap, onClo
           <p>방학·휴일이거나 학교에서 아직 급식을 등록하지 않았을 수 있어요.</p>
         </section> : meals.map((meal, index) => <article
           className="meal-display-card"
+          data-columns={view.columns}
+          data-text-step={view.textStep}
           style={{ '--dish-cols': view.columns, '--dish-scale': mealTextScale(view.textStep) }}
           key={`${meal.mealType}-${index}`}
         >

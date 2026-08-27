@@ -108,9 +108,9 @@ test('전체화면 급식판의 글자 크기·열 선택은 브라우저에 자
   assert.doesNotMatch(fullscreen, /supabase|rpc\(|mealBoardApi/);
 });
 
-test('전체화면 급식판은 3열 고정으로 음식 12개까지 한 화면에 담는다', () => {
-  // 2열 고정이던 때 9개부터 카드가 화면 밖으로 나갔다. 급식 메뉴는 보통 10개 이내라
-  // 열을 더 늘려 글자를 줄이는 대신 3열 하나로 두고 글자를 크게 유지한다(2026-08-27).
+test('전체화면 급식판은 기본 3열과 높이 안전장치를 유지한다', () => {
+  // 2열 고정이던 때 9개부터 카드가 화면 밖으로 나갔다. 기본은 3열로 두되
+  // 선생님이 2열을 고를 수 있고, 선택값에 맞춰 간격과 넘침 처리를 안전하게 바꾼다.
   assert.match(mealCss, /\.meal-display-card \{[^}]*--dish-cols: 3/);
   assert.match(mealCss, /grid-template-columns: repeat\(var\(--dish-cols\)/);
   assert.doesNotMatch(mealCss, /\.meal-display-dishes \{[^}]*grid-template-columns: repeat\(2,/);
@@ -119,26 +119,34 @@ test('전체화면 급식판은 3열 고정으로 음식 12개까지 한 화면�
   // 음식 이름 길이가 제각각이라 왼쪽 정렬이면 오른쪽 끝이 들쭉날쭉해 불안해 보인다.
   assert.match(mealCss, /\.meal-display-dishes div \{[^}]*text-align: center/);
 
-  // 1fr 칸과 카드가 화면 높이를 넘지 못하게 막아 둔다 — 없으면 카드가 화면 밖으로 나간다.
-  assert.match(mealCss, /\.meal-fullscreen-grid \{[^}]*min-height: 0/);
-  assert.match(mealCss, /\.meal-display-card \{[^}]*max-height: 100%/);
+  // 카드가 칸을 정확히 채우게 한다. place-items:center 로 두면 카드가 내용만큼 커지는데,
+  // 1fr 칸은 높이가 확정되지 않아 카드의 max-height:100% 가 무효가 된다(백분율 기준이 없다).
+  // 실제로 카드가 칸보다 62px 커져 글자 옆에 사이드바가 생겼다(2026-08-27 실측).
+  assert.match(mealCss, /\.meal-fullscreen-grid \{[^}]*align-items: stretch;[^}]*min-height: 0/);
+  assert.match(mealCss, /\.meal-display-card \{[^}]*min-height: 0/);
+  assert.doesNotMatch(mealCss, /\.meal-display-card \{[^}]*max-height: 100%/,
+    '백분율 max-height 는 1fr 칸에서 무효라 stretch 로 대신한다');
   assert.match(mealCss, /\.meal-display-dishes \{[^}]*overflow: auto/);
+  assert.match(mealCss, /\.meal-display-dishes \{[^}]*align-content: safe center/);
+  assert.match(fullscreen, /data-columns=\{view\.columns\}/);
+  assert.match(fullscreen, /data-text-step=\{view\.textStep\}/);
+  assert.match(mealCss, /\.meal-display-card\[data-columns="2"\] \.meal-display-dishes \{[^}]*gap: clamp\(4px, \.7vh, 10px\)/);
 
-  // 낮은 화면은 높이가 모자라다. 두 단계인 이유는 실측 때문이다 —
-  // 1600x900 은 여백만 줄여도 큰 글자가 들어가고, 1440x810 부터는 글자도 줄여야 담긴다.
+  // 화면이 낮을 때는 여백과 제목만 줄여 급식 칸에 자리를 넘긴다.
+  // 글자는 아래 min(vw, vh) 가 알아서 줄이므로 여기서 또 줄이면 경계에서 뚝 떨어진다.
   assert.match(mealCss, /@media \(max-height: 950px\)/);
-  assert.match(mealCss, /@media \(max-height: 860px\)/);
-  const padStep = mealCss.slice(mealCss.indexOf('@media (max-height: 950px)'), mealCss.indexOf('@media (max-height: 860px)'));
-  assert.match(padStep, /\.meal-fullscreen-grid \{[^}]*padding: clamp\(14px/);
-  assert.doesNotMatch(padStep, /--dish-name/, '900px 대에서 글자까지 줄이면 괜히 작아진다');
-  const fontStep = mealCss.slice(mealCss.indexOf('@media (max-height: 860px)'));
-  assert.match(fontStep, /\.meal-display-card \{[^}]*--dish-name/);
+  const shortScreen = mealCss.slice(mealCss.indexOf('@media (max-height: 950px)'));
+  assert.match(shortScreen, /\.meal-fullscreen-grid \{[^}]*padding: clamp\(8px/);
+  assert.match(shortScreen, /\.meal-fullscreen-header h2 \{[^}]*font-size/);
+  assert.doesNotMatch(shortScreen, /--dish-name/, '글자를 계단으로 줄이면 경계에서 뚝 떨어진다');
 
-  // 프로젝터 가독성 — 음식명은 1920x1080 에서 53px(3.3rem)까지 커진다.
-  assert.match(mealCss, /--dish-name: clamp\(1\.7rem, 3\.2vw, 3\.3rem\)/);
+  // 글자는 폭과 높이 중 작은 쪽을 따른다. 높이 기준 계단으로 나눴을 때 경계 바로 위 구간
+  // (1600x900)이 큰 글자를 그대로 받아 오히려 가장 많이 넘쳤다(2026-08-27 실측).
+  assert.match(mealCss, /--dish-name: clamp\(1\.25rem, min\(3\.2vw, 4\.4vh\), 3\.3rem\)/);
+  assert.match(mealCss, /--dish-allergen: clamp\(\.88rem, min\(1\.6vw, 2\.2vh\), 1\.38rem\)/);
   // 아이가 태블릿에서 읽을 수 있는 바닥(0.8rem) 아래로 내려가지 않는다.
   const floors = [...mealCss.matchAll(/--dish-(?:name|allergen): clamp\(([\d.]+)rem/g)].map((m) => Number(m[1]));
-  assert.ok(floors.length >= 4);
+  assert.ok(floors.length >= 2, '음식명·알레르기 두 글자 크기의 바닥이 모두 있어야 한다');
   assert.ok(Math.min(...floors) >= 0.8, `가장 작은 글자 ${Math.min(...floors)}rem 이 0.8rem 아래다`);
 });
 
@@ -176,11 +184,11 @@ test('공개 전체화면은 급식만 받고 학생 명단이나 비고를 전�
   assert.doesNotMatch(fullscreen, /meal-icon-button|>×<|>횞</);
   assert.doesNotMatch(fullscreen, /student|roster|studentNote|healthAuthorization|allergenCodes\s*:\s*student/);
   assert.match(fullscreen, /학생 이름과 비고는 이 화면에 표시되지 않아요/);
-  // 프로젝터 가독성 — 2026-08-27부터 값은 --dish-* 변수에 있고, 3열로 바꾸면서 오히려 더 키웠다
-  // (1920x1080 기준 음식명 34px → 53px). 카드 높이는 화면을 넘지 못하게 min()/max-height 로 묶었다.
-  assert.match(mealCss, /\.meal-display-card \{[^}]*width: min\(1080px, 100%\); min-height: min\(clamp\(440px, 62vh, 680px\), 100%\); max-height: 100%;/);
-  assert.match(mealCss, /\.meal-display-dishes \{[^}]*flex: 1;[^}]*align-content: center;/);
-  assert.match(mealCss, /\.meal-display-card \{[^}]*--dish-allergen: clamp\(1\.05rem, 1\.6vw, 1\.38rem\)/);
+  // 카드 폭을 1080px 로 묶어 두었더니 1920 화면에서 좌우 762px 이 통째로 놀았다(화면의 40%).
+  // 교실 프로젝터 전용 화면이므로 화면을 최대한 쓴다(2026-08-27 실측으로 1720px 까지 넓혔다).
+  assert.match(mealCss, /\.meal-display-card \{[^}]*width: min\(1720px, 100%\); min-height: 0;/);
+  assert.doesNotMatch(mealCss, /width: min\(1080px, 100%\)/, '좁은 폭으로 되돌리면 화면 40%가 논다');
+  assert.match(mealCss, /\.meal-display-dishes \{[^}]*flex: 1;[^}]*align-content: safe center;/);
   assert.match(mealCss, /\.meal-display-dishes small \{[^}]*font-weight: 750; line-height: 1\.45/);
 });
 

@@ -211,15 +211,24 @@
 .meal-school-scope strong { font-size: .84rem; }
 .meal-school-scope small { margin-top: 4px; color: var(--meal-muted); line-height: 1.45; font-size: .7rem; }
 
-.meal-fullscreen { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-rows: auto 1fr auto; overflow: auto; color: #fff; background: radial-gradient(circle at 86% 4%, #487d5d, transparent 28%), linear-gradient(145deg, #193d2b, #28553a 58%, #1c402d); padding: clamp(22px, 4vw, 58px); }
+.meal-fullscreen { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-rows: auto 1fr auto; overflow: auto; color: #fff; background: radial-gradient(circle at 86% 4%, #487d5d, transparent 28%), linear-gradient(145deg, #193d2b, #28553a 58%, #1c402d); padding: clamp(18px, 2.4vw, 38px); }
 .meal-fullscreen-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .meal-fullscreen-header .meal-kicker { color: #bfe2ca; }
-.meal-fullscreen-header h2 { margin: 5px 0 2px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.06em; }
+/* 제목이 클수록 급식 칸이 줄어든다. 주인공은 급식이므로 학교 이름은 이 정도면 충분하다. */
+.meal-fullscreen-header h2 { margin: 4px 0 2px; font-size: clamp(1.9rem, 3.6vw, 3.3rem); line-height: 1; letter-spacing: -.06em; }
 .meal-fullscreen-header p { margin: 8px 0 0; color: #d3e5d9; font-size: clamp(.95rem, 1.7vw, 1.35rem); }
-/* min-height:0 이 없으면 1fr 칸이 내용만큼 늘어나 카드가 화면 밖으로 나간다. */
-.meal-fullscreen-grid { display: grid; place-items: center; min-height: 0; padding: clamp(25px, 4vw, 55px) 0; }
+/* 여백을 크게 두면 그만큼 급식 칸이 줄어든다. 카드가 화면을 최대한 쓰도록 얇게 잡는다.
+   min-height:0 이 없으면 1fr 칸이 내용만큼 늘어나 카드가 화면 밖으로 나간다.
+   align-items:stretch 가 핵심이다. place-items:center 로 두면 카드가 내용만큼 커지는데,
+   1fr 칸은 높이가 확정되지 않아 카드의 max-height:100% 가 무효가 된다(백분율 기준이 없다).
+   그래서 카드가 칸보다 62px 더 커져 글자 옆에 사이드바가 생겼다(2026-08-27 실측).
+   늘려 붙이면 카드가 칸을 정확히 채우고, 남는 처리는 카드 안쪽 flex 가 맡는다. */
+.meal-fullscreen-grid { display: grid; justify-items: center; align-items: stretch; min-height: 0; padding: clamp(10px, 1.4vw, 22px) 0; }
 .meal-fullscreen-grid.has-multiple { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px; align-items: stretch; }
-.meal-display-card { width: min(1080px, 100%); min-height: min(clamp(440px, 62vh, 680px), 100%); max-height: 100%; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.18); border-radius: clamp(24px, 3.4vw, 44px); padding: clamp(28px, 4.5vw, 64px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }
+/* 폭을 1080px 로 묶어 두었더니 1920 화면에서 좌우 762px 이 통째로 놀았고(화면의 40%),
+   그만큼 세로가 모자라 글자를 키우면 오른쪽에 사이드바가 생겼다(2026-08-27 실측).
+   교실 프로젝터 전용 화면이므로 화면을 최대한 쓴다. */
+.meal-display-card { width: min(1720px, 100%); min-height: 0; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.18); border-radius: clamp(24px, 3.4vw, 44px); padding: clamp(28px, 4.5vw, 64px); background: rgba(255,255,255,.1); box-shadow: 0 26px 70px rgba(2,18,8,.2); backdrop-filter: blur(14px); }
 .has-multiple .meal-display-card { width: auto; }
 .meal-display-card-heading { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid rgba(255,255,255,.17); padding-bottom: 20px; }
 .meal-display-card-heading > span { font-size: clamp(2.1rem, 4.4vw, 3.5rem); }
@@ -229,11 +238,20 @@
    급식 메뉴는 보통 10개 이내라 3열이면 네 줄 안에 담긴다. 그래서 열을 더 늘려 글자를 줄이는
    대신 3열 하나로 두고 글자를 크게 유지한다(2026-08-27 결정).
    2열 고정이던 때는 9개부터 카드가 화면보다 길어져 잘렸다. */
-.meal-display-card { --dish-cols: 3; --dish-name: clamp(1.7rem, 3.2vw, 3.3rem); --dish-allergen: clamp(1.05rem, 1.6vw, 1.38rem); --dish-gap: clamp(14px, 2vw, 26px); --dish-top: 20px; padding: clamp(20px, 2.6vw, 38px); }
+/* 글자는 폭과 높이 중 **작은 쪽**을 따른다. 높이 기준으로 계단을 나누면 경계에서 뚝 떨어지고,
+   경계 바로 위 구간(예: 1600x900)이 큰 글자를 그대로 받아 오히려 가장 많이 넘쳤다.
+   min(vw, vh) 로 두면 화면이 낮아질수록 저절로 줄어 계단이 없다(2026-08-27). */
+.meal-display-card { --dish-cols: 3; --dish-name: clamp(1.25rem, min(3.2vw, 4.4vh), 3.3rem); --dish-allergen: clamp(.88rem, min(1.6vw, 2.2vh), 1.38rem); --dish-gap: clamp(12px, min(2vw, 2.6vh), 26px); --dish-top: 20px; padding: clamp(20px, 2.6vw, 38px); }
 /* 급식이 여러 개면 카드가 나란히 놓여 한 카드의 폭이 좁아지므로 열을 하나 줄인다. */
 .has-multiple .meal-display-card { --dish-cols: 2; --dish-name: clamp(1.3rem, 2vw, 2rem); }
 /* overflow:auto 는 안전장치다 — 위 단계로도 안 담기는 드문 경우에 글자가 잘리는 대신 카드 안에서만 스크롤된다. */
-.meal-display-dishes { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(var(--dish-cols), minmax(0, 1fr)); align-content: center; gap: var(--dish-gap); margin-top: var(--dish-top); }
+.meal-display-dishes { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(var(--dish-cols), minmax(0, 1fr)); align-content: safe center; gap: var(--dish-gap); margin-top: var(--dish-top); }
+/* 2열은 같은 음식 수를 더 많은 행에 담으므로 세로 간격을 먼저 줄인다.
+   큰 글자 단계도 글자 자체를 줄이지 않고 간격을 양보한다. 그래도 넘치면 safe center 덕분에
+   첫 줄이 위로 잘리지 않고 카드 안에서 처음부터 끝까지 스크롤할 수 있다. */
+.meal-display-card[data-text-step="xlarge"] .meal-display-dishes,
+.meal-display-card[data-text-step="xxlarge"] .meal-display-dishes { gap: clamp(5px, .7vh, 10px); margin-top: clamp(4px, .6vh, 8px); }
+.meal-display-card[data-columns="2"] .meal-display-dishes { gap: clamp(4px, .7vh, 10px); margin-top: clamp(4px, .6vh, 8px); }
 /* 음식 이름 길이가 제각각이라 왼쪽 정렬이면 오른쪽 끝이 들쭉날쭉해 불안해 보인다.
    칸 가운데로 모으면 열이 또렷하게 선다(2026-08-27). */
 .meal-display-dishes div { min-width: 0; text-align: center; }
@@ -256,20 +274,17 @@
 .meal-fullscreen-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; color: #c8ddcf; font-size: clamp(.7rem, 1.1vw, .9rem); }
 .meal-fullscreen-footer strong { color: #fff; }
 
-/* 화면이 낮으면 높이가 모자라진다. 두 단계로 나눈 것은 실측 때문이다(2026-08-27) —
-   1600x900 은 **여백만 줄여도** 큰 글자가 들어가지만(글자까지 줄이면 괜히 작아진다),
-   1440x810 부터는 글자도 줄여야 담긴다. 1920x1080 에서는 둘 다 걸리지 않는다. */
+/* 글자 크기는 위의 min(vw, vh) 가 알아서 줄인다. 여기서는 **여백과 제목**만 줄여
+   급식 칸에 자리를 넘긴다. 글자까지 여기서 또 줄이면 계단이 생겨 경계에서 뚝 떨어진다. */
 @media (max-height: 950px) {
-  .meal-fullscreen-grid { padding: clamp(14px, 2vw, 26px) 0; }
+  .meal-fullscreen-grid { padding: clamp(8px, 1.2vw, 16px) 0; }
   .meal-display-card { --dish-gap: clamp(12px, 1.6vw, 20px); --dish-top: 14px; padding: clamp(16px, 2.2vw, 30px); }
+  /* 낮은 화면에서는 제목줄이 화면의 14%를 먹는다. 급식이 주인공이므로 제목을 줄여 자리를 넘긴다. */
+  .meal-fullscreen-header h2 { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .meal-fullscreen-header p { margin-top: 4px; font-size: clamp(.85rem, 1.3vw, 1.05rem); }
   .meal-display-card-heading { padding-bottom: 10px; }
   .meal-display-card-heading > span { font-size: clamp(1.5rem, 2.4vw, 2rem); }
   .meal-display-card-heading h3 { font-size: clamp(1.3rem, 2vw, 1.8rem); }
-}
-
-/* 여백만으로 부족한 높이 — 여기서부터 글자도 줄인다. */
-@media (max-height: 860px) {
-  .meal-display-card { --dish-name: clamp(1.25rem, 2.3vw, 2.2rem); --dish-allergen: clamp(.88rem, 1.3vw, 1.05rem); --dish-gap: clamp(12px, 1.6vw, 18px); }
 }
 
 @media (max-width: 980px) {
