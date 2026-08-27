@@ -115,11 +115,24 @@
 - [x] 관리자 선택 뒤에만 모든 학급 공통 자료로 게시하고 원장·캐시에 학생 글·학생·학급 식별자를 저장하지 않음
 - [x] 교사 `맞춤법 배움 데이터` 도움말에 주 1회 수집·중복 제거·AI 검수·관리자 정선·공통 반영과 학급별 추가 흐름 안내
 - [x] 운영 `agit-db`에 `20261179` 적용 후 221/221·대기 0, 적용 전후 권한·게시 ROLLBACK 스모크 통과
-- [x] 월요일 05:10 LaunchAgent 정의와 설치 파일 준비
+- [x] 화요일 05:10 LaunchAgent 정의와 설치 파일 준비(`week_start`는 그 주 월요일로 기록한다)
 - [ ] 학생 유래의 짧은 표현·교정을 외부 OpenAI로 보내는 첫 실행과 LaunchAgent 활성화에 대한 명시 승인
 - [ ] 첫 실행 결과 수·기존 자료 제외 수·AI 새 검수/캐시 수와 인증된 관리자 실화면 확인
-- **다음 작업**: 외부 AI 전송 범위를 명시적으로 승인받은 뒤 첫 주간 검수를 실행하고, 성공을 확인한 다음
-  `com.agit.weekly-spelling-review` LaunchAgent를 활성화한다.
+
+> **현재 상태(2026-08-28 확인)**: 아직 **한 번도 실행되지 않았다.** `spelling_weekly_review_runs` 0건,
+> `launchctl`에 등록 없음, plist는 저장소 `ops/launchd/`에만 있고 `~/Library/LaunchAgents/`에는 없다.
+> 그래서 관리자 `맞춤법 승격 > 이번 주 검수 결과`는 **항상 비어 있고** 공통 자료도 0건이다.
+> 다만 **원자료는 계속 쌓이고 있고 새지 않는다** — 수집 기준이 고정 7일이 아니라 마지막 성공 시점
+> (`max(finished_at)`)이라 첫 실행은 지금까지 쌓인 전부를 대상으로 한다
+> (AI 검사 77건·학생 검색 77건·학급 자료 4건, 2026-08-28 기준).
+
+- **다음 작업**(승인 후 이 순서로):
+  1. `npm run spelling:weekly:check` — 외부 AI 호출 없이 준비 상태만 확인한다.
+  2. `npm run spelling:weekly:run` — 첫 실행. **실제 OpenAI 호출과 비용이 발생한다.**
+  3. 관리자 `맞춤법 승격`에서 후보 수와 `반영 권장 / 주의 검토 / 제외 권장` 분류를 실화면으로 확인한다.
+  4. 성공을 확인한 뒤에만 `cp ops/launchd/com.agit.weekly-spelling-review.plist ~/Library/LaunchAgents/`
+     후 `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.weekly-spelling-review.plist`
+     로 등록한다. `RunAtLoad`가 `false`이므로 등록해도 다음 화요일 05:10부터 돈다.
 
 ### 맞춤법 공통 자료 관리 화면 정리 (2026-08-26)
 
