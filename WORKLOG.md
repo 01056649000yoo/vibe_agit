@@ -21,6 +21,38 @@
 
 ---
 
+## 2026-08-28 — 주간 맞춤법 검수 관리자 실행 배포 (Claude)
+
+- **한 일**: `a217284` 를 배포하고, 마이그레이션 적용·엣지 함수 기동까지 확인했다.
+- **변경**:
+  · 커밋 `a217284` 푸시 → 자동 배포 성공(33초, 실행 33140291609).
+  · 배포 워크플로에 `Sync spelling weekly review edge function` 단계를 더했다. 이 함수만 파일이 둘이라
+    (`index.ts` + `reviewCore.js`) 하나만 올리면 import 에서 죽는다. 검사가 두 파일을 다 지킨다.
+  · 맥미니에서 `npm run migrate` — `20261188_spelling_weekly_intake.sql` 적용(230개 중 마지막 1개).
+  · **git 밖 인프라 변경** — `~/agit-supabase/secrets.agit.env` 에 `SPELLING_CATALOG_ORIGIN=`
+    `http://host.docker.internal:8300` 한 줄을 더하고 `agit-edge-functions` 를 재생성했다.
+    되돌릴 사본은 같은 폴더의 `secrets.agit.env.bak-20260828` 이다.
+- **배포하면서 잡은 것**:
+  · **맥미니가 자기 공개 도메인으로 못 나간다**(헤어핀 NAT). `curl` 이 응답 없이 멈추고 코드 000 이다.
+    엣지 함수가 공개 주소에서 카탈로그를 받게 두면 `catalog_fetch_failed` 로 죽었을 것이다.
+    그래서 호스트 경유 내부 주소로 `agit-app`(127.0.0.1:8300)을 부르게 했다. 컨테이너 안에서
+    `host.docker.internal` 이 192.168.65.254 로 풀리고 HTTP 200·380,066 바이트를 받는 것을 확인했다.
+  · `agit-app` 은 `bridge`, `agit-edge-functions` 는 `agit_default` 로 **다른 도커 네트워크**다.
+    그래서 `http://agit-app` 같은 이름 호출은 안 되고 호스트 경유가 필요하다.
+  · 카탈로그 크기가 로컬(390,759)과 서버(380,066)에서 다른데 줄바꿈(CRLF/LF) 차이다. 내용은 같다.
+    다만 `catalog_version` 해시는 플랫폼마다 달라진다 — 이름표일 뿐 판정에 쓰이지 않는다.
+- **결과/검증**:
+  · 엣지 함수 파일 두 개가 `~/agit-supabase/volumes/functions/spelling-weekly-review/` 에 올라갔다.
+  · 인증 없이 부르면 `401 {"success":false,"message":"로그인이 필요합니다."}` — 모듈이 정상 적재되고
+    관리자 관문이 도는 것을 확인했다.
+  · 운영 DB 에 `admin_get_spelling_weekly_intake_v1` 이 있다.
+- **남은 것 / 다음**:
+  · **관리자 화면을 아직 눈으로 못 봤다.** 로그인이 필요하다. `맞춤법 승격` 탭에서 쌓인 양 카드와
+    `AI 검수 돌리기` 단추가 보이는지 확인해야 한다.
+  · **첫 실행을 아직 안 눌렀다.** 누르면 실제 OpenAI 호출과 비용이 생기고, 그 주에는 다시 못 돌린다.
+  · 4단계 실행 시간은 첫 실행 때만 잴 수 있다. 후보 155건이면 12개씩 13번 부른다.
+  · 예약 작업(LaunchAgent)은 이제 필요 없다. plist 와 Node 스크립트는 되돌림 경로로 남겨 둔다.
+
 ## 2026-08-28 — 주간 맞춤법 검수 실행 함수와 관리자 화면 (2·3단계) (Claude)
 
 - **한 일**: 관리자가 쌓인 양을 보고 **직접 눌러** 주간 AI 검수를 돌리는 길을 만들었다. 아직 배포는 안 했다.
