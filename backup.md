@@ -33,8 +33,8 @@
 bash scripts/audit-backup-monitor-day.sh 2026-08-29
 ```
 
-운영에서는 `com.agit.backup-monitor` LaunchAgent가 매일 04:15에 같은 검사기를 실행한다.
-04:00 통합 백업이 끝날 시간을 둔 뒤 실행하며, 안전한 한 줄 판정만
+운영에서는 `com.agit.backup-monitor` LaunchAgent가 매일 05:00에 같은 검사기를 실행한다.
+04:00 통합 백업과 매월 1일 04:40 복구 리허설까지 끝날 시간을 둔 뒤 실행하며, 안전한 한 줄 판정만
 `~/Library/Logs/agit-backup-monitor.stdout.log`에 누적한다. stderr는 별도 파일이다.
 
 ```bash
@@ -83,7 +83,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | `com.samlink.db-backup` | 매일 **03:30** | `agit-db`의 `samlink` 스키마 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
 | `local.literacy.backup` | 매일 **03:00** | literacy DB | 드라이브 동기화 폴더 | — |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
-| `com.agit.backup-monitor` | 매일 **04:15** | 원장·세 사본·보조 백업·복구·서비스 읽기 판정 | 안전한 상태 한 줄 로그 | — |
+| `com.agit.backup-monitor` | 매일 **05:00** | 원장·세 사본·보조 백업·복구·서비스 읽기 판정 | 안전한 상태 한 줄 로그 | — |
 
 - 스크립트: `~/scripts/sh_mirror_backup.sh` · `~/.db-backup/backup.sh` · `~/literacy/scripts/backup-db.sh` · `~/scripts/restore_rehearsal.sh`
 - 관리자 상태 기록기: 저장소의 `scripts/record-backup-status.sh`(실행) ·

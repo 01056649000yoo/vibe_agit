@@ -112,7 +112,7 @@ test('7일 일일 검사는 원장·세 사본·보조 백업·복구·서비스
     assert.doesNotMatch(dailyAudit, /sync\.log|backup\.log|rclone\.conf|secrets\.agit\.env/);
     assert.match(dailyAuditPlist, /<string>com\.agit\.backup-monitor<\/string>/);
     assert.match(dailyAuditPlist, /audit-backup-monitor-day\.sh/);
-    assert.match(dailyAuditPlist, /<key>Hour<\/key>\s*<integer>4<\/integer>/);
-    assert.match(dailyAuditPlist, /<key>Minute<\/key>\s*<integer>15<\/integer>/);
+    assert.match(dailyAuditPlist, /<key>Hour<\/key>\s*<integer>5<\/integer>/);
+    assert.match(dailyAuditPlist, /<key>Minute<\/key>\s*<integer>0<\/integer>/);
     assert.doesNotMatch(dailyAuditPlist, /RunAtLoad|KeepAlive|StartInterval/);
 });
