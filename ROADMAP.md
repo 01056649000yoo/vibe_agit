@@ -188,7 +188,7 @@
 - [x] `npm run check:rpc-surface` — 운영 DB·이 저장소·다른 앱을 함께 봐 이름이 다른 교체까지 확인
 - [x] `ops/rpc-surface-allowlist.json` — 남기려면 이유와 언제 지울 수 있는지를 적어야 통과
 - [x] 두 검사를 `test:all`·푸시 전 훅·`test:security` 에 연결하고 AGENTS.md 절대 규칙에 기록
-- **다음 작업**: 허용 목록 8개 중 `get_my_role`(외부 앱 확인 후), `get_spelling_learning_workspace_v2`
+- **다음 작업**: 허용 목록 6개 중 `get_spelling_learning_workspace_v2`
   (`_v3` 가 스스로 계산하게 바꾼 뒤), `get_reading_marathon_snapshot`(DB 함수 셋을 `_v2` 로 옮긴 뒤),
   `record_system_daily_metric_v1`(지표 스크립트 되돌림 경로 정리 뒤)을 순서대로 지운다.
 

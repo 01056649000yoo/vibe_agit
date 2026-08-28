@@ -49,17 +49,9 @@
   ],
   "keep": [
     {
-      "name": "admin_dashboard_snapshot",
-      "reason": "관리자 화면이 쓰지 않지만 운영 점검 때 psql 로 직접 부른다. 점검 절차를 RPC 없이 바꾸면 지운다."
-    },
-    {
       "name": "auth_user_is_teacher_of",
       "reason": "쓰는 곳이 없다. 2026-08-27 확인: RLS 정책 64개 중 0개, 부르는 DB 함수 0개, 저장소 참조 0개. 이 저장소에는 이 함수를 만드는 마이그레이션조차 없다 — 손으로 만들어져 기록이 안 남은 함수다. 위험하지 않아 급히 지우지 않기로 했다(auth.uid() 기준 '내가 이 학급 담임인가'만 boolean 으로 돌려주므로 부르는 사람이 이미 아는 사실 외에는 새지 않는다). 다음 정리 때 is_teacher_of_student 와 함께 DROP IF EXISTS 로 지운다.",
       "reasonCheckedAt": "2026-08-27"
-    },
-    {
-      "name": "get_my_role",
-      "reason": "구형 역할 조회. 앱은 부트스트랩 RPC 로 옮겼다. 외부 앱이 남아 있지 않은지 한 번 더 확인한 뒤 지운다."
     },
     {
       "name": "get_reading_marathon_snapshot",

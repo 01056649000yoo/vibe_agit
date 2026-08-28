@@ -432,5 +432,9 @@ test('권장이 비어도 일감이 보이고, 권장 아닌 후보도 관리자
     // 서버도 화면도 판정으로 게시를 막지 않는다 — 관리자 판단으로 올릴 수 있어야 한다.
     assert.match(panel, /target\.verdict !== 'recommend' && <p className="admin-spelling__manual-promote">/);
     assert.match(panel, /되풀이해 만날 규칙이라고 판단하시면 그대로 올릴 수 있어요/);
+    // 단추 이름이 하는 일을 말해야 한다. `내용 검토` 는 읽는 화면처럼 보여
+    // 주의 검토에서 직접 올리는 길을 못 찾는다는 말을 들었다(2026-08-28).
+    assert.match(panel, /'확인하고 등록' : '직접 등록하기'/);
+    assert.doesNotMatch(panel, />내용 검토</);
     assert.doesNotMatch(panel, /canPublish[\s\S]{0,200}verdict === 'recommend'/);
 });

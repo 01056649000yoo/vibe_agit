@@ -729,7 +729,7 @@ const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, 
     <div className="admin-spelling__editor-heading">
         <div>
             <span>{target.entryId ? '공통 자료 수정' : `${verdictLabel(target.verdict)} 후보 확인`}</span>
-            <h3>{target.entryId ? `${target.expression} 자료 수정` : `${target.expression} 반영 내용 확인`}</h3>
+            <h3>{target.entryId ? `${target.expression} 자료 수정` : `${target.expression} 공통 자료로 등록`}</h3>
             {!target.entryId && <small>
                 {target.classCount}학급 · {target.hitCount}회 근거 · {(target.sourceKinds || []).map(sourceLabel).join(' + ')}
                 {/* 왜 반영 권장이 아닌지 그 자리에서 알려 준다. 이유를 모르면 관리자는 AI 가 틀렸다고 읽는다. */}
@@ -798,7 +798,14 @@ const CandidateList = ({ rows, loading, onReview, onReject, emptyTitle, emptyDes
             </div>
             <div className="admin-spelling__row-actions">
                 <Button type="button" variant="ghost" size="sm" onClick={() => onReject(row)} disabled={loading}>보류</Button>
-                <Button type="button" size="sm" onClick={() => onReview(row)} disabled={loading}>내용 검토</Button>
+                {/*
+                  * 예전 이름은 `내용 검토` 였다. 누르면 등록 화면이 열리는데도 **읽는 화면처럼 보여**
+                  * 주의 검토에서 직접 올리는 길을 못 찾는다는 말을 들었다(2026-08-28).
+                  * 무엇을 하는 단추인지 이름으로 말하게 한다.
+                  */}
+                <Button type="button" size="sm" onClick={() => onReview(row)} disabled={loading}>
+                    {row.ai_verdict === 'recommend' ? '확인하고 등록' : '직접 등록하기'}
+                </Button>
             </div>
         </article>)}
     </div>;
