@@ -199,3 +199,22 @@ test('탭 계산은 배지가 만들어진 뒤에 온다', async () => {
         'urgentTabs 가 tabBadges 보다 먼저 있다 — 렌더 중에 터져 흰 화면이 된다'
     );
 });
+
+test('어느 관리자 메뉴에서도 고정 홈 버튼으로 첫 화면 상태를 복구한다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+    const homeButton = await read('src/components/admin/AdminHomeButton.jsx');
+    const homeButtonCss = await read('src/components/admin/AdminHomeButton.css');
+
+    assert.match(dashboard, /import AdminHomeButton from '\.\/AdminHomeButton';/);
+    assert.match(dashboard, /<AdminHomeButton onGoHome=\{handleGoHome\} isHome=\{currentTab === 'active'\} \/>/);
+    assert.match(dashboard, /const handleGoHome = \(\) => \{[\s\S]*?setCurrentTab\('active'\);[\s\S]*?setSearchTerm\(''\);[\s\S]*?setCurrentPage\(1\);[\s\S]*?setPendingGroup\('new'\);[\s\S]*?window\.scrollTo\(\{ top: 0,/);
+
+    assert.match(homeButton, /aria-label="관리자 대시보드 홈으로 이동"/);
+    assert.match(homeButton, /aria-current=\{isHome \? 'page' : undefined\}/);
+    assert.match(homeButton, /<span>관리자 홈<\/span>/);
+    assert.match(homeButtonCss, /position:\s*fixed/);
+    assert.match(homeButtonCss, /bottom:\s*max\(18px, env\(safe-area-inset-bottom\)\)/);
+    assert.match(homeButtonCss, /z-index:\s*1200/);
+    assert.match(homeButtonCss, /:focus-visible/);
+    assert.match(homeButtonCss, /@media \(max-width: 560px\)/);
+});

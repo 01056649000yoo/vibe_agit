@@ -1,0 +1,69 @@
+.admin-home-button {
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 1200;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 11px 17px;
+    border: 1px solid #2b6cb0;
+    border-radius: 999px;
+    background: #2b6cb0;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(43, 108, 176, 0.28);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-home-button svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    fill: currentColor;
+}
+
+.admin-home-button:hover {
+    transform: translateY(-2px);
+    background: #245b97;
+    box-shadow: 0 10px 28px rgba(43, 108, 176, 0.34);
+}
+
+.admin-home-button:focus-visible {
+    outline: 3px solid #f6ad55;
+    outline-offset: 3px;
+}
+
+.admin-home-button--current {
+    border-color: #90cdf4;
+    background: #ebf8ff;
+    color: #2b6cb0;
+    box-shadow: 0 6px 18px rgba(43, 108, 176, 0.18);
+}
+
+.admin-home-button--current:hover {
+    background: #bee3f8;
+}
+
+@media (max-width: 560px) {
+    .admin-home-button {
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 0.82rem;
+        box-shadow: 0 6px 20px rgba(43, 108, 176, 0.28);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-home-button {
+        transition: none;
+    }
+}

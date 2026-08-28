@@ -11,6 +11,7 @@ import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
 import AdminDashboardOverview from './AdminDashboardOverview';
+import AdminHomeButton from './AdminHomeButton';
 import { useAdminHealthSummary } from './useAdminHealthSummary';
 import useAdminUsage from '../../hooks/useAdminUsage';
 import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
@@ -535,8 +536,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         } catch (err) { alert('삭제 실패: ' + err.message); }
     };
 
+    const handleGoHome = () => {
+        setCurrentTab('active');
+        setSearchTerm('');
+        setCurrentPage(1);
+        setPendingGroup('new');
+
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+        window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    };
+
     return (
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px', fontFamily: "'Pretendard', sans-serif" }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px 104px', fontFamily: "'Pretendard', sans-serif" }}>
+            <AdminHomeButton onGoHome={handleGoHome} isHome={currentTab === 'active'} />
+
             {/* Header */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
