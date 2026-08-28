@@ -3,18 +3,17 @@ import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import SelectableTeacherTable from './SelectableTeacherTable';
 import useRowSelection from '../../hooks/useRowSelection';
-import { DORMANT_DAY_OPTIONS } from '../../hooks/useAdminUsage';
 import {
-    DayRangeSelect, PanelHeader, SectionCard,
+    PanelHeader, SectionCard,
     formatDate, formatRelativeTime
 } from './adminUsageUi';
 
 /**
  * 장기 미접속 선생님 패널.
- * 학급·학생 데이터는 있는데 기준일 이상 로그인하지 않은 계정만 모아 본다.
- * 데이터가 있으므로 여기서는 삭제하지 않고 "승인 취소(비활성화)"까지만 제공한다.
+ * 학급·학생 보유 여부와 무관하게 기준일 이상 로그인하지 않은 계정을 모아 본다.
+ * 이 목록은 삭제 근거가 아니므로 "승인 취소(비활성화)"까지만 제공한다.
  */
-const AdminDormantPanel = ({ dormantTeachers, dormantDays, setDormantDays, loading, onRefresh }) => {
+const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [working, setWorking] = useState(false);
 
@@ -89,27 +88,19 @@ const AdminDormantPanel = ({ dormantTeachers, dormantDays, setDormantDays, loadi
         <SectionCard>
             <PanelHeader
                 title="😴 장기 미접속 선생님"
-                description={`${dormantDays}일 넘게 로그인하지 않은 선생님입니다. 학급과 학생 자료가 남아 있으므로 삭제 대신 승인 취소로 접속만 막을 수 있고, 나중에 다시 승인하면 그대로 복구됩니다.`}
+                description={`${dormantDays}일(3개월) 이상 로그인하지 않은 선생님입니다. 이 목록만으로 데이터가 삭제되지는 않으며, 필요하면 승인 취소로 접속만 막고 나중에 다시 승인할 수 있습니다.`}
                 right={(
-                    <>
-                        <DayRangeSelect
-                            label="미접속 기준"
-                            value={dormantDays}
-                            options={DORMANT_DAY_OPTIONS}
-                            onChange={setDormantDays}
-                            disabled={loading || working}
-                        />
-                        <input
-                            type="text"
-                            placeholder="🔍 이름·학교·이메일 검색"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                padding: '8px 14px', borderRadius: '20px', border: '1px solid #CBD5E0',
-                                width: '240px', fontSize: '0.85rem', outline: 'none'
-                            }}
-                        />
-                    </>
+                    <input
+                        type="text"
+                        placeholder="🔍 이름·학교·이메일 검색"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        disabled={working}
+                        style={{
+                            padding: '8px 14px', borderRadius: '20px', border: '1px solid #CBD5E0',
+                            width: '240px', fontSize: '0.85rem', outline: 'none'
+                        }}
+                    />
                 )}
             />
 

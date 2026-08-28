@@ -7,7 +7,6 @@ import AdminAnnouncementManager from './AdminAnnouncementManager';
 import AdminUsagePanel from './AdminUsagePanel';
 import AdminStudentActivityPanel from './AdminStudentActivityPanel';
 import AdminDormantPanel from './AdminDormantPanel';
-import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
@@ -36,8 +35,7 @@ const TAB_GROUPS = [
         tabs: [
             { id: 'active', label: '전체 명단' },
             { id: 'pending', label: '승인 대기' },
-            { id: 'dormant', label: '장기 미접속' },
-            { id: 'cleanup', label: '정리 대상' }
+            { id: 'dormant', label: '장기 미접속' }
         ]
     },
     {
@@ -280,11 +278,11 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const newSignupCount = Number(teacherPage.counts.pending_new || 0);
     const revokedTeacherCount = Number(teacherPage.counts.pending_revoked || 0);
 
-    // 사용량·장기 미접속·정리 대상은 DB에서 한 번에 집계해서 받는다 (useAdminUsage)
+    // 사용량·장기 미접속은 DB에서 한 번에 집계해서 받는다 (useAdminUsage)
     const usage = useAdminUsage();
 
     // States for UI
-    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
     // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
     // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
 
@@ -347,8 +345,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             items: [
                 { id: 'alerts', label: '서버 조치 필요', basis: '처리 안 된 것', value: health.summary ? `${health.summary.openAlertCount}건` : '확인 중', color: health.summary?.openAlertCount > 0 ? '#E53E3E' : '#38A169', icon: '🚨', onOpen: () => setCurrentTab('service') },
                 { id: 'pending', label: '신규 승인 대기', basis: '승인 안 된 교사', value: `${newSignupCount}명`, color: '#DD6B20', icon: '⏳', onOpen: () => setCurrentTab('pending') },
-                { id: 'dormant', label: `장기 미접속 ${usage.dormantDays}일`, basis: `${usage.dormantDays}일 넘게 로그인 없음`, value: `${usage.dormantTeachers.length}명`, color: '#B7791F', icon: '😴', onOpen: () => setCurrentTab('dormant') },
-                { id: 'cleanup', label: '정리 후보 전체', basis: '지금까지 전체', value: `${usage.cleanupCandidates.length}명`, color: '#C53030', icon: '🧹', onOpen: () => setCurrentTab('cleanup') },
+                { id: 'dormant', label: '장기 미접속', basis: `${usage.dormantDays}일(3개월) 이상 로그인 없음`, value: `${usage.dormantTeachers.length}명`, color: '#B7791F', icon: '😴', onOpen: () => setCurrentTab('dormant') },
                 { id: 'feedback', label: '새 의견 제보', basis: '읽지 않은 것', value: `${pendingFeedbackCount}건`, color: '#6B46C1', icon: '📢', onOpen: () => setCurrentTab('feedback') }
             ]
         },
@@ -387,10 +384,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const tabBadges = useMemo(() => ({
         pending: newSignupCount,
         dormant: usage.dormantTeachers.length,
-        cleanup: usage.cleanupCandidates.length,
         feedback: pendingFeedbackCount,
         backup: health.summary?.backupAttentionCount || 0
-    }), [newSignupCount, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount, health.summary?.backupAttentionCount]);
+    }), [newSignupCount, usage.dormantTeachers.length, pendingFeedbackCount, health.summary?.backupAttentionCount]);
 
     /*
      * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라
@@ -804,7 +800,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             loading={usage.loading}
                             error={usage.error}
                             dormantDays={usage.dormantDays}
-                            setDormantDays={usage.setDormantDays}
                             activityDays={usage.activityDays}
                             setActivityDays={usage.setActivityDays}
                             onRefresh={usage.refresh}
@@ -832,20 +827,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         <AdminDormantPanel
                             dormantTeachers={usage.dormantTeachers}
                             dormantDays={usage.dormantDays}
-                            setDormantDays={usage.setDormantDays}
-                            loading={usage.loading}
-                            onRefresh={async (options) => {
-                                await usage.refresh(options);
-                            }}
-                        />
-                    </KeepAlivePanel>
-
-                    <KeepAlivePanel
-                        active={currentTab === 'cleanup'}
-                        visited={visitedTabs.has('cleanup')}
-                    >
-                        <AdminCleanupPanel
-                            cleanupCandidates={usage.cleanupCandidates}
                             loading={usage.loading}
                             onRefresh={async (options) => {
                                 await usage.refresh(options);

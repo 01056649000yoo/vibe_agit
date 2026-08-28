@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import AdminStudentActivityPanel from './AdminStudentActivityPanel';
-import { ACTIVITY_DAY_OPTIONS, DORMANT_DAY_OPTIONS, USAGE_STATUS } from '../../hooks/useAdminUsage';
+import { ACTIVITY_DAY_OPTIONS, USAGE_STATUS } from '../../hooks/useAdminUsage';
 import {
     CountCell, DayRangeSelect, EmptyState, PanelHeader, SectionCard, UsageStatusBadge,
     formatDate, formatRelativeTime, tableStyle, tdLeftStyle, tdStyle, theadRowStyle, thLeftStyle, thStyle
@@ -50,7 +50,7 @@ const sortRows = (rows, sortBy) => {
  */
 const AdminUsagePanel = ({
     teachers, loading, error,
-    dormantDays, setDormantDays, activityDays, setActivityDays, onRefresh
+    dormantDays, activityDays, setActivityDays, onRefresh
 }) => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [sortBy, setSortBy] = useState('last_login');
@@ -89,13 +89,6 @@ const AdminUsagePanel = ({
                                 value={activityDays}
                                 options={ACTIVITY_DAY_OPTIONS}
                                 onChange={setActivityDays}
-                                disabled={loading}
-                            />
-                            <DayRangeSelect
-                                label="미접속 기준"
-                                value={dormantDays}
-                                options={DORMANT_DAY_OPTIONS}
-                                onChange={setDormantDays}
                                 disabled={loading}
                             />
                             <Button
