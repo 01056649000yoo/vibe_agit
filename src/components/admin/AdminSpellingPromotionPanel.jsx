@@ -323,6 +323,18 @@ const AdminSpellingPromotionPanel = () => {
     const commonEntries = data.common_entries || [];
     const enabledCommonCount = commonEntries.filter((entry) => entry.status === 'approved').length;
     const disabledCommonCount = commonEntries.length - enabledCommonCount;
+    /*
+     * 반영 권장이 비었는데 기본 화면이 거기에 머무르면 **일감이 없는 것처럼** 보인다.
+     * 실제로는 주의 검토에 대부분이 기다린다(2026-08-28: 권장 0 · 주의 99 · 제외 28).
+     * 관리자가 손으로 탭을 옮기지 않아도 볼 것이 보이게 한다.
+     */
+    useEffect(() => {
+        if (verdictFilter !== 'recommend') return;
+        if (weeklyCandidates.length === 0) return;
+        if (weeklyCandidates.some((item) => item.ai_verdict === 'recommend')) return;
+        setVerdictFilter('all');
+    }, [verdictFilter, weeklyCandidates]);
+
     const verdictCounts = useMemo(() => ({
         recommend: weeklyCandidates.filter((item) => item.ai_verdict === 'recommend').length,
         caution: weeklyCandidates.filter((item) => item.ai_verdict === 'caution').length,
@@ -550,7 +562,18 @@ const AdminSpellingPromotionPanel = () => {
             </div>
 
             <p className="admin-spelling__source-guide">정확히 같은 기본·공통 자료는 코드가 먼저 제외합니다. AI에는 새 후보와 유사 자료 최대 3개만 전달하며, 이전에 검수한 같은 후보는 저장된 결과를 재사용합니다.</p>
-            <CandidateList rows={visibleCandidates} loading={loading} onReview={startCandidateReview} onReject={rejectCandidate} />
+            <CandidateList
+                rows={visibleCandidates} loading={loading}
+                onReview={startCandidateReview} onReject={rejectCandidate}
+                emptyTitle={verdictFilter === 'recommend' && weeklyCandidates.length > 0
+                    ? '여러 학급에서 되풀이된 표현이 아직 없어요'
+                    : undefined}
+                emptyDescription={verdictFilter === 'recommend' && weeklyCandidates.length > 0
+                    ? `반영 권장은 두 학급 이상에서 나온 표현만 받습니다. `
+                        + `주의 검토 ${verdictCounts.caution}건과 제외 권장 ${verdictCounts.reject}건은 `
+                        + '내용을 보고 직접 공통 자료로 올릴 수 있어요.'
+                    : undefined}
+            />
         </section>}
 
         {activeView === 'common' && <section id="spelling-common-panel" className="admin-spelling__panel" role="tabpanel">
@@ -716,6 +739,17 @@ const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, 
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={loading}>검토 닫기</Button>
     </div>
     {!target.entryId && target.aiReason && <p className="admin-spelling__ai-reason"><b>AI 검수 의견</b>{target.aiReason}</p>}
+    {/*
+      * 권장이 아닌 후보도 관리자가 판단해 올릴 수 있다. 다만 그것이 **AI 판단이 아니라 내 판단**임을
+      * 그 자리에서 분명히 한다. 제외 권장은 바른 표현이 비어 있는 경우가 많아(28건 중 21건)
+      * 무엇을 채워야 하는지도 함께 알려 준다.
+      */}
+    {!target.entryId && target.verdict !== 'recommend' && <p className="admin-spelling__manual-promote">
+        <b>{verdictLabel(target.verdict)} 후보를 직접 올리기</b>
+        {target.verdict === 'caution'
+            ? 'AI 는 권장하지 않았지만 선생님들이 되풀이해 만날 규칙이라고 판단하시면 그대로 올릴 수 있어요.'
+            : 'AI 는 제외를 권했어요. 올리려면 바른 표현과 학생용 설명을 직접 채워야 합니다. 아래 AI 초안 만들기로 시작할 수 있어요.'}
+    </p>}
     <div className="admin-spelling__editor-grid">
         <DraftInput label="틀린 표현" value={draft.wrong_expression} onChange={(wrong_expression) => setDraft({ ...draft, wrong_expression })} />
         <DraftInput label="바른 표현" value={draft.correct_expression} onChange={(correct_expression) => setDraft({ ...draft, correct_expression })} />
@@ -740,8 +774,11 @@ const DraftInput = ({ label, value, onChange }) => <label className="admin-spell
     {label}<input value={value} maxLength={40} onChange={(event) => onChange(event.target.value)} />
 </label>;
 
-const CandidateList = ({ rows, loading, onReview, onReject }) => rows.length === 0
-    ? <EmptyState title="해당 검수 결과가 없습니다" description="다른 검수 결과를 선택하거나 다음 주 자동 정리를 기다려 주세요." />
+const CandidateList = ({ rows, loading, onReview, onReject, emptyTitle, emptyDescription }) => rows.length === 0
+    ? <EmptyState
+        title={emptyTitle || '해당 검수 결과가 없습니다'}
+        description={emptyDescription || '다른 검수 결과를 선택하거나 다음 주 자동 정리를 기다려 주세요.'}
+    />
     : <div className="admin-spelling__list">
         {rows.map((row) => <article className={`admin-spelling__candidate is-${row.ai_verdict}`} key={row.id}>
             <div className="admin-spelling__candidate-main">

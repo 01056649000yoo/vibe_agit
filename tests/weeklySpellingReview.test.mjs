@@ -420,3 +420,17 @@ test('문장형 후보는 AI 검수에 올리지 않는다', () => {
     assert.match(aiBlock, /finding\.expression !~ '\[\.!\?\]\$'/);
     assert.match(aiBlock, /finding\.expression ~ '\^\[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\( \[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\)\?\$'/);
 });
+
+test('권장이 비어도 일감이 보이고, 권장 아닌 후보도 관리자가 직접 올릴 수 있다', () => {
+    /*
+     * 반영 권장을 학급 2개 이상으로 제한하면 기본 화면이 자주 빈다(2026-08-28: 권장 0 · 주의 99).
+     * 기본 탭에 머무르면 일감이 없는 것처럼 보이는데 실제로는 주의 검토에 다 있다.
+     */
+    assert.match(panel, /if \(verdictFilter !== 'recommend'\) return;/);
+    assert.match(panel, /setVerdictFilter\('all'\);/);
+    assert.match(panel, /여러 학급에서 되풀이된 표현이 아직 없어요/);
+    // 서버도 화면도 판정으로 게시를 막지 않는다 — 관리자 판단으로 올릴 수 있어야 한다.
+    assert.match(panel, /target\.verdict !== 'recommend' && <p className="admin-spelling__manual-promote">/);
+    assert.match(panel, /되풀이해 만날 규칙이라고 판단하시면 그대로 올릴 수 있어요/);
+    assert.doesNotMatch(panel, /canPublish[\s\S]{0,200}verdict === 'recommend'/);
+});
