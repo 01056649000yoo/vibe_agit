@@ -7,8 +7,10 @@ import {
     MODEL,
     REVIEW_VERSION,
     buildKnownSpellingIndex,
+    cleanReview,
     getMonday,
     mergeWeeklySpellingSources,
+    missingReview,
     normalizeSpellingValue,
     prepareWeeklyReviewCandidates as prepareCandidatesWithHash,
     trimText
@@ -123,23 +125,6 @@ const reviewWithOpenAI = async (apiKey, candidates) => {
     return parsed.reviews;
 };
 
-const cleanReview = (candidate, review, cacheHit) => {
-    if (review.review_key !== candidate.review_key) throw new Error('openai_review_key_mismatch');
-    const verdict = ['recommend', 'caution', 'reject'].includes(review.verdict) ? review.verdict : 'reject';
-    const correctExpression = trimText(review.correct_expression, 40);
-    if (verdict !== 'reject' && !correctExpression) throw new Error('openai_missing_correction');
-    return {
-        ...candidate,
-        verdict,
-        correct_expression: correctExpression,
-        label: trimText(review.label, 40) || '미분류',
-        explanation: trimText(review.explanation, 600) || '관리자가 직접 확인해 주세요.',
-        examples: (Array.isArray(review.examples) ? review.examples : []).map((item) => trimText(item, 150)).filter(Boolean).slice(0, 4),
-        reason: trimText(review.reason, 300) || '관리자 확인이 필요합니다.',
-        cache_hit: cacheHit
-    };
-};
-
 const main = async () => {
     const [lookupBuffer, detectionBuffer] = await Promise.all([readFile(lookupUrl), readFile(detectionUrl)]);
     const lookupPayload = JSON.parse(lookupBuffer.toString('utf8'));
@@ -195,8 +180,8 @@ const main = async () => {
                 const reviewByKey = new Map(reviews.map((review) => [review.review_key, review]));
                 for (const candidate of batch) {
                     const review = reviewByKey.get(candidate.review_key);
-                    if (!review) throw new Error('openai_missing_review');
-                    completed.push(cleanReview(candidate, review, false));
+                    // 판정이 빠진 후보 하나 때문에 배치 전체를 버리지 않는다.
+                    completed.push(review ? cleanReview(candidate, review, false) : missingReview(candidate));
                 }
             }
         }

@@ -18,9 +18,10 @@ import {
     MODEL,
     REVIEW_VERSION,
     buildKnownSpellingIndex,
+    cleanReview,
     getMonday,
-    prepareWeeklyReviewCandidates,
-    trimText
+    missingReview,
+    prepareWeeklyReviewCandidates
 } from './reviewCore.js'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
@@ -126,23 +127,6 @@ const reviewWithOpenAI = async (candidates: unknown[]) => {
     const parsed = JSON.parse(content)
     if (!Array.isArray(parsed.reviews)) throw new Error('openai_invalid_response')
     return parsed.reviews
-}
-
-const cleanReview = (candidate: Record<string, unknown>, review: Record<string, unknown>, cacheHit: boolean) => {
-    if (review.review_key !== candidate.review_key) throw new Error('openai_review_key_mismatch')
-    const verdict = ['recommend', 'caution', 'reject'].includes(String(review.verdict)) ? review.verdict : 'reject'
-    const correctExpression = trimText(review.correct_expression, 40)
-    if (verdict !== 'reject' && !correctExpression) throw new Error('openai_missing_correction')
-    return {
-        ...candidate,
-        verdict,
-        correct_expression: correctExpression,
-        label: trimText(review.label, 40) || '미분류',
-        explanation: trimText(review.explanation, 600) || '관리자가 직접 확인해 주세요.',
-        examples: (Array.isArray(review.examples) ? review.examples : []).map((item: unknown) => trimText(item, 150)).filter(Boolean).slice(0, 4),
-        reason: trimText(review.reason, 300) || '관리자 확인이 필요합니다.',
-        cache_hit: cacheHit
-    }
 }
 
 const loadCatalogs = async () => {
@@ -260,8 +244,8 @@ Deno.serve(async (req) => {
             const done: Record<string, unknown>[] = []
             for (const candidate of batch) {
                 const review = reviewByKey.get(candidate.review_key)
-                if (!review) throw new Error('openai_missing_review')
-                done.push(cleanReview(candidate, review, false))
+                // 판정이 빠진 후보 하나 때문에 배치 전체를 버리지 않는다.
+                done.push(review ? cleanReview(candidate, review, false) : missingReview(candidate))
             }
 
             // 배치가 끝나는 즉시 캐시에 적립한다. 다음 호출이 이것을 재사용하므로,

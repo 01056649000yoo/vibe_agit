@@ -63,7 +63,8 @@ test('기본 500개와 공통 자료의 정확 일치는 코드에서 제외하�
 });
 
 test('AI에는 전체 카탈로그 대신 후보와 유사 항목만 보내고 구조화 출력을 강제한다', () => {
-    const requestBlock = runner.match(/const reviewWithOpenAI[\s\S]*?const cleanReview/)?.[0] || '';
+    // 판정 다듬기(cleanReview)는 원본으로 옮겼으므로 요청 블록은 main 앞까지다.
+    const requestBlock = runner.match(/const reviewWithOpenAI[\s\S]*?const main = async/)?.[0] || '';
     assert.ok(requestBlock);
     assert.match(runner, /similar_matches: candidate\.similar_matches/);
     assert.match(runner, /response_format:[\s\S]*type: 'json_schema'/);
@@ -74,7 +75,7 @@ test('AI에는 전체 카탈로그 대신 후보와 유사 항목만 보내고 �
     assert.match(reviewCore, /AI_BATCH_SIZE = 12/);
     assert.doesNotMatch(requestBlock, /lookupPayload|detectionPayload|lookupEntries|elementaryRules/);
     assert.match(runner, /cached_reviews/);
-    assert.match(runner, /cache_hit: cacheHit/);
+    assert.match(reviewCore, /cache_hit: cacheHit === true/);
 });
 
 test('주간 원장과 AI 캐시는 브라우저에 직접 공개하지 않고 관리자 RPC만 제공한다', () => {
@@ -324,4 +325,28 @@ test('엣지 함수의 오류 처리 자체가 터지지 않는다', () => {
      */
     assert.doesNotMatch(edgeFunction, /\.rpc\([\s\S]{0,400}?\)\s*\.catch\(/);
     assert.match(edgeFunction, /실패 기록도 못 남김/);
+});
+
+test('어긋난 AI 판정 하나가 회차 전체를 막지 않는다', () => {
+    /*
+     * AI 가 `반영 권장` 이라면서 바른 표현을 비워 보내면 오류를 던졌고, 그 후보가 든 배치가
+     * 매번 같은 자리에서 터져 회차가 84/146 에서 영원히 멈췄다(2026-08-28).
+     * 어차피 게시 여부는 사람이 정하므로, 버리지 말고 낮춰서 보여 준다.
+     */
+    assert.doesNotMatch(reviewCore, /openai_missing_correction|openai_missing_review/);
+    assert.doesNotMatch(edgeFunction, /openai_missing_correction|openai_missing_review/);
+    assert.doesNotMatch(runner, /openai_missing_correction|openai_missing_review/);
+
+    // 판정 다듬기는 두 실행 경로가 함께 쓰는 원본에 하나만 있어야 한다.
+    assert.match(reviewCore, /export const cleanReview/);
+    assert.match(reviewCore, /export const missingReview/);
+    assert.doesNotMatch(edgeFunction, /const cleanReview = /);
+    assert.doesNotMatch(runner, /const cleanReview = /);
+
+    // 바른 표현이 없으면 원자료의 교정으로 메우고, 그것도 없으면 제외 권장으로 낮춘다.
+    assert.match(reviewCore, /correctExpression = trimText\(candidate\?\.source_correction, 40\)/);
+    assert.match(reviewCore, /verdict = 'reject'/);
+    assert.match(reviewCore, /AI가 바른 표현을 주지 않아/);
+    // 판정이 아예 없는 후보도 빼 두지 않는다 — 빼면 영원히 안 끝난다.
+    assert.match(reviewCore, /AI가 이 후보의 판정을 주지 않았습니다/);
 });

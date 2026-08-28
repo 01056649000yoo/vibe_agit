@@ -184,6 +184,48 @@ export const prepareWeeklyReviewCandidates = (payload, knownIndex, hashFn) => {
     return { candidates, collectedCount: grouped.length, knownFilteredCount: knownFiltered.length };
 };
 
+/**
+ * AI 가 돌려준 판정 하나를 저장할 모양으로 다듬는다.
+ *
+ * **한 항목 때문에 회차 전체가 멈추면 안 된다.** 예전에는 AI 가 `반영 권장` 이라면서 바른 표현을
+ * 비워 보내면 오류를 던졌고, 그 후보가 든 배치가 매번 같은 자리에서 터져 회차가 84/146 에서
+ * 영원히 멈췄다(2026-08-28). 이제 어긋난 답은 **버리지 않고 낮춰서** 관리자에게 보낸다 —
+ * 어차피 게시 여부는 사람이 정하므로, 보여 주고 판단하게 하는 편이 낫다.
+ */
+export const cleanReview = (candidate, review, cacheHit) => {
+    const rawVerdict = String(review?.verdict || '');
+    let verdict = ['recommend', 'caution', 'reject'].includes(rawVerdict) ? rawVerdict : 'reject';
+    let correctExpression = trimText(review?.correct_expression, 40);
+    let reason = trimText(review?.reason, 300);
+
+    if (verdict !== 'reject' && !correctExpression) {
+        // 원자료에 교정이 함께 온 후보(AI 검사·교사 자료)면 그것을 쓴다.
+        correctExpression = trimText(candidate?.source_correction, 40);
+        if (!correctExpression) {
+            verdict = 'reject';
+            reason = 'AI가 바른 표현을 주지 않아 제외 권장으로 낮췄습니다. 필요하면 직접 등록해 주세요.';
+        }
+    }
+
+    return {
+        ...candidate,
+        verdict,
+        correct_expression: correctExpression,
+        label: trimText(review?.label, 40) || '미분류',
+        explanation: trimText(review?.explanation, 600) || '관리자가 직접 확인해 주세요.',
+        examples: (Array.isArray(review?.examples) ? review.examples : [])
+            .map((item) => trimText(item, 150)).filter(Boolean).slice(0, 4),
+        reason: reason || '관리자 확인이 필요합니다.',
+        cache_hit: cacheHit === true
+    };
+};
+
+/** AI 가 아예 판정을 안 준 후보. 빼 두면 영원히 안 끝나므로 제외 권장으로 남긴다. */
+export const missingReview = (candidate) => cleanReview(candidate, {
+    verdict: 'reject',
+    reason: 'AI가 이 후보의 판정을 주지 않았습니다. 필요하면 직접 등록해 주세요.'
+}, false);
+
 export const getMonday = (date = new Date()) => {
     const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = local.getDay() || 7;
