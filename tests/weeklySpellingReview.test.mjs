@@ -257,3 +257,12 @@ test('이어 부르는 호출은 같은 회차를 이어받는다', () => {
     assert.match(panel, /result\.done === false/);
     assert.match(panel, /MAX_REVIEW_PASSES/);
 });
+
+test('응답이 안 와도 화면이 굳지 않는다', () => {
+    // 작업자가 끊기면 응답이 아예 안 온다. 기다림에 끝이 없으면 단추가 그대로 굳는다.
+    assert.match(panel, /REVIEW_CALL_TIMEOUT_MS/);
+    assert.match(panel, /callWithTimeout\(/);
+    // 작업자 제한(60초)보다는 길게 기다려야 정상 응답을 헛되이 버리지 않는다.
+    const wait = Number(panel.match(/REVIEW_CALL_TIMEOUT_MS = ([\d_]+)/)?.[1]?.replace(/_/g, ''));
+    assert.ok(wait > 60_000 && wait <= 120_000, `기다리는 시간이 이상하다: ${wait}ms`);
+});

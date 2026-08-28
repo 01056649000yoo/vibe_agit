@@ -11,6 +11,23 @@ const EMPTY_INTAKE = {
 };
 // 후보 상한이 200개, 배치가 12개이므로 17번이면 끝난다. 그보다 많이 돌면 무언가 잘못된 것이다.
 const MAX_REVIEW_PASSES = 20;
+
+/**
+ * 한 번 부를 때 이만큼 기다리고 포기한다.
+ *
+ * 작업자가 제한(60초)에 걸려 supervisor 에게 끊기면 **응답이 아예 오지 않는다**. 그러면 브라우저는
+ * 영원히 기다리고 단추는 `AI 검수 중…` 인 채로 굳는다(2026-08-28 실제로 그렇게 굳었다).
+ * 포기해도 서버는 회차를 열어 둔 채이므로, 다시 누르면 이어서 한다.
+ */
+const REVIEW_CALL_TIMEOUT_MS = 70_000;
+
+const callWithTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_resolve, reject) => setTimeout(
+        () => reject(new Error('서버가 제때 답하지 않았어요. 다시 누르면 하던 곳부터 이어서 합니다.')),
+        ms
+    ))
+]);
 const EMPTY_DRAFT = {
     wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: []
 };
@@ -86,9 +103,12 @@ const AdminSpellingPromotionPanel = () => {
             for (let pass = 1; ; pass += 1) {
                 if (pass > MAX_REVIEW_PASSES) throw new Error('검수가 너무 오래 걸립니다. 잠시 뒤 다시 눌러 이어서 진행해 주세요.');
 
-                const { data: result, error } = await supabase.functions.invoke('spelling-weekly-review', {
-                    body: { weekStart: intake.week_start }
-                });
+                const { data: result, error } = await callWithTimeout(
+                    supabase.functions.invoke('spelling-weekly-review', {
+                        body: { weekStart: intake.week_start }
+                    }),
+                    REVIEW_CALL_TIMEOUT_MS
+                );
                 if (error) throw error;
 
                 if (result?.skipped) {
