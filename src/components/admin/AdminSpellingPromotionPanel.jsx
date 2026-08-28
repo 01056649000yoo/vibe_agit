@@ -5,6 +5,10 @@ import { spellingLearningApi } from '../../modules/writing/spelling-learning/api
 import './AdminSpellingPromotionPanel.css';
 
 const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], common_entries: [] };
+const EMPTY_INTAKE = {
+    week_start: null, source_since_at: null, current_status: null, can_run: false,
+    ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
+};
 const EMPTY_DRAFT = {
     wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: []
 };
@@ -24,6 +28,8 @@ const AdminSpellingPromotionPanel = () => {
     const [verdictFilter, setVerdictFilter] = useState('recommend');
     const [commonFilter, setCommonFilter] = useState('enabled');
     const [data, setData] = useState(EMPTY_DATA);
+    const [intake, setIntake] = useState(EMPTY_INTAKE);
+    const [running, setRunning] = useState(false);
     const [reviewTarget, setReviewTarget] = useState(null);
     const [draft, setDraft] = useState(EMPTY_DRAFT);
     const [loading, setLoading] = useState(false);
@@ -34,15 +40,66 @@ const AdminSpellingPromotionPanel = () => {
         setLoading(true);
         setNotice(null);
         try {
-            const { data: result, error } = await supabase.rpc('admin_get_spelling_promotion_workspace_v3');
-            if (error) throw error;
-            setData(result || EMPTY_DATA);
+            // 쌓인 양은 AI 를 부르지 않고 읽기만 한다. 관리자가 돌릴지 판단하는 근거다.
+            const [workspace, intakeResult] = await Promise.all([
+                supabase.rpc('admin_get_spelling_promotion_workspace_v3'),
+                supabase.rpc('admin_get_spelling_weekly_intake_v1')
+            ]);
+            if (workspace.error) throw workspace.error;
+            setData(workspace.data || EMPTY_DATA);
+            // 쌓인 양을 못 읽어도 검수 결과는 보여 준다 — 둘은 서로 다른 일이다.
+            setIntake(intakeResult.error ? EMPTY_INTAKE : (intakeResult.data || EMPTY_INTAKE));
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || '맞춤법 주간 검수 데이터를 불러오지 못했습니다.' });
         } finally {
             setLoading(false);
         }
     }, []);
+
+    /**
+     * 관리자가 직접 눌러 AI 검수를 돌린다. 여기서 처음으로 학생 유래 표현이 외부 AI 로 나가므로
+     * 무엇이 나가는지 확인시킨 뒤에 부른다. 한 주에 한 번만 돌 수 있다.
+     */
+    const runWeeklyReview = async () => {
+        const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
+        const confirmed = window.confirm(
+            `쌓인 자료 ${total}건을 AI 검수에 보냅니다.\n\n`
+            + '기존 자료와 겹치는 것은 보내기 전에 코드가 먼저 제외합니다.\n'
+            + '실제 AI 호출과 비용이 발생하며, 이번 주에는 다시 돌릴 수 없습니다.\n\n계속할까요?'
+        );
+        if (!confirmed) return;
+
+        setRunning(true);
+        setNotice(null);
+        try {
+            const { data: result, error } = await supabase.functions.invoke('spelling-weekly-review', {
+                body: { weekStart: intake.week_start }
+            });
+            if (error) throw error;
+            if (result?.skipped) {
+                setNotice({
+                    tone: 'error',
+                    text: result.reason === 'already_finished'
+                        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+                        : '이미 검수가 돌고 있습니다. 잠시 뒤 새로고침해 주세요.'
+                });
+            } else if (result?.success) {
+                setNotice({
+                    tone: 'success',
+                    text: `검수를 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
+                        + ` · 이전 결과 재사용 ${result.cacheHitCount} · AI 새 검수 ${result.aiReviewedCount}`
+                        + ` · 검토할 후보 ${result.itemCount}건`
+                });
+            } else {
+                throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
+            }
+            await load();
+        } catch (error) {
+            setNotice({ tone: 'error', text: error.message || '주간 맞춤법 검수를 실행하지 못했습니다.' });
+        } finally {
+            setRunning(false);
+        }
+    };
 
     useEffect(() => { load(); }, [load]);
     useEffect(() => {
@@ -217,9 +274,9 @@ const AdminSpellingPromotionPanel = () => {
     return <section className="admin-spelling">
         <header className="admin-spelling__header">
             <div className="admin-spelling__intro">
-                <span className="admin-spelling__eyebrow">매주 월요일 자동 정리</span>
+                <span className="admin-spelling__eyebrow">관리자가 보고 직접 실행</span>
                 <h2>맞춤법 공통 자료 관리</h2>
-                <p>AI 검사·학생 검색·교사 학급 자료를 주 1회 모아 기존 자료와 비교하고 AI 검수를 마친 뒤, 관리자가 고른 것만 모든 학급에 적용합니다.</p>
+                <p>AI 검사·학생 검색·교사 학급 자료가 계속 쌓입니다. 쌓인 양을 보고 관리자가 AI 검수를 돌리면 기존 자료와 겹치는 것을 먼저 뺀 뒤 검수하며, 그중 관리자가 고른 것만 모든 학급에 적용합니다.</p>
             </div>
             <div className="admin-spelling__metrics" aria-label="맞춤법 공통 자료 현황">
                 <Metric label="검토 대기" value={weeklyCandidates.length} detail={`권장 ${verdictCounts.recommend} · 주의 ${verdictCounts.caution}`} tone={weeklyCandidates.length ? 'warning' : 'neutral'} />
@@ -256,6 +313,7 @@ const AdminSpellingPromotionPanel = () => {
                 <button type="button" className="admin-spelling__refresh" onClick={load} disabled={loading}>{loading ? '갱신 중…' : '새로고침'}</button>
             </div>
 
+            <WeeklyIntakeCard intake={intake} running={running} loading={loading} onRun={runWeeklyReview} />
             <RunSummary run={latestRun} candidateWeek={data.candidate_week} />
             <div className="admin-spelling__source-toolbar">
                 <div className="admin-spelling__source-tabs" role="tablist" aria-label="AI 검수 결과 필터">
@@ -294,9 +352,47 @@ const Metric = ({ label, value, detail, tone }) => <div className={`admin-spelli
 
 const FilterButton = ({ active, children, onClick }) => <button type="button" className={active ? 'is-active' : ''} aria-pressed={active} onClick={onClick}>{children}</button>;
 
+/**
+ * 이번 주에 쌓인 원자료의 양과 실행 단추.
+ *
+ * 여기 수는 **거르기 전**이다. 기본 500개·공통 자료와 겹치는 것은 실행할 때 코드가 빼므로
+ * 실제로 AI 에 가는 수는 이보다 적다. 관리자가 "돌릴 만한가"를 가늠하는 용도다.
+ */
+const WeeklyIntakeCard = ({ intake, running, loading, onRun }) => {
+    const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
+    const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
+    const reason = alreadyDone
+        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+        : intake.current_status === 'running'
+            ? '지금 검수가 돌고 있습니다.'
+            : total === 0
+                ? '아직 검수할 새 자료가 없습니다.'
+                : '';
+
+    return <div className="admin-spelling__intake">
+        <div className="admin-spelling__intake-counts">
+            <div><span>학생 AI 검사</span><strong>{intake.ai_finding_count || 0}</strong></div>
+            <div><span>학생 검색</span><strong>{intake.search_count || 0}</strong></div>
+            <div><span>교사 학급 자료</span><strong>{intake.teacher_entry_count || 0}</strong></div>
+        </div>
+        <div className="admin-spelling__intake-action">
+            <p>
+                {intake.source_since_at
+                    ? `지난 검수(${formatDateTime(intake.source_since_at)}) 이후 쌓인 자료입니다.`
+                    : '아직 한 번도 검수하지 않아 지금까지 쌓인 전부가 대상입니다.'}
+                {' '}겹치는 자료는 AI 에 보내기 전에 코드가 먼저 뺍니다.
+            </p>
+            <Button onClick={onRun} disabled={running || loading || !intake.can_run || total === 0}>
+                {running ? 'AI 검수 중…' : 'AI 검수 돌리기'}
+            </Button>
+            {reason && <small>{reason}</small>}
+        </div>
+    </div>;
+};
+
 const RunSummary = ({ run, candidateWeek }) => {
     if (!run) return <div className="admin-spelling__run-summary is-empty">
-        <strong>아직 주간 검수 기록이 없습니다.</strong><span>마이그레이션과 예약 작업 적용 후 매주 월요일 05:10에 첫 결과가 만들어집니다.</span>
+        <strong>아직 주간 검수 기록이 없습니다.</strong><span>위에서 <b>AI 검수 돌리기</b>를 누르면 첫 결과가 만들어집니다.</span>
     </div>;
     return <div className="admin-spelling__run-summary">
         <div><span>결과 주간</span><strong>{candidateWeek ? formatDate(candidateWeek) : '후보 없음'}</strong></div>

@@ -74,6 +74,23 @@ jobs:
           cd "$HOME/agit-supabase"
           docker compose up -d --no-deps --force-recreate functions
 
+      # 이 함수만 파일이 둘이다 — index.ts 와, 되돌림 스크립트와 함께 쓰는 계산 원본 reviewCore.js.
+      # 하나만 올리면 함수가 import 에서 죽으므로 둘을 함께 보고 함께 올린다.
+      - name: Sync spelling weekly review edge function
+        run: |
+          target_dir="$HOME/agit-supabase/volumes/functions/spelling-weekly-review"
+          if [ -f "$target_dir/index.ts" ] \
+            && cmp -s supabase/functions/spelling-weekly-review/index.ts "$target_dir/index.ts" \
+            && cmp -s supabase/functions/spelling-weekly-review/reviewCore.js "$target_dir/reviewCore.js"; then
+            echo "spelling-weekly-review already current"
+            exit 0
+          fi
+          mkdir -p "$target_dir"
+          install -m 0644 supabase/functions/spelling-weekly-review/index.ts "$target_dir/index.ts"
+          install -m 0644 supabase/functions/spelling-weekly-review/reviewCore.js "$target_dir/reviewCore.js"
+          cd "$HOME/agit-supabase"
+          docker compose up -d --no-deps --force-recreate functions
+
       - name: Verify
         run: |
           sleep 4

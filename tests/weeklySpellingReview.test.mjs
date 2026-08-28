@@ -8,8 +8,12 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
+    readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
+    readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
+    readFile('.github/workflows/deploy.yml', 'utf8'),
+    readFile('supabase/migrations/20261188_spelling_weekly_intake.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
     readFile('ops/launchd/com.agit.weekly-spelling-review.plist', 'utf8'),
@@ -60,8 +64,9 @@ test('AI에는 전체 카탈로그 대신 후보와 유사 항목만 보내고 �
     assert.match(runner, /response_format:[\s\S]*type: 'json_schema'/);
     assert.match(runner, /strict: true/);
     assert.match(runner, /additionalProperties: false/);
-    assert.match(runner, /MAX_CANDIDATES = 200/);
-    assert.match(runner, /AI_BATCH_SIZE = 12/);
+    // 상한은 두 실행 경로(엣지 함수·되돌림 스크립트)가 함께 쓰는 원본에 있다.
+    assert.match(reviewCore, /MAX_CANDIDATES = 200/);
+    assert.match(reviewCore, /AI_BATCH_SIZE = 12/);
     assert.doesNotMatch(requestBlock, /lookupPayload|detectionPayload|lookupEntries|elementaryRules/);
     assert.match(runner, /cached_reviews/);
     assert.match(runner, /cache_hit: cacheHit/);
@@ -91,4 +96,76 @@ test('예약 작업은 매주 월요일 05:10 한 번 실행한다', () => {
     assert.match(plist, /<key>Hour<\/key>\s*<integer>5<\/integer>/);
     assert.match(plist, /<key>Minute<\/key>\s*<integer>10<\/integer>/);
     assert.match(plist, /run-weekly-spelling-review\.mjs/);
+});
+
+test('관리자 실행 엣지 함수는 관리자만 통과시키고 실패한 회차를 반드시 기록한다', () => {
+    assert.match(edgeFunction, /auth\.getUser\(\)/);
+    assert.match(edgeFunction, /\.from\('profiles'\)[\s\S]{0,120}\.select\('role'\)/);
+    assert.match(edgeFunction, /profile\?\.role !== 'ADMIN'/);
+    // 실패를 안 남기면 회차가 running 인 채로 두 시간 동안 다시 못 누른다.
+    assert.match(edgeFunction, /fail_spelling_weekly_review_v1/);
+    assert.match(edgeFunction, /SUPABASE_SERVICE_ROLE_KEY/);
+});
+
+test('엣지 함수는 거르는 계산을 다시 쓰지 않고 원본을 가져다 쓴다', () => {
+    assert.match(edgeFunction, /from '\.\/reviewCore\.js'/);
+    assert.match(edgeFunction, /buildKnownSpellingIndex/);
+    assert.match(edgeFunction, /prepareWeeklyReviewCandidates/);
+    // 같은 계산을 두 벌 두면 화면으로 돌린 결과와 되돌림 스크립트 결과가 갈라진다.
+    assert.doesNotMatch(edgeFunction, /const buildKnownSpellingIndex|const prepareWeeklyReviewCandidates|const mergeWeeklySpellingSources/);
+    assert.doesNotMatch(reviewCore, /node:crypto|node:fs|Deno\.|require\(/);
+});
+
+test('엣지 함수와 되돌림 스크립트는 같은 지시문·같은 상한으로 AI를 부른다', () => {
+    for (const source of [runner, edgeFunction]) {
+        assert.match(source, /초등학생용 맞춤법 공통 자료 후보를 검수한다\./);
+        assert.match(source, /response_format:[\s\S]{0,200}type: 'json_schema'/);
+        assert.match(source, /strict: true/);
+        assert.match(source, /max_tokens: 5000/);
+        assert.match(source, /temperature: 0/);
+    }
+    // 완료 요약의 칸 이름이 어긋나면 관리자 화면의 수가 조용히 0 이 된다.
+    for (const key of ['collected_count', 'known_filtered_count', 'cache_hit_count', 'ai_reviewed_count']) {
+        assert.match(runner, new RegExp(key));
+        assert.match(edgeFunction, new RegExp(key));
+    }
+});
+
+test('엣지 함수는 학생이 받는 것과 같은 카탈로그를 주소에서 받아 온다', () => {
+    // 번들에 사본을 넣으면 배포 시점이 어긋나 학생 화면과 검수 기준이 달라진다.
+    assert.match(edgeFunction, /spelling\/elementary-lookup-v1\.json/);
+    assert.match(edgeFunction, /spelling\/elementary-detection-v1\.json/);
+    assert.match(edgeFunction, /SPELLING_CATALOG_ORIGIN/);
+});
+
+test('쌓인 양 조회는 관리자 전용이고 실행 함수와 같은 기준으로 센다', () => {
+    assert.match(intakeMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(intakeMigration, /REVOKE ALL ON FUNCTION public\.admin_get_spelling_weekly_intake_v1\(\) FROM PUBLIC, anon/);
+    // start 함수와 같은 기준 시각·같은 걸러내기를 써야 화면의 수와 실제 검수 대상이 맞는다.
+    assert.match(intakeMigration, /status IN \('ready', 'empty'\)/);
+    assert.match(intakeMigration, /corpus\.matched IS FALSE/);
+    assert.match(intakeMigration, /spelling_common_reviews/);
+    // 이번 주 회차가 없을 때 can_run 이 NULL 로 새면 화면이 버튼을 못 정한다.
+    assert.match(intakeMigration, /NOT COALESCE\(/);
+    // 읽기만 한다.
+    assert.doesNotMatch(intakeMigration, /INSERT INTO|UPDATE public\.|DELETE FROM/);
+});
+
+test('관리자 화면은 쌓인 양을 보여 주고 관리자가 눌러야 AI가 돈다', () => {
+    assert.match(panel, /admin_get_spelling_weekly_intake_v1/);
+    assert.match(panel, /functions\.invoke\('spelling-weekly-review'/);
+    // 여기서 처음으로 학생 표현이 외부 AI 로 나간다. 확인 없이 나가면 안 된다.
+    assert.match(panel, /window\.confirm\([\s\S]{0,400}AI 검수에 보냅니다/);
+    assert.match(panel, /실제 AI 호출과 비용이 발생하며/);
+    // 이미 끝난 주를 눌러도 헛돌지 않게 화면이 이유를 말해야 한다.
+    assert.match(panel, /already_finished/);
+    assert.match(panel, /disabled=\{running \|\| loading \|\| !intake\.can_run \|\| total === 0\}/);
+    // 자동 실행을 전제한 옛 안내가 남아 있으면 안 된다.
+    assert.doesNotMatch(panel, /매주 월요일 05:10에 첫 결과가/);
+});
+
+test('배포가 엣지 함수의 두 파일을 함께 올린다', () => {
+    // index.ts 만 올리면 reviewCore.js 를 import 하다가 함수가 죽는다.
+    assert.match(deployWorkflow, /spelling-weekly-review\/index\.ts/);
+    assert.match(deployWorkflow, /spelling-weekly-review\/reviewCore\.js/);
 });

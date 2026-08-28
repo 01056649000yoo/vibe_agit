@@ -27,6 +27,15 @@
 .admin-spelling__panel-heading h3, .admin-spelling__editor-heading h3 { margin: 3px 0 0; color: #312e81; font-size: 1.1rem; }
 .admin-spelling__panel-heading > div:first-child > span, .admin-spelling__editor-heading > div > span { color: #7c3aed; font-size: .72rem; font-weight: 900; }
 .admin-spelling__editor-heading small { display: block; margin-top: 4px; color: #64748b; font-size: .72rem; }
+/* 쌓인 양과 실행 단추. 여기서 처음으로 학생 표현이 외부 AI 로 나가므로 눈에 띄게 둔다. */
+.admin-spelling__intake { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: center; padding: 12px; border: 1px solid #ddd6fe; border-radius: 12px; background: #faf5ff; }
+.admin-spelling__intake-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.admin-spelling__intake-counts > div { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border-radius: 8px; background: white; }
+.admin-spelling__intake-counts span { color: #64748b; font-size: .65rem; font-weight: 800; }
+.admin-spelling__intake-counts strong { color: #6d28d9; font-size: 1.05rem; }
+.admin-spelling__intake-action { display: grid; gap: 7px; justify-items: start; }
+.admin-spelling__intake-action p { margin: 0; color: #475569; font-size: .75rem; line-height: 1.55; }
+.admin-spelling__intake-action small { color: #7c3aed; font-size: .72rem; font-weight: 800; }
 .admin-spelling__run-summary { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
 .admin-spelling__run-summary > div { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border-radius: 8px; background: white; }
 .admin-spelling__run-summary span { color: #64748b; font-size: .65rem; font-weight: 800; }
@@ -89,6 +98,7 @@
     .admin-spelling__metrics { width: 100%; }
     .admin-spelling__panel-heading { flex-direction: column; }
     .admin-spelling__run-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .admin-spelling__intake { grid-template-columns: minmax(0, 1fr); }
     .admin-spelling__candidate, .admin-spelling__common-entry { grid-template-columns: minmax(0, 1fr) auto; }
     .admin-spelling__evidence, .admin-spelling__common-meta { grid-column: 1; justify-content: flex-start; justify-items: start; }
     .admin-spelling__row-actions { grid-column: 2; grid-row: 1 / span 2; }
