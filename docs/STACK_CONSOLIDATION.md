@@ -130,6 +130,25 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA app TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT ALL ON TABLES TO anon, authenticated, service_role;"
 ```
 
+### 로그인 — 같은 이메일이라도 **다른 계정**이다
+
+옮긴 뒤 자비스가 `Invalid login credentials` 로 막혔다. 이메일은 양쪽에 있었지만
+**옛 스택은 `email` 가입(비밀번호 있음), 아지트는 `google` 가입(비밀번호 없음)** 이었다.
+비밀번호 로그인을 쓰는 앱은 이대로면 들어갈 수 없다.
+
+두 스택이 같은 bcrypt 를 쓰므로 **해시를 그대로 옮기면 쓰던 비밀번호가 통한다.**
+구글 로그인은 그대로 남아 두 방식이 공존한다.
+
+```bash
+E='<이메일>'
+HASH=$(docker exec supabase-db psql -U postgres -d postgres -t -A \
+  -c "SELECT encrypted_password FROM auth.users WHERE lower(email)=lower('$E');")
+printf "UPDATE auth.users SET encrypted_password = :'h' WHERE lower(email) = lower(:'e');\n" \
+  | docker exec -i agit-db psql -U postgres -d postgres -v h="$HASH" -v e="$E"
+```
+
+> `psql -c` 에서는 `:'변수'` 가 풀리지 않는다. **표준입력으로** 넘겨야 한다.
+
 ### 네트워크는 둘 다 붙인다
 
 `jarvis-caddy` 가 `frontend:3000` 을 컨테이너 이름으로 부른다. 프론트를 아지트 네트워크로만 옮기면
