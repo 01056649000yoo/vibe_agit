@@ -16,6 +16,7 @@ import { createHash } from 'node:crypto'
 import {
     AI_BATCH_SIZE,
     MODEL,
+    REVIEW_INSTRUCTIONS,
     REVIEW_VERSION,
     buildKnownSpellingIndex,
     cleanReview,
@@ -99,17 +100,7 @@ const reviewWithOpenAI = async (candidates: unknown[]) => {
         body: JSON.stringify({
             model: MODEL,
             messages: [
-                {
-                    role: 'system',
-                    content: [
-                        '초등학생용 맞춤법 공통 자료 후보를 검수한다.',
-                        '입력은 기본 500개와 현재 공통 자료의 정확 일치를 코드로 제거한 뒤의 후보다.',
-                        'similar_matches는 전체 자료가 아니라 코드가 고른 유사 항목 최대 3개이므로 참고만 한다.',
-                        '문맥에 따라 맞을 수 있거나 고유명사 가능성이 있으면 caution, 틀린 표현이 아니면 reject다.',
-                        'recommend/caution에는 짧은 바른 표현, 40자 이하 라벨, 학생용 설명, 바른 예문 최대 4개를 작성한다.',
-                        '학생 글·학생·학급 정보는 추측하지 않는다.'
-                    ].join('\n')
-                },
+                { role: 'system', content: REVIEW_INSTRUCTIONS },
                 { role: 'user', content: JSON.stringify({ candidates }) }
             ],
             response_format: {

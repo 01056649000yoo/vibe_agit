@@ -8,7 +8,7 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, restartMigration, restartSmoke, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
@@ -18,6 +18,8 @@ const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candid
     readFile('supabase/migrations/20261190_spelling_weekly_review_resume.sql', 'utf8'),
     readFile('supabase/migrations/20261191_spelling_intake_resumable.sql', 'utf8'),
     readFile('supabase/migrations/20261192_spelling_weekly_progress.sql', 'utf8'),
+    readFile('supabase/migrations/20261193_spelling_weekly_restart.sql', 'utf8'),
+    readFile('tests/sql/20261193_spelling_weekly_restart.smoke.sql', 'utf8'),
     readFile('tests/sql/20261189_spelling_intake_candidate_review.smoke.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
@@ -124,7 +126,8 @@ test('엣지 함수는 거르는 계산을 다시 쓰지 않고 원본을 가져
 
 test('엣지 함수와 되돌림 스크립트는 같은 지시문·같은 상한으로 AI를 부른다', () => {
     for (const source of [runner, edgeFunction]) {
-        assert.match(source, /초등학생용 맞춤법 공통 자료 후보를 검수한다\./);
+        // 지시문은 원본(reviewCore)에서 가져다 쓴다 — 여기 적혀 있으면 두 벌이 된다.
+        assert.match(source, /content: REVIEW_INSTRUCTIONS/);
         assert.match(source, /response_format:[\s\S]{0,200}type: 'json_schema'/);
         assert.match(source, /strict: true/);
         assert.match(source, /max_tokens: 5000/);
@@ -349,4 +352,40 @@ test('어긋난 AI 판정 하나가 회차 전체를 막지 않는다', () => {
     assert.match(reviewCore, /AI가 바른 표현을 주지 않아/);
     // 판정이 아예 없는 후보도 빼 두지 않는다 — 빼면 영원히 안 끝난다.
     assert.match(reviewCore, /AI가 이 후보의 판정을 주지 않았습니다/);
+});
+
+test('검수 기준은 되풀이될 규칙인지를 묻고, 두 경로가 같은 지시문을 쓴다', () => {
+    /*
+     * v1 의 기준은 `틀렸는가` 하나뿐이라 146건 중 83건이 `반영 권장` 으로 몰렸고, 그 안에
+     * `안/않` 같은 규칙과 `즐거워더` 같은 한 아이의 오타가 섞였다(2026-08-28 운영 결과로 확인).
+     */
+    assert.match(reviewCore, /export const REVIEW_INSTRUCTIONS/);
+    assert.match(reviewCore, /여러 학급 아이들이 되풀이해 틀릴 규칙인가/);
+    // 세 칸의 기준이 모두 적혀 있어야 한다. v1 은 recommend 기준이 아예 없었다.
+    assert.match(reviewCore, /recommend: 규칙이 있어 다른 아이도 똑같이 틀릴 것/);
+    assert.match(reviewCore, /caution: 틀린 것은 맞지만 이 아이 한 명의 오타/);
+    assert.match(reviewCore, /reject: 틀린 표현이 아니거나/);
+
+    // 지시문이 두 벌이면 같은 후보에 다른 판정이 나온다.
+    for (const source of [edgeFunction, runner]) {
+        assert.match(source, /content: REVIEW_INSTRUCTIONS/);
+        assert.doesNotMatch(source, /초등학생용 맞춤법 공통 자료 후보를 검수한다/);
+    }
+
+    /*
+     * 기준을 고쳤으면 판정 버전도 올라가야 한다. `review_key` 가 이 값으로 만든 해시라,
+     * 안 올리면 옛 판정 캐시를 그대로 재사용해 새 기준이 아무 소용이 없다.
+     */
+    assert.match(reviewCore, /REVIEW_VERSION = 'weekly-v2'/);
+});
+
+test('끝난 회차를 다시 검수할 수 있고 관리자 결정은 남는다', () => {
+    assert.match(restartMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    // 회차를 지우면 그 주 결과가 함께 지워진다(items 가 CASCADE).
+    assert.match(restartMigration, /DELETE FROM public\.spelling_weekly_review_runs/);
+    // 게시·보류 결정은 다른 표라 건드리면 안 된다.
+    assert.doesNotMatch(restartMigration, /DELETE FROM public\.spelling_common_reviews/);
+    assert.match(restartSmoke, /관리자 결정이 함께 지워졌다/);
+    assert.match(panel, /admin_restart_spelling_weekly_review_v1/);
+    assert.match(panel, /다시 검수하기/);
 });

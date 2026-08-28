@@ -201,6 +201,40 @@ const AdminSpellingPromotionPanel = () => {
     };
 
     /**
+     * 끝난 회차를 지우고 처음부터 다시 검수한다.
+     *
+     * 검수 기준을 고친 뒤 그 주 결과를 새 기준으로 다시 보고 싶을 때 쓴다. 관리자가 이미 게시하거나
+     * 뺀 결정은 다른 표에 있어 그대로 남고, 다음 회차에서도 그대로 걸러진다.
+     */
+    const restartWeeklyReview = async () => {
+        const confirmed = window.confirm(
+            '이번 주 검수 결과를 지우고 처음부터 다시 검수합니다.\n\n'
+            + '이미 게시하거나 뺀 것은 그대로 남습니다.\n'
+            + '검수 기준이 바뀌었다면 AI를 다시 부르므로 비용이 발생합니다.\n\n계속할까요?'
+        );
+        if (!confirmed) return;
+
+        setRunning(true);
+        setNotice(null);
+        try {
+            const { data: result, error } = await supabase.rpc('admin_restart_spelling_weekly_review_v1', {
+                p_week_start: intake.week_start
+            });
+            if (error) throw error;
+            setNotice({
+                tone: 'success',
+                text: `이번 주 결과 ${result?.removed_item_count ?? 0}건을 지웠습니다.`
+                    + ' 아래에서 다시 검수를 시작해 주세요.'
+            });
+            await load({ keepNotice: true });
+        } catch (error) {
+            setNotice({ tone: 'error', text: error.message || '다시 검수를 준비하지 못했습니다.' });
+        } finally {
+            setRunning(false);
+        }
+    };
+
+    /**
      * AI 를 돌리기 전에 원자료를 훑어본다. 학생 검색에는 아이 이름·오타 부스러기가 섞여 있어
      * 통째로 보내면 돈이 새고 검토할 후보에 잡음이 낀다.
      */
@@ -493,7 +527,7 @@ const AdminSpellingPromotionPanel = () => {
 
             <WeeklyIntakeCard
                 intake={intake} running={running} loading={loading}
-                onRun={runWeeklyReview} onStop={() => { stopRef.current = true; }}
+                onRun={runWeeklyReview} onStop={() => { stopRef.current = true; }} onRestart={restartWeeklyReview}
                 onOpenList={(sourceKind) => openCandidates(sourceKind, false)}
             />
             {candidateView.open && <IntakeCandidateList
@@ -549,7 +583,7 @@ const FilterButton = ({ active, children, onClick }) => <button type="button" cl
  * 여기 수는 **거르기 전**이다. 기본 500개·공통 자료와 겹치는 것은 실행할 때 코드가 빼므로
  * 실제로 AI 에 가는 수는 이보다 적다. 관리자가 "돌릴 만한가"를 가늠하는 용도다.
  */
-const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onOpenList }) => {
+const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onRestart, onOpenList }) => {
     const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
     const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
     // 돌다 만 회차는 막힌 것이 아니라 **이어서 할 수 있는** 상태다. 여기서 막으면 관리자가 갇힌다.
@@ -599,6 +633,10 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onOpenList 
                 </Button>
                 {/* 도는 중에도 세울 수 있어야 한다. 지금 덩어리는 끝내고 다음으로 안 넘어간다. */}
                 {running && <Button variant="ghost" onClick={onStop}>여기서 멈추기</Button>}
+                {/* 기준을 고친 뒤 같은 주를 새 기준으로 다시 보고 싶을 때. */}
+                {!running && alreadyDone && (
+                    <Button variant="outline" onClick={onRestart} disabled={loading}>다시 검수하기</Button>
+                )}
             </div>
             {reason && <small>{reason}</small>}
         </div>
