@@ -1,5 +1,8 @@
 # 스택 통합 — 조사 결과와 계획
 
+> **진행 상황**: 자비스는 2026-08-28 에 **이전 완료**. 샘링크만 남았다.
+> 이전하며 배운 것은 아래 `실제로 해 보니` 절에 적었다.
+
 > 2026-08-28 조사. 옛 `supabase` 스택을 아지트 스택으로 합치기 위한 사전 조사다.
 > 실행 전에 이 문서를 먼저 읽는다. 여기 적힌 충돌 세 가지를 모르고 덤프를 복원하면 **자료가 날아간다.**
 
@@ -102,3 +105,43 @@ blue-green 이전의 잔재다. **제거가 원래 계획**이었는데, 그때 
   아지트로 옮길지, 다시 만들지.
 - 자비스는 **오픈클로와 연동**된다. 그쪽 설정에 옛 스택 주소·키가 박혀 있는지.
 - 샘링크의 `samlink-cleanup` 컨테이너가 주기적으로 무엇을 부르는지.
+
+
+## 실제로 해 보니 (자비스, 2026-08-28)
+
+**앱 코드는 한 줄도 안 고쳤다.** 자비스가 모든 호출에 `.schema("app")` 을 명시하고 있었기 때문이다.
+스키마를 통째로 옮기고 접속 주소만 바꾸면 끝이었다.
+
+### 걸린 곳 — 권한이 따라오지 않는다
+
+`pg_dump --no-privileges` 로 뜨면 **역할 권한이 빠진다.** 복원 직후
+`permission denied for schema app` 으로 REST 가 401 을 냈다. 원본 권한을 조회해 그대로 부여해야 한다.
+
+```bash
+# 원본에서 확인
+docker exec supabase-db psql -U postgres -d postgres -c \
+  "SELECT nspacl FROM pg_namespace WHERE nspname='app';"
+
+# 새 DB 에 같게 부여
+docker exec agit-db psql -U postgres -d postgres -c "
+GRANT USAGE ON SCHEMA app TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA app TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA app TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT ALL ON TABLES TO anon, authenticated, service_role;"
+```
+
+### 네트워크는 둘 다 붙인다
+
+`jarvis-caddy` 가 `frontend:3000` 을 컨테이너 이름으로 부른다. 프론트를 아지트 네트워크로만 옮기면
+Caddy 가 못 찾는다. **두 네트워크에 모두** 붙여야 한다.
+
+### 잊지 말 것
+
+- `PGRST_DB_SCHEMAS` 에 새 스키마를 더하고 `rest` 컨테이너를 재생성한다.
+- 동기화 스크립트 등 **DB 컨테이너 이름을 직접 쓰는 곳**을 함께 고친다(`supabase-db` → `agit-db`).
+- 옮긴 뒤 행 수를 원본과 표별로 대조한다.
+
+### 샘링크는 이만큼 쉽지 않다
+
+자비스와 달리 자료가 `public` 에 있어 **`samlink` 스키마로 옮기고 앱 코드도 고쳐야 한다.**
+`classes` 이름 충돌도 그때 실제로 부딪힌다.
