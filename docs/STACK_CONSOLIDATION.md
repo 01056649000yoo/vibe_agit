@@ -1,6 +1,7 @@
 # 스택 통합 — 조사 결과와 계획
 
-> **진행 상황**: 자비스는 2026-08-28 에 **이전 완료**. 샘링크만 남았다.
+> **진행 상황**: 자비스·샘링크 **둘 다 2026-08-28 이전 완료.**
+> 이제 옛 `supabase` 스택을 쓰는 앱이 없다 — 며칠 지켜본 뒤 제거하면 된다.
 > 이전하며 배운 것은 아래 `실제로 해 보니` 절에 적었다.
 
 > 2026-08-28 조사. 옛 `supabase` 스택을 아지트 스택으로 합치기 위한 사전 조사다.
@@ -160,7 +161,39 @@ Caddy 가 못 찾는다. **두 네트워크에 모두** 붙여야 한다.
 - 동기화 스크립트 등 **DB 컨테이너 이름을 직접 쓰는 곳**을 함께 고친다(`supabase-db` → `agit-db`).
 - 옮긴 뒤 행 수를 원본과 표별로 대조한다.
 
-### 샘링크는 이만큼 쉽지 않다
+## 실제로 해 보니 (샘링크, 2026-08-28)
 
-자비스와 달리 자료가 `public` 에 있어 **`samlink` 스키마로 옮기고 앱 코드도 고쳐야 한다.**
-`classes` 이름 충돌도 그때 실제로 부딪힌다.
+자료가 `public` 에 있어 `samlink` 스키마를 새로 만들어 옮겼다. **호출부는 안 고쳤다** —
+`.from(...)` 은 28곳이지만 `createClient` 는 3곳뿐이라 거기에 한 줄씩만 넣으면 된다.
+
+```ts
+createClient(url, key, {
+  auth: { ... },
+  db: { schema: "samlink" },   // ← 이 한 줄. .from 과 .rpc 모두 이 스키마로 간다
+});
+```
+
+### 걸린 곳
+
+- **덤프에 트리거가 이미 들어 있다.** 함수보다 먼저 실행돼 `function ... does not exist` 로 실패한다.
+  앞쪽 트리거 정의를 빼고 함수 뒤에 다시 만들어야 한다.
+- **`GENERATED ALWAYS` 식별 칼럼**은 그냥 `INSERT` 가 안 된다. `OVERRIDING SYSTEM VALUE` 를 쓰고
+  넣은 뒤 `setval(pg_get_serial_sequence(...), max(id))` 로 시퀀스를 맞춘다.
+- compose 의 `networks:` 들여쓰기를 확인하고 고친다(스택마다 다르다).
+
+### 전환 중 벌어지는 행은 나중에 메운다
+
+덤프를 뜬 뒤에도 옛 스택은 계속 쓰인다. 전환을 마친 **뒤에** 옛 스택에만 남은 행을
+`ON CONFLICT DO NOTHING` 으로 넣으면 된다. 서비스를 멈출 필요가 없다.
+
+```bash
+{ echo "CREATE TEMP TABLE _d (LIKE samlink.<표>);"; echo "COPY _d FROM STDIN;"
+  docker exec supabase-db psql -U postgres -d postgres -t -A -c "COPY (SELECT * FROM public.<표>) TO STDOUT;"
+  echo "\."; echo "INSERT INTO samlink.<표> SELECT * FROM _d ON CONFLICT DO NOTHING;"
+} | docker exec -i agit-db psql -U postgres -d postgres
+```
+
+## 남은 일 — 옛 스택 제거
+
+쓰는 앱이 없다. 다만 `jarvis-caddy` 가 아직 `supabase.샘링크.kr` 과 서바이벌 경로를 넘기므로
+그 두 경로를 호스트 Caddy 로 옮기거나 정리한 뒤에 컨테이너를 내린다.
