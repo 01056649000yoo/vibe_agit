@@ -85,7 +85,9 @@ fi
 # 새 실행부터는 기록된 앱 하나라도 실패하거나 3개가 덜 기록되면 같은 운영 경고를 연다.
 STALE="$(psql_exec -c "
 WITH latest AS (
-  SELECT DISTINCT ON (job_type) run_key, job_type, status, COALESCE(finished_at, started_at) AS checked_at
+  SELECT DISTINCT ON (job_type)
+         run_key, job_type, status, COALESCE(finished_at, started_at) AS checked_at,
+         local_ok, drive_ok, external_ok, artifact_count
   FROM public.system_backup_runs
   ORDER BY job_type, started_at DESC
 ), app_counts AS (
@@ -100,11 +102,20 @@ SELECT CASE WHEN
     SELECT 1 FROM latest run LEFT JOIN app_counts apps USING (run_key)
     WHERE (run.job_type = 'daily' AND (
              run.status <> 'PASS' OR run.checked_at < now() - interval '26 hours'
-             OR (COALESCE(apps.recorded, 0) > 0 AND (apps.recorded <> 3 OR apps.passed <> 3))
+             OR (run.artifact_count = 7 AND (
+                   COALESCE(apps.recorded, 0) <> 3 OR COALESCE(apps.passed, 0) <> 3
+                   OR run.local_ok IS DISTINCT FROM true
+                   OR run.drive_ok IS DISTINCT FROM true
+                   OR run.external_ok IS DISTINCT FROM true
+                ))
           ))
        OR (run.job_type = 'restore' AND (
              run.status <> 'PASS' OR run.checked_at < now() - interval '40 days'
-             OR (COALESCE(apps.recorded, 0) > 0 AND (apps.recorded <> 3 OR apps.passed <> 3))
+             OR (run.artifact_count = 7 AND (
+                   COALESCE(apps.recorded, 0) <> 3 OR COALESCE(apps.passed, 0) <> 3
+                   OR run.local_ok IS DISTINCT FROM true
+                   OR run.drive_ok IS DISTINCT FROM true
+                ))
           ))
   )
 THEN 1 ELSE 0 END;" 2>/dev/null | tr -d ' ')"

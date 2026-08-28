@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [baseMigration, appMigration, panel, dashboard, healthHook, healthScript, recorder, appRecorder, appRegistry] = await Promise.all([
+const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, recorder, appRecorder, appRegistry] = await Promise.all([
     readFile('supabase/migrations/20261147_admin_backup_status.sql', 'utf8'),
     readFile('supabase/migrations/20261196_backup_app_results.sql', 'utf8'),
+    readFile('supabase/migrations/20261197_backup_run_completion.sql', 'utf8'),
     readFile('src/components/admin/AdminBackupPanel.jsx', 'utf8'),
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('src/components/admin/useAdminHealthSummary.js', 'utf8'),
@@ -77,5 +78,18 @@ test('관리자 첫 화면과 5분 건강검진도 같은 앱별 판정을 재�
     assert.match(dashboard, /backup: health\.summary\?\.backupAttentionCount \|\| 0/);
     assert.match(appMigration, /'backup', v_backup/);
     assert.match(healthScript, /system_backup_app_results/);
-    assert.match(healthScript, /apps\.recorded <> 3 OR apps\.passed <> 3/);
+    assert.match(healthScript, /run\.artifact_count = 7/);
+    assert.match(healthScript, /COALESCE\(apps\.recorded, 0\) <> 3/);
+    assert.match(healthScript, /run\.local_ok IS DISTINCT FROM true/);
+    assert.match(healthScript, /run\.drive_ok IS DISTINCT FROM true/);
+    assert.match(healthScript, /run\.external_ok IS DISTINCT FROM true/);
+});
+
+test('새 7개 산출물 실행은 앱 결과 3행 전까지 성공으로 확정하지 않는다', () => {
+    assert.match(completionMigration, /NEW\.artifact_count IS DISTINCT FROM 7/);
+    assert.match(completionMigration, /IF v_recorded < 3 THEN[\s\S]*NEW\.status := 'RUNNING'/);
+    assert.match(completionMigration, /v_recorded = 3 AND v_passed = 3 AND v_integrity_ok/);
+    assert.match(completionMigration, /NEW\.local_ok IS TRUE[\s\S]*NEW\.drive_ok IS TRUE[\s\S]*NEW\.external_ok IS TRUE/);
+    assert.match(completionMigration, /CREATE TRIGGER trg_finalize_system_backup_run_from_apps/);
+    assert.match(completionMigration, /REVOKE ALL ON FUNCTION public\.finalize_system_backup_run_from_apps_v1\(\)/);
 });
