@@ -306,6 +306,19 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         : (hostMemoryPressureOpen
             ? '#E53E3E'
             : (health.summary.hostMemoryAvailablePct < 30 ? '#D69E2E' : '#48BB78'));
+    const backupHasAppRecords = (health.summary?.backupAppRecorded || 0) > 0;
+    const backupTone = health.summary == null
+        ? '#A0AEC0'
+        : health.summary.backupAttentionCount > 0
+            ? '#E53E3E'
+            : !backupHasAppRecords ? '#A0AEC0' : '#48BB78';
+    const backupValue = health.summary == null
+        ? '확인 중'
+        : health.summary.backupAttentionCount > 0
+            ? `${health.summary.backupAttentionCount}개 확인`
+            : !backupHasAppRecords
+                ? '앱별 기록 대기'
+                : `${health.summary.backupAppPassed}/${health.summary.backupExpectedApps} 정상`;
 
     // 시스템 값을 잰 시각. 없으면 아직 건강검진이 한 번도 안 돈 것이다.
     const sampledAtLabel = health.summary?.resourceSampledAt
@@ -364,6 +377,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             tone: 'system',
             items: [
                 { id: 'containers', label: '컨테이너', basis: '살아 있는 수 / 전체', value: health.summary ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}` : '확인 중', color: containerTone, icon: '📦', onOpen: () => setCurrentTab('service') },
+                { id: 'backups', label: '앱 백업', basis: '최근 통합 백업의 앱별 결과', value: backupValue, color: backupTone, icon: '🛟', onOpen: () => setCurrentTab('backup') },
                 { id: 'disk', label: '디스크 여유', basis: '잰 순간의 남은 용량', value: health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중', color: diskTone, icon: '💾', onOpen: () => setCurrentTab('service') },
                 { id: 'memory', label: '맥 메모리/스왑', basis: '잰 순간의 값', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') }
             ]
@@ -374,8 +388,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         pending: newSignupCount,
         dormant: usage.dormantTeachers.length,
         cleanup: usage.cleanupCandidates.length,
-        feedback: pendingFeedbackCount
-    }), [newSignupCount, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount]);
+        feedback: pendingFeedbackCount,
+        backup: health.summary?.backupAttentionCount || 0
+    }), [newSignupCount, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount, health.summary?.backupAttentionCount]);
 
     /*
      * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라

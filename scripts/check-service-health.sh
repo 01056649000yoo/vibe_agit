@@ -80,10 +80,36 @@ else
     report container_down false ""
 fi
 
-# --- 5) 백업이 어제 안 돌았는가 ---
-STALE="$(psql_exec -c "SELECT CASE WHEN max(started_at) < now() - interval '26 hours' OR max(started_at) IS NULL THEN 1 ELSE 0 END FROM public.system_backup_runs WHERE job_type = 'daily';" 2>/dev/null | tr -d ' ')"
+# --- 5) 백업·복구 또는 3개 앱 중 하나가 실패했는가 ---
+# 앱별 기록을 붙이기 전의 과거 실행(자식 0행)은 실패로 추정하지 않는다.
+# 새 실행부터는 기록된 앱 하나라도 실패하거나 3개가 덜 기록되면 같은 운영 경고를 연다.
+STALE="$(psql_exec -c "
+WITH latest AS (
+  SELECT DISTINCT ON (job_type) run_key, job_type, status, COALESCE(finished_at, started_at) AS checked_at
+  FROM public.system_backup_runs
+  ORDER BY job_type, started_at DESC
+), app_counts AS (
+  SELECT run_key, count(*) AS recorded, count(*) FILTER (WHERE status = 'PASS') AS passed
+  FROM public.system_backup_app_results
+  GROUP BY run_key
+)
+SELECT CASE WHEN
+  NOT EXISTS (SELECT 1 FROM latest WHERE job_type = 'daily')
+  OR NOT EXISTS (SELECT 1 FROM latest WHERE job_type = 'restore')
+  OR EXISTS (
+    SELECT 1 FROM latest run LEFT JOIN app_counts apps USING (run_key)
+    WHERE (run.job_type = 'daily' AND (
+             run.status <> 'PASS' OR run.checked_at < now() - interval '26 hours'
+             OR (COALESCE(apps.recorded, 0) > 0 AND (apps.recorded <> 3 OR apps.passed <> 3))
+          ))
+       OR (run.job_type = 'restore' AND (
+             run.status <> 'PASS' OR run.checked_at < now() - interval '40 days'
+             OR (COALESCE(apps.recorded, 0) > 0 AND (apps.recorded <> 3 OR apps.passed <> 3))
+          ))
+  )
+THEN 1 ELSE 0 END;" 2>/dev/null | tr -d ' ')"
 if [ "${STALE:-0}" = "1" ]; then
-    report backup_failed true "26시간 넘게 새 백업 기록이 없습니다"
+    report backup_failed true "백업·복구 시각 또는 3개 앱 결과를 확인하세요"
 else
     report backup_failed false ""
 fi

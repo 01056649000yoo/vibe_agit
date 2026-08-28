@@ -5,18 +5,22 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-28 — 통합 DB(app·samlink 포함) 로컬 실백업·실복구 통과**
+**최종 설정 점검: 2026-08-28 — 3개 앱 통합 현황 원장·대시보드 ROLLBACK 검증 통과**
 
 ---
 
 ## 1. 매일·매월 점검 — 이것만 보면 된다
 
-관리자로 로그인한 뒤 `관리자 대시보드 → 💾 백업 상태`에서 아래 일일·월간 결과와 최근 20건을 함께 볼 수 있다.
+관리자로 로그인한 뒤 `관리자 대시보드 → 운영 → 백업 상태`에서 아지트·샘링크·자비스의
+앱별 일일 백업과 월간 실제 복구 결과, 공용 사본, 최근 20건을 함께 볼 수 있다.
 상태 DB에는 성공 여부·시각·파일/테이블 수만 저장하며 원문 로그·파일 경로·시크릿은 넣지 않는다.
 일일 기록이 26시간, 복구 기록이 40일 넘게 갱신되지 않으면 화면이 `확인 필요`로 바꿔 표시한다.
+예전 실행에는 앱별 자식 기록이 없으므로 값을 추정하지 않고 `앱별 기록 전`으로 표시한다.
 
 매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 7개 필수 산출물, 내장 사본, 암호화 Drive,
 외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
+같은 실행 키 아래 앱별로 DB와 필수 파일/설정 판정을 1행씩 남기며, 셋 중 하나라도 실패하거나
+3행이 덜 기록되면 5분 건강검진이 `backup_failed` 운영 경고를 연다.
 
 ```bash
 cat ~/backups/auto/backup-status.txt
@@ -65,7 +69,8 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 
 - 스크립트: `~/scripts/sh_mirror_backup.sh` · `~/.db-backup/backup.sh` · `~/literacy/scripts/backup-db.sh` · `~/scripts/restore_rehearsal.sh`
-- 관리자 상태 기록기: 저장소의 `scripts/record-backup-status.sh` — 호스트 스크립트가 직접 호출하며 실패해도 원래 상태 파일은 유지
+- 관리자 상태 기록기: 저장소의 `scripts/record-backup-status.sh`(실행) ·
+  `scripts/record-backup-app-status.sh`(앱별 결과) — 호스트 스크립트가 직접 호출하며 실패해도 원래 상태 파일은 유지
 - 로그: `~/backups/auto/sync.log` · `~/.db-backup/backup.log` · `~/backups/auto/rehearsal.log`
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
 - 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
@@ -81,6 +86,18 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | `아지트Storage.tar.gz` | Docker named volume `agit-storage-data`의 실제 사진 파일. DB의 `storage` 스키마와 함께 복구해야 함 |
 | `자비스.tar.gz` | `Jarvis_Brain_Local` |
 | `host_Caddyfile` | 호스트 Caddy 설정 |
+
+### 앱별 판정 기준
+
+| 앱 | DB 판정 | 파일·설정 판정 |
+|---|---|---|
+| 아지트 | 덤프/복원 DB의 `public·auth·storage·writing_helper·writing_helper_internal` 표 | 스택 설정·Storage·Caddy·롤·Realtime 보조 산출물 |
+| 샘링크 | 덤프/복원 DB의 `samlink` 표 | 통합 스택 설정·Caddy |
+| 자비스 | 덤프/복원 DB의 `app` 표 | `자비스.tar.gz`·Caddy |
+
+앱 카드의 초록색만으로 전체 백업을 정상이라 보지 않는다. 공용 사본의 내장·Drive·외장 SSD와
+실제 복구 리허설도 모두 따로 정상이어야 한다. 운영 반영 뒤 첫 7일 점검표는
+[`docs/BACKUP_MONITORING_20260829.md`](docs/BACKUP_MONITORING_20260829.md)에 남긴다.
 
 ---
 

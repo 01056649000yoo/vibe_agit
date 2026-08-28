@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
+import { BACKUP_APPS } from './backupApps';
 import { PanelHeader, SectionCard } from './adminUsageUi';
 
 const STATUS_META = {
@@ -15,7 +16,12 @@ const DETAIL_LABELS = {
     all_good: '필수 파일과 세 위치 사본 완료',
     backup_failed: '백업 단계 일부 실패',
     restore_verified: '실제 복원 검증 완료',
-    restore_failed: '복구 리허설 일부 실패'
+    restore_failed: '복구 리허설 일부 실패',
+    backup_verified: 'DB와 필수 파일 확인',
+    restore_verified_app: 'DB와 필수 파일 실제 복원 확인',
+    database_failed: 'DB 확인 실패',
+    files_failed: '필수 파일 확인 실패',
+    database_and_files_failed: 'DB와 필수 파일 확인 실패'
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
@@ -85,13 +91,13 @@ const CopyStatus = ({ label, value }) => {
     const known = value === true || value === false;
     return (
         <div style={{
-            padding: '14px', borderRadius: '12px',
+            padding: '12px', borderRadius: '12px', minWidth: 0,
             border: `1px solid ${value === false ? '#FCA5A5' : '#E2E8F0'}`,
             background: value === false ? '#FFF1F2' : '#F8FAFC'
         }}>
-            <div style={{ color: '#64748B', fontSize: '0.78rem', fontWeight: 700 }}>{label}</div>
+            <div style={{ color: '#64748B', fontSize: '0.76rem', fontWeight: 700 }}>{label}</div>
             <div style={{ marginTop: '5px', color: value === false ? '#B91C1C' : '#1E293B', fontWeight: 900 }}>
-                {known ? (value ? '정상' : '실패') : '확인 중'}
+                {known ? (value ? '정상' : '실패') : '기록 전'}
             </div>
         </div>
     );
@@ -119,6 +125,86 @@ const SummaryCard = ({ title, run, presentation, children, schedule }) => (
     </SectionCard>
 );
 
+const getAppResult = (run, appKey) => (
+    Array.isArray(run?.app_results)
+        ? run.app_results.find((result) => result.app_key === appKey)
+        : null
+);
+
+const AppResultLine = ({ label, result }) => {
+    if (!result) {
+        return (
+            <div style={{ padding: '12px', borderRadius: '12px', background: '#F8FAFC', color: '#64748B' }}>
+                <strong style={{ color: '#475569' }}>{label}</strong>
+                <div style={{ marginTop: '6px', fontSize: '0.8rem' }}>앱별 기록 전</div>
+            </div>
+        );
+    }
+
+    const meta = STATUS_META[result.status] || STATUS_META.EMPTY;
+    return (
+        <div style={{
+            padding: '12px', borderRadius: '12px',
+            background: result.status === 'PASS' ? '#F0FDF4' : '#FFF1F2',
+            border: `1px solid ${result.status === 'PASS' ? '#BBF7D0' : '#FECDD3'}`
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                <strong style={{ color: '#334155' }}>{label}</strong>
+                <StatusBadge presentation={meta} />
+            </div>
+            <div style={{ marginTop: '9px', color: '#475569', fontSize: '0.78rem', lineHeight: 1.55 }}>
+                DB {result.db_ok === true ? '정상' : result.db_ok === false ? '실패' : '기록 전'} · 파일/설정 {result.files_ok === true ? '정상' : result.files_ok === false ? '실패' : '기록 전'}<br />
+                DB 표 {result.object_count ?? '-'}개 · {DETAIL_LABELS[result.detail_code] || '세부 상태 확인'}
+            </div>
+        </div>
+    );
+};
+
+const AppCard = ({ app, daily, restore }) => (
+    <SectionCard style={{ minWidth: 0 }}>
+        <div style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <span aria-hidden="true" style={{ fontSize: '1.45rem' }}>{app.icon}</span>
+                <div>
+                    <div style={{ color: '#1E293B', fontWeight: 900 }}>{app.label}</div>
+                    <div style={{ marginTop: '3px', color: '#64748B', fontSize: '0.76rem', lineHeight: 1.45 }}>{app.description}</div>
+                </div>
+            </div>
+            <div style={{ display: 'grid', gap: '8px', marginTop: '15px' }}>
+                <AppResultLine label="최근 백업" result={getAppResult(daily, app.key)} />
+                <AppResultLine label="최근 복구 검사" result={getAppResult(restore, app.key)} />
+            </div>
+        </div>
+    </SectionCard>
+);
+
+const AppRunSummary = ({ title, run, expectedCount, presentation }) => {
+    const results = Array.isArray(run?.app_results) ? run.app_results : [];
+    const passed = results.filter((result) => result.status === 'PASS').length;
+    const hasAppRecords = results.length > 0;
+    const healthy = presentation.label === '정상' && hasAppRecords && passed === expectedCount;
+    const text = !hasAppRecords ? '앱별 기록 전' : `${passed}/${expectedCount} 정상`;
+    const visual = presentation.label !== '정상'
+        ? presentation
+        : !hasAppRecords
+            ? STATUS_META.EMPTY
+            : healthy
+                ? STATUS_META.PASS
+                : STATUS_META.FAIL;
+    return (
+        <div style={{
+            padding: '15px 16px', borderRadius: '14px',
+            background: visual.background,
+            border: `1px solid ${visual.border}`
+        }}>
+            <div style={{ color: '#64748B', fontSize: '0.76rem', fontWeight: 800 }}>{title}</div>
+            <div style={{ marginTop: '5px', color: visual.color, fontSize: '1.08rem', fontWeight: 900 }}>
+                {presentation.label === '정상' ? text : presentation.label}
+            </div>
+        </div>
+    );
+};
+
 const AdminBackupPanel = () => {
     const [payload, setPayload] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -143,8 +229,9 @@ const AdminBackupPanel = () => {
     }, [load]);
 
     const runs = useMemo(() => Array.isArray(payload?.runs) ? payload.runs : [], [payload]);
-    const daily = runs.find(run => run.job_type === 'daily');
-    const restore = runs.find(run => run.job_type === 'restore');
+    const daily = runs.find((run) => run.job_type === 'daily');
+    const restore = runs.find((run) => run.job_type === 'restore');
+    const expectedAppCount = payload?.expected_app_count || BACKUP_APPS.length;
     const dailyPresentation = getRunPresentation(
         daily,
         payload?.server_time,
@@ -162,8 +249,8 @@ const AdminBackupPanel = () => {
         <div style={{ display: 'grid', gap: '18px' }}>
             <SectionCard>
                 <PanelHeader
-                    title="자동 백업·복구 상태"
-                    description="이 화면을 열 때 최신 기록만 한 번 읽습니다. 원문 로그와 서버 비밀 값은 표시하지 않습니다."
+                    title="3개 앱 통합 백업·복구 상태"
+                    description="아지트·샘링크·자비스의 앱별 결과와 공용 사본을 한 번에 봅니다. 원문 로그·경로·비밀 값은 표시하지 않습니다."
                     right={(
                         <Button onClick={load} disabled={loading} size="sm" variant="secondary">
                             {loading ? '확인 중...' : '새로고침'}
@@ -179,43 +266,45 @@ const AdminBackupPanel = () => {
                     <div style={{ padding: '36px 20px', textAlign: 'center', color: '#94A3B8' }}>백업 상태를 확인하고 있습니다...</div>
                 )}
                 {!errorMessage && payload && (
-                    <div style={{ padding: '18px 20px', color: '#64748B', fontSize: '0.8rem' }}>
-                        서버 기준 확인 시각: {formatDateTime(payload.server_time)}
+                    <div style={{ padding: '16px 20px 20px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                            <AppRunSummary title="최근 통합 백업" run={daily} expectedCount={expectedAppCount} presentation={dailyPresentation} />
+                            <AppRunSummary title="최근 실제 복구 검사" run={restore} expectedCount={expectedAppCount} presentation={restorePresentation} />
+                        </div>
+                        <div style={{ marginTop: '12px', color: '#64748B', fontSize: '0.78rem' }}>
+                            서버 기준 확인 시각: {formatDateTime(payload.server_time)}
+                        </div>
                     </div>
                 )}
             </SectionCard>
 
             {!errorMessage && payload && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-                    <SummaryCard
-                        title="매일 자동 백업"
-                        run={daily}
-                        presentation={dailyPresentation}
-                        schedule="매일 오전 4:00 · 26시간 이상 새 기록이 없으면 경고"
-                    >
+                    {BACKUP_APPS.map((app) => <AppCard key={app.key} app={app} daily={daily} restore={restore} />)}
+                </div>
+            )}
+
+            {!errorMessage && payload && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                    <SummaryCard title="공용 사본" run={daily} presentation={dailyPresentation} schedule="매일 오전 4:00 · 26시간 이상 새 기록이 없으면 경고">
                         <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
                             <CopyStatus label="내장" value={daily?.local_ok} />
                             <CopyStatus label="Drive" value={daily?.drive_ok} />
                             <CopyStatus label="외장 SSD" value={daily?.external_ok} />
                         </div>
                         <div style={{ marginTop: '12px', color: '#475569', fontSize: '0.82rem' }}>
-                            필수 파일: {daily?.artifact_count == null ? '-' : `${daily.artifact_count}개`}
+                            필수 산출물: {daily?.artifact_count == null ? '-' : `${daily.artifact_count}개 / 7개`}
                         </div>
                     </SummaryCard>
 
-                    <SummaryCard
-                        title="실제 복구 리허설"
-                        run={restore}
-                        presentation={restorePresentation}
-                        schedule="매월 1일 오전 4:40 · 40일 이상 새 기록이 없으면 경고"
-                    >
+                    <SummaryCard title="실제 복구 리허설" run={restore} presentation={restorePresentation} schedule="매월 1일 오전 4:40 · 40일 이상 새 기록이 없으면 경고">
                         <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                            <CopyStatus label="아지트 DB" value={restore?.agit_table_count > 0 ? true : restore?.agit_table_count === 0 ? false : null} />
-                            <CopyStatus label="연구소 DB" value={restore?.lab_table_count > 0 ? true : restore?.lab_table_count === 0 ? false : null} />
+                            <CopyStatus label="통합 DB" value={restore?.agit_table_count > 0 ? true : restore?.agit_table_count === 0 ? false : null} />
+                            <CopyStatus label="앱 스키마" value={restore?.lab_table_count > 0 ? true : restore?.lab_table_count === 0 ? false : null} />
                             <CopyStatus label="Storage" value={restore?.storage_file_count > 0 ? true : restore?.storage_file_count === 0 ? false : null} />
                         </div>
                         <div style={{ marginTop: '12px', color: '#475569', fontSize: '0.82rem' }}>
-                            복원 결과: 아지트 {restore?.agit_table_count ?? '-'}개 · 연구소 {restore?.lab_table_count ?? '-'}개 · 파일 {restore?.storage_file_count ?? '-'}개
+                            복원 결과: 통합 DB {restore?.agit_table_count ?? '-'}개 · app+samlink {restore?.lab_table_count ?? '-'}개 · 파일 {restore?.storage_file_count ?? '-'}개
                         </div>
                     </SummaryCard>
                 </div>
@@ -223,32 +312,35 @@ const AdminBackupPanel = () => {
 
             {!errorMessage && payload && (
                 <SectionCard>
-                    <PanelHeader
-                        title="최근 실행 내역"
-                        description="최근 20건만 표시합니다. 실패하면 맥미니의 백업 로그에서 상세 원인을 확인합니다."
-                    />
+                    <PanelHeader title="최근 실행 내역" description="최근 20건만 표시합니다. 실패하면 맥미니의 백업 로그에서 상세 원인을 확인합니다." />
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                        <table style={{ width: '100%', minWidth: '820px', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                             <thead>
                                 <tr style={{ background: '#F8FAFC', color: '#475569', borderBottom: '1px solid #E2E8F0' }}>
                                     <th style={{ padding: '12px', textAlign: 'left' }}>종류</th>
                                     <th style={{ padding: '12px', textAlign: 'left' }}>대상 날짜</th>
                                     <th style={{ padding: '12px', textAlign: 'left' }}>완료 시각</th>
                                     <th style={{ padding: '12px', textAlign: 'center' }}>상태</th>
+                                    <th style={{ padding: '12px', textAlign: 'center' }}>앱 결과</th>
                                     <th style={{ padding: '12px', textAlign: 'left' }}>요약</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {runs.length === 0 ? (
-                                    <tr><td colSpan={5} style={{ padding: '34px', textAlign: 'center', color: '#94A3B8' }}>기록된 실행이 없습니다.</td></tr>
-                                ) : runs.map(run => {
+                                    <tr><td colSpan={6} style={{ padding: '34px', textAlign: 'center', color: '#94A3B8' }}>기록된 실행이 없습니다.</td></tr>
+                                ) : runs.map((run) => {
                                     const meta = STATUS_META[run.status] || STATUS_META.EMPTY;
+                                    const appResults = Array.isArray(run.app_results) ? run.app_results : [];
+                                    const appPassed = appResults.filter((result) => result.status === 'PASS').length;
                                     return (
                                         <tr key={run.run_key} style={{ borderBottom: '1px solid #F1F5F9' }}>
                                             <td style={{ padding: '12px', color: '#334155', fontWeight: 700 }}>{run.job_type === 'daily' ? '매일 백업' : '복구 리허설'}</td>
                                             <td style={{ padding: '12px', color: '#64748B' }}>{formatBackupDay(run.backup_day)}</td>
                                             <td style={{ padding: '12px', color: '#64748B' }}>{formatDateTime(run.finished_at || run.started_at)}</td>
                                             <td style={{ padding: '12px', textAlign: 'center' }}><StatusBadge presentation={meta} /></td>
+                                            <td style={{ padding: '12px', textAlign: 'center', color: '#475569', fontWeight: 800 }}>
+                                                {appResults.length > 0 ? `${appPassed}/${expectedAppCount}` : '앱별 기록 전'}
+                                            </td>
                                             <td style={{ padding: '12px', color: '#475569' }}>{DETAIL_LABELS[run.detail_code] || '-'}</td>
                                         </tr>
                                     );

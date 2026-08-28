@@ -28,6 +28,7 @@ export const useAdminHealthSummary = () => {
         const latest = data?.latest || null;
         const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
         const openAlerts = alerts.filter((alert) => alert.status === 'open');
+        const backup = data?.backup || null;
         setSummary({
             todayTeachers: data?.today?.teachers ?? null,
             todayStudents: data?.today?.students ?? null,
@@ -39,7 +40,15 @@ export const useAdminHealthSummary = () => {
             hostSwapUsedMb: latest?.host_swap_used_mb ?? null,
             openAlertCount: openAlerts.length,
             openAlertKeys: openAlerts.map((alert) => alert.alert_key),
-            resourceSampledAt: latest?.resource_sampled_at ?? null
+            resourceSampledAt: latest?.resource_sampled_at ?? null,
+            backupExpectedApps: backup?.expected_apps ?? 3,
+            backupAppRecorded: backup?.daily_app_recorded ?? 0,
+            backupAppPassed: backup?.daily_app_passed ?? 0,
+            backupFresh: backup?.daily_fresh ?? false,
+            restoreAppRecorded: backup?.restore_app_recorded ?? 0,
+            restoreAppPassed: backup?.restore_app_passed ?? 0,
+            restoreFresh: backup?.restore_fresh ?? false,
+            backupAttentionCount: backup?.attention_count ?? 0
         });
     }, []);
 
