@@ -8,12 +8,14 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
     readFile('.github/workflows/deploy.yml', 'utf8'),
     readFile('supabase/migrations/20261188_spelling_weekly_intake.sql', 'utf8'),
+    readFile('supabase/migrations/20261189_spelling_intake_candidate_review.sql', 'utf8'),
+    readFile('tests/sql/20261189_spelling_intake_candidate_review.smoke.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
     readFile('ops/launchd/com.agit.weekly-spelling-review.plist', 'utf8'),
@@ -168,4 +170,46 @@ test('배포가 엣지 함수의 두 파일을 함께 올린다', () => {
     // index.ts 만 올리면 reviewCore.js 를 import 하다가 함수가 죽는다.
     assert.match(deployWorkflow, /spelling-weekly-review\/index\.ts/);
     assert.match(deployWorkflow, /spelling-weekly-review\/reviewCore\.js/);
+});
+
+test('원자료 목록은 관리자 전용 읽기이고 실행 함수와 같은 기준으로 고른다', () => {
+    assert.match(candidateMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(candidateMigration, /REVOKE ALL ON FUNCTION public\.admin_get_spelling_intake_candidates_v1/);
+    // start 함수와 같은 기준 시각·같은 걸러내기를 써야 목록과 실제 검수 대상이 맞는다.
+    assert.match(candidateMigration, /status IN \('ready', 'empty'\)/);
+    assert.match(candidateMigration, /spelling_common_reviews/);
+    // 목록과 총 개수는 각자 세므로 **두 곳 다** 같은 걸러내기를 써야 한다.
+    // 한쪽만 고치면 "78건" 이라고 써 놓고 12건만 보여 주는 식으로 어긋난다.
+    assert.equal((candidateMigration.match(/corpus\.matched IS FALSE/g) || []).length, 2);
+    assert.equal((candidateMigration.match(/char_length\(corpus\.expression\) BETWEEN 2 AND 15/g) || []).length, 2);
+    // 목록은 읽기만 한다 — 쓰기는 빼기 함수만 한다.
+    assert.doesNotMatch(
+        candidateMigration.match(/admin_get_spelling_intake_candidates_v1[\s\S]*?\$\$;/)?.[0] || '',
+        /INSERT INTO|DELETE FROM|UPDATE public\./
+    );
+});
+
+test('빼기는 되돌릴 수 있고 이미 게시된 후보는 건드리지 않는다', () => {
+    assert.match(candidateMigration, /admin_set_spelling_candidate_excluded_v1/);
+    // 새 표를 만들지 않고 기존 결정 원장에 남긴다 — start 함수가 이미 그 행을 보고 건너뛴다.
+    assert.match(candidateMigration, /decision = 'rejected'/);
+    assert.match(candidateMigration, /'restored'/);
+    // 게시된 것을 빼면 common_entry_id 를 잃어 자료의 출처가 끊긴다.
+    // 주석이 아니라 **실제로 되돌려 보내는 값**인지 본다.
+    assert.match(candidateMigration, /v_existing = 'published'[\s\S]{0,120}RETURN jsonb_build_object\('status', 'published_locked'\)/);
+    assert.match(candidateSmoke, /published_locked/);
+    assert.match(candidateSmoke, /되돌리기가 안 됐다/);
+});
+
+test('관리자 화면은 AI에 보내기 전에 두 출처의 원자료를 훑어보게 한다', () => {
+    assert.match(panel, /admin_get_spelling_intake_candidates_v1/);
+    assert.match(panel, /admin_set_spelling_candidate_excluded_v1/);
+    // 학생이 낸 두 출처를 모두 고를 수 있어야 한다. 한쪽만 있으면 다른 쪽은 통째로 나간다.
+    assert.match(panel, /onOpenList\('ai'\)/);
+    assert.match(panel, /onOpenList\('search'\)/);
+    assert.match(panel, /뺀 것 보기/);
+    assert.match(panel, /되돌리기/);
+    // AI 를 거치지 않는 직접 등록은 기존 공통 게시 RPC 를 그대로 쓴다.
+    assert.match(panel, /admin_publish_common_spelling_entry_v1/);
+    assert.match(panel, /직접 등록/);
 });

@@ -30,9 +30,16 @@
 /* 쌓인 양과 실행 단추. 여기서 처음으로 학생 표현이 외부 AI 로 나가므로 눈에 띄게 둔다. */
 .admin-spelling__intake { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: center; padding: 12px; border: 1px solid #ddd6fe; border-radius: 12px; background: #faf5ff; }
 .admin-spelling__intake-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.admin-spelling__intake-counts > div { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border-radius: 8px; background: white; }
+.admin-spelling__intake-counts > div, .admin-spelling__intake-counts > button { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border: 1px solid transparent; border-radius: 8px; background: white; font: inherit; text-align: left; }
+.admin-spelling__intake-counts > button { cursor: pointer; }
+.admin-spelling__intake-counts > button:hover { border-color: #c4b5fd; background: #fdfcff; }
 .admin-spelling__intake-counts span { color: #64748b; font-size: .65rem; font-weight: 800; }
 .admin-spelling__intake-counts strong { color: #6d28d9; font-size: 1.05rem; }
+.admin-spelling__intake-counts em { color: #94a3b8; font-size: .62rem; font-style: normal; font-weight: 800; }
+.admin-spelling__intake-counts > button:hover em { color: #7c3aed; }
+.admin-spelling__candidate-review { display: grid; gap: 9px; padding: 11px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.admin-spelling__candidate-review-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.admin-spelling__candidate-review-head .admin-spelling__refresh { margin-left: auto; }
 .admin-spelling__intake-action { display: grid; gap: 7px; justify-items: start; }
 .admin-spelling__intake-action p { margin: 0; color: #475569; font-size: .75rem; line-height: 1.55; }
 .admin-spelling__intake-action small { color: #7c3aed; font-size: .72rem; font-weight: 800; }

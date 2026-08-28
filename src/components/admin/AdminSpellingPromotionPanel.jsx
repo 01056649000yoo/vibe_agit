@@ -30,6 +30,9 @@ const AdminSpellingPromotionPanel = () => {
     const [data, setData] = useState(EMPTY_DATA);
     const [intake, setIntake] = useState(EMPTY_INTAKE);
     const [running, setRunning] = useState(false);
+    const [candidateView, setCandidateView] = useState({ open: false, sourceKind: 'search', excluded: false });
+    const [candidates, setCandidates] = useState({ items: [], total: 0 });
+    const [candidatesLoading, setCandidatesLoading] = useState(false);
     const [reviewTarget, setReviewTarget] = useState(null);
     const [draft, setDraft] = useState(EMPTY_DRAFT);
     const [loading, setLoading] = useState(false);
@@ -99,6 +102,85 @@ const AdminSpellingPromotionPanel = () => {
         } finally {
             setRunning(false);
         }
+    };
+
+    /**
+     * AI 를 돌리기 전에 원자료를 훑어본다. 학생 검색에는 아이 이름·오타 부스러기가 섞여 있어
+     * 통째로 보내면 돈이 새고 검토할 후보에 잡음이 낀다.
+     */
+    const loadCandidates = useCallback(async (sourceKind, excluded) => {
+        setCandidatesLoading(true);
+        try {
+            const { data: result, error } = await supabase.rpc('admin_get_spelling_intake_candidates_v1', {
+                p_source_kind: sourceKind, p_excluded: excluded, p_limit: 300, p_offset: 0
+            });
+            if (error) throw error;
+            setCandidates({ items: result?.items || [], total: Number(result?.total) || 0 });
+        } catch (error) {
+            setNotice({ tone: 'error', text: error.message || '원자료 목록을 불러오지 못했습니다.' });
+            setCandidates({ items: [], total: 0 });
+        } finally {
+            setCandidatesLoading(false);
+        }
+    }, []);
+
+    const openCandidates = (sourceKind, excluded = false) => {
+        setCandidateView({ open: true, sourceKind, excluded });
+        void loadCandidates(sourceKind, excluded);
+    };
+
+    const setCandidateExcluded = async (row, excluded) => {
+        setCandidatesLoading(true);
+        setNotice(null);
+        try {
+            const { data: result, error } = await supabase.rpc('admin_set_spelling_candidate_excluded_v1', {
+                p_source_kind: candidateView.sourceKind,
+                p_expression: row.expression,
+                p_source_correction: row.source_correction || '',
+                p_excluded: excluded
+            });
+            if (error) throw error;
+            if (result?.status === 'published_locked') {
+                setNotice({ tone: 'error', text: '이미 공통 자료로 게시한 표현입니다. 전체 공통 자료에서 적용을 중지해 주세요.' });
+            } else {
+                setNotice({
+                    tone: 'success',
+                    text: excluded
+                        ? `‘${row.expression}’를 뺐습니다. 앞으로 AI 검수에 보내지 않습니다.`
+                        : `‘${row.expression}’를 되돌렸습니다. 다음 검수에 함께 갑니다.`
+                });
+            }
+            await Promise.all([loadCandidates(candidateView.sourceKind, candidateView.excluded), load()]);
+        } catch (error) {
+            setNotice({ tone: 'error', text: error.message || '후보 상태를 바꾸지 못했습니다.' });
+        } finally {
+            setCandidatesLoading(false);
+        }
+    };
+
+    /** AI 를 거치지 않고 원자료에서 바로 공통 자료로 올린다. 편집기는 주간 후보와 같은 것을 쓴다. */
+    const startRawReview = (row) => {
+        setActiveView('candidates');
+        setReviewTarget({
+            weeklyItemId: null,
+            entryId: null,
+            sourceKind: candidateView.sourceKind,
+            expression: row.expression,
+            sourceCorrection: row.source_correction || '',
+            classCount: row.class_count || 0,
+            hitCount: row.hit_count || 0,
+            sourceKinds: [candidateView.sourceKind],
+            verdict: null,
+            aiReason: null
+        });
+        setDraft({
+            wrong_expression: row.expression || '',
+            correct_expression: row.source_correction || '',
+            label: '미분류',
+            explanation: '',
+            examples: []
+        });
+        setNotice({ tone: 'info', text: 'AI를 거치지 않고 직접 등록합니다. 바른 표현과 설명을 적어 주세요.' });
     };
 
     useEffect(() => { load(); }, [load]);
@@ -313,7 +395,19 @@ const AdminSpellingPromotionPanel = () => {
                 <button type="button" className="admin-spelling__refresh" onClick={load} disabled={loading}>{loading ? '갱신 중…' : '새로고침'}</button>
             </div>
 
-            <WeeklyIntakeCard intake={intake} running={running} loading={loading} onRun={runWeeklyReview} />
+            <WeeklyIntakeCard
+                intake={intake} running={running} loading={loading}
+                onRun={runWeeklyReview} onOpenList={(sourceKind) => openCandidates(sourceKind, false)}
+            />
+            {candidateView.open && <IntakeCandidateList
+                view={candidateView} data={candidates} loading={candidatesLoading}
+                onSelectSource={(sourceKind) => openCandidates(sourceKind, candidateView.excluded)}
+                onToggleExcluded={(excluded) => openCandidates(candidateView.sourceKind, excluded)}
+                onClose={() => setCandidateView({ ...candidateView, open: false })}
+                onExclude={(row) => void setCandidateExcluded(row, true)}
+                onRestore={(row) => void setCandidateExcluded(row, false)}
+                onManual={startRawReview}
+            />}
             <RunSummary run={latestRun} candidateWeek={data.candidate_week} />
             <div className="admin-spelling__source-toolbar">
                 <div className="admin-spelling__source-tabs" role="tablist" aria-label="AI 검수 결과 필터">
@@ -358,7 +452,7 @@ const FilterButton = ({ active, children, onClick }) => <button type="button" cl
  * 여기 수는 **거르기 전**이다. 기본 500개·공통 자료와 겹치는 것은 실행할 때 코드가 빼므로
  * 실제로 AI 에 가는 수는 이보다 적다. 관리자가 "돌릴 만한가"를 가늠하는 용도다.
  */
-const WeeklyIntakeCard = ({ intake, running, loading, onRun }) => {
+const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
     const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
     const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
     const reason = alreadyDone
@@ -370,10 +464,15 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun }) => {
                 : '';
 
     return <div className="admin-spelling__intake">
+        {/* 학생이 낸 두 출처는 눌러서 목록을 본다. 교사 학급 자료는 이미 교사가 손으로 승인한 것이라 고를 필요가 없다. */}
         <div className="admin-spelling__intake-counts">
-            <div><span>학생 AI 검사</span><strong>{intake.ai_finding_count || 0}</strong></div>
-            <div><span>학생 검색</span><strong>{intake.search_count || 0}</strong></div>
-            <div><span>교사 학급 자료</span><strong>{intake.teacher_entry_count || 0}</strong></div>
+            <button type="button" onClick={() => onOpenList('ai')}>
+                <span>학생 AI 검사</span><strong>{intake.ai_finding_count || 0}</strong><em>목록 보기</em>
+            </button>
+            <button type="button" onClick={() => onOpenList('search')}>
+                <span>학생 검색</span><strong>{intake.search_count || 0}</strong><em>목록 보기</em>
+            </button>
+            <div><span>교사 학급 자료</span><strong>{intake.teacher_entry_count || 0}</strong><em>승인된 자료</em></div>
         </div>
         <div className="admin-spelling__intake-action">
             <p>
@@ -387,6 +486,51 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun }) => {
             </Button>
             {reason && <small>{reason}</small>}
         </div>
+    </div>;
+};
+
+/** AI 에 보내기 전에 훑어보는 원자료 목록. 여기서 빼거나 직접 등록한다. */
+const IntakeCandidateList = ({ view, data, loading, onSelectSource, onToggleExcluded, onClose, onExclude, onRestore, onManual }) => {
+    const sourceName = view.sourceKind === 'ai' ? '학생 AI 검사' : '학생 검색';
+    return <div className="admin-spelling__candidate-review">
+        <div className="admin-spelling__candidate-review-head">
+            <div className="admin-spelling__source-tabs" role="tablist" aria-label="원자료 출처">
+                <FilterButton active={view.sourceKind === 'search'} onClick={() => onSelectSource('search')}>학생 검색</FilterButton>
+                <FilterButton active={view.sourceKind === 'ai'} onClick={() => onSelectSource('ai')}>학생 AI 검사</FilterButton>
+            </div>
+            <FilterButton active={view.excluded} onClick={() => onToggleExcluded(!view.excluded)}>
+                {view.excluded ? '검수할 것 보기' : '뺀 것 보기'}
+            </FilterButton>
+            <button type="button" className="admin-spelling__refresh" onClick={onClose}>닫기</button>
+        </div>
+        <p className="admin-spelling__source-guide">
+            {view.excluded
+                ? `${sourceName}에서 빼 둔 표현입니다. 되돌리면 다음 검수에 함께 갑니다.`
+                : `${sourceName} ${data.total}건이 AI 검수 대상입니다. 맞춤법 자료가 될 수 없는 것은 빼 주세요.`}
+        </p>
+        {loading ? <p className="admin-spelling__source-guide">불러오는 중…</p>
+            : data.items.length === 0 ? <p className="admin-spelling__source-guide">여기에는 아무것도 없습니다.</p>
+                : <div className="admin-spelling__list">
+                    {data.items.map((row) => <article className="admin-spelling__candidate" key={`${row.expression}:${row.source_correction || ''}`}>
+                        <div>
+                            <strong>{row.expression}</strong>
+                            {row.source_correction && <small> → {row.source_correction}</small>}
+                        </div>
+                        <div className="admin-spelling__evidence">
+                            {view.excluded
+                                ? <small>{formatDateTime(row.decided_at)} 뺌</small>
+                                : <small>{row.class_count || 0}학급 · {row.hit_count || 0}회 · {formatDateTime(row.last_seen_at)}</small>}
+                        </div>
+                        <div className="admin-spelling__row-actions">
+                            {view.excluded
+                                ? <Button size="sm" variant="outline" onClick={() => onRestore(row)}>되돌리기</Button>
+                                : <>
+                                    <Button size="sm" variant="outline" onClick={() => onManual(row)}>직접 등록</Button>
+                                    <Button size="sm" variant="ghost" onClick={() => onExclude(row)}>빼기</Button>
+                                </>}
+                        </div>
+                    </article>)}
+                </div>}
     </div>;
 };
 
