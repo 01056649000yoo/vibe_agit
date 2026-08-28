@@ -7,10 +7,8 @@ import './AdminSpellingPromotionPanel.css';
 const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], common_entries: [] };
 const EMPTY_INTAKE = {
     week_start: null, source_since_at: null, current_status: null, can_run: false,
-    ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
+    is_resuming: false, ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
 };
-// 후보 상한이 200개, 배치가 12개이므로 17번이면 끝난다. 그보다 많이 돌면 무언가 잘못된 것이다.
-const MAX_REVIEW_PASSES = 20;
 
 /**
  * 한 번 부를 때 이만큼 기다리고 포기한다.
@@ -83,60 +81,56 @@ const AdminSpellingPromotionPanel = () => {
      * 무엇이 나가는지 확인시킨 뒤에 부른다. 한 주에 한 번만 돌 수 있다.
      */
     const runWeeklyReview = async () => {
-        const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
-        const confirmed = window.confirm(
-            `쌓인 자료 ${total}건을 AI 검수에 보냅니다.\n\n`
-            + '기존 자료와 겹치는 것은 보내기 전에 코드가 먼저 제외합니다.\n'
-            + '실제 AI 호출과 비용이 발생하며, 이번 주에는 다시 돌릴 수 없습니다.\n\n계속할까요?'
-        );
-        if (!confirmed) return;
+        // 이어서 하는 것은 이미 승낙받은 일의 나머지다. 누를 때마다 같은 확인창을 띄우지 않는다.
+        if (intake.is_resuming !== true) {
+            const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
+            const confirmed = window.confirm(
+                `쌓인 자료 ${total}건을 AI 검수에 보냅니다.\n\n`
+                + '기존 자료와 겹치는 것은 보내기 전에 코드가 먼저 제외합니다.\n'
+                + '실제 AI 호출과 비용이 발생합니다. 한 번에 다 하지 않고 나눠서 하며,\n'
+                + '남으면 단추를 다시 눌러 이어서 합니다.\n\n계속할까요?'
+            );
+            if (!confirmed) return;
+        }
 
         setRunning(true);
         setNotice(null);
         try {
             /*
-             * 엣지 함수 작업자는 60초에 끊긴다. 후보가 많으면 한 번에 못 끝내므로 함수가
-             * `done: false` 와 남은 수를 돌려준다. 남은 것이 없어질 때까지 이어서 부른다.
-             * 이미 검수한 배치는 서버 캐시에 적립돼 있어 다시 불러도 AI 비용이 또 나가지 않는다.
+             * **한 번 누르면 한 덩어리만** 한다. 엣지 함수 작업자가 60초에 끊기므로 한 번에
+             * 다 하려면 오래 매달려야 하고, 끊기면 화면이 굳는다. 30초 안에 할 만큼만 하고
+             * 남은 수를 알려 주면, 관리자가 눌러 가며 진행 상황을 눈으로 본다.
+             * 이미 검수한 배치는 서버 캐시에 적립돼 있어 다시 눌러도 AI 비용이 또 나가지 않는다.
              */
-            let reviewedTotal = 0;
-            for (let pass = 1; ; pass += 1) {
-                if (pass > MAX_REVIEW_PASSES) throw new Error('검수가 너무 오래 걸립니다. 잠시 뒤 다시 눌러 이어서 진행해 주세요.');
+            const { data: result, error } = await callWithTimeout(
+                supabase.functions.invoke('spelling-weekly-review', {
+                    body: { weekStart: intake.week_start }
+                }),
+                REVIEW_CALL_TIMEOUT_MS
+            );
+            if (error) throw error;
 
-                const { data: result, error } = await callWithTimeout(
-                    supabase.functions.invoke('spelling-weekly-review', {
-                        body: { weekStart: intake.week_start }
-                    }),
-                    REVIEW_CALL_TIMEOUT_MS
-                );
-                if (error) throw error;
-
-                if (result?.skipped) {
-                    setNotice({
-                        tone: 'error',
-                        text: result.reason === 'already_finished'
-                            ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
-                            : '이미 검수가 돌고 있습니다. 잠시 뒤 새로고침해 주세요.'
-                    });
-                    break;
-                }
-                if (!result?.success) throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
-
-                reviewedTotal += Number(result.reviewedNow) || 0;
-                if (result.done === false) {
-                    setNotice({
-                        tone: 'info',
-                        text: `검수하는 중이에요 — 지금까지 ${reviewedTotal}건, 남은 후보 ${result.remaining}건. 그대로 기다려 주세요.`
-                    });
-                    continue;
-                }
-
+            if (result?.skipped) {
+                setNotice({
+                    tone: 'error',
+                    text: result.reason === 'already_finished'
+                        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+                        : '방금 다른 곳에서 검수가 시작됐어요. 잠시 뒤 새로고침해 주세요.'
+                });
+            } else if (!result?.success) {
+                throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
+            } else if (result.done === false) {
+                setNotice({
+                    tone: 'info',
+                    text: `${result.reviewedNow}건을 검수했어요. 남은 후보 ${result.remaining}건 —`
+                        + ' 아래 단추를 다시 누르면 하던 곳부터 이어서 합니다.'
+                });
+            } else {
                 setNotice({
                     tone: 'success',
-                    text: `검수를 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
-                        + ` · AI 새 검수 ${reviewedTotal} · 검토할 후보 ${result.itemCount}건`
+                    text: `검수를 모두 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
+                        + ` · 이번에 새로 검수 ${result.reviewedNow || 0} · 검토할 후보 ${result.itemCount}건`
                 });
-                break;
             }
             await load();
         } catch (error) {
@@ -498,10 +492,12 @@ const FilterButton = ({ active, children, onClick }) => <button type="button" cl
 const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
     const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
     const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
+    // 돌다 만 회차는 막힌 것이 아니라 **이어서 할 수 있는** 상태다. 여기서 막으면 관리자가 갇힌다.
+    const resuming = intake.is_resuming === true;
     const reason = alreadyDone
         ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
-        : intake.current_status === 'running'
-            ? '지금 검수가 돌고 있습니다.'
+        : resuming
+            ? '지난번에 다 못 끝냈어요. 이어서 하면 하던 곳부터 계속합니다.'
             : total === 0
                 ? '아직 검수할 새 자료가 없습니다.'
                 : '';
@@ -525,7 +521,7 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
                 {' '}겹치는 자료는 AI 에 보내기 전에 코드가 먼저 뺍니다.
             </p>
             <Button onClick={onRun} disabled={running || loading || !intake.can_run || total === 0}>
-                {running ? 'AI 검수 중…' : 'AI 검수 돌리기'}
+                {running ? 'AI 검수 중…' : resuming ? '이어서 검수하기' : 'AI 검수 돌리기'}
             </Button>
             {reason && <small>{reason}</small>}
         </div>

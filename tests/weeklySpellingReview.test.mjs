@@ -8,7 +8,7 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
@@ -16,6 +16,7 @@ const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candid
     readFile('supabase/migrations/20261188_spelling_weekly_intake.sql', 'utf8'),
     readFile('supabase/migrations/20261189_spelling_intake_candidate_review.sql', 'utf8'),
     readFile('supabase/migrations/20261190_spelling_weekly_review_resume.sql', 'utf8'),
+    readFile('supabase/migrations/20261191_spelling_intake_resumable.sql', 'utf8'),
     readFile('tests/sql/20261189_spelling_intake_candidate_review.smoke.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
@@ -159,7 +160,7 @@ test('관리자 화면은 쌓인 양을 보여 주고 관리자가 눌러야 AI�
     assert.match(panel, /functions\.invoke\('spelling-weekly-review'/);
     // 여기서 처음으로 학생 표현이 외부 AI 로 나간다. 확인 없이 나가면 안 된다.
     assert.match(panel, /window\.confirm\([\s\S]{0,400}AI 검수에 보냅니다/);
-    assert.match(panel, /실제 AI 호출과 비용이 발생하며/);
+    assert.match(panel, /실제 AI 호출과 비용이 발생합니다/);
     // 이미 끝난 주를 눌러도 헛돌지 않게 화면이 이유를 말해야 한다.
     assert.match(panel, /already_finished/);
     assert.match(panel, /disabled=\{running \|\| loading \|\| !intake\.can_run \|\| total === 0\}/);
@@ -253,9 +254,19 @@ test('이어 부르는 호출은 같은 회차를 이어받는다', () => {
     assert.match(edgeFunction, /p_allow_resume: true/);
     // 인자가 늘었으므로 옛 서명을 지워야 호출이 갈리지 않는다.
     assert.match(resumeMigration, /DROP FUNCTION IF EXISTS public\.start_spelling_weekly_review_v1\(DATE, TEXT\)/);
-    // 화면은 끝날 때까지 이어서 부른다.
+    // 화면은 한 번 누르면 한 덩어리만 하고 남은 수를 알려 준다.
     assert.match(panel, /result\.done === false/);
-    assert.match(panel, /MAX_REVIEW_PASSES/);
+    assert.match(panel, /다시 누르면 하던 곳부터 이어서 합니다/);
+
+    /*
+     * 돌다 만 회차가 관리자를 가두면 안 된다. `can_run` 이 `running` 을 막으면 단추가 잠겨
+     * "지금 검수가 돌고 있습니다" 만 뜨고 아무것도 못 하게 된다(2026-08-28 실제로 갇혔다).
+     */
+    assert.match(resumableIntakeMigration, /'can_run', COALESCE\(v_current\.status, ''\) NOT IN \('ready', 'empty'\)/);
+    assert.match(resumableIntakeMigration, /'is_resuming'/);
+    assert.doesNotMatch(resumableIntakeMigration, /can_run[\s\S]{0,200}status = 'running'/);
+    assert.match(panel, /is_resuming/);
+    assert.match(panel, /이어서 검수하기/);
 });
 
 test('응답이 안 와도 화면이 굳지 않는다', () => {
