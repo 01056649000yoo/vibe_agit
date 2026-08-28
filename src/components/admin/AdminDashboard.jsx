@@ -278,6 +278,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             ? '#E53E3E'
             : (health.summary.hostMemoryAvailablePct < 30 ? '#D69E2E' : '#48BB78'));
 
+    // 시스템 값을 잰 시각. 없으면 아직 건강검진이 한 번도 안 돈 것이다.
+    const sampledAtLabel = health.summary?.resourceSampledAt
+        ? new Intl.DateTimeFormat('ko-KR', {
+            month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul'
+        }).format(new Date(health.summary.resourceSampledAt))
+        : '';
+
     const overviewGroups = [
         {
             id: 'today',
@@ -285,9 +292,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             description: '한국 시간 0시부터 지금까지',
             tone: 'today',
             items: [
-                { id: 'today-teachers', label: '오늘 접속 교사', value: health.summary?.todayTeachers != null ? `${health.summary.todayTeachers}명` : '확인 중', color: '#2F855A', icon: '👩‍🏫', onOpen: () => setCurrentTab('service') },
-                { id: 'today-students', label: '오늘 접속 학생', value: health.summary?.todayStudents != null ? `${health.summary.todayStudents}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('service') },
-                { id: 'today-posts', label: '오늘 제출글', value: health.summary?.todaySubmittedPosts != null ? `${health.summary.todaySubmittedPosts}편` : '확인 중', color: '#6B46C1', icon: '📝', onOpen: () => setCurrentTab('service') }
+                { id: 'today-teachers', label: '오늘 접속 교사', basis: '오늘 로그인한 사람', value: health.summary?.todayTeachers != null ? `${health.summary.todayTeachers}명` : '확인 중', color: '#2F855A', icon: '👩‍🏫', onOpen: () => setCurrentTab('service') },
+                { id: 'today-students', label: '오늘 접속 학생', basis: '오늘 로그인한 사람', value: health.summary?.todayStudents != null ? `${health.summary.todayStudents}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('service') },
+                { id: 'today-posts', label: '오늘 제출글', basis: '오늘 낸 글', value: health.summary?.todaySubmittedPosts != null ? `${health.summary.todaySubmittedPosts}편` : '확인 중', color: '#6B46C1', icon: '📝', onOpen: () => setCurrentTab('service') }
             ]
         },
         {
@@ -296,36 +303,40 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             description: '누르면 처리 화면으로 이동',
             tone: 'actions',
             items: [
-                { id: 'alerts', label: '서버 조치 필요', value: health.summary ? `${health.summary.openAlertCount}건` : '확인 중', color: health.summary?.openAlertCount > 0 ? '#E53E3E' : '#38A169', icon: '🚨', onOpen: () => setCurrentTab('service') },
-                { id: 'pending', label: '신규 승인 대기', value: `${newSignupCount}명`, color: '#DD6B20', icon: '⏳', onOpen: () => setCurrentTab('pending') },
-                { id: 'dormant', label: `장기 미접속 ${usage.dormantDays}일`, value: `${usage.dormantTeachers.length}명`, color: '#B7791F', icon: '😴', onOpen: () => setCurrentTab('dormant') },
-                { id: 'cleanup', label: '정리 후보 전체', value: `${usage.cleanupCandidates.length}명`, color: '#C53030', icon: '🧹', onOpen: () => setCurrentTab('cleanup') },
-                { id: 'feedback', label: '새 의견 제보', value: `${pendingFeedbackCount}건`, color: '#6B46C1', icon: '📢', onOpen: () => setCurrentTab('feedback') }
+                { id: 'alerts', label: '서버 조치 필요', basis: '처리 안 된 것', value: health.summary ? `${health.summary.openAlertCount}건` : '확인 중', color: health.summary?.openAlertCount > 0 ? '#E53E3E' : '#38A169', icon: '🚨', onOpen: () => setCurrentTab('service') },
+                { id: 'pending', label: '신규 승인 대기', basis: '승인 안 된 교사', value: `${newSignupCount}명`, color: '#DD6B20', icon: '⏳', onOpen: () => setCurrentTab('pending') },
+                { id: 'dormant', label: `장기 미접속 ${usage.dormantDays}일`, basis: `${usage.dormantDays}일 넘게 로그인 없음`, value: `${usage.dormantTeachers.length}명`, color: '#B7791F', icon: '😴', onOpen: () => setCurrentTab('dormant') },
+                { id: 'cleanup', label: '정리 후보 전체', basis: '지금까지 전체', value: `${usage.cleanupCandidates.length}명`, color: '#C53030', icon: '🧹', onOpen: () => setCurrentTab('cleanup') },
+                { id: 'feedback', label: '새 의견 제보', basis: '읽지 않은 것', value: `${pendingFeedbackCount}건`, color: '#6B46C1', icon: '📢', onOpen: () => setCurrentTab('feedback') }
             ]
         },
         {
             id: 'usage',
             title: '이용 현황',
-            description: `최근 ${usage.activityDays}일`,
+            // 이 묶음은 기준이 하나가 아니다 — 누적과 최근 N일이 섞여 있어 머리말에 한 기간만 적으면
+            // 누적 숫자를 그 기간의 숫자로 잘못 읽는다. 기준은 항목마다 적는다.
+            description: '항목마다 기준이 다릅니다',
             tone: 'usage',
             items: [
-                { id: 'teachers', label: '가입 선생님', value: usage.overview ? `${usage.overview.teacher_total}명` : '확인 중', color: '#2D3748', icon: '👩‍🏫', onOpen: () => setCurrentTab('usage') },
-                { id: 'active-teachers', label: '활동 교사', value: usage.overview ? `${usage.overview.teacher_active}명` : '확인 중', color: '#2F855A', icon: '🟢', onOpen: () => setCurrentTab('usage') },
-                { id: 'classes', label: '운영 학급', value: usage.overview ? `${usage.overview.class_total}개` : '확인 중', color: '#2B6CB0', icon: '🏫', onOpen: () => setCurrentTab('usage') },
-                { id: 'students', label: '등록 학생', value: usage.overview ? `${usage.overview.student_total}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('students') },
-                { id: 'writing-students', label: '글쓰기 학생', value: usage.overview ? `${usage.overview.student_active}명` : '확인 중', color: '#2F855A', icon: '✍️', onOpen: () => setCurrentTab('students') },
-                { id: 'posts', label: '작성 글', value: usage.overview ? `${usage.overview.post_recent}개` : '확인 중', color: '#2F855A', icon: '📝', onOpen: () => setCurrentTab('usage') }
+                { id: 'teachers', label: '가입 선생님', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.teacher_total}명` : '확인 중', color: '#2D3748', icon: '👩‍🏫', onOpen: () => setCurrentTab('usage') },
+                { id: 'active-teachers', label: '활동 교사', basis: `최근 ${usage.activityDays}일 학생 글 있음`, value: usage.overview ? `${usage.overview.teacher_active}명` : '확인 중', color: '#2F855A', icon: '🟢', onOpen: () => setCurrentTab('usage') },
+                { id: 'classes', label: '운영 학급', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.class_total}개` : '확인 중', color: '#2B6CB0', icon: '🏫', onOpen: () => setCurrentTab('usage') },
+                { id: 'students', label: '등록 학생', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.student_total}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('students') },
+                { id: 'writing-students', label: '글쓰기 학생', basis: `최근 ${usage.activityDays}일`, value: usage.overview ? `${usage.overview.student_active}명` : '확인 중', color: '#2F855A', icon: '✍️', onOpen: () => setCurrentTab('students') },
+                { id: 'posts', label: '작성 글', basis: `최근 ${usage.activityDays}일`, value: usage.overview ? `${usage.overview.post_recent}개` : '확인 중', color: '#2F855A', icon: '📝', onOpen: () => setCurrentTab('usage') }
             ]
         },
         {
             id: 'system',
             title: '시스템 상태',
-            description: '최근 건강검진',
+            // 시스템 값은 기간이 아니라 **언제 잰 것인가**가 기준이다. 잰 시각을 적어 두지 않으면
+            // 며칠 전 표본을 지금 상태로 읽는다.
+            description: sampledAtLabel ? `${sampledAtLabel}에 잰 값` : '아직 측정 기록 없음',
             tone: 'system',
             items: [
-                { id: 'containers', label: '컨테이너', value: health.summary ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}` : '확인 중', color: containerTone, icon: '📦', onOpen: () => setCurrentTab('service') },
-                { id: 'disk', label: '디스크 여유', value: health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중', color: diskTone, icon: '💾', onOpen: () => setCurrentTab('service') },
-                { id: 'memory', label: '맥 메모리/스왑', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') }
+                { id: 'containers', label: '컨테이너', basis: '살아 있는 수 / 전체', value: health.summary ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}` : '확인 중', color: containerTone, icon: '📦', onOpen: () => setCurrentTab('service') },
+                { id: 'disk', label: '디스크 여유', basis: '잰 순간의 남은 용량', value: health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중', color: diskTone, icon: '💾', onOpen: () => setCurrentTab('service') },
+                { id: 'memory', label: '맥 메모리/스왑', basis: '잰 순간의 값', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') }
             ]
         }
     ];

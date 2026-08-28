@@ -66,9 +66,11 @@ test('교사 학급 현황은 접속과 글쓰기 활동을 분리한다', () =>
 });
 
 test('관리자 요약의 이름과 집계 대상이 실제 의미와 같다', () => {
-    assert.match(adminDashboard, /label: '가입 선생님', value: usage\.overview \? `\$\{usage\.overview\.teacher_total\}명`/);
-    assert.match(adminDashboard, /label: '신규 승인 대기', value: `\$\{newSignupCount\}명`/);
-    assert.match(adminDashboard, /label: '활동 교사', value: usage\.overview \? `\$\{usage\.overview\.teacher_active\}명`/);
+    // 이름과 집계 대상의 짝을 본다. 사이에 기준(basis)이 끼는 것은 허용한다 — 기준 표기는
+    // 2026-08-28에 더했고, 짝이 어긋나는 것만 막으면 된다.
+    assert.match(adminDashboard, /label: '가입 선생님',[^\n]*?value: usage\.overview \? `\$\{usage\.overview\.teacher_total\}명`/);
+    assert.match(adminDashboard, /label: '신규 승인 대기',[^\n]*?value: `\$\{newSignupCount\}명`/);
+    assert.match(adminDashboard, /label: '활동 교사',[^\n]*?value: usage\.overview \? `\$\{usage\.overview\.teacher_active\}명`/);
     assert.doesNotMatch(adminDashboard, /label="활동 중인 선생님"/);
     assert.match(adminDashboard, /label: '글쓰기 학생'/);
     assert.doesNotMatch(usagePanel, /const OverviewStrip/);

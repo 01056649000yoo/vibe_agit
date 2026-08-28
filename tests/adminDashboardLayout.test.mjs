@@ -121,3 +121,38 @@ test('관리자 첫 화면 맨 위에서 오늘 교사·학생 접속과 제출�
     assert.match(dashboard, /id: 'today',[\s\S]*?id: 'actions'/, '오늘 현황이 첫 요약 묶음이어야 한다');
     assert.match(overviewCss, /admin-overview__group--today[\s\S]*?grid-column: 1 \/ -1/);
 });
+
+/*
+ * 첫 화면 숫자는 기준이 제각각이다 — `지금까지 전체`와 `최근 30일`이 한 묶음 안에 섞여 있다.
+ * 묶음 머리말 하나로는 알 수 없어 누적 숫자를 그 기간의 숫자로 잘못 읽었다(2026-08-28 지적).
+ * 그래서 **모든 항목이 자기 기준을 달고 있어야** 한다. 새 항목이 기준 없이 붙는 것을 막는다.
+ */
+test('첫 화면 요약은 항목마다 무엇을 센 숫자인지 밝힌다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+    const overview = await read('src/components/admin/AdminDashboardOverview.jsx');
+    const overviewCss = await read('src/components/admin/AdminDashboardOverview.css');
+
+    // 화면이 기준을 실제로 그린다(값 밑 작은 줄 + 읽어 주는 이름표).
+    assert.match(overview, /item\.basis && <em>\{item\.basis\}<\/em>/);
+    assert.match(overview, /기준 \$\{item\.basis\}/);
+    assert.match(overviewCss, /\.admin-overview__metric-copy em/);
+
+    // 요약 항목은 하나도 빠짐없이 기준을 단다(탭 목록은 숫자가 아니므로 제외한다).
+    const groupsBlock = dashboard.match(/const overviewGroups = \[[\s\S]*?\n    \];/)?.[0] || '';
+    assert.ok(groupsBlock, 'overviewGroups 를 찾지 못했다');
+    const itemLines = groupsBlock.split('\n').filter((line) => /^\s*\{ id: '[^']+', label: /.test(line));
+    assert.ok(itemLines.length >= 15, `요약 항목을 찾지 못했다(${itemLines.length}개)`);
+    const missing = itemLines
+        .filter((line) => !line.includes('basis:'))
+        .map((line) => line.match(/label: (`[^`]+`|'[^']+')/)?.[1] || line.trim().slice(0, 40));
+    assert.deepEqual(missing, [], `기준을 안 적은 요약 항목이 있다:\n  ${missing.join('\n  ')}`);
+
+    // 누적과 기간을 섞어 놓은 묶음은 머리말에 한 기간만 적지 않는다.
+    assert.match(dashboard, /title: '이용 현황',[\s\S]{0,300}description: '항목마다 기준이 다릅니다'/);
+    assert.ok(dashboard.includes("basis: '지금까지 전체'"), '누적 항목에 누적이라고 적어야 한다');
+    assert.match(dashboard, /basis: `최근 \$\{usage\.activityDays\}일`/);
+
+    // 시스템 값은 기간이 아니라 잰 시각이 기준이다.
+    assert.match(dashboard, /resourceSampledAt/);
+    assert.match(dashboard, /sampledAtLabel \? `\$\{sampledAtLabel\}에 잰 값`/);
+});

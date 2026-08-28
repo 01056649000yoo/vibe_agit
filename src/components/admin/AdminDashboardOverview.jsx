@@ -30,12 +30,18 @@ const AdminDashboardOverview = ({ groups }) => (
                                 type="button"
                                 className="admin-overview__metric"
                                 onClick={item.onOpen}
-                                aria-label={`${item.label} ${item.value} 자세히 보기`}
+                                aria-label={`${item.label} ${item.value}${item.basis ? `, 기준 ${item.basis}` : ''} 자세히 보기`}
                             >
                                 <span className="admin-overview__metric-icon" aria-hidden="true">{item.icon}</span>
+                                {/*
+                                  * 기준을 항목마다 적는다. 묶음 머리말 하나로는 안 된다 —
+                                  * 같은 묶음 안에도 `전체 누적`과 `최근 30일`이 섞여 있어
+                                  * 머리말만 보면 누적 숫자를 기간 숫자로 잘못 읽는다(2026-08-28 지적).
+                                  */}
                                 <span className="admin-overview__metric-copy">
                                     <small>{item.label}</small>
                                     <strong style={{ color: item.color }}>{item.value}</strong>
+                                    {item.basis && <em>{item.basis}</em>}
                                 </span>
                                 <span className="admin-overview__metric-arrow" aria-hidden="true">→</span>
                             </button>
