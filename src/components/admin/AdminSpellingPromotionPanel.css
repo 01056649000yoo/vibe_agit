@@ -50,6 +50,7 @@
 .admin-spelling__intake-progress progress::-webkit-progress-value { border-radius: 99px; background: #7c3aed; }
 .admin-spelling__intake-progress progress::-moz-progress-bar { border-radius: 99px; background: #7c3aed; }
 .admin-spelling__intake-progress strong { color: #5b21b6; font-size: .76rem; }
+.admin-spelling__intake-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .admin-spelling__run-summary { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
 .admin-spelling__run-summary > div { display: grid; gap: 2px; min-width: 0; padding: 7px 8px; border-radius: 8px; background: white; }
 .admin-spelling__run-summary span { color: #64748b; font-size: .65rem; font-weight: 800; }

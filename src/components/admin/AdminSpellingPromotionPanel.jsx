@@ -20,6 +20,9 @@ const EMPTY_INTAKE = {
  */
 const REVIEW_CALL_TIMEOUT_MS = 70_000;
 
+// 후보 상한이 200개이고 한 번에 12개씩 하므로 17번이면 끝난다. 그보다 많이 돌면 무언가 잘못된 것이다.
+const MAX_REVIEW_PASSES = 20;
+
 const callWithTimeout = (promise, ms) => Promise.race([
     promise,
     new Promise((_resolve, reject) => setTimeout(
@@ -56,6 +59,8 @@ const AdminSpellingPromotionPanel = () => {
     const [loading, setLoading] = useState(false);
     const [notice, setNotice] = useState(null);
     const editorRef = useRef(null);
+    // 자동으로 이어 도는 도중에 세우고 싶을 때 쓴다. 덩어리 사이에서만 본다 — 도는 덩어리는 끝까지 간다.
+    const stopRef = useRef(false);
 
     // `keepNotice` 를 주면 방금 띄운 알림을 지우지 않는다. 검수 뒤 진행 상황을 띄우자마자
     // 이 새로고침이 알림을 지워 버려 아무 정보도 안 남았다(2026-08-28).
@@ -90,57 +95,82 @@ const AdminSpellingPromotionPanel = () => {
             const confirmed = window.confirm(
                 `쌓인 자료 ${total}건을 AI 검수에 보냅니다.\n\n`
                 + '기존 자료와 겹치는 것은 보내기 전에 코드가 먼저 제외합니다.\n'
-                + '실제 AI 호출과 비용이 발생합니다. 한 번에 다 하지 않고 나눠서 하며,\n'
-                + '남으면 단추를 다시 눌러 이어서 합니다.\n\n계속할까요?'
+                + '실제 AI 호출과 비용이 발생합니다.\n'
+                + '끊어서 하며 끝날 때까지 알아서 이어집니다. 1~2분 걸리고,\n'
+                + '도중에 `여기서 멈추기` 로 세울 수 있습니다.\n\n계속할까요?'
             );
             if (!confirmed) return;
         }
 
+        stopRef.current = false;
         setRunning(true);
         setNotice(null);
         try {
             /*
-             * **한 번 누르면 한 덩어리만** 한다. 엣지 함수 작업자가 60초에 끊기므로 한 번에
-             * 다 하려면 오래 매달려야 하고, 끊기면 화면이 굳는다. 30초 안에 할 만큼만 하고
-             * 남은 수를 알려 주면, 관리자가 눌러 가며 진행 상황을 눈으로 본다.
-             * 이미 검수한 배치는 서버 캐시에 적립돼 있어 다시 눌러도 AI 비용이 또 나가지 않는다.
+             * 검수는 30초짜리 덩어리로 끊어서 하되 **다음 덩어리는 스스로 이어서** 부른다.
+             * 한 번에 다 하려면 작업자 제한(60초)을 넘겨 끊기고, 관리자가 매번 누르는 것은 번거롭다.
+             * 한 덩어리가 끝날 때마다 화면을 새로 읽어 진행 막대를 움직인 뒤 다음 것을 부른다.
+             * 이미 검수한 배치는 서버 캐시에 적립돼 있어 도중에 멈춰도 한 일은 남는다.
              */
-            const { data: result, error } = await callWithTimeout(
-                supabase.functions.invoke('spelling-weekly-review', {
-                    body: { weekStart: intake.week_start }
-                }),
-                REVIEW_CALL_TIMEOUT_MS
-            );
-            if (error) throw error;
+            for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass += 1) {
+                const { data: result, error } = await callWithTimeout(
+                    supabase.functions.invoke('spelling-weekly-review', {
+                        body: { weekStart: intake.week_start }
+                    }),
+                    REVIEW_CALL_TIMEOUT_MS
+                );
+                if (error) throw error;
 
-            if (result?.skipped) {
-                setNotice({
-                    tone: 'error',
-                    text: result.reason === 'already_finished'
-                        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
-                        : '방금 다른 곳에서 검수가 시작됐어요. 잠시 뒤 새로고침해 주세요.'
-                });
-            } else if (!result?.success) {
-                throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
-            } else if (result.done === false) {
+                if (result?.skipped) {
+                    setNotice({
+                        tone: 'error',
+                        text: result.reason === 'already_finished'
+                            ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+                            : '방금 다른 곳에서 검수가 시작됐어요. 잠시 뒤 새로고침해 주세요.'
+                    });
+                    await load({ keepNotice: true });
+                    return;
+                }
+                if (!result?.success) throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
+
+                if (result.done !== false) {
+                    setNotice({
+                        tone: 'success',
+                        text: `검수를 모두 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
+                            + ` · 검토할 후보 ${result.itemCount}건`
+                    });
+                    await load({ keepNotice: true });
+                    return;
+                }
+
                 setNotice({
                     tone: 'info',
-                    text: `${result.reviewedNow}건을 검수했어요. 지금까지 ${result.doneCount} / ${result.totalCount}건 —`
-                        + ' 아래 단추를 다시 누르면 하던 곳부터 이어서 합니다.'
+                    text: `${result.doneCount} / ${result.totalCount}건 검수했어요. 이어서 하는 중이에요…`
                 });
-            } else {
-                setNotice({
-                    tone: 'success',
-                    text: `검수를 모두 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
-                        + ` · 이번에 새로 검수 ${result.reviewedNow || 0} · 검토할 후보 ${result.itemCount}건`
-                });
+                // 다음 덩어리로 넘어가기 전에 화면을 새로 읽는다. 그래야 진행 막대가 눈앞에서 움직인다.
+                await load({ keepNotice: true });
+
+                if (stopRef.current) {
+                    setNotice({
+                        tone: 'info',
+                        text: `여기서 멈췄어요 — ${result.doneCount} / ${result.totalCount}건까지 했습니다.`
+                            + ' 한 것은 남아 있으니 언제든 이어서 하면 됩니다.'
+                    });
+                    return;
+                }
             }
+
+            setNotice({
+                tone: 'error',
+                text: '검수가 예상보다 오래 걸려 잠시 멈췄어요. 한 것은 남아 있으니 다시 눌러 이어서 해 주세요.'
+            });
             await load({ keepNotice: true });
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || '주간 맞춤법 검수를 실행하지 못했습니다.' });
             await load({ keepNotice: true });
         } finally {
             setRunning(false);
+            stopRef.current = false;
         }
     };
 
@@ -437,7 +467,8 @@ const AdminSpellingPromotionPanel = () => {
 
             <WeeklyIntakeCard
                 intake={intake} running={running} loading={loading}
-                onRun={runWeeklyReview} onOpenList={(sourceKind) => openCandidates(sourceKind, false)}
+                onRun={runWeeklyReview} onStop={() => { stopRef.current = true; }}
+                onOpenList={(sourceKind) => openCandidates(sourceKind, false)}
             />
             {candidateView.open && <IntakeCandidateList
                 view={candidateView} data={candidates} loading={candidatesLoading}
@@ -492,7 +523,7 @@ const FilterButton = ({ active, children, onClick }) => <button type="button" cl
  * 여기 수는 **거르기 전**이다. 기본 500개·공통 자료와 겹치는 것은 실행할 때 코드가 빼므로
  * 실제로 AI 에 가는 수는 이보다 적다. 관리자가 "돌릴 만한가"를 가늠하는 용도다.
  */
-const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
+const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onOpenList }) => {
     const total = (intake.ai_finding_count || 0) + (intake.search_count || 0) + (intake.teacher_entry_count || 0);
     const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
     // 돌다 만 회차는 막힌 것이 아니라 **이어서 할 수 있는** 상태다. 여기서 막으면 관리자가 갇힌다.
@@ -536,9 +567,13 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
                     : '아직 한 번도 검수하지 않아 지금까지 쌓인 전부가 대상입니다.'}
                 {' '}겹치는 자료는 AI 에 보내기 전에 코드가 먼저 뺍니다.
             </p>
-            <Button onClick={onRun} disabled={running || loading || !intake.can_run || total === 0}>
-                {running ? 'AI 검수 중…' : resuming ? '이어서 검수하기' : 'AI 검수 돌리기'}
-            </Button>
+            <div className="admin-spelling__intake-buttons">
+                <Button onClick={onRun} disabled={running || loading || !intake.can_run || total === 0}>
+                    {running ? 'AI 검수 중…' : resuming ? '이어서 검수하기' : 'AI 검수 돌리기'}
+                </Button>
+                {/* 도는 중에도 세울 수 있어야 한다. 지금 덩어리는 끝내고 다음으로 안 넘어간다. */}
+                {running && <Button variant="ghost" onClick={onStop}>여기서 멈추기</Button>}
+            </div>
             {reason && <small>{reason}</small>}
         </div>
     </div>;

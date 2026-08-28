@@ -255,9 +255,9 @@ test('이어 부르는 호출은 같은 회차를 이어받는다', () => {
     assert.match(edgeFunction, /p_allow_resume: true/);
     // 인자가 늘었으므로 옛 서명을 지워야 호출이 갈리지 않는다.
     assert.match(resumeMigration, /DROP FUNCTION IF EXISTS public\.start_spelling_weekly_review_v1\(DATE, TEXT\)/);
-    // 화면은 한 번 누르면 한 덩어리만 하고 남은 수를 알려 준다.
-    assert.match(panel, /result\.done === false/);
-    assert.match(panel, /다시 누르면 하던 곳부터 이어서 합니다/);
+    // 화면은 덩어리마다 끝났는지 보고, 안 끝났으면 이어서 부른다.
+    assert.match(panel, /result\.done !== false/);
+    assert.match(panel, /이어서 하는 중이에요/);
 
     /*
      * 돌다 만 회차가 관리자를 가두면 안 된다. `can_run` 이 `running` 을 막으면 단추가 잠겨
@@ -292,4 +292,15 @@ test('눌러 가며 하는 동안 어디까지 왔는지 화면에 남는다', (
     assert.match(panel, /admin-spelling__intake-progress/);
     assert.match(panel, /load\(\{ keepNotice: true \}\)/);
     assert.match(panel, /if \(!keepNotice\) setNotice\(null\)/);
+});
+
+test('검수는 끊어서 하되 스스로 이어 돌고 세울 수 있다', () => {
+    // 매번 누르는 것이 번거롭다는 지적. 덩어리 사이에서 화면을 새로 읽어 막대를 움직인 뒤 이어 부른다.
+    assert.match(panel, /for \(let pass = 1; pass <= MAX_REVIEW_PASSES/);
+    assert.match(panel, /이어서 하는 중이에요/);
+    // 이어 부르기 전에 반드시 화면을 새로 읽는다. 안 그러면 막대가 끝날 때까지 안 움직인다.
+    assert.match(panel, /이어서 하는 중이에요[\s\S]{0,300}await load\(\{ keepNotice: true \}\)[\s\S]{0,160}stopRef\.current/);
+    // 도는 중에도 세울 수 있어야 한다.
+    assert.match(panel, /여기서 멈추기/);
+    assert.match(panel, /stopRef\.current = true/);
 });
