@@ -41,7 +41,18 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day:
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
     month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
 });
-const normalize = (value) => String(value || '').normalize('NFC').replace(/\s+/g, '');
+/*
+ * 같은 낱말인지 견줄 때 쓰는 정규화. **공백은 지우지 않는다.**
+ *
+ * 예전에는 공백까지 지웠는데, 그러면 `세번 → 세 번` 처럼 **띄어쓰기만 고치는 교정이
+ * "틀린 표현과 바른 표현이 같다"로 판정되어 게시 단추가 잠겼다.** 주의 검토 99건 중 50건이
+ * 이것 때문에 막혀 있었다(2026-08-28). 초등 맞춤법에서 띄어쓰기는 가장 흔한 갈래라
+ * 정작 제일 필요한 자료가 통째로 못 올라간 셈이다.
+ *
+ * 막으려던 것은 `자료를 올려도 아무것도 안 고쳐 주는 항목`이다. 앞뒤 공백만 다듬고
+ * 가운데 띄어쓰기는 **차이로 인정한다.**
+ */
+const normalize = (value) => String(value || '').normalize('NFC').trim();
 const formatDate = (value) => value ? DATE_FORMATTER.format(new Date(value)) : '기록 없음';
 const formatDateTime = (value) => value ? DATE_TIME_FORMATTER.format(new Date(value)) : '아직 없음';
 const verdictLabel = (value) => value === 'recommend' ? '반영 권장' : value === 'caution' ? '주의 검토' : '제외 권장';

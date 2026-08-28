@@ -435,6 +435,13 @@ test('권장이 비어도 일감이 보이고, 권장 아닌 후보도 관리자
     // 단추 이름이 하는 일을 말해야 한다. `내용 검토` 는 읽는 화면처럼 보여
     // 주의 검토에서 직접 올리는 길을 못 찾는다는 말을 들었다(2026-08-28).
     assert.match(panel, /'확인하고 등록' : '직접 등록하기'/);
+    /*
+     * 게시 가능 판정에서 **공백을 지우면 안 된다.** 지우면 `세번 → 세 번` 같은 띄어쓰기 교정이
+     * "틀린 표현과 바른 표현이 같다"가 되어 단추가 잠긴다. 주의 검토 99건 중 50건이 이것 때문에
+     * 막혀 있었다(2026-08-28). 초등 맞춤법에서 띄어쓰기가 가장 흔한 갈래다.
+     */
+    assert.match(panel, /const normalize = \(value\) => String\(value \|\| ''\)\.normalize\('NFC'\)\.trim\(\);/);
+    assert.doesNotMatch(panel, /normalize\('NFC'\)\.replace\(\/\\s\+\/g, ''\)/);
     assert.doesNotMatch(panel, />내용 검토</);
     assert.doesNotMatch(panel, /canPublish[\s\S]{0,200}verdict === 'recommend'/);
 });
