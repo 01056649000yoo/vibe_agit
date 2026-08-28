@@ -42,7 +42,16 @@ test('처리할 일은 묶음 배지와 요약 카드 양쪽에서 보인다', a
     const overview = await read('src/components/admin/AdminDashboardOverview.jsx');
 
     assert.match(dashboard, /const tabBadges = useMemo\(/);
-    assert.match(dashboard, /group\.tabs\.reduce\(\(sum, tab\) => sum \+ \(tabBadges\[tab\.id\] \|\| 0\), 0\)/);
+    /*
+     * 예전에는 큰 묶음 단추에 그 안의 배지를 합쳐 띄웠다. 한 줄 탭으로 펴면서 묶음 단추가
+     * 없어졌으므로, 이제는 **처리할 일이 있는 화면 자체가 맨 앞으로 나온다**(2026-08-28).
+     * 지키려는 것은 같다 — 배지를 봐야 놓치지 않는다.
+     */
+    assert.match(dashboard, /const urgentTabs = TAB_GROUPS\.flatMap\(\(group\) => group\.tabs\)\.filter\(\(tab\) => \(tabBadges\[tab\.id\] \|\| 0\) > 0\)/);
+    assert.match(dashboard, /지금 할 일/);
+    // 할 일이 없으면 앞 칸이 사라지고 늘 같은 순서만 남는다.
+    assert.match(dashboard, /urgentTabs\.length > 0 && \(/);
+    assert.match(dashboard, /badge=\{tabBadges\[tab\.id\]\}/);
     for (const key of ['pending', 'dormant', 'cleanup', 'feedback']) {
         assert.ok(dashboard.includes(`${key}:`), `'${key}' 배지 개수가 없다`);
     }
@@ -155,4 +164,20 @@ test('첫 화면 요약은 항목마다 무엇을 센 숫자인지 밝힌다', a
     // 시스템 값은 기간이 아니라 잰 시각이 기준이다.
     assert.match(dashboard, /resourceSampledAt/);
     assert.match(dashboard, /sampledAtLabel \? `\$\{sampledAtLabel\}에 잰 값`/);
+});
+
+test('관리자 화면 탭은 한 줄에 모두 펴고 같은 생김새를 쓴다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+
+    /*
+     * 큰 묶음(1단) → 그 안의 화면(2단) 두 층이면 어느 화면이든 예외 없이 두 번을 눌러야 하고,
+     * 1단만 단추처럼 생겨 눈에는 탭이 넷만 보였다. 화면은 열넷인데.
+     */
+    assert.match(dashboard, /const AdminTabButton = /);
+    // 묶음을 눌러 첫 화면으로 넘기던 옛 동작이 되살아나면 다시 두 단계가 된다.
+    assert.doesNotMatch(dashboard, /onClick=\{\(\) => setCurrentTab\(group\.tabs\[0\]\.id\)\}/);
+    assert.doesNotMatch(dashboard, /const activeGroup = findTabGroup/);
+    // 묶음은 구분선과 이름표로만 남는다.
+    assert.match(dashboard, /restGroups\.map\(\(group, groupIndex\) =>/);
+    assert.match(dashboard, /group\.tabs\.map\(tab => <AdminTabButton/);
 });

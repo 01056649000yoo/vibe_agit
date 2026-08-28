@@ -70,7 +70,37 @@ const TAB_GROUPS = [
     }
 ];
 
-const findTabGroup = (tabId) => TAB_GROUPS.find((group) => group.tabs.some((tab) => tab.id === tabId)) || TAB_GROUPS[0];
+/**
+ * 모든 화면 탭이 쓰는 한 가지 생김새.
+ *
+ * 예전에는 큰 묶음만 단추처럼 그리고 그 안의 화면은 맨 글자로 그렸다. 그러면 눈에는 탭이 넷만
+ * 보이고 나머지 열넷은 숨은 것처럼 느껴진다. 같은 층에 있는 것은 같게 그린다.
+ */
+const AdminTabButton = ({ tab, isActive, badge, onSelect, urgent = false }) => (
+    <button
+        type="button"
+        onClick={() => onSelect(tab.id)}
+        aria-current={isActive ? 'page' : undefined}
+        style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
+            border: `1px solid ${isActive ? '#2B6CB0' : (urgent ? '#FEB2B2' : '#E2E8F0')}`,
+            background: isActive ? '#EBF8FF' : (urgent ? '#FFF5F5' : 'white'),
+            color: isActive ? '#2B6CB0' : (urgent ? '#C53030' : '#4A5568'),
+            fontWeight: isActive ? 800 : 600,
+            fontSize: '0.88rem', padding: '7px 12px',
+            borderRadius: '9px', cursor: 'pointer', whiteSpace: 'nowrap'
+        }}
+    >
+        {tab.label}
+        {badge > 0 && (
+            <span style={{
+                background: '#E53E3E', color: 'white', fontSize: '0.68rem',
+                padding: '1px 6px', borderRadius: '10px', fontWeight: 'bold'
+            }}>{badge}</span>
+        )}
+    </button>
+);
+
 
 /*
  * 한 번 연 화면은 감추기만 하고 살려 둔다.
@@ -257,7 +287,15 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
     // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
     // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
-    const activeGroup = findTabGroup(currentTab);
+    /*
+     * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라
+     * 손이 기억하는 자리가 흔들리지 않는다. 할 일이 없으면 앞 칸 자체가 사라진다.
+     */
+    const urgentTabs = TAB_GROUPS.flatMap((group) => group.tabs).filter((tab) => (tabBadges[tab.id] || 0) > 0);
+    const urgentIds = new Set(urgentTabs.map((tab) => tab.id));
+    const restGroups = TAB_GROUPS
+        .map((group) => ({ ...group, tabs: group.tabs.filter((tab) => !urgentIds.has(tab.id)) }))
+        .filter((group) => group.tabs.length > 0);
 
     // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
     const health = useAdminHealthSummary();
@@ -506,70 +544,42 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             {/* Main Content Area */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-                {/* 1단 — 큰 묶음. 안에 처리할 일이 있으면 합계 배지를 함께 띄운다. */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {TAB_GROUPS.map(group => {
-                        const isActive = activeGroup.id === group.id;
-                        const groupBadge = group.tabs.reduce((sum, tab) => sum + (tabBadges[tab.id] || 0), 0);
-                        return (
-                            <button
-                                key={group.id}
-                                onClick={() => setCurrentTab(group.tabs[0].id)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '7px',
-                                    border: isActive ? '1px solid #2B6CB0' : '1px solid #E2E8F0',
-                                    background: isActive ? '#EBF8FF' : 'white',
-                                    color: isActive ? '#2B6CB0' : '#4A5568',
-                                    fontWeight: isActive ? 'bold' : 'normal',
-                                    fontSize: '1rem', padding: '9px 16px',
-                                    borderRadius: '10px', cursor: 'pointer'
-                                }}
-                            >
-                                {group.label}
-                                {groupBadge > 0 && (
-                                    <span style={{
-                                        background: '#E53E3E', color: 'white', fontSize: '0.7rem',
-                                        padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
-                                    }}>
-                                        {groupBadge}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
+                {/*
+                  * 화면 14개를 **한 줄에 모두** 편다.
+                  *
+                  * 예전에는 큰 묶음 4개(1단) → 그 안의 화면(2단) 두 층이었다. 그래서 어느 화면이든
+                  * 예외 없이 두 번을 눌러야 했고(`검수` → `맞춤법 승격`), 화면이 2개뿐인 `현황` 도
+                  * 층을 하나 통째로 썼다. 게다가 1단만 단추처럼 생기고 2단은 맨 글자라
+                  * **눈에는 탭이 넷만 보였다**(2026-08-28 확인).
+                  *
+                  * 이제 한 번만 누르면 되고, 묶음은 사이 구분선으로만 남긴다.
+                  * 처리할 일이 있는 화면은 맨 앞 `지금 할 일` 칸으로 나온다 — 자리가 흔들리는 것이
+                  * 아니라 **일이 생겼다는 표시**다. 할 일이 없으면 늘 같은 순서 그대로다.
+                  */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '7px', borderBottom: '2px solid #E2E8F0', paddingBottom: '14px' }}>
+                    {urgentTabs.length > 0 && (
+                        <>
+                            <span style={{ color: '#C53030', fontSize: '0.78rem', fontWeight: 900, paddingRight: '2px' }}>지금 할 일</span>
+                            {urgentTabs.map(tab => <AdminTabButton
+                                key={`urgent-${tab.id}`} tab={tab} isActive={currentTab === tab.id}
+                                badge={tabBadges[tab.id]} onSelect={setCurrentTab} urgent
+                            />)}
+                            <span style={{ width: '1px', height: '20px', background: '#CBD5E0', margin: '0 5px' }} />
+                        </>
+                    )}
+                    {restGroups.map((group, groupIndex) => (
+                        <React.Fragment key={group.id}>
+                            {groupIndex > 0 && <span style={{ width: '1px', height: '20px', background: '#E2E8F0', margin: '0 5px' }} />}
+                            <span style={{ color: '#A0AEC0', fontSize: '0.76rem', fontWeight: 800, paddingRight: '1px' }}>{group.label}</span>
+                            {group.tabs.map(tab => <AdminTabButton
+                                key={tab.id} tab={tab} isActive={currentTab === tab.id}
+                                badge={tabBadges[tab.id]} onSelect={setCurrentTab}
+                            />)}
+                        </React.Fragment>
+                    ))}
                 </div>
 
-                {/* 2단 — 고른 묶음 안의 화면들. 검색은 선생님 목록에서만 쓴다. */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderBottom: '2px solid #E2E8F0', paddingBottom: '16px' }}>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', rowGap: '12px' }}>
-                        {activeGroup.tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setCurrentTab(tab.id)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                    border: 'none', background: 'none', cursor: 'pointer',
-                                    fontWeight: currentTab === tab.id ? 'bold' : 'normal',
-                                    color: currentTab === tab.id ? '#2B6CB0' : '#718096',
-                                    fontSize: '1rem', padding: '0 4px',
-                                    position: 'relative'
-                                }}
-                            >
-                                {tab.label}
-                                {tabBadges[tab.id] > 0 && (
-                                    <span style={{
-                                        background: '#E53E3E', color: 'white', fontSize: '0.7rem',
-                                        padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
-                                    }}>
-                                        {tabBadges[tab.id]}
-                                    </span>
-                                )}
-                                {currentTab === tab.id && (
-                                    <div style={{ position: 'absolute', bottom: '-18px', left: 0, right: 0, height: '3px', background: '#2B6CB0' }} />
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     {(currentTab === 'active' || currentTab === 'pending') && (
                         <input
                             type="text"
