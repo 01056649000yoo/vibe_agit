@@ -27,9 +27,10 @@ export const USAGE_STATUS_META = {
 
 export const ACTIVITY_DAY_OPTIONS = [7, 30, 90];
 
-// 관리자 화면의 장기 미접속 기준은 여기 한 곳에서만 정한다.
-// 삭제 기준이 아니라 확인·비활성화 판단을 돕는 표시 기준이다.
+// 관리자 화면의 미접속 분류 기준은 여기 한 곳에서만 정한다.
+// 둘 다 삭제 기준이 아니라 확인·비활성화 판단을 돕는 논리적 표시 기준이다.
 export const DORMANT_DAYS = 90;
+export const DORMANT_ACCOUNT_DAYS = 365;
 const DEFAULT_ACTIVITY_DAYS = 30;
 
 const useAdminUsage = ({
@@ -79,9 +80,23 @@ const useAdminUsage = ({
      * 장기 미접속은 학급·학생 보유 여부와 무관하게 모든 가입 교사의 마지막 접속일로 판정한다.
      * DB의 usage_status는 학급 미개설/학생 미등록을 별도 분류하므로 그것만 보면 일부가 빠질 수 있다.
      */
-    const dormantTeachers = useMemo(
-        () => teachers.filter(t => Number(t.days_since_login) >= DORMANT_DAYS),
+    const longInactiveTeachers = useMemo(
+        () => teachers.filter(t => {
+            const inactiveDays = Number(t.days_since_login);
+            return inactiveDays >= DORMANT_DAYS && inactiveDays < DORMANT_ACCOUNT_DAYS;
+        }),
         [teachers]
+    );
+
+    /** 1년 이상 미접속 계정은 삭제·이관 없이 휴면계정으로만 따로 표시한다. */
+    const dormantAccounts = useMemo(
+        () => teachers.filter(t => Number(t.days_since_login) >= DORMANT_ACCOUNT_DAYS),
+        [teachers]
+    );
+
+    const inactiveTeachers = useMemo(
+        () => [...longInactiveTeachers, ...dormantAccounts],
+        [longInactiveTeachers, dormantAccounts]
     );
 
     /** 정리 후보: 학급을 안 만들었거나(NEVER_STARTED), 만들고도 학생이 0명(NO_STUDENT) */
@@ -95,11 +110,14 @@ const useAdminUsage = ({
     return {
         teachers,
         overview,
-        dormantTeachers,
+        inactiveTeachers,
+        longInactiveTeachers,
+        dormantAccounts,
         cleanupCandidates,
         loading,
         error,
         dormantDays: DORMANT_DAYS,
+        dormantAccountDays: DORMANT_ACCOUNT_DAYS,
         activityDays,
         setActivityDays,
         refresh: fetchUsage

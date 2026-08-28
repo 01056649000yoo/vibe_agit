@@ -6,7 +6,9 @@ import React from 'react';
 const TermsOfService = () => {
     return (
         <div style={{ textAlign: 'left' }}>
-            <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>발효일: 2026년 1월 16일</p>
+            <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>
+                최초 시행일: 2026년 1월 16일 · 개정일: 2026년 8월 29일 · 개정 시행일: 2026년 9월 5일
+            </p>
 
             <section style={{ marginBottom: '20px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>1. 서비스 이용약관</h4>
@@ -26,7 +28,13 @@ const TermsOfService = () => {
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>4. 사용자 행동 및 콘텐츠</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>4. 장기 미접속 및 휴면계정</h4>
+                <p>마지막 로그인 후 90일 이상 1년 미만인 교사 계정은 '장기 미접속', 1년 이상인 교사 계정은 '휴면계정'으로 분류할 수 있습니다.</p>
+                <p style={{ marginTop: '8px' }}>이 분류는 계정 상태를 확인하기 위한 논리적 표시이며, 개인정보를 별도 데이터베이스로 옮기거나 계정·학급·학생·활동 데이터를 자동 삭제하지 않습니다. 이용자가 다시 로그인하면 장기 미접속 또는 휴면 분류는 자동으로 해제됩니다. 계정과 개인정보의 보유기간은 개인정보처리방침에 따릅니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>5. 사용자 행동 및 콘텐츠</h4>
                 <p>서비스를 사용할 때 귀하는 다음 사항에 동의합니다:</p>
                 <ul style={{ paddingLeft: '20px', marginTop: '5px' }}>
                     <li>부적절하거나 불법적인 콘텐츠를 게시하지 않을 것</li>
@@ -36,32 +44,32 @@ const TermsOfService = () => {
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>5. 지적 재산권</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>6. 지적 재산권</h4>
                 <p>서비스 및 관련 콘텐츠에 대한 모든 지적 재산권은 '끄적끄적 아지트' 또는 그 라이센서에게 있습니다. 귀하는 개인적, 비상업적 목적으로만 서비스를 사용할 수 있으며, '끄적끄적 아지트'의 명시적 허가 없이 서비스의 어떤 부분도 수정, 배포, 전송, 복제할 수 없습니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>6. 서비스 변경 및 종료</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>7. 서비스 변경 및 종료</h4>
                 <p>본 서비스는 언제든지 서비스의 일부 또는 전체를 임시적으로 또는 영구적으로 수정하거나 중단할 권리가 있습니다. 본 서비스는 서비스 변경이나 중단에 대해 가능한 한 사전 통지를 제공하기 위해 노력할 것이나, 모든 상황에서 이를 보장할 수는 없습니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>7. 면책 조항</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>8. 면책 조항</h4>
                 <p>서비스는 "있는 그대로" 제공되며, 본 서비스는 상품성, 특정 목적에의 적합성, 비침해성에 대한 묵시적 보증을 포함하여 모든 종류의 명시적 또는 묵시적 보증을 부인합니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>8. 책임 제한</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>9. 책임 제한</h4>
                 <p>법률이 허용하는 최대 범위 내에서, 본 서비스는 귀하 또는 제3자에 대해 이익 손실, 데이터 손실, 영업 중단 또는 기타 특별, 간접, 결과적 손해를 포함한 어떠한 직접적, 간접적, 부수적, 특별, 결과적 또는 징벌적 손해에 대해서도 책임을 지지 않습니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>9. 약관 변경</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>10. 약관 변경</h4>
                 <p>본 서비스는 언제든지 본 이용약관을 수정할 권리가 있습니다. 중대한 변경이 있는 경우, 본 서비스는 서비스 내 공지를 통해 변경 사실을 고지하며, 변경 사항이 발효된 후 계속해서 서비스를 사용하는 것은 수정된 약관에 동의하는 것으로 간주됩니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>10. 문의 및 불만 처리</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>11. 문의 및 불만 처리</h4>
                 <p>본 이용약관에 관한 질문이나 의견이 있으시면 <a href="mailto:yshgg@naver.com">yshgg@naver.com</a>으로 연락해 주시기 바랍니다.</p>
             </section>
         </div>
@@ -69,4 +77,3 @@ const TermsOfService = () => {
 };
 
 export default TermsOfService;
-

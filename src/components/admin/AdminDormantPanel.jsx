@@ -9,22 +9,35 @@ import {
 } from './adminUsageUi';
 
 /**
- * 장기 미접속 선생님 패널.
- * 학급·학생 보유 여부와 무관하게 기준일 이상 로그인하지 않은 계정을 모아 본다.
+ * 장기 미접속·휴면계정 선생님 패널.
+ * 90~364일과 365일 이상을 논리적으로 나눠 보되 데이터는 옮기거나 삭제하지 않는다.
  * 이 목록은 삭제 근거가 아니므로 "승인 취소(비활성화)"까지만 제공한다.
  */
-const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh }) => {
+const AdminDormantPanel = ({
+    longInactiveTeachers,
+    dormantAccounts,
+    dormantDays,
+    dormantAccountDays,
+    loading,
+    onRefresh
+}) => {
+    const [groupId, setGroupId] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
     const [working, setWorking] = useState(false);
 
     const rows = useMemo(() => {
+        const sourceRows = groupId === 'LONG_INACTIVE'
+            ? longInactiveTeachers
+            : groupId === 'DORMANT'
+                ? dormantAccounts
+                : [...longInactiveTeachers, ...dormantAccounts];
         const keyword = searchTerm.trim().toLowerCase();
         const filtered = keyword
-            ? dormantTeachers.filter(row =>
+            ? sourceRows.filter(row =>
                 `${row.display_name} ${row.school_name} ${row.email}`.toLowerCase().includes(keyword))
-            : dormantTeachers;
+            : sourceRows;
         return [...filtered].sort((a, b) => (b.days_since_login || 0) - (a.days_since_login || 0));
-    }, [dormantTeachers, searchTerm]);
+    }, [longInactiveTeachers, dormantAccounts, groupId, searchTerm]);
 
     const availableIds = useMemo(() => rows.map(row => row.teacher_id), [rows]);
     const { selectedIds, toggle, toggleAll, clear } = useRowSelection(availableIds);
@@ -54,6 +67,13 @@ const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh })
     };
 
     const columns = [
+        {
+            key: 'inactivity_status',
+            label: '미접속 분류',
+            render: (row) => (Number(row.days_since_login) >= dormantAccountDays
+                ? <span style={{ color: '#4A5568', fontWeight: 800, background: '#EDF2F7', borderRadius: '999px', padding: '4px 9px' }}>휴면계정</span>
+                : <span style={{ color: '#B7791F', fontWeight: 800, background: '#FFFAF0', borderRadius: '999px', padding: '4px 9px' }}>장기 미접속</span>)
+        },
         {
             key: 'last_login',
             label: '마지막 접속',
@@ -87,8 +107,8 @@ const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh })
     return (
         <SectionCard>
             <PanelHeader
-                title="😴 장기 미접속 선생님"
-                description={`${dormantDays}일(3개월) 이상 로그인하지 않은 선생님입니다. 이 목록만으로 데이터가 삭제되지는 않으며, 필요하면 승인 취소로 접속만 막고 나중에 다시 승인할 수 있습니다.`}
+                title="😴 장기 미접속·휴면계정"
+                description={`${dormantDays}~${dormantAccountDays - 1}일은 장기 미접속, ${dormantAccountDays}일(1년) 이상은 휴면계정으로 표시합니다. 분류만으로 데이터가 이동·삭제되지는 않으며 다시 로그인하면 자동 해제됩니다.`}
                 right={(
                     <input
                         type="text"
@@ -103,6 +123,35 @@ const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh })
                     />
                 )}
             />
+
+            <div style={{
+                display: 'flex', gap: '8px', padding: '14px 20px',
+                borderBottom: '1px solid #EDF2F7', flexWrap: 'wrap'
+            }}>
+                {[
+                    { id: 'ALL', label: '전체', count: longInactiveTeachers.length + dormantAccounts.length },
+                    { id: 'LONG_INACTIVE', label: `장기 미접속 ${dormantDays}~${dormantAccountDays - 1}일`, count: longInactiveTeachers.length },
+                    { id: 'DORMANT', label: '휴면계정 1년 이상', count: dormantAccounts.length }
+                ].map(group => {
+                    const isActive = groupId === group.id;
+                    return (
+                        <button
+                            key={group.id}
+                            type="button"
+                            onClick={() => setGroupId(group.id)}
+                            style={{
+                                padding: '7px 14px', borderRadius: '20px', cursor: 'pointer',
+                                fontSize: '0.83rem', fontWeight: isActive ? 800 : 600,
+                                border: `1px solid ${isActive ? '#B7791F' : '#E2E8F0'}`,
+                                background: isActive ? '#FFFAF0' : 'white',
+                                color: isActive ? '#975A16' : '#4A5568'
+                            }}
+                        >
+                            {group.label} {group.count}
+                        </button>
+                    );
+                })}
+            </div>
 
             <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
@@ -149,7 +198,9 @@ const AdminDormantPanel = ({ dormantTeachers, dormantDays, loading, onRefresh })
                     selectedIds={selectedIds}
                     onToggle={toggle}
                     onToggleAll={toggleAll}
-                    emptyMessage={`${dormantDays}일 이상 미접속한 선생님이 없습니다. 🎉`}
+                    emptyMessage={groupId === 'DORMANT'
+                        ? '1년 이상 미접속한 휴면계정이 없습니다.'
+                        : '조건에 맞는 장기 미접속 계정이 없습니다. 🎉'}
                 />
             )}
         </SectionCard>

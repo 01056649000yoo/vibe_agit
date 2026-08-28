@@ -7,7 +7,7 @@ const PrivacyPolicy = () => {
     return (
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                최종 수정일: 2026년 8월 26일
+                최종 수정일: 2026년 8월 29일 · 시행일: 2026년 9월 5일
             </p>
 
             <section style={{ marginBottom: '30px' }}>
@@ -33,6 +33,7 @@ const PrivacyPolicy = () => {
                     <p><strong>1. 수집 항목</strong></p>
                     <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
                         <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 성명(또는 닉네임)</li>
+                        <li><strong>교사 계정 관리 항목:</strong> 가입일, 마지막 로그인 일시, 승인 및 미접속 분류 상태</li>
                         <li><strong>학생 (이용자):</strong> 필수항목 - 닉네임, 출석 번호 (모두 가명 처리, 개인식별 어려운 가상 번호 사용 필수, 교사가 생성)</li>
                         <li><strong>선택 항목:</strong> 포인트 정보, 퀘스트 정보, 학급 활동 데이터 등 서비스 이용 과정에서 생성되는 정보</li>
                         <li><strong>급식 도구 선택 항목:</strong> 학생별 짧은 비고(교사가 필요한 경우에만 입력하며 민감한 건강정보 입력 금지)</li>
@@ -40,6 +41,7 @@ const PrivacyPolicy = () => {
                     <p><strong>2. 이용 목적</strong></p>
                     <ul style={{ paddingLeft: '20px' }}>
                         <li>회원 가입 의사 확인 및 본인 식별</li>
+                        <li>계정 보안 및 장기 미접속·휴면계정 상태 확인</li>
                         <li>서비스 제공(학급 관리, 글쓰기 활동, 포인트 부여 등) 및 운영</li>
                         <li>당일 식단 확인과 선택적인 학급 운영 비고 관리</li>
                         <li>서비스 부정이용 방지 및 비인가 사용 방지</li>
@@ -52,11 +54,20 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제4조 (개인정보의 보유 및 이용 기간)</h4>
                 <p>이용 목적 달성 시 즉시 파기 원칙을 준수하며, 특히 교사의 학급 운영 종료 시 학생 정보는 서버에서 영구 삭제됩니다.</p>
                 <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                    <li><strong>교사 계정 정보:</strong> 회원 탈퇴 시까지</li>
-                        <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
-                        <li><strong>급식 도구 학생별 비고:</strong> 교사가 비고를 지우거나 해당 학생·학급을 삭제하면 즉시 영구 삭제</li>
-                    <li><strong>서비스 이용 기록:</strong> 3개월 (통신비밀보호법에 따름)</li>
+                    <li><strong>교사 계정 정보 및 마지막 로그인 일시:</strong> 회원 탈퇴 시까지</li>
+                    <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
+                    <li><strong>급식 도구 학생별 비고:</strong> 교사가 비고를 지우거나 해당 학생·학급을 삭제하면 즉시 영구 삭제</li>
+                    <li><strong>서버 접속 로그:</strong> 3개월 (통신비밀보호법 등 관계 법령에 따른 기간)</li>
                 </ul>
+                <div style={{ marginTop: '12px', padding: '14px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
+                    <p><strong>장기 미접속·휴면계정 처리</strong></p>
+                    <ul style={{ paddingLeft: '20px', marginTop: '6px' }}>
+                        <li>마지막 로그인 후 90일 이상 1년 미만인 교사 계정은 '장기 미접속'으로 분류합니다.</li>
+                        <li>마지막 로그인 후 1년 이상인 교사 계정은 '휴면계정'으로 분류합니다.</li>
+                        <li>미접속 분류는 관리 목적의 논리적 표시이며 개인정보를 별도 데이터베이스로 옮기거나 자동 삭제하지 않습니다.</li>
+                        <li>이용자가 다시 로그인하면 해당 분류는 자동으로 해제되며, 교사 계정 정보는 회원 탈퇴 시까지 보유합니다.</li>
+                    </ul>
+                </div>
             </section>
 
             <section style={{ marginBottom: '30px' }}>
@@ -143,7 +154,7 @@ const PrivacyPolicy = () => {
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제12조 (개인정보처리방침의 변경)</h4>
-                <p>이 개인정보처리방침은 2026년 8월 26일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
+                <p>이 개인정보처리방침은 2026년 9월 5일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
             </section>
 
             <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#EBF5FB', borderRadius: '8px', fontSize: '0.9rem' }}>
