@@ -323,12 +323,21 @@ Deno.serve(async (req) => {
         }, 200, origin)
     } catch (error) {
         const code = String((error as Error)?.message || 'unknown').slice(0, 80)
-        // 회차를 'running' 인 채로 두면 두 시간 동안 다시 못 누른다. 실패를 반드시 기록한다.
+        /*
+         * 실패를 반드시 기록한다. 안 그러면 무엇 때문에 멈췄는지 알 길이 없다.
+         *
+         * ⚠️ `rpc(...)` 는 thenable 이지만 **`.catch()` 가 없다**. 예전에 `.catch(() => {})` 로 적었다가
+         * 오류 처리 안에서 `TypeError` 가 나 진짜 원인을 통째로 가렸다(2026-08-28). try/catch 로 감싼다.
+         */
         if (adminClient && weekStart) {
-            await adminClient.rpc('fail_spelling_weekly_review_v1', {
-                p_week_start: weekStart,
-                p_error_code: code
-            }).catch(() => {})
+            try {
+                await adminClient.rpc('fail_spelling_weekly_review_v1', {
+                    p_week_start: weekStart,
+                    p_error_code: code
+                })
+            } catch (recordError) {
+                console.error('[spelling-weekly-review] 실패 기록도 못 남김:', String(recordError))
+            }
         }
         console.error('[spelling-weekly-review] failure:', code)
         return json({ success: false, message: '주간 맞춤법 검수에 실패했습니다.', code }, 500, origin)

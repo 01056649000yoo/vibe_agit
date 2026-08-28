@@ -20,8 +20,12 @@ const EMPTY_INTAKE = {
  */
 const REVIEW_CALL_TIMEOUT_MS = 70_000;
 
-// 후보 상한이 200개이고 한 번에 12개씩 하므로 17번이면 끝난다. 그보다 많이 돌면 무언가 잘못된 것이다.
-const MAX_REVIEW_PASSES = 20;
+// 후보 상한이 200개이고 한 번에 12개씩 하므로 17번이면 끝난다. 다시 시도한 것도 이 수를 쓰므로
+// 넉넉히 잡는다. 이 수를 넘기면 무언가 잘못된 것이니 스스로 선다.
+const MAX_REVIEW_PASSES = 30;
+
+// 덩어리 하나가 잇따라 이만큼 실패하면 그때는 멈추고 사람에게 알린다. 한 일은 그대로 남는다.
+const MAX_CHUNK_RETRIES = 3;
 
 const callWithTimeout = (promise, ms) => Promise.race([
     promise,
@@ -112,14 +116,36 @@ const AdminSpellingPromotionPanel = () => {
              * 한 덩어리가 끝날 때마다 화면을 새로 읽어 진행 막대를 움직인 뒤 다음 것을 부른다.
              * 이미 검수한 배치는 서버 캐시에 적립돼 있어 도중에 멈춰도 한 일은 남는다.
              */
+            let failStreak = 0;
             for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass += 1) {
-                const { data: result, error } = await callWithTimeout(
-                    supabase.functions.invoke('spelling-weekly-review', {
-                        body: { weekStart: intake.week_start }
-                    }),
-                    REVIEW_CALL_TIMEOUT_MS
-                );
-                if (error) throw error;
+                /*
+                 * 덩어리 하나가 실패해도 **반복을 풀지 않는다.** 한 일은 서버에 남아 있고 이어받기가
+                 * 되므로 다시 부르면 그만이다. 예전에는 한 번 걸리면 거기서 통째로 멈춰
+                 * 관리자가 다시 눌러야 했다(2026-08-28).
+                 */
+                let result = null;
+                try {
+                    const response = await callWithTimeout(
+                        supabase.functions.invoke('spelling-weekly-review', {
+                            body: { weekStart: intake.week_start }
+                        }),
+                        REVIEW_CALL_TIMEOUT_MS
+                    );
+                    if (response.error) throw response.error;
+                    result = response.data;
+                    failStreak = 0;
+                } catch (chunkError) {
+                    failStreak += 1;
+                    if (failStreak > MAX_CHUNK_RETRIES) throw chunkError;
+                    setNotice({
+                        tone: 'info',
+                        text: `잠시 문제가 있어 다시 시도하고 있어요 (${failStreak}/${MAX_CHUNK_RETRIES}).`
+                            + ' 지금까지 한 것은 그대로 남아 있습니다.'
+                    });
+                    await load({ keepNotice: true });
+                    if (stopRef.current) return;
+                    continue;
+                }
 
                 if (result?.skipped) {
                     setNotice({

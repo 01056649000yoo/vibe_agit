@@ -304,3 +304,24 @@ test('검수는 끊어서 하되 스스로 이어 돌고 세울 수 있다', () 
     assert.match(panel, /여기서 멈추기/);
     assert.match(panel, /stopRef\.current = true/);
 });
+
+test('덩어리 하나가 실패해도 반복이 풀리지 않는다', () => {
+    // 84/146 에서 멈춘 적이 있다. 한 번 걸리면 거기서 통째로 서 버렸다(2026-08-28).
+    assert.match(panel, /MAX_CHUNK_RETRIES/);
+    assert.match(panel, /잠시 문제가 있어 다시 시도하고 있어요/);
+    assert.match(panel, /failStreak > MAX_CHUNK_RETRIES/);
+    // 다시 시도한 것도 같은 예산을 쓰므로 반복 상한이 넉넉해야 한다.
+    const passes = Number(panel.match(/MAX_REVIEW_PASSES = (\d+)/)?.[1]);
+    const retries = Number(panel.match(/MAX_CHUNK_RETRIES = (\d+)/)?.[1]);
+    assert.ok(passes >= 20 && retries >= 2, `반복·재시도 상한이 모자라다: ${passes}, ${retries}`);
+});
+
+test('엣지 함수의 오류 처리 자체가 터지지 않는다', () => {
+    /*
+     * Supabase 의 rpc 결과는 thenable 이지만 `.catch()` 가 없다. `.catch(() => {})` 로 적었다가
+     * 오류 처리 안에서 TypeError 가 나 진짜 원인을 통째로 가렸고, 실패 기록도 못 남겨
+     * 회차가 왜 멈췄는지 알 수 없었다(2026-08-28).
+     */
+    assert.doesNotMatch(edgeFunction, /\.rpc\([\s\S]{0,400}?\)\s*\.catch\(/);
+    assert.match(edgeFunction, /실패 기록도 못 남김/);
+});
