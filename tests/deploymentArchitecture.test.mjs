@@ -36,6 +36,12 @@ test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함�
     assert.match(localDeploy, /install -m 0644 "\$NEIS_FN_SRC" "\$NEIS_FN_DST"/);
     assert.match(localDeploy, /functions\/v1\/neis-meal/);
     assert.match(localDeploy, /NEIS_EDGE_CODE" = "401"/);
+    // 파일이 둘인 함수는 하나만 맞으면 지시문과 판정 버전이 어긋난다. 자동 배포에만 있고
+    // 로컬 배포에 없어서 손으로 올리면 옛 판이 남았다(2026-08-28).
+    assert.match(localDeploy, /volumes\/functions\/spelling-weekly-review/);
+    assert.match(localDeploy, /for FILE in index\.ts reviewCore\.js/);
+    assert.match(localDeploy, /functions\/v1\/spelling-weekly-review/);
+    assert.match(localDeploy, /WEEKLY_EDGE_CODE" = "401"/);
 });
 
 test('main 푸시는 맥미니 self-hosted 러너의 단일 배포 작업을 시작한다', () => {

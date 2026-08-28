@@ -8,11 +8,13 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, restartMigration, restartSmoke, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [
+    runner, reviewCore, edgeFunction, deployWorkflow, multiClassMigration, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, restartMigration, restartSmoke, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
     readFile('.github/workflows/deploy.yml', 'utf8'),
+    readFile('supabase/migrations/20261194_spelling_weekly_multiclass_recommend.sql', 'utf8'),
     readFile('supabase/migrations/20261188_spelling_weekly_intake.sql', 'utf8'),
     readFile('supabase/migrations/20261189_spelling_intake_candidate_review.sql', 'utf8'),
     readFile('supabase/migrations/20261190_spelling_weekly_review_resume.sql', 'utf8'),
@@ -376,7 +378,7 @@ test('검수 기준은 되풀이될 규칙인지를 묻고, 두 경로가 같은
      * 기준을 고쳤으면 판정 버전도 올라가야 한다. `review_key` 가 이 값으로 만든 해시라,
      * 안 올리면 옛 판정 캐시를 그대로 재사용해 새 기준이 아무 소용이 없다.
      */
-    assert.match(reviewCore, /REVIEW_VERSION = 'weekly-v2'/);
+    assert.match(reviewCore, /REVIEW_VERSION = 'weekly-v3'/);
 });
 
 test('끝난 회차를 다시 검수할 수 있고 관리자 결정은 남는다', () => {
@@ -388,4 +390,33 @@ test('끝난 회차를 다시 검수할 수 있고 관리자 결정은 남는다
     assert.match(restartSmoke, /관리자 결정이 함께 지워졌다/);
     assert.match(panel, /admin_restart_spelling_weekly_review_v1/);
     assert.match(panel, /다시 검수하기/);
+});
+
+test('반영 권장은 여러 학급에서 되풀이된 표현만 받는다', () => {
+    /*
+     * 지시문에 적는 것만으로는 부족했다 — AI 가 자기 지시문의 `주의 검토` 보기(`븍지런함`, `잔고 싶어`)
+     * 조차 `반영 권장` 으로 올렸다(2026-08-28 첫 회차, 90건 전부 한 학급). 그래서 서버가 마지막에 내린다.
+     */
+    assert.match(multiClassMigration, /v_verdict := v_item->>'verdict';/);
+    assert.match(multiClassMigration, /IF v_verdict = 'recommend'[\s\S]{0,120}class_count'\)::INTEGER, 0\) < 2 THEN/);
+    assert.match(multiClassMigration, /v_verdict := 'caution';/);
+    // 버리지 않는다 — 다른 학급에서 또 나오면 다음 회차에 스스로 자격을 얻는다.
+    assert.doesNotMatch(multiClassMigration, /DELETE FROM public\.spelling_(search_corpus|ai_findings)/);
+    // AI 도 같은 기준을 알아야 판정이 덜 흔들린다.
+    assert.match(reviewCore, /여러 학급에서 되풀이된 것만 해당한다/);
+    assert.match(reviewCore, /class_count가 1이면/);
+    // 왜 반영 권장이 아닌지 관리자 화면이 그 자리에서 알려 준다.
+    assert.match(panel, /아직 한 학급에서만 나와 반영 권장이 될 수 없어요/);
+});
+
+test('문장형 후보는 AI 검수에 올리지 않는다', () => {
+    // 학생 화면의 검사는 정확히 같은 글자를 찾는다. 문장은 다시 걸릴 일이 없어 자리만 차지한다.
+    // 검색 원장에는 원래 모양 조건이 있었고 AI 발견 원장에만 없어서 문장 19건이 올라왔다.
+    const aiBlock = multiClassMigration.slice(
+        multiClassMigration.indexOf('FROM public.spelling_ai_findings finding'),
+        multiClassMigration.indexOf("'searched'")
+    );
+    assert.match(aiBlock, /char_length\(finding\.expression\) BETWEEN 2 AND 15/);
+    assert.match(aiBlock, /finding\.expression !~ '\[\.!\?\]\$'/);
+    assert.match(aiBlock, /finding\.expression ~ '\^\[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\( \[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\)\?\$'/);
 });

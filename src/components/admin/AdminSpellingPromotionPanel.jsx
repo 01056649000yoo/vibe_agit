@@ -707,7 +707,11 @@ const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, 
         <div>
             <span>{target.entryId ? '공통 자료 수정' : `${verdictLabel(target.verdict)} 후보 확인`}</span>
             <h3>{target.entryId ? `${target.expression} 자료 수정` : `${target.expression} 반영 내용 확인`}</h3>
-            {!target.entryId && <small>{target.classCount}학급 · {target.hitCount}회 근거 · {(target.sourceKinds || []).map(sourceLabel).join(' + ')}</small>}
+            {!target.entryId && <small>
+                {target.classCount}학급 · {target.hitCount}회 근거 · {(target.sourceKinds || []).map(sourceLabel).join(' + ')}
+                {/* 왜 반영 권장이 아닌지 그 자리에서 알려 준다. 이유를 모르면 관리자는 AI 가 틀렸다고 읽는다. */}
+                {target.classCount < 2 && <b className="admin-spelling__single-class"> · 아직 한 학급에서만 나와 반영 권장이 될 수 없어요</b>}
+            </small>}
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={loading}>검토 닫기</Button>
     </div>

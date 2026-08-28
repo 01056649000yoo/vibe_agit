@@ -102,6 +102,8 @@
 .admin-spelling__field input:focus, .admin-spelling__field textarea:focus { border-color: #8b5cf6; outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
 .admin-spelling__ai-reason { display: flex; gap: 8px; margin: 0; padding: 9px 11px; border-radius: 9px; background: #eef2ff; color: #4338ca; font-size: .75rem; line-height: 1.5; }
 .admin-spelling__ai-reason b { white-space: nowrap; }
+/* 반영 권장이 될 수 없는 이유. 눈에 띄되 경고처럼 겁주지는 않게 둔다. */
+.admin-spelling__single-class { color: #9a3412; font-weight: 800; }
 .admin-spelling__warning { margin: 0; padding: 9px 11px; border-radius: 9px; background: #fff7ed; color: #9a3412; font-size: .75rem; line-height: 1.55; }
 .admin-spelling__editor-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
 .admin-spelling__empty { display: grid; justify-items: center; gap: 5px; padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 13px; background: #f8fafc; text-align: center; }

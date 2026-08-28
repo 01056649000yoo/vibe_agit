@@ -104,4 +104,35 @@ else
     [ "$NEIS_EDGE_CODE" = "401" ] || { echo "✗ 나이스 급식 Edge Function 이 401 을 주지 않습니다." >&2; exit 1; }
 fi
 
+# ── 주간 맞춤법 검수 Edge Function 동기화 ────────────────────────────────
+# 파일이 둘(`index.ts` + `reviewCore.js`)이라 하나만 맞으면 지시문과 판정 버전이 어긋난다.
+# 자동 배포에는 이 단계가 있었는데 로컬 배포에만 없어서, 손으로 올리면 옛 판이 남았다(2026-08-28).
+WEEKLY_FN_SRC="supabase/functions/spelling-weekly-review"
+WEEKLY_FN_DIR="$HOME/agit-supabase/volumes/functions/spelling-weekly-review"
+if [ -f "$WEEKLY_FN_DIR/index.ts" ] \
+    && cmp -s "$WEEKLY_FN_SRC/index.ts" "$WEEKLY_FN_DIR/index.ts" \
+    && cmp -s "$WEEKLY_FN_SRC/reviewCore.js" "$WEEKLY_FN_DIR/reviewCore.js"; then
+    echo "▶ 주간 맞춤법 검수 Edge Function 그대로 (바뀐 것 없음)"
+else
+    echo "▶ 주간 맞춤법 검수 Edge Function 교체"
+    mkdir -p "$WEEKLY_FN_DIR"
+    for FILE in index.ts reviewCore.js; do
+        if [ -f "$WEEKLY_FN_DIR/$FILE" ]; then
+            cp "$WEEKLY_FN_DIR/$FILE" "$WEEKLY_FN_DIR/$FILE.bak-$(date +%Y%m%d-%H%M%S)"
+        fi
+        install -m 0644 "$WEEKLY_FN_SRC/$FILE" "$WEEKLY_FN_DIR/$FILE"
+    done
+    (cd "$HOME/agit-supabase" && docker compose up -d --no-deps --force-recreate functions >/dev/null 2>&1) \
+        || docker restart agit-edge-functions >/dev/null
+
+    sleep 4
+    WEEKLY_EDGE_STATE=$(docker inspect -f '{{.State.Status}}' agit-edge-functions 2>/dev/null || echo "없음")
+    [ "$WEEKLY_EDGE_STATE" = "running" ] || { echo "✗ Edge Function 컨테이너가 뜨지 않았습니다($WEEKLY_EDGE_STATE)." >&2; exit 1; }
+    WEEKLY_EDGE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST http://127.0.0.1:8100/functions/v1/spelling-weekly-review \
+        -H 'Content-Type: application/json' -d '{}')
+    echo "▶ 주간 맞춤법 검수 Edge Function 응답 $WEEKLY_EDGE_CODE"
+    [ "$WEEKLY_EDGE_CODE" = "401" ] || { echo "✗ 주간 맞춤법 검수 Edge Function 이 401 을 주지 않습니다." >&2; exit 1; }
+fi
+
 echo "✓ 배포 완료"
