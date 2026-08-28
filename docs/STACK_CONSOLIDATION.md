@@ -177,6 +177,12 @@ createClient(url, key, {
 
 - **덤프에 트리거가 이미 들어 있다.** 함수보다 먼저 실행돼 `function ... does not exist` 로 실패한다.
   앞쪽 트리거 정의를 빼고 함수 뒤에 다시 만들어야 한다.
+- **RPC 목록만 옮기면 트리거 내부 함수가 빠질 수 있다.** 첫 이전에서 `sync_short_link_stats()`는
+  옮겼지만 이 함수가 부르는 `increment_created_short_links(integer)`·
+  `increment_deleted_short_links(integer)`를 누락했다. 그 결과 조회와 속도 제한 RPC는 200이지만
+  실제 `POST /short_links`만 404가 났다. `20260828134000_restore_samlink_counter_functions.sql`로
+  운영 복구했다. 앞으로는 `pg_trigger.tgfoid` 끝에서 시작해 함수 본문이 부르는 다른 함수까지
+  폐쇄적으로 대조한다.
 - **`GENERATED ALWAYS` 식별 칼럼**은 그냥 `INSERT` 가 안 된다. `OVERRIDING SYSTEM VALUE` 를 쓰고
   넣은 뒤 `setval(pg_get_serial_sequence(...), max(id))` 로 시퀀스를 맞춘다.
 - compose 의 `networks:` 들여쓰기를 확인하고 고친다(스택마다 다르다).

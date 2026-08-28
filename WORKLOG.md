@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-08-28 — 샘링크 스택 이전 후 단축링크 저장 복구 (Codex)
+
+- **한 일**: 샘링크를 아지트 스택으로 옮긴 뒤 단축링크가 저장되지 않는 문제를 런타임 로그·배포 코드·
+  역할 권한·트리거 함수 순서로 조사했다. 조회와 `consume_short_link_rate_limit` RPC는 200인 반면
+  `POST /rest/v1/short_links`만 반복해 404였다. `service_role` INSERT를 롤백 재현하니 트리거가 부르는
+  `samlink.increment_created_short_links(integer)`가 없다는 오류가 확정적으로 나왔다.
+- **변경**: 샘링크 저장소 `/Users/seunghyeonmaegmini/URL`에
+  `20260828134000_restore_samlink_counter_functions.sql`을 추가했다. 원본 스택에만 있던 생성·삭제
+  통계 함수 두 개를 `samlink` 스키마 참조로 복구하고, `SECURITY DEFINER`·`search_path=samlink`·
+  `service_role` 실행 전용 권한을 적용했다. `samlink` 스키마가 없는 기존 로컬 `public` 환경은 자동으로
+  건너뛴도록 했다. 검증한 SQL을 git 밖 운영 `agit-db`에 적용했다.
+- **결과/검증**: 운영 적용 전·후 재적용·생성·삭제를 ROLLBACK으로 검증했고, 실제 샘링크 API에서
+  진단 링크 생성 200, 목적지 307, 소유 쿠키 삭제 200을 확인했다. 진단 링크와 고아 기기 연결은
+  0건으로 정리됐다. 샘링크 Next.js 프로덕션 빌드도 통과했다.
+- **남은 것 / 다음**: 실사용 생성·삭제 로그를 며칠 본 뒤, 이상이 없으면 옛 `supabase` 스택 제거 계획을
+  이어 간다. 이번 사고를 막기 위해 스키마 이전 때 RPC 목록만이 아니라 트리거가 부르는 내부 함수까지 폐쇄적으로
+  대조한다.
+
 ## 2026-08-28 — 샘링크를 아지트 스택으로 이전 (Claude)
 
 - **한 일**: 옛 스택의 마지막 사용자인 샘링크를 아지트 스택으로 옮겼다. 자비스와 달리 자료가
