@@ -116,6 +116,20 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 실제 복구 리허설도 모두 따로 정상이어야 한다. 운영 반영 뒤 첫 7일 점검표는
 [`docs/BACKUP_MONITORING_20260829.md`](docs/BACKUP_MONITORING_20260829.md)에 남긴다.
 
+### 관리자 대시보드 수치의 백업 범위
+
+- 가입 교사·학생·글·AI 사용량과 트래픽·자원·장애·백업 이력의 원본은 통합 DB의 `public` 스키마에
+  저장되므로 `아지트DB.dump`와 세 사본에 포함된다. 화면에서 다시 계산하는 합계도 이 원본으로 복원된다.
+- 2026-08-28 실제 덤프 목차에서 `profiles`·`students`·`student_posts`·`ai_request_events`·
+  `system_daily_metrics`·`system_alert_events`·`system_backup_runs`의 `TABLE DATA` 포함을 확인했다.
+- DB 백업은 04:00, 트래픽 기록은 04:50이므로 그날 04:50에 생긴 최신 트래픽 행은 **다음 날 04:00
+  백업**에 들어간다. 설정 누락은 아니며 DB 백업의 최대 하루 복구 시점 간격 안에 있다.
+- `~/.agit-metrics-state`와 그 시각 파일은 DB 데이터가 아니라 다음 트래픽 차감을 위한 호스트 임시
+  기준이라 7개 산출물에 포함하지 않는다. 이를 잃어도 계정·글·과거 대시보드 이력은 보존되지만 복구 뒤
+  첫 트래픽 구간은 기준이 없어 `기록 없음/불완전`이 되고 다음 구간부터 다시 정상 측정된다.
+- `system_backup_app_results`는 2026-08-28 04:00 백업 뒤 새로 생긴 표라 해당 덤프에는 없고,
+  스키마 전체를 뜨는 다음 04:00 통합 백업부터 자동 포함된다.
+
 ---
 
 ## 3. 암호화와 열쇠 ⚠️
