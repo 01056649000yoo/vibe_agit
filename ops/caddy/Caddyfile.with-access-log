@@ -3,7 +3,7 @@
 }
 
 # 옛 연구소 주소. 통합(2026-07-24) 뒤로는 앱을 직접 띄우지 않고 통합본으로 넘긴다.
-# 직접 연결로 두면 옛 앱이 옛 DB(supabase-db)에 쓰게 되어 통합 운영 DB와 갈라진다.
+# 주소는 배포된 QR·단축링크 호환용으로 남기되, 데이터는 통합 Kong으로만 보낸다.
 # 배포된 QR·단축링크를 살리려고 주소 자체는 남긴다(INTEGRATION_PLAN 130·163행).
 helper.xn--vz0ba242ncqcba79xhwx.site {
 	redir https://xn--vz0ba242ncqcba79xhwx.site/lab{uri} permanent
@@ -21,7 +21,8 @@ http://app.xn--9y2br3k43n.kr, https://app.xn--9y2br3k43n.kr {
 
 supabase.xn--9y2br3k43n.kr {
 	encode gzip zstd
-	reverse_proxy 127.0.0.1:8000
+	# 예전 Supabase 주소도 자비스·샘링크가 쓰는 통합 Kong으로 보낸다.
+	reverse_proxy 127.0.0.1:8100
 }
 
 survival.xn--vz0ba242ncqcba79xhwx.site {

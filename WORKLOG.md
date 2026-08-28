@@ -21,6 +21,35 @@
 
 ---
 
+## 2026-08-28 — 옛 Docker 스택 제거와 통합 백업 전환 (Codex)
+
+- **한 일**: Docker Desktop 재시작 후 35개 컨테이너를 실제 소비자·네트워크·DB 연결로 다시
+  분류했다. 자비스·샘링크 이관을 마쳐 옛 `supabase` 스택 14개는 실서비스 소비자가 없었고,
+  아지트 Studio·Meta·Analytics·Vector는 평소 꺼 두는 선택 도구였다. `agit-pooler`도 자기 유지
+  연결 외 손님 연결·저장소·예약 작업 참조가 0건이었다.
+- **변경**: 옛 스택 14개, 선택 도구 4개, pooler 1개 컨테이너를 정확한 이름으로 제거했다.
+  bind DB 데이터·named volume·이미지·`supabase_default` 공유 네트워크는 보존했다. `~/agit-supabase/`의
+  선택 서비스는 `admin`·`observability`·`pooler` compose profile로 옮겨 기본 `up -d`가 다시
+  만들지 않게 했다. 미사용 build cache 4.691GB도 제거했다.
+- **백업 전환**: git 밖 `~/scripts/sh_mirror_backup.sh`를 `agit-db` 하나의
+  `public·auth·storage·writing_helper·writing_helper_internal·app·samlink` 7개 스키마 덤프로 바꾸고,
+  `~/.db-backup/backup.sh`는 `agit-db.samlink`만 보는 14일 보조 백업으로 바꿀다. 복구 리허설도
+  옛 DB 없이 통합 덤프 하나를 검증하고, 필수 산출물을 8개에서 7개로 맞췄다.
+  로컬 덤프·롤·Caddy 원본·제거 목록은 `~/agit-backups/pre-docker-cleanup-20260828/`에 보존했다.
+- **Caddy**: `Jarvis_Brain_Local/deploy/Caddyfile.docker`의 `supabase.샘링크.kr`과 샘링크
+  `/supabase/*` upstream을 옛 `supabase-kong` 대신 호스트 8100 통합 Kong으로 바꾸고 무중단 reload했다.
+  호스트 Caddy의 같은 변경은 관리자 암호 필요로 디스크 파일에 반영하지 못해
+  `~/agit-supabase/Caddyfile.cleanup-proposed`에 검증 후보를 남겼다. 현재 공개 경로는 Jarvis Caddy를 통해 정상이다.
+- **결과/검증**: 제거 전 새 통합 DB 덤프(15MB)를 임시 DB에 `pg_restore --exit-on-error`로
+  실제 복원했다. 표는 public 87·auth 20·storage 10·writing_helper 29·internal 1·app 9·samlink 9,
+  `anon/authenticated` 권한 503개가 복원됐다. 샘링크 보조 덤프도 836,033바이트·9표로 별도
+  실복구했다. pooler 중지·제거 후 아지트 200, Kong 401, 연구소 307, 샘링크 200,
+  자비스 307, 서바이벌 200, 공개 샘링크 200, 예전 API 401, 마이그레이션 237/237이다.
+  최종 Docker는 **16개 전부 실행 중**, build cache 0B이다.
+- **남은 것 / 다음**: 첫 03:30 샘링크 보조 백업과 04:00 통합 백업의 내장·암호화 Drive·
+  외장 SSD 자동 실행 결과를 확인한다. 호스트 Caddy 후보도 관리자 권한으로
+  `/etc/caddy/Caddyfile`에 반영·reload해 디스크와 런타임을 완전히 맞춘다.
+
 ## 2026-08-28 — Docker Desktop 업데이트 후 필수 서비스 복구 (Codex)
 
 - **한 일**: Docker Desktop 업데이트·재시작 후 모든 컨테이너가 정지된 상태를 확인했다.

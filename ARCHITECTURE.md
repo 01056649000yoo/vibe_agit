@@ -73,10 +73,10 @@
 
 ## 맥미니 인프라
 
-### DB 컨테이너 이름 — 헷갈리기 쉬움
-- 아지트 DB는 **`agit-db`**다. **`supabase-db`는 완전히 다른 앱(Jarvis)의 DB**다 — 이름이 비슷해
-  실제로 헷갈려서 `student_posts`를 못 찾은 적이 있다. 둘은 별개의 PostgreSQL(17.6 vs 15.8, 데이터
-  폴더도 다름)이라 격리 자체는 이미 되어 있다.
+### DB 컨테이너
+- 운영 DB는 **`agit-db`** 하나다. 자비스는 `app`, 샘링크는 `samlink`, 연구소는
+  `writing_helper` 스키마로 격리한다. 예전 PG15 `supabase-db`는 2026-08-28에 컨테이너를 제거했고
+  bind 데이터와 이관 백업은 롤백용으로 보존한다.
 - 아지트 실데이터 확인: `docker exec agit-db psql -U postgres -d postgres -c "SELECT count(*) FROM students;"`
 
 ### docker-compose 파일 3개는 항상 같이 써야 한다
@@ -86,6 +86,8 @@
   걸어둬서 `-f` 없이 그냥 `docker compose up -d`만 써도 세 파일이 항상 같이 적용된다(2026-08-09 설정).
   이 설정을 지우거나 우회하면 컨테이너를 재기동할 때 `secrets.agit.env` 연결이 빠져 함수 시크릿이
   통째로 누락될 수 있다 — 실제로 `ADMIN_MODE_PASSWORD`가 이렇게 빠진 적이 있다.
+- 기본 기동은 필수 9개만 올린다. 관리 UI는 `--profile admin`, 로그 수집은
+  `--profile observability`, DB 호스트 풀러는 `--profile pooler`로 필요할 때만 올린다.
 
 ### 교사 연구소 SSO는 같은 도메인의 루트 쿠키로 연결한다
 - 아지트 브라우저와 통합 연구소 `/lab`은 `sb-agit-auth-token`, `Path=/`, `SameSite=Lax`인 host-only 쿠키를

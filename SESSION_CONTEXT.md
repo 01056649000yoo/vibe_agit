@@ -31,9 +31,9 @@
   탓인데 로컬에는 파일이 있어 검사가 통과하므로 로컬로는 잡을 수 없다. 셸·시스템 도구에 기대는 검사를
   새로 넣을 때는 배포 관문과 같은 환경에서 먼저 돌린다:
   `docker run --rm -v "$PWD":/app -w /app node:20-alpine npm run test:all`
-- **도커를 재시작하면 컨테이너 35개가 자동으로 올라오지 않는다**(2026-08-23 확인). 두 스택을 의존 순서대로
-  올린다 — `cd ~/agit-supabase && docker compose up -d`, `cd ~/Jarvis_Brain_Local/self-hosted-supabase &&
-  docker compose up -d`, 그 뒤 나머지는 `docker start`. 서버 자원 상태는 관리자 `운영 > 서버 상태`에서 본다.
+- Docker 재시작 후 통합 스택은 `cd ~/agit-supabase && docker compose up -d`로 올린다.
+  기본은 필수 9개만 올라오고 `admin`·`observability`·`pooler` profile은 필요할 때만 쓴다.
+  예전 `supabase` 스택은 2026-08-28에 제거했다. 앱 컨테이너는 배포 compose/런너로 다시 올린다.
 
 ## 현재 위치
 

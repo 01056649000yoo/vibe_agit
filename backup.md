@@ -5,7 +5,7 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-21 — 관리자 대시보드 상태 이력 연결 및 실백업·실복구 통과**
+**최종 설정 점검: 2026-08-28 — 통합 DB(app·samlink 포함) 로컬 실백업·실복구 통과**
 
 ---
 
@@ -15,7 +15,7 @@
 상태 DB에는 성공 여부·시각·파일/테이블 수만 저장하며 원문 로그·파일 경로·시크릿은 넣지 않는다.
 일일 기록이 26시간, 복구 기록이 40일 넘게 갱신되지 않으면 화면이 `확인 필요`로 바꿔 표시한다.
 
-매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 8개 필수 산출물, 내장 사본, 암호화 Drive,
+매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 7개 필수 산출물, 내장 사본, 암호화 Drive,
 외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
 
 ```bash
@@ -24,14 +24,14 @@ cat ~/backups/auto/backup-status.txt
 
 | 나오는 값 | 뜻 | 할 일 |
 |---|---|---|
-| `PASS …` | 그날 3개 위치에 필수 파일 8개가 만들어짐 | 없음 |
+| `PASS …` | 그날 3개 위치에 필수 파일 7개가 만들어짐 | 없음 |
 | `FAIL …` | 필수 파일 또는 사본 하나 이상 실패 | `~/backups/auto/sync.log`의 해당 실행 구간에서 `✗` 줄을 본다 |
 | `RUNNING …` | 현재 실행 중이거나 실행이 비정상 중단됨 | 10분 이상 그대로면 로그와 `launchctl list \| grep com.agit.backup` 확인 |
 
 매월 **1일 04:40**, `com.agit.restore-rehearsal` 이 DB 백업은 **임시 DB에 실제 복원**하고 아지트 Storage
 백업은 **임시 디렉터리에 실제로 풀어** 확인한다. DB는 `pg_restore --exit-on-error`로 오류를 즉시 잡고,
 덤프 목차의 테이블·데이터 항목과 실제 복원 테이블 수, `anon/authenticated` 권한을 확인한다.
-암호화 Drive도 파일 8개의 크기가 로컬과 같은지 검사한 뒤 결과를 남긴다.
+암호화 Drive도 파일 7개의 크기가 로컬과 같은지 검사한 뒤 결과를 남긴다.
 실패하면 화면 알림도 뜬다.
 
 ```bash
@@ -59,8 +59,8 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 
 | 작업 | 시각 | 대상 | 사본 위치 | 보관 |
 |---|---|---|---|---|
-| `com.agit.backup` | 매일 **04:00** | `agit-db`(아지트) · 아지트 Storage 객체 · `supabase-db`(연구소·쌤링크·수업도구·글쓰기도우미) · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
-| `com.samlink.db-backup` | 매일 **03:30** | `supabase-db` 전체 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
+| `com.agit.backup` | 매일 **04:00** | `agit-db` 통합 DB(`public·auth·storage·writing_helper·writing_helper_internal·app·samlink`) · Storage 객체 · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
+| `com.samlink.db-backup` | 매일 **03:30** | `agit-db`의 `samlink` 스키마 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
 | `local.literacy.backup` | 매일 **03:00** | literacy DB | 드라이브 동기화 폴더 | — |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 
@@ -70,12 +70,11 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
 - 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
 
-### 하루치 산출물 (8개)
+### 하루치 산출물 (7개)
 
 | 파일 | 내용 |
 |---|---|
-| `아지트DB.dump` | 아지트 DB — `public·auth·storage·writing_helper·writing_helper_internal` |
-| `연구소DB.dump` | 공용 DB — 위 + `app·literacy` |
+| `아지트DB.dump` | 통합 DB — `public·auth·storage·writing_helper·writing_helper_internal·app·samlink` |
 | `롤.sql` | 롤 15개. `pg_dump` 는 롤을 담지 않아 따로 뜬다 |
 | `리얼타임설정.dump` | `_realtime.tenants`(동시접속 한도·JWT) + `_realtime.extensions` |
 | `아지트DB스택설정.tar.gz` | `~/agit-supabase` (⚠️ `.env`·`secrets.agit.env` 포함) |
@@ -143,7 +142,7 @@ psql -U supabase_admin -d 대상DB \
   -c 'CREATE SCHEMA IF NOT EXISTS extensions;' \
   -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;' \
   -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;'
-# 연구소DB 는 pgvector 도 필요하다
+# 통합 DB 는 pgvector 도 필요하다
 psql -U supabase_admin -d 대상DB -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 
 # 2) 롤 먼저 (권한을 얹을 대상이 있어야 한다)

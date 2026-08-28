@@ -120,13 +120,13 @@
   전체가 실패하는데, 다른 파일들은 스테이징된 것처럼 착각하기 쉽다. 커밋 전 `git status -s`의 **앞 칸**
   (스테이징 여부)과 **뒤 칸**(작업트리 수정 여부)을 반드시 구분해서 본다 — `M ` 은 스테이징됨, ` M` 은
   안 됨. 실제로 이 실수로 커밋 하나에서 파일 6개가 빠진 적이 있다(다행히 빌드 테스트 게이트가 잡아줬다).
-- **`agit-db`(아지트) vs `supabase-db`(다른 앱 Jarvis)** — 이름이 비슷해 실제로 헷갈렸다. 자세한 건 아래.
+- 운영 DB는 **`agit-db` 하나**다. 예전 `supabase-db` PG15 스택은 2026-08-28에 이관·제거했다.
 
 ## 현재 운영 구조 (2026-07-24 컷오버 후)
 - 본 서비스: 맥미니. 앱=Docker `agit-app`(127.0.0.1:8300) ← 호스트 Caddy(`/etc/caddy/Caddyfile`) 프록시.
-- DB/인증/함수: 새 통합 스택 `~/agit-supabase/` (compose project `agit`, PG17, Kong 8100 / DB 5433).
-- 도메인: `끄적끄적아지트.site`(apex, 앱) / `api.…`(Supabase Kong) / `helper.…`(연구소, 별도 구 스택) — 가비아 네임서버.
-- 구 스택(`supabase-db` PG15.8 + writing-helper)은 연구소용으로 계속 가동. 통합(SSO)은 Stage 2에서.
+- DB/인증/함수: 통합 스택 `~/agit-supabase/` (compose project `agit`, PG17, Kong 8100). 자비스는 `app`, 샘링크는 `samlink` 스키마를 쓴다.
+- 도메인: `끄적끄적아지트.site`(apex, 앱+연구소) / `api.…`(통합 Kong) / `helper.…`(`/lab` 리다이렉트) — 가비아 네임서버.
+- 선택 서비스는 compose profile로만 올린다: `admin`(Studio·Meta·Analytics), `observability`(Analytics·Vector), `pooler`(Supavisor). 기본 `docker compose up -d`는 필수 9개만 올린다.
 
 ## 현재 확장 규칙 (2026-07-29 갱신)
 
@@ -222,7 +222,7 @@
 ## DB 마이그레이션 (2026-08-04 도구화)
 - **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
 - **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.
-- 붙는 DB는 맥미니의 **`agit-db`** 컨테이너다. **`supabase-db` 는 다른 앱의 DB** — 헷갈리지 말 것.
+- 붙는 DB는 맥미니의 **`agit-db`** 컨테이너다. 예전 `supabase-db`는 이관 완료 후 제거됐다.
 - 스키마 소유 역할은 **`supabase_admin`** 이다. 마이그레이션 도구도 이를 기본값으로 사용한다(`AGIT_DB_USER`로 변경 가능).
 - **운영 적용 전에는 롤백되는 트랜잭션에서 먼저 검증한다**:
   파일의 `BEGIN;`/`COMMIT;` 을 빼고 `BEGIN; … ROLLBACK;` 으로 감싸 돌려 본다.
