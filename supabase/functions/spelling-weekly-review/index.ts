@@ -40,6 +40,14 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
  */
 const CATALOG_ORIGIN = (Deno.env.get('SPELLING_CATALOG_ORIGIN') ?? ALLOWED_ORIGINS[0] ?? '').replace(/\/$/, '')
 
+/**
+ * 이 시간이 지나면 다음 배치를 **시작하지 않는다**.
+ *
+ * 작업자 제한이 60초인데, 넘기면 supervisor 가 끊어 버려 오류 처리조차 못 돈다(2026-08-28 첫 실행이
+ * 그렇게 통째로 날아갔다). AI 호출 하나가 최대 20초이므로 30초에 멈추면 최악이라도 50초 안에 끝난다.
+ */
+const BATCH_BUDGET_MS = 30_000
+
 const corsHeaders = (origin: string | null) => ({
     'Access-Control-Allow-Origin': origin && (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin.replace(/\/$/, '')))
         ? origin
@@ -86,7 +94,7 @@ const reviewWithOpenAI = async (candidates: unknown[]) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(20_000),
         body: JSON.stringify({
             model: MODEL,
             messages: [
@@ -167,6 +175,7 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) })
     if (req.method !== 'POST') return json({ success: false, message: '허용되지 않은 요청입니다.' }, 405, origin)
 
+    const startedAt = Date.now()
     let weekStart = ''
     let adminClient: ReturnType<typeof createClient> | null = null
 
@@ -201,7 +210,9 @@ Deno.serve(async (req) => {
 
         const { data: sourcePayload, error: startError } = await adminClient.rpc('start_spelling_weekly_review_v1', {
             p_week_start: weekStart,
-            p_catalog_version: catalogVersion
+            p_catalog_version: catalogVersion,
+            // 60초에 못 끝낸 회차를 다음 호출이 이어받는다. 없으면 already_running 으로 막힌다.
+            p_allow_resume: true
         })
         if (startError) throw new Error(`database_start_failed:${startError.message}`)
         if (!sourcePayload?.should_run) {
@@ -226,7 +237,15 @@ Deno.serve(async (req) => {
             else fresh.push(candidate)
         }
 
-        for (let offset = 0; offset < fresh.length; offset += AI_BATCH_SIZE) {
+        /*
+         * 작업자 제한은 60초다(`volumes/functions/main/index.ts` 의 workerTimeoutMs).
+         * 제한을 넘으면 supervisor 가 작업자를 **끊어** 버려서 아래 오류 처리도 못 돈다.
+         * 그래서 시간이 남아 있을 때만 다음 배치를 시작하고, 남은 것이 있으면 회차를 열어 둔 채
+         * 돌려보낸다. 부르는 쪽이 다시 부르면 이어서 한다.
+         */
+        let reviewedNow = 0
+        let offset = 0
+        while (offset < fresh.length && Date.now() - startedAt < BATCH_BUDGET_MS) {
             const batch = fresh.slice(offset, offset + AI_BATCH_SIZE)
             const reviews = await reviewWithOpenAI(batch.map((candidate) => ({
                 review_key: candidate.review_key,
@@ -238,11 +257,36 @@ Deno.serve(async (req) => {
                 similar_matches: candidate.similar_matches
             })))
             const reviewByKey = new Map(reviews.map((review: Record<string, unknown>) => [review.review_key, review]))
+            const done: Record<string, unknown>[] = []
             for (const candidate of batch) {
                 const review = reviewByKey.get(candidate.review_key)
                 if (!review) throw new Error('openai_missing_review')
-                completed.push(cleanReview(candidate, review, false))
+                done.push(cleanReview(candidate, review, false))
             }
+
+            // 배치가 끝나는 즉시 캐시에 적립한다. 다음 호출이 이것을 재사용하므로,
+            // 중간에 끊겨도 이미 낸 AI 비용은 남는다.
+            const { error: cacheError } = await adminClient.rpc('save_spelling_weekly_ai_cache_v1', {
+                p_items: done.map((item) => ({ ...item, model: MODEL, review_version: REVIEW_VERSION }))
+            })
+            if (cacheError) throw new Error(`database_cache_failed:${cacheError.message}`)
+
+            completed.push(...done)
+            reviewedNow += done.length
+            offset += AI_BATCH_SIZE
+        }
+
+        if (offset < fresh.length) {
+            // 회차는 `running` 인 채로 둔다. 다음 호출이 이어받는다.
+            return json({
+                success: true,
+                done: false,
+                weekStart,
+                remaining: fresh.length - offset,
+                reviewedNow,
+                collectedCount: prepared.collectedCount,
+                knownFilteredCount: prepared.knownFilteredCount
+            }, 200, origin)
         }
 
         const { error: finishError } = await adminClient.rpc('finish_spelling_weekly_review_v1', {

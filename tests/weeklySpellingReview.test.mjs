@@ -8,13 +8,14 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
     readFile('.github/workflows/deploy.yml', 'utf8'),
     readFile('supabase/migrations/20261188_spelling_weekly_intake.sql', 'utf8'),
     readFile('supabase/migrations/20261189_spelling_intake_candidate_review.sql', 'utf8'),
+    readFile('supabase/migrations/20261190_spelling_weekly_review_resume.sql', 'utf8'),
     readFile('tests/sql/20261189_spelling_intake_candidate_review.smoke.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
@@ -212,4 +213,47 @@ test('관리자 화면은 AI에 보내기 전에 두 출처의 원자료를 훑�
     // AI 를 거치지 않는 직접 등록은 기존 공통 게시 RPC 를 그대로 쓴다.
     assert.match(panel, /admin_publish_common_spelling_entry_v1/);
     assert.match(panel, /직접 등록/);
+});
+
+/*
+ * 2026-08-28 첫 실행이 통째로 날아갔다. 작업자 제한이 60초인데 후보 155건은 AI 를 13번 불러야 해서
+ * supervisor 가 작업자를 끊었고, 끊기는 방식이라 함수의 오류 처리도 못 돌아 회차가 `running` 에
+ * 멈췄다. `finish_` 가 결과와 캐시를 한꺼번에 쓰기 때문에 이미 낸 AI 비용도 하나도 안 남았다.
+ * 다시는 이렇게 잃지 않도록 세 가지를 고정한다.
+ */
+test('한 번에 못 끝낼 검수는 시간을 남기고 멈춰 이어서 돌린다', () => {
+    // 시간이 남아 있을 때만 다음 배치를 시작한다.
+    assert.match(edgeFunction, /Date\.now\(\) - startedAt < BATCH_BUDGET_MS/);
+    // 예산과 AI 호출 제한을 더해도 작업자 제한(60초) 안이어야 한다.
+    const budget = Number(edgeFunction.match(/BATCH_BUDGET_MS = ([\d_]+)/)?.[1]?.replace(/_/g, ''));
+    const openAiTimeout = Number(edgeFunction.match(/reviewWithOpenAI[\s\S]*?AbortSignal\.timeout\(([\d_]+)\)/)?.[1]?.replace(/_/g, ''));
+    assert.ok(Number.isFinite(budget) && Number.isFinite(openAiTimeout), '예산과 AI 호출 제한을 못 읽었다');
+    assert.ok(budget + openAiTimeout <= 55_000,
+        `예산 ${budget}ms + AI 호출 ${openAiTimeout}ms 가 작업자 제한 60초에 너무 가깝다`);
+    // 남은 것이 있으면 회차를 열어 둔 채 돌려보낸다.
+    assert.match(edgeFunction, /done: false/);
+    assert.match(edgeFunction, /remaining: fresh\.length - offset/);
+});
+
+test('배치마다 결과를 캐시에 적립해 끊겨도 낸 비용이 남는다', () => {
+    // finish_ 는 맨 끝에 한 번뿐이라, 중간 적립이 없으면 끊길 때 전부 날아간다.
+    assert.match(edgeFunction, /save_spelling_weekly_ai_cache_v1/);
+    assert.match(edgeFunction, /database_cache_failed/);
+    assert.match(resumeMigration, /CREATE OR REPLACE FUNCTION public\.save_spelling_weekly_ai_cache_v1/);
+    assert.match(resumeMigration, /ON CONFLICT \(review_key\) DO UPDATE SET/);
+    // 서버 역할만 적립할 수 있다.
+    assert.match(resumeMigration, /session_user <> 'supabase_admin'[\s\S]{0,80}service_role/);
+    assert.match(resumeMigration, /GRANT EXECUTE ON FUNCTION public\.save_spelling_weekly_ai_cache_v1\(JSONB\) TO service_role/);
+});
+
+test('이어 부르는 호출은 같은 회차를 이어받는다', () => {
+    // 이어받지 못하면 already_running 에 막혀 두 시간 동안 아무것도 못 한다.
+    assert.match(resumeMigration, /p_allow_resume BOOLEAN DEFAULT FALSE/);
+    assert.match(resumeMigration, /IF NOT COALESCE\(p_allow_resume, FALSE\) THEN[\s\S]{0,120}'already_running'/);
+    assert.match(edgeFunction, /p_allow_resume: true/);
+    // 인자가 늘었으므로 옛 서명을 지워야 호출이 갈리지 않는다.
+    assert.match(resumeMigration, /DROP FUNCTION IF EXISTS public\.start_spelling_weekly_review_v1\(DATE, TEXT\)/);
+    // 화면은 끝날 때까지 이어서 부른다.
+    assert.match(panel, /result\.done === false/);
+    assert.match(panel, /MAX_REVIEW_PASSES/);
 });

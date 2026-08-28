@@ -9,6 +9,8 @@ const EMPTY_INTAKE = {
     week_start: null, source_since_at: null, current_status: null, can_run: false,
     ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
 };
+// 후보 상한이 200개, 배치가 12개이므로 17번이면 끝난다. 그보다 많이 돌면 무언가 잘못된 것이다.
+const MAX_REVIEW_PASSES = 20;
 const EMPTY_DRAFT = {
     wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: []
 };
@@ -75,30 +77,51 @@ const AdminSpellingPromotionPanel = () => {
         setRunning(true);
         setNotice(null);
         try {
-            const { data: result, error } = await supabase.functions.invoke('spelling-weekly-review', {
-                body: { weekStart: intake.week_start }
-            });
-            if (error) throw error;
-            if (result?.skipped) {
-                setNotice({
-                    tone: 'error',
-                    text: result.reason === 'already_finished'
-                        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
-                        : '이미 검수가 돌고 있습니다. 잠시 뒤 새로고침해 주세요.'
+            /*
+             * 엣지 함수 작업자는 60초에 끊긴다. 후보가 많으면 한 번에 못 끝내므로 함수가
+             * `done: false` 와 남은 수를 돌려준다. 남은 것이 없어질 때까지 이어서 부른다.
+             * 이미 검수한 배치는 서버 캐시에 적립돼 있어 다시 불러도 AI 비용이 또 나가지 않는다.
+             */
+            let reviewedTotal = 0;
+            for (let pass = 1; ; pass += 1) {
+                if (pass > MAX_REVIEW_PASSES) throw new Error('검수가 너무 오래 걸립니다. 잠시 뒤 다시 눌러 이어서 진행해 주세요.');
+
+                const { data: result, error } = await supabase.functions.invoke('spelling-weekly-review', {
+                    body: { weekStart: intake.week_start }
                 });
-            } else if (result?.success) {
+                if (error) throw error;
+
+                if (result?.skipped) {
+                    setNotice({
+                        tone: 'error',
+                        text: result.reason === 'already_finished'
+                            ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+                            : '이미 검수가 돌고 있습니다. 잠시 뒤 새로고침해 주세요.'
+                    });
+                    break;
+                }
+                if (!result?.success) throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
+
+                reviewedTotal += Number(result.reviewedNow) || 0;
+                if (result.done === false) {
+                    setNotice({
+                        tone: 'info',
+                        text: `검수하는 중이에요 — 지금까지 ${reviewedTotal}건, 남은 후보 ${result.remaining}건. 그대로 기다려 주세요.`
+                    });
+                    continue;
+                }
+
                 setNotice({
                     tone: 'success',
                     text: `검수를 마쳤습니다 — 수집 ${result.collectedCount} · 기존 제외 ${result.knownFilteredCount}`
-                        + ` · 이전 결과 재사용 ${result.cacheHitCount} · AI 새 검수 ${result.aiReviewedCount}`
-                        + ` · 검토할 후보 ${result.itemCount}건`
+                        + ` · AI 새 검수 ${reviewedTotal} · 검토할 후보 ${result.itemCount}건`
                 });
-            } else {
-                throw new Error(result?.message || '주간 맞춤법 검수에 실패했습니다.');
+                break;
             }
             await load();
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || '주간 맞춤법 검수를 실행하지 못했습니다.' });
+            await load();
         } finally {
             setRunning(false);
         }
