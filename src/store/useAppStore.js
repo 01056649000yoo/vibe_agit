@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { SERVICE_PAGE_TITLE } from '../constants/serviceIdentity';
 
 /**
  * 전역 UI 및 네비게이션 상태 관리 스토어 🎨
@@ -30,7 +31,7 @@ export const useAppStore = create((set) => ({
         } else if (path === 'learning-support-software') {
             document.title = '학습지원소프트웨어 선정기준 안내 | 끄적끄적 아지트';
         } else {
-            document.title = '아지트 (agit) - 기록하는 즐거움';
+            document.title = SERVICE_PAGE_TITLE;
         }
     },
 

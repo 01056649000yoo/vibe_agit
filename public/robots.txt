@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /lab/
+
+Sitemap: https://xn--vz0ba242ncqcba79xhwx.site/sitemap.xml
