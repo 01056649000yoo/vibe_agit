@@ -63,6 +63,9 @@ const AdminSpellingPromotionPanel = () => {
     const [activeView, setActiveView] = useState('candidates');
     const [verdictFilter, setVerdictFilter] = useState('recommend');
     const [commonFilter, setCommonFilter] = useState('enabled');
+    // 검수 결과와 공통 자료는 각각 수백 건까지 늘어난다. 목록을 눈으로 훑는 대신 찾아 들어간다.
+    const [candidateQuery, setCandidateQuery] = useState('');
+    const [commonQuery, setCommonQuery] = useState('');
     const [data, setData] = useState(EMPTY_DATA);
     const [intake, setIntake] = useState(EMPTY_INTAKE);
     const [running, setRunning] = useState(false);
@@ -351,13 +354,29 @@ const AdminSpellingPromotionPanel = () => {
         caution: weeklyCandidates.filter((item) => item.ai_verdict === 'caution').length,
         reject: weeklyCandidates.filter((item) => item.ai_verdict === 'reject').length
     }), [weeklyCandidates]);
+    /*
+     * 찾기는 **띄어쓰기를 무시한다.** 이 화면의 자료 절반이 띄어쓰기 교정이라
+     * `세 번` 으로 찾는 사람과 `세번` 으로 찾는 사람이 갈린다. 어느 쪽으로 쳐도 같은 것이 나와야 한다.
+     * 틀린 표현·바른 표현·배움 라벨을 모두 본다 — 라벨로 갈래를 훑는 쓰임이 많다.
+     */
+    const matchesQuery = (query, ...fields) => {
+        const needle = normalize(query).replace(/\s+/g, '').toLocaleLowerCase('ko-KR');
+        if (!needle) return true;
+        return fields.some((field) => normalize(field)
+            .replace(/\s+/g, '')
+            .toLocaleLowerCase('ko-KR')
+            .includes(needle));
+    };
+
     const visibleCandidates = weeklyCandidates.filter((item) => (
-        verdictFilter === 'all' || item.ai_verdict === verdictFilter
+        (verdictFilter === 'all' || item.ai_verdict === verdictFilter)
+        && matchesQuery(candidateQuery, item.expression, item.ai_correct_expression, item.source_correction, item.ai_label)
     ));
     const visibleCommonEntries = commonEntries.filter((entry) => (
-        commonFilter === 'all'
-        || (commonFilter === 'enabled' && entry.status === 'approved')
-        || (commonFilter === 'disabled' && entry.status !== 'approved')
+        (commonFilter === 'all'
+            || (commonFilter === 'enabled' && entry.status === 'approved')
+            || (commonFilter === 'disabled' && entry.status !== 'approved'))
+        && matchesQuery(commonQuery, entry.wrong_expression, entry.correct_expression, entry.label)
     ));
     const latestRun = data.latest_run;
 
@@ -572,6 +591,14 @@ const AdminSpellingPromotionPanel = () => {
                 </div>
             </div>
 
+            <SearchField
+                label="검수 결과에서 찾기"
+                value={candidateQuery} onChange={setCandidateQuery}
+                placeholder="틀린 표현·바른 표현·배움 라벨 (띄어쓰기는 무시해요)"
+                resultCount={visibleCandidates.length}
+                totalCount={weeklyCandidates.length}
+            />
+
             <p className="admin-spelling__source-guide">정확히 같은 기본·공통 자료는 코드가 먼저 제외합니다. AI에는 새 후보와 유사 자료 최대 3개만 전달하며, 이전에 검수한 같은 후보는 저장된 결과를 재사용합니다.</p>
             <CandidateList
                 rows={visibleCandidates} loading={loading}
@@ -599,6 +626,14 @@ const AdminSpellingPromotionPanel = () => {
                     <FilterButton active={commonFilter === 'all'} onClick={() => setCommonFilter('all')}>전체 {commonEntries.length}</FilterButton>
                 </div>
             </div>
+            <SearchField
+                label="공통 자료에서 찾기"
+                value={commonQuery} onChange={setCommonQuery}
+                placeholder="틀린 표현·바른 표현·배움 라벨 (띄어쓰기는 무시해요)"
+                resultCount={visibleCommonEntries.length}
+                totalCount={commonEntries.length}
+            />
+
             <p className="admin-spelling__source-guide">문제가 있으면 삭제하지 않고 적용을 중지할 수 있으며, 나중에 다시 적용할 수 있습니다.</p>
             <CommonEntriesList entries={visibleCommonEntries} loading={loading} onEdit={startCommonEdit} onSetEnabled={setCommonEnabled} />
         </section>}
@@ -841,6 +876,24 @@ const CommonEntriesList = ({ entries, loading, onEdit, onSetEnabled }) => entrie
             </article>;
         })}
     </div>;
+
+/** 두 목록이 같은 찾기 상자를 쓴다. 화면마다 다르게 만들면 한쪽만 고치게 된다. */
+const SearchField = ({ label, value, onChange, placeholder, resultCount, totalCount }) => <div className="admin-spelling__search">
+    <label>
+        <span className="admin-spelling__search-label">{label}</span>
+        <input
+            type="search"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder}
+            maxLength={40}
+        />
+    </label>
+    {value.trim() && <small aria-live="polite">
+        {resultCount === 0 ? '찾는 낱말이 없어요' : `${totalCount}개 중 ${resultCount}개`}
+        <button type="button" onClick={() => onChange('')}>지우기</button>
+    </small>}
+</div>;
 
 const EmptyState = ({ title, description }) => <div className="admin-spelling__empty">
     <strong>{title}</strong><p>{description}</p>

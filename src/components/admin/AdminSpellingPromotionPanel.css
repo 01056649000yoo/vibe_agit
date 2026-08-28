@@ -102,6 +102,22 @@
 .admin-spelling__field input:focus, .admin-spelling__field textarea:focus { border-color: #8b5cf6; outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
 .admin-spelling__ai-reason { display: flex; gap: 8px; margin: 0; padding: 9px 11px; border-radius: 9px; background: #eef2ff; color: #4338ca; font-size: .75rem; line-height: 1.5; }
 .admin-spelling__ai-reason b { white-space: nowrap; }
+/* 목록 위 찾기 상자. 두 화면이 같은 모양을 쓴다. */
+.admin-spelling__search { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; }
+.admin-spelling__search label { display: flex; flex: 1 1 260px; align-items: center; gap: 8px; min-width: 0; }
+.admin-spelling__search-label { flex: 0 0 auto; color: #475569; font-size: .76rem; font-weight: 900; white-space: nowrap; }
+.admin-spelling__search input {
+    flex: 1 1 auto; min-width: 0; padding: 8px 11px; border: 1px solid #cbd5e1;
+    border-radius: 9px; background: white; color: #1e293b; font-size: .78rem;
+}
+.admin-spelling__search input:focus-visible { outline: 2px solid #6366f1; outline-offset: 1px; }
+.admin-spelling__search small { display: inline-flex; align-items: center; gap: 7px; color: #64748b; font-size: .72rem; font-weight: 800; }
+.admin-spelling__search small button {
+    padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 999px;
+    background: white; color: #475569; font-size: .68rem; font-weight: 800; cursor: pointer;
+}
+.admin-spelling__search small button:hover { background: #f1f5f9; }
+
 /* 권장이 아닌 후보를 관리자 판단으로 올릴 때. AI 의견과 구분되게 다른 색을 쓴다. */
 .admin-spelling__manual-promote { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 9px 11px; border-radius: 9px; background: #fefce8; color: #854d0e; font-size: .75rem; line-height: 1.55; }
 .admin-spelling__manual-promote b { font-weight: 900; }

@@ -445,3 +445,23 @@ test('권장이 비어도 일감이 보이고, 권장 아닌 후보도 관리자
     assert.doesNotMatch(panel, />내용 검토</);
     assert.doesNotMatch(panel, /canPublish[\s\S]{0,200}verdict === 'recommend'/);
 });
+
+test('검수 결과와 공통 자료를 같은 찾기 상자로 검색한다', () => {
+    /*
+     * 찾기는 띄어쓰기를 무시해야 한다. 이 화면 자료의 절반이 띄어쓰기 교정이라
+     * `세 번` 으로 찾는 사람과 `세번` 으로 찾는 사람이 갈리는데 어느 쪽으로 쳐도 같은 것이 나와야 한다.
+     */
+    assert.match(panel, /const matchesQuery = \(query, \.\.\.fields\) =>/);
+    assert.match(panel, /normalize\(query\)\.replace\(\/\\s\+\/g, ''\)/);
+    // 틀린 표현만이 아니라 바른 표현·배움 라벨로도 찾는다.
+    assert.match(panel, /matchesQuery\(candidateQuery, item\.expression, item\.ai_correct_expression, item\.source_correction, item\.ai_label\)/);
+    assert.match(panel, /matchesQuery\(commonQuery, entry\.wrong_expression, entry\.correct_expression, entry\.label\)/);
+    // 두 화면이 같은 부품을 쓴다. 따로 만들면 한쪽만 고치게 된다.
+    assert.equal((panel.match(/<SearchField/g) ?? []).length, 2);
+    assert.match(panel, /검수 결과에서 찾기/);
+    assert.match(panel, /공통 자료에서 찾기/);
+    // 찾은 뒤 몇 개가 남았는지 알려 주고 한 번에 지울 수 있어야 한다.
+    assert.match(panel, /개 중 \$\{resultCount\}개/);
+    assert.match(panel, /찾는 낱말이 없어요/);
+    assert.match(panel, />지우기</);
+});
