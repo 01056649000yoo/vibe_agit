@@ -274,6 +274,13 @@ Deno.serve(async (req) => {
             completed.push(...done)
             reviewedNow += done.length
             offset += AI_BATCH_SIZE
+
+            // 어디까지 왔는지 원장에 적어 둔다. 화면이 이것을 읽어 진행 상황을 계속 보여 준다.
+            await adminClient.rpc('update_spelling_weekly_progress_v1', {
+                p_week_start: weekStart,
+                p_total_count: prepared.candidates.length,
+                p_done_count: completed.length
+            })
         }
 
         if (offset < fresh.length) {
@@ -283,6 +290,8 @@ Deno.serve(async (req) => {
                 done: false,
                 weekStart,
                 remaining: fresh.length - offset,
+                totalCount: prepared.candidates.length,
+                doneCount: completed.length,
                 reviewedNow,
                 collectedCount: prepared.collectedCount,
                 knownFilteredCount: prepared.knownFilteredCount

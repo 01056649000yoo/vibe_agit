@@ -7,7 +7,8 @@ import './AdminSpellingPromotionPanel.css';
 const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], common_entries: [] };
 const EMPTY_INTAKE = {
     week_start: null, source_since_at: null, current_status: null, can_run: false,
-    is_resuming: false, ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
+    is_resuming: false, current_total_count: 0, current_done_count: 0,
+    ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
 };
 
 /**
@@ -56,9 +57,11 @@ const AdminSpellingPromotionPanel = () => {
     const [notice, setNotice] = useState(null);
     const editorRef = useRef(null);
 
-    const load = useCallback(async () => {
+    // `keepNotice` 를 주면 방금 띄운 알림을 지우지 않는다. 검수 뒤 진행 상황을 띄우자마자
+    // 이 새로고침이 알림을 지워 버려 아무 정보도 안 남았다(2026-08-28).
+    const load = useCallback(async ({ keepNotice = false } = {}) => {
         setLoading(true);
-        setNotice(null);
+        if (!keepNotice) setNotice(null);
         try {
             // 쌓인 양은 AI 를 부르지 않고 읽기만 한다. 관리자가 돌릴지 판단하는 근거다.
             const [workspace, intakeResult] = await Promise.all([
@@ -122,7 +125,7 @@ const AdminSpellingPromotionPanel = () => {
             } else if (result.done === false) {
                 setNotice({
                     tone: 'info',
-                    text: `${result.reviewedNow}건을 검수했어요. 남은 후보 ${result.remaining}건 —`
+                    text: `${result.reviewedNow}건을 검수했어요. 지금까지 ${result.doneCount} / ${result.totalCount}건 —`
                         + ' 아래 단추를 다시 누르면 하던 곳부터 이어서 합니다.'
                 });
             } else {
@@ -132,10 +135,10 @@ const AdminSpellingPromotionPanel = () => {
                         + ` · 이번에 새로 검수 ${result.reviewedNow || 0} · 검토할 후보 ${result.itemCount}건`
                 });
             }
-            await load();
+            await load({ keepNotice: true });
         } catch (error) {
             setNotice({ tone: 'error', text: error.message || '주간 맞춤법 검수를 실행하지 못했습니다.' });
-            await load();
+            await load({ keepNotice: true });
         } finally {
             setRunning(false);
         }
@@ -494,6 +497,8 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
     const alreadyDone = intake.current_status === 'ready' || intake.current_status === 'empty';
     // 돌다 만 회차는 막힌 것이 아니라 **이어서 할 수 있는** 상태다. 여기서 막으면 관리자가 갇힌다.
     const resuming = intake.is_resuming === true;
+    const progressTotal = Number(intake.current_total_count) || 0;
+    const progressDone = Number(intake.current_done_count) || 0;
     const reason = alreadyDone
         ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
         : resuming
@@ -514,6 +519,17 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onOpenList }) => {
             <div><span>교사 학급 자료</span><strong>{intake.teacher_entry_count || 0}</strong><em>승인된 자료</em></div>
         </div>
         <div className="admin-spelling__intake-action">
+            {/*
+              * 진행 상황은 **알림이 아니라 여기**에 둔다. 알림은 새로 고치면 사라져서,
+              * 눌러 가며 하는 동안 어디까지 왔는지 알 수가 없었다(2026-08-28 지적).
+              */}
+            {resuming && progressTotal > 0 && (
+                <div className="admin-spelling__intake-progress">
+                    {/* 폭을 코드에서 적지 않으려고 progress 요소를 쓴다. 읽어 주는 도구도 이해한다. */}
+                    <progress value={progressDone} max={progressTotal} aria-label="AI 검수 진행" />
+                    <strong>{progressDone} / {progressTotal}건 검수함 · {Math.max(0, progressTotal - progressDone)}건 남음</strong>
+                </div>
+            )}
             <p>
                 {intake.source_since_at
                     ? `지난 검수(${formatDateTime(intake.source_since_at)}) 이후 쌓인 자료입니다.`

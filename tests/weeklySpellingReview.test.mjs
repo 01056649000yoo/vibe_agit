@@ -8,7 +8,7 @@ import {
     prepareWeeklyReviewCandidates
 } from '../scripts/run-weekly-spelling-review.mjs';
 
-const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
+const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
     readFile('scripts/run-weekly-spelling-review.mjs', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/reviewCore.js', 'utf8'),
     readFile('supabase/functions/spelling-weekly-review/index.ts', 'utf8'),
@@ -17,6 +17,7 @@ const [runner, reviewCore, edgeFunction, deployWorkflow, intakeMigration, candid
     readFile('supabase/migrations/20261189_spelling_intake_candidate_review.sql', 'utf8'),
     readFile('supabase/migrations/20261190_spelling_weekly_review_resume.sql', 'utf8'),
     readFile('supabase/migrations/20261191_spelling_intake_resumable.sql', 'utf8'),
+    readFile('supabase/migrations/20261192_spelling_weekly_progress.sql', 'utf8'),
     readFile('tests/sql/20261189_spelling_intake_candidate_review.smoke.sql', 'utf8'),
     readFile('supabase/migrations/20261179_weekly_spelling_review.sql', 'utf8'),
     readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8'),
@@ -276,4 +277,19 @@ test('응답이 안 와도 화면이 굳지 않는다', () => {
     // 작업자 제한(60초)보다는 길게 기다려야 정상 응답을 헛되이 버리지 않는다.
     const wait = Number(panel.match(/REVIEW_CALL_TIMEOUT_MS = ([\d_]+)/)?.[1]?.replace(/_/g, ''));
     assert.ok(wait > 60_000 && wait <= 120_000, `기다리는 시간이 이상하다: ${wait}ms`);
+});
+
+test('눌러 가며 하는 동안 어디까지 왔는지 화면에 남는다', () => {
+    // 알림은 목록 새로고침이 지우고, 새로 고치면 사라진다. 그래서 진행 수를 원장에 적고 카드가 읽는다.
+    assert.match(progressMigration, /CREATE OR REPLACE FUNCTION public\.update_spelling_weekly_progress_v1/);
+    // 이미 끝난 회차의 최종 집계를 덮어쓰면 안 된다.
+    assert.match(progressMigration, /AND run\.status = 'running'/);
+    assert.match(progressMigration, /'current_total_count'/);
+    assert.match(progressMigration, /'current_done_count'/);
+    // 엣지 함수가 배치마다 적는다.
+    assert.match(edgeFunction, /update_spelling_weekly_progress_v1/);
+    // 화면은 카드에 계속 보여 주고, 검수 뒤 새로고침이 알림을 지우지 않는다.
+    assert.match(panel, /admin-spelling__intake-progress/);
+    assert.match(panel, /load\(\{ keepNotice: true \}\)/);
+    assert.match(panel, /if \(!keepNotice\) setNotice\(null\)/);
 });
