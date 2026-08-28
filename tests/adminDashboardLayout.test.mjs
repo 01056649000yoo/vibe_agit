@@ -181,3 +181,21 @@ test('관리자 화면 탭은 한 줄에 모두 펴고 같은 생김새를 쓴�
     assert.match(dashboard, /restGroups\.map\(\(group, groupIndex\) =>/);
     assert.match(dashboard, /group\.tabs\.map\(tab => <AdminTabButton/);
 });
+
+test('탭 계산은 배지가 만들어진 뒤에 온다', async () => {
+    const dashboard = await read('src/components/admin/AdminDashboard.jsx');
+
+    /*
+     * `const` 는 끌어올려지지 않는다. 렌더 중에 선언보다 먼저 쓰면 그 자리에서 터져
+     * **관리자 화면이 통째로 흰 화면이 된다**(2026-08-28 실제로 발생).
+     * 빌드·ESLint·전체 회귀가 모두 통과했다 — 어느 것도 화면을 그려 보지 않기 때문이다.
+     * 그래서 순서를 여기서 못 박는다.
+     */
+    const badgesAt = dashboard.indexOf('const tabBadges = useMemo(');
+    const urgentAt = dashboard.indexOf('const urgentTabs = ');
+    assert.ok(badgesAt > 0 && urgentAt > 0, '두 선언을 찾지 못했다');
+    assert.ok(
+        badgesAt < urgentAt,
+        'urgentTabs 가 tabBadges 보다 먼저 있다 — 렌더 중에 터져 흰 화면이 된다'
+    );
+});

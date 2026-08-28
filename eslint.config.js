@@ -34,6 +34,11 @@ export default defineConfig([
       // 2026-08-06 친구 아지트가 흰 화면이 됐다 — `getSelfWritingType(post)` 를 쓰면서 임포트가 없었는데
       // 빌드도 린트도 통과했다. JSX만 보던 그물의 구멍이었다.
       'no-undef': 'error',
+      // 위 둘의 세 번째 짝. **선언보다 먼저 쓴** 경우를 잡는다.
+      // `const` 는 끌어올려지지 않아 앞에서 쓰면 그 자리에서 터진다. 2026-08-28 관리자 대시보드가
+      // 흰 화면이 됐다 — `tabBadges` 를 선언보다 90줄 앞에서 썼는데 빌드·린트·검사가 모두 통과했다.
+      // 함수 선언은 끌어올려지므로 예외로 둔다(파일 아래쪽에 도우미를 모으는 이 저장소의 습관).
+      'no-use-before-define': ['warn', { functions: false, classes: true, variables: true }],
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
       'security/detect-unsafe-regex': 'error',
       'security/detect-eval-with-expression': 'error',

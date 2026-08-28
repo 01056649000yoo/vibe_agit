@@ -287,15 +287,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
     // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
     // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
-    /*
-     * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라
-     * 손이 기억하는 자리가 흔들리지 않는다. 할 일이 없으면 앞 칸 자체가 사라진다.
-     */
-    const urgentTabs = TAB_GROUPS.flatMap((group) => group.tabs).filter((tab) => (tabBadges[tab.id] || 0) > 0);
-    const urgentIds = new Set(urgentTabs.map((tab) => tab.id));
-    const restGroups = TAB_GROUPS
-        .map((group) => ({ ...group, tabs: group.tabs.filter((tab) => !urgentIds.has(tab.id)) }))
-        .filter((group) => group.tabs.length > 0);
 
     // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
     const health = useAdminHealthSummary();
@@ -385,6 +376,16 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         cleanup: usage.cleanupCandidates.length,
         feedback: pendingFeedbackCount
     }), [newSignupCount, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount]);
+
+    /*
+     * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라
+     * 손이 기억하는 자리가 흔들리지 않는다. 할 일이 없으면 앞 칸 자체가 사라진다.
+     */
+    const urgentTabs = TAB_GROUPS.flatMap((group) => group.tabs).filter((tab) => (tabBadges[tab.id] || 0) > 0);
+    const urgentIds = new Set(urgentTabs.map((tab) => tab.id));
+    const restGroups = TAB_GROUPS
+        .map((group) => ({ ...group, tabs: group.tabs.filter((tab) => !urgentIds.has(tab.id)) }))
+        .filter((group) => group.tabs.length > 0);
 
     // 한 번 연 화면은 살려 둔다(위 KeepAlivePanel 주석 참고).
     const [visitedTabs, setVisitedTabs] = useState(() => new Set(['active']));
