@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, dailyAudit, recorder, appRecorder, appRegistry] = await Promise.all([
+const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, dailyAudit, dailyAuditPlist, recorder, appRecorder, appRegistry] = await Promise.all([
     readFile('supabase/migrations/20261147_admin_backup_status.sql', 'utf8'),
     readFile('supabase/migrations/20261196_backup_app_results.sql', 'utf8'),
     readFile('supabase/migrations/20261197_backup_run_completion.sql', 'utf8'),
@@ -11,6 +11,7 @@ const [baseMigration, appMigration, completionMigration, panel, dashboard, healt
     readFile('src/components/admin/useAdminHealthSummary.js', 'utf8'),
     readFile('scripts/check-service-health.sh', 'utf8'),
     readFile('scripts/audit-backup-monitor-day.sh', 'utf8'),
+    readFile('ops/launchd/com.agit.backup-monitor.plist', 'utf8'),
     readFile('scripts/record-backup-status.sh', 'utf8'),
     readFile('scripts/record-backup-app-status.sh', 'utf8'),
     readFile('src/components/admin/backupApps.js', 'utf8')
@@ -109,4 +110,9 @@ test('7일 일일 검사는 원장·세 사본·보조 백업·복구·서비스
     assert.match(dailyAudit, /https:\/\/xn--9y2br3k43n\.kr\//);
     assert.match(dailyAudit, /https:\/\/app\.xn--9y2br3k43n\.kr\//);
     assert.doesNotMatch(dailyAudit, /sync\.log|backup\.log|rclone\.conf|secrets\.agit\.env/);
+    assert.match(dailyAuditPlist, /<string>com\.agit\.backup-monitor<\/string>/);
+    assert.match(dailyAuditPlist, /audit-backup-monitor-day\.sh/);
+    assert.match(dailyAuditPlist, /<key>Hour<\/key>\s*<integer>4<\/integer>/);
+    assert.match(dailyAuditPlist, /<key>Minute<\/key>\s*<integer>15<\/integer>/);
+    assert.doesNotMatch(dailyAuditPlist, /RunAtLoad|KeepAlive|StartInterval/);
 });
