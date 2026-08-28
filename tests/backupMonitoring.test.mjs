@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, recorder, appRecorder, appRegistry] = await Promise.all([
+const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, dailyAudit, recorder, appRecorder, appRegistry] = await Promise.all([
     readFile('supabase/migrations/20261147_admin_backup_status.sql', 'utf8'),
     readFile('supabase/migrations/20261196_backup_app_results.sql', 'utf8'),
     readFile('supabase/migrations/20261197_backup_run_completion.sql', 'utf8'),
@@ -10,6 +10,7 @@ const [baseMigration, appMigration, completionMigration, panel, dashboard, healt
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('src/components/admin/useAdminHealthSummary.js', 'utf8'),
     readFile('scripts/check-service-health.sh', 'utf8'),
+    readFile('scripts/audit-backup-monitor-day.sh', 'utf8'),
     readFile('scripts/record-backup-status.sh', 'utf8'),
     readFile('scripts/record-backup-app-status.sh', 'utf8'),
     readFile('src/components/admin/backupApps.js', 'utf8')
@@ -92,4 +93,20 @@ test('새 7개 산출물 실행은 앱 결과 3행 전까지 성공으로 확정
     assert.match(completionMigration, /NEW\.local_ok IS TRUE[\s\S]*NEW\.drive_ok IS TRUE[\s\S]*NEW\.external_ok IS TRUE/);
     assert.match(completionMigration, /CREATE TRIGGER trg_finalize_system_backup_run_from_apps/);
     assert.match(completionMigration, /REVOKE ALL ON FUNCTION public\.finalize_system_backup_run_from_apps_v1\(\)/);
+});
+
+test('7일 일일 검사는 원장·세 사본·보조 백업·복구·서비스를 같은 기준으로 판정한다', () => {
+    assert.match(dailyAudit, /job_type = 'daily' AND backup_day = DATE '\$\{MONITOR_DAY\}'/);
+    assert.match(dailyAudit, /APP_RECORDED" = "3"/);
+    assert.match(dailyAudit, /ARTIFACT_COUNT" = "7"/);
+    assert.match(dailyAudit, /LOCAL_COUNT" = "7"/);
+    assert.match(dailyAudit, /DRIVE_COUNT" = "7"/);
+    assert.match(dailyAudit, /EXTERNAL_COUNT" = "7"/);
+    assert.match(dailyAudit, /SAMLINK_RAW[^\n]+-ge 100000/);
+    assert.match(dailyAudit, /alert_key = 'backup_failed' AND status = 'open'/);
+    assert.match(dailyAudit, /RESTORE_FRESH/);
+    assert.match(dailyAudit, /--resolve xn--vz0ba242ncqcba79xhwx\.site:443:127\.0\.0\.1/);
+    assert.match(dailyAudit, /https:\/\/xn--9y2br3k43n\.kr\//);
+    assert.match(dailyAudit, /https:\/\/app\.xn--9y2br3k43n\.kr\//);
+    assert.doesNotMatch(dailyAudit, /sync\.log|backup\.log|rclone\.conf|secrets\.agit\.env/);
 });
