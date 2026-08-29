@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, dailyAudit, dailyAuditPlist, recorder, appRecorder, appRegistry] = await Promise.all([
+const [baseMigration, appMigration, completionMigration, panel, dashboard, healthHook, healthScript, dailyAudit, dailyAuditPlist, recorder, appRecorder, appRegistry, externalCrypt, externalCryptConfig] = await Promise.all([
     readFile('supabase/migrations/20261147_admin_backup_status.sql', 'utf8'),
     readFile('supabase/migrations/20261196_backup_app_results.sql', 'utf8'),
     readFile('supabase/migrations/20261197_backup_run_completion.sql', 'utf8'),
@@ -14,7 +14,9 @@ const [baseMigration, appMigration, completionMigration, panel, dashboard, healt
     readFile('ops/launchd/com.agit.backup-monitor.plist', 'utf8'),
     readFile('scripts/record-backup-status.sh', 'utf8'),
     readFile('scripts/record-backup-app-status.sh', 'utf8'),
-    readFile('src/components/admin/backupApps.js', 'utf8')
+    readFile('src/components/admin/backupApps.js', 'utf8'),
+    readFile('scripts/external-backup-crypt.sh', 'utf8'),
+    readFile('scripts/configure-external-backup-crypt.sh', 'utf8')
 ]);
 
 test('백업 원장과 앱별 결과는 브라우저에 직접 공개하지 않고 관리자 RPC로만 읽는다', () => {
@@ -65,7 +67,7 @@ test('관리자 백업 화면은 3개 앱·공용 사본·복구를 한 화면�
     assert.match(panel, /daily_stale_after_hours \|\| 26/);
     assert.match(panel, /restore_stale_after_days \|\| 40/);
     assert.match(panel, /15, 'minutes'/);
-    for (const label of ['내장', 'Drive', '외장 SSD']) {
+    for (const label of ['내장', 'Drive', '외장 SSD(암호화)']) {
         assert.ok(panel.includes(label), `공용 사본 '${label}'이 없다`);
     }
     assert.doesNotMatch(panel, /setInterval|postgres_changes|\.channel\(/);
@@ -103,6 +105,15 @@ test('7일 일일 검사는 원장·세 사본·보조 백업·복구·서비스
     assert.match(dailyAudit, /LOCAL_COUNT" = "7"/);
     assert.match(dailyAudit, /DRIVE_COUNT" = "7"/);
     assert.match(dailyAudit, /EXTERNAL_COUNT" = "7"/);
+    assert.match(dailyAudit, /external-backup-crypt\.sh/);
+    assert.match(dailyAudit, /EXTERNAL_CRYPT" count "\$DAY_KEY"/);
+    assert.match(externalCrypt, /REMOTE="\$\{EXTERNAL_BACKUP_REMOTE:-agitssdcrypt:\}"/);
+    assert.match(externalCrypt, /cryptcheck "\$source_dir" "\$\{REMOTE\}\$\{day\}" --one-way/);
+    assert.match(externalCrypt, /delete "\$REMOTE" --min-age 30d/);
+    assert.match(externalCryptConfig, /SOURCE_REMOTE="\$\{SOURCE_CRYPT_REMOTE:-agitcrypt\}"/);
+    assert.match(externalCryptConfig, /DEST_REMOTE="\$\{EXTERNAL_CRYPT_REMOTE:-agitssdcrypt\}"/);
+    assert.match(externalCryptConfig, /--no-obscure --no-output/);
+    assert.doesNotMatch(externalCryptConfig, /echo[^\n]*\$(password|password2)/i);
     assert.match(dailyAudit, /SAMLINK_RAW[^\n]+-ge 100000/);
     assert.match(dailyAudit, /alert_key = 'backup_failed' AND status = 'open'/);
     assert.match(dailyAudit, /RESTORE_FRESH/);

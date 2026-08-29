@@ -290,7 +290,7 @@ const AdminBackupPanel = () => {
                         <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
                             <CopyStatus label="내장" value={daily?.local_ok} />
                             <CopyStatus label="Drive" value={daily?.drive_ok} />
-                            <CopyStatus label="외장 SSD" value={daily?.external_ok} />
+                            <CopyStatus label="외장 SSD(암호화)" value={daily?.external_ok} />
                         </div>
                         <div style={{ marginTop: '12px', color: '#475569', fontSize: '0.82rem' }}>
                             필수 산출물: {daily?.artifact_count == null ? '-' : `${daily.artifact_count}개 / 7개`}

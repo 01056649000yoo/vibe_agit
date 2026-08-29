@@ -5,7 +5,7 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-29 — 오늘 통합 백업 실제 복구·앱별 백업/복구 3/3 통과**
+**최종 설정 점검: 2026-08-29 — 외장 SSD rclone crypt 전환, 통합 백업·실제 복구·앱별 3/3 통과**
 
 ---
 
@@ -18,11 +18,11 @@
 예전 실행에는 앱별 자식 기록이 없으므로 값을 추정하지 않고 `앱별 기록 전`으로 표시한다.
 
 매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 7개 필수 산출물, 내장 사본, 암호화 Drive,
-외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
+암호화 외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
 같은 실행 키 아래 앱별로 DB와 필수 파일/설정 판정을 1행씩 남기며, 셋 중 하나라도 실패하거나
 3행이 덜 기록되면 5분 건강검진이 `backup_failed` 운영 경고를 연다. 새 형식 실행은 부모가 먼저
 `PASS`를 보내도 DB가 앱 결과 3행이 완성될 때까지 `RUNNING`으로 유지한다. 3/3 성공과 일일 백업의
-내장·Drive·외장 SSD, 정확히 7개 산출물이 모두 맞은 뒤에만 `PASS`로 확정하므로 기록기 일부가
+내장·Drive·암호화 외장 SSD, 정확히 7개 산출물이 모두 맞은 뒤에만 `PASS`로 확정하므로 기록기 일부가
 중간에 끊겨도 성공으로 보이지 않는다. 전환 전 8개 산출물 기록은 이 규칙에서 제외한다.
 
 7일 모니터링처럼 하루의 모든 기준을 같은 방식으로 다시 확인할 때는 읽기 전용 검사기를 사용한다.
@@ -50,7 +50,8 @@ cat ~/backups/auto/backup-status.txt
 매월 **1일 04:40**, `com.agit.restore-rehearsal` 이 DB 백업은 **임시 DB에 실제 복원**하고 아지트 Storage
 백업은 **임시 디렉터리에 실제로 풀어** 확인한다. DB는 `pg_restore --exit-on-error`로 오류를 즉시 잡고,
 덤프 목차의 테이블·데이터 항목과 실제 복원 테이블 수, `anon/authenticated` 권한을 확인한다.
-암호화 Drive도 파일 7개의 크기가 로컬과 같은지 검사한 뒤 결과를 남긴다.
+암호화 Drive는 파일 7개의 크기를, 암호화 외장 SSD는 `rclone cryptcheck`로 원본과 암호문 체크섬을
+검사한 뒤 결과를 남긴다.
 복구 부모 원장에도 로컬 7개와 Drive 판정을 기록하고 앱 결과 3행이 모두 끝난 뒤에만 성공을 확정한다.
 실패하면 화면 알림도 뜬다.
 
@@ -79,7 +80,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 
 | 작업 | 시각 | 대상 | 사본 위치 | 보관 |
 |---|---|---|---|---|
-| `com.agit.backup` | 매일 **04:00** | `agit-db` 통합 DB(`public·auth·storage·writing_helper·writing_helper_internal·app·samlink`) · Storage 객체 · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
+| `com.agit.backup` | 매일 **04:00** | `agit-db` 통합 DB(`public·auth·storage·writing_helper·writing_helper_internal·app·samlink`) · Storage 객체 · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD(**암호화**) | Drive·외장 30일 |
 | `com.samlink.db-backup` | 매일 **03:30** | `agit-db`의 `samlink` 스키마 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 | `com.agit.backup-monitor` | 매일 **05:00** | 원장·세 사본·보조 백업·복구·서비스 읽기 판정 | 안전한 상태 한 줄 로그 | — |
@@ -89,7 +90,9 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
   `scripts/record-backup-app-status.sh`(앱별 결과) — 호스트 스크립트가 직접 호출하며 실패해도 원래 상태 파일은 유지
 - 로그: `~/backups/auto/sync.log` · `~/.db-backup/backup.log` · `~/backups/auto/rehearsal.log`
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
-- 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
+- 외장 암호화 사본: `agitssdcrypt:YYYYMMDD/` → 실제 `/Volumes/SHmaegmini/agit-backups-encrypted/`
+- 외장 동기화·검증 공용 스크립트: 저장소의 `scripts/external-backup-crypt.sh`
+- 내장 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
 
 > `local.literacy.backup`은 자비스·샘링크 이관 전 공유 PG15에 남아 있던 0행 `literacy` 스키마용이었다.
 > 옛 `supabase-db` 제거 뒤 2026-08-29 03:00 실행이 실패했고, 같은 날 수동 통합 복구 3/3을 확인한 뒤
@@ -115,7 +118,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | 샘링크 | 덤프/복원 DB의 `samlink` 표 | 통합 스택 설정·Caddy |
 | 자비스 | 덤프/복원 DB의 `app` 표 | `자비스.tar.gz`·Caddy |
 
-앱 카드의 초록색만으로 전체 백업을 정상이라 보지 않는다. 공용 사본의 내장·Drive·외장 SSD와
+앱 카드의 초록색만으로 전체 백업을 정상이라 보지 않는다. 공용 사본의 내장·Drive·암호화 외장 SSD와
 실제 복구 리허설도 모두 따로 정상이어야 한다. 운영 반영 뒤 첫 7일 점검표는
 [`docs/BACKUP_MONITORING_20260829.md`](docs/BACKUP_MONITORING_20260829.md)에 남긴다.
 
@@ -137,10 +140,14 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 
 ## 3. 암호화와 열쇠 ⚠️
 
-드라이브로 나가는 사본은 **rclone crypt** 로 암호화된다(내용·파일명 모두). 내장·외장SSD 사본은 평문이다.
+Drive와 외장 SSD 사본은 모두 **rclone crypt** 로 암호화된다(내용·파일명 모두). 내장 사본만 평문이다.
 
 - 원격 이름 `agitcrypt:` → 실제 위치 `gdrive:SH맥미니-enc`
-- **열쇠는 `~/.config/rclone/rclone.conf` 의 `[agitcrypt]` 항목에만 있다.**
+- 원격 이름 `agitssdcrypt:` → 실제 위치 `/Volumes/SHmaegmini/agit-backups-encrypted`
+- 두 원격은 같은 crypt 열쇠를 사용하며, **열쇠는 `~/.config/rclone/rclone.conf`의
+  `[agitcrypt]`·`[agitssdcrypt]` 항목에만 있다.**
+- 외장 SSD 원격은 `scripts/configure-external-backup-crypt.sh`로 구성한다. 이 스크립트는 기존 obscured
+  열쇠를 출력하지 않고 복사하며 `rclone.conf` 권한을 `600`으로 유지한다.
 
 > ### 🔴 반드시 해야 할 일
 > **`~/.config/rclone/rclone.conf` 사본을 맥미니 밖(비밀번호 관리자 등)에 보관한다.**
@@ -172,7 +179,8 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 > (2026-07-30 에 실제로 이 절차를 밟았다. `WORKLOG.md` 같은 날 ⑪ 항목)
 
 암호화가 필요한 이유: `아지트DB스택설정.tar.gz` 안에 `.env` 와 `secrets.agit.env` 가 그대로 들어가고,
-DB 덤프에는 계정 비밀번호 해시가 있다. 2026-07-30 이전에는 이것이 평문으로 드라이브에 30일 남았다.
+DB 덤프에는 계정 비밀번호 해시가 있다. Drive는 2026-07-30, 외장 SSD 신규 사본은 2026-08-29부터
+암호화했다. 외장 SSD의 기존 `/Volumes/SHmaegmini/backups/` 평문 사본은 전환 안전망으로 임시 보존한다.
 
 ---
 
@@ -185,8 +193,9 @@ DB 덤프에는 계정 비밀번호 해시가 있다. 2026-07-30 이전에는 �
 실제로 첫 리허설에서 `post_comments` 8,410건 · `post_reactions` 2,465건이 그렇게 사라졌다.
 
 ```bash
-# 0) (드라이브에서 가져올 때) 암호화 사본 내려받기
+# 0) 암호화 사본 내려받기 — Drive 또는 고정 외장 SSD 중 하나
 rclone copy "agitcrypt:20260730" ./복구 --progress
+# rclone copy "agitssdcrypt:20260730" ./복구 --progress
 
 # 1) 대상 DB 준비 — 이 단계를 건너뛰지 말 것
 psql -U supabase_admin -d 대상DB \
@@ -239,9 +248,10 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 | 항목 | 누가 |
 |---|---|
 | 🔴 `rclone.conf` 사본을 맥미니 밖에 보관 (3절) | **사용자** |
-| 🔴 내부 APFS(FileVault OFF)와 외장 백업 SSD(APFS 암호화 OFF)를 암호화 — 현재 두 위치의 백업은 평문 | 별도 유지보수 창 |
+| 내부 APFS FileVault는 무인 재부팅·Docker 자동 복구를 우선해 보류. 내장 사본은 평문이므로 맥미니 물리 접근을 제한 | 운영 결정 |
+| 외장 SSD 신규 사본은 `agitssdcrypt:` 파일 단위 암호화 완료. 기존 `/Volumes/SHmaegmini/backups/` 평문 사본은 7일 관측·9월 1일 리허설 뒤 삭제 여부 결정 | 2026-09-05 이후 사용자 확인 |
 | 더 이상 갱신하지 않는 `gdrive:Supabase-Backups/literacy/` 옛 평문 사본의 보존·삭제 결정 | 미정 |
-| 외장SSD 를 뽑으면 3중 중 하나가 빠진다 | — |
+| 외장SSD를 뽑으면 3중 중 하나가 빠지고 04시 백업이 `FAIL`로 기록된다 | — |
 
 ### 2026-07-30 에 정리·해결한 것
 - 드라이브 평문 백업(`gdrive:SH맥미니` 237MB)·`gdrive:samlink-backup` 삭제 → 드라이브에는 **암호화본만** 남았다.

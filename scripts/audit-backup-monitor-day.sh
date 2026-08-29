@@ -7,6 +7,7 @@ MONITOR_HOME="${AGIT_MONITOR_HOME:-/Users/seunghyeonmaegmini}"
 DOCKER="${DOCKER:-/Applications/Docker.app/Contents/Resources/bin/docker}"
 RCLONE="${RCLONE:-/opt/homebrew/bin/rclone}"
 CURL="${CURL:-/usr/bin/curl}"
+EXTERNAL_CRYPT="${EXTERNAL_CRYPT:-$MONITOR_HOME/vibe_agit/scripts/external-backup-crypt.sh}"
 MONITOR_DAY="${1:-$(date +%F)}"
 
 if [[ ! "$MONITOR_DAY" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
@@ -73,7 +74,10 @@ count_files() {
 }
 
 LOCAL_COUNT=$(count_files "$MONITOR_HOME/backups/auto/$DAY_KEY")
-EXTERNAL_COUNT=$(count_files "/Volumes/SHmaegmini/backups/$DAY_KEY")
+EXTERNAL_COUNT=-1
+if [ -x "$EXTERNAL_CRYPT" ]; then
+  EXTERNAL_COUNT=$("$EXTERNAL_CRYPT" count "$DAY_KEY" 2>/dev/null || printf '%s' -1)
+fi
 DRIVE_COUNT=-1
 if "$RCLONE" lsf --files-only "agitcrypt:$DAY_KEY" >/dev/null 2>&1; then
   DRIVE_COUNT=$("$RCLONE" lsf --files-only "agitcrypt:$DAY_KEY" 2>/dev/null | grep -c . | tr -d ' ')

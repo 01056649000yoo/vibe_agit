@@ -38,8 +38,9 @@
 
 > **2026-08-29 운영·보안 보완 완료**: 자비스·샘링크 취약 의존성을 0건으로 갱신·재배포하고,
 > 8001·8080을 loopback으로 제한했으며 8444는 제거했다. 자비스 보안 헤더·동적 렌더링, 샘링크 HSTS,
-> secret 권한 600·Docker 빌드 제외와 자비스 로컬 git 기준점도 반영했다. 남은 핵심은 공개키 접속 준비 뒤
-> SSH 비밀번호 해제, 디스크 암호화, 이미지 CVE 스캔이다. 다음 자동 일정은 **2026-08-30 05:00 이후
+> secret 권한 600·Docker 빌드 제외와 자비스 로컬 git 기준점도 반영했다. 외장 SSD 신규 백업은 파일 단위
+> rclone crypt로 전환했다. 남은 핵심은 Tailscale SSH 공개키 전환, 내부 디스크 위험 수용, 이미지 CVE
+> 스캔이다. 다음 자동 일정은 **2026-08-30 05:00 이후
 > 백업 2일차 대조**다.
 > 상세 증거는 [보안 감사 보고서](docs/SECURITY_AUDIT_20260829.md)와 [WORKLOG.md](WORKLOG.md) 최상단에 있다.
 
@@ -78,7 +79,9 @@
 - [x] **P0** 샘링크·옛 자비스 secret env 권한 600과 두 저장소 `.dockerignore` 비밀/백업 패턴 보강
 - [x] 8001·8080 loopback 제한, 소비자 없는 8444 TCP/UDP 제거 후 Tunnel·공개 서비스 회귀 확인
 - [~] 자비스 보안 헤더와 샘링크/API HSTS 적용 — 아지트 API HSTS는 root Caddyfile 반영 대기
-- [ ] FileVault와 암호화 외장 SSD 전환 계획, 맥 밖 rclone 복구키 사본 확인
+- [x] 외장 SSD 신규 사본을 `agitssdcrypt:`로 파일명·내용 암호화하고 7/7 cryptcheck·실제 복구 리허설 통과
+- [~] 내부 FileVault는 무인 재부팅·Docker 자동 복구를 우선해 보류하고 물리 접근 제한으로 보완;
+      맥 밖 rclone 복구키 사본 확인과 기존 외장 평문 사본 정리는 대기
 - [~] 자비스 비밀 제외 로컬 git 초기 기준점 생성 — private 원격 연결·push 대기
 - [~] 컨테이너 격리 강화 — 샘링크 비root/read-only/cap drop/NNP 완료, 아지트·연구소·classroom-tools 대기
 - [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
