@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-08-29 — Supabase 긴급도 재판정: 전체 묶음과 Realtime 경로 차단 분리 (Codex)
+
+- **한 일**: “현재 즉시 올려야 하는가”를 답하기 위해 운영 `volumes/api/kong.yml`과 공식 v0.6.0 이후
+  Realtime gateway 보안 설정을 대조하고, 비밀 값을 출력하지 않은 채 로컬 Kong에 공개 anon 키로 상태
+  코드만 확인했다.
+- **결과**: `/realtime/v1/api/openapi`는 200, `/realtime/v1/api/tenants`는 403이었다. 현재 설정에는 공식판의
+  두 관리 경로 전용 `request-termination` 403 규칙이 없다. 공식 변경 기록도 Realtime 사용 설치에 이
+  보안 설정을 강하게 권고한다.
+- **결정**: Supabase 전체 v0.7.2 묶음은 백업·복구·격리 스모크 뒤 9월 변경 창까지 기다려도 되지만,
+  Realtime 두 관리 경로 차단은 전체 업데이트와 분리한 작은 선행 보안 보완으로 먼저 처리한다.
+- **변경/검증**: 이번에는 운영 Kong을 바꾸지 않고 정책·ROADMAP만 보정했다. 실제 반영 뒤에는 두 경로
+  모두 403, 정상 Realtime WebSocket 연결, `npm run test:security`를 확인해야 한다.
+- **남은 것 / 다음**: 사용자가 진행을 지시하면 Kong 설정 백업 → 공식 두 차단 규칙 추가 → config 검증·
+  Kong 재생성 → 공개/로컬 403·WebSocket·세 앱 회귀 순으로 반영한다.
+
 ## 2026-08-29 — Supabase self-hosted 월간 업데이트 정책 확정 (Codex)
 
 - **한 일**: 공식 self-hosted 릴리스·업데이트 문서와 현재 `~/agit-supabase/`의 혼합 이미지·세 Compose
