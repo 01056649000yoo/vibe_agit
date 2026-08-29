@@ -239,6 +239,7 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 | 항목 | 누가 |
 |---|---|
 | 🔴 `rclone.conf` 사본을 맥미니 밖에 보관 (3절) | **사용자** |
+| 🔴 내부 APFS(FileVault OFF)와 외장 백업 SSD(APFS 암호화 OFF)를 암호화 — 현재 두 위치의 백업은 평문 | 별도 유지보수 창 |
 | 더 이상 갱신하지 않는 `gdrive:Supabase-Backups/literacy/` 옛 평문 사본의 보존·삭제 결정 | 미정 |
 | 외장SSD 를 뽑으면 3중 중 하나가 빠진다 | — |
 

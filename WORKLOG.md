@@ -21,6 +21,35 @@
 
 ---
 
+## 2026-08-29 — 3개 앱 운영·서버·외부 노출 보안 감사 (Codex)
+
+- **운영 상태**: 아지트·샘링크·자비스와 공유 맥미니를 읽기 전용으로 대조했다. 컨테이너 16/16,
+  필수 health check, DB 23/100 연결, 열린 경고 0, 백업 앱 3/3·산출물/세 사본 7/7/7,
+  실제 복구 3/3이 정상이다. 호스트는 디스크 약 117GB와 메모리 약 63%가 남아 즉시 자원 압박은 없다.
+- **보안 양호**: 아지트 `npm run test:security`의 정적 71/71·RPC surface·미적용 마이그레이션 0·운영 DB
+  롤백 권한 스모크·포트/Edge 검사가 통과했고 운영 의존성 취약점도 0건이다. 공개 API의 REST·관리 후보
+  경로는 키 없이 401, 함수 루트는 400이다. Cloudflare credential과 통합 스택 시크릿 권한도 제한돼 있다.
+- **높은 우선순위 발견**: 자비스 운영 의존성은 높음 5건이며 실제 Middleware 인증과 Server Actions 10개를
+  사용한다. 샘링크는 높음 3·보통 1건이나 Middleware/Server Actions는 없다. 두 앱 모두 일반
+  `npm audit fix` 범위에서 안전 버전 후보가 확인됐다. SSH 22번은 모든 인터페이스와 방화벽 허용 상태이고
+  공개키뿐 아니라 password·keyboard-interactive도 제안한다.
+- **포트·격리**: 의도된 Caddy 80/443 외에 Jarvis origin 8001, classroom-tools 8080, Jarvis TLS 8444가
+  모든 인터페이스에서 LAN 응답했고 Stream Deck 28198도 전체 바인딩이다. Cloudflare Tunnel은 localhost
+  8001만 쓰므로 8001 loopback 제한과 8444 제거가 가능해 보인다. Docker 원격 API는 열려 있지 않다.
+  자비스 컨테이너는 비root/read-only/cap drop/NNP지만 아지트·샘링크·연구소·classroom-tools는 root·쓰기
+  가능·추가 격리 없음이다.
+- **비밀·보관**: 샘링크 실제 env와 이관 백업은 service-role·관리/webhook secret 계열 변수를 가지면서
+  권한이 644다. 현재 운영 이미지에 실제 env 파일은 없지만 `.dockerignore`가 백업 패턴을 막지 않는다.
+  자비스 프런트 env는 600이고 이미지에도 없으나 빌드 컨텍스트 `.dockerignore`가 없으며, 저장소는 아직
+  커밋 0·전체 untracked다. 이관 전 Jarvis Supabase env도 644다. 내부 FileVault와 외장 백업 SSD 암호화가
+  모두 꺼져 있고 두 로컬 백업은 평문이라 장비 분실 시 세 앱 DB·시크릿이 함께 노출될 수 있다.
+- **검증 한계/다음**: 원시 비표준 포트의 WAN 도달 여부는 공유기에서 확인해야 한다. Docker Scout는
+  Docker ID 로그인이 없어 이미지 CVE 스캔을 끝내지 못했으므로 0건으로 판정하지 않았다. 먼저 자비스·
+  샘링크 패치, SSH 키 전용화, secret 파일 600/빌드 제외를 처리하고 포트 축소·보안 헤더·디스크 암호화·
+  자비스 private git 기준점 순으로 진행한다. 상세 증거와 명령 결과 요약은
+  [`docs/SECURITY_AUDIT_20260829.md`](docs/SECURITY_AUDIT_20260829.md)에 남겼다. 이번 감사에서 운영 설정과
+  코드는 변경하지 않았다.
+
 ## 2026-08-29 — 주말 운영 정리 작업 최종 마감 (Codex)
 
 - **완료 묶음**: 3개 앱 통합 백업 대시보드의 첫 자동 백업과 관리자 RPC를 대조하고, 오늘 백업으로
