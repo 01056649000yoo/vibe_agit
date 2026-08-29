@@ -21,6 +21,34 @@
 
 ---
 
+## 2026-08-29 — 3개 앱 P0·P1 보안 보완과 운영 재배포 (Codex)
+
+- **의존성·빌드**: 샘링크를 Next 16.3.3·nanoid 3.3.18·postcss 8.5.26·sharp 0.35.4,
+  자비스를 Next 15.5.24·nanoid 3.3.18·postcss 8.5.26·sharp 0.35.4·ws 8.21.3으로 갱신했다.
+  두 앱과 아지트 모두 `npm audit --omit=dev` 0건이다. 샘링크 host/Docker 빌드, 자비스 타입검사와
+  Docker 빌드가 통과했다. 자비스 인증 대시보드는 빌드 시 DB 자료를 정적으로 굽지 않도록 상위 layout을
+  `force-dynamic`으로 바꿨고 전체 대시보드 경로가 요청 시 렌더링되는 것을 빌드 결과로 확인했다.
+- **비밀·브라우저 방어**: 샘링크 실제 env·이관 백업과 옛 자비스 Supabase env를 600으로 제한했다.
+  샘링크 `.dockerignore`는 `.env*` 전체를 제외하고 자비스 프런트에도 같은 제외 파일을 추가했다. 재빌드
+  이미지에는 실제 env가 없다. 자비스에는 CSP·HSTS·frame 차단·nosniff·Referrer/Permissions Policy를,
+  Jarvis Caddy에는 샘링크·공유 API HSTS를 추가했고 공개 응답에서 확인했다.
+- **포트·배포**: `jarvis-caddy` 8001과 `classroom-tools` 8080을 loopback 전용으로 재생성하고 소비자가 없는
+  8444 TCP/UDP publish를 제거했다. LAN 두 인터페이스에서 세 포트가 모두 응답하지 않고, Cloudflare의
+  샘링크 200·자비스 307→로그인 200과 host Caddy survival 200은 유지된다. 운영 커밋은 샘링크
+  `729a7d4`·`af43109`, classroom-tools `d0dc42a`, 자비스 첫 로컬 코드 기준점 `552d9f2`다. 샘링크는
+  추가로 `node` 비root·read-only·cap drop·NNP와 전용 tmpfs 캐시를 적용해 메인·통계·공개 응답 200,
+  소유권 오류 없음까지 확인했다. 샘링크는 `origin/main`보다 2개, classroom-tools는 1개 앞서 있고 아직
+  push하지 않았다. 자비스 private 원격도 아직 연결하지 않았다.
+- **검증**: 아지트 `npm run test:security` 정적 71/71·RPC surface·운영 DB 롤백 스모크·운영 포트 검사가
+  모두 통과했다. 비인가 REST·Auth admin·Studio는 401, 컨테이너 16/16, 백업 앱 3/3·사본 7/7/7·복구
+  3/3·경고 0·서비스 200/200/307이다. 연결 가능한 브라우저가 없고 독립 브라우저 CLI도 설치돼 있지 않아
+  눈검사는 못 했으며 공개 HTTP·헤더·로그·빌드로 대체했다.
+- **남은 것 / 다음**: SSH는 공개키 전용 접속 시험이 255로 실패했고 비대화형 관리자 권한도 없어, 지금
+  password/keyboard-interactive를 끄면 잠길 수 있어 변경하지 않았다. 먼저 사용할 공개키를 등록한 뒤
+  SSH 키 전용화·공유기 TCP 22 확인을 진행한다. FileVault·외장 SSD 암호화는 복구키와 데이터 이전을
+  확인하는 별도 유지보수 작업이다. 아지트 API HSTS의 root Caddyfile 반영, 운영 이미지 CVE 스캔,
+  Stream Deck 28198 차단 여부와 세 로컬 커밋의 원격 push도 남았다.
+
 ## 2026-08-29 — 3개 앱 운영·서버·외부 노출 보안 감사 (Codex)
 
 - **운영 상태**: 아지트·샘링크·자비스와 공유 맥미니를 읽기 전용으로 대조했다. 컨테이너 16/16,
