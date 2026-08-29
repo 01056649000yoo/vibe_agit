@@ -46,6 +46,10 @@
 17. 공통 학습 콘텐츠 카탈로그는 문제 정답을 포함하므로 익명·학생·교사 브라우저와 `service_role`에 표 직접 권한을
    주지 않는다. 학년군·내용/문제 난이도·검수 신호가 해결된 `published` 자료만 기능 전용 RPC가 사용하며, 학생에게
    문제를 줄 때는 정답을 빼고 답안 제출 RPC가 실제 학생·학급·서버 발급 문항을 다시 확인한다.
+18. Realtime WebSocket은 통합 연구소의 활성 질문 결과 화면에만 허용한다. Kong은
+    `/realtime/v1/api/openapi`와 `/realtime/v1/api/tenants`를 `request-termination` 403으로 먼저 차단한 뒤
+    일반 `/realtime/v1/` WebSocket route를 처리해야 한다. `npm run test:security:ops`는 운영 설정과 실제
+    anon 키 403을 함께 확인한다.
 
 ## 실행
 

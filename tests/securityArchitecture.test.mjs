@@ -43,6 +43,16 @@ const weeklySpellingReviewMigration = await readFile(
 const commentQueueMigration = await readFile(
     'supabase/migrations/20261180_comment_ai_review_queue.sql', 'utf8'
 );
+const operationalSecurity = await readFile('scripts/check-operational-security.mjs', 'utf8');
+
+test('운영 보안 검사는 Realtime 관리 경로의 정적 규칙과 실제 403을 함께 확인한다', () => {
+    assert.match(operationalSecurity, /realtime-v1-rest-openapi/);
+    assert.match(operationalSecurity, /realtime-v1-rest-tenants/);
+    assert.match(operationalSecurity, /request-termination/);
+    assert.match(operationalSecurity, /status_code: 403/);
+    assert.match(operationalSecurity, /response\.status !== 403/);
+    assert.match(operationalSecurity, /headers: \{ apikey: anonKey \}/);
+});
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
     assert.match(vibeAi, /profile\.is_approved === true/);

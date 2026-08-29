@@ -21,6 +21,27 @@
 
 ---
 
+## 2026-08-29 — Realtime 관리 경로 차단 완료·Supabase 묶음 갱신 10월 연휴로 확정 (Codex)
+
+- **한 일**: 통합 연구소의 학생 제출 즉시 확인 WebSocket은 유지하면서, 공식 v0.6.0 방식의 Realtime
+  `openapi`·`tenants` 전용 `request-termination` 403 route를 운영 Kong 설정에 추가했다. 전체 Supabase
+  묶음 갱신은 2026-10-03~05 개천절 연휴로 이월했다.
+- **git 밖 변경**: `~/agit-supabase/volumes/api/kong.yml`을 날짜가 붙은 같은 디렉터리 사본으로 보존한 뒤
+  두 차단 route를 일반 Realtime REST route보다 앞에 추가했다. 세 Compose 병합 설정을 검증하고 다른
+  서비스는 건드리지 않은 채 `agit-kong`만 재생성했다.
+- **결과/검증**: 변경 전 새 운영 검사가 두 정적 route 누락과 `openapi=200`을 실제 실패로 잡았다. 변경 뒤
+  공개 anon 키 기준 `openapi=403`, `tenants=403`, 일반 WebSocket handshake=101이다. Kong·Realtime·Auth·
+  Storage가 healthy이고 Kong 최근 오류 0이다. `scripts/check-operational-security.mjs`가 앞으로 운영
+  `kong.yml`의 두 규칙과 실제 403을 한꺼번에 확인하며 정적 회귀 검사도 추가했다. `npm run test:security`
+  전체, 프로덕션 빌드, ESLint 오류 0이 통과했다. ESLint의 기존 `no-use-before-define` 등 경고 38개는 이번
+  운영 설정 변경과 무관하며 새 경고는 없다. 정적 검사에서 openapi route 이름을 잠시 깨뜨렸을 때 실제
+  1건 실패한 뒤 원복·재통과하는 것까지 확인했고, 검증용 임시 파일은 제거했다.
+- **10월 일정**: 9월 25일에 9월 19일까지 공개돼 14일 이상 관찰된 최신 호환 `self-hosted/v*` 태그를
+  고정한다. 9월 26일~10월 2일 격리 복원·dry-run·스모크를 끝내고, 10월 1일 월간 실제 복구 3/3을 최종
+  게이트로 삼아 10월 4일 00:00~02:00 Kong override로 반영한다. 10월 4~5일은 집중 관찰·롤백 여유로 둔다.
+- **남은 것 / 다음**: 운영 이미지와 `.supabase-version`은 아직 변경하지 않았으며 Envoy 전환도 이번
+  일정에 포함하지 않는다. 9월 25일 후보 고정 전까지 새 공식 릴리스와 백업 추이를 계속 확인한다.
+
 ## 2026-08-29 — 세 본앱 Realtime 미사용·통합 연구소 조건부 1곳 확인 (Codex)
 
 - **한 일**: 아지트·샘링크·자비스·통합 연구소·classroom-tools의 JS/TS 소스에서 `.channel()`,

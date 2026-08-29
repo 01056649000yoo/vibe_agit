@@ -89,12 +89,11 @@
 - [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
 - [x] Supabase self-hosted 월간 릴리스 선택·검증·롤백 정책 수립 —
       [정책 문서](docs/SUPABASE_RELEASE_POLICY.md)
-- [ ] **선행 보안 보완**: 현재 anon 키로 200인 Realtime `/realtime/v1/api/openapi`와 관리 `/tenants`를
-      공식 Kong `request-termination` 규칙으로 둘 다 403 차단하고 통합 연구소 질문 결과 WebSocket 회귀 확인
-      (아지트·샘링크·자비스는 구독 0곳, 통합 연구소에 조건부 1곳, 점검 순간 연결 0개)
-- [ ] Supabase 1차 정상화 — 현재 혼합 구성을 `self-hosted/v0.7.2` + Kong으로 맞추고
-      `.supabase-version` 기준점 확정(8/30 백업·9/1 복구·격리 스모크 통과 시 9/6 00:00~02:00 변경 창)
-- [ ] 정상화 7일 뒤 당시 최신 공식 묶음 + Kong override 검토; Envoy 전환은 별도 작업으로 분리
+- [x] Realtime `/realtime/v1/api/openapi`·`/tenants`를 공식 Kong `request-termination` 규칙으로 403 차단;
+      통합 연구소 제출 확인 WebSocket 101, Kong healthy, 최근 오류 0 확인
+- [ ] **10월 3~5일 연휴 Supabase 묶음 정상화** — 9/25에 14일 이상 관찰된 최신 호환 태그를 고정하고,
+      격리 복원·단계별 dry-run·세 앱/연구소 스모크 뒤 10/4 00:00~02:00 Kong override로 반영
+- [ ] 정상화 뒤 `.supabase-version` 기준점 기록과 7일 관찰; Envoy 전환은 별도 작업으로 분리
 - [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
