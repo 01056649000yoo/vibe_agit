@@ -21,6 +21,23 @@
 
 ---
 
+## 2026-08-29 — Supabase self-hosted 월간 업데이트 정책 확정 (Codex)
+
+- **한 일**: 공식 self-hosted 릴리스·업데이트 문서와 현재 `~/agit-supabase/`의 혼합 이미지·세 Compose
+  override, Caddy·배포 검사·통합 연구소의 `agit-kong`/8100 직접 참조를 대조해 월간 선택·적용 정책을
+  `docs/SUPABASE_RELEASE_POLICY.md`에 정리했다.
+- **결정**: 서비스별 Docker Hub 최신판이 아니라 함께 검증된 `self-hosted/vX.Y.Z`를 묶음 단위로 쓴다.
+  정기는 릴리스 14일 관찰 뒤 둘째 일요일 00:00~02:00, 공개 경로 보안 수정은 원칙적으로 72시간 안에
+  별도 변경 창으로 처리한다. Postgres 메이저·gateway·JWT/키 변경은 일반 이미지 갱신과 분리한다.
+- **현재 적용안**: 설치 기준점이 없고 최신 v0.8.0이 Kong→Envoy 기본 전환을 포함하므로, 먼저
+  `self-hosted/v0.7.2` + Kong으로 정상화한다. 8월 30일 백업 2일치와 9월 1일 실제 복구, 격리 복원·
+  dry-run·세 앱/연구소 스모크·CVE 재검사가 모두 통과하면 9월 6일 00:00~02:00에 반영한다. 7일 관찰 뒤
+  다음 공식 묶음은 Kong override로 검토하고 Envoy 전환은 별도 작업으로 남긴다.
+- **변경/검증**: 운영 Docker·Caddy·DB에는 손대지 않은 계획 문서 변경이다. 공식 v0.7.2 Compose의 실제
+  서비스 태그, v0.8.0 파괴적 변경, `.supabase-version` 없는 설치의 3-way merge 제한과 DB·Storage 별도
+  백업 필요 조건을 확인했다.
+- **남은 것 / 다음**: 8월 30일 05:00 이후 백업 추이 확인부터 일정표 순서대로 진행한다.
+
 ## 2026-08-29 — 통합 Supabase 버전 최신 여부 확인 (Codex)
 
 - **한 일**: 실제 `~/agit-supabase/` Compose 이미지 태그와 2026-08-29 기준 공식 Supabase self-hosted

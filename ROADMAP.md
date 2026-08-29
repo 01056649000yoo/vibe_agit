@@ -39,8 +39,8 @@
 > **2026-08-29 운영·보안 보완 완료**: 자비스·샘링크 취약 의존성을 0건으로 갱신·재배포하고,
 > 8001·8080을 loopback으로 제한했으며 8444는 제거했다. 자비스 보안 헤더·동적 렌더링, 샘링크 HSTS,
 > secret 권한 600·Docker 빌드 제외와 자비스 로컬 git 기준점도 반영했다. 외장 SSD 신규 백업은 파일 단위
-> rclone crypt로 전환했다. 남은 핵심은 Tailscale SSH 공개키 전환, 내부 디스크 위험 수용, 이미지 CVE
-> 스캔이다. 다음 자동 일정은 **2026-08-30 05:00 이후
+> rclone crypt로 전환했다. 운영 이미지 CVE 전수 검사는 끝났고, 남은 핵심은 Tailscale SSH 공개키 전환,
+> 내부 디스크 위험 수용, Supabase 공식 묶음 정상화다. 다음 자동 일정은 **2026-08-30 05:00 이후
 > 백업 2일차 대조**다.
 > 상세 증거는 [보안 감사 보고서](docs/SECURITY_AUDIT_20260829.md)와 [WORKLOG.md](WORKLOG.md) 최상단에 있다.
 
@@ -87,7 +87,11 @@
 - [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
       샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
 - [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
-- [ ] Supabase self-hosted 공식 최신 묶음으로 갱신 — 현재 2026-02~04 이미지 혼합, `.supabase-version` 기준점부터 확정
+- [x] Supabase self-hosted 월간 릴리스 선택·검증·롤백 정책 수립 —
+      [정책 문서](docs/SUPABASE_RELEASE_POLICY.md)
+- [ ] Supabase 1차 정상화 — 현재 혼합 구성을 `self-hosted/v0.7.2` + Kong으로 맞추고
+      `.supabase-version` 기준점 확정(8/30 백업·9/1 복구·격리 스모크 통과 시 9/6 00:00~02:00 변경 창)
+- [ ] 정상화 7일 뒤 당시 최신 공식 묶음 + Kong override 검토; Envoy 전환은 별도 작업으로 분리
 - [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
