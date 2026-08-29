@@ -21,6 +21,29 @@
 
 ---
 
+## 2026-08-29 — 자비스 개인 대시보드 업데이트 전 분석 (Codex)
+
+- **한 일**: 자비스 저장소의 화면 구성, Server Action·인증·민감 섹션 잠금, DB 조회·캐시, Markdown·
+  Google Tasks/Calendar 동기화, Docker·Cloudflare Tunnel·호스트 Caddy·LaunchAgent 경로를 읽기 전용으로
+  대조했다. 개인 자료 내용은 열지 않고 표별 합계와 상태 분포만 사용했다.
+- **결과**: 외부 서비스는 Docker 경로에서 정상이며 컨테이너 자원·최근 로그·공개 로그인 이동·타입 검사·
+  운영 의존성 감사가 정상이다. 다만 Docker 3004와 구 호스트 Next 3003이 동시에 실행되고, 캐시 무효화도
+  두 서버의 localhost 변형 네 개와 공개 403 경로까지 호출한다. 화면은 업무 161건 중 완료 158건을 모두
+  렌더링하고 홈 누적 숫자·개발 설명이 행동 정보를 밀어낸다. 프로젝트 8개는 모두 진행중이다. 4초 자동
+  새로고침과 1분마다 Google Tasks 165건 전체 비교도 개인용 규모에 비해 과하다.
+- **보안·유지보수 발견**: Middleware가 Server Action을 통과시키므로 Action 자체 인증이 필수인데 잠금 해제·
+  잠금·첨부 PIN Action은 공용 로그인 검사를 호출하지 않는다. 첨부 잠금 쿠키만 `secure: false`이고 잠금
+  상태는 서명 없는 `true` 쿠키다. 별도 테스트가 없으며 `npm run lint`는 대화형 설정 질문을 띄운다.
+  Git은 프런트·Compose 한 커밋만 있고 private 원격이 없으며, 실제 동기화 스크립트와 개인 데이터 폴더가
+  함께 untracked라 선별적인 버전 관리·ignore 경계가 필요하다.
+- **검증**: Docker 프런트/프록시 2개 정상, 공개 루트 307, Docker·구 호스트 로그인 200, 최근 프런트 로그
+  오류 없음, TypeScript 통과, Next 15.5.24·React 19.2.5, `npm audit --omit=dev` 0건이다. 연결 가능한 인증
+  브라우저가 없어 로그인 뒤 실제 화면 눈검사는 하지 못했다.
+- **남은 것 / 다음**: 먼저 private Git·개인 자료 제외와 3003 구 서버 정리로 운영 기준을 하나로 만든다.
+  이어 Server Action 인증·검사 게이트를 보완한 뒤 오늘 중심 홈, 완료 업무 접기, 프로젝트 노후 표시,
+  새로고침·Google Tasks 주기 완화를 적용한다. 상세 순서는
+  [`docs/JARVIS_DASHBOARD_REVIEW_20260829.md`](docs/JARVIS_DASHBOARD_REVIEW_20260829.md)에 정리했다.
+
 ## 2026-08-29 — 외장 SSD 백업을 rclone crypt로 전환 (Codex)
 
 - **한 일**: 고정 외장 SSD를 포맷하지 않고 `/Volumes/SHmaegmini/agit-backups-encrypted`에
