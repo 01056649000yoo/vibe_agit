@@ -149,8 +149,8 @@
       `공유 → 자료 수합`의 양식 수정·저장·열기/마감·링크 복사·응답표를 구현해 운영 배포
 - [x] **J9 Google Sheet 생성 경로** — 오픈클로 `jarvis-collection` 스킬과 `make_collection.py`가
       양식 열에 맞는 새 Sheet를 소유자 전용 비공개로 만들고, 응답은 DB 우선 저장 뒤 추가만 하는 작업기 준비
-- [~] **J9 상시 Sheet 반영** — 30초 LaunchAgent 파일은 설치했으나, 연결 Google 계정으로 향후 수합 응답을
-      지속 전송하는 권한 승인이 필요해 아직 로드하지 않음
+- [x] **J9 상시 Sheet 반영** — 사용자 승인 범위(명시적으로 만든 수합의 제목·제출 시각·입력값, 양식별
+      새 소유자 비공개 Sheet)로 30초 LaunchAgent 로드; 연속 실행 종료 코드 0·전송 대기 0 확인
 - [ ] 첫 실제 자료 수합을 만든 뒤 공유 탭 PC·모바일 눈검사, Sheet 열·권한·첫 응답 반영 확인
 - **고도화 계획(정본)**: [docs/JARVIS_UPGRADE_PLAN_20260829.md](docs/JARVIS_UPGRADE_PLAN_20260829.md)
 - **최초 점검 근거**: [docs/JARVIS_DASHBOARD_REVIEW_20260829.md](docs/JARVIS_DASHBOARD_REVIEW_20260829.md)

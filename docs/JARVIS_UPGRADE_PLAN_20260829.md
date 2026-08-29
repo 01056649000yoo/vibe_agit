@@ -476,8 +476,8 @@ openclaw cron add --name "주간 업무 확인" --schedule "0 16 * * 5" --sessio
 - [x] 전용 Sheet 생성·열 헤더·숨김 응답 ID·추가 전용 작업기
 - [x] 오픈클로 생성 스크립트·`jarvis-collection` 스킬 `ready`
 - [x] 타입·프로덕션/Docker 빌드, 운영 암호→입력→제출→DB 스모크 통과
-- [~] `com.jarvis.collection-sheets` LaunchAgent 파일은 설치됐지만 **연결 Google 계정으로 향후 응답을
-      30초마다 지속 전송하는 외부 연동 승인 전이라 로드하지 않았다**
+- [x] 사용자 승인 후 `com.jarvis.collection-sheets` LaunchAgent 로드. 명시적으로 만든 수합의 제목·제출
+      시각·입력값만 양식별 새 소유자 비공개 Sheet에 30초마다 추가하며, 연속 실행 종료 코드 0·대기 0 확인
 - [ ] 첫 실제 양식으로 Google Sheet 생성·소유자 비공개·첫 응답 행 추가 확인
 - [ ] 관리자 실계정 PC·모바일 공유 탭 눈검사(현재 연결 가능한 브라우저 없음)
 
