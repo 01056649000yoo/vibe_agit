@@ -75,8 +75,9 @@
 
 ### DB 컨테이너
 - 운영 DB는 **`agit-db`** 하나다. 자비스는 `app`, 샘링크는 `samlink`, 연구소는
-  `writing_helper` 스키마로 격리한다. 예전 PG15 `supabase-db`는 2026-08-28에 컨테이너를 제거했고
-  bind 데이터와 이관 백업은 롤백용으로 보존한다.
+  `writing_helper` 스키마로 격리한다. 예전 PG15 `supabase-db`는 2026-08-28에 컨테이너를 제거했고,
+  2026-08-29 통합 복구 3/3 뒤 이미지·소형 볼륨·bind 데이터까지 제거했다. 이관 직전 통합 덤프와
+  Caddy·롤·제거 목록은 `~/agit-backups/pre-docker-cleanup-20260828/`에 롤백용으로 보존한다.
 - 아지트 실데이터 확인: `docker exec agit-db psql -U postgres -d postgres -c "SELECT count(*) FROM students;"`
 
 ### docker-compose 파일 3개는 항상 같이 써야 한다

@@ -21,6 +21,32 @@
 
 ---
 
+## 2026-08-29 — 옛 PG15 스택 최종 정리·통합 복구 3/3 검증 (Codex)
+
+- **선행 복구 검증**: 삭제 전에 오늘 04:00 통합 백업을 수동 복구 리허설했다. 임시 DB에 166개 표·
+  데이터 항목과 `anon/authenticated` 권한 609개를 실제 복원하고 Storage 12개 파일, 스택·자비스 압축,
+  Caddy·롤·Realtime, 암호화 Drive 7개 크기 일치를 확인했다. 관리자 원장에는 아지트 148·샘링크 9·
+  자비스 9개 표가 복구 `3/3 PASS`로 기록됐다.
+- **중지**: 제거된 `supabase-db`를 매일 찾던 `local.literacy.backup`을 `launchctl bootout`하고, 다음
+  로그인 때 재등록되지 않도록 plist를
+  `~/Library/LaunchAgents/local.literacy.backup.plist.disabled-20260829`로 이름을 바꿔 보존했다.
+  0행 `literacy` 잔재용 스크립트와 과거 로그는 삭제하지 않아 필요하면 원인을 되짚을 수 있다.
+- **제거**: 실행 소비자 0인 `supabase/postgres:15.8.1.085` 이미지 2.92GB와 링크 0인
+  `supabase_db-config`·`supabase_deno-cache` 볼륨 약 0.4MB를 제거했다. 이관 보존 덤프가
+  `public·auth·storage·writing_helper·writing_helper_internal·app·samlink` 7개 스키마의 표·데이터
+  165개 항목을 정상적으로 읽는지 확인한 뒤 옛 PG15 bind 데이터 디렉터리 297MB도 삭제했다.
+- **재생성 방지·보존**: 옛 스택 기본 Compose 파일은 삭제하지 않고
+  `docker-compose.yml.retired-20260829`로 바꿨다. 이관 직전 `integrated.dump`·롤·Caddy·제거 목록 15MB는
+  `~/agit-backups/pre-docker-cleanup-20260828/`에 그대로 남겼다. 옛 DB bind 데이터는 직접 복구할 수
+  없지만 이 보존본과 매일 통합 백업으로 복구할 수 있다.
+- **결과/검증**: Docker 이미지 사용량은 15.18GB에서 12.25GB로 줄었고 옛 스택 디렉터리는
+  297MB에서 540KB가 됐다. 현재 16개 컨테이너는 모두 실행 중이다. 최종 판정은 백업 3/3,
+  복구 3/3, 사본 7/7/7, 열린 경고 0, 서비스 200/200/307이며 백업 회귀 7/7을 통과했다.
+  `supabase_default`는 Jarvis Caddy 등 현재 소비자 4개가 있어 제거하지 않았다. 서비스 중단은 없었다.
+- **남은 것 / 다음**: 7일 백업 관측은 9월 4일까지 계속한다. Google Drive 동기화 폴더의 옛
+  `literacy` 평문 백업은 이번 로컬 Docker 정리 범위에서 삭제하지 않았으며, 별도 오프사이트 자료 삭제
+  작업으로 다룬다.
+
 ## 2026-08-29 — 자비스·샘링크 이관 뒤 옛 Docker 스택 잔재 점검 (Codex)
 
 - **결론**: 옛 PG15 `supabase` 백엔드 스택을 다시 실행할 실서비스 소비자는 없다. 현재 16개 컨테이너는
