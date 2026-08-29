@@ -87,6 +87,8 @@
 - [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
       샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
 - [ ] Docker Scout 로그인 또는 승인된 대체 스캐너로 운영 이미지 CVE 점검
+- [ ] Stream Deck 28198의 공유기 TCP 전달 여부 확인 — 호스트는 현재 `*:28198` 수신 중
+- [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
 - **보고서**: [docs/SECURITY_AUDIT_20260829.md](docs/SECURITY_AUDIT_20260829.md)
 
 ### 자비스 개인 대시보드 1차 개편 (2026-08-29 분석)
