@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-08-29 — 자비스 로컬 Docker 재배포·GitHub 미사용 확정 (Codex)
+
+- **사용자 방향**: 자비스는 GitHub에 푸시하지 않는다. 로컬 Git의 작은 커밋을 롤백 기준으로 삼고 기존
+  통합 백업으로 복구한다. 실제 저장소도 원격이 설정되어 있지 않은 상태를 확인했다.
+- **변경**: `~/Jarvis_Brain_Local`에서 `jarvis_brain_local-frontend:latest`를 로컬 빌드하고
+  `docker compose up -d --no-deps frontend`로 프론트 컨테이너만 교체했다. DB·Caddy·다른 앱과 GitHub에는
+  변경을 보내지 않았다.
+- **결과/검증**: Next.js 15.5.24 프로덕션 컴파일·타입 검사가 통과했다. 운영 컨테이너는 새 이미지
+  `1813b6e8…`와 일치하고 `running`·재시작 0회이며 시작 로그 오류가 없다. 직접 3004·Caddy 8001·공개
+  HTTPS의 `/share`는 비로그인 307, 공개 `/login`은 200, 형식은 맞지만 없는 32자 수합 토큰은 404다.
+  Sheet LaunchAgent도 배포 뒤 41회·마지막 종료 코드 0으로 유지됐다.
+- **남은 것 / 다음**: 첫 실제 자료 수합으로 비공개 Sheet 생성·첫 응답 행과 관리자 PC·모바일 공유 탭을
+  확인한다. 자비스 배포는 앞으로도 GitHub push가 아니라 로컬 빌드·교체·HTTP 스모크로 진행한다.
+
 ## 2026-08-29 — 자료 수합 Google Sheet 상시 반영 승인·활성화 (Codex)
 
 - **한 일**: 사용자가 `~/.openclaw/workspace/token.json`에 연결된 본인 Google 계정으로, 명시적으로 만든
