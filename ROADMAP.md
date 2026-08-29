@@ -90,7 +90,8 @@
 - [x] Supabase self-hosted 월간 릴리스 선택·검증·롤백 정책 수립 —
       [정책 문서](docs/SUPABASE_RELEASE_POLICY.md)
 - [ ] **선행 보안 보완**: 현재 anon 키로 200인 Realtime `/realtime/v1/api/openapi`와 관리 `/tenants`를
-      공식 Kong `request-termination` 규칙으로 둘 다 403 차단하고 WebSocket 회귀 확인
+      공식 Kong `request-termination` 규칙으로 둘 다 403 차단하고 통합 연구소 질문 결과 WebSocket 회귀 확인
+      (아지트·샘링크·자비스는 구독 0곳, 통합 연구소에 조건부 1곳, 점검 순간 연결 0개)
 - [ ] Supabase 1차 정상화 — 현재 혼합 구성을 `self-hosted/v0.7.2` + Kong으로 맞추고
       `.supabase-version` 기준점 확정(8/30 백업·9/1 복구·격리 스모크 통과 시 9/6 00:00~02:00 변경 창)
 - [ ] 정상화 7일 뒤 당시 최신 공식 묶음 + Kong override 검토; Envoy 전환은 별도 작업으로 분리

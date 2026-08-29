@@ -21,6 +21,23 @@
 
 ---
 
+## 2026-08-29 — 세 본앱 Realtime 미사용·통합 연구소 조건부 1곳 확인 (Codex)
+
+- **한 일**: 아지트·샘링크·자비스·통합 연구소·classroom-tools의 JS/TS 소스에서 `.channel()`,
+  `postgres_changes`, Realtime client와 WebSocket 사용처를 전수 검색하고 운영 DB publication·Realtime
+  컨테이너의 현재 연결 수를 읽기 전용으로 확인했다.
+- **결과**: 아지트·샘링크·자비스 본앱은 실제 Realtime 구독이 0곳이다. `@supabase/realtime-js`가 lockfile에
+  있는 것은 supabase-js의 전이 의존성일 뿐 사용 증거가 아니다. 통합 연구소에는 활동 중인 질문 만들기 결과
+  창을 교사가 열었을 때 `writing_helper.activity_events`를 구독하는 1곳이 있으며 실패 시 5초 조회로
+  전환한다. 이 테이블은 `supabase_realtime` publication에 등록돼 있다.
+- **운영 상태**: 점검 순간 Realtime 컨테이너 4000 포트의 ESTABLISHED 연결은 0개였고 최근 로그에도 채널
+  접속 흔적은 없었다. 단, 로그 수준상 과거 사용량 0을 완전히 증명하는 수치는 아니며 소스의 조건상 해당
+  교사 화면을 열 때만 연결된다.
+- **판단**: Realtime은 세 본앱의 필수 기반은 아니지만 통합 연구소에서 제한적으로 사용하므로 바로 컨테이너를
+  내리지는 않는다. 또한 클라이언트 사용 빈도와 공개 관리 REST 경로 노출은 별개이므로, 공식 Kong 403 차단은
+  여전히 적용 대상이다.
+- **변경/검증**: 운영 서비스·DB·Kong은 변경하지 않았고 정책·ROADMAP의 사용 현황 설명만 보정했다.
+
 ## 2026-08-29 — Supabase 긴급도 재판정: 전체 묶음과 Realtime 경로 차단 분리 (Codex)
 
 - **한 일**: “현재 즉시 올려야 하는가”를 답하기 위해 운영 `volumes/api/kong.yml`과 공식 v0.6.0 이후

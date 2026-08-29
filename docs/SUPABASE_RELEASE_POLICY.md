@@ -56,6 +56,12 @@ Caddy와 앱 설정은 묶음 업데이트의 호환성 검사 대상에는 포�
 - `/realtime/v1/api/openapi` → `200`
 - `/realtime/v1/api/tenants` → `403`
 
+아지트·샘링크·자비스 본앱 소스에는 `.channel()`·`postgres_changes` 구독이 없다. 다만 통합 연구소의
+교사용 질문 결과 화면은 활동 중인 `question_generator` 결과 창을 열었을 때만
+`writing_helper.activity_events`를 구독하며, 실패하면 5초 조회로 전환한다. 해당 테이블은 실제
+`supabase_realtime` publication에도 등록돼 있다. 점검 순간 Realtime 4000 포트의 연결 세션은 0개였다.
+따라서 Realtime은 상시 핵심 경로는 아니지만 완전 미사용 서비스도 아니다.
+
 공식 v0.6.0은 두 경로 모두 gateway의 `request-termination` 규칙으로 403 차단하며, Realtime을 실행하는
 self-hosted 설치에 강하게 적용을 권고한다. 전체 이미지 묶음은 예정된 검증 창까지 기다리되, 이 두 차단 규칙은
 작은 Kong 설정 변경으로 먼저 반영하고 두 경로의 403과 일반 WebSocket 연결을 함께 회귀 확인한다.
