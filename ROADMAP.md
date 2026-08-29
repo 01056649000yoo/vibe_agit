@@ -81,6 +81,8 @@
 - [ ] FileVault와 암호화 외장 SSD 전환 계획, 맥 밖 rclone 복구키 사본 확인
 - [~] 자비스 비밀 제외 로컬 git 초기 기준점 생성 — private 원격 연결·push 대기
 - [~] 컨테이너 격리 강화 — 샘링크 비root/read-only/cap drop/NNP 완료, 아지트·연구소·classroom-tools 대기
+- [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
+      샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
 - [ ] Docker Scout 로그인 또는 승인된 대체 스캐너로 운영 이미지 CVE 점검
 - **보고서**: [docs/SECURITY_AUDIT_20260829.md](docs/SECURITY_AUDIT_20260829.md)
 
