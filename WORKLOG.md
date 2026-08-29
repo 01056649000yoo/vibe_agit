@@ -21,6 +21,30 @@
 
 ---
 
+## 2026-08-29 — 자비스·샘링크 이관 뒤 옛 Docker 스택 잔재 점검 (Codex)
+
+- **결론**: 옛 PG15 `supabase` 백엔드 스택을 다시 실행할 실서비스 소비자는 없다. 현재 16개 컨테이너는
+  모두 실행 중이고 DB·Auth·REST·Kong은 `agit-*` PG17 통합 스택 한 벌뿐이다. 자비스는 `app`, 샘링크는
+  `samlink` 스키마와 `agit-kong:8000`/호스트 8100을 사용하며, 예전 `supabase.샘링크.kr` 주소도 호스트와
+  Jarvis Caddy 양쪽에서 통합 Kong 8100으로 전달한다.
+- **지우면 안 되는 잔재**: 이름이 옛 스택처럼 보이는 `supabase_default` 네트워크에는 현재
+  `jarvis-caddy`·`jarvis-frontend`·`classroom-tools`·`samlink-app` 4개가 붙어 있다. 특히 Caddy가
+  `frontend:3000`과 `classroom-tools:8080` 별칭을 실제로 쓰므로 지금 네트워크를 지우면 공개 경로가
+  끊긴다. 전용 호환 네트워크로 옮기기 전까지 유지한다.
+- **정리 후보**: 소비자 0인 `supabase/postgres:15.8.1.085` 이미지는 2.92GB다. 옛 named volume 두 개는
+  합계 약 0.4MB, 옛 bind DB 자료는 `~/Jarvis_Brain_Local/self-hosted-supabase/volumes/db` 약 297MB,
+  이관 직전 별도 보존본은 `~/agit-backups/pre-docker-cleanup-20260828/` 약 15MB다. Docker 전체 회수 가능
+  이미지 7.50GB에는 통합 스택의 필요 시 재다운로드할 Studio·Meta·Logflare·Vector·Pooler와 과거 앱
+  이미지도 섞여 있으므로 일괄 prune 대상으로 보지 않는다. 일일 자비스 압축은 `volumes/db/data`를 이미
+  제외해 옛 DB 297MB를 매일 중복 업로드하지 않는다.
+- **발견한 운영 잔재**: `local.literacy.backup` LaunchAgent가 매일 03:00 제거된 `supabase-db`를 아직
+  대상으로 삼아 8월 29일 처음 실패했다. 이관 전 확인에서도 `literacy` 스키마는 0행인 서바이벌 잔재였고
+  현재 서비스 컨테이너도 없다. 이는 옛 스택을 되살릴 이유가 아니라 예약 작업을 중지·정리할 근거다.
+- **변경/다음**: 이번 점검은 읽기 전용으로 진행해 컨테이너·네트워크·이미지·볼륨·LaunchAgent를
+  삭제하거나 중지하지 않았다. 7일 백업 관측과 9월 1일 통합 복구 3/3이 끝난 뒤 ① literacy 예약 작업
+  중지 ② PG15 이미지와 미사용 소형 볼륨 제거 ③ 이관 보존본을 남긴 채 297MB bind 자료의 삭제 여부 결정
+  순서가 안전하다. `supabase_default`는 Jarvis Caddy를 전용 네트워크로 옮기는 별도 작업 전까지 유지한다.
+
 ## 2026-08-29 — 통합 백업 관리자 대시보드 첫 자동 실행 점검 (Codex)
 
 - **점검**: 전날 통합한 관리자 백업 대시보드의 첫 실제 자동 실행을 코드·운영 DB 원장·실제 세 사본·

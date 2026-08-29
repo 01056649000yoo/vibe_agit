@@ -81,7 +81,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 |---|---|---|---|---|
 | `com.agit.backup` | 매일 **04:00** | `agit-db` 통합 DB(`public·auth·storage·writing_helper·writing_helper_internal·app·samlink`) · Storage 객체 · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
 | `com.samlink.db-backup` | 매일 **03:30** | `agit-db`의 `samlink` 스키마 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
-| `local.literacy.backup` | 매일 **03:00** | literacy DB | 드라이브 동기화 폴더 | — |
+| `local.literacy.backup` | 매일 **03:00**(잔재·중지 예정) | 옛 `supabase-db`의 빈 `literacy` 잔재 | 드라이브 동기화 폴더 | 2026-08-29 대상 컨테이너 제거로 실패 |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 | `com.agit.backup-monitor` | 매일 **05:00** | 원장·세 사본·보조 백업·복구·서비스 읽기 판정 | 안전한 상태 한 줄 로그 | — |
 
@@ -91,6 +91,10 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 - 로그: `~/backups/auto/sync.log` · `~/.db-backup/backup.log` · `~/backups/auto/rehearsal.log`
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
 - 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
+
+> `local.literacy.backup`은 자비스·샘링크 이관 전 공유 PG15에 남아 있던 0행 `literacy` 스키마용이다.
+> 옛 `supabase-db` 제거 뒤 2026-08-29 03:00 실행이 실패했다. 이는 통합 3개 앱 백업 대상이 아니며,
+> 옛 스택을 되살리지 않고 7일 백업 관측·9월 1일 복구 확인 뒤 LaunchAgent를 중지·정리한다.
 
 ### 하루치 산출물 (7개)
 
