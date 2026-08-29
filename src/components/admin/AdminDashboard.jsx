@@ -10,9 +10,11 @@ import AdminDormantPanel from './AdminDormantPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
+import AdminServiceManagementPanel from './AdminServiceManagementPanel';
 import AdminDashboardOverview from './AdminDashboardOverview';
 import AdminHomeButton from './AdminHomeButton';
 import { useAdminHealthSummary } from './useAdminHealthSummary';
+import { useAdminServiceManagement } from './useAdminServiceManagement';
 import useAdminUsage from '../../hooks/useAdminUsage';
 import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
 
@@ -61,6 +63,7 @@ const TAB_GROUPS = [
         label: '🛠 운영',
         tabs: [
             { id: 'service', label: '서버 상태' },
+            { id: 'maintenance', label: '서비스 관리' },
             { id: 'backup', label: '백업 상태' },
             { id: 'announcements', label: '공지사항' },
             { id: 'feedback', label: '의견 제보' },
@@ -283,12 +286,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const usage = useAdminUsage();
 
     // States for UI
-    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'lab' | 'vocab' | 'spelling' | 'service' | 'maintenance' | 'backup' | 'feedback' | 'announcements' | 'settings'
     // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
     // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
 
     // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
     const health = useAdminHealthSummary();
+    const serviceManagement = useAdminServiceManagement();
     /*
      * 색은 **지금 손대야 하는지**만 나타낸다. 판단 기준은 `AdminResourceStatus` 와 같게 둔다 —
      * 두 곳이 다르면 상단은 초록인데 안에 들어가면 빨강인 일이 생긴다.
@@ -377,7 +381,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 { id: 'containers', label: '컨테이너', basis: '살아 있는 수 / 전체', value: health.summary ? `${health.summary.containerHealthy ?? '?'}/${health.summary.containerTotal ?? '?'}` : '확인 중', color: containerTone, icon: '📦', onOpen: () => setCurrentTab('service') },
                 { id: 'backups', label: '앱 백업', basis: '최근 통합 백업의 앱별 결과', value: backupValue, color: backupTone, icon: '🛟', onOpen: () => setCurrentTab('backup') },
                 { id: 'disk', label: '디스크 여유', basis: '잰 순간의 남은 용량', value: health.summary?.diskFreeGb != null ? `${health.summary.diskFreeGb}GB` : '확인 중', color: diskTone, icon: '💾', onOpen: () => setCurrentTab('service') },
-                { id: 'memory', label: '맥 메모리/스왑', basis: '잰 순간의 값', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') }
+                { id: 'memory', label: '맥 메모리/스왑', basis: '잰 순간의 값', value: health.summary?.hostMemoryAvailablePct != null && health.summary?.hostSwapUsedMb != null ? `${health.summary.hostMemoryAvailablePct}% / ${health.summary.hostSwapUsedMb}MB` : '확인 중', color: hostMemoryTone, icon: '🧠', onOpen: () => setCurrentTab('service') },
+                { id: 'maintenance', label: '서비스 점검', basis: '분기 점검·최근 이미지 CVE', value: serviceManagement.data ? (serviceManagement.data.summary?.review_initialized || serviceManagement.data.summary?.scan_initialized ? `${serviceManagement.data.summary?.attention_count || 0}건 확인` : '첫 점검 대기') : '확인 중', color: serviceManagement.data?.summary?.attention_count > 0 ? '#E53E3E' : '#2F855A', icon: '🧰', onOpen: () => setCurrentTab('maintenance') }
             ]
         }
     ];
@@ -386,8 +391,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         pending: newSignupCount,
         dormant: usage.inactiveTeachers.length,
         feedback: pendingFeedbackCount,
-        backup: health.summary?.backupAttentionCount || 0
-    }), [newSignupCount, usage.inactiveTeachers.length, pendingFeedbackCount, health.summary?.backupAttentionCount]);
+        backup: health.summary?.backupAttentionCount || 0,
+        maintenance: serviceManagement.data?.summary?.attention_count || 0
+    }), [newSignupCount, usage.inactiveTeachers.length, pendingFeedbackCount, health.summary?.backupAttentionCount, serviceManagement.data?.summary?.attention_count]);
 
     /*
      * 처리할 일이 있는 화면만 앞으로 뽑는다. 나머지는 늘 같은 묶음 순서 그대로라
@@ -880,6 +886,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         visited={visitedTabs.has('backup')}
                     >
                         <AdminBackupPanel />
+                    </KeepAlivePanel>
+
+                    <KeepAlivePanel
+                        active={currentTab === 'maintenance'}
+                        visited={visitedTabs.has('maintenance')}
+                    >
+                        <AdminServiceManagementPanel serviceManagement={serviceManagement} />
                     </KeepAlivePanel>
 
                     {currentTab === 'settings' && (

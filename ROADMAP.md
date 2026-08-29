@@ -100,6 +100,10 @@
 - [ ] 정상화 성공 뒤 `.supabase-version=self-hosted/v0.8.0` 기준점과 7일 관찰; Envoy 전환은 별도 작업
 - [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
+- [x] 관리자 `운영 → 서비스 관리`에 12항목 분기 점검표·완료일+3개월 일정·이미지별 CVE 원장과 추이 추가;
+      Docker 소켓 없는 tar 검사기와 30일 경과 판정 LaunchAgent 준비
+- [ ] **2026-08-30 Supabase 업데이트 확인 뒤 사용자 요청 시 첫 서비스 점검** — CVE `--force` 기준 검사,
+      12개 항목 확인·완료 시각을 첫 분기 기준으로 기록하고 이후 월간/분기 일정 활성화
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
 - **보고서**: [docs/SECURITY_AUDIT_20260829.md](docs/SECURITY_AUDIT_20260829.md)
 

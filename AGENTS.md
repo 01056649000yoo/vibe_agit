@@ -17,6 +17,7 @@
 | **[CLASS_ACTIVITY_TOOLS_PLAN.md](CLASS_ACTIVITY_TOOLS_PLAN.md)** | 전체 화면 모달 기반 학급 활동 도구함 확장 순서·공통 계약 |
 | **[src/components/student/README.md](src/components/student/README.md)** | 학생 메뉴 유형별 활성 표시·방문 기록·뒤로가기 계약과 신규 메뉴 추가 순서 |
 | **[backup.md](backup.md)** | 백업·복구 절차, 매월 1일 자동 리허설 |
+| **[docs/SERVICE_MANAGEMENT.md](docs/SERVICE_MANAGEMENT.md)** | 분기 셀프호스팅 점검표·월간 Docker 이미지 CVE 수집과 첫 기준 점검 절차 |
 | **[docs/OUTAGE_PLAN.md](docs/OUTAGE_PLAN.md)** | 맥미니 내부 장애 시 Caddy 점검 화면·로컬 상태 기록 운영 절차 |
 | **[MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)** | 브라우저 없이는 확인 못 하는 실기기 인수 검사표 |
 

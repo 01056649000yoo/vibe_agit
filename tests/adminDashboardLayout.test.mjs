@@ -52,14 +52,14 @@ test('처리할 일은 묶음 배지와 요약 카드 양쪽에서 보인다', a
     // 할 일이 없으면 앞 칸이 사라지고 늘 같은 순서만 남는다.
     assert.match(dashboard, /urgentTabs\.length > 0 && \(/);
     assert.match(dashboard, /badge=\{tabBadges\[tab\.id\]\}/);
-    for (const key of ['pending', 'dormant', 'feedback', 'backup']) {
+    for (const key of ['pending', 'dormant', 'feedback', 'backup', 'maintenance']) {
         assert.ok(dashboard.includes(`${key}:`), `'${key}' 배지 개수가 없다`);
     }
 
     // 요약 항목은 눌러서 그 일을 처리하는 화면으로 간다.
     assert.match(dashboard, /<AdminDashboardOverview groups=\{overviewGroups\}/);
     assert.match(overview, /group\.items\.map/);
-    for (const tabId of ['service', 'backup', 'pending', 'dormant', 'feedback']) {
+    for (const tabId of ['service', 'maintenance', 'backup', 'pending', 'dormant', 'feedback']) {
         assert.ok(dashboard.includes(`onOpen: () => setCurrentTab('${tabId}')`), `요약 카드에서 '${tabId}' 로 가는 길이 없다`);
     }
 });
@@ -76,7 +76,7 @@ test('한 번 연 화면은 살려 두어 다시 열 때 서버를 다시 읽지
     assert.match(dashboard, /display: active \? 'block' : 'none'/);
 
     // 서버를 다시 읽는 패널은 모두 살려 두어야 한다.
-    for (const tabId of ['students', 'dormant', 'lab', 'backup', 'vocab', 'spelling', 'announcements']) {
+    for (const tabId of ['students', 'dormant', 'lab', 'maintenance', 'backup', 'vocab', 'spelling', 'announcements']) {
         assert.ok(dashboard.includes(`visited={visitedTabs.has('${tabId}')}`), `'${tabId}' 화면이 살려 두기에서 빠졌다`);
     }
 });

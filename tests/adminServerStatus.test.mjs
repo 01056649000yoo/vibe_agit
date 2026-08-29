@@ -14,7 +14,7 @@ const [resourceStatus, servicePanel, dashboard, healthScript, migration, accurac
 
 test('서버 운영 정보는 운영 탭의 `서버 상태` 한 곳에 모인다', () => {
     // 예전에는 `현황 > 서비스 현황` 과 `운영 > 백업 상태` 로 흩어져 있었다.
-    assert.match(dashboard, /\{ id: 'service', label: '서버 상태' \},\s*\n\s*\{ id: 'backup', label: '백업 상태' \}/);
+    assert.match(dashboard, /\{ id: 'service', label: '서버 상태' \},\s*\n\s*\{ id: 'maintenance', label: '서비스 관리' \},\s*\n\s*\{ id: 'backup', label: '백업 상태' \}/);
     assert.ok(!/\{ id: 'service', label: '서비스 현황' \}/.test(dashboard), '옛 이름이 남아 있다');
     // 링크가 깨지지 않도록 id 는 그대로 둔다.
     assert.match(dashboard, /active=\{currentTab === 'service'\}/);

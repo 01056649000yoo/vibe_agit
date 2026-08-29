@@ -50,6 +50,10 @@
     `/realtime/v1/api/openapi`와 `/realtime/v1/api/tenants`를 `request-termination` 403으로 먼저 차단한 뒤
     일반 `/realtime/v1/` WebSocket route를 처리해야 한다. `npm run test:security:ops`는 운영 설정과 실제
     anon 키 403을 함께 확인한다.
+19. 서비스 정기점검·CVE 원장은 브라우저 역할과 `service_role`에 표 직접 권한을 주지 않는다. 호스트 CVE
+    검사기는 Docker 소켓 없이 이미지 tar를 하나씩 읽고, DB에는 제한된 이미지 식별자·노출 등급·개수와 원본
+    해시만 기록한다. 원본 JSON·패키지 경로·호스트 파일 경로는 브라우저에 반환하지 않는다. 점검 결과 수정과
+    완료는 실제 `profiles.role='ADMIN'` 관리자 RPC만 허용하며, 미확인 항목이 있으면 완료할 수 없다.
 
 ## 실행
 

@@ -1,0 +1,55 @@
+# 셀프호스팅 서비스 정기점검·CVE 대시보드
+
+## 운영 원칙
+
+- 관리자 대시보드의 `운영 → 서비스 관리`에서 분기 체크리스트와 Docker 이미지 CVE 추이를 함께 본다.
+- 분기 주기는 달력 분기를 억지로 맞추지 않고 **실제 점검 완료 시각 + 3개월**로 계산한다.
+- 첫 기준일은 자동으로 만들지 않는다. 2026-08-30 Supabase 업데이트를 확인한 뒤 사용자가 첫 점검을 요청한
+  시점에 점검을 시작하고, 모든 항목을 확인해 완료한 시각을 기준으로 삼는다.
+- CVE는 첫 점검 때 `npm run service:scan -- --force`로 기준을 만들고, 그 뒤에는 마지막 성공 검사에서 30일이
+  지난 날의 02:10 정기 작업이 실행한다. 이미지 변경 뒤에는 월간 일정 전이라도 `--force`로 다시 검사한다.
+- 자동화 범위는 수집·비교·표시까지다. 이미지 업데이트, 컨테이너·볼륨 삭제, 서비스 중지는 자동화하지 않는다.
+
+## 데이터 경계
+
+- 실행 중인 이미지는 `docker save`로 임시 tar 하나씩 만들고, digest로 고정한 Trivy 컨테이너에 읽기 전용으로
+  전달한다. Trivy에는 Docker 소켓을 마운트하지 않는다.
+- 원본 JSON은 gzip으로 압축해 `~/Library/Application Support/Agit/service-scans/`에 권한 600으로 둔다.
+- DB에는 이미지 참조·digest·서비스 묶음·노출 등급과 CRITICAL/HIGH/수정 가능/긴급 개수, 원본 SHA-256만
+  저장한다. 패키지 경로·원본 로그·파일 경로·시크릿은 저장하지 않는다.
+- 원장 테이블은 `anon`·`authenticated`·`service_role` 직접 접근을 모두 막는다. 호스트 기록 RPC와 실제
+  `profiles.role='ADMIN'`을 확인하는 관리자 RPC만 사용한다.
+
+## 점검 항목
+
+점검 항목의 단일 원본은 `20261198_service_management_dashboard.sql`의
+`system_service_review_catalog`이다. 현재 12개 영역은 외부 포트, SSH·Tailscale, 컨테이너 격리, 버전,
+비밀파일, HTTPS, 디스크·로그, 재시작, 백업·복구, 복구키·물리 보안, DB/RPC/Realtime, CVE 예외다.
+
+각 항목은 `미확인 / 정상 / 보완 필요 / 해당 없음` 중 하나로 판정한다. 짧은 근거나 다음 조치는 240자 안에서
+기록할 수 있지만 비밀번호·키·토큰은 입력하지 않는다. 미확인 항목이 하나라도 있으면 점검을 완료할 수 없다.
+
+## 첫 점검 절차
+
+1. Supabase 예약 업데이트 상태와 새 이미지·서비스 스모크를 확인한다.
+2. `npm run service:scan -- --force`를 실행해 첫 CVE 기준을 기록한다.
+3. 관리자 대시보드 `운영 → 서비스 관리 → 첫 점검 시작`을 누른다.
+4. 12개 항목을 실제 상태와 대조하고 항목별 결과를 저장한다.
+5. `점검 완료`를 누른다. 이 완료 시각의 3개월 뒤가 다음 점검일이 된다.
+6. 월간 검사 LaunchAgent가 로드됐는지 확인한다.
+
+## 판정
+
+- `긴급`: 공개 요청 경로에 있는 수정 가능한 CRITICAL 탐지 횟수
+- `조치`: 노출 등급과 무관하게 수정 가능한 CRITICAL·HIGH 탐지 횟수
+- `수집 실패`: 이미지 하나라도 tar 생성·Trivy 검사에 실패한 경우. 0건으로 오해하지 않도록 전체 실행을 FAIL로 남긴다.
+- CVE 개수는 취약 패키지 탐지 횟수이며 원격 공격 가능한 취약점 수와 같지 않다. 분기 점검에서 사용 경로와
+  예외 사유를 다시 판정한다.
+
+## 관련 파일
+
+- 화면: `src/components/admin/AdminServiceManagementPanel.jsx`
+- DB 원장·RPC: `supabase/migrations/20261198_service_management_dashboard.sql`
+- 호스트 검사기: `scripts/scan-service-images.mjs`
+- 서비스 노출 분류 원본: `ops/service-management/services.json`
+- 정기 작업: `ops/launchd/com.agit.service-vulnerability-scan.plist`

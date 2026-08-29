@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scanIntervalDays": 30,
+  "services": {
+    "agit-app": { "group": "agit", "exposure": "public" },
+    "agit-kong": { "group": "supabase", "exposure": "public" },
+    "agit-auth": { "group": "supabase", "exposure": "public" },
+    "agit-rest": { "group": "supabase", "exposure": "public" },
+    "agit-realtime": { "group": "supabase", "exposure": "public" },
+    "agit-storage": { "group": "supabase", "exposure": "public" },
+    "agit-imgproxy": { "group": "supabase", "exposure": "public" },
+    "agit-edge-functions": { "group": "supabase", "exposure": "public" },
+    "agit-db": { "group": "supabase", "exposure": "internal" },
+    "agit-templates-server-1": { "group": "supabase", "exposure": "internal" },
+    "writing-helper-lab-app": { "group": "lab", "exposure": "public" },
+    "samlink-app": { "group": "samlink", "exposure": "public" },
+    "samlink-cleanup": { "group": "samlink", "exposure": "internal" },
+    "jarvis-frontend": { "group": "jarvis", "exposure": "public" },
+    "jarvis-caddy": { "group": "jarvis", "exposure": "public" },
+    "classroom-tools": { "group": "classroom", "exposure": "public" }
+  }
+}
