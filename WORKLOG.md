@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-08-29 — 통합 Supabase 버전 최신 여부 확인 (Codex)
+
+- **한 일**: 실제 `~/agit-supabase/` Compose 이미지 태그와 2026-08-29 기준 공식 Supabase self-hosted
+  Docker Compose·변경 기록을 읽기 전용으로 대조했다.
+- **결과**: 현재 스택은 최신 묶음이 아니다. Auth 2.186.0→2.189.0, PostgREST 14.8→14.12,
+  Realtime 2.76.5→2.102.3, Storage 1.48.26→1.60.4, Edge Runtime 1.71.2→1.74.0,
+  Postgres 17.6.1.084→17.6.1.136, Postgres Meta 0.96.3→0.96.6, Supavisor 2.7.4→2.9.5 차이가 있다.
+  imgproxy 3.30.1과 Kong 3.9.1은 현재 구성과 공식 참조가 같지만 공식 기본 게이트웨이는 Envoy로 이동했다.
+- **업데이트 전제**: 설치 기준을 기록하는 `.supabase-version`이 없어 공식 `update.sh`의 안전한 3-way
+  merge를 바로 사용할 수 없다. 현재 파일과 가장 가까운 공식 릴리스/커밋을 먼저 기준점으로 확정하고,
+  통합 백업·복구 확인 → dry-run → 설정 충돌·새 env 검토 → 호환 이미지 일괄 적용 → 인증·REST·Storage·
+  Edge·Realtime·세 앱 스모크 순으로 진행해야 한다. 이번 확인에서는 운영 설정을 변경하지 않았다.
+- **남은 것 / 다음**: 운영 이미지 CVE 갱신 작업과 묶어 별도 변경 창에서 Supabase self-hosted 업데이트를
+  계획한다. 여러 앱이 같은 DB·API를 쓰므로 개별 이미지 태그만 즉흥적으로 올리지 않는다.
+
 ## 2026-08-29 — API HSTS 적용·운영 이미지 CVE 전수 검사·28198 범위 확인 (Codex)
 
 - **HSTS**: `/etc/caddy/Caddyfile`의 아지트 API 가상호스트에 1년 HSTS와 `includeSubDomains`를 추가했다.

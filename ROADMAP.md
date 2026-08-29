@@ -87,6 +87,7 @@
 - [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
       샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
 - [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
+- [ ] Supabase self-hosted 공식 최신 묶음으로 갱신 — 현재 2026-02~04 이미지 혼합, `.supabase-version` 기준점부터 확정
 - [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
