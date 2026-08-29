@@ -78,7 +78,7 @@
 - [ ] **P0** SSH 공개키 확인 후 password/keyboard-interactive 비활성화, 공유기 TCP 22 전달 여부 확인
 - [x] **P0** 샘링크·옛 자비스 secret env 권한 600과 두 저장소 `.dockerignore` 비밀/백업 패턴 보강
 - [x] 8001·8080 loopback 제한, 소비자 없는 8444 TCP/UDP 제거 후 Tunnel·공개 서비스 회귀 확인
-- [~] 자비스 보안 헤더와 샘링크/API HSTS 적용 — 아지트 API HSTS는 root Caddyfile 반영 대기
+- [x] 자비스 보안 헤더와 샘링크/API HSTS, 아지트 API 호스트 Caddy HSTS 공개 응답 반영
 - [x] 외장 SSD 신규 사본을 `agitssdcrypt:`로 파일명·내용 암호화하고 7/7 cryptcheck·실제 복구 리허설 통과
 - [~] 내부 FileVault는 무인 재부팅·Docker 자동 복구를 우선해 보류하고 물리 접근 제한으로 보완;
       맥 밖 rclone 복구키 사본 확인과 기존 외장 평문 사본 정리는 대기
@@ -86,9 +86,10 @@
 - [~] 컨테이너 격리 강화 — 샘링크 비root/read-only/cap drop/NNP 완료, 아지트·연구소·classroom-tools 대기
 - [x] 샘링크 보안 보완·classroom-tools loopback 제한·아지트 누적 완료 커밋을 각 `origin/main`에 push하고
       샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
-- [ ] Docker Scout 로그인 또는 승인된 대체 스캐너로 운영 이미지 CVE 점검
-- [ ] Stream Deck 28198의 공유기 TCP 전달 여부 확인 — 호스트는 현재 `*:28198` 수신 중
+- [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
+- [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
+- **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
 - **보고서**: [docs/SECURITY_AUDIT_20260829.md](docs/SECURITY_AUDIT_20260829.md)
 
 ### 자비스 개인 대시보드 1차 개편 (2026-08-29 분석)

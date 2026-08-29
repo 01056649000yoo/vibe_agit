@@ -11,7 +11,8 @@
 - 자비스·샘링크 운영 의존성, 불필요한 LAN 포트, 비밀파일 권한·Docker 빌드 제외와 자비스 보안 헤더는
   같은 날 보완했다. 세 앱 운영 의존성은 모두 취약점 0건이다.
 - 남은 핵심은 **Tailscale SSH 키 등록 뒤 비밀번호 로그인 해제**, **암호화되지 않은 내부 디스크와 기존 외장 평문 사본**,
-  **운영 이미지 OS 패키지 CVE 스캔**이다.
+  **운영 이미지 CVE 갱신 작업**이다. 이미지 검사는 완료했고 결과는
+  [별도 보고서](DOCKER_CVE_SCAN_20260829.md)에 정리했다.
 - 공유기 포트포워딩 설정은 맥미니 내부 점검만으로 확정할 수 없다. 아래의 `전체 인터페이스` 포트는 LAN 접근을
   실제 확인했으며, 인터넷에서 원시 포트로 직접 들어올 수 있는지는 공유기에서 별도로 대조해야 한다.
 
@@ -41,7 +42,7 @@
 | TCP 8001 | Jarvis Caddy의 Cloudflare origin | `127.0.0.1` 전용, 공개 Tunnel 정상 | **완료** — LAN 직접 접근 0 |
 | TCP 8080 | `classroom-tools` | `127.0.0.1` 전용, host Caddy 경로 200 | **완료** — LAN 직접 접근 0 |
 | TCP·UDP 8444 | 과거 Jarvis Caddy 직접 TLS | 리스너·Docker publish 제거 | **완료** |
-| TCP 28198 | Elgato Stream Deck | 모든 인터페이스 | **낮음~중간** — 모바일/LAN 기능을 안 쓰면 차단 후보 |
+| TCP 28198 | Elgato Stream Deck | 모든 인터페이스·두 LAN 주소·Docker에서 연결 성공 | **낮음~중간** — WAN 전달은 공유기 확인 필요 |
 | TCP 임시 포트·UDP 41641 | Tailscale | Tailscale 데몬, Serve/Funnel 설정 없음 | 정상 전송 경계 |
 | UDP 5353·137·138 | macOS 발견/NetBIOS 계열 | LAN 시스템 서비스 | 파일 공유·발견 기능이 불필요하면 별도 축소 검토 |
 
@@ -118,8 +119,8 @@
 
 1. **완료** — Jarvis Caddy 8001 loopback 제한, 8444 TCP/UDP 제거, Tunnel·공개 응답 정상.
 2. **완료** — `classroom-tools` 8080 loopback 제한, host Caddy survival 200.
-3. **부분 완료** — 자비스 보안 헤더와 샘링크·샘링크 API HSTS는 적용했다. 아지트 API HSTS는 root 소유
-   호스트 Caddyfile 반영 권한이 필요해 남았다.
+3. **완료** — 자비스 보안 헤더와 샘링크·샘링크 API HSTS에 이어 아지트 API HSTS도 root 소유 호스트
+   Caddyfile에 반영했다. 무중단 reload 뒤 공개·로컬 TLS 401 응답에서 헤더를 확인했다.
 4. **부분 완료** — 외장 SSD 신규 사본은 `agitssdcrypt:`로 암호화했다. FileVault는 UPS·무인 재부팅·
    Docker 자동 복구를 우선해 보류하고 물리 접근 제한으로 보완한다. 기존 외장 평문 사본은 7일 관측과
    9월 1일 리허설 뒤 삭제 여부를 결정하며, rclone 복구키의 독립 사본은 계속 확인 대상이다.
@@ -129,9 +130,11 @@
 
 1. **부분 완료** — 샘링크는 비root/read-only/cap drop/NNP 적용. 아지트·연구소·classroom-tools와
    기능별 적정 메모리 제한은 남았다.
-2. Stream Deck의 LAN 기능을 쓰지 않으면 28198 인바운드를 차단한다.
-3. Docker Scout 로그인 또는 별도 승인된 이미지 스캐너로 앱 3개와 Kong/Caddy/Supabase 이미지의 OS 패키지
-   CVE를 검사한다.
+2. Stream Deck 28198은 macOS 방화벽 허용 상태이며 두 LAN 주소와 Docker에서 연결된다. 공유기 TCP 전달을
+   확인하고 LAN 기능을 쓰지 않으면 인바운드를 차단한다.
+3. **검사 완료** — Docker Scout 로그인 제한 때문에 Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유
+   이미지 15개를 검사했다. 0건이 아니며 공식/베이스 이미지 갱신은
+   [CVE 보고서](DOCKER_CVE_SCAN_20260829.md)의 순서로 별도 진행한다.
 
 ## 6. 확인한 권고 근거와 점검 한계
 
@@ -140,8 +143,8 @@
   [ws 메모리 고갈](https://github.com/advisories/GHSA-96hv-2xvq-fx4p),
   [sharp/libvips](https://github.com/advisories/GHSA-f88m-g3jw-g9cj).
 - `npm audit`은 운영 의존성만 검사했다. 개발 의존성은 이번 공개 런타임 판정에서 제외했다.
-- Docker Scout는 설치돼 있지만 Docker ID 로그인이 없어 이미지 CVE 검사를 수행하지 못했다. 따라서
-  “이미지 취약점 0건”으로 판정하지 않는다.
+- Docker Scout는 Docker ID 로그인 제한으로 쓰지 못했다. 대신 Trivy 0.74.0 고정 digest를 사용해 Docker
+  소켓 없이 15개 운영 이미지를 검사했다. 결과는 0건이 아니며 패키지 존재와 실제 노출 경로를 나눠 해석한다.
 - 브라우저 연결 후보가 0개이고 `agent-browser` 실행 파일도 없어 실제 화면 눈검사는 못 했다. 공개 HTTP,
   CSP/HSTS 헤더, 로그인 보호, 세 앱 빌드와 컨테이너 로그로 대체 검증했다.
 - 원시 포트의 WAN 도달 여부는 공유기/NAT 외부 시점 검사가 필요하다. 이 문서의 비표준 포트 판정은

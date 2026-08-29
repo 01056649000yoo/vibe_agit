@@ -92,6 +92,8 @@ xn--vz0ba242ncqcba79xhwx.site {
 # 아지트 Supabase API (새 PG17 통합 스택 Kong)
 api.xn--vz0ba242ncqcba79xhwx.site {
 	encode gzip zstd
+	# API도 브라우저가 이후 HTTP로 내려가지 않도록 강제한다.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	reverse_proxy 127.0.0.1:8100
 
 	# ── 접근 로그 ──────────────────────────────────────────────────────────
