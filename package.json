@@ -43,7 +43,7 @@
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
     "test:meal-board": "node --test tests/mealBoard.test.mjs",
     "test:lab-sso": "node --test tests/labSsoIntegration.test.mjs",
-    "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/backupMonitoring.test.mjs tests/vibeAiEdgeFunction.test.mjs tests/labSsoIntegration.test.mjs tests/mealBoard.test.mjs",
+    "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/backupMonitoring.test.mjs tests/supabaseUpgrade.test.mjs tests/vibeAiEdgeFunction.test.mjs tests/labSsoIntegration.test.mjs tests/mealBoard.test.mjs",
     "test:deployment": "node --test tests/deploymentArchitecture.test.mjs",
     "test:security:ops": "node scripts/check-operational-security.mjs",
     "check:rpc-surface": "node scripts/check-rpc-surface.mjs",

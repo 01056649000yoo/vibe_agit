@@ -1,0 +1,64 @@
+name: agit-rehearsal
+
+services:
+  studio:
+    profiles: ["admin"]
+    container_name: agit-rehearsal-studio
+  analytics:
+    profiles: ["observability", "admin"]
+    container_name: agit-rehearsal-analytics
+  vector:
+    profiles: ["observability"]
+    container_name: agit-rehearsal-vector
+  meta:
+    profiles: ["admin"]
+    container_name: agit-rehearsal-meta
+  supavisor:
+    profiles: ["pooler"]
+    container_name: agit-rehearsal-pooler
+
+  db:
+    container_name: agit-rehearsal-db
+    volumes: !override
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./volumes/db/rehearsal-data:/var/lib/postgresql/data:Z
+      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - rehearsal-db-config:/etc/postgresql-custom
+
+  kong:
+    container_name: agit-rehearsal-kong
+    ports: !override
+      - 127.0.0.1:18100:8000/tcp
+      - 127.0.0.1:18447:8443/tcp
+
+  auth:
+    container_name: agit-rehearsal-auth
+  templates-server:
+    container_name: agit-rehearsal-templates
+  rest:
+    container_name: agit-rehearsal-rest
+  realtime:
+    container_name: agit-rehearsal-realtime
+  storage:
+    container_name: agit-rehearsal-storage
+    volumes: !override
+      - rehearsal-storage:/var/lib/storage
+  imgproxy:
+    container_name: agit-rehearsal-imgproxy
+    volumes: !override
+      - rehearsal-storage:/var/lib/storage:ro
+  functions:
+    container_name: agit-rehearsal-functions
+    volumes: !override
+      - ./volumes/functions:/home/deno/functions:Z
+      - rehearsal-deno-cache:/root/.cache/deno
+
+volumes:
+  rehearsal-db-config:
+  rehearsal-deno-cache:
+  rehearsal-storage:

@@ -43,6 +43,8 @@
 > 내부 디스크 위험 수용, Supabase 공식 묶음 정상화다. 다음 자동 일정은 **2026-08-30 05:00 이후
 > 백업 2일차 대조**다.
 > 상세 증거는 [보안 감사 보고서](docs/SECURITY_AUDIT_20260829.md)와 [WORKLOG.md](WORKLOG.md) 최상단에 있다.
+> Supabase v0.8.0+Kong 격리 복원 예행연습은 8월 29일 PASS했고, 8월 30일 04:00 백업·05:00 판정이
+> 모두 PASS일 때만 05:30 자동 반영하도록 예약했다. 실패하면 운영은 변경하지 않는다.
 
 ### 3개 앱 통합 백업 대시보드와 7일 모니터링 (2026-08-28 시작)
 
@@ -91,9 +93,11 @@
       [정책 문서](docs/SUPABASE_RELEASE_POLICY.md)
 - [x] Realtime `/realtime/v1/api/openapi`·`/tenants`를 공식 Kong `request-termination` 규칙으로 403 차단;
       통합 연구소 제출 확인 WebSocket 101, Kong healthy, 최근 오류 0 확인
-- [ ] **10월 3~5일 연휴 Supabase 묶음 정상화** — 9/25에 14일 이상 관찰된 최신 호환 태그를 고정하고,
-      격리 복원·단계별 dry-run·세 앱/연구소 스모크 뒤 10/4 00:00~02:00 Kong override로 반영
-- [ ] 정상화 뒤 `.supabase-version` 기준점 기록과 7일 관찰; Envoy 전환은 별도 작업으로 분리
+- [x] Supabase `self-hosted/v0.8.0`+Kong staging 생성·이미지 선다운로드·최신 백업 격리 복원 —
+      새 PG17·Auth·REST·Realtime·Storage·Edge가 모두 healthy, API 200·관리 경로 403·WebSocket 101 확인
+- [ ] **2026-08-30 05:30 Supabase 묶음 정상화 예약** — 04:00 백업과 05:00 3/3 판정이 모두 PASS일 때만
+      고정 staging을 반영하고, 실패 시 자동 중단·기동/스모크 실패 시 이전 설정·이미지로 자동 롤백
+- [ ] 정상화 성공 뒤 `.supabase-version=self-hosted/v0.8.0` 기준점과 7일 관찰; Envoy 전환은 별도 작업
 - [~] Stream Deck 28198은 두 LAN 주소·Docker에서 연결됨 — 공유기 TCP 전달 여부는 관리자 화면 확인 필요
 - [ ] 관리자 실계정으로 백업 대시보드와 모바일 좁은 화면 직접 확인
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)

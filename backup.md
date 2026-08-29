@@ -214,24 +214,35 @@ pg_restore -l 아지트DB.dump | sed '/ SCHEMA - public /s/^/;/' > restore.list
 pg_restore -U supabase_admin -d 대상DB --no-owner --exit-on-error \
   -L restore.list 아지트DB.dump
 
-# 3-1) 아지트 Storage 객체 파일 — 새 스택에서 storage/imgproxy를 올리기 전에 실행
+# 3-1) --no-owner 복원 뒤 Auth·Storage 내부 객체 소유자를 서비스 역할로 되돌린다.
+#      이 단계가 없으면 새 Auth/Storage 이미지가 마이그레이션 표를 읽거나 바꾸지 못해 재시작한다.
+psql -U supabase_admin -d 대상DB -v ON_ERROR_STOP=1 \
+  -f scripts/normalize-supabase-restore-owners.sql
+
+# 3-2) 아지트 Storage 객체 파일 — 새 스택에서 storage/imgproxy를 올리기 전에 실행
 docker volume create agit-storage-data
 docker run --rm --entrypoint sh \
   -v agit-storage-data:/restore \
   -v "$PWD:/backup:ro" \
-  supabase/storage-api:v1.48.26 \
+  supabase/storage-api:v1.60.4 \
   -c 'tar xzf /backup/아지트Storage.tar.gz -C /restore'
 
-# 4) 리얼타임 설정 — 새 스택에는 시드된 행이 이미 있어 그대로 넣으면 PK 충돌이 난다.
-#    기존 행을 지운 뒤 얹거나, 한도 값만 UPDATE 한다 (값은 WORKLOG 2026-07-30 항목 참고)
-pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설정.dump
+# 4) 리얼타임 설정 — Realtime이 아직 한 번도 기동되지 않은 새 DB에는 _realtime 표가 없다.
+#    백업에 스키마 전체가 있으므로 기존 스키마를 지우고 통째로 복원하면 두 경우를 함께 처리한다.
+psql -U supabase_admin -d 대상DB -v ON_ERROR_STOP=1 \
+  -c 'DROP SCHEMA IF EXISTS _realtime CASCADE;'
+pg_restore -U supabase_admin -d 대상DB --no-owner --exit-on-error 리얼타임설정.dump
 ```
 
 위 목차 방식은 새 DB에 이미 있는 `public` 스키마 생성 항목만 제외하므로 정상 복원은 오류 없이 끝나야 한다.
 
-- 테이블·함수 소유자가 `supabase_admin` 이다. **`-U postgres` 로는 실패**한다.
+- 앱 스키마의 테이블·함수와 복원 실행 계정은 `supabase_admin` 이다. **`-U postgres` 로는 실패**한다.
+  Auth·Storage 내부 객체 소유자는 아래 정규화 단계에서 각 서비스 역할로 되돌린다.
 - `--no-privileges` 를 쓰지 않는다. 그러면 `anon`/`authenticated` 표 권한이 안 담겨,
   복원해도 **데이터는 있는데 PostgREST 가 표를 못 본다**(앱이 빈 화면).
+- `--no-owner`는 복원 계정이 달라도 데이터를 얹기 쉽게 하지만 Auth·Storage 내부 객체까지
+  `supabase_admin` 소유가 된다. `normalize-supabase-restore-owners.sql`을 반드시 실행해야 새 서비스 이미지가
+  자기 마이그레이션을 수행할 수 있다. 2026-08-29 v0.8.0 격리 복원에서 실제 Auth·Storage 재시작으로 발견했다.
 - `agit-storage-data`는 compose의 외부 영구 볼륨이다. 새 맥에서 복구할 때는 위 명령으로 볼륨을 먼저 만들고
   객체 파일을 푼 뒤 `docker compose up -d storage imgproxy`를 실행한다.
 

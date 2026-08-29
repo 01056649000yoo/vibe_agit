@@ -21,6 +21,34 @@
 
 ---
 
+## 2026-08-29 — Supabase v0.8.0 격리 예행연습 PASS·8월 30일 05:30 조건부 반영 예약 (Codex)
+
+- **한 일**: 사용자의 주말 조기 반영 결정에 따라 공식 `self-hosted/v0.8.0` 구성 버전과 Kong 호환 구조를
+  staging 9개 파일로 고정하고 SHA-256 manifest를 만들었다. 새 이미지를 전부 미리 내려받고, 운영과 분리된
+  `agit-rehearsal` 네트워크·컨테이너·볼륨과 loopback 18100에서 오늘 통합 백업을 실제 복원했다.
+- **격리 결과**: 새 PG17·Auth·REST·Realtime·Storage·imgproxy·Edge·Kong과 템플릿 서버가 모두 healthy였다.
+  Auth·REST·Storage 200, Realtime 관리 경로 403/403, WebSocket 101을 확인했고, 복원 결과는 public 88표·
+  자비스 9표·샘링크 9표, Auth 사용자 3,899명, Storage 객체 메타데이터 12건이었다. 끝난 임시 컨테이너·볼륨과
+  비밀 사본 임시 폴더는 모두 제거했다. 운영 컨테이너와 데이터는 변경하지 않았다.
+- **복구 결함 발견/보완**: `--no-owner` 덤프를 새 DB에 복원하면 `auth`·`storage` 내부 표 소유자가
+  `supabase_admin`으로 바뀌어 새 Auth는 `schema_migrations`, Storage는 `migrations`를 다루지 못하고
+  재시작했다. 운영의 실제 소유자 분포를 대조해 `scripts/normalize-supabase-restore-owners.sql` 한 곳에서
+  Auth는 `supabase_auth_admin`, Storage는 `supabase_storage_admin`으로 표·시퀀스·함수 소유자를 복구하도록
+  만들었고 재실행에서 두 서비스의 신규 마이그레이션과 healthy를 확인했다. `backup.md` 복구 순서도 수정했다.
+- **안전장치**: `scripts/apply-supabase-v080.sh`는 날짜·staging 체크섬·오늘 예행연습 PASS·10GB 여유·고정
+  이미지·운영 컨테이너를 확인한다. 실제 적용 때는 8월 30일 04:00 백업 PASS와 05:00 모니터 PASS까지
+  추가로 요구한다. 적용 직전 설정 tar·이미지 digest·새 DB 덤프를 만들며, 기동 또는 API 스모크 실패 시 이전
+  설정·이미지로 자동 롤백한다. Envoy로 바꾸지 않고 `agit-kong`과 8100을 그대로 유지한다.
+- **git 밖 변경**: `~/agit-supabase/upgrade-staging/20260830-self-hosted-v0.8.0/`에 체크섬이 고정된 staging을
+  만들고, 필요한 이미지들을 선다운로드했다. `~/Library/LaunchAgents/com.agit.supabase-upgrade-v080.plist`를
+  설치·로드해 **2026-08-30 05:30 KST**로 예약했다. 비파괴 `--preflight-only`는 READY다.
+- **결과/검증**: 업데이트 계약 검사 3/3, `npm run test:security`(정적 75건·운영 DB/RPC·롤백 스모크),
+  `npm run test:all`, 프로덕션 빌드가 통과했다. 예약일 상수를 일부러 틀리게 바꿨을 때 계약 검사가 1건
+  실패하고 원복 뒤 통과하는 것도 확인했다. ESLint는 오류 0이며 기존 경고 38개 외에 새 경고는 없다.
+- **남은 것 / 다음**: 내일 `~/backups/auto/supabase-upgrade-status.txt`에서 `PASS`·`BLOCKED`·`ROLLED_BACK`을
+  확인하고 컨테이너 버전·공개 앱·백업 대시보드를 대조한다. 성공하면 7일 관찰을 시작하고, 게이트 중단이면
+  운영을 그대로 둔 채 10월 연휴를 대체 창으로 사용한다.
+
 ## 2026-08-29 — Realtime 관리 경로 차단 완료·Supabase 묶음 갱신 10월 연휴로 확정 (Codex)
 
 - **한 일**: 통합 연구소의 학생 제출 즉시 확인 WebSocket은 유지하면서, 공식 v0.6.0 방식의 Realtime
