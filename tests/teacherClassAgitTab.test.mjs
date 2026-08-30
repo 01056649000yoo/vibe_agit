@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { CLASS_AGIT_PREPARATION_ROADMAP } from '../src/constants/preparationRoadmaps.js';
 
-const [teacherNav, dashboard, hub, uiPreview] = await Promise.all([
+const [teacherNav, dashboard, hub, uiPreview, preparationRoadmap, preparationRoadmapCss] = await Promise.all([
     readFile('src/constants/teacherNav.js', 'utf8'),
     readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8'),
     readFile('src/components/teacher/TeacherClassAgitHub.jsx', 'utf8'),
-    readFile('src/dev/UiPreview.jsx', 'utf8')
+    readFile('src/dev/UiPreview.jsx', 'utf8'),
+    readFile('src/components/common/PreparationRoadmap.jsx', 'utf8'),
+    readFile('src/components/common/PreparationRoadmap.css', 'utf8')
 ]);
 
 test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교사 탭이다', () => {
@@ -26,10 +29,18 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
     assert.match(uiPreview, /group\.id === 'class-agit'[\s\S]*<TeacherClassAgitHub activeClass=/);
 });
 
-test('준비 화면은 정해지지 않은 활동 예시 없이 상단 배너만 보여 준다', () => {
+test('우리반 아지트 준비 화면은 확정된 전시·문집 업데이트 개요를 보여 준다', () => {
     assert.match(hub, /Beta · 준비 중/);
-    assert.match(hub, /을 위한 공간을 준비하고 있습니다/);
-    assert.doesNotMatch(hub, /아이들 의견 모으기|글쓰기 전 생각 열기|우리 반 활동 돕기/);
-    assert.doesNotMatch(hub, /선택 → 활성화 → 마무리|PREVIEW_AREAS|teacher-class-agit__areas|teacher-class-agit__plan/);
-    assert.doesNotMatch(hub, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
+    assert.match(hub, /전시하고 문집으로 남길 공간을 준비하고 있습니다/);
+    assert.match(hub, /CLASS_AGIT_PREPARATION_ROADMAP/);
+    assert.match(hub, /<PreparationRoadmap/);
+    assert.deepEqual(
+        CLASS_AGIT_PREPARATION_ROADMAP.items.map((item) => item.title),
+        ['여러 전시 만들기', '2.5D 글 전시관', '학급 문집 만들기', '읽기 전용으로 나누기']
+    );
+    assert.match(CLASS_AGIT_PREPARATION_ROADMAP.note, /관리자 내부 확인.*시범 학급.*기능이 꺼진 상태/);
+    assert.match(preparationRoadmap, /<ol className="preparation-roadmap__items">/);
+    assert.match(preparationRoadmapCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(preparationRoadmapCss, /@media \(max-width: 700px\)[\s\S]*grid-template-columns: 1fr/);
+    assert.doesNotMatch(`${hub}\n${preparationRoadmap}`, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
 });

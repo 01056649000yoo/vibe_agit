@@ -1,0 +1,115 @@
+.preparation-roadmap {
+    --preparation-accent: #4F46E5;
+    --preparation-accent-soft: #EEF2FF;
+    --preparation-border: #C7D2FE;
+    margin-top: clamp(24px, 3vw, 36px);
+    text-align: left;
+}
+
+.preparation-roadmap--green {
+    --preparation-accent: #247153;
+    --preparation-accent-soft: #EAF7F1;
+    --preparation-border: #B9DECF;
+}
+
+.preparation-roadmap--teal {
+    --preparation-accent: #0F766E;
+    --preparation-accent-soft: #E6FFFB;
+    --preparation-border: #99E6DB;
+}
+
+.preparation-roadmap__heading {
+    text-align: center;
+}
+
+.preparation-roadmap__eyebrow {
+    display: inline-flex;
+    padding: 5px 10px;
+    border: 1px solid var(--preparation-border);
+    border-radius: var(--ui-radius-pill);
+    background: var(--preparation-accent-soft);
+    color: var(--preparation-accent);
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+}
+
+.preparation-roadmap__heading h2 {
+    margin: 10px 0 0;
+    color: #24324A;
+    font-size: var(--ui-text-xl);
+    font-weight: 900;
+    line-height: var(--ui-line-compact);
+}
+
+.preparation-roadmap__items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.preparation-roadmap__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--preparation-border);
+    border-radius: var(--ui-radius-md);
+    background: rgba(255, 255, 255, .82);
+    box-shadow: 0 8px 24px rgba(36, 50, 74, .05);
+}
+
+.preparation-roadmap__step {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: var(--ui-radius-pill);
+    background: var(--preparation-accent-soft);
+    color: var(--preparation-accent);
+    font-size: var(--ui-text-xs);
+    font-weight: 950;
+}
+
+.preparation-roadmap__item h3 {
+    margin: 1px 0 0;
+    color: #24324A;
+    font-size: var(--ui-text-md);
+    font-weight: 900;
+    line-height: var(--ui-line-compact);
+}
+
+.preparation-roadmap__item p {
+    margin: 7px 0 0;
+    color: #607086;
+    font-size: var(--ui-text-sm);
+    font-weight: 650;
+    line-height: var(--ui-line-body);
+}
+
+.preparation-roadmap__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 13px 15px;
+    border-radius: var(--ui-radius-sm);
+    background: var(--preparation-accent-soft);
+    color: #475569;
+    font-size: var(--ui-text-sm);
+    font-weight: 750;
+    line-height: var(--ui-line-body);
+}
+
+@media (max-width: 700px) {
+    .preparation-roadmap__items {
+        grid-template-columns: 1fr;
+    }
+
+    .preparation-roadmap__item {
+        padding: 15px;
+    }
+}

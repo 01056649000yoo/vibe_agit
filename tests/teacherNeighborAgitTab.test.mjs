@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { NEIGHBOR_AGIT_PREPARATION_ROADMAP } from '../src/constants/preparationRoadmaps.js';
 
-const [teacherNav, dashboard, manifest, entry, guideRegistry] = await Promise.all([
+const [teacherNav, dashboard, manifest, entry, guideRegistry, preparationRoadmap] = await Promise.all([
     readFile('src/constants/teacherNav.js', 'utf8'),
     readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/manifest.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
-    readFile('src/guides/teacherGuideRegistry.js', 'utf8')
+    readFile('src/guides/teacherGuideRegistry.js', 'utf8'),
+    readFile('src/components/common/PreparationRoadmap.jsx', 'utf8')
 ]);
 
 test('이웃 아지트 beta는 학급운영도구 오른쪽과 설정 왼쪽의 독립 교사 메뉴다', () => {
@@ -28,9 +30,18 @@ test('이웃 아지트는 설정 진입점을 남기지 않고 메인 메뉴에�
     assert.doesNotMatch(guideRegistry, /settings:module:neighbor-agit|section: 'module:neighbor-agit'/);
 });
 
-test('이웃 아지트 beta 준비 화면은 데이터 요청 없이 도움말과 현재 학급만 표시한다', () => {
+test('이웃 아지트 beta 준비 화면은 연결·글 교류 업데이트 개요를 데이터 요청 없이 보여 준다', () => {
     assert.match(entry, /Beta · 운영 기능 준비 중/);
     assert.match(entry, /TeacherGuideButton tabId="neighbor-agit"/);
     assert.match(entry, /activeClass\?\.name/);
-    assert.doesNotMatch(entry, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
+    assert.match(entry, /NEIGHBOR_AGIT_PREPARATION_ROADMAP/);
+    assert.match(entry, /<PreparationRoadmap/);
+    assert.deepEqual(
+        NEIGHBOR_AGIT_PREPARATION_ROADMAP.items.map((item) => item.title),
+        ['초대로 학급 참여', '나눌 글 확인하기', '하나의 이웃 글 피드', '학급별 사용 관리']
+    );
+    assert.match(NEIGHBOR_AGIT_PREPARATION_ROADMAP.title, /여러 학급.*서로의 독자/);
+    assert.match(NEIGHBOR_AGIT_PREPARATION_ROADMAP.items[0].description, /최대 네 학급/);
+    assert.match(NEIGHBOR_AGIT_PREPARATION_ROADMAP.note, /관리자 내부 확인.*사용자 승인.*교사가 확인한 글/);
+    assert.doesNotMatch(`${entry}\n${preparationRoadmap}`, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
 });

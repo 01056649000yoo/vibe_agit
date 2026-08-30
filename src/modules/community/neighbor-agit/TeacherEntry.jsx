@@ -1,4 +1,6 @@
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import PreparationRoadmap from '../../../components/common/PreparationRoadmap';
+import { NEIGHBOR_AGIT_PREPARATION_ROADMAP } from '../../../constants/preparationRoadmaps';
 
 const NeighborAgitTeacherEntry = ({ activeClass, isMobile }) => (
     <section style={{
@@ -6,7 +8,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile }) => (
         display: 'grid', placeItems: 'center', border: '1px solid #DCE6EE', borderRadius: '22px',
         background: 'linear-gradient(145deg,#FFFFFF,#F0FDFA)', textAlign: 'center'
     }}>
-        <div style={{ maxWidth: '560px' }}>
+        <div style={{ width: '100%', maxWidth: '960px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <span style={{
                     display: 'inline-block', padding: '7px 11px', borderRadius: '10px',
@@ -24,6 +26,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile }) => (
                 {activeClass?.name ? `${activeClass.name}과 ` : '우리 학급과 '}연결한 다른 학급의 글을 읽고 나누는 독립 공간을 준비하고 있습니다.
                 학급 생성·삭제 같은 기본 관리는 설정의 학급 관리에서 계속합니다.
             </p>
+            <PreparationRoadmap
+                headingId="neighbor-agit-roadmap-title"
+                roadmap={NEIGHBOR_AGIT_PREPARATION_ROADMAP}
+                tone="teal"
+            />
         </div>
     </section>
 );

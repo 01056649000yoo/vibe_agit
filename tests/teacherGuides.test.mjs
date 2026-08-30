@@ -182,6 +182,6 @@ test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을
     assert.match(mealBoard, /기본으로 접혀 있는 `우리 반 비고`/);
     assert.match(mealBoard, /전체화면 보기.*학생 이름과 비고가 포함되지 않/);
     assert.match(tools, /수업과 학급 운영 중 바로 사용하는/);
-    assert.match(tools, /`QR 코드 관리`.*쌤링크/);
+    assert.match(tools, /`URL 단축하기`.*쌤링크/);
     assert.match(tools, /`얘들아, 밥 먹자!`.*학생 정보가 빠진 급식판/);
 });

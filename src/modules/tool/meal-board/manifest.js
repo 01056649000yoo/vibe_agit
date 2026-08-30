@@ -7,5 +7,5 @@ export const mealBoardManifest = {
   audience: 'teacher',
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100 },
   teacherEntry: () => import('./TeacherEntry'),
-  tool: { order: 30, launchMode: 'embedded' }
+  tool: { order: 10, launchMode: 'embedded' }
 };

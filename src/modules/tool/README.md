@@ -25,7 +25,7 @@ export const sampleToolManifest = {
 
 ## 현재 도구
 
-- `classroom-arrangement`: 자리·역할 배치
-- `samlink`: 쌤링크
-- `meal-board`: `얘들아, 밥 먹자!` 급식·학생별 비고 확인. 나이스 키는 서버 함수만 읽고, 공개
+- `meal-board`: `얘들아, 밥 먹자!` 급식·학생별 비고 확인. 첫 화면으로 열리며, 나이스 키는 서버 함수만 읽고, 공개
   전체화면에는 학생 이름과 비고를 전달하지 않는다. 비고는 선택 사항이며 담당 학급 RPC로만 읽고 쓴다.
+- `classroom-arrangement`: 자리·역할 배치
+- `samlink`: URL 단축하기(쌤링크). 필요한 경우 선택할 때만 외부 페이지를 지연 로드한다.
