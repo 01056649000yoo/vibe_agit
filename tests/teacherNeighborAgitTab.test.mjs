@@ -45,3 +45,11 @@ test('이웃 아지트 beta 준비 화면은 연결·글 교류 업데이트 개
     assert.match(NEIGHBOR_AGIT_PREPARATION_ROADMAP.note, /관리자 내부 확인.*사용자 승인.*교사가 확인한 글/);
     assert.doesNotMatch(`${entry}\n${preparationRoadmap}`, /supabase|\.rpc\(|\.from\(|fetch\(|setInterval|postgres_changes/);
 });
+
+test('내부 공개 중에는 학생 진입점이 서버 bootstrap 신호 없이는 보이지 않는다', () => {
+    assert.match(manifest, /defaultMode: NEIGHBOR_AGIT_DEFAULT_ROLLOUT_MODE/);
+    assert.match(manifest, /studentEntry: \(\) => import\('\.\/StudentEntry'\)/);
+    assert.match(manifest, /visibilityKey: 'neighbor_agit_available'/);
+    assert.match(manifest, /defaultEnabled: false/);
+    assert.doesNotMatch(entry, /Workspace|Operational|supabase|\.rpc\(|\.from\(|fetch\(/);
+});

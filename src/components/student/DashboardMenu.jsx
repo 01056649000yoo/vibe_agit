@@ -60,6 +60,10 @@ const DashboardMenu = ({
         : diaryDailyStatus.hasTodayDiary ? '오늘 작성 완료' : '오늘 아직 안 썼어요';
     const moduleCards = enabledModules
         .filter((module) => module.studentDashboard && module.studentRoute && module.studentEntry)
+        .filter((module) => (
+            !module.studentDashboard.visibilityKey
+            || homeBootstrap?.home?.[module.studentDashboard.visibilityKey] === true
+        ))
         .sort((left, right) => left.studentDashboard.order - right.studentDashboard.order);
 
     return (
@@ -85,6 +89,10 @@ const DashboardMenu = ({
                         title={module.studentDashboard.title || module.name}
                         description={module.studentDashboard.description || module.description}
                         tone={module.studentDashboard.tone}
+                        badge={module.studentDashboard.badgeCountKey
+                            && Number(homeBootstrap?.home?.[module.studentDashboard.badgeCountKey]) > 0
+                            ? `새 글 ${Math.min(Number(homeBootstrap.home[module.studentDashboard.badgeCountKey]), 99)}편`
+                            : null}
                         isNew={Boolean(
                             module.studentDashboard.newFlagKey
                             && homeBootstrap?.home?.[module.studentDashboard.newFlagKey]

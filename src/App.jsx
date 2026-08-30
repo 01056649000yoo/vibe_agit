@@ -44,6 +44,7 @@ const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
 const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
 const DiaryPage = lazy(getModule('diary').studentEntry)
 const LabActivitiesPage = lazy(getModule('lab-activities').studentEntry)
+const NeighborAgitStudentEntry = lazy(getModule('neighbor-agit').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 
 /**
@@ -108,6 +109,9 @@ function App() {
   }, [studentHomeBootstrap, studentSession]);
   const studentPageName = internalPage.name;
   const studentRouteKey = getStudentRouteKey(internalPage);
+  const neighborAgitAvailable = enabledStudentModules.some((module) => module.id === 'neighbor-agit')
+    && studentHomeBootstrap?.home?.neighbor_agit_available === true
+    && Boolean(studentHomeBootstrap?.home?.neighbor_agit_space_id);
   // 하단 내비의 '나의 아지트'는 페이지가 아니라 홈 위에 뜨는 판이라,
   // 홈으로 보낸 뒤 일회용 신호로 열고, 실제로 열린 판을 따로 기억해 하단 메뉴 강조를 맞춘다.
   const [myAgitSignal, setMyAgitSignal] = useState(0);
@@ -233,6 +237,13 @@ function App() {
     setDashboardResetSignal((value) => value + 1);
     setInternalPage(nextRoute.name, nextRoute.params);
   }, [setInternalPage]);
+
+  // 홈 카드가 사라진 뒤 저장된 방문 기록이나 임의 상태로 다시 들어와도 내용은 열지 않는다.
+  // 실제 RPC도 같은 공개 단계·학급 스위치·참여 조건을 다시 확인한다.
+  useEffect(() => {
+    if (studentPageName !== 'neighbor_agit' || studentHomeBootstrapLoading) return;
+    if (!neighborAgitAvailable) replaceStudentRoute(STUDENT_HOME_ROUTE);
+  }, [neighborAgitAvailable, replaceStudentRoute, studentHomeBootstrapLoading, studentPageName]);
 
   // 화면 안의 뒤로가기는 새 방문 기록을 만들지 않고 정해진 부모 화면으로 교체한다.
   // 과제 편집기는 과제 목록, 과제에서 연 친구 글은 과제 목록, 나머지 메뉴는 모두 홈이 부모다.
@@ -620,6 +631,12 @@ function App() {
                   params={internalPage.params}
                   onBack={handleCurrentStudentBack}
                   onNavigate={setInternalPage}
+                />
+              )}
+              {studentPageName === 'neighbor_agit' && neighborAgitAvailable && (
+                <NeighborAgitStudentEntry
+                  spaceId={studentHomeBootstrap.home.neighbor_agit_space_id}
+                  onBack={handleCurrentStudentBack}
                 />
               )}
   

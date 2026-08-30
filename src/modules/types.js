@@ -29,11 +29,13 @@
  *   메뉴 슬롯 크기는 공통 설정 호스트가 데스크톱 270px·항목 좌우 15px·최소 높이 68px로 보장하므로
  *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
- * @property {{title?: string, description?: string, tone: string, order: number, newFlagKey?: string}} [studentDashboard]
+ * @property {{title?: string, description?: string, tone: string, order: number, newFlagKey?: string, visibilityKey?: string, badgeCountKey?: string}} [studentDashboard]
  *   학생 홈 주요 메뉴에 표시할 모듈 카드. 학생 화면 진입점과 studentRoute가 모두 있어야 한다.
- *   `newFlagKey`는 홈 부트스트랩 RPC 응답 `home` 안의 불리언 키 이름이다. 이 키가 참이면 카드에
- *   NEW 를 붙인다. 홈은 카드마다 따로 조회하지 않으므로, 새 표시가 필요하면 홈 RPC에 값을 더한다.
+ *   `visibilityKey`가 있으면 홈 bootstrap의 같은 불리언 키가 참일 때만 카드를 표시한다.
+ *   `newFlagKey`는 NEW 표시, `badgeCountKey`는 새 항목 수 배지에 쓰며 모두 `home` 안의 작은 값만 읽는다.
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
+ * @property {{sourceTable: string, shareTable: string, editorStrategy: string, draftStrategy: string, requestRpc: string, recallRpc: string, reviewRpc: string, moderationRpc: string}} [writingBridge]
+ *   기존 글쓰기 원본·임시저장을 재사용하면서 다른 공간에 공개 연결만 만드는 모듈 계약.
  * @property {{group: 'self', label: string, icon: string, description: string, emptyMessage: string, order: number}} [communityFeed]
  *   친구 아지트의 `자율 글` 필터 등록 정보. `writingPolicy.type`을 조회 유형 ID로 사용하며,
  *   새 자율 글 모듈은 화면을 고치지 않고 이 계약만 선언한다.
@@ -118,6 +120,8 @@ export function validateManifest(m) {
     if (!m.studentRoute) problems.push('studentDashboard에는 studentRoute가 필요함');
     if (!m.studentDashboard.tone) problems.push('studentDashboard.tone 없음');
     if (!Number.isInteger(m.studentDashboard.order)) problems.push('studentDashboard.order는 정수여야 함');
+    if (m.studentDashboard.visibilityKey && typeof m.studentDashboard.visibilityKey !== 'string') problems.push('studentDashboard.visibilityKey는 문자열이어야 함');
+    if (m.studentDashboard.badgeCountKey && typeof m.studentDashboard.badgeCountKey !== 'string') problems.push('studentDashboard.badgeCountKey는 문자열이어야 함');
   }
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
     problems.push('teacherEntry가 있지만 audience가 student임');

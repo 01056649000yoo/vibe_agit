@@ -21,6 +21,7 @@ import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
 // 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
 const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingPromotionPanel'));
+const AdminNeighborAgitPanel = React.lazy(() => import('./AdminNeighborAgitPanel'));
 
 /*
  * 관리자 화면을 성격별로 묶는다.
@@ -65,6 +66,7 @@ const TAB_GROUPS = [
             { id: 'service', label: '서버 상태' },
             { id: 'maintenance', label: '서비스 관리' },
             { id: 'backup', label: '백업 상태' },
+            { id: 'rollout', label: '기능 공개' },
             { id: 'announcements', label: '공지사항' },
             { id: 'feedback', label: '의견 제보' },
             { id: 'settings', label: '시스템 설정' }
@@ -893,6 +895,15 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         visited={visitedTabs.has('maintenance')}
                     >
                         <AdminServiceManagementPanel serviceManagement={serviceManagement} />
+                    </KeepAlivePanel>
+
+                    <KeepAlivePanel
+                        active={currentTab === 'rollout'}
+                        visited={visitedTabs.has('rollout')}
+                    >
+                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>기능 공개 화면을 불러오는 중입니다...</div>}>
+                            <AdminNeighborAgitPanel />
+                        </React.Suspense>
                     </KeepAlivePanel>
 
                     {currentTab === 'settings' && (

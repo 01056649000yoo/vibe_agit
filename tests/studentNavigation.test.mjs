@@ -66,7 +66,7 @@ test('현재 화면과 하단 메뉴 강조가 과제 편집기·두 오버레�
 });
 
 test('메뉴 화면 뒤로가기는 홈이고 글쓰기·과제에서 연 친구 글만 과제 목록으로 간다', () => {
-    for (const name of ['mission_list', 'reading_logs', 'diaries', 'lab_activities']) {
+    for (const name of ['mission_list', 'reading_logs', 'diaries', 'lab_activities', 'neighbor_agit']) {
         assert.deepEqual(getStudentBackDestination({ name }), { name: 'main', params: {} });
     }
     assert.deepEqual(
@@ -81,7 +81,7 @@ test('메뉴 화면 뒤로가기는 홈이고 글쓰기·과제에서 연 친구
         getStudentBackDestination({ name: 'friends_hideout', params: { returnTo: 'mission_list' } }),
         { name: 'mission_list', params: {} }
     );
-    assert.equal((app.match(/onBack=\{handleCurrentStudentBack\}/g) || []).length, 6);
+    assert.equal((app.match(/onBack=\{handleCurrentStudentBack\}/g) || []).length, 7);
 });
 
 test('메뉴 간 이동은 현재 기록을 홈으로 교체해 기기 뒤로가기가 이전 메뉴를 재방문하지 않는다', () => {
