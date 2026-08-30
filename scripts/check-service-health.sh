@@ -10,6 +10,9 @@ APP_URL="${APP_URL:-http://127.0.0.1:8300/}"
 APP_TRIES="${APP_TRIES:-3}"
 APP_TIMEOUT="${APP_TIMEOUT:-15}"
 APP_RETRY_WAIT="${APP_RETRY_WAIT:-5}"
+# DB 도 마찬가지다. 컨테이너를 다시 만든 직후에는 healthy 여도 잠깐 연결을 받지 않는다.
+DB_TRIES="${DB_TRIES:-3}"
+DB_RETRY_WAIT="${DB_RETRY_WAIT:-5}"
 DISK_MIN_GB="${DISK_MIN_GB:-10}"
 VM_MEM_CRITICAL_PCT="${VM_MEM_CRITICAL_PCT:-15}"
 VM_MEM_WATCH_PCT="${VM_MEM_WATCH_PCT:-30}"
@@ -64,11 +67,21 @@ else
 fi
 
 # --- 2) DB 가 응답하는가 ---
-if psql_exec -c "SELECT 1;" >/dev/null 2>&1; then
+# 앱과 같은 이유로 여러 번 묻는다. 2026-08-30 Supabase 반영이 DB 재생성 직후
+# 이 확인 한 번에 걸려 두 차례 롤백됐다.
+DB_OK=false
+for attempt in $(seq 1 "$DB_TRIES"); do
+    if psql_exec -c "SELECT 1;" >/dev/null 2>&1; then
+        DB_OK=true
+        break
+    fi
+    [ "$attempt" -lt "$DB_TRIES" ] && sleep "$DB_RETRY_WAIT"
+done
+if [ "$DB_OK" = true ]; then
     report db_down false ""
 else
     # DB가 죽으면 상태를 DB에 적을 수도 없다. launchd 오류 로그에만 남긴다.
-    echo "DB 무응답 — 상태를 기록하지 못했습니다" >&2
+    echo "DB 무응답 (${DB_TRIES}회 시도) — 상태를 기록하지 못했습니다" >&2
     exit 1
 fi
 

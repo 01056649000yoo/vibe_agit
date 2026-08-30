@@ -176,7 +176,7 @@ WS_CODE=$(curl --http1.1 -sS -o /dev/null -w '%{http_code}' --max-time 10 \
   "http://127.0.0.1:8100/realtime/v1/websocket?apikey=$ANON_KEY&vsn=1.0.0" || true)
 [ "$WS_CODE" = 101 ] || fail "Realtime WebSocket smoke failed (${WS_CODE:-000})"
 
-APP_TRIES=5 APP_TIMEOUT=20 APP_RETRY_WAIT=6 \
+APP_TRIES=5 APP_TIMEOUT=20 APP_RETRY_WAIT=6 DB_TRIES=6 DB_RETRY_WAIT=5 \
   "$REPO_ROOT/scripts/check-service-health.sh" >>"$LOG" 2>&1 \
   || fail "three-app service health smoke failed"
 "$DOCKER" exec agit-db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -Atc \
