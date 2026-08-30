@@ -68,6 +68,23 @@ mkdirSync(REPORT_ROOT, { recursive: true, mode: 0o700 });
 mkdirSync(CACHE_ROOT, { recursive: true, mode: 0o700 });
 
 const exposureRank = { internal: 0, lan: 1, unknown: 2, public: 3 };
+
+/**
+ * 우리가 고칠 수 있는 이미지인가.
+ *
+ * 상류(supabase/·kong/ 등) 이미지의 CVE 는 우리가 손댈 수 없다. 그런데 `긴급` 숫자에
+ * 함께 섞이면 매 분기 "조치해야 할 것"처럼 보인다. 2026-08-30 첫 점검에서 긴급 23건이
+ * 나왔는데 실제로 우리가 할 수 있는 일은 0건이었다.
+ * 그래서 원본에 이 표시를 남겨 다음 점검 때 바로 갈라 볼 수 있게 한다.
+ */
+const UPSTREAM_PREFIXES = [
+    'supabase/', 'kong/', 'postgrest/', 'darthsim/', 'curlimages/',
+    'caddy:', 'caddy@', 'postgres:', 'node:', 'alpine', 'aquasec/'
+];
+function isUpstreamImage(ref) {
+    const name = String(ref || '').toLowerCase();
+    return UPSTREAM_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
 const inferExposure = (inspect) => {
     const bindings = Object.values(inspect.HostConfig?.PortBindings || {}).flat().filter(Boolean);
     if (bindings.some((binding) => binding.HostIp === '0.0.0.0' || binding.HostIp === '::' || !binding.HostIp)) return 'lan';
@@ -172,6 +189,8 @@ try {
         });
         rawScans.push({
             image_ref: image.imageRef,
+            // true 면 상류 이미지 — 우리가 고칠 수 없고 "지켜보기" 대상이다.
+            upstream: isUpstreamImage(image.imageRef),
             image_digest: digest,
             containers: [...image.containers].sort(),
             service_groups: [...image.groups].sort(),
@@ -222,7 +241,18 @@ try {
         convert_from(decode('${encodedPayload}', 'base64'), 'UTF8')::JSONB
     );\n`);
     console.log(`서비스 이미지 검사 기록 완료: 이미지 ${summaries.length}개 · CRITICAL ${totals.critical} · HIGH ${totals.high} · 긴급 ${totals.urgent}`);
-    if (failedImages > 0) process.exitCode = 1;
+
+// 우리가 실제로 손댈 수 있는 것이 몇 건인지 따로 알려 준다.
+{
+    const ours = rawScans.filter((scan) => !scan.upstream);
+    const oursUrgent = ours.reduce((sum, scan) => {
+        const vulns = (scan.report?.Results || []).flatMap((r) => r.Vulnerabilities || []);
+        return sum + (scan.exposure === 'public'
+            ? vulns.filter((v) => v.Severity === 'CRITICAL' && v.FixedVersion).length
+            : 0);
+    }, 0);
+    console.log(`  이 가운데 우리 이미지(${ours.length}개)의 긴급: ${oursUrgent}건 — 나머지는 상류 대기`);
+}    if (failedImages > 0) process.exitCode = 1;
 } finally {
     if (tempRoot.startsWith('/private/tmp/agit-service-scan.')) rmSync(tempRoot, { recursive: true, force: true });
 }
