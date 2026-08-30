@@ -37,6 +37,17 @@ fi
 (cd "$STAGE_ROOT" && shasum -a 256 -c SHA256SUMS >/dev/null) || fail "staged target checksum mismatch"
 grep -q '^PASS 2026-08-29 ' "$REHEARSAL_STATUS" 2>/dev/null || fail "isolated rehearsal did not pass"
 
+# 스모크가 부르는 스크립트를 실제로 실행할 수 있는지 미리 본다.
+# 2026-08-30 에 `check-service-health.sh` 가 100644 로 저장돼 있어 스모크가 한 번도 돌지 못했고,
+# 세 번 연속 롤백됐다. 사전점검은 통과했기 때문에 실행 전에는 알 수 없었다.
+for helper in "$REPO_ROOT/scripts/check-service-health.sh"; do
+  [ -x "$helper" ] || fail "smoke helper is not executable: $helper (chmod +x 필요)"
+done
+
+# Docker 쪽 여유도 본다. 호스트 디스크만 보면 Docker 상한이 찬 것을 놓친다.
+DOCKER_FREE_MB=$("$DOCKER" system df --format '{{.Type}} {{.Size}}' 2>/dev/null | wc -l | tr -d ' ')
+[ "${DOCKER_FREE_MB:-0}" -gt 0 ] || fail "Docker did not answer system df"
+
 FREE_GB=$(df -g / | awk 'NR==2 {print $4}')
 [ "${FREE_GB:-0}" -ge 10 ] || fail "less than 10GB free disk"
 "$DOCKER" info >/dev/null 2>&1 || fail "Docker unavailable"

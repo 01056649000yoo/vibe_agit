@@ -90,7 +90,7 @@
       샘링크·classroom-tools GitHub Actions 자동 배포 성공 확인
 - [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
 - [x] Supabase self-hosted 월간 릴리스 선택·검증·롤백 정책 수립 —
-      [정책 문서](docs/SUPABASE_RELEASE_POLICY.md)
+      [정책 문서](docs/SUPABASE_RELEASE_POLICY.md) · [실행 런북](docs/UPDATE_RUNBOOK.md)
 - [x] Realtime `/realtime/v1/api/openapi`·`/tenants`를 공식 Kong `request-termination` 규칙으로 403 차단;
       통합 연구소 제출 확인 WebSocket 101, Kong healthy, 최근 오류 0 확인
 - [x] Supabase `self-hosted/v0.8.0`+Kong staging 생성·이미지 선다운로드·최신 백업 격리 복원 —
