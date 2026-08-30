@@ -5,6 +5,11 @@ set -uo pipefail
 
 DOCKER="${DOCKER:-/Applications/Docker.app/Contents/Resources/bin/docker}"
 APP_URL="${APP_URL:-http://127.0.0.1:8300/}"
+# 앱 확인은 한 번에 단정하지 않는다. 컨테이너가 막 올라온 직후에는 첫 응답이 늦다.
+# 2026-08-30 Supabase 반영이 이 이유로 잘못 롤백됐다.
+APP_TRIES="${APP_TRIES:-3}"
+APP_TIMEOUT="${APP_TIMEOUT:-15}"
+APP_RETRY_WAIT="${APP_RETRY_WAIT:-5}"
 DISK_MIN_GB="${DISK_MIN_GB:-10}"
 VM_MEM_CRITICAL_PCT="${VM_MEM_CRITICAL_PCT:-15}"
 VM_MEM_WATCH_PCT="${VM_MEM_WATCH_PCT:-30}"
@@ -45,11 +50,17 @@ append_reason() {
 }
 
 # --- 1) 앱이 응답하는가 ---
-CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$APP_URL" 2>/dev/null)"
+# 실패하면 잠깐 쉬었다 다시 묻는다. 한 번 늦었다고 장애로 보지 않는다.
+CODE=""
+for attempt in $(seq 1 "$APP_TRIES"); do
+    CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time "$APP_TIMEOUT" "$APP_URL" 2>/dev/null)"
+    [ "$CODE" = "200" ] && break
+    [ "$attempt" -lt "$APP_TRIES" ] && sleep "$APP_RETRY_WAIT"
+done
 if [ "$CODE" = "200" ]; then
     report app_down false ""
 else
-    report app_down true "HTTP ${CODE:-무응답}"
+    report app_down true "HTTP ${CODE:-무응답} (${APP_TRIES}회 시도)"
 fi
 
 # --- 2) DB 가 응답하는가 ---

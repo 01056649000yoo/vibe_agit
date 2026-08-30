@@ -15,6 +15,8 @@ REHEARSAL_STATUS="$USER_HOME/backups/auto/supabase-v080-rehearsal-status.txt"
 LOCK_DIR="$USER_HOME/backups/auto/.supabase-upgrade-v080.lock"
 EXPECTED_DAY="2026-08-30"
 MODE="${1:---apply}"
+# 기동 직후 스모크 전에 기다릴 시간과, 세 앱 확인에 줄 여유.
+SETTLE_SECONDS="${SETTLE_SECONDS:-20}"
 CONFIG_APPLIED=false
 BACKUP_ROOT=""
 
@@ -148,12 +150,17 @@ log "target config installed"
 (cd "$STACK_ROOT" && "$DOCKER" compose up -d --remove-orphans --wait --wait-timeout 420) >>"$LOG" 2>&1 \
   || fail "updated containers did not become ready"
 
+# 컨테이너가 healthy 여도 Kong 뒤의 첫 요청은 늦다. 2026-08-30 에 이 때문에
+# 세 앱 확인이 10초를 넘겨 잘못 롤백됐다. 잠깐 자리를 잡게 둔다.
+log "waiting ${SETTLE_SECONDS}s for the stack to settle before smoke tests"
+sleep "$SETTLE_SECONDS"
+
 ANON_KEY=$(awk -F= '$1=="ANON_KEY" {print substr($0,index($0,"=")+1); exit}' "$STACK_ROOT/.env")
 SERVICE_KEY=$(awk -F= '$1=="SERVICE_ROLE_KEY" {print substr($0,index($0,"=")+1); exit}' "$STACK_ROOT/.env")
 expect_code() {
   local label="$1" expected="$2"; shift 2
   local actual
-  actual=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$@" || true)
+  actual=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 25 "$@" || true)
   [ "$actual" = "$expected" ] || fail "$label HTTP smoke expected $expected, received ${actual:-000}"
 }
 expect_code auth 200 -H "apikey: $ANON_KEY" http://127.0.0.1:8100/auth/v1/health
@@ -169,7 +176,9 @@ WS_CODE=$(curl --http1.1 -sS -o /dev/null -w '%{http_code}' --max-time 10 \
   "http://127.0.0.1:8100/realtime/v1/websocket?apikey=$ANON_KEY&vsn=1.0.0" || true)
 [ "$WS_CODE" = 101 ] || fail "Realtime WebSocket smoke failed (${WS_CODE:-000})"
 
-"$REPO_ROOT/scripts/check-service-health.sh" >>"$LOG" 2>&1 || fail "three-app service health smoke failed"
+APP_TRIES=5 APP_TIMEOUT=20 APP_RETRY_WAIT=6 \
+  "$REPO_ROOT/scripts/check-service-health.sh" >>"$LOG" 2>&1 \
+  || fail "three-app service health smoke failed"
 "$DOCKER" exec agit-db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -Atc \
   "SELECT 1 WHERE EXISTS (SELECT 1 FROM auth.users) AND EXISTS (SELECT 1 FROM public.applied_migrations);" \
   | grep -q '^1$' || fail "database content smoke failed"
