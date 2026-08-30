@@ -274,7 +274,7 @@
   border-radius: 999px;
   background: #EEF2FF;
   color: #4F46E5;
-  font-size: 0.62rem;
+  font-size: var(--ui-text-xs);
   font-weight: 900;
   line-height: 1;
 }
