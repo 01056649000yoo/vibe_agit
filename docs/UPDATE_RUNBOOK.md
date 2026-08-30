@@ -103,7 +103,14 @@ docker exec agit-db psql -U postgres -d postgres -tAc \
 - **조치**: 백업이 `PASS` 로 끝난 뒤 판정기를 다시 돌린다.
   `launchctl kickstart -k gui/501/com.agit.backup-monitor` (수동 실행은 로그 파일에 안 남아 관문이 못 본다)
 - **주의**: 값을 손으로 만들지 않는다. 실제 상태가 통과할 때만 다시 돌린다.
-- **이력**: 2026-08-30 05:30. 04:00 백업이 **466분** 걸렸다. 평소 0~1분이다. 원인 미해결.
+- **이력**: 2026-08-30 05:30. 04:00 백업이 **466분** 걸렸다. 평소 0~1분이다.
+- **원인 추적 방법(2026-08-30 추가)**: 백업 로그가 이제 단계마다 시각을 남긴다.
+  `~/backups/auto/sync.log` 에서 `[누적 +이번단계초]` 를 보면 어느 구간이 늦었는지 바로 짚인다.
+
+      ✓ 드라이브 agitcrypt:/20260830          [00:20 +16s]
+      ✓ 암호화 외장SSD 사본 (7개·cryptcheck)   [00:26 +6s]
+
+  평상시 값은 위와 같다(전체 27초). 다음에 늦어지면 이 줄들로 구간을 특정한다.
 
 ### ③ `BLOCKED  another upgrade process or completed one-shot lock exists`
 
