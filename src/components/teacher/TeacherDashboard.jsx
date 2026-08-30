@@ -1,9 +1,10 @@
 import { TEACHER_NAV_GROUPS } from '../../constants/teacherNav';
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import Button from '../common/Button';
 import GuideInfoButton from '../common/GuideInfoButton';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getModule } from '../../modules/registry';
 
 // 지연 로딩 적용
 const ClassManager = lazy(() => import('./ClassManager'));
@@ -17,6 +18,7 @@ const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
 const TeacherGuideCenter = lazy(() => import('./TeacherGuideCenter'));
 const TeacherClassAgitHub = lazy(() => import('./TeacherClassAgitHub'));
+const TeacherNeighborAgit = lazy(getModule('neighbor-agit').teacherEntry);
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -88,6 +90,7 @@ const loadMissionWorkspaceView = () => {
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
 const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
+    const teacherNavRef = useRef(null);
     const [currentTab, setCurrentTab] = useState(loadTeacherTab);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
@@ -262,6 +265,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
+
+    useEffect(() => {
+        const activeItem = teacherNavRef.current?.querySelector('.teacher-dashboard__nav-item.is-active');
+        activeItem?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }, [activeNavGroup.id]);
+
     return (
         <div className="teacher-dashboard">
             {/* 상단 슬림 헤더 (고정) */}
@@ -342,14 +351,21 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             />
 
             {/* 교사 업무 영역 네비게이션 */}
-            <nav className="teacher-dashboard__nav" style={{
+            <nav ref={teacherNavRef} className="teacher-dashboard__nav" style={{
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
             }} aria-label="교사 업무 메뉴">
-                {TEACHER_NAV_GROUPS.map((group) => {
+                {TEACHER_NAV_GROUPS.map((group, groupIndex) => {
                     const isActive = activeNavGroup.id === group.id;
+                    const beginsSection = groupIndex > 0
+                        && TEACHER_NAV_GROUPS[groupIndex - 1].navSection !== group.navSection;
+                    const itemClassName = [
+                        'teacher-dashboard__nav-item',
+                        isActive ? 'is-active' : '',
+                        beginsSection ? 'is-section-start' : ''
+                    ].filter(Boolean).join(' ');
                     const itemStyle = {
-                            padding: isMobile ? '10px 12px' : '12px 22px', border: 'none',
+                            padding: isMobile ? '10px 12px' : '12px clamp(13px, 1.15vw, 22px)', border: 'none',
                             background: isActive ? '#EFF6FF' : 'transparent',
                             borderBottom: isActive ? '3px solid #3498DB' : '3px solid transparent',
                             color: isActive ? '#2563EB' : '#64748B',
@@ -368,10 +384,13 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             <a
                                 key={group.id}
                                 href={launchHref}
-                                aria-label={`${group.label}로 이동`}
+                                className={itemClassName}
+                                aria-label={`${group.label}${group.badge ? ` ${group.badge}` : ''}로 이동`}
                                 style={itemStyle}
                             >
-                                <span aria-hidden="true">{group.icon}</span> {group.label}
+                                <span aria-hidden="true">{group.icon}</span>
+                                {group.label}
+                                {group.badge && <span className="teacher-dashboard__nav-badge">{group.badge}</span>}
                             </a>
                         );
                     }
@@ -380,11 +399,14 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         <button
                             key={group.id}
                             type="button"
+                            className={itemClassName}
                             aria-pressed={isActive}
                             onClick={() => handleTabChange(group.defaultTab)}
                             style={itemStyle}
                         >
-                            <span aria-hidden="true">{group.icon}</span> {group.label}
+                            <span aria-hidden="true">{group.icon}</span>
+                            {group.label}
+                            {group.badge && <span className="teacher-dashboard__nav-badge">{group.badge}</span>}
                         </button>
                     );
                 })}
@@ -504,6 +526,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             />
                         ) : visibleTab === 'class-agit' ? (
                             <TeacherClassAgitHub activeClass={activeClass} />
+                        ) : visibleTab === 'neighbor-agit' ? (
+                            <TeacherNeighborAgit activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}

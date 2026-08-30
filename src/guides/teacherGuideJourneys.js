@@ -78,7 +78,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('tool-overview', '학급운영도구 고르기', '현재 학급 명부를 사용하는 수업 도구를 한곳에서 엽니다.', 'tools'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
             step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat'),
-            step('neighbor-agit', '이웃 아지트 준비 상태 확인', '다른 학급과 글을 나누는 선택 기능의 현재 준비 상태를 확인합니다.', 'settings:module:neighbor-agit')
+            step('neighbor-agit', '이웃 아지트 준비 상태 확인', '다른 학급과 글을 나누는 선택 기능의 현재 준비 상태를 확인합니다.', 'neighbor-agit')
         ]
     },
     {

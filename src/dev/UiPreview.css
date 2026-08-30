@@ -264,6 +264,20 @@
   background: #EDF2FF;
   color: #364FC7;
 }
+.ui-preview__teacher-nav .is-section-start {
+  margin-left: 10px;
+  box-shadow: -10px 0 0 -9px #CBD5E1;
+}
+.ui-preview__nav-badge {
+  padding: 2px 5px;
+  border: 1px solid #C7D2FE;
+  border-radius: 999px;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+}
 .ui-preview__teacher-tabs {
   display: flex;
   flex-wrap: wrap;

@@ -20,7 +20,7 @@ const MIGRATED = [
     'src/components/teacher/TeacherSettingsTab.jsx',
     'src/components/teacher/TeachingToolsHub.jsx',
     'src/components/teacher/ClassManager.jsx',
-    'src/modules/community/neighbor-agit/SettingsEntry.jsx',
+    'src/modules/community/neighbor-agit/TeacherEntry.jsx',
     'src/components/teacher/PromptRuleModal.jsx',
     'src/components/teacher/TeacherDashboard.css',
     'src/components/teacher/TeacherEvaluationTab.jsx',

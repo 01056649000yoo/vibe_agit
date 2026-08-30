@@ -23,6 +23,52 @@
 
 .teacher-dashboard__nav {
     padding: 0 clamp(24px, 1.5vw, 48px);
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: clamp(24px, 1.5vw, 48px);
+    scrollbar-width: thin;
+}
+
+.teacher-dashboard__nav-item {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+/* 글쓰기 / 학급 관리 / 확장 기능 / 설정의 경계만 가볍게 보인다.
+   메뉴 이름 자체에 구분 문자를 넣지 않아 화면 낭독과 좁은 화면을 함께 지킨다. */
+.teacher-dashboard__nav-item.is-section-start {
+    margin-left: 14px;
+}
+
+.teacher-dashboard__nav-item.is-section-start::before {
+    position: absolute;
+    top: 25%;
+    bottom: 25%;
+    left: -7px;
+    width: 1px;
+    background: #CBD5E1;
+    content: '';
+}
+
+.teacher-dashboard__nav-item:focus-visible {
+    z-index: 1;
+    outline: none;
+    border-radius: var(--ui-radius-sm);
+    box-shadow: var(--ui-focus-ring);
+}
+
+.teacher-dashboard__nav-badge {
+    display: inline-flex;
+    min-height: 17px;
+    align-items: center;
+    padding: 1px 5px;
+    border: 1px solid #C7D2FE;
+    border-radius: var(--ui-radius-pill);
+    background: #EEF2FF;
+    color: #4F46E5;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: .025em;
+    line-height: 1;
 }
 
 .teacher-guide-center-trigger { margin-right: 0; }
@@ -307,6 +353,15 @@
 
     .teacher-dashboard__nav {
         padding: 0 8px;
+        scroll-padding-inline: 8px;
+    }
+
+    .teacher-dashboard__nav-item.is-section-start {
+        margin-left: 10px;
+    }
+
+    .teacher-dashboard__nav-item.is-section-start::before {
+        left: -5px;
     }
 
     .teacher-dashboard__main {

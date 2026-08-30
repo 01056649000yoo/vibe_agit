@@ -225,23 +225,39 @@ function UiPreview() {
         </p>
 
         <nav className="ui-preview__teacher-nav" aria-label="업무 영역">
-          {TEACHER_NAV_GROUPS.map((group) => group.launchHref ? (
-            <a key={group.id} href={group.launchHref}>
-              <span aria-hidden="true">{group.icon}</span>
-              {group.label} ↗
-            </a>
-          ) : (
+          {TEACHER_NAV_GROUPS.map((group, groupIndex) => {
+            const beginsSection = groupIndex > 0
+              && TEACHER_NAV_GROUPS[groupIndex - 1].navSection !== group.navSection
+            const className = [
+              activeNav === group.id ? 'is-active' : '',
+              beginsSection ? 'is-section-start' : ''
+            ].filter(Boolean).join(' ')
+
+            if (group.launchHref) {
+              return (
+                <a key={group.id} href={group.launchHref} className={className}>
+                  <span aria-hidden="true">{group.icon}</span>
+                  {group.label}
+                  {group.badge && <span className="ui-preview__nav-badge">{group.badge}</span>}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )
+            }
+
+            return (
               <button
                 type="button"
                 key={group.id}
-                className={activeNav === group.id ? 'is-active' : ''}
+                className={className}
                 aria-pressed={activeNav === group.id}
                 onClick={() => setActiveNav(group.id)}
               >
                 <span aria-hidden="true">{group.icon}</span>
                 {group.label}
+                {group.badge && <span className="ui-preview__nav-badge">{group.badge}</span>}
               </button>
-            ))}
+            )
+          })}
         </nav>
 
         {(() => {

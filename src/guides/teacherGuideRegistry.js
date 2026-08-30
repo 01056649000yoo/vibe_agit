@@ -12,7 +12,7 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'settings:ai-prompts': { tab: 'settings', section: 'ai-prompts' },
     'settings:writing-editor': { tab: 'settings', section: 'writing-editor' },
     'settings:module:spelling-learning': { tab: 'settings', section: 'module:spelling-learning' },
-    'settings:module:neighbor-agit': { tab: 'settings', section: 'module:neighbor-agit' },
+    'neighbor-agit': { tab: 'neighbor-agit' },
     dashboard: { tab: 'dashboard' },
     'reading-logs': { tab: 'reading-logs' },
     'reading-events': { tab: 'reading-logs' },

@@ -15,7 +15,10 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
     const operationsIndex = teacherNav.indexOf("id: 'operations'");
 
     assert.ok(labIndex > -1 && labIndex < classAgitIndex && classAgitIndex < operationsIndex);
-    assert.match(teacherNav, /id: 'class-agit'[\s\S]*label: '우리반 아지트 \(beta\)'[\s\S]*defaultTab: 'class-agit'/);
+    const labGroup = teacherNav.slice(labIndex, classAgitIndex);
+    assert.match(labGroup, /label: '글쓰기 연구소'/);
+    assert.doesNotMatch(labGroup, /beta/i);
+    assert.match(teacherNav, /id: 'class-agit'[\s\S]*label: '우리반 아지트'[\s\S]*badge: 'BETA'[\s\S]*defaultTab: 'class-agit'/);
     const classAgitGroup = teacherNav.slice(classAgitIndex, operationsIndex);
     assert.doesNotMatch(classAgitGroup, /launchHref/);
     assert.match(dashboard, /lazy\(\(\) => import\('\.\/TeacherClassAgitHub'\)\)/);

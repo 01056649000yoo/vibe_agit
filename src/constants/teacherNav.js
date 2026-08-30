@@ -11,6 +11,7 @@ export const TEACHER_NAV_GROUPS = [
         id: 'writing',
         label: '글쓰기',
         icon: '✍️',
+        navSection: 'writing',
         defaultTab: 'dashboard',
         secondaryShape: 'sidebar',
         tabs: [
@@ -22,15 +23,18 @@ export const TEACHER_NAV_GROUPS = [
     },
     {
         id: 'writing-lab',
-        label: '글쓰기 연구소 (beta)',
+        label: '글쓰기 연구소',
         icon: '🧪',
+        navSection: 'writing',
         launchHref: '/lab/dashboard',
         tabs: []
     },
     {
         id: 'class-agit',
-        label: '우리반 아지트 (beta)',
+        label: '우리반 아지트',
         icon: '🏡',
+        badge: 'BETA',
+        navSection: 'writing',
         defaultTab: 'class-agit',
         tabs: [{ id: 'class-agit', label: '우리반 아지트' }]
     },
@@ -38,6 +42,7 @@ export const TEACHER_NAV_GROUPS = [
         id: 'operations',
         label: '학급 운영',
         icon: '📊',
+        navSection: 'class',
         defaultTab: 'operations',
         secondaryShape: 'sidebar',
         tabs: [
@@ -51,14 +56,24 @@ export const TEACHER_NAV_GROUPS = [
         id: 'students',
         label: '학생',
         icon: '👥',
+        navSection: 'class',
         defaultTab: 'students',
         // 학생 탭은 개인 관리로만 쓴다. 학급 전체 흐름은 바로 앞의 학급 운영에서 본다.
         tabs: [{ id: 'students', label: '학생 명단 관리' }]
     },
     {
+        id: 'footprints',
+        label: '학급 발자국',
+        icon: '👣',
+        navSection: 'class',
+        defaultTab: 'footprints',
+        tabs: [{ id: 'footprints', label: '학급 발자국' }]
+    },
+    {
         id: 'records',
         label: '평가·기록',
         icon: '📝',
+        navSection: 'class',
         defaultTab: 'evaluation',
         secondaryShape: 'sidebar',
         tabs: [
@@ -70,6 +85,7 @@ export const TEACHER_NAV_GROUPS = [
         id: 'playground',
         label: '아지트 놀이터',
         icon: '🎡',
+        navSection: 'extensions',
         defaultTab: 'playground',
         tabs: [{ id: 'playground', label: '아지트 놀이터' }],
         // 화면 안이 카드로 구성된다 (GameManager).
@@ -79,23 +95,27 @@ export const TEACHER_NAV_GROUPS = [
         innerNote: '각 카드 머리의 "학생 화면 ON/OFF" 버튼으로 켜고 끕니다.'
     },
     {
-        id: 'footprints',
-        label: '학급 발자국',
-        icon: '👣',
-        defaultTab: 'footprints',
-        tabs: [{ id: 'footprints', label: '학급 발자국' }]
-    },
-    {
         id: 'tools',
         label: TEACHER_TOOL_SECTION_LABEL,
         icon: '🧰',
+        navSection: 'extensions',
         defaultTab: 'tools',
         tabs: [{ id: 'tools', label: TEACHER_TOOL_SECTION_LABEL }]
+    },
+    {
+        id: 'neighbor-agit',
+        label: '이웃 아지트',
+        icon: '🤝',
+        badge: 'BETA',
+        navSection: 'extensions',
+        defaultTab: 'neighbor-agit',
+        tabs: [{ id: 'neighbor-agit', label: '이웃 아지트' }]
     },
     {
         id: 'settings',
         label: '설정',
         icon: '⚙️',
+        navSection: 'settings',
         defaultTab: 'settings',
         // 학급 자체 관리와 서비스 설정은 한 화면에서 관리한다.
         // 학생 명단은 자주 쓰는 업무이므로 학생 메뉴에 그대로 둔다.

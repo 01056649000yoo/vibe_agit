@@ -6,12 +6,7 @@ export const neighborAgitManifest = {
     part: 'community',
     audience: 'teacher',
     core: true,
-    settingsEntry: () => import('./SettingsEntry'),
-    settings: {
-        order: 60,
-        label: '이웃 아지트',
-        description: '다른 학급과 글 나누기'
-    },
+    teacherEntry: () => import('./TeacherEntry'),
     performance: {
         home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 0
     }
