@@ -91,6 +91,8 @@
 - [x] Docker 소켓 없는 Trivy 임시 tar 방식으로 운영 고유 이미지 15개 CVE 점검·갱신 우선순위 기록
 - [x] Docker 32GB 내부 디스크 100%로 Kong 건강검사가 실패한 원인을 확인하고, 실행 이미지·볼륨·빌드 캐시는
       보존한 채 미사용 이미지 15.18GB 정리. 14GB 여유·Kong healthy·전체 16개 컨테이너 실행 확인 (2026-08-30)
+- [ ] 관리자 상단 건강 요약과 `운영 → 서버 상태`의 새로고침 상태를 한 원본으로 연결. 폴링 없이 서버 상태
+      새로고침·관리자 홈 복귀·창 포커스 때 해제된 컨테이너 경고가 두 화면에서 함께 사라지도록 보완 (2026-08-31 진단)
 - [x] Supabase self-hosted 월간 릴리스 선택·검증·롤백 정책 수립 —
       [정책 문서](docs/SUPABASE_RELEASE_POLICY.md) · [실행 런북](docs/UPDATE_RUNBOOK.md)
 - [x] Realtime `/realtime/v1/api/openapi`·`/tenants`를 공식 Kong `request-termination` 규칙으로 403 차단;
