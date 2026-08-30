@@ -9,6 +9,8 @@ import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
 import TeacherGuideButton from './TeacherGuideButton';
 import { getPdfRenderModes } from '../../modules/writing/mission-types/registry';
+import CardSizeControl from '../../modules/card-layout/CardSizeControl';
+import { getCardColumns, normalizeCardSize } from '../../modules/card-layout/cardSize';
 
 const ARCHIVE_PAGE_SIZE = 50;
 const MISSION_POST_LIMIT = 100;
@@ -16,7 +18,7 @@ const MISSION_POST_LIMIT = 100;
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
  */
-const ArchiveManager = ({ activeClass, isMobile }) => {
+const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) => {
     const [archivedMissions, setArchivedMissions] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
@@ -28,6 +30,10 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [selectedMissionIds, setSelectedMissionIds] = useState([]); // 다중 선택된 미션 ID들
+    const normalizedCardSize = normalizeCardSize(cardSize);
+    const cardColumns = getCardColumns(normalizedCardSize);
+    const isSmallCard = normalizedCardSize === 'small';
+    const isLargeCard = normalizedCardSize === 'large';
 
     // 글 내보내기 훅
     const { fetchExportData, exportToExcel, exportToPdf, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport(activeClass?.id);
@@ -306,7 +312,16 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 <h3 style={{ margin: 0, fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     📂 보관함 <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
                 </h3>
-                <TeacherGuideButton tabId="archive" variant="help" />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                    <TeacherGuideButton tabId="archive" variant="help" />
+                    {!isMobile && (
+                        <CardSizeControl
+                            value={normalizedCardSize}
+                            onChange={onCardSizeChange}
+                            label="보관 카드"
+                        />
+                    )}
+                </div>
             </div>
 
             {/* 태그 필터링 UI */}
@@ -421,8 +436,8 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 <>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))',
-                        gap: '12px',
+                        gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardColumns}, minmax(0, 1fr))`,
+                        gap: isLargeCard ? '16px' : isSmallCard ? '10px' : '12px',
                         justifyContent: 'start'
                     }}>
                     {filteredMissions.map((mission) => (
@@ -435,7 +450,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 background: 'white',
                                 border: selectedMissionIds.includes(mission.id) ? '2px solid #3498DB' : '1px solid #E9ECEF',
                                 borderRadius: '16px',
-                                padding: isMobile ? '16px' : '14px',
+                                padding: isMobile ? '16px' : isSmallCard ? '10px' : isLargeCard ? '18px' : '14px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
@@ -488,7 +503,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                                     <h4 style={{
                                         margin: 0,
-                                        fontSize: 'var(--ui-text-lg)',
+                                        fontSize: isSmallCard ? '0.92rem' : isLargeCard ? '1.08rem' : 'var(--ui-text-lg)',
                                         color: '#2C3E50',
                                         fontWeight: '800',
                                         lineHeight: '1.4',

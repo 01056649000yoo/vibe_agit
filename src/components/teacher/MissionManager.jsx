@@ -20,6 +20,7 @@ import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
 import TeacherGuideButton from './TeacherGuideButton';
 import TeacherSubmissionBoard from './TeacherSubmissionBoard';
+import CardSizeControl from '../../modules/card-layout/CardSizeControl';
 
 const GENRE_MISSION_BUILDERS = new Map(
     getGenreMissionTypes()
@@ -33,7 +34,7 @@ const MissionLabSourcesModal = lazy(() => import('./MissionLabSourcesModal'));
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({
-    activeClass, isDashboardMode = true, missionCardSize,
+    activeClass, isDashboardMode = true, missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
     navigationTarget, onNavigationHandled, bootstrapProfile
 }) => {
@@ -284,6 +285,13 @@ const MissionManager = ({
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     {isDashboardMode && <TeacherGuideButton tabId="dashboard" variant="help" />}
+                    {isDashboardMode && !isMobile && !isSubmissionBoardView && (
+                        <CardSizeControl
+                            value={missionCardSize}
+                            onChange={onMissionCardSizeChange}
+                            label="미션 카드"
+                        />
+                    )}
                     {!isSubmissionBoardView && (
                         <Button
                             onClick={() => {

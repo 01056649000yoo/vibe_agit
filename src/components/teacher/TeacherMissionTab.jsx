@@ -3,7 +3,7 @@ import React, { lazy, Suspense } from 'react';
 const MissionManager = lazy(() => import('./MissionManager'));
 
 const TeacherMissionTab = ({
-    activeClass, isMobile, missionCardSize,
+    activeClass, isMobile, missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
     navigationTarget, onNavigationHandled, bootstrapProfile
 }) => (
@@ -21,6 +21,7 @@ const TeacherMissionTab = ({
                     activeClass={activeClass}
                     isDashboardMode={true}
                     missionCardSize={missionCardSize}
+                    onMissionCardSizeChange={onMissionCardSizeChange}
                     missionWorkspaceView={missionWorkspaceView}
                     onMissionWorkspaceViewChange={onMissionWorkspaceViewChange}
                     navigationTarget={navigationTarget}

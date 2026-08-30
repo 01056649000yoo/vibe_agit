@@ -36,7 +36,6 @@ import { TEACHER_GUIDE_CENTER_OPEN_EVENT } from '../../guides/teacherGuideEvents
 import {
     DEFAULT_MISSION_CARD_SIZE,
     LEGACY_WRITING_CARD_LAYOUT_STORAGE_KEY,
-    MISSION_CARD_SIZE_OPTIONS,
     MISSION_CARD_SIZE_STORAGE_KEY,
     migrateLegacyMissionCardSize,
     normalizeMissionCardSize
@@ -263,10 +262,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
-    const showsMissionCardSizeControls = !isMobile
-        && visibleTab === 'dashboard'
-        && missionWorkspaceView === 'manage';
-
     return (
         <div className="teacher-dashboard">
             {/* 상단 슬림 헤더 (고정) */}
@@ -393,24 +388,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         </button>
                     );
                 })}
-                {showsMissionCardSizeControls && (
-                    <div role="group" aria-label="미션 카드 크기 설정" style={{
-                        display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '18px',
-                        borderLeft: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.76rem', fontWeight: '800', flexShrink: 0
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span>미션 카드</span>
-                            {MISSION_CARD_SIZE_OPTIONS.map(option => (
-                                <button key={option.id} type="button" onClick={() => setMissionCardSize(option.id)} aria-pressed={missionCardSize === option.id} style={{
-                                    height: '28px', padding: '0 9px', borderRadius: '8px', cursor: 'pointer', fontWeight: '800',
-                                    border: missionCardSize === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
-                                    background: missionCardSize === option.id ? '#EFF6FF' : 'white',
-                                    color: missionCardSize === option.id ? '#1D4ED8' : '#64748B'
-                                }}>{option.label}</button>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </nav>
 
             {/* 메인 콘텐츠 영역 */}
@@ -479,7 +456,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             ))}
                         </div>
                     ) : visibleTab === 'archive' ? (
-                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
+                        <ArchiveManager
+                            activeClass={activeClass}
+                            isMobile={isMobile}
+                            cardSize={missionCardSize}
+                            onCardSizeChange={setMissionCardSize}
+                        />
                     ) : visibleTab === 'playground' ? (
                         <GameManager
                             activeClass={activeClass}
@@ -513,6 +495,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 isMobile={isMobile}
                                 section={visibleTab === 'dashboard' ? 'missions' : visibleTab}
                                 missionCardSize={missionCardSize}
+                                onMissionCardSizeChange={setMissionCardSize}
                                 missionWorkspaceView={missionWorkspaceView}
                                 onMissionWorkspaceViewChange={setMissionWorkspaceView}
                                 navigationTarget={workspaceTarget}

@@ -6,7 +6,7 @@ const TeacherReadingLogManager = lazy(getModule('reading-log').teacherEntry);
 const TeacherDiaryManager = lazy(getModule('diary').teacherEntry);
 
 const TeacherWritingHub = ({
-    activeClass, isMobile, section = 'missions', missionCardSize,
+    activeClass, isMobile, section = 'missions', missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
     navigationTarget, onNavigationHandled, bootstrapProfile
 }) => {
@@ -17,6 +17,7 @@ const TeacherWritingHub = ({
                     activeClass={activeClass}
                     isMobile={isMobile}
                     missionCardSize={missionCardSize}
+                    onMissionCardSizeChange={onMissionCardSizeChange}
                     missionWorkspaceView={missionWorkspaceView}
                     onMissionWorkspaceViewChange={onMissionWorkspaceViewChange}
                     navigationTarget={navigationTarget}

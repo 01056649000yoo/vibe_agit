@@ -1,0 +1,43 @@
+.card-size-control {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    gap: 7px;
+    padding: 3px 4px 3px 9px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background: #F8FAFC;
+    color: #64748B;
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.card-size-control__options {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.card-size-control__option {
+    min-height: 28px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #64748B;
+    font: inherit;
+    cursor: pointer;
+}
+
+.card-size-control__option:hover { background: #EEF2FF; color: #1D4ED8; }
+.card-size-control__option:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.card-size-control__option[aria-pressed="true"] {
+    border-color: #93C5FD;
+    background: #EFF6FF;
+    color: #1D4ED8;
+}
+
+@media (pointer: coarse) {
+    .card-size-control__option { min-height: 36px; padding: 0 10px; }
+}
