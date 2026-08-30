@@ -193,13 +193,13 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                 <section className="neighbor-admin-card">
                     <div className="neighbor-admin-card__heading">
                         <div><span>내부 시험</span><h3>시험 공간 만들기</h3></div>
-                        <small>2~4개 학급 · 학생 공개 기본 OFF</small>
+                        <small>등록된 테스트 학급만 · 학생 공개 기본 OFF</small>
                     </div>
                     <form onSubmit={createTrial}>
                         <label htmlFor="neighbor-trial-name">공간 이름</label>
                         <input id="neighbor-trial-name" value={trialName} maxLength={60} required onChange={(event) => setTrialName(event.target.value)} />
                         <fieldset>
-                            <legend>시험 학급 선택 ({selectedClassIds.length}/4)</legend>
+                            <legend>관리자 테스트 학급 선택 ({selectedClassIds.length}/4)</legend>
                             <div className="neighbor-admin__class-list">
                                 {availableClasses.map((item) => (
                                     <label key={item.class_id}>
@@ -212,7 +212,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                                         <span><strong>{item.class_name}</strong><small>{item.teacher_name}</small></span>
                                     </label>
                                 ))}
-                                {availableClasses.length === 0 && <p>새 시험 공간에 사용할 수 있는 학급이 없습니다.</p>}
+                                {availableClasses.length === 0 && <p>등록된 관리자 테스트 학급이 없습니다.</p>}
                             </div>
                         </fieldset>
                         <Button
