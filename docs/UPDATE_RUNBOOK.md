@@ -125,6 +125,9 @@ docker exec agit-db psql -U postgres -d postgres -tAc \
 - **확인**: `docker system df` — Images + Build Cache 합이 상한에 가까운지.
 - **조치**: `docker builder prune -af` (빌드 캐시는 다시 만들어진다).
   **이미지 정리(`image prune -a`)는 하지 않는다** — 롤백 대상이 지금 쓰는 이미지다.
+- **주의(2026-08-30 실제로 겪음)**: `docker image prune -f`(dangling 만 지우는 것)에도
+  **태그 없이 digest 로 고정한 도구 이미지는 지워진다.** Trivy(`aquasec/trivy@sha256:...`)가
+  이렇게 사라져 CVE 검사가 실패했다. 지운 뒤 그런 도구를 쓸 일이 있으면 다시 받아야 한다.
 - **이력**: 2026-08-30, 캐시 8.45GB 를 비워 약 9GB 를 확보했다.
 
 ### ⑤ 스모크가 기동 직후 실패한다
