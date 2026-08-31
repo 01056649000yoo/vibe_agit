@@ -249,3 +249,17 @@ test('칭호 보상은 명시적 수령·서버 재검증·공용 포인트 엔�
     assert.match(dashboard, /onPointsChange=\{setPoints\}/);
     assert.equal((dashboard.match(/onPointsChange=\{setPoints\}/g) || []).length >= 2, true);
 });
+
+test('전체 공개는 전역 스위치로 현재·미래 학급에 적용되고 학급별 예외가 우선한다', async () => {
+    const migration = await read('supabase/migrations/20261208_title_reward_global_rollout.sql');
+
+    assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.title_reward_rollout_state/);
+    assert.match(migration, /globally_enabled BOOLEAN NOT NULL DEFAULT FALSE/);
+    assert.match(migration, /COALESCE\(rollout\.enabled, global_state\.globally_enabled, FALSE\)/);
+    assert.match(migration, /CREATE TRIGGER trg_create_title_season_for_new_class/);
+    assert.match(migration, /AFTER INSERT ON public\.classes/);
+    assert.match(migration, /CREATE OR REPLACE FUNCTION public\.set_title_reward_rollout_global_v1/);
+    assert.match(migration, /public\.auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(migration, /REVOKE ALL ON TABLE public\.title_reward_rollout_state FROM PUBLIC, anon, authenticated/);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.set_title_reward_rollout_global_v1\(BOOLEAN\) FROM PUBLIC, anon/);
+});
