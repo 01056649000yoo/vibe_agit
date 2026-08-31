@@ -85,12 +85,14 @@ test('기록가·독서가 원자료는 확인 완료 글만 날짜와 서로 �
     assert.match(migration, /'reading_book_count', COALESCE\(v_reading_book_count, 0\)/);
 });
 
-test('학생과 교사 화면은 기존 칭호 RPC 안에서 네 가지 칭호를 함께 표시한다', async () => {
-    const [hook, panel, teacher, home] = await Promise.all([
+test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서 네 가지 칭호를 함께 표시한다', async () => {
+    const [hook, panel, teacher, home, dashboard, tracks] = await Promise.all([
         read('src/modules/writing/title-status/useMyTitleStatus.js'),
         read('src/modules/writing/title-status/MyTitleStatusPanel.jsx'),
         read('src/components/teacher/TeacherStudentAgitViewer.jsx'),
-        read('src/components/student/StudentHomeGrowthPanel.jsx')
+        read('src/components/student/StudentHomeGrowthPanel.jsx'),
+        read('src/components/student/StudentDashboard.jsx'),
+        read('src/modules/writing/title-status/titleTracks.js')
     ]);
 
     assert.equal((hook.match(/supabase\.rpc\('get_my_title_status'\)/g) || []).length, 1);
@@ -99,8 +101,36 @@ test('학생과 교사 화면은 기존 칭호 RPC 안에서 네 가지 칭호�
     for (const kind of ['writer', 'reader', 'diary', 'reading']) {
         assert.equal(panel.includes(`BadgeButton kind="${kind}"`), true);
     }
-    assert.match(panel, /작가 칭호[\s\S]*소통 칭호[\s\S]*기록가 칭호[\s\S]*독서가 칭호/);
     assert.match(teacher, /getDiaryLevel\(raw\?\.diary_days\)/);
     assert.match(teacher, /독서록·서로 다른 책/);
-    assert.match(home, /'소통 칭호'/);
+    for (const kind of ['writer', 'reader', 'diary', 'reading']) {
+        assert.equal(home.includes(`TitleSummary kind="${kind}"`), true);
+    }
+    assert.match(dashboard, /diaryLevel={diaryLevel}/);
+    assert.match(dashboard, /readingLevel={readingLevel}/);
+    assert.match(tracks, /작가 칭호[\s\S]*소통 칭호[\s\S]*기록가 칭호[\s\S]*독서가 칭호/);
+});
+
+test('친구 아지트는 기존 명단 RPC 한 번으로 네 칭호 원자료와 화면을 함께 제공한다', async () => {
+    const [migration, hook, preview, profile, screen] = await Promise.all([
+        read('supabase/migrations/20261204_expose_activity_titles_on_home_and_friends.sql'),
+        read('src/modules/community/friends-hideout/useFriendsHideout.js'),
+        read('src/modules/community/friends-hideout/profile/FriendHideoutPreviewCard.jsx'),
+        read('src/modules/community/friends-hideout/profile/FriendProfileShell.jsx'),
+        read('src/modules/community/friends-hideout/FriendsHideout.jsx')
+    ]);
+
+    assert.match(migration, /DROP FUNCTION IF EXISTS public\.get_student_hideout_directory\(\)/);
+    assert.match(migration, /diary_days INTEGER,[\s\S]*reading_log_count INTEGER,[\s\S]*reading_book_count INTEGER/);
+    assert.match(migration, /COALESCE\(title\.diary_days, 0\)::INTEGER AS diary_days/);
+    assert.match(migration, /record\.snapshot ->> 'reading_book_count'/);
+    assert.equal((hook.match(/\.rpc\('get_student_hideout_directory'\)/g) || []).length, 1);
+    for (const component of [preview, profile]) {
+        assert.match(component, /getDiaryLevel\(friend\?*\.?diary_days\)/);
+        assert.match(component, /getReadingLevel\(friend\?*\.?reading_log_count, friend\?*\.?reading_book_count\)/);
+        for (const kind of ['writer', 'reader', 'diary', 'reading']) {
+            assert.equal(component.includes(`kind="${kind}"`), true);
+        }
+    }
+    assert.match(screen, /작가·소통·기록가·독서가 칭호/);
 });

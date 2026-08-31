@@ -2,23 +2,23 @@ import React, { memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../../components/common/Button';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
-import { getReaderLevel, getWriterLevel } from '../../../../constants/writerLevels';
+import { getDiaryLevel, getReaderLevel, getReadingLevel, getWriterLevel } from '../../../../constants/writerLevels';
+import TitleArtwork from '../../../writing/title-status/TitleArtwork';
+import { getTitleTrack } from '../../../writing/title-status/titleTracks';
 import FriendProfileCardBoundary from './FriendProfileCardBoundary';
 import { getActiveFriendProfileCards } from './profileCardManifest';
 
-const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
-
 const TitleIdentity = ({ kind, level }) => {
-    const writer = kind === 'writer';
+    const track = getTitleTrack(kind);
     return (
         <div style={{
             display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, padding: '9px 10px',
-            borderRadius: '15px', background: writer ? 'rgba(255,238,185,.94)' : 'rgba(213,237,255,.94)',
-            border: `1px solid ${writer ? 'rgba(244,183,64,.6)' : 'rgba(114,183,255,.65)'}`
+            borderRadius: '15px', background: track.background,
+            border: `1px solid ${track.border}`
         }}>
-            <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="42" height="42" style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }} />
+            <TitleArtwork kind={kind} level={level} size={42} />
             <div style={{ minWidth: 0 }}>
-                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.6rem', fontWeight: 950 }}>{writer ? '✍️ 작가 칭호' : '💬 소통 칭호'} · LV.{level.level}</small>
+                <small style={{ display: 'block', color: track.deepAccent, fontSize: '.6rem', fontWeight: 950 }}>{track.icon} {track.label} · LV.{level.level}</small>
                 <strong style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '.76rem' }}>{level.name}</strong>
             </div>
         </div>
@@ -41,6 +41,8 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
         friend.pet_data?._testWriterLevel
     );
     const reader = getReaderLevel(friend.reader_score, friend.pet_data?._testReaderLevel);
+    const diary = getDiaryLevel(friend.diary_days);
+    const reading = getReadingLevel(friend.reading_log_count, friend.reading_book_count);
     const activeCards = getActiveFriendProfileCards();
 
     return (
@@ -81,6 +83,8 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px', marginTop: '12px' }}>
                             <TitleIdentity kind="writer" level={writer} />
                             <TitleIdentity kind="reader" level={reader} />
+                            <TitleIdentity kind="diary" level={diary} />
+                            <TitleIdentity kind="reading" level={reading} />
                         </div>
                     </div>
                 </section>

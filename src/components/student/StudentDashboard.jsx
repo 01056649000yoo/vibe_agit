@@ -139,6 +139,8 @@ const StudentDashboard = ({
     const {
         writerLevel,
         readerLevel,
+        diaryLevel,
+        readingLevel,
         loading: titleStatusLoading
     } = useMyTitleStatus({
         studentSession,
@@ -297,6 +299,8 @@ const StudentDashboard = ({
                         points={points}
                         writerLevel={writerLevel}
                         readerLevel={readerLevel}
+                        diaryLevel={diaryLevel}
+                        readingLevel={readingLevel}
                         titleLoading={titleStatusLoading}
                         dragonEnabled={isOn('dragon')}
                         petData={displayPetData}

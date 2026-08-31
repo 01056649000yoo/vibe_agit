@@ -51,6 +51,14 @@ BEGIN
       AND teacher_profile.role IN ('TEACHER', 'ADMIN')
       AND teacher_profile.is_approved IS TRUE
       AND teacher_profile.approval_revoked_at IS NULL
+      AND EXISTS (
+          SELECT 1
+          FROM public.students classmate
+          WHERE classmate.class_id = student.class_id
+            AND classmate.id <> student.id
+            AND classmate.is_active IS DISTINCT FROM FALSE
+            AND classmate.deleted_at IS NULL
+      )
       AND COALESCE(latest_season.status, 'active') = 'active'
       AND COALESCE(
           latest_season.started_at,
@@ -207,12 +215,23 @@ SELECT set_config('request.jwt.claims', jsonb_build_object(
 DO $$
 DECLARE
     v_status JSONB;
+    v_friend JSONB;
 BEGIN
     v_status := public.get_my_title_status();
     IF NOT (v_status ? 'diary_days')
        OR NOT (v_status ? 'reading_log_count')
        OR NOT (v_status ? 'reading_book_count') THEN
         RAISE EXCEPTION '학생 칭호 응답에 새 활동 칭호 원자료가 없습니다: %', v_status;
+    END IF;
+
+    SELECT to_jsonb(directory) INTO v_friend
+    FROM public.get_student_hideout_directory() directory
+    LIMIT 1;
+    IF v_friend IS NULL
+       OR NOT (v_friend ? 'diary_days')
+       OR NOT (v_friend ? 'reading_log_count')
+       OR NOT (v_friend ? 'reading_book_count') THEN
+        RAISE EXCEPTION '친구 명단 응답에 새 활동 칭호 원자료가 없습니다.';
     END IF;
 END;
 $$;

@@ -1,23 +1,18 @@
 import React from 'react';
 import DragonAvatar from '../../modules/game/dragon/DragonAvatar';
+import TitleArtwork from '../../modules/writing/title-status/TitleArtwork';
+import { getTitleTrack } from '../../modules/writing/title-status/titleTracks';
 import './StudentHomeGrowthPanel.css';
 
-const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
 const formatPoints = (value) => Number(value || 0).toLocaleString('ko-KR');
 
 const TitleSummary = ({ kind, level, loading, onClick }) => {
-    const writer = kind === 'writer';
+    const track = getTitleTrack(kind);
     return (
         <button type="button" className={`student-home-title-summary is-${kind}`} onClick={onClick}>
-            <img
-                src={titleBadgeSrc(kind, level.level)}
-                alt=""
-                aria-hidden="true"
-                width="42"
-                height="42"
-            />
+            <TitleArtwork kind={kind} level={level} size={38} className="student-home-title-summary__artwork" />
             <span>
-                <small>{writer ? '작가 칭호' : '소통 칭호'}</small>
+                <small>{track.label}</small>
                 <strong>{loading ? '불러오는 중' : level.name}</strong>
             </span>
             <em>LV.{level.level}</em>
@@ -31,6 +26,8 @@ const StudentHomeGrowthPanel = ({
     points,
     writerLevel,
     readerLevel,
+    diaryLevel,
+    readingLevel,
     titleLoading,
     dragonEnabled,
     petData,
@@ -71,6 +68,8 @@ const StudentHomeGrowthPanel = ({
                     </button>
                     <TitleSummary kind="writer" level={writerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
                     <TitleSummary kind="reader" level={readerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                    <TitleSummary kind="diary" level={diaryLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                    <TitleSummary kind="reading" level={readingLevel} loading={titleLoading} onClick={onOpenMyAgit} />
                 </div>
             </div>
 

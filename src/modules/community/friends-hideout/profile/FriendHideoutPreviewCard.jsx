@@ -1,20 +1,20 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { getReaderLevel, getWriterLevel } from '../../../../constants/writerLevels';
-
-const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
+import { getDiaryLevel, getReaderLevel, getReadingLevel, getWriterLevel } from '../../../../constants/writerLevels';
+import TitleArtwork from '../../../writing/title-status/TitleArtwork';
+import { getTitleTrack } from '../../../writing/title-status/titleTracks';
 
 const MiniTitle = ({ kind, level }) => {
-    const writer = kind === 'writer';
+    const track = getTitleTrack(kind);
     return (
         <span style={{
             display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0, padding: '7px 9px',
-            borderRadius: '13px', border: `1px solid ${writer ? '#F2D092' : '#A9D2F5'}`,
-            background: writer ? '#FFF7E3' : '#EFF8FF'
+            borderRadius: '13px', border: `1px solid ${track.border}`,
+            background: track.background
         }}>
-            <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="34" height="34" style={{ width: '34px', height: '34px', objectFit: 'contain', flexShrink: 0 }} />
+            <TitleArtwork kind={kind} level={level} size={34} />
             <span style={{ minWidth: 0 }}>
-                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.58rem', fontWeight: 950 }}>{writer ? '작가' : '소통'} LV.{level.level}</small>
+                <small style={{ display: 'block', color: track.deepAccent, fontSize: '.58rem', fontWeight: 950 }}>{track.shortLabel} LV.{level.level}</small>
                 <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '.69rem' }}>{level.name}</strong>
             </span>
         </span>
@@ -28,6 +28,8 @@ const FriendHideoutPreviewCard = ({ friend, onSelect }) => {
         friend?.pet_data?._testWriterLevel
     );
     const reader = getReaderLevel(friend?.reader_score, friend?.pet_data?._testReaderLevel);
+    const diary = getDiaryLevel(friend?.diary_days);
+    const reading = getReadingLevel(friend?.reading_log_count, friend?.reading_book_count);
     const initial = Array.from(friend?.name || '친').at(0);
 
     return (
@@ -36,9 +38,9 @@ const FriendHideoutPreviewCard = ({ friend, onSelect }) => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => onSelect(friend)}
-            aria-label={`${friend.name}의 아지트 방문, ${writer.name}, ${reader.name}`}
+            aria-label={`${friend.name}의 아지트 방문, ${writer.name}, ${reader.name}, ${diary.name}, ${reading.name}`}
             style={{
-                position: 'relative', overflow: 'hidden', width: '100%', minHeight: '156px', padding: '18px',
+                position: 'relative', overflow: 'hidden', width: '100%', minHeight: '226px', padding: '18px',
                 border: '1px solid #E2D7CC', borderRadius: '24px', cursor: 'pointer', textAlign: 'left',
                 background: 'linear-gradient(145deg,#FFFFFF,#FFF9EE)', boxShadow: '0 8px 20px rgba(73,52,37,.08)'
             }}
@@ -59,6 +61,8 @@ const FriendHideoutPreviewCard = ({ friend, onSelect }) => {
             <span style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px', marginTop: '13px' }}>
                 <MiniTitle kind="writer" level={writer} />
                 <MiniTitle kind="reader" level={reader} />
+                <MiniTitle kind="diary" level={diary} />
+                <MiniTitle kind="reading" level={reading} />
             </span>
         </motion.button>
     );
