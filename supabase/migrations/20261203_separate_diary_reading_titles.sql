@@ -1,120 +1,7 @@
 -- 일기·독서록을 작가 글자 수에서 분리하고 각각의 꾸준함 칭호로 센다.
--- 전환 시점까지의 작가 진행도는 학생별 기준점으로 보존해 현재 단계가 내려가지 않게 한다.
+-- 이번 시즌 처음부터 새 기준으로 다시 계산하므로 기존 작가 단계가 내려갈 수 있다.
 
 BEGIN;
-
-CREATE TABLE IF NOT EXISTS public.writer_title_transition_baselines (
-    class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
-    student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
-    season_started_at TIMESTAMPTZ NOT NULL,
-    captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    writer_total_chars BIGINT NOT NULL DEFAULT 0 CHECK (writer_total_chars >= 0),
-    writer_completed_posts INTEGER NOT NULL DEFAULT 0 CHECK (writer_completed_posts >= 0),
-    writer_post_keys TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
-    PRIMARY KEY (class_id, student_id, season_started_at)
-);
-
-ALTER TABLE public.writer_title_transition_baselines ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE public.writer_title_transition_baselines FROM PUBLIC, anon, authenticated;
-GRANT ALL ON TABLE public.writer_title_transition_baselines TO service_role;
-
-COMMENT ON TABLE public.writer_title_transition_baselines IS
-    '2026-08-31 자율 일기·독서록 칭호 분리 당시 현재 학기 작가 진행도 기준점. 다음 학기에는 사용하지 않는다.';
-
--- 이미 획득한 작가 진행도를 보존한다. 현재 성장 중인 시즌(또는 옛 학급 시작일)만 기준점을 만든다.
-WITH class_seasons AS MATERIALIZED (
-    SELECT
-        class_row.id AS class_id,
-        COALESCE(season.started_at, class_row.season_started_at, class_row.created_at) AS season_started_at
-    FROM public.classes class_row
-    LEFT JOIN LATERAL (
-        SELECT candidate.started_at, candidate.status
-        FROM public.dragon_growth_seasons candidate
-        WHERE candidate.class_id = class_row.id
-        ORDER BY (candidate.status IN ('active', 'closing')) DESC, candidate.season_number DESC
-        LIMIT 1
-    ) season ON TRUE
-    WHERE COALESCE(season.status, 'active') = 'active'
-), active_students AS MATERIALIZED (
-    SELECT student.id AS student_id, student.class_id, class_season.season_started_at
-    FROM public.students student
-    JOIN class_seasons class_season ON class_season.class_id = student.class_id
-    WHERE student.is_active IS DISTINCT FROM FALSE
-      AND (student.deleted_at IS NULL OR student.deleted_at > NOW())
-), completed_posts AS MATERIALIZED (
-    SELECT
-        post.id,
-        post.student_id,
-        post.class_id,
-        post.mission_id,
-        COALESCE(post.char_count, 0)::INTEGER AS char_count,
-        post.created_at,
-        CASE
-            WHEN COALESCE(post.writing_context, 'assignment') = 'self'
-                THEN COALESCE(post.published_at, post.updated_at, post.created_at)
-            ELSE COALESCE(post.approved_at, post.updated_at, post.created_at)
-        END AS completed_at,
-        student.season_started_at
-    FROM public.student_posts post
-    JOIN active_students student
-      ON student.student_id = post.student_id
-     AND student.class_id = post.class_id
-    WHERE public.writing_counts_as_completed(post.writing_context, post.is_confirmed, post.is_submitted)
-), level_posts AS MATERIALIZED (
-    SELECT DISTINCT ON (
-        post.student_id,
-        COALESCE('mission:' || post.mission_id::TEXT, 'post:' || post.id::TEXT)
-    )
-        post.student_id,
-        post.class_id,
-        post.season_started_at,
-        COALESCE('mission:' || post.mission_id::TEXT, 'post:' || post.id::TEXT) AS post_key,
-        post.char_count
-    FROM completed_posts post
-    WHERE post.completed_at >= post.season_started_at
-    ORDER BY
-        post.student_id,
-        COALESCE('mission:' || post.mission_id::TEXT, 'post:' || post.id::TEXT),
-        post.created_at DESC,
-        post.id
-), current_stats AS MATERIALIZED (
-    SELECT
-        student.student_id,
-        student.class_id,
-        student.season_started_at,
-        COALESCE(SUM(post.char_count), 0)::BIGINT AS writer_total_chars,
-        COUNT(post.student_id)::INTEGER AS writer_completed_posts,
-        COALESCE(
-            array_agg(post.post_key ORDER BY post.post_key)
-                FILTER (WHERE post.post_key IS NOT NULL),
-            '{}'::TEXT[]
-        ) AS writer_post_keys
-    FROM active_students student
-    LEFT JOIN level_posts post
-      ON post.student_id = student.student_id
-     AND post.class_id = student.class_id
-     AND post.season_started_at = student.season_started_at
-    GROUP BY student.student_id, student.class_id, student.season_started_at
-)
-INSERT INTO public.writer_title_transition_baselines (
-    class_id,
-    student_id,
-    season_started_at,
-    captured_at,
-    writer_total_chars,
-    writer_completed_posts,
-    writer_post_keys
-)
-SELECT
-    stats.class_id,
-    stats.student_id,
-    stats.season_started_at,
-    statement_timestamp(),
-    stats.writer_total_chars,
-    stats.writer_completed_posts,
-    stats.writer_post_keys
-FROM current_stats stats
-ON CONFLICT (class_id, student_id, season_started_at) DO NOTHING;
 
 -- 한 학급의 칭호 원자료를 한 번에 계산한다. 외부 호출은 막고 공개 RPC들만 이 함수를 공유한다.
 CREATE OR REPLACE FUNCTION public.get_class_writing_title_stats_v1(
@@ -143,15 +30,6 @@ AS $$
           AND (student.deleted_at IS NULL OR student.deleted_at > NOW())
         ORDER BY student.id
         LIMIT 100
-    ), transition AS MATERIALIZED (
-        SELECT baseline.student_id,
-               baseline.writer_total_chars,
-               baseline.writer_completed_posts,
-               baseline.writer_post_keys
-        FROM public.writer_title_transition_baselines baseline
-        JOIN active_students student ON student.id = baseline.student_id
-        WHERE baseline.class_id = p_class_id
-          AND baseline.season_started_at = p_started_at
     ), completed_posts AS MATERIALIZED (
         SELECT
             post.id,
@@ -200,17 +78,12 @@ AS $$
             post.char_count,
             post.created_at
         FROM completed_posts post
-        LEFT JOIN transition baseline ON baseline.student_id = post.student_id
         WHERE NOT (
             COALESCE(post.writing_context, 'assignment') = 'self'
             AND post.self_writing_type IN ('diary', 'reading_log')
         )
           AND post.completed_at >= p_started_at
           AND (p_ended_at IS NULL OR post.completed_at <= p_ended_at)
-          AND NOT (
-              COALESCE('mission:' || post.mission_id::TEXT, 'post:' || post.id::TEXT)
-              = ANY(COALESCE(baseline.writer_post_keys, '{}'::TEXT[]))
-          )
         ORDER BY
             post.student_id,
             COALESCE('mission:' || post.mission_id::TEXT, 'post:' || post.id::TEXT),
@@ -276,13 +149,12 @@ AS $$
     )
     SELECT
         student.id AS student_id,
-        COALESCE(baseline.writer_total_chars, 0) + COALESCE(writer.total_chars, 0) AS writer_total_chars,
-        COALESCE(baseline.writer_completed_posts, 0) + COALESCE(writer.completed_posts, 0) AS writer_completed_posts,
+        COALESCE(writer.total_chars, 0) AS writer_total_chars,
+        COALESCE(writer.completed_posts, 0) AS writer_completed_posts,
         COALESCE(diary.diary_days, 0)::INTEGER AS diary_days,
         COALESCE(reading.reading_log_count, 0)::INTEGER AS reading_log_count,
         COALESCE(reading.reading_book_count, 0)::INTEGER AS reading_book_count
     FROM active_students student
-    LEFT JOIN transition baseline ON baseline.student_id = student.id
     LEFT JOIN writer_stats writer ON writer.student_id = student.id
     LEFT JOIN diary_stats diary ON diary.student_id = student.id
     LEFT JOIN reading_stats reading ON reading.student_id = student.id

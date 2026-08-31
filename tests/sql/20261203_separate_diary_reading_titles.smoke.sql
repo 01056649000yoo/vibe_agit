@@ -1,8 +1,5 @@
 DO $$
 BEGIN
-    IF has_table_privilege('authenticated', 'public.writer_title_transition_baselines', 'SELECT') THEN
-        RAISE EXCEPTION '학생/교사가 작가 전환 기준점을 직접 읽을 수 있습니다.';
-    END IF;
     IF has_function_privilege(
         'authenticated',
         'public.get_class_writing_title_stats_v1(uuid,timestamptz,timestamptz)',
@@ -174,16 +171,11 @@ BEGIN
 
     SELECT jsonb_build_object(
         'post', to_jsonb(post),
-        'baseline', to_jsonb(baseline),
         'counts_as_completed', public.writing_counts_as_completed(
             post.writing_context, post.is_confirmed, post.is_submitted
         )
     ) INTO v_debug
     FROM public.student_posts post
-    LEFT JOIN public.writer_title_transition_baselines baseline
-      ON baseline.student_id = post.student_id
-     AND baseline.class_id = post.class_id
-     AND baseline.season_started_at = v_started_at
     WHERE post.id = v_general_id;
 
     IF v_after.writer_total_chars <> v_before.writer_total_chars + 111

@@ -55,17 +55,21 @@ test('DB 칭호 함수는 화면 상수에서 생성되고 새 칭호도 학기 
     assert.match(activityMigration, /'reading_level', public\.dragon_reading_level/);
 });
 
-test('작가 칭호는 전환 기준점을 보존하고 이후 자율 일기·독서록을 제외한다', async () => {
+test('작가 칭호는 이번 시즌 전체에서 자율 일기·독서록을 제외해 다시 계산한다', async () => {
     const migration = await read('supabase/migrations/20261203_separate_diary_reading_titles.sql');
+    const eligibleWriterPosts = migration.match(
+        /eligible_writer_posts AS MATERIALIZED \(([\s\S]*?)\n    \), writer_stats AS MATERIALIZED/
+    )?.[1];
 
-    assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.writer_title_transition_baselines/);
-    assert.match(migration, /ON CONFLICT \(class_id, student_id, season_started_at\) DO NOTHING/);
-    assert.match(migration, /baseline\.writer_total_chars[\s\S]*writer\.total_chars/);
-    assert.match(migration, /writer_post_keys TEXT\[\]/);
-    assert.match(migration, /= ANY\(COALESCE\(baseline\.writer_post_keys/);
-    assert.match(migration, /post\.self_writing_type IN \('diary', 'reading_log'\)/);
-    assert.match(migration, /post\.completed_at >= p_started_at/);
-    assert.match(migration, /REVOKE ALL ON TABLE public\.writer_title_transition_baselines FROM PUBLIC, anon, authenticated/);
+    assert.doesNotMatch(migration, /writer_title_transition_baselines/);
+    assert.ok(eligibleWriterPosts, '작가 칭호 대상 글 CTE를 찾을 수 있어야 한다');
+    assert.match(
+        eligibleWriterPosts,
+        /WHERE NOT \([\s\S]*?post\.self_writing_type IN \('diary', 'reading_log'\)[\s\S]*?post\.completed_at >= p_started_at/
+    );
+    assert.match(migration, /COALESCE\(writer\.total_chars, 0\) AS writer_total_chars/);
+    assert.match(migration, /COALESCE\(writer\.completed_posts, 0\) AS writer_completed_posts/);
+    assert.doesNotMatch(migration, /baseline\.writer_total_chars|writer_post_keys/);
 });
 
 test('기록가·독서가 원자료는 확인 완료 글만 날짜와 서로 다른 책으로 센다', async () => {
