@@ -10,7 +10,12 @@ import {
     getDragonStage,
     getReaderDragonEffect
 } from '../../modules/game/dragon/presentation';
-import { getReaderLevel, getWriterLevel } from '../../constants/writerLevels';
+import {
+    getDiaryLevel,
+    getReaderLevel,
+    getReadingLevel,
+    getWriterLevel
+} from '../../constants/writerLevels';
 import MasteryBadges from '../../modules/learning/MasteryBadges';
 import useLearningMastery from '../../modules/learning/useLearningMastery';
 import {
@@ -55,6 +60,8 @@ const normalizeStudent = (raw, pointMap) => {
         raw?.writer_level_override
     );
     const reader = getReaderLevel(raw?.reader_score, raw?.reader_level_override);
+    const diary = getDiaryLevel(raw?.diary_days);
+    const reading = getReadingLevel(raw?.reading_log_count, raw?.reading_book_count);
 
     return {
         ...raw,
@@ -62,6 +69,8 @@ const normalizeStudent = (raw, pointMap) => {
         petData,
         writer,
         reader,
+        diary,
+        reading,
         dragon: getDragonStage(writer.level, petData.species),
         growth: getDragonGrowthFromWriterLevel(writer),
         readerEffect: getReaderDragonEffect(reader.level),
@@ -70,7 +79,10 @@ const normalizeStudent = (raw, pointMap) => {
         writerChars: Number(raw?.writer_total_chars || 0),
         careerPosts: Number(raw?.career_posts || 0),
         careerChars: Number(raw?.career_chars || 0),
-        readerScore: Number(raw?.reader_score || 0)
+        readerScore: Number(raw?.reader_score || 0),
+        diaryDays: Number(raw?.diary_days || 0),
+        readingLogs: Number(raw?.reading_log_count || 0),
+        readingBooks: Number(raw?.reading_book_count || 0)
     };
 };
 
@@ -371,7 +383,9 @@ const TeacherStudentAgitViewer = ({
                                         </div>
                                         <div className="teacher-student-agit__badges">
                                             <div><span>{selectedStudent.writer.emoji}</span><small>작가 칭호</small><strong>Lv.{selectedStudent.writer.level} {selectedStudent.writer.name}</strong></div>
-                                            <div><span>{selectedStudent.reader.emoji}</span><small>독자 칭호</small><strong>R{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
+                                            <div><span>{selectedStudent.reader.emoji}</span><small>소통 칭호</small><strong>Lv.{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
+                                            <div><span>{selectedStudent.diary.emoji}</span><small>기록가 칭호</small><strong>Lv.{selectedStudent.diary.level} {selectedStudent.diary.name}</strong></div>
+                                            <div><span>{selectedStudent.reading.emoji}</span><small>독서가 칭호</small><strong>Lv.{selectedStudent.reading.level} {selectedStudent.reading.name}</strong></div>
                                         </div>
                                         {/* 학습 성취 — 교사는 학생 본인과 같은 범위(진행도 포함)를 본다. */}
                                         <MasteryBadges
@@ -381,10 +395,12 @@ const TeacherStudentAgitViewer = ({
                                         />
                                     </section>
                                     <section className="teacher-student-agit__stats" aria-label={`${selectedStudent.name} 활동 요약`}>
-                                        <div><small>이번 학기 완성 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
-                                        <div><small>이번 학기 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
+                                        <div><small>작가 칭호 인정 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
+                                        <div><small>작가 칭호 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
+                                        <div><small>일기 기록일</small><strong>{formatNumber(selectedStudent.diaryDays)}일</strong></div>
+                                        <div><small>독서록·서로 다른 책</small><strong>{formatNumber(selectedStudent.readingLogs)}편 · {formatNumber(selectedStudent.readingBooks)}권</strong></div>
                                         <div><small>전체 보관 기록</small><strong>{formatNumber(selectedStudent.careerPosts)}편</strong></div>
-                                        <div><small>독자 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
+                                        <div><small>소통 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
                                     </section>
                                 </div>
                             </div>

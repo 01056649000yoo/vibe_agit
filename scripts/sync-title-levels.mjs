@@ -18,7 +18,12 @@
  */
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { WRITER_LEVELS, READER_LEVELS } from '../src/constants/writerLevels.js';
+import {
+    DIARY_LEVELS,
+    READER_LEVELS,
+    READING_LEVELS,
+    WRITER_LEVELS
+} from '../src/constants/writerLevels.js';
 
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
 const CONTAINER = 'agit-db';
@@ -54,6 +59,32 @@ const buildReaderBody = () => {
     ].join('\n');
 };
 
+const buildDiaryBody = () => {
+    const rows = [...DIARY_LEVELS]
+        .filter((item) => item.level > 1)
+        .sort((a, b) => b.level - a.level)
+        .map((item) => `        WHEN COALESCE(p_days, 0) >= ${item.from} THEN ${item.level}`);
+    return [
+        '    SELECT CASE',
+        ...rows,
+        '        ELSE 1',
+        '    END;'
+    ].join('\n');
+};
+
+const buildReadingBody = () => {
+    const rows = [...READING_LEVELS]
+        .filter((item) => item.level > 1)
+        .sort((a, b) => b.level - a.level)
+        .map((item) => `        WHEN COALESCE(p_logs, 0) >= ${item.logsFrom} AND COALESCE(p_books, 0) >= ${item.booksFrom} THEN ${item.level}`);
+    return [
+        '    SELECT CASE',
+        ...rows,
+        '        ELSE 1',
+        '    END;'
+    ].join('\n');
+};
+
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
 const readDeployed = (name) => {
@@ -69,7 +100,9 @@ const readDeployed = (name) => {
 
 const TARGETS = [
     { name: 'dragon_writer_level', body: buildWriterBody(), label: '작가' },
-    { name: 'dragon_reader_level', body: buildReaderBody(), label: '독자' }
+    { name: 'dragon_reader_level', body: buildReaderBody(), label: '소통' },
+    { name: 'dragon_diary_level', body: buildDiaryBody(), label: '기록가' },
+    { name: 'dragon_reading_level', body: buildReadingBody(), label: '독서가' }
 ];
 
 /**
@@ -130,7 +163,11 @@ if (mode === 'check') {
 }
 
 // --write: 상수에서 만든 본문으로 마이그레이션 파일을 쓴다.
-const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+const requestedStamp = process.argv.find((argument) => argument.startsWith('--stamp='))?.split('=')[1];
+if (requestedStamp && !/^\d{8}$/.test(requestedStamp)) {
+    throw new Error('--stamp는 YYYYMMDD 형식이어야 합니다.');
+}
+const stamp = requestedStamp || new Date().toISOString().slice(0, 10).replace(/-/g, '');
 const file = `supabase/migrations/${stamp}_sync_title_levels.sql`;
 const sql = `-- 칭호 기준 동기화 — **손으로 고치지 마세요.**
 -- \`src/constants/writerLevels.js\` 를 고친 뒤
@@ -163,6 +200,29 @@ IMMUTABLE
 AS $$
 ${buildReaderBody()}
 $$;
+
+CREATE OR REPLACE FUNCTION public.dragon_diary_level(p_days BIGINT)
+RETURNS INTEGER
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+${buildDiaryBody()}
+$$;
+
+CREATE OR REPLACE FUNCTION public.dragon_reading_level(p_logs BIGINT, p_books BIGINT)
+RETURNS INTEGER
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+${buildReadingBody()}
+$$;
+
+REVOKE ALL ON FUNCTION public.dragon_diary_level(BIGINT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.dragon_reading_level(BIGINT, BIGINT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.dragon_diary_level(BIGINT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.dragon_reading_level(BIGINT, BIGINT) TO service_role;
 
 COMMIT;
 `;

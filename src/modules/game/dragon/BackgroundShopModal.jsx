@@ -127,13 +127,13 @@ const BackgroundShopModal = ({
                             <div className={`agit-workshop__legend-reward${hasLegendaryReward ? ' is-owned' : canClaimLegendaryReward ? ' is-ready' : ''}`}>
                                 <div className="agit-workshop__legend-reward-mark" aria-hidden="true">✦</div>
                                 <div>
-                                    <small>WRITER 10 · READER 7</small>
+                                    <small>작가 10 · 소통 7</small>
                                     <strong>{DRAGON_LEGENDARY_REWARD.name}</strong>
                                     <p>{hasLegendaryReward
                                         ? '달성 선물을 받았어요. 전설 장식은 슬롯별로 언제든 다시 장착할 수 있어요.'
                                         : canClaimLegendaryReward
                                             ? '두 칭호를 모두 달성했어요. 선물을 열면 전설 장식 5종이 바로 장착돼요.'
-                                            : `작가 ${writerLevel}/10 · 독자 ${currentReaderLevel}/7 — 두 성장을 모두 완성하면 열려요.`}</p>
+                                            : `작가 ${writerLevel}/10 · 소통 ${currentReaderLevel}/7 — 두 성장을 모두 완성하면 열려요.`}</p>
                                 </div>
                                 <Button
                                     size="sm"
@@ -253,7 +253,7 @@ const BackgroundShopModal = ({
                                                         : isOwned
                                                             ? '보유 중'
                                                             : isReward
-                                                                ? '작가 10 · 독자 7 달성 선물'
+                                                                ? '작가 10 · 소통 7 달성 선물'
                                                                 : isLocked
                                                                     ? `작가 ${item.requiredWriterLevel}단계 필요`
                                                                     : `${Number(item.price || 0).toLocaleString()}P`}

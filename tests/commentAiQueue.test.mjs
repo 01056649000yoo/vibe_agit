@@ -109,7 +109,7 @@ test('과거 댓글 포인트는 이전 기록으로 남고 원장 삭제 SQL은
     assert.doesNotMatch(retirementMigration, /DROP\s+(?:TABLE|COLUMN)[\s\S]*comment_reward/i);
 });
 
-test('승인된 친구 댓글은 포인트와 독립된 독자 칭호 성장으로 계속 인정한다', () => {
+test('승인된 친구 댓글은 포인트와 독립된 소통 칭호 성장으로 계속 인정한다', () => {
     assert.match(readerMigration, /c\.status = 'approved'/);
     assert.match(readerMigration, /p\.student_id <> v_student_id/);
     assert.match(readerMigration, /SUM\(1 \+ LEAST\(comment_chars \/ 20, 3\)\)/);
@@ -132,6 +132,6 @@ test('교사 도움말은 학생 확인·3건 대기열·실패 댓글 처리 �
     assert.match(commentsGuide, /내가 쓴 댓글을 한 번 읽어 보세요/);
     assert.match(commentsGuide, /최대 3건씩/);
     assert.match(commentsGuide, /두 번 실패/);
-    assert.match(commentsGuide, /포인트 대신 \*\*독자 칭호 성장\*\*/);
+    assert.match(commentsGuide, /포인트 대신 \*\*소통 칭호 성장\*\*/);
     assert.match(commentsGuide, /과거에 받은 댓글 포인트와 내역은 그대로 유지/);
 });

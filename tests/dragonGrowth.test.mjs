@@ -47,7 +47,7 @@ test('테스트 칭호 오버라이드는 실제 글 통계를 바꾸지 않고 
 
     const reader = getReaderLevel(0, 6);
     assert.equal(reader.level, 6);
-    assert.equal(reader.name, '열혈 독자');
+    assert.equal(reader.name, '소통 달인');
     assert.equal(reader.isTestOverride, true);
     assert.equal(getReaderLevel(0, 999).level, 1);
 });
@@ -86,13 +86,13 @@ test('4종 드래곤이 작가 10단계마다 서로 다른 개별 이미지를 
     }
 });
 
-test('독자 칭호 7단계를 독립적인 드래곤 효과로 제한한다', () => {
+test('소통 칭호 7단계를 독립적인 드래곤 효과로 제한한다', () => {
     assert.equal(getReaderDragonEffect(0).level, 1);
     assert.equal(getReaderDragonEffect({ level: 5 }).name, '별무리 서가');
     assert.equal(getReaderDragonEffect(999).level, 7);
 });
 
-test('모든 아지트 프레임이 예전 화면용 독자 효과 대비 계약도 유지한다', () => {
+test('모든 아지트 프레임이 예전 화면용 소통 효과 대비 계약도 유지한다', () => {
     const allowedTones = new Set(['light', 'dark', 'vivid']);
     Object.values(HIDEOUT_BACKGROUNDS).forEach((background) => {
         assert.equal(allowedTones.has(background.readerTone), true);
@@ -277,7 +277,7 @@ test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리�
     assert.match(shopSource, /상품은 하나씩 구입하고 장착할 수 있어요/);
     assert.match(shopSource, /buyDecorItem\(item\)/);
     assert.match(shopSource, /claimLegendaryReward\(\)/);
-    assert.match(shopSource, /작가 10 · 독자 7/);
+    assert.match(shopSource, /작가 10 · 소통 7/);
     assert.doesNotMatch(shopSource, /buyDecorCollection|buy_my_dragon_decor_collection/);
     assert.match(shopCss, /grid-template-areas: 'copy preview' 'action preview'/);
     assert.match(shopCss, /\.agit-workshop__item-preview \{ grid-area: preview; justify-self: end;/);

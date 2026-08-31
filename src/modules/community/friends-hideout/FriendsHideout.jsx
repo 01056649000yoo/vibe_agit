@@ -315,7 +315,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                     <div style={{ marginBottom: '18px' }}>
                         <span style={{ color: '#8E24AA', fontSize: '0.75rem', fontWeight: '950' }}>친구의 공간 방문</span>
                         <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>🏠 누구의 아지트로 갈까요?</h3>
-                        <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>이름과 작가·독자 칭호로 친구를 찾고, 공개 서재와 둘이 나눈 기록을 구경해요.</p>
+                        <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>이름과 작가·소통 칭호로 친구를 찾고, 공개 서재와 둘이 나눈 기록을 구경해요.</p>
                     </div>
                 )}
 

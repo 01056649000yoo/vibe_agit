@@ -17,7 +17,7 @@ const TitleSummary = ({ kind, level, loading, onClick }) => {
                 height="42"
             />
             <span>
-                <small>{writer ? '작가 칭호' : '독자 칭호'}</small>
+                <small>{writer ? '작가 칭호' : '소통 칭호'}</small>
                 <strong>{loading ? '불러오는 중' : level.name}</strong>
             </span>
             <em>LV.{level.level}</em>

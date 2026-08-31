@@ -18,7 +18,7 @@ const formatWriterRequirement = (level) => {
 };
 
 const formatReaderRequirement = (level) => (
-    level.level === 1 ? '독자 활동을 시작하는 단계' : `독자 활동 ${Number(level.from).toLocaleString('ko-KR')}점부터`
+    level.level === 1 ? '소통 활동을 시작하는 단계' : `소통 활동 ${Number(level.from).toLocaleString('ko-KR')}점부터`
 );
 
 const TeacherStagePreview = () => {
@@ -43,7 +43,7 @@ const TeacherStagePreview = () => {
                 <div>
                     <span className="dragon-teacher-eyebrow">TEACHER PREVIEW</span>
                     <h3 id="dragon-stage-preview-title">수호룡 단계 미리보기</h3>
-                    <p>학생 기록을 바꾸지 않고 수호룡 4종, 작가 성장 10단계와 독자 효과 7단계를 조합해 확인합니다.</p>
+                    <p>학생 기록을 바꾸지 않고 수호룡 4종, 작가 성장 10단계와 소통 효과 7단계를 조합해 확인합니다.</p>
                 </div>
                 <span className="dragon-stage-preview__safe-badge">교사 전용 · 저장 안 됨</span>
             </header>
@@ -55,7 +55,7 @@ const TeacherStagePreview = () => {
                             <small>선택한 학생 화면 모습</small>
                             <strong>{dragon.species.shortName} · {dragon.name}</strong>
                         </div>
-                        <span>작가 Lv.{writerLevel} + 독자 R{readerLevel}</span>
+                        <span>작가 Lv.{writerLevel} + 소통 Lv.{readerLevel}</span>
                     </div>
                     <DragonHideoutScene
                         petData={previewPet}
@@ -71,8 +71,8 @@ const TeacherStagePreview = () => {
                             <span>{formatWriterRequirement(selectedWriter)}</span>
                         </div>
                         <div>
-                            <small>독자 효과</small>
-                            <strong>{selectedReader.emoji} R{selectedReader.level} {readerEffect.name}</strong>
+                            <small>소통 효과</small>
+                            <strong>{selectedReader.emoji} Lv.{selectedReader.level} {readerEffect.name}</strong>
                             <span>{readerEffect.description}</span>
                         </div>
                     </div>
@@ -134,7 +134,7 @@ const TeacherStagePreview = () => {
                     </fieldset>
 
                     <fieldset>
-                        <legend>3. 독자 효과 단계</legend>
+                        <legend>3. 소통 효과 단계</legend>
                         <p>친구 글 읽기·반응·댓글 활동이 빛과 입자 효과로 더해집니다.</p>
                         <div className="dragon-stage-preview__levels dragon-stage-preview__levels--reader">
                             {READER_LEVELS.map((level) => (
@@ -152,7 +152,7 @@ const TeacherStagePreview = () => {
                             ))}
                         </div>
                         <div className="dragon-stage-preview__selection-copy is-reader">
-                            <strong>R{selectedReader.level} {selectedReader.name} · {readerEffect.name}</strong>
+                            <strong>Lv.{selectedReader.level} {selectedReader.name} · {readerEffect.name}</strong>
                             <span>{formatReaderRequirement(selectedReader)} · {readerEffect.description}</span>
                         </div>
                     </fieldset>

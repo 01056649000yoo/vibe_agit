@@ -14,7 +14,7 @@ const MiniTitle = ({ kind, level }) => {
         }}>
             <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="34" height="34" style={{ width: '34px', height: '34px', objectFit: 'contain', flexShrink: 0 }} />
             <span style={{ minWidth: 0 }}>
-                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.58rem', fontWeight: 950 }}>{writer ? '작가' : '독자'} LV.{level.level}</small>
+                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.58rem', fontWeight: 950 }}>{writer ? '작가' : '소통'} LV.{level.level}</small>
                 <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '.69rem' }}>{level.name}</strong>
             </span>
         </span>

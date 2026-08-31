@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const requestedFile = process.argv[2];
-const requestedMigration = process.argv[3];
+const requestedMigrations = process.argv.slice(3);
 if (!requestedFile) {
   console.error('사용법: node scripts/run-rollback-smoke.mjs tests/sql/<파일>.sql');
   process.exit(1);
@@ -19,20 +19,20 @@ if (!resolvedFile.startsWith(allowedRoot) || !resolvedFile.endsWith('.sql')) {
   process.exit(1);
 }
 
-let migrationSource = '';
-if (requestedMigration) {
+const migrationSources = [];
+for (const requestedMigration of requestedMigrations) {
   const resolvedMigration = path.resolve(requestedMigration);
   const allowedMigrationRoot = `${path.resolve('supabase/migrations')}${path.sep}`;
   if (!resolvedMigration.startsWith(allowedMigrationRoot) || !resolvedMigration.endsWith('.sql')) {
     console.error('선행 마이그레이션은 supabase/migrations 아래 SQL 파일만 사용할 수 있습니다.');
     process.exit(1);
   }
-  migrationSource = readFileSync(resolvedMigration, 'utf8');
+  migrationSources.push(readFileSync(resolvedMigration, 'utf8'));
 }
 
 const container = process.env.AGIT_DB_CONTAINER || 'agit-db';
 const databaseUser = process.env.AGIT_DB_USER || 'supabase_admin';
-const source = `${migrationSource}\n${readFileSync(resolvedFile, 'utf8')}`
+const source = `${migrationSources.join('\n')}\n${readFileSync(resolvedFile, 'utf8')}`
   .replace(/^\s*BEGIN;\s*$/gmi, '')
   .replace(/^\s*(COMMIT|ROLLBACK);\s*$/gmi, '');
 

@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
-import { WRITER_LEVELS, getReaderLevel, getWriterLevel } from '../../../constants/writerLevels';
+import {
+    WRITER_LEVELS,
+    getDiaryLevel,
+    getReaderLevel,
+    getReadingLevel,
+    getWriterLevel
+} from '../../../constants/writerLevels';
 import { supabase } from '../../../lib/supabaseClient';
 import DragonAvatar from './DragonAvatar';
 import TeacherStagePreview from './TeacherStagePreview';
@@ -40,6 +46,8 @@ const normalizeStudent = (raw) => {
         raw?.writer_level_override
     );
     const reader = getReaderLevel(raw?.reader_score, raw?.reader_level_override);
+    const diary = getDiaryLevel(raw?.diary_days);
+    const reading = getReadingLevel(raw?.reading_log_count, raw?.reading_book_count);
     const dragon = getDragonStage(writer.level, petData.species);
     const growth = getDragonGrowthFromWriterLevel(writer);
     const readerEffect = getReaderDragonEffect(reader.level);
@@ -50,6 +58,8 @@ const normalizeStudent = (raw) => {
         petData,
         writer,
         reader,
+        diary,
+        reading,
         dragon,
         growth,
         readerEffect,
@@ -61,7 +71,10 @@ const normalizeStudent = (raw) => {
         writerPosts: Number(raw?.writer_completed_posts || 0),
         careerChars: Number(raw?.career_chars || 0),
         careerPosts: Number(raw?.career_posts || 0),
-        readerScore: Number(raw?.reader_score || 0)
+        readerScore: Number(raw?.reader_score || 0),
+        diaryDays: Number(raw?.diary_days || 0),
+        readingLogs: Number(raw?.reading_log_count || 0),
+        readingBooks: Number(raw?.reading_book_count || 0)
     };
 };
 
@@ -139,7 +152,7 @@ const StudentCard = ({ student, onOpen }) => (
             <span className="dragon-student-card__stats">
                 <span><b>{student.seasonPosts}</b>편<small>이번 시즌</small></span>
                 <span><b>{formatNumber(student.writerChars)}</b>자<small>이번 학기</small></span>
-                <span><b>R{student.reader.level}</b><small>독자 효과</small></span>
+                <span><b>Lv.{student.reader.level}</b><small>소통 효과</small></span>
             </span>
             <span className="dragon-student-card__more">성장 자세히 보기 ›</span>
         </span>
@@ -166,19 +179,23 @@ const StudentDetailModal = ({ student, onClose, seasonLabel }) => {
                             <p>{student.petData.name || '나의 드래곤'} · {student.hasSpecies ? species.name : '수호룡 선택 전'}</p>
                             <div className="dragon-teacher-modal__badges">
                                 <span>{student.writer.emoji} Lv.{student.writer.level} {student.writer.name}</span>
-                                <span>{student.reader.emoji} R{student.reader.level} {student.reader.name}</span>
+                                <span>{student.reader.emoji} Lv.{student.reader.level} {student.reader.name}</span>
+                                <span>{student.diary.emoji} Lv.{student.diary.level} {student.diary.name}</span>
+                                <span>{student.reading.emoji} Lv.{student.reading.level} {student.reading.name}</span>
                                 {(student.writer.isTestOverride || student.reader.isTestOverride) && <span className="is-test">시험 단계 적용 중</span>}
                             </div>
                         </div>
                     </div>
 
                     <div className="dragon-teacher-detail-grid">
-                        <div><small>이번 학기 완성 글</small><strong>{formatNumber(student.writerPosts)}편</strong></div>
-                        <div><small>이번 학기 글자 수</small><strong>{formatNumber(student.writerChars)}자</strong></div>
+                        <div><small>작가 칭호 인정 글</small><strong>{formatNumber(student.writerPosts)}편</strong></div>
+                        <div><small>작가 칭호 글자 수</small><strong>{formatNumber(student.writerChars)}자</strong></div>
+                        <div><small>일기 기록일</small><strong>{formatNumber(student.diaryDays)}일</strong></div>
+                        <div><small>독서록·서로 다른 책</small><strong>{formatNumber(student.readingLogs)}편 · {formatNumber(student.readingBooks)}권</strong></div>
                         <div><small>이번 시즌</small><strong>{formatNumber(student.seasonPosts)}편 · {formatNumber(student.seasonChars)}자</strong></div>
                         <div><small>전체 보관 기록</small><strong>{formatNumber(student.careerPosts)}편 · {formatNumber(student.careerChars)}자</strong></div>
                         <div><small>최근 완성</small><strong>{formatDateTime(student.latest_completed_at)}</strong></div>
-                        <div><small>독자 활동 점수</small><strong>{formatNumber(student.readerScore)}점</strong></div>
+                        <div><small>소통 활동 점수</small><strong>{formatNumber(student.readerScore)}점</strong></div>
                         <div><small>교감 기록</small><strong>{formatNumber(student.petData.bondCount)}회 · {student.petData.lastFed ? formatDate(student.petData.lastFed) : '아직 없음'}</strong></div>
                     </div>
 
@@ -378,7 +395,7 @@ const DragonTeacherManager = ({ activeClass }) => {
         runSeasonAction({
             rpc: 'open_teacher_dragon_season_closing',
             params: { p_season_name: currentName, p_farewell_deadline: farewellDeadline || null },
-            confirmMessage: `“${currentName}”의 작별 기간을 열까요?\n\n이 순간의 작가·독자 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
+            confirmMessage: `“${currentName}”의 작별 기간을 열까요?\n\n이 순간의 작가·소통·기록가·독서가 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
             successMessage: () => `${currentName}의 성장을 마무리하고 작별 편지 쓰기를 열었습니다.`
         });
     };

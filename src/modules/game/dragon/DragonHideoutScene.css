@@ -23,7 +23,7 @@
 .dragon-hideout-scene__prop,
 .dragon-hideout-scene__nameplate { position: absolute; }
 
-/* 중앙은 모든 프레임에서 동일한 중립 공간을 써 드래곤과 독자 효과의 대비를 지킨다. */
+/* 중앙은 모든 프레임에서 동일한 중립 공간을 써 드래곤과 소통 효과의 대비를 지킨다. */
 .dragon-hideout-scene__wall {
     z-index: 0;
     inset: 0 0 28%;

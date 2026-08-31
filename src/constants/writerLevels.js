@@ -1,5 +1,5 @@
 /**
- * 작가 레벨.
+ * 글쓰기·소통·자율 활동 칭호.
  *
  * 칭호 공용 모듈과 친구 아지트가 같은 정의를 보도록 한 곳에 둔다.
  * 나의 아지트와 글쓰기 발자국은 `title-status` 모듈의 같은 훅·상태창을 그대로 쓴다.
@@ -10,7 +10,7 @@
  * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 쓴다.
  *
  * ⚠️ **이 파일이 칭호 기준의 원본이다.** 숫자를 고치면 DB 도 함께 맞춰야 한다 —
- * `dragon_writer_level()` / `dragon_reader_level()` 이 학기 마감 때 그 시점의 칭호를
+ * `dragon_*_level()` 함수들이 학기 마감 때 그 시점의 칭호를
  * 스냅샷에 얼려 두는 데 쓰인다(그래야 나중에 기준을 바꿔도 지난 학기 기록이 소급해서
  * 바뀌지 않는다). 손으로 두 번 적지 않는다:
  *
@@ -82,7 +82,7 @@ export const getWriterLevel = (totalChars = 0, completedPosts = 0, overrideLevel
 };
 
 /**
- * 독자 칭호.
+ * 소통 칭호. 내부 필드명 `reader`는 이미 저장된 응답·스냅샷과의 호환을 위해 유지한다.
  * 친구 글을 여러 편 읽고 반응하거나 정성스러운 댓글을 남기는 행동을 인정한다.
  * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 사용한다.
  * 2026-07-30 운영 학급의 1학기 중앙값 60점을 기준으로, 같은 활동량이 2학기까지
@@ -90,12 +90,12 @@ export const getWriterLevel = (totalChars = 0, completedPosts = 0, overrideLevel
  * Lv2는 첫 읽기 행동을 바로 인정하도록 1점을 유지한다.
  */
 export const READER_LEVELS = [
-    { level: 1, name: '조용한 독자', emoji: '👀', from: 0 },
-    { level: 2, name: '첫 독자', emoji: '📖', from: 1 },
+    { level: 1, name: '조용한 이웃', emoji: '👀', from: 0 },
+    { level: 2, name: '첫 인사', emoji: '👋', from: 1 },
     { level: 3, name: '이야기 친구', emoji: '💬', from: 20 },
-    { level: 4, name: '단짝 독자', emoji: '🤝', from: 50 },
-    { level: 5, name: '든든한 독자', emoji: '🌟', from: 120 },
-    { level: 6, name: '열혈 독자', emoji: '🏅', from: 200 },
+    { level: 4, name: '다정한 이웃', emoji: '🤝', from: 50 },
+    { level: 5, name: '든든한 친구', emoji: '🌟', from: 120 },
+    { level: 6, name: '소통 달인', emoji: '🏅', from: 200 },
     { level: 7, name: '아지트 지킴이', emoji: '💎', from: 300 }
 ];
 
@@ -120,4 +120,70 @@ export const getReaderLevel = (score = 0, overrideLevel = null) => {
     const current = READER_LEVELS.at(index);
     const upcoming = READER_LEVELS.at(index + 1);
     return { ...current, next: upcoming ? upcoming.from : null };
+};
+
+/**
+ * 자율 일기 칭호. 글자 수가 아니라 이번 학기에 일기를 완성하고 교사가 확인한 날짜 수로 오른다.
+ * 같은 날짜의 일기는 한 번만 인정하며 연속 작성은 요구하지 않는다.
+ */
+export const DIARY_LEVELS = [
+    { level: 1, name: '기록 새싹', emoji: '🌱', from: 0 },
+    { level: 2, name: '하루 기록가', emoji: '📔', from: 3 },
+    { level: 3, name: '꾸준한 기록가', emoji: '✍️', from: 7 },
+    { level: 4, name: '생활 관찰자', emoji: '🔎', from: 14 },
+    { level: 5, name: '마음 기록가', emoji: '💛', from: 21 },
+    { level: 6, name: '시간 수집가', emoji: '⏳', from: 30 },
+    { level: 7, name: '위대한 기록가', emoji: '🏆', from: 40 }
+];
+
+/**
+ * 자율 독서록 칭호. 교사가 확인한 독서록 수와 서로 다른 책 수를 모두 만족해야 오른다.
+ * 다시 읽고 쓴 독서록은 편수에는 남지만 같은 책은 한 권으로 센다.
+ */
+export const READING_LEVELS = [
+    { level: 1, name: '책씨앗', emoji: '🌱', logsFrom: 0, booksFrom: 0 },
+    { level: 2, name: '책친구', emoji: '📗', logsFrom: 3, booksFrom: 3 },
+    { level: 3, name: '이야기 탐험가', emoji: '🧭', logsFrom: 5, booksFrom: 4 },
+    { level: 4, name: '책길잡이', emoji: '🗺️', logsFrom: 8, booksFrom: 6 },
+    { level: 5, name: '생각 독서가', emoji: '💡', logsFrom: 12, booksFrom: 9 },
+    { level: 6, name: '책숲지기', emoji: '🌳', logsFrom: 18, booksFrom: 13 },
+    { level: 7, name: '깊은 독서가', emoji: '🏆', logsFrom: 25, booksFrom: 18 }
+];
+
+const getSingleMetricLevel = (levels, value = 0) => {
+    const safeValue = Math.max(0, Number(value) || 0);
+    const index = levels.reduce(
+        (found, item, itemIndex) => (safeValue >= item.from ? itemIndex : found),
+        0
+    );
+    const current = levels.at(index);
+    const upcoming = levels.at(index + 1);
+    return {
+        ...current,
+        next: upcoming ? upcoming.from : null,
+        progressValue: safeValue,
+        progressFrom: current.from
+    };
+};
+
+export const getDiaryLevel = (days = 0) => getSingleMetricLevel(DIARY_LEVELS, days);
+
+export const getReadingLevel = (logs = 0, books = 0) => {
+    const safeLogs = Math.max(0, Number(logs) || 0);
+    const safeBooks = Math.max(0, Number(books) || 0);
+    const index = READING_LEVELS.reduce(
+        (found, item, itemIndex) => (
+            safeLogs >= item.logsFrom && safeBooks >= item.booksFrom ? itemIndex : found
+        ),
+        0
+    );
+    const current = READING_LEVELS.at(index);
+    const upcoming = READING_LEVELS.at(index + 1);
+    return {
+        ...current,
+        nextLogs: upcoming ? upcoming.logsFrom : null,
+        nextBooks: upcoming ? upcoming.booksFrom : null,
+        progressLogs: safeLogs,
+        progressBooks: safeBooks
+    };
 };

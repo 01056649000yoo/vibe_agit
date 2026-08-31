@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getReaderLevel, getWriterLevel } from '../../../constants/writerLevels';
+import {
+    getDiaryLevel,
+    getReaderLevel,
+    getReadingLevel,
+    getWriterLevel
+} from '../../../constants/writerLevels';
 import { classKey, dataCache } from '../../../lib/cache';
 import { supabase } from '../../../lib/supabaseClient';
 
@@ -12,6 +17,9 @@ const EMPTY_STATUS = {
     readerScore: 0,
     readerPostCount: 0,
     readerLevelOverride: null,
+    diaryDays: 0,
+    readingLogCount: 0,
+    readingBookCount: 0,
     season: null
 };
 
@@ -22,6 +30,9 @@ const normalizeTitleStatus = (data) => ({
     readerScore: Number(data?.reader_score || 0),
     readerPostCount: Number(data?.reader_post_count || 0),
     readerLevelOverride: data?.reader_level_override == null ? null : Number(data.reader_level_override),
+    diaryDays: Number(data?.diary_days || 0),
+    readingLogCount: Number(data?.reading_log_count || 0),
+    readingBookCount: Number(data?.reading_book_count || 0),
     season: data?.season || null
 });
 
@@ -82,8 +93,25 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
         () => getReaderLevel(status.readerScore, status.readerLevelOverride),
         [status.readerLevelOverride, status.readerScore]
     );
+    const diaryLevel = useMemo(
+        () => getDiaryLevel(status.diaryDays),
+        [status.diaryDays]
+    );
+    const readingLevel = useMemo(
+        () => getReadingLevel(status.readingLogCount, status.readingBookCount),
+        [status.readingBookCount, status.readingLogCount]
+    );
 
-    return { status, writerLevel, readerLevel, loading, errorMessage, reload: () => load(true) };
+    return {
+        status,
+        writerLevel,
+        readerLevel,
+        diaryLevel,
+        readingLevel,
+        loading,
+        errorMessage,
+        reload: () => load(true)
+    };
 };
 
 export default useMyTitleStatus;

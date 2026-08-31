@@ -18,7 +18,7 @@ const TitleIdentity = ({ kind, level }) => {
         }}>
             <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="42" height="42" style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
-                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.6rem', fontWeight: 950 }}>{writer ? '✍️ 작가 칭호' : '📖 독자 칭호'} · LV.{level.level}</small>
+                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.6rem', fontWeight: 950 }}>{writer ? '✍️ 작가 칭호' : '💬 소통 칭호'} · LV.{level.level}</small>
                 <strong style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '.76rem' }}>{level.name}</strong>
             </div>
         </div>

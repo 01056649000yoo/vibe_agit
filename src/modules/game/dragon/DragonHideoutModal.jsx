@@ -140,7 +140,7 @@ const DragonHideoutModal = ({
                                         <h3>{petData.name || '나의 드래곤'}</h3>
                                         <div className="dragon-room-modal__badges">
                                             <span>작가 성장 {petData.level}/10</span>
-                                            <span>독자 효과 {readerEffect.level}/7</span>
+                                            <span>소통 효과 {readerEffect.level}/7</span>
                                         </div>
                                         <div className="dragon-room-modal__progress" aria-label={`다음 성장 진행도 ${exp}%`}>
                                             <span style={{ width: `${exp}%` }} />

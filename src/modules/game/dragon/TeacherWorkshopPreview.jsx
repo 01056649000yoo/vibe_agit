@@ -13,7 +13,7 @@ import { getDragonStage } from './presentation';
 import './TeacherWorkshopPreview.css';
 
 const formatPrice = (item) => {
-    if (item.acquisitionType === 'achievement') return '작가 10 · 독자 7 달성 선물';
+    if (item.acquisitionType === 'achievement') return '작가 10 · 소통 7 달성 선물';
     if (Number(item.price || 0) > 0) return `${Number(item.price).toLocaleString('ko-KR')}P`;
     if (Number(item.requiredWriterLevel || 1) > 1) return `작가 ${item.requiredWriterLevel}단계 보상`;
     return '기본 제공';
@@ -87,7 +87,7 @@ const TeacherWorkshopPreview = () => {
                             <span>{String(index + 1).padStart(2, '0')}</span>
                             <strong>{collection.name}</strong>
                             <small>{collection.summary}</small>
-                            <em>{collection.acquisitionType === 'achievement' ? '작가 10 · 독자 7 선물' : `${collection.levelFree ? '자유 구매 · ' : ''}${totalPrice.toLocaleString('ko-KR')}P`} · 전체 미리보기</em>
+                            <em>{collection.acquisitionType === 'achievement' ? '작가 10 · 소통 7 선물' : `${collection.levelFree ? '자유 구매 · ' : ''}${totalPrice.toLocaleString('ko-KR')}P`} · 전체 미리보기</em>
                         </button>
                     );
                 })}

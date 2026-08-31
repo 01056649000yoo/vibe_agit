@@ -57,7 +57,7 @@ const READER_DRAGON_EFFECTS = [
     { level: 2, name: '첫 책빛', description: '부드러운 책빛이 수호룡을 감싸요.', className: 'booklight', particles: 2 },
     { level: 3, name: '이야기 반짝임', description: '읽은 이야기의 반짝임이 떠올라요.', className: 'spark', particles: 3 },
     { level: 4, name: '우정의 궤도', description: '친구와 나눈 이야기가 빛의 궤도를 만들어요.', className: 'orbit', particles: 4 },
-    { level: 5, name: '별무리 서가', description: '든든한 독자의 별빛이 주변을 밝혀요.', className: 'starlibrary', particles: 5 },
+    { level: 5, name: '별무리 서가', description: '든든한 친구의 별빛이 주변을 밝혀요.', className: 'starlibrary', particles: 5 },
     { level: 6, name: '이야기 오로라', description: '많은 글에서 모은 빛이 오로라처럼 흘러요.', className: 'aurora', particles: 6 },
     { level: 7, name: '아지트 수호광', description: '아지트 지킴이의 찬란한 빛이 완성됐어요.', className: 'guardian', particles: 7 }
 ];
@@ -72,7 +72,7 @@ export const getDragonSpecies = (speciesId) => (
 
 /**
  * 드래곤의 화면 표현은 모듈 한곳에서 관리한다.
- * 4종×작가 10단계 이미지는 개별 에셋이며 독자 효과는 별도 경량 레이어로 합성한다.
+ * 4종×작가 10단계 이미지는 개별 에셋이며 소통 효과는 별도 경량 레이어로 합성한다.
  */
 export const getDragonStage = (level, speciesId = DEFAULT_DRAGON_SPECIES) => {
     const safeLevel = Math.min(10, Math.max(1, Math.floor(Number(level) || 1)));

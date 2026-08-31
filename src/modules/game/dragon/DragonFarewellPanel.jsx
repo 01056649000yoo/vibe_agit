@@ -146,7 +146,7 @@ const downloadFarewellCard = async ({ record, ownerName }) => {
     drawRoundedRect(context, 125, 740, 800, 58, 29);
     context.fillStyle = '#FFFFFF';
     context.font = '850 21px system-ui, sans-serif';
-    context.fillText(`${writer.emoji} 작가 ${writerLevel}/10 ${writer.name}   ·   ${reader.emoji} 독자 ${readerLevel}/7 ${reader.name}`, 525, 777);
+    context.fillText(`${writer.emoji} 작가 ${writerLevel}/10 ${writer.name}   ·   ${reader.emoji} 소통 ${readerLevel}/7 ${reader.name}`, 525, 777);
 
     const letterBox = { x: 90, y: 850, width: 870, height: 980 };
     context.textAlign = 'left';
