@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import TeacherGuideButton from './TeacherGuideButton';
@@ -67,9 +67,12 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [openingId, setOpeningId] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const requestSequenceRef = useRef(0);
 
     const fetchPage = useCallback(async ({ offset = 0, append = false, force = false } = {}) => {
         if (!classId) return;
+        const requestId = requestSequenceRef.current + 1;
+        requestSequenceRef.current = requestId;
         const cacheKey = classKey(classId, 'recent-activity', { filter, offset, period });
         if (force) dataCache.invalidate(cacheKey);
 
@@ -91,24 +94,31 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                 return data || {};
             }, CACHE_TTL_MS);
 
+            if (requestId !== requestSequenceRef.current) return;
             const items = Array.isArray(result.items) ? result.items : [];
             setActivities((current) => append ? [...current, ...items] : items);
             setCounts({ ...EMPTY_COUNTS, ...(result.counts || {}) });
             setHasMore(Boolean(result.has_more));
             setNextOffset(Number(result.next_offset || offset + items.length));
         } catch (error) {
+            if (requestId !== requestSequenceRef.current) return;
             console.error('최근 활동 로드 실패:', error.message);
             if (!append) setActivities([]);
             setErrorMessage('최근 활동을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
-            setLoading(false);
-            setLoadingMore(false);
-            setRefreshing(false);
+            if (requestId === requestSequenceRef.current) {
+                setLoading(false);
+                setLoadingMore(false);
+                setRefreshing(false);
+            }
         }
     }, [classId, filter, period]);
 
     useEffect(() => {
         fetchPage({ offset: 0 });
+        return () => {
+            requestSequenceRef.current += 1;
+        };
     }, [fetchPage]);
 
     useEffect(() => {

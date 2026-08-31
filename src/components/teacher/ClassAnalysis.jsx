@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import DashboardCardHost from '../../modules/dashboard/DashboardCardHost';
@@ -196,6 +196,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const requestSequenceRef = useRef(0);
 
     const cacheKey = useMemo(
         () => classKey(classId, 'operations-dashboard', { period }),
@@ -204,6 +205,8 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
 
     const loadDashboard = useCallback(async ({ force = false } = {}) => {
         if (!classId) return;
+        const requestId = requestSequenceRef.current + 1;
+        requestSequenceRef.current = requestId;
         if (force) {
             dataCache.invalidate(cacheKey);
             setRefreshing(true);
@@ -221,19 +224,26 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                 if (error) throw error;
                 return normalizeData(dashboard);
             }, CACHE_TTL_MS);
+            if (requestId !== requestSequenceRef.current) return;
             setData(normalizeData(result));
         } catch (error) {
+            if (requestId !== requestSequenceRef.current) return;
             console.error('학급 운영 현황 로드 실패:', error.message);
             setData(EMPTY_DATA);
             setErrorMessage('학급 운영 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            if (requestId === requestSequenceRef.current) {
+                setLoading(false);
+                setRefreshing(false);
+            }
         }
     }, [cacheKey, classId, period]);
 
     useEffect(() => {
         loadDashboard();
+        return () => {
+            requestSequenceRef.current += 1;
+        };
     }, [loadDashboard]);
 
     const totalStudents = Number(data.summary.students || 0);

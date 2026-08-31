@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 /**
@@ -22,11 +22,14 @@ const useLearningMastery = ({ viewer = 'me', studentId = null, active = true }) 
     const [contents, setContents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const requestSequenceRef = useRef(0);
 
     const load = useCallback(async () => {
         const rpc = rpcFor(viewer);
         if (!rpc) return;
         if (viewer !== 'me' && !studentId) return;
+        const requestId = requestSequenceRef.current + 1;
+        requestSequenceRef.current = requestId;
 
         setLoading(true);
         setErrorMessage('');
@@ -34,6 +37,7 @@ const useLearningMastery = ({ viewer = 'me', studentId = null, active = true }) 
             rpc,
             viewer === 'me' ? {} : { p_student_id: studentId }
         );
+        if (requestId !== requestSequenceRef.current) return;
         setLoading(false);
 
         if (error) {
@@ -50,7 +54,10 @@ const useLearningMastery = ({ viewer = 'me', studentId = null, active = true }) 
     useEffect(() => {
         if (!active) return undefined;
         const timerId = window.setTimeout(() => { void load(); }, 0);
-        return () => window.clearTimeout(timerId);
+        return () => {
+            window.clearTimeout(timerId);
+            requestSequenceRef.current += 1;
+        };
     }, [active, load]);
 
     return { contents, loading, errorMessage, reload: load };
