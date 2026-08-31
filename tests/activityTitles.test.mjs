@@ -109,6 +109,9 @@ test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서
     }
     assert.match(home, /className="student-home-title-grid" role="group" aria-label="나의 칭호"/);
     assert.match(homeCss, /\.student-home-title-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(homeCss, /\.student-home-title-summary \{ grid-template-columns: 38px minmax\(0, 1fr\) 44px;/);
+    assert.match(homeCss, /\.student-home-title-summary em \{[\s\S]*?grid-column: 3;[\s\S]*?grid-row: 1;[\s\S]*?place-items: center;/);
+    assert.match(homeCss, /@media \(max-width: 560px\)[\s\S]*?\.student-home-title-summary \{[\s\S]*?grid-template-columns: 34px minmax\(0, 1fr\) 34px;/);
     assert.match(dashboard, /diaryLevel={diaryLevel}/);
     assert.match(dashboard, /readingLevel={readingLevel}/);
     assert.match(tracks, /작가 칭호[\s\S]*소통 칭호[\s\S]*기록가 칭호[\s\S]*독서가 칭호/);

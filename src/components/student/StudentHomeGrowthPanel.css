@@ -124,10 +124,15 @@
     font-style: normal;
     font-weight: 900;
 }
-.student-home-title-summary { grid-template-columns: 38px minmax(0, 1fr); gap: 8px; }
+.student-home-title-summary { grid-template-columns: 38px minmax(0, 1fr) 44px; gap: 8px; }
 .student-home-title-summary__artwork { display: grid; width: 38px; height: 38px; object-fit: contain; }
 .student-home-title-summary em {
-    grid-column: 2;
+    display: grid;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    justify-self: stretch;
+    place-items: center;
     color: var(--ui-ink-subtle);
     font-size: var(--ui-text-sm);
     font-style: normal;
@@ -213,19 +218,18 @@
         text-align: left;
     }
     .student-home-title-summary {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        min-height: 94px;
-        gap: 3px;
-        padding: 9px 5px;
-        text-align: center;
+        grid-template-columns: 34px minmax(0, 1fr) 34px;
+        justify-items: stretch;
+        min-height: 76px;
+        gap: 5px;
+        padding: 9px 6px;
+        text-align: left;
     }
     .student-home-point-summary > span:nth-child(2),
-    .student-home-title-summary > span { align-items: center; width: 100%; }
+    .student-home-title-summary > span { width: 100%; }
     .student-home-point-summary > span:nth-child(2) { align-items: flex-start; }
     .student-home-point-summary > span:first-child { font-size: 1.25rem; }
     .student-home-point-summary em { grid-column: 3; align-self: center; white-space: nowrap; }
-    .student-home-title-summary em { grid-column: 1; }
     .student-home-title-summary__artwork { width: 34px !important; height: 34px !important; }
     .student-home-dragon-summary { grid-template-columns: 68px minmax(0, 1fr); }
     .student-home-dragon-summary__avatar { width: 64px; height: 64px; }
