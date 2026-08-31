@@ -37,7 +37,7 @@ export const TITLE_TRACKS = Object.freeze({
         accent: '#68C79A', deepAccent: '#16704A',
         border: 'rgba(104,199,154,.5)', glow: 'rgba(22,90,62,.18)',
         background: 'linear-gradient(155deg,rgba(240,255,247,.98),rgba(174,230,198,.92))',
-        description: '선생님이 확인한 독서록 수와 서로 다른 책 수를 함께 세요. 같은 책을 다시 읽은 기록은 편수에는 남지만 책 수에는 한 번만 들어가요.'
+        description: '이번 학기에 완성하고 선생님이 확인한 독서록 편수로 자라요. 같은 책이라도 새 독서록을 쓰고 확인받으면 각각 한 편으로 인정해요.'
     })
 });
 

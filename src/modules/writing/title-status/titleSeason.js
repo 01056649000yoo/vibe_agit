@@ -29,6 +29,7 @@ export const EMPTY_TITLE_STATUS = Object.freeze({
     diaryLevelOverride: null,
     readingLogCount: 0,
     readingBookCount: 0,
+    readingLevelFloor: 1,
     readingLevelOverride: null,
     season: null,
     titleRewards: EMPTY_TITLE_REWARDS
@@ -72,6 +73,7 @@ export const normalizeTitleStatus = (data) => ({
     diaryLevelOverride: data?.diary_level_override == null ? null : Number(data.diary_level_override),
     readingLogCount: Number(data?.reading_log_count || 0),
     readingBookCount: Number(data?.reading_book_count || 0),
+    readingLevelFloor: Number(data?.reading_level_floor || 1),
     readingLevelOverride: data?.reading_level_override == null ? null : Number(data.reading_level_override),
     season: data?.season || null,
     titleRewards: normalizeTitleRewards(data?.title_rewards)

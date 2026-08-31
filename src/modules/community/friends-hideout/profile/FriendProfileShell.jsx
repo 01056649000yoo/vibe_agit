@@ -42,7 +42,9 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
     );
     const reader = getReaderLevel(friend.reader_score, friend.pet_data?._testReaderLevel);
     const diary = getDiaryLevel(friend.diary_days);
-    const reading = getReadingLevel(friend.reading_log_count, friend.reading_book_count);
+    const reading = getReadingLevel(friend.reading_log_count, {
+        minimumLevel: friend.reading_level_floor
+    });
     const activeCards = getActiveFriendProfileCards();
 
     return (

@@ -137,17 +137,17 @@ export const DIARY_LEVELS = [
 ];
 
 /**
- * 자율 독서록 칭호. 교사가 확인한 독서록 수와 서로 다른 책 수를 모두 만족해야 오른다.
- * 다시 읽고 쓴 독서록은 편수에는 남지만 같은 책은 한 권으로 센다.
+ * 자율 독서록 칭호. 이번 학기에 완성하고 교사가 확인한 독서록 편수로만 오른다.
+ * 같은 책이라도 독서록을 새로 완성해 확인받으면 각각 한 편으로 인정한다.
  */
 export const READING_LEVELS = [
-    { level: 1, name: '책씨앗', emoji: '🌱', logsFrom: 0, booksFrom: 0 },
-    { level: 2, name: '책친구', emoji: '📗', logsFrom: 3, booksFrom: 3 },
-    { level: 3, name: '이야기 탐험가', emoji: '🧭', logsFrom: 5, booksFrom: 4 },
-    { level: 4, name: '책길잡이', emoji: '🗺️', logsFrom: 8, booksFrom: 6 },
-    { level: 5, name: '생각 독서가', emoji: '💡', logsFrom: 12, booksFrom: 9 },
-    { level: 6, name: '책숲지기', emoji: '🌳', logsFrom: 18, booksFrom: 13 },
-    { level: 7, name: '깊은 독서가', emoji: '🏆', logsFrom: 25, booksFrom: 18 }
+    { level: 1, name: '책씨앗', emoji: '🌱', logsFrom: 0 },
+    { level: 2, name: '책친구', emoji: '📗', logsFrom: 3 },
+    { level: 3, name: '이야기 탐험가', emoji: '🧭', logsFrom: 6 },
+    { level: 4, name: '책길잡이', emoji: '🗺️', logsFrom: 10 },
+    { level: 5, name: '생각 독서가', emoji: '💡', logsFrom: 15 },
+    { level: 6, name: '책숲지기', emoji: '🌳', logsFrom: 22 },
+    { level: 7, name: '깊은 독서가', emoji: '🏆', logsFrom: 30 }
 ];
 
 const getSingleMetricLevel = (levels, value = 0) => {
@@ -174,7 +174,7 @@ export const getDiaryLevel = (days = 0, overrideLevel = null) => {
     return getSingleMetricLevel(DIARY_LEVELS, days);
 };
 
-export const getReadingLevel = (logs = 0, books = 0, overrideLevel = null) => {
+export const getReadingLevel = (logs = 0, { minimumLevel = 1, overrideLevel = null } = {}) => {
     const requestedOverride = Number(overrideLevel);
     if (Number.isInteger(requestedOverride) && requestedOverride >= 1 && requestedOverride <= READING_LEVELS.length) {
         const current = READING_LEVELS.at(requestedOverride - 1);
@@ -182,27 +182,26 @@ export const getReadingLevel = (logs = 0, books = 0, overrideLevel = null) => {
         return {
             ...current,
             nextLogs: upcoming ? upcoming.logsFrom : null,
-            nextBooks: upcoming ? upcoming.booksFrom : null,
             progressLogs: current.logsFrom,
-            progressBooks: current.booksFrom,
             isTestOverride: true
         };
     }
     const safeLogs = Math.max(0, Number(logs) || 0);
-    const safeBooks = Math.max(0, Number(books) || 0);
-    const index = READING_LEVELS.reduce(
-        (found, item, itemIndex) => (
-            safeLogs >= item.logsFrom && safeBooks >= item.booksFrom ? itemIndex : found
-        ),
+    const achievedIndex = READING_LEVELS.reduce(
+        (found, item, itemIndex) => (safeLogs >= item.logsFrom ? itemIndex : found),
         0
     );
+    const requestedMinimum = Number(minimumLevel);
+    const minimumIndex = Number.isInteger(requestedMinimum)
+        ? Math.min(READING_LEVELS.length - 1, Math.max(0, requestedMinimum - 1))
+        : 0;
+    const index = Math.max(achievedIndex, minimumIndex);
     const current = READING_LEVELS.at(index);
     const upcoming = READING_LEVELS.at(index + 1);
     return {
         ...current,
         nextLogs: upcoming ? upcoming.logsFrom : null,
-        nextBooks: upcoming ? upcoming.booksFrom : null,
         progressLogs: safeLogs,
-        progressBooks: safeBooks
+        isTransitionProtected: minimumIndex > achievedIndex
     };
 };

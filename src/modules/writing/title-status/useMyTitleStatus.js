@@ -99,8 +99,11 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
         [status.diaryDays, status.diaryLevelOverride]
     );
     const readingLevel = useMemo(
-        () => getReadingLevel(status.readingLogCount, status.readingBookCount, status.readingLevelOverride),
-        [status.readingBookCount, status.readingLevelOverride, status.readingLogCount]
+        () => getReadingLevel(status.readingLogCount, {
+            minimumLevel: status.readingLevelFloor,
+            overrideLevel: status.readingLevelOverride
+        }),
+        [status.readingLevelFloor, status.readingLevelOverride, status.readingLogCount]
     );
 
     return {

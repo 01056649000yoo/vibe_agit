@@ -76,7 +76,7 @@ const buildReadingBody = () => {
     const rows = [...READING_LEVELS]
         .filter((item) => item.level > 1)
         .sort((a, b) => b.level - a.level)
-        .map((item) => `        WHEN COALESCE(p_logs, 0) >= ${item.logsFrom} AND COALESCE(p_books, 0) >= ${item.booksFrom} THEN ${item.level}`);
+        .map((item) => `        WHEN COALESCE(p_logs, 0) >= ${item.logsFrom} THEN ${item.level}`);
     return [
         '    SELECT CASE',
         ...rows,
@@ -218,6 +218,9 @@ PARALLEL SAFE
 AS $$
 ${buildReadingBody()}
 $$;
+
+COMMENT ON FUNCTION public.dragon_reading_level(BIGINT, BIGINT) IS
+    '독서가 칭호는 교사가 확인한 독서록 편수로만 계산한다. p_books는 기존 호출 호환을 위해만 유지한다.';
 
 REVOKE ALL ON FUNCTION public.dragon_diary_level(BIGINT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.dragon_reading_level(BIGINT, BIGINT) FROM PUBLIC, anon, authenticated;

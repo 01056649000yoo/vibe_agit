@@ -47,7 +47,10 @@ const normalizeStudent = (raw) => {
     );
     const reader = getReaderLevel(raw?.reader_score, raw?.reader_level_override);
     const diary = getDiaryLevel(raw?.diary_days);
-    const reading = getReadingLevel(raw?.reading_log_count, raw?.reading_book_count);
+    const reading = getReadingLevel(raw?.reading_log_count, {
+        minimumLevel: raw?.reading_level_floor,
+        overrideLevel: raw?.reading_level_override
+    });
     const dragon = getDragonStage(writer.level, petData.species);
     const growth = getDragonGrowthFromWriterLevel(writer);
     const readerEffect = getReaderDragonEffect(reader.level);
@@ -191,7 +194,7 @@ const StudentDetailModal = ({ student, onClose, seasonLabel }) => {
                         <div><small>작가 칭호 인정 글</small><strong>{formatNumber(student.writerPosts)}편</strong></div>
                         <div><small>작가 칭호 글자 수</small><strong>{formatNumber(student.writerChars)}자</strong></div>
                         <div><small>일기 기록일</small><strong>{formatNumber(student.diaryDays)}일</strong></div>
-                        <div><small>독서록·서로 다른 책</small><strong>{formatNumber(student.readingLogs)}편 · {formatNumber(student.readingBooks)}권</strong></div>
+                        <div><small>확인 독서록 · 책 수(참고)</small><strong>{formatNumber(student.readingLogs)}편 · {formatNumber(student.readingBooks)}권</strong></div>
                         <div><small>이번 시즌</small><strong>{formatNumber(student.seasonPosts)}편 · {formatNumber(student.seasonChars)}자</strong></div>
                         <div><small>전체 보관 기록</small><strong>{formatNumber(student.careerPosts)}편 · {formatNumber(student.careerChars)}자</strong></div>
                         <div><small>최근 완성</small><strong>{formatDateTime(student.latest_completed_at)}</strong></div>

@@ -61,7 +61,10 @@ const normalizeStudent = (raw, pointMap) => {
     );
     const reader = getReaderLevel(raw?.reader_score, raw?.reader_level_override);
     const diary = getDiaryLevel(raw?.diary_days);
-    const reading = getReadingLevel(raw?.reading_log_count, raw?.reading_book_count);
+    const reading = getReadingLevel(raw?.reading_log_count, {
+        minimumLevel: raw?.reading_level_floor,
+        overrideLevel: raw?.reading_level_override
+    });
 
     return {
         ...raw,
@@ -398,7 +401,7 @@ const TeacherStudentAgitViewer = ({
                                         <div><small>작가 칭호 인정 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
                                         <div><small>작가 칭호 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
                                         <div><small>일기 기록일</small><strong>{formatNumber(selectedStudent.diaryDays)}일</strong></div>
-                                        <div><small>독서록·서로 다른 책</small><strong>{formatNumber(selectedStudent.readingLogs)}편 · {formatNumber(selectedStudent.readingBooks)}권</strong></div>
+                                        <div><small>확인 독서록 · 책 수(참고)</small><strong>{formatNumber(selectedStudent.readingLogs)}편 · {formatNumber(selectedStudent.readingBooks)}권</strong></div>
                                         <div><small>전체 보관 기록</small><strong>{formatNumber(selectedStudent.careerPosts)}편</strong></div>
                                         <div><small>소통 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
                                     </section>

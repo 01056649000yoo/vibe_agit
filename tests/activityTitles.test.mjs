@@ -25,17 +25,16 @@ test('기록가 칭호는 서로 다른 일기 날짜 0·3·7·14·21·30·40일
     assert.equal(getDiaryLevel(1, 3).isTestOverride, true);
 });
 
-test('독서가 칭호는 확인 독서록 수와 서로 다른 책 수를 모두 만족해야 성장한다', () => {
-    assert.deepEqual(
-        READING_LEVELS.map((item) => [item.logsFrom, item.booksFrom]),
-        [[0, 0], [3, 3], [5, 4], [8, 6], [12, 9], [18, 13], [25, 18]]
-    );
-    assert.equal(getReadingLevel(12, 8).level, 4);
-    assert.equal(getReadingLevel(12, 9).name, '생각 독서가');
-    assert.equal(getReadingLevel(100, 17).level, 6);
-    assert.equal(getReadingLevel(25, 18).name, '깊은 독서가');
-    assert.equal(getReadingLevel(0, 0, 3).name, '이야기 탐험가');
-    assert.equal(getReadingLevel(0, 0, 3).isTestOverride, true);
+test('독서가 칭호는 확인 독서록 0·3·6·10·15·22·30편으로만 성장한다', () => {
+    assert.deepEqual(READING_LEVELS.map((item) => item.logsFrom), [0, 3, 6, 10, 15, 22, 30]);
+    assert.equal(getReadingLevel(5).level, 2);
+    assert.equal(getReadingLevel(15).name, '생각 독서가');
+    assert.equal(getReadingLevel(29).level, 6);
+    assert.equal(getReadingLevel(30).name, '깊은 독서가');
+    assert.equal(getReadingLevel(5, { minimumLevel: 3 }).name, '이야기 탐험가');
+    assert.equal(getReadingLevel(5, { minimumLevel: 3 }).isTransitionProtected, true);
+    assert.equal(getReadingLevel(0, { overrideLevel: 3 }).name, '이야기 탐험가');
+    assert.equal(getReadingLevel(0, { overrideLevel: 3 }).isTestOverride, true);
 });
 
 test('기존 독자 수치는 소통 칭호로 이름만 바로잡고 점수 경계는 유지한다', () => {
@@ -45,7 +44,7 @@ test('기존 독자 수치는 소통 칭호로 이름만 바로잡고 점수 경
 
 test('DB 칭호 함수는 화면 상수에서 생성되고 새 칭호도 학기 스냅샷에 고정한다', async () => {
     const [syncMigration, syncScript, activityMigration] = await Promise.all([
-        read('supabase/migrations/20261202_sync_title_levels.sql'),
+        read('supabase/migrations/20261212_sync_title_levels.sql'),
         read('scripts/sync-title-levels.mjs'),
         read('supabase/migrations/20261203_separate_diary_reading_titles.sql')
     ]);
@@ -55,7 +54,10 @@ test('DB 칭호 함수는 화면 상수에서 생성되고 새 칭호도 학기 
     assert.match(syncMigration, /CREATE OR REPLACE FUNCTION public\.dragon_diary_level/);
     assert.match(syncMigration, /COALESCE\(p_days, 0\) >= 40 THEN 7/);
     assert.match(syncMigration, /CREATE OR REPLACE FUNCTION public\.dragon_reading_level/);
-    assert.match(syncMigration, /COALESCE\(p_logs, 0\) >= 25 AND COALESCE\(p_books, 0\) >= 18 THEN 7/);
+    assert.match(syncMigration, /COALESCE\(p_logs, 0\) >= 30 THEN 7/);
+    assert.doesNotMatch(syncMigration.match(/CREATE OR REPLACE FUNCTION public\.dragon_reading_level[\s\S]*?\$\$;/)?.[0] || '', /p_books, 0/);
+    assert.match(syncMigration, /student_reading_title_level_floors/);
+    assert.match(syncMigration, /reading_level_floor/);
     assert.match(activityMigration, /'diary_level', public\.dragon_diary_level/);
     assert.match(activityMigration, /'reading_level', public\.dragon_reading_level/);
 });
@@ -109,7 +111,7 @@ test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서
         assert.equal(panel.includes(`BadgeButton kind="${kind}"`), true);
     }
     assert.match(teacher, /getDiaryLevel\(raw\?\.diary_days\)/);
-    assert.match(teacher, /독서록·서로 다른 책/);
+    assert.match(teacher, /확인 독서록 · 책 수\(참고\)/);
     for (const kind of ['writer', 'reader', 'diary', 'reading']) {
         assert.equal(home.includes(`TitleSummary kind="${kind}"`), true);
     }
@@ -139,7 +141,8 @@ test('친구 아지트는 기존 명단 RPC 한 번으로 네 칭호 원자료�
     assert.equal((hook.match(/\.rpc\('get_student_hideout_directory'\)/g) || []).length, 1);
     for (const component of [preview, profile]) {
         assert.match(component, /getDiaryLevel\(friend\?*\.?diary_days\)/);
-        assert.match(component, /getReadingLevel\(friend\?*\.?reading_log_count, friend\?*\.?reading_book_count\)/);
+        assert.match(component, /getReadingLevel\(friend\?*\.?reading_log_count, \{/);
+        assert.match(component, /minimumLevel: friend\?*\.?reading_level_floor/);
         for (const kind of ['writer', 'reader', 'diary', 'reading']) {
             assert.equal(component.includes(`kind="${kind}"`), true);
         }
@@ -195,6 +198,7 @@ test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같
     const status = normalizeTitleStatus({
         diary_days: 14,
         diary_level_override: 3,
+        reading_level_floor: 3,
         reading_level_override: 4,
         title_rewards: {
             enabled: true,
@@ -218,6 +222,7 @@ test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같
 
     assert.equal(status.diaryDays, 14);
     assert.equal(status.diaryLevelOverride, 3);
+    assert.equal(status.readingLevelFloor, 3);
     assert.equal(status.readingLevelOverride, 4);
     assert.equal(status.titleRewards.enabled, true);
     assert.equal(status.titleRewards.tracks.diary.currentLevel, 4);
@@ -241,11 +246,12 @@ test('기록가·독서가 시험 단계는 실제 활동을 바꾸지 않고 �
     assert.match(migration, /'diary_level_override'/);
     assert.match(migration, /'reading_level_override'/);
     assert.match(levels, /getDiaryLevel = \(days = 0, overrideLevel = null\)/);
-    assert.match(levels, /getReadingLevel = \(logs = 0, books = 0, overrideLevel = null\)/);
+    assert.match(levels, /getReadingLevel = \(logs = 0, \{ minimumLevel = 1, overrideLevel = null \} = \{\}\)/);
     assert.match(titleSeason, /diaryLevelOverride: data\?\.diary_level_override/);
     assert.match(titleSeason, /readingLevelOverride: data\?\.reading_level_override/);
+    assert.match(titleSeason, /readingLevelFloor: Number\(data\?\.reading_level_floor/);
     assert.match(hook, /getDiaryLevel\(status\.diaryDays, status\.diaryLevelOverride\)/);
-    assert.match(hook, /getReadingLevel\(status\.readingLogCount, status\.readingBookCount, status\.readingLevelOverride\)/);
+    assert.match(hook, /getReadingLevel\(status\.readingLogCount, \{[\s\S]*minimumLevel: status\.readingLevelFloor,[\s\S]*overrideLevel: status\.readingLevelOverride/);
 });
 
 test('칭호 보상은 명시적 수령·서버 재검증·공용 포인트 엔진·제한 공개를 한 계약으로 묶는다', async () => {

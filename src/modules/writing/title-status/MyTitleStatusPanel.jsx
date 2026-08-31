@@ -66,7 +66,7 @@ const titleRequirement = (kind, item) => {
     if (kind === 'writer') return `${num(item.from)}자`;
     if (kind === 'reader') return `${num(item.from)}점`;
     if (kind === 'diary') return `${num(item.from)}일`;
-    return `${num(item.logsFrom)}편 · ${num(item.booksFrom)}권`;
+    return `${num(item.logsFrom)}편`;
 };
 
 const RewardAction = ({ reward, track, claiming, onClaim }) => {
@@ -237,7 +237,7 @@ const MyTitleStatusPanel = ({ active = true, studentSession, points = 0, onPoint
         : activeGuide === 'diary'
             ? `${num(status.diaryDays)}일`
             : activeGuide === 'reading'
-                ? `${num(status.readingLogCount)}편 · ${num(status.readingBookCount)}권`
+                ? `${num(status.readingLogCount)}편`
                 : `${num(writerLevel.progressValue)}${writerLevel.nextUnit}`;
     const activeRewardTrack = getTitleRewardTrack(status, activeGuide);
     const handleClaim = async (levels) => {
