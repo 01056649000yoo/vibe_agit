@@ -39,8 +39,10 @@ test('제한 공개는 두 허용 학급이 있어야 열리고 전체 공개의
     assert.match(change, /p_mode = 'limited_beta'[\s\S]*count\(\*\)[\s\S]*< 2/);
     assert.match(change, /p_mode = 'public_beta'[\s\S]*neighbor_acceptance_ready_v1/);
     assert.match(change, /p_confirmation <> '전체 교사 Beta 공개'/);
-    assert.match(panel, /선택한 학급만 제한 공개/);
+    assert.match(panel, /선택한 학급으로 제한 공개 시작/);
     assert.match(panel, /limitedClassCount < 2/);
+    assert.match(panel, /role="switch"/);
+    assert.match(panel, /제한 공개[\s\S]*정상 공개/);
     assert.match(adminApi, /set_neighbor_limited_class_v1/);
 });
 

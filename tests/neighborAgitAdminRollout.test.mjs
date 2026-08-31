@@ -57,7 +57,7 @@ test('내부 시험 공간은 관리자만 2~4개 학급을 한 트랜잭션으�
     assert.match(smoke, /admin internal trial did not connect two classes safely/);
 });
 
-test('전체 교사 공개는 여섯 점검과 확인 문구를 서버에서도 요구하고 변경 이력을 남긴다', () => {
+test('정상 공개 스위치는 여섯 점검과 서버 확인 토큰을 요구하고 변경 이력을 남긴다', () => {
     const saveCheck = functionSource('set_neighbor_acceptance_check_v1');
     const changeRollout = functionSource('change_neighbor_rollout_v1');
     assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.neighbor_rollout_events/);
@@ -65,18 +65,22 @@ test('전체 교사 공개는 여섯 점검과 확인 문구를 서버에서도 
     assert.match(changeRollout, /neighbor_acceptance_ready_v1/);
     assert.match(changeRollout, /p_confirmation <> '전체 교사 Beta 공개'/);
     assert.match(changeRollout, /INSERT INTO public\.neighbor_rollout_events/);
-    assert.match(panel, /confirmation !== '전체 교사 Beta 공개'/);
+    assert.match(panel, /PUBLIC_ROLLOUT_CONFIRMATION = '전체 교사 Beta 공개'/);
+    assert.match(panel, /role="switch"/);
+    assert.match(panel, /event\.target\.checked \? 'public_beta' : 'limited_beta'/);
     assert.match(panel, /acceptanceReady/);
     assert.match(panel, /window\.confirm/);
+    assert.doesNotMatch(panel, /window\.prompt/);
     assert.match(smoke, /rollout opened without all acceptance checks/);
     assert.match(smoke, /rollout opened without the explicit confirmation phrase/);
 });
 
-test('관리 화면은 좁은 화면에서 한 열로 줄고 공개 버튼·체크박스 접근성을 유지한다', () => {
+test('관리 화면은 좁은 화면에서 한 열로 줄고 공개 스위치·체크박스 접근성을 유지한다', () => {
     assert.match(panelCss, /@media \(max-width: 760px\)/);
     assert.match(panelCss, /grid-template-columns:\s*1fr/);
     assert.match(panel, /type="checkbox"/);
     assert.match(panel, /htmlFor=\{`neighbor-acceptance-/);
-    assert.match(panel, /disabled=\{[^}]*acceptanceReady/);
+    assert.match(panel, /aria-label="이웃 아지트 정상 공개 전환"/);
+    assert.match(panel, /disabled=\{rolloutSwitchDisabled\}/);
     assert.match(panel, /aria-live="polite"/);
 });

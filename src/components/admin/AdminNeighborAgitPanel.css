@@ -53,6 +53,17 @@
 .neighbor-admin__acceptance-list input { width: 18px; height: 18px; margin-top: 2px; }
 .neighbor-admin__acceptance-list label { display: grid; gap: 3px; cursor: pointer; }
 .neighbor-admin__acceptance-list label span { color: #627d98; font-size: .82rem; line-height: 1.45; }
+.neighbor-admin__scope-switch { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 18px; padding: 14px 16px; border: 1px solid #b7d7cd; border-radius: 12px; background: #f0fff4; }
+.neighbor-admin__scope-switch > div { display: grid; gap: 4px; }
+.neighbor-admin__scope-switch > div span { color: #41665a; font-size: .84rem; line-height: 1.45; }
+.neighbor-admin__scope-switch-control { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; color: #829ab1; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.neighbor-admin__scope-switch-control span.is-active { color: #0f766e; }
+.neighbor-admin__scope-switch-control input { appearance: none; position: relative; width: 48px; height: 27px; margin: 0; border: 0; border-radius: 999px; background: #9fb3c8; cursor: pointer; transition: background .18s ease; }
+.neighbor-admin__scope-switch-control input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: white; box-shadow: 0 1px 4px rgba(16, 42, 67, .28); transition: transform .18s ease; }
+.neighbor-admin__scope-switch-control input:checked { background: #2b6cb0; }
+.neighbor-admin__scope-switch-control input:checked::after { transform: translateX(21px); }
+.neighbor-admin__scope-switch-control input:focus-visible { outline: 3px solid rgba(49, 151, 149, .3); outline-offset: 3px; }
+.neighbor-admin__scope-switch-control input:disabled { opacity: .48; cursor: not-allowed; }
 .neighbor-admin__rollout-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 18px; flex-wrap: wrap; }
 .neighbor-admin__acceptance-help { margin: 10px 0 0; color: #b7791f; text-align: right; font-size: .82rem; }
 .neighbor-admin-state { padding: 52px 20px; color: #718096; text-align: center; }
@@ -63,10 +74,11 @@
 }
 
 @media (max-width: 760px) {
-    .neighbor-admin__header, .neighbor-admin-card__heading, .neighbor-admin-preview > header { align-items: stretch; flex-direction: column; }
+    .neighbor-admin__header, .neighbor-admin-card__heading, .neighbor-admin-preview > header, .neighbor-admin__scope-switch { align-items: stretch; flex-direction: column; }
     .neighbor-admin__summary, .neighbor-admin__workspace, .neighbor-admin__previews, .neighbor-admin__acceptance-list, .neighbor-admin__class-list { grid-template-columns: 1fr; }
     .neighbor-admin-card, .neighbor-admin-preview { padding: 16px; }
     .neighbor-admin__space-list button, .neighbor-admin-preview__classes li { align-items: flex-start; flex-direction: column; }
     .neighbor-admin__rollout-actions { align-items: stretch; flex-direction: column; }
     .neighbor-admin__rollout-actions button { width: 100%; }
+    .neighbor-admin__scope-switch-control { justify-content: space-between; }
 }

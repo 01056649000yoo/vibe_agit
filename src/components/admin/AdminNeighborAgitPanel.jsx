@@ -10,10 +10,12 @@ import {
 } from '../../modules/community/neighbor-agit/NeighborAgitPreviews';
 import './AdminNeighborAgitPanel.css';
 
+const PUBLIC_ROLLOUT_CONFIRMATION = '전체 교사 Beta 공개';
+
 const getModeLabel = (mode) => {
     if (mode === 'internal') return '관리자 내부 확인';
     if (mode === 'limited_beta') return '선택 학급 제한 공개';
-    if (mode === 'public_beta') return '전체 교사 Beta';
+    if (mode === 'public_beta') return '정상 공개';
     if (mode === 'paused') return '긴급 중지';
     return '확인 필요';
 };
@@ -66,6 +68,13 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
     const limitedClasses = dashboard?.limited_classes || [];
     const limitedClassCount = Number(dashboard?.limited_class_count) || 0;
     const limitedClassMax = Number(dashboard?.limited_class_max) || 8;
+    const rolloutMode = dashboard?.rollout?.mode || 'internal';
+    const isPublicRollout = rolloutMode === 'public_beta';
+    const isLiveRollout = rolloutMode === 'limited_beta' || isPublicRollout;
+    const rolloutSwitchDisabled = Boolean(action)
+        || !isLiveRollout
+        || (!isPublicRollout && !acceptanceReady)
+        || (isPublicRollout && limitedClassCount < 2);
 
     const selectSpace = async (spaceId) => {
         if (spaceId === selectedSpaceId || action) return;
@@ -159,12 +168,8 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
             if (!window.confirm('선택한 학급에만 이웃 아지트 실제 기능을 공개할까요?')) return;
         } else if (mode === 'public_beta') {
             if (!acceptanceReady) return;
-            if (!window.confirm('모든 승인 교사에게 실제 이웃 아지트 화면을 공개합니다. 계속할까요?')) return;
-            confirmation = window.prompt('확인을 위해 “전체 교사 Beta 공개”를 그대로 입력하세요.') || '';
-            if (confirmation !== '전체 교사 Beta 공개') {
-                setErrorMessage('확인 문구가 일치하지 않아 공개하지 않았습니다.');
-                return;
-            }
+            if (!window.confirm('이웃 아지트를 모든 승인 교사에게 정상 공개할까요? 학생 메뉴는 학급별로 켠 경우에만 열립니다.')) return;
+            confirmation = PUBLIC_ROLLOUT_CONFIRMATION;
         } else if (!window.confirm(`${getModeLabel(mode)} 단계로 변경할까요?`)) {
             return;
         }
@@ -194,7 +199,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                         {getModeLabel(dashboard?.rollout?.mode)}
                     </span>
                     <h2 id="neighbor-admin-title">🤝 이웃 아지트 기능 공개</h2>
-                    <p>실제 사용 학급만 먼저 제한 공개하고, 전체 교사 공개는 별도 점검 뒤 진행합니다.</p>
+                    <p>선택 학급에서 먼저 개발·점검하고, 준비가 끝나면 스위치로 정상 공개합니다.</p>
                 </div>
                 <Button type="button" variant="outline" loading={loading} onClick={() => loadDashboard(selectedSpaceId || null)}>
                     새로고침
@@ -250,7 +255,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                         disabled={Boolean(action) || limitedClassCount < 2 || dashboard?.rollout?.mode === 'limited_beta'}
                         onClick={() => changeRollout('limited_beta')}
                     >
-                        선택한 학급만 제한 공개
+                        선택한 학급으로 제한 공개 시작
                     </Button>
                 </section>
 
@@ -338,6 +343,28 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                         </div>
                     ))}
                 </div>
+                <div className="neighbor-admin__scope-switch">
+                    <div>
+                        <strong>공개 범위 전환</strong>
+                        <span>{isPublicRollout
+                            ? '현재 모든 승인 교사에게 정상 공개 중입니다.'
+                            : isLiveRollout
+                                ? '현재 선택한 학급에만 제한 공개 중입니다.'
+                                : '먼저 두 학급 이상을 선택해 제한 공개를 시작하세요.'}</span>
+                    </div>
+                    <label className="neighbor-admin__scope-switch-control">
+                        <span className={!isPublicRollout && isLiveRollout ? 'is-active' : ''}>제한 공개</span>
+                        <input
+                            type="checkbox"
+                            role="switch"
+                            aria-label="이웃 아지트 정상 공개 전환"
+                            checked={isPublicRollout}
+                            disabled={rolloutSwitchDisabled}
+                            onChange={(event) => changeRollout(event.target.checked ? 'public_beta' : 'limited_beta')}
+                        />
+                        <span className={isPublicRollout ? 'is-active' : ''}>정상 공개</span>
+                    </label>
+                </div>
                 <div className="neighbor-admin__rollout-actions">
                     <Button type="button" variant="outline" disabled={Boolean(action) || dashboard?.rollout?.mode === 'internal'} onClick={() => changeRollout('internal')}>
                         관리자 내부로 되돌리기
@@ -345,16 +372,9 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                     <Button type="button" variant="outline" disabled={Boolean(action) || dashboard?.rollout?.mode === 'paused'} onClick={() => changeRollout('paused')}>
                         긴급 중지
                     </Button>
-                    <Button
-                        type="button"
-                        loading={action === 'rollout'}
-                        disabled={Boolean(action) || !acceptanceReady || dashboard?.rollout?.mode === 'public_beta'}
-                        onClick={() => changeRollout('public_beta')}
-                    >
-                        전체 교사 Beta 공개
-                    </Button>
                 </div>
-                {!acceptanceReady && <p className="neighbor-admin__acceptance-help">여섯 항목을 모두 확인해야 공개 버튼이 활성화됩니다.</p>}
+                {!acceptanceReady && <p className="neighbor-admin__acceptance-help">여섯 항목을 모두 확인해야 정상 공개 스위치가 활성화됩니다.</p>}
+                {isPublicRollout && limitedClassCount < 2 && <p className="neighbor-admin__acceptance-help">제한 공개로 되돌리려면 사용할 학급을 두 곳 이상 먼저 선택하세요.</p>}
             </section>
         </section>
     );
