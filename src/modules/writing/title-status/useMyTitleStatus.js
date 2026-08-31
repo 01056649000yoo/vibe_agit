@@ -7,42 +7,25 @@ import {
 } from '../../../constants/writerLevels';
 import { classKey, dataCache } from '../../../lib/cache';
 import { supabase } from '../../../lib/supabaseClient';
+import { titleRewardApi } from './titleRewardApi';
+import { EMPTY_TITLE_STATUS, normalizeTitleStatus } from './titleSeason';
 
 const TITLE_STATUS_TTL_MS = 30000;
-
-const EMPTY_STATUS = {
-    writerTotalChars: 0,
-    writerCompletedPosts: 0,
-    writerLevelOverride: null,
-    readerScore: 0,
-    readerPostCount: 0,
-    readerLevelOverride: null,
-    diaryDays: 0,
-    readingLogCount: 0,
-    readingBookCount: 0,
-    season: null
-};
-
-const normalizeTitleStatus = (data) => ({
-    writerTotalChars: Number(data?.writer_total_chars || 0),
-    writerCompletedPosts: Number(data?.writer_completed_posts || 0),
-    writerLevelOverride: data?.writer_level_override == null ? null : Number(data.writer_level_override),
-    readerScore: Number(data?.reader_score || 0),
-    readerPostCount: Number(data?.reader_post_count || 0),
-    readerLevelOverride: data?.reader_level_override == null ? null : Number(data.reader_level_override),
-    diaryDays: Number(data?.diary_days || 0),
-    readingLogCount: Number(data?.reading_log_count || 0),
-    readingBookCount: Number(data?.reading_book_count || 0),
-    season: data?.season || null
-});
 
 /** 나의 아지트와 글쓰기 발자국이 함께 쓰는 유일한 칭호 데이터 경로. */
 const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null, bootstrapLoading = false }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
-    const [status, setStatus] = useState(() => initialStatus ? normalizeTitleStatus(initialStatus) : EMPTY_STATUS);
+    const [status, setStatus] = useState(() => initialStatus ? normalizeTitleStatus(initialStatus) : EMPTY_TITLE_STATUS);
     const [loading, setLoading] = useState(!initialStatus);
     const [errorMessage, setErrorMessage] = useState('');
+    const [claimingTrack, setClaimingTrack] = useState(null);
+    const [rewardErrorMessage, setRewardErrorMessage] = useState('');
+
+    const cacheKey = useMemo(
+        () => classId && studentId ? classKey(classId, 'my-title-status', { student: studentId }) : null,
+        [classId, studentId]
+    );
 
     const load = useCallback(async (forceRefresh = false) => {
         if (!classId || !studentId) {
@@ -51,7 +34,6 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
             return;
         }
 
-        const cacheKey = classKey(classId, 'my-title-status', { student: studentId });
         if (forceRefresh) dataCache.invalidate(cacheKey);
         setLoading(true);
         setErrorMessage('');
@@ -61,15 +43,34 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
                 if (error) throw error;
                 return normalizeTitleStatus(data);
             }, TITLE_STATUS_TTL_MS);
-            setStatus(next || EMPTY_STATUS);
+            setStatus(next || EMPTY_TITLE_STATUS);
         } catch (error) {
             console.error('나의 칭호 상태 로드 실패:', error.message);
-            setStatus(EMPTY_STATUS);
+            setStatus(EMPTY_TITLE_STATUS);
             setErrorMessage('칭호를 잠시 확인하지 못했어요.');
         } finally {
             setLoading(false);
         }
-    }, [classId, studentId]);
+    }, [cacheKey, classId, studentId]);
+
+    const claimRewards = useCallback(async (trackId, levels = null) => {
+        if (!cacheKey || claimingTrack) return null;
+        setClaimingTrack(trackId);
+        setRewardErrorMessage('');
+        try {
+            const result = await titleRewardApi.claim(trackId, levels);
+            const next = normalizeTitleStatus(result?.title_status);
+            setStatus(next);
+            dataCache.set(cacheKey, next);
+            return result;
+        } catch (error) {
+            console.error('칭호 단계 보상 수령 실패:', error.message);
+            setRewardErrorMessage(error.message || '보상을 받지 못했어요. 잠시 후 다시 시도해주세요.');
+            return null;
+        } finally {
+            setClaimingTrack(null);
+        }
+    }, [cacheKey, claimingTrack]);
 
     useEffect(() => {
         if (!initialStatus) return;
@@ -110,6 +111,9 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
         readingLevel,
         loading,
         errorMessage,
+        claimingTrack,
+        rewardErrorMessage,
+        claimRewards,
         reload: () => load(true)
     };
 };

@@ -7,7 +7,7 @@ import { GRID, INK, INK_SOFT } from './FootprintVisuals';
 import { useMyWritingFootprint } from './useMyWritingFootprint';
 
 /** 모달은 로딩·닫기·칭호 결합만 맡고, 발자국 본문은 독립 모듈에 위임한다. */
-const WritingFootprintModal = ({ isOpen, onClose, studentSession, points = 0 }) => {
+const WritingFootprintModal = ({ isOpen, onClose, studentSession, points = 0, onPointsChange }) => {
     const { detail, loading, errorMessage } = useMyWritingFootprint(isOpen);
 
     const onCloseRef = useRef(onClose);
@@ -42,7 +42,12 @@ const WritingFootprintModal = ({ isOpen, onClose, studentSession, points = 0 }) 
                     {loading ? <p style={{ padding: '70px 0', textAlign: 'center', color: INK_SOFT, fontWeight: 800 }}>발자국을 모아보는 중... 👣</p>
                         : errorMessage ? <p style={{ padding: '60px 0', textAlign: 'center', color: '#C62828', fontWeight: 800 }}>{errorMessage}</p>
                             : <>
-                                <MyTitleStatusPanel active={isOpen} studentSession={studentSession} points={points} />
+                                <MyTitleStatusPanel
+                                    active={isOpen}
+                                    studentSession={studentSession}
+                                    points={points}
+                                    onPointsChange={onPointsChange}
+                                />
                                 <StudentWritingFootprintStats detail={detail} />
                             </>}
                 </div>

@@ -388,6 +388,7 @@ const StudentDashboard = ({
                             initialPost={myAgitInitialPost}
                             closeOnInitialPostClose={Boolean(myAgitInitialPost)}
                             points={points}
+                            onPointsChange={setPoints}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{
                                 dragon: { petData: displayPetData, daysSinceLastFed: daysSinceLastBond, readerLevel }
@@ -408,6 +409,7 @@ const StudentDashboard = ({
                             onClose={() => setIsFootprintOpen(false)}
                             studentSession={studentSession}
                             points={points}
+                            onPointsChange={setPoints}
                         />
                     )}
                 </Suspense>

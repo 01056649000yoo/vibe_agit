@@ -143,7 +143,7 @@ const ShelfBook = ({ post, section, onOpen }) => {
 };
 
 const MyAgitPanel = ({
-    isOpen, onClose, studentSession, points = 0,
+    isOpen, onClose, studentSession, points = 0, onPointsChange,
     enabledModules = [], closeOnInitialPostClose = false,
     moduleRuntimeById = {}, onOpenModule, initialPost = null
 }) => {
@@ -331,7 +331,12 @@ const MyAgitPanel = ({
                         <ModalCloseButton onClick={onClose} label="나의 아지트 닫기" />
                     </header>
 
-                    <MyTitleStatusPanel active={isOpen} studentSession={studentSession} points={points} />
+                    <MyTitleStatusPanel
+                        active={isOpen}
+                        studentSession={studentSession}
+                        points={points}
+                        onPointsChange={onPointsChange}
+                    />
 
                     {/* 학습 성취 — 덱마스터 진행과 정상 휘장. 나의 아지트를 열 때만 한 번 조회한다. */}
                     <MasteryBadges

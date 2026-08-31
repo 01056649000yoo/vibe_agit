@@ -94,7 +94,7 @@ test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차�
 });
 
 test('포인트 활동 유형 계약은 DB 엔진 허용 목록과 같다', async () => {
-    const migration = await read('supabase/migrations/20261181_retire_comment_point_reward.sql');
+    const migration = await read('supabase/migrations/20261206_title_season_rewards.sql');
     const pointEngine = migration.slice(
         migration.indexOf('CREATE OR REPLACE FUNCTION public.point_engine_apply'),
         migration.indexOf('REVOKE ALL ON FUNCTION public.point_engine_apply')

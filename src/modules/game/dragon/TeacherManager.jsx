@@ -9,7 +9,7 @@ import {
     getReadingLevel,
     getWriterLevel
 } from '../../../constants/writerLevels';
-import { supabase } from '../../../lib/supabaseClient';
+import { titleSeasonApi } from '../../writing/title-status/titleSeasonApi';
 import DragonAvatar from './DragonAvatar';
 import TeacherStagePreview from './TeacherStagePreview';
 import TeacherWorkshopPreview from './TeacherWorkshopPreview';
@@ -320,23 +320,20 @@ const DragonTeacherManager = ({ activeClass }) => {
     const loadDashboard = useCallback(async () => {
         if (!classId) return;
         setLoading(true);
-        const { data, error: loadError } = await supabase.rpc('get_teacher_dragon_growth_dashboard', {
-            p_class_id: classId
-        });
-        if (loadError) {
-            console.error('수호룡 성장 현황 조회 실패:', loadError);
-            setError(loadError);
-        } else {
+        try {
+            const data = await titleSeasonApi.getTeacherDashboard(classId);
             setError(null);
             setDashboard(data);
             setSeasonName(data?.season?.name || '');
+        } catch (loadError) {
+            console.error('학기 성장·칭호 시즌 현황 조회 실패:', loadError);
+            setError(loadError);
         }
         setLoading(false);
     }, [classId]);
 
     useEffect(() => {
         // 선택한 학급의 수호룡 운영 현황을 RPC 한 번으로 동기화한다.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadDashboard();
     }, [loadDashboard]);
 
@@ -373,28 +370,31 @@ const DragonTeacherManager = ({ activeClass }) => {
         });
     }, [students, search, levelFilter]);
 
-    const runSeasonAction = async ({ rpc, params, confirmMessage, successMessage, nextTab = 'overview' }) => {
+    const runSeasonAction = async ({ action, confirmMessage, successMessage, nextTab = 'overview' }) => {
         if (closingSeason || !classId) return;
         if (!window.confirm(confirmMessage)) return;
 
         setClosingSeason(true);
-        const { data, error: actionError } = await supabase.rpc(rpc, { p_class_id: classId, ...params });
-        setClosingSeason(false);
-        if (actionError) {
+        try {
+            const data = await action();
+            window.alert(successMessage(data));
+            await loadDashboard();
+            setActiveTab(nextTab);
+        } catch (actionError) {
             console.error('수호룡 시즌 처리 실패:', actionError);
             window.alert(actionError.message || '시즌을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');
-            return;
+        } finally {
+            setClosingSeason(false);
         }
-        window.alert(successMessage(data));
-        await loadDashboard();
-        setActiveTab(nextTab);
     };
 
     const handleOpenFarewell = () => {
         const currentName = seasonName.trim() || season.name || `${season.number || 1}번째 시즌`;
         runSeasonAction({
-            rpc: 'open_teacher_dragon_season_closing',
-            params: { p_season_name: currentName, p_farewell_deadline: farewellDeadline || null },
+            action: () => titleSeasonApi.openClosing(classId, {
+                seasonName: currentName,
+                farewellDeadline
+            }),
             confirmMessage: `“${currentName}”의 작별 기간을 열까요?\n\n이 순간의 작가·소통·기록가·독서가 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
             successMessage: () => `${currentName}의 성장을 마무리하고 작별 편지 쓰기를 열었습니다.`
         });
@@ -403,8 +403,7 @@ const DragonTeacherManager = ({ activeClass }) => {
     const handleFinalizeSeason = () => {
         const pending = Math.max(0, Number(season.farewell_total || students.length) - Number(season.farewell_completed || 0));
         runSeasonAction({
-            rpc: 'finalize_teacher_dragon_season',
-            params: {},
+            action: () => titleSeasonApi.finalize(classId),
             confirmMessage: `현재 시즌을 최종 종료할까요?\n\n작별 편지 미완성 학생 ${pending}명도 그대로 보관됩니다. 종료 뒤에는 편지를 수정할 수 없습니다.`,
             successMessage: (data) => `${data?.season_name || season.name}을 보관했습니다. 새 학기는 준비가 되었을 때 별도로 시작하세요.`,
             nextTab: 'history'
@@ -417,8 +416,7 @@ const DragonTeacherManager = ({ activeClass }) => {
     // 그 뒤로는 pet_data 가 이미 초기화됐을 수 있어 서버가 거절한다.
     const handleCancelFinalize = () => {
         runSeasonAction({
-            rpc: 'cancel_teacher_dragon_season_finalize',
-            params: {},
+            action: () => titleSeasonApi.cancelFinalize(classId),
             confirmMessage: `“${season.name}” 종료를 취소하고 시즌 종료를 누르기 전, 학기 성장 중 상태로 되돌릴까요?\n\n학생이 쓴 작별 편지는 지워지지 않고 그대로 남아요. 새 학기를 이미 시작했다면 되돌릴 수 없어요.`,
             successMessage: (data) => `${data?.season_name || season.name}을 시즌 종료 이전, 학기 성장 중 상태로 되돌렸습니다.`,
             nextTab: 'overview'
@@ -429,8 +427,7 @@ const DragonTeacherManager = ({ activeClass }) => {
         const nextNumber = Number(season.number || history[0]?.season_number || 0) + 1;
         const nextName = seasonName.trim() && seasonName.trim() !== season.name ? seasonName.trim() : `${nextNumber}번째 시즌`;
         runSeasonAction({
-            rpc: 'start_teacher_dragon_season',
-            params: { p_season_name: nextName },
+            action: () => titleSeasonApi.start(classId, nextName),
             confirmMessage: `“${nextName}”을 시작할까요?\n\n학생의 포인트·구입한 소품·지난 글은 보존됩니다. 새 수호룡은 알부터 시작하며 학생이 종류를 다시 고릅니다.`,
             successMessage: (data) => `${data?.season_name || nextName}을 시작했습니다. 학생들은 새 수호룡을 선택할 수 있습니다.`
         });
@@ -449,9 +446,9 @@ const DragonTeacherManager = ({ activeClass }) => {
         <div className="dragon-teacher-manager">
             <section className="dragon-season-hero">
                 <div className="dragon-season-hero__copy">
-                    <span className="dragon-teacher-eyebrow">GUARDIAN SEASON {season.number || 1}</span>
+                    <span className="dragon-teacher-eyebrow">TITLE SEASON {season.number || 1}</span>
                     <h2>{season.name || '현재 시즌'}</h2>
-                    <p>학기 동안 글과 함께 성장하고, 시즌을 마치면 작별 편지와 최종 모습을 보관합니다.</p>
+                    <p>학기 동안 글과 함께 성장하고, 네 가지 칭호와 수호룡을 한 시즌으로 묶어 최종 모습을 보관합니다.</p>
                     <div className="dragon-season-hero__meta">
                         <span>시작 {formatDate(season.started_at)}</span>
                         <span>{getSeasonDays(season.started_at)}일째</span>

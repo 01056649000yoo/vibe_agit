@@ -9,6 +9,7 @@ import {
     getReaderLevel,
     getReadingLevel
 } from '../src/constants/writerLevels.js';
+import { normalizeTitleStatus } from '../src/modules/writing/title-status/titleSeason.js';
 
 // 테스트가 넘기는 저장소 상대 경로만 읽는다.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -86,8 +87,9 @@ test('기록가·독서가 원자료는 확인 완료 글만 날짜와 서로 �
 });
 
 test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서 네 가지 칭호를 함께 표시한다', async () => {
-    const [hook, panel, teacher, home, homeCss, dashboard, tracks] = await Promise.all([
+    const [hook, titleSeason, panel, teacher, home, homeCss, dashboard, tracks] = await Promise.all([
         read('src/modules/writing/title-status/useMyTitleStatus.js'),
+        read('src/modules/writing/title-status/titleSeason.js'),
         read('src/modules/writing/title-status/MyTitleStatusPanel.jsx'),
         read('src/components/teacher/TeacherStudentAgitViewer.jsx'),
         read('src/components/student/StudentHomeGrowthPanel.jsx'),
@@ -97,8 +99,8 @@ test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서
     ]);
 
     assert.equal((hook.match(/supabase\.rpc\('get_my_title_status'\)/g) || []).length, 1);
-    assert.match(hook, /diaryDays: Number\(data\?\.diary_days/);
-    assert.match(hook, /readingBookCount: Number\(data\?\.reading_book_count/);
+    assert.match(titleSeason, /diaryDays: Number\(data\?\.diary_days/);
+    assert.match(titleSeason, /readingBookCount: Number\(data\?\.reading_book_count/);
     for (const kind of ['writer', 'reader', 'diary', 'reading']) {
         assert.equal(panel.includes(`BadgeButton kind="${kind}"`), true);
     }
@@ -139,4 +141,82 @@ test('친구 아지트는 기존 명단 RPC 한 번으로 네 칭호 원자료�
         }
     }
     assert.match(screen, /작가·소통·기록가·독서가 칭호/);
+});
+
+test('기록가·독서가 보상은 시즌별 각각 5,000P이며 작가·소통에는 붙지 않는다', async () => {
+    const [migration, tracks] = await Promise.all([
+        read('supabase/migrations/20261206_title_season_rewards.sql'),
+        read('src/modules/writing/title-status/titleTracks.js')
+    ]);
+    const rewardArrays = [...migration.matchAll(/"(?:diary|reading)":\[(.*?)\]/g)]
+        .map((match) => match[1].split(',').map(Number));
+
+    assert.ok(rewardArrays.length >= 2, '두 칭호의 시즌 보상표가 있어야 한다');
+    for (const rewards of rewardArrays.slice(0, 2)) {
+        assert.deepEqual(rewards, [0, 200, 400, 600, 800, 1200, 1800]);
+        assert.equal(rewards.reduce((sum, points) => sum + points, 0), 5000);
+    }
+    assert.match(tracks, /id: 'writer', rewardEnabled: false/);
+    assert.match(tracks, /id: 'reader', rewardEnabled: false/);
+    assert.match(tracks, /id: 'diary', rewardEnabled: true/);
+    assert.match(tracks, /id: 'reading', rewardEnabled: true/);
+});
+
+test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같은 모양으로 만든다', () => {
+    const status = normalizeTitleStatus({
+        diary_days: 14,
+        title_rewards: {
+            enabled: true,
+            policy_version: 1,
+            season_id: 'season-1',
+            claimable_total: 1000,
+            tracks: {
+                diary: {
+                    current_level: 4,
+                    claimable_total: 1000,
+                    claimed_total: 200,
+                    levels: [
+                        { level: 2, points: 200, status: 'claimed' },
+                        { level: 3, points: 400, status: 'claimable' },
+                        { level: 4, points: 600, status: 'claimable' }
+                    ]
+                }
+            }
+        }
+    });
+
+    assert.equal(status.diaryDays, 14);
+    assert.equal(status.titleRewards.enabled, true);
+    assert.equal(status.titleRewards.tracks.diary.currentLevel, 4);
+    assert.equal(status.titleRewards.tracks.diary.claimableTotal, 1000);
+    assert.deepEqual(status.titleRewards.tracks.diary.levels.map((item) => item.status), [
+        'claimed', 'claimable', 'claimable'
+    ]);
+});
+
+test('칭호 보상은 명시적 수령·서버 재검증·공용 포인트 엔진·제한 공개를 한 계약으로 묶는다', async () => {
+    const [migration, hook, panel, rewardApi, seasonApi, dashboard] = await Promise.all([
+        read('supabase/migrations/20261206_title_season_rewards.sql'),
+        read('src/modules/writing/title-status/useMyTitleStatus.js'),
+        read('src/modules/writing/title-status/MyTitleStatusPanel.jsx'),
+        read('src/modules/writing/title-status/titleRewardApi.js'),
+        read('src/modules/writing/title-status/titleSeasonApi.js'),
+        read('src/components/student/StudentDashboard.jsx')
+    ]);
+
+    assert.match(migration, /student_title_reward_claims_unique UNIQUE \(season_id, student_id, track_id, level\)/);
+    assert.match(migration, /title-reward:%s:%s:%s/);
+    assert.match(migration, /public\.point_engine_apply\([\s\S]*?'title_reward'/);
+    assert.match(migration, /v_current_level := CASE p_track_id/);
+    assert.match(migration, /title_reward_rollout_classes/);
+    assert.match(migration, /REVOKE ALL ON TABLE public\.student_title_reward_claims FROM PUBLIC, anon, authenticated/);
+    assert.match(rewardApi, /claim_my_title_rewards_v1/);
+    assert.doesNotMatch(rewardApi, /student_id|class_id/);
+    assert.match(hook, /titleRewardApi\.claim/);
+    assert.match(panel, /받을 보상 모두 받기/);
+    assert.match(panel, /\+\{num\(reward\.points\)\}P 받기/);
+    assert.match(seasonApi, /get_teacher_dragon_growth_dashboard/);
+    assert.match(seasonApi, /start_teacher_dragon_season/);
+    assert.match(dashboard, /onPointsChange=\{setPoints\}/);
+    assert.equal((dashboard.match(/onPointsChange=\{setPoints\}/g) || []).length >= 2, true);
 });

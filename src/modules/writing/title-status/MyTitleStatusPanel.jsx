@@ -5,6 +5,7 @@ import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import useMyTitleStatus from './useMyTitleStatus';
 import TitleArtwork from './TitleArtwork';
 import { getTitleTrack } from './titleTracks';
+import { getTitleRewardTrack } from './titleSeason';
 
 const INK = '#3E2E23';
 const INK_SOFT = '#8D7B6C';
@@ -68,7 +69,34 @@ const titleRequirement = (kind, item) => {
     return `${num(item.logsFrom)}편 · ${num(item.booksFrom)}권`;
 };
 
-const TitleGuide = ({ kind, currentLevel, currentSummary, onClose }) => {
+const RewardAction = ({ reward, track, claiming, onClaim }) => {
+    if (!reward || reward.points <= 0) return null;
+    if (reward.status === 'claimed') {
+        return <span style={{ color: '#34845D', fontSize: '.66rem', fontWeight: 950, whiteSpace: 'nowrap' }}>받음 ✓</span>;
+    }
+    if (reward.status !== 'claimable') {
+        return <span style={{ color: INK_SOFT, fontSize: '.66rem', fontWeight: 850, whiteSpace: 'nowrap' }}>+{num(reward.points)}P</span>;
+    }
+    return (
+        <button
+            type="button"
+            disabled={claiming}
+            onClick={() => onClaim([reward.level])}
+            style={{
+                padding: '6px 8px', border: `1px solid ${track.accent}`, borderRadius: '10px',
+                background: track.deepAccent, color: '#FFFFFF', fontFamily: 'inherit', fontSize: '.66rem',
+                fontWeight: 950, cursor: claiming ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: claiming ? .6 : 1
+            }}
+        >
+            +{num(reward.points)}P 받기
+        </button>
+    );
+};
+
+const TitleGuide = ({
+    kind, currentLevel, currentSummary, rewardTrack, rewardsEnabled,
+    claiming, rewardErrorMessage, onClaim, onClose
+}) => {
     if (!kind) return null;
     const track = getTitleTrack(kind);
 
@@ -102,10 +130,31 @@ const TitleGuide = ({ kind, currentLevel, currentSummary, onClose }) => {
                         <p style={{ margin: '0 0 13px', color: INK_SOFT, fontSize: '.78rem', fontWeight: 750, lineHeight: 1.55 }}>
                             {track.description}
                         </p>
+                        {track.rewardEnabled && rewardsEnabled && rewardTrack.claimableTotal > 0 ? (
+                            <button
+                                type="button"
+                                disabled={claiming}
+                                onClick={() => onClaim(null)}
+                                style={{
+                                    width: '100%', marginBottom: '11px', padding: '10px 12px', border: 0,
+                                    borderRadius: '13px', background: track.deepAccent, color: '#FFFFFF',
+                                    fontFamily: 'inherit', fontSize: '.78rem', fontWeight: 950,
+                                    cursor: claiming ? 'wait' : 'pointer', opacity: claiming ? .65 : 1
+                                }}
+                            >
+                                {claiming ? '보상을 담는 중...' : `받을 보상 모두 받기 · +${num(rewardTrack.claimableTotal)}P`}
+                            </button>
+                        ) : null}
+                        {rewardErrorMessage ? (
+                            <p role="alert" style={{ margin: '0 0 10px', color: '#B42318', fontSize: '.72rem', fontWeight: 850 }}>
+                                {rewardErrorMessage}
+                            </p>
+                        ) : null}
                         <div style={{ display: 'grid', gap: '7px' }}>
                             {track.levels.map((item) => {
                                 const current = item.level === currentLevel.level;
                                 const achieved = item.level <= currentLevel.level;
+                                const reward = rewardTrack.levels.find((entry) => entry.level === item.level);
                                 return (
                                     <div key={item.level} style={{
                                         display: 'grid', gridTemplateColumns: '42px minmax(0,1fr) auto', alignItems: 'center', gap: '9px',
@@ -124,8 +173,18 @@ const TitleGuide = ({ kind, currentLevel, currentSummary, onClose }) => {
                                             </span>
                                             {current && <span style={{ display: 'block', marginTop: '1px', color: track.deepAccent, fontSize: '.64rem', fontWeight: 900 }}>지금 나의 칭호</span>}
                                         </span>
-                                        <span style={{ color: achieved ? track.deepAccent : INK_SOFT, fontSize: '.69rem', fontWeight: 900, whiteSpace: 'nowrap' }}>
-                                            {titleRequirement(kind, item)}
+                                        <span style={{ display: 'grid', justifyItems: 'end', gap: '4px' }}>
+                                            <span style={{ color: achieved ? track.deepAccent : INK_SOFT, fontSize: '.69rem', fontWeight: 900, whiteSpace: 'nowrap' }}>
+                                                {titleRequirement(kind, item)}
+                                            </span>
+                                            {track.rewardEnabled && rewardsEnabled ? (
+                                                <RewardAction
+                                                    reward={reward}
+                                                    track={track}
+                                                    claiming={claiming}
+                                                    onClaim={onClaim}
+                                                />
+                                            ) : null}
                                         </span>
                                     </div>
                                 );
@@ -138,7 +197,7 @@ const TitleGuide = ({ kind, currentLevel, currentSummary, onClose }) => {
     );
 };
 
-const MyTitleStatusPanel = ({ active = true, studentSession, points = 0 }) => {
+const MyTitleStatusPanel = ({ active = true, studentSession, points = 0, onPointsChange }) => {
     const [activeGuide, setActiveGuide] = useState(null);
     const {
         status,
@@ -147,7 +206,10 @@ const MyTitleStatusPanel = ({ active = true, studentSession, points = 0 }) => {
         diaryLevel,
         readingLevel,
         loading,
-        errorMessage
+        errorMessage,
+        claimingTrack,
+        rewardErrorMessage,
+        claimRewards
     } = useMyTitleStatus({ studentSession, active });
     const activeGuideLevel = activeGuide === 'reader'
         ? readerLevel
@@ -163,6 +225,13 @@ const MyTitleStatusPanel = ({ active = true, studentSession, points = 0 }) => {
             : activeGuide === 'reading'
                 ? `${num(status.readingLogCount)}편 · ${num(status.readingBookCount)}권`
                 : `${num(writerLevel.progressValue)}${writerLevel.nextUnit}`;
+    const activeRewardTrack = getTitleRewardTrack(status, activeGuide);
+    const handleClaim = async (levels) => {
+        const trackId = activeGuide;
+        if (!trackId) return;
+        const result = await claimRewards(trackId, levels);
+        if (result?.total_points != null) onPointsChange?.(Number(result.total_points));
+    };
 
     useEffect(() => {
         if (!activeGuide) return undefined;
@@ -224,6 +293,11 @@ const MyTitleStatusPanel = ({ active = true, studentSession, points = 0 }) => {
                 kind={activeGuide}
                 currentLevel={activeGuideLevel}
                 currentSummary={activeGuideSummary}
+                rewardTrack={activeRewardTrack}
+                rewardsEnabled={status.titleRewards.enabled}
+                claiming={claimingTrack === activeGuide}
+                rewardErrorMessage={rewardErrorMessage}
+                onClaim={handleClaim}
                 onClose={() => setActiveGuide(null)}
             />
         </>

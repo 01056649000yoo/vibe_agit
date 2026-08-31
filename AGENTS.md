@@ -17,6 +17,8 @@
 | **[CLASS_ACTIVITY_TOOLS_PLAN.md](CLASS_ACTIVITY_TOOLS_PLAN.md)** | 전체 화면 모달 기반 학급 활동 도구함 확장 순서·공통 계약 |
 | **[CLASS_AGIT_PLAN.md](CLASS_AGIT_PLAN.md)** | 우리반 글 2.5D 전시관·학급 문집 제작/내보내기·단계적 공개 계획 |
 | **[NEIGHBOR_AGIT_PLAN.md](NEIGHBOR_AGIT_PLAN.md)** | 여러 학급 이웃 아지트의 초대·글 교류·전용 RPC·관리자 선공개 계획 |
+| **[TITLE_SEASON_REWARD_PLAN.md](TITLE_SEASON_REWARD_PLAN.md)** | 네 칭호 공용 학기 시즌·기록가/독서가 단계 포인트·직접 수령 구현 순서 |
+| **[POINT_ECONOMY_PLAN.md](POINT_ECONOMY_PLAN.md)** | 글쓰기·게임 포인트 예산, 공방 가격, 한 학기 한 세트 운영 목표 |
 | **[src/components/student/README.md](src/components/student/README.md)** | 학생 메뉴 유형별 활성 표시·방문 기록·뒤로가기 계약과 신규 메뉴 추가 순서 |
 | **[backup.md](backup.md)** | 백업·복구 절차, 매월 1일 자동 리허설 |
 | **[docs/SERVICE_MANAGEMENT.md](docs/SERVICE_MANAGEMENT.md)** | 분기 셀프호스팅 점검표·월간 Docker 이미지 CVE 수집과 첫 기준 점검 절차 |
