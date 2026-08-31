@@ -65,7 +65,7 @@
     "smoke:classroom-arrangement": "node scripts/run-rollback-smoke.mjs tests/sql/20261159_classroom_arrangement_tool.smoke.sql",
     "smoke:learning-content": "node scripts/run-rollback-smoke.mjs tests/sql/20261160_learning_content_catalog.smoke.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261161_learning_content_curriculum_alignment.smoke.sql",
     "smoke:neighbor-agit": "node scripts/run-rollback-smoke.mjs tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql supabase/migrations/20261199_neighbor_agit_data_foundation.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261201_neighbor_limited_beta.smoke.sql supabase/migrations/20261201_neighbor_limited_beta.sql",
-    "smoke:activity-titles": "node scripts/run-rollback-smoke.mjs tests/sql/20261203_separate_diary_reading_titles.smoke.sql supabase/migrations/20261202_sync_title_levels.sql supabase/migrations/20261203_separate_diary_reading_titles.sql supabase/migrations/20261204_expose_activity_titles_on_home_and_friends.sql",
+    "smoke:activity-titles": "node scripts/run-rollback-smoke.mjs tests/sql/20261203_separate_diary_reading_titles.smoke.sql supabase/migrations/20261204_expose_activity_titles_on_home_and_friends.sql",
     "preflight:disk": "bash scripts/preflight-disk.sh",
     "check:title-levels": "node scripts/sync-title-levels.mjs --check",
     "sync:title-levels": "node scripts/sync-title-levels.mjs --write",
