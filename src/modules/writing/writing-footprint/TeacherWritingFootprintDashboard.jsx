@@ -5,7 +5,7 @@ import { classKey, dataCache } from '../../../lib/cache';
 import DashboardCardHost from '../../dashboard/DashboardCardHost';
 import { DASHBOARD_IDS, getDashboardCards, getDashboardValue } from '../../dashboard/cardRegistry';
 import {
-    buildCumulativePoints, fillSchoolYearMonths, num, StatTile
+    buildCumulativePoints, fillSchoolYearMonths, num, signedPoints, StatTile
 } from './FootprintVisuals';
 import FootprintCardContent from './FootprintCardContent';
 import FootprintChartDetailModal from './FootprintChartDetailModal';
@@ -26,8 +26,10 @@ const EMPTY_CLASS_FOOTPRINT = {
     school_year: null,
     totals: {
         total_students: 0, active_students: 0, total_posts: 0, total_chars: 0,
+        assignment_posts: 0, reading_logs: 0, diaries: 0,
         avg_posts_per_student: 0, avg_chars_per_post: 0, active_days: 0,
-        comments: 0, reactions: 0, points_earned: 0, points_used: 0
+        comments: 0, reactions: 0, points_earned: 0, points_used: 0,
+        activity_points_earned: 0, teacher_adjustment_points: 0, starting_bonus_points: 0
     },
     daily: [], monthly: [], points_monthly: [], points_by_type: [], spending_by_type: [], students: []
 };
@@ -163,9 +165,9 @@ const StudentTable = ({ students }) => {
                         </td>
                         <MetricCell primary={`${num(student.posts)}편`} secondary={`과제 ${num(student.assignment_posts)} · 독서록 ${num(student.reading_logs)} · 일기 ${num(student.diaries)}`} />
                         <MetricCell primary={`${num(student.active_days)}일 활동`} secondary={`현재 ${num(student.current_streak)}일 · 최고 ${num(student.best_streak)}일`} />
-                        <MetricCell primary={`다시쓰기 요청 ${num(student.rewrite_requests)}회`} secondary={`수정 제출 ${num(student.revision_submissions)}회 · 기록 이후`} />
+                        <MetricCell primary={`다시쓰기 요청 ${num(student.rewrite_requests)}회`} secondary={`수정 제출 ${num(student.revision_submissions)}회 · 교사 피드백 ${num(student.feedbacks_received)}회`} />
                         <MetricCell primary={`남김 ${num(interactionsGiven)}회`} secondary={`받음 ${num(interactionsReceived)}회`} />
-                        <MetricCell primary={`+${num(student.points_earned)}P`} secondary={`사용 ${num(student.points_used)}P`} />
+                        <MetricCell primary={`활동 +${num(student.activity_points_earned)}P`} secondary={`교사 조정 ${signedPoints(student.teacher_adjustment_points)} · 사용 ${num(student.points_used)}P`} />
                         <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
                             <strong style={{ display: 'block', color: student.last_post_at ? '#334155' : '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>{formatDate(student.last_post_at)}</strong>
                             <span style={{ display: 'block', marginTop: '3px', color: changeColor, fontSize: 'var(--ui-text-sm)', fontWeight: 700, whiteSpace: 'nowrap' }}>30일 {num(student.recent_30_posts)}편 · {changeLabel}</span>
@@ -211,10 +213,10 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
             const fullSummary = [
                 `글 ${num(student.posts)}편(과제 ${num(student.assignment_posts)}·독서록 ${num(student.reading_logs)}·일기 ${num(student.diaries)})`,
                 `활동 ${num(student.active_days)}일(연속 ${num(student.current_streak)}·최고 ${num(student.best_streak)})`,
-                `다시쓰기 요청 ${num(student.rewrite_requests)}·수정 제출 ${num(student.revision_submissions)}`,
+                `다시쓰기 요청 ${num(student.rewrite_requests)}·수정 제출 ${num(student.revision_submissions)}·교사 피드백 ${num(student.feedbacks_received)}`,
                 `교류 남김 ${num(interactionsGiven)}·받음 ${num(interactionsReceived)}`,
                 `30일 ${num(student.recent_30_posts)}편·${changeLabel}`,
-                `포인트 +${num(student.points_earned)}·사용 ${num(student.points_used)}`
+                `활동 포인트 +${num(student.activity_points_earned)}·교사 조정 ${signedPoints(student.teacher_adjustment_points)}·사용 ${num(student.points_used)}`
             ].join(' · ');
             return <button type="button" key={student.student_id} onClick={() => onSelectStudent(student)} aria-haspopup="dialog" aria-label={`${student.name} 발자국 크게 보기`} title={`${student.name} · ${fullSummary} · 최근 글 ${formatDate(student.last_post_at)}`} style={{
                 border: '1px solid #DCE6F2', borderRadius: '10px', padding: '5px 8px', background: '#F8FAFC',
@@ -224,7 +226,7 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5px', alignItems: 'baseline', minWidth: 0, lineHeight: 1.05 }}>
                     <strong style={{ flex: 1, minWidth: 0, color: '#172554', fontSize: 'var(--footprint-student-name, .84rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
-                    <span title={`최근 글 ${formatDate(student.last_post_at)}`} style={{ flexShrink: 1, minWidth: 0, maxWidth: '52%', color: '#1D4ED8', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>+{num(student.points_earned)} · -{num(student.points_used)}P</span>
+                    <span title={`활동 포인트 +${num(student.activity_points_earned)}P · 교사 조정 ${signedPoints(student.teacher_adjustment_points)}`} style={{ flexShrink: 1, minWidth: 0, maxWidth: '52%', color: '#1D4ED8', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>활동 +{num(student.activity_points_earned)}P</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '3px', color: '#334155', fontSize: 'var(--footprint-student-text, .68rem)', fontWeight: 800, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>과 {num(student.assignment_posts)} · 독 {num(student.reading_logs)} · 일 {num(student.diaries)}</span>
@@ -232,7 +234,7 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>연속 {num(student.current_streak)}/{num(student.best_streak)}일</span>
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>요청 {num(student.rewrite_requests)} · 수정 제출 {num(student.revision_submissions)}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>요청 {num(student.rewrite_requests)} · 수정 {num(student.revision_submissions)} · 피드백 {num(student.feedbacks_received)}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>교류 {num(interactionsGiven)}↗ {num(interactionsReceived)}↙</span>
@@ -286,10 +288,13 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const [selectedChart, setSelectedChart] = useState(null);
     const [modalContainer, setModalContainer] = useState(null);
     const rootRef = useRef(null);
+    const requestSequenceRef = useRef(0);
 
     const classId = activeClass?.id;
     const load = useCallback(async (forceRefresh = false) => {
         if (!classId) return;
+        const requestId = requestSequenceRef.current + 1;
+        requestSequenceRef.current = requestId;
         setLoading(true);
         setErrorMessage('');
         const cacheKey = classKey(classId, 'writing-footprint-dashboard');
@@ -300,17 +305,22 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
                 if (result.error) throw result.error;
                 return result.data;
             }, 30000);
+            if (requestId !== requestSequenceRef.current) return;
             setDetail({ ...EMPTY_CLASS_FOOTPRINT, ...(data || {}), totals: { ...EMPTY_CLASS_FOOTPRINT.totals, ...(data?.totals || {}) } });
         } catch (error) {
+            if (requestId !== requestSequenceRef.current) return;
             console.error('학급 글쓰기 발자국 로드 실패:', error.message);
             setErrorMessage('학급 발자국을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
-        setLoading(false);
+        if (requestId === requestSequenceRef.current) setLoading(false);
     }, [classId]);
 
     useEffect(() => {
         const timerId = window.setTimeout(() => load(), 0);
-        return () => window.clearTimeout(timerId);
+        return () => {
+            window.clearTimeout(timerId);
+            requestSequenceRef.current += 1;
+        };
     }, [load]);
 
     useEffect(() => {

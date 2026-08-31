@@ -9,8 +9,24 @@ export const CLASS_FOOTPRINT_CARDS = [
         icon: '📝', label: '완료 글', metric: { path: 'totals.total_posts', unit: '편' }
     },
     {
+        id: 'assignment-posts', section: 'summary', renderer: 'stat', order: 21,
+        icon: '📋', label: '과제 글', metric: { path: 'totals.assignment_posts', unit: '편' }
+    },
+    {
+        id: 'reading-log-posts', section: 'summary', renderer: 'stat', order: 22,
+        icon: '📚', label: '독서록', metric: { path: 'totals.reading_logs', unit: '편' }
+    },
+    {
+        id: 'diary-posts', section: 'summary', renderer: 'stat', order: 23,
+        icon: '📔', label: '일기', metric: { path: 'totals.diaries', unit: '편' }
+    },
+    {
         id: 'total-characters', section: 'summary', renderer: 'stat', order: 30,
         icon: '✍️', label: '쓴 글자', metric: { path: 'totals.total_chars', unit: '자' }
+    },
+    {
+        id: 'class-active-days', section: 'summary', renderer: 'stat', order: 35,
+        icon: '🔥', label: '학급 활동일', metric: { path: 'totals.active_days', unit: '일' }
     },
     {
         id: 'posts-per-student', section: 'summary', renderer: 'stat', order: 40,
@@ -25,6 +41,14 @@ export const CLASS_FOOTPRINT_CARDS = [
         icon: '💬', label: '친구 교류', metric: { type: 'sum', paths: ['totals.comments', 'totals.reactions'], unit: '회' }
     },
     {
+        id: 'activity-points-earned', section: 'summary', renderer: 'stat', order: 70,
+        icon: '✨', label: '활동 포인트', metric: { path: 'totals.activity_points_earned', unit: 'P' }
+    },
+    {
+        id: 'teacher-adjustment-points', section: 'summary', renderer: 'stat', order: 80,
+        icon: '🧑‍🏫', label: '교사 조정', metric: { path: 'totals.teacher_adjustment_points', unit: 'P' }
+    },
+    {
         id: 'calendar', section: 'visualization', renderer: 'calendar', order: 10,
         title: '🔥 학급 글쓰기 달력',
         hint: '학급 전체가 쓴 날을 합쳐, 활동이 많았던 날을 진하게 표시합니다.',
@@ -35,8 +59,8 @@ export const CLASS_FOOTPRINT_CARDS = [
     {
         id: 'monthly-posts', section: 'visualization', renderer: 'monthly-bars', order: 20,
         title: '📈 달마다 완료한 글',
-        hint: '승인된 글을 기준으로 월별 학급 활동량을 봅니다.',
-        modalHint: '승인된 과제와 제출 완료한 독서록을 기준으로 월별 학급 활동량을 봅니다.',
+        hint: '과제는 승인일, 독서록·일기는 작성 완료일을 기준으로 월별 활동량을 봅니다.',
+        modalHint: '승인된 과제와 작성 완료한 독서록·일기를 실제 완료일 기준으로 보여줍니다.',
         rowsPath: 'months', valueKey: 'posts', unit: '편',
         surfaces: ['default', 'fullscreen', 'modal']
     },
@@ -57,10 +81,10 @@ export const CLASS_FOOTPRINT_CARDS = [
     },
     {
         id: 'point-sources', section: 'visualization', renderer: 'point-types', order: 50,
-        title: '🎁 포인트 획득처',
-        hint: '이번 학년도에 학급이 포인트를 모은 활동입니다.',
-        modalHint: '이번 학년도에 학급이 어떤 활동으로 포인트를 모았는지 보여줍니다.',
-        rowsPath: 'detail.points_by_type', emptyMessage: '아직 모은 포인트가 없습니다.',
+        title: '🎁 활동 포인트 획득처',
+        hint: '교사 조정·시작 보너스를 제외하고 학생이 활동으로 모은 포인트입니다.',
+        modalHint: '이번 학년도에 학급이 어떤 활동으로 포인트를 모았는지 보여줍니다. 교사 조정과 시작 보너스는 제외합니다.',
+        rowsPath: 'detail.points_by_type', emptyMessage: '아직 활동으로 모은 포인트가 없습니다.',
         surfaces: ['default', 'fullscreen', 'modal']
     },
     {
@@ -72,4 +96,3 @@ export const CLASS_FOOTPRINT_CARDS = [
         surfaces: ['default', 'fullscreen', 'modal']
     }
 ];
-

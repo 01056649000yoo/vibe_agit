@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [classAnalysis, recentActivity, learningMastery] = await Promise.all([
+const [classAnalysis, recentActivity, learningMastery, writingFootprint] = await Promise.all([
     readFile('src/components/teacher/ClassAnalysis.jsx', 'utf8'),
     readFile('src/components/teacher/RecentActivity.jsx', 'utf8'),
-    readFile('src/modules/learning/useLearningMastery.js', 'utf8')
+    readFile('src/modules/learning/useLearningMastery.js', 'utf8'),
+    readFile('src/modules/writing/writing-footprint/TeacherWritingFootprintDashboard.jsx', 'utf8')
 ]);
 
 test('운영 현황은 빠른 기간 전환에서 늦은 이전 응답을 반영하지 않는다', () => {
@@ -48,4 +49,18 @@ test('학습 성취는 학생 전환 뒤 직전 학생 응답을 새 학생 화�
     assert.match(loadBlock, /await supabase\.rpc\([\s\S]*if \(requestId !== requestSequenceRef\.current\) return;\s*setLoading\(false\)/);
     assert.match(loadBlock, /if \(error\) \{[\s\S]*setContents\(\[\]\);[\s\S]*setContents\(Array\.isArray\(data\?\.contents\)/);
     assert.match(learningMastery, /return \(\) => \{\s*window\.clearTimeout\(timerId\);\s*requestSequenceRef\.current \+= 1;\s*\};/);
+});
+
+test('학급 발자국은 학급 전환 뒤 직전 학급 응답을 새 학급 화면에 쓰지 않는다', () => {
+    const loadBlock = writingFootprint.slice(
+        writingFootprint.indexOf('const load = useCallback'),
+        writingFootprint.indexOf('const toggleExpanded')
+    );
+
+    assert.match(writingFootprint, /const requestSequenceRef = useRef\(0\)/);
+    assert.match(loadBlock, /const requestId = requestSequenceRef\.current \+ 1;\s*requestSequenceRef\.current = requestId/);
+    assert.match(loadBlock, /await dataCache\.get[\s\S]*if \(requestId !== requestSequenceRef\.current\) return;\s*setDetail/);
+    assert.match(loadBlock, /catch \(error\) \{\s*if \(requestId !== requestSequenceRef\.current\) return;/);
+    assert.match(loadBlock, /if \(requestId === requestSequenceRef\.current\) setLoading\(false\)/);
+    assert.match(loadBlock, /return \(\) => \{\s*window\.clearTimeout\(timerId\);\s*requestSequenceRef\.current \+= 1;\s*\};/);
 });

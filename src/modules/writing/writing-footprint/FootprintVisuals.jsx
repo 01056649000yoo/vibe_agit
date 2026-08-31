@@ -25,6 +25,11 @@ const AXIS_L = 20;
 
 export const num = (value) => Number(value || 0).toLocaleString('ko-KR');
 
+export const signedPoints = (value) => {
+    const amount = Number(value || 0);
+    return `${amount > 0 ? '+' : ''}${num(amount)}P`;
+};
+
 /** 3월~다음 해 1월(11칸) 축을 만들고, 값이 없는 달은 0으로 채운다. */
 export const fillSchoolYearMonths = (rows, schoolYear) => {
     const startYear = schoolYear?.start ? Number(String(schoolYear.start).slice(0, 4)) : new Date().getFullYear();
