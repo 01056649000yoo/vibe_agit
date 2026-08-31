@@ -66,7 +66,7 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
             }),
             Object.freeze({
                 id: 'footprint', icon: '👣', title: '글쓰기 발자국',
-                description: '내가 쓴 글과 활동이 얼마나 쌓였는지 살펴봐요.',
+                description: '완성한 글, 꾸준히 쓴 날, 고쳐 쓴 기록과 최근 성장을 살펴봐요.',
                 ctaLabel: '발자국 보기', destination: Object.freeze({ type: 'dashboard-action', action: 'footprint' })
             })
         ])
