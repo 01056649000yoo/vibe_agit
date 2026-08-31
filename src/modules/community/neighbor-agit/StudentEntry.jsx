@@ -24,6 +24,11 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
     const [interactionBusy, setInteractionBusy] = useState('');
     const [interactionError, setInteractionError] = useState('');
     const [commentDraft, setCommentDraft] = useState('');
+    const [sharePanelOpen, setSharePanelOpen] = useState(false);
+    const [shareCandidates, setShareCandidates] = useState(null);
+    const [shareLoading, setShareLoading] = useState(false);
+    const [shareBusy, setShareBusy] = useState('');
+    const [shareMessage, setShareMessage] = useState('');
 
     const loadFirstPage = useCallback(async () => {
         if (!spaceId) return;
@@ -191,6 +196,58 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
         }
     };
 
+    const openSharePanel = async () => {
+        const nextOpen = !sharePanelOpen;
+        setSharePanelOpen(nextOpen);
+        setShareMessage('');
+        if (!nextOpen || shareCandidates || shareLoading) return;
+        setShareLoading(true);
+        try {
+            setShareCandidates(await neighborAgitApi.getShareCandidates({ spaceId }));
+        } catch {
+            setShareMessage('내 글 목록을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+        } finally {
+            setShareLoading(false);
+        }
+    };
+
+    const requestShare = async (post) => {
+        if (shareBusy) return;
+        setShareBusy(post.post_id);
+        setShareMessage('');
+        try {
+            const result = await neighborAgitApi.requestShare({ spaceId, postId: post.post_id });
+            setShareCandidates((current) => current.map((item) => item.post_id === post.post_id ? {
+                ...item,
+                shared_post_id: result.shared_post_id,
+                share_status: result.status,
+                review_note: ''
+            } : item));
+            setShareMessage('선생님께 이웃 공개 확인을 요청했어요.');
+        } catch {
+            setShareMessage('공개를 요청하지 못했어요. 현재 글 상태를 확인해 주세요.');
+        } finally {
+            setShareBusy('');
+        }
+    };
+
+    const recallShare = async (post) => {
+        if (!post.shared_post_id || shareBusy) return;
+        setShareBusy(post.post_id);
+        setShareMessage('');
+        try {
+            await neighborAgitApi.recallShare({ spaceId, sharedPostId: post.shared_post_id });
+            setShareCandidates((current) => current.map((item) => item.post_id === post.post_id ? {
+                ...item, share_status: 'recalled'
+            } : item));
+            setShareMessage('이웃 공개 요청을 회수했어요.');
+        } catch {
+            setShareMessage('공개 요청을 회수하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+        } finally {
+            setShareBusy('');
+        }
+    };
+
     return (
         <main className="neighbor-student-page">
             <header className="neighbor-student-page__header">
@@ -206,6 +263,40 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                     </span>
                 )}
             </header>
+
+            <section className="neighbor-share-panel">
+                <div>
+                    <span>내 글 나누기</span>
+                    <h2>내 아지트 글을 이웃에게 소개해요</h2>
+                    <p>이미 제출한 글 중 하나를 골라 선생님께 공개 확인을 요청할 수 있어요.</p>
+                </div>
+                <Button type="button" variant="outline" loading={shareLoading} onClick={openSharePanel}>
+                    {sharePanelOpen ? '내 글 목록 닫기' : '공개할 내 글 고르기'}
+                </Button>
+                {sharePanelOpen && (
+                    <div className="neighbor-share-panel__list">
+                        {shareMessage && <p className="neighbor-share-panel__message" role="status">{shareMessage}</p>}
+                        {shareLoading ? <p>내 글을 불러오고 있어요…</p> : (shareCandidates || []).length === 0 ? (
+                            <p>공개를 요청할 수 있는 제출 글이 아직 없어요.</p>
+                        ) : (shareCandidates || []).map((post) => (
+                            <article key={post.post_id}>
+                                <div>
+                                    <strong>{post.title || '제목 없는 글'}</strong>
+                                    <small>{post.share_status === 'pending' ? '선생님 확인 중'
+                                        : post.share_status === 'published' ? '이웃에게 공개 중'
+                                            : post.share_status === 'returned' ? `다시 확인 필요${post.review_note ? ` · ${post.review_note}` : ''}`
+                                                : '공개 요청 전'}</small>
+                                </div>
+                                {['pending', 'published'].includes(post.share_status) ? (
+                                    <Button type="button" variant="outline" loading={shareBusy === post.post_id} disabled={Boolean(shareBusy)} onClick={() => recallShare(post)}>공개 회수</Button>
+                                ) : (
+                                    <Button type="button" loading={shareBusy === post.post_id} disabled={Boolean(shareBusy)} onClick={() => requestShare(post)}>공개 요청</Button>
+                                )}
+                            </article>
+                        ))}
+                    </div>
+                )}
+            </section>
 
             {loading ? (
                 <section className="neighbor-student-state" aria-live="polite">이웃 글을 불러오고 있어요…</section>

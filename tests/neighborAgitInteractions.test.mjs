@@ -58,7 +58,7 @@ test('상세는 보이는 댓글 최대 100개와 현재 합계·내 상태만 �
 });
 
 test('학생 화면은 쓰기 RPC 응답으로 댓글·공감·간직하기를 갱신하고 추가 목록 재조회하지 않는다', () => {
-    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 5);
+    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 8);
     assert.match(api, /save_neighbor_comment_v1/);
     assert.match(api, /toggle_neighbor_reaction_v1/);
     assert.match(api, /toggle_neighbor_save_v1/);

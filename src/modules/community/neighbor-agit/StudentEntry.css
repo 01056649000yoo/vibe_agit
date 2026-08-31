@@ -31,6 +31,16 @@
     white-space: nowrap;
 }
 
+.neighbor-share-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; margin-bottom: 18px; padding: 18px 20px; border: 1px solid #ddd6fe; border-radius: var(--ui-radius-lg); background: #faf5ff; }
+.neighbor-share-panel > div:first-child > span { color: #7c3aed; font-size: var(--ui-text-xs); font-weight: 900; }
+.neighbor-share-panel h2 { margin: 4px 0; font-size: var(--ui-text-lg); }
+.neighbor-share-panel p { margin: 0; color: var(--ui-ink-muted); line-height: 1.55; }
+.neighbor-share-panel__list { display: grid; grid-column: 1 / -1; gap: 8px; padding-top: 12px; border-top: 1px solid #ddd6fe; }
+.neighbor-share-panel__list article { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border-radius: var(--ui-radius-md); background: var(--ui-surface); }
+.neighbor-share-panel__list article > div { display: grid; gap: 3px; }
+.neighbor-share-panel__list small { color: var(--ui-ink-subtle); }
+.neighbor-share-panel__message { color: #6d28d9 !important; font-weight: 800; }
+
 .neighbor-student-feed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .neighbor-post-card {
     display: flex;
@@ -163,4 +173,9 @@
     .neighbor-post-card { min-height: 190px; padding: 17px; }
     .neighbor-comment-form > div { grid-template-columns: 1fr; }
     .neighbor-post-detail__actions > * { flex: 1 1 140px; }
+    .neighbor-share-panel { grid-template-columns: 1fr; }
+    .neighbor-share-panel > button { width: 100%; }
+    .neighbor-share-panel__list { grid-column: 1; }
+    .neighbor-share-panel__list article { align-items: stretch; flex-direction: column; }
+    .neighbor-share-panel__list article > button { width: 100%; }
 }

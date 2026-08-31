@@ -14,6 +14,7 @@ const assertDashboard = (data) => {
         || !data?.rollout
         || !data?.summary
         || !Array.isArray(data?.eligible_classes)
+        || !Array.isArray(data?.limited_classes)
         || !Array.isArray(data?.spaces)
         || !Array.isArray(data?.preview_feed)) {
         throw new Error('지원하지 않는 이웃 아지트 관리자 응답입니다.');
@@ -38,6 +39,18 @@ export const neighborAgitAdminApi = {
         if (error) throw error;
         if (data?.success !== true || !data?.space_id || Number(data?.active_class_count) < 2) {
             throw new Error('내부 시험 공간 응답을 확인할 수 없습니다.');
+        }
+        return data;
+    },
+
+    async setLimitedClass(classId, enabled) {
+        const { data, error } = await supabase.rpc('set_neighbor_limited_class_v1', {
+            p_class_id: classId,
+            p_enabled: enabled
+        });
+        if (error) throw error;
+        if (data?.success !== true || data?.class_id !== classId || typeof data?.selected !== 'boolean') {
+            throw new Error('제한 공개 학급 저장 결과를 확인할 수 없습니다.');
         }
         return data;
     },

@@ -12,6 +12,7 @@ import './AdminNeighborAgitPanel.css';
 
 const getModeLabel = (mode) => {
     if (mode === 'internal') return '관리자 내부 확인';
+    if (mode === 'limited_beta') return '선택 학급 제한 공개';
     if (mode === 'public_beta') return '전체 교사 Beta';
     if (mode === 'paused') return '긴급 중지';
     return '확인 필요';
@@ -62,6 +63,9 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
     const acceptanceChecks = dashboard?.rollout?.acceptance_checks || {};
     const acceptanceReady = dashboard?.rollout?.ready_for_public_beta === true;
     const availableClasses = dashboard?.eligible_classes?.filter((item) => item.available) || [];
+    const limitedClasses = dashboard?.limited_classes || [];
+    const limitedClassCount = Number(dashboard?.limited_class_count) || 0;
+    const limitedClassMax = Number(dashboard?.limited_class_max) || 8;
 
     const selectSpace = async (spaceId) => {
         if (spaceId === selectedSpaceId || action) return;
@@ -126,10 +130,34 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
         }
     };
 
+    const toggleLimitedClass = async (classId, selected) => {
+        if (action) return;
+        setAction(`limited-${classId}`);
+        setErrorMessage('');
+        setMessage('');
+        try {
+            const result = await api.setLimitedClass(classId, selected);
+            setDashboard((current) => ({
+                ...current,
+                limited_class_count: result.selected_count,
+                limited_classes: current.limited_classes.map((item) => (
+                    item.class_id === classId ? { ...item, selected: result.selected } : item
+                ))
+            }));
+        } catch (error) {
+            setErrorMessage(error.message || '제한 공개 학급을 저장하지 못했습니다.');
+        } finally {
+            setAction('');
+        }
+    };
+
     const changeRollout = async (mode) => {
         if (action || mode === dashboard?.rollout?.mode) return;
         let confirmation = '';
-        if (mode === 'public_beta') {
+        if (mode === 'limited_beta') {
+            if (limitedClassCount < 2) return;
+            if (!window.confirm('선택한 학급에만 이웃 아지트 실제 기능을 공개할까요?')) return;
+        } else if (mode === 'public_beta') {
             if (!acceptanceReady) return;
             if (!window.confirm('모든 승인 교사에게 실제 이웃 아지트 화면을 공개합니다. 계속할까요?')) return;
             confirmation = window.prompt('확인을 위해 “전체 교사 Beta 공개”를 그대로 입력하세요.') || '';
@@ -166,7 +194,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                         {getModeLabel(dashboard?.rollout?.mode)}
                     </span>
                     <h2 id="neighbor-admin-title">🤝 이웃 아지트 기능 공개</h2>
-                    <p>관리자가 먼저 시험하고 점검표를 모두 확인한 뒤에만 전체 교사 Beta를 열 수 있습니다.</p>
+                    <p>실제 사용 학급만 먼저 제한 공개하고, 전체 교사 공개는 별도 점검 뒤 진행합니다.</p>
                 </div>
                 <Button type="button" variant="outline" loading={loading} onClick={() => loadDashboard(selectedSpaceId || null)}>
                     새로고침
@@ -177,7 +205,9 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                 <strong>현재 일반 교사·학생 공개 상태</strong>
                 <span>{dashboard?.rollout?.mode === 'public_beta'
                     ? '승인 교사에게 실제 화면이 보이며, 학생은 학급별 스위치가 ON일 때만 들어갑니다.'
-                    : '일반 교사는 준비 화면만 보고 학생 진입은 서버에서 차단됩니다.'}</span>
+                    : dashboard?.rollout?.mode === 'limited_beta'
+                        ? `${limitedClassCount}개 선택 학급만 실제 화면을 사용합니다.`
+                        : '일반 교사의 실제 기능과 학생 진입은 서버에서 차단됩니다.'}</span>
             </div>
 
             {errorMessage && <p className="neighbor-admin__message neighbor-admin__message--error" role="alert">{errorMessage}</p>}
@@ -190,6 +220,40 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
             </div>
 
             <div className="neighbor-admin__workspace">
+                <section className="neighbor-admin-card">
+                    <div className="neighbor-admin-card__heading">
+                        <div><span>제한 공개</span><h3>사용 학급 선택</h3></div>
+                        <small>{limitedClassCount}/{limitedClassMax}개 · 선택 학급만 실제 기능 사용</small>
+                    </div>
+                    <div className="neighbor-admin__class-list neighbor-admin__class-list--limited">
+                        {limitedClasses.map((item) => (
+                            <label key={item.class_id}>
+                                <input
+                                    type="checkbox"
+                                    checked={item.selected === true}
+                                    disabled={Boolean(action)
+                                        || (!item.selected && limitedClassCount >= limitedClassMax)}
+                                    onChange={(event) => toggleLimitedClass(item.class_id, event.target.checked)}
+                                />
+                                <span>
+                                    <strong>{item.class_name}</strong>
+                                    <small>{item.teacher_name}{item.has_active_space ? ' · 참여 공간 있음' : ''}</small>
+                                </span>
+                            </label>
+                        ))}
+                        {limitedClasses.length === 0 && <p>제한 공개에 사용할 승인 교사 학급이 없습니다.</p>}
+                    </div>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        loading={action === 'rollout'}
+                        disabled={Boolean(action) || limitedClassCount < 2 || dashboard?.rollout?.mode === 'limited_beta'}
+                        onClick={() => changeRollout('limited_beta')}
+                    >
+                        선택한 학급만 제한 공개
+                    </Button>
+                </section>
+
                 <section className="neighbor-admin-card">
                     <div className="neighbor-admin-card__heading">
                         <div><span>내부 시험</span><h3>시험 공간 만들기</h3></div>

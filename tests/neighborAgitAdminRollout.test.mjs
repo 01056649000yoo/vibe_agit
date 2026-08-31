@@ -30,7 +30,7 @@ test('관리자 운영 묶음에 기능 공개 탭을 두고 이웃 화면은 �
 test('관리자 현황은 전용 RPC 한 번으로 공간·학급·상호작용과 안전한 미리보기를 읽는다', () => {
     const summary = functionSource('get_neighbor_admin_dashboard_v1');
     assert.match(adminApi, /get_neighbor_admin_dashboard_v1/);
-    assert.equal((adminApi.match(/supabase\.rpc\(/g) || []).length, 4);
+    assert.equal((adminApi.match(/supabase\.rpc\(/g) || []).length, 5);
     assert.match(summary, /assert_neighbor_admin_v1\(\)/);
     assert.match(summary, /LIMIT 20/);
     assert.match(summary, /'eligible_classes'/);

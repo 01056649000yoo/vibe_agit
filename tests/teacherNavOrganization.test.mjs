@@ -37,15 +37,13 @@ test('교사 상단 메뉴는 글쓰기 → 학급 관리 → 확장 기능 → 
     );
 });
 
-test('BETA는 준비 중인 우리반·이웃 아지트에만 작은 배지로 표시한다', () => {
+test('BETA 배지는 우리반 아지트에만 두고 이웃 아지트는 제작 중 메뉴명으로 표시한다', () => {
     const badges = TEACHER_NAV_GROUPS
         .filter((group) => group.badge)
         .map((group) => [group.id, group.badge]);
 
-    assert.deepEqual(badges, [
-        ['class-agit', 'BETA'],
-        ['neighbor-agit', 'BETA']
-    ]);
+    assert.deepEqual(badges, [['class-agit', 'BETA']]);
+    assert.equal(TEACHER_NAV_GROUPS.find((group) => group.id === 'neighbor-agit')?.label, '이웃 아지트(제작 중)');
     assert.equal(TEACHER_NAV_GROUPS.find((group) => group.id === 'writing-lab')?.badge, undefined);
     assert.doesNotMatch(TEACHER_NAV_GROUPS.map((group) => group.label).join(' '), /\(beta\)/i);
     assert.match(dashboard, /group\.badge && <span className="teacher-dashboard__nav-badge">/);

@@ -11,6 +11,7 @@ import {
 test('이웃 아지트 공개 단계와 초기 제한은 한 원본에서 fail-closed로 정한다', () => {
     assert.deepEqual(NEIGHBOR_AGIT_ROLLOUT_MODES, {
         INTERNAL: 'internal',
+        LIMITED_BETA: 'limited_beta',
         PUBLIC_BETA: 'public_beta',
         PAUSED: 'paused'
     });
@@ -27,6 +28,8 @@ test('이웃 아지트 공개 단계와 초기 제한은 한 원본에서 fail-c
 test('internal에서는 관리자만 실제 작업 화면을 보고 일반 교사는 준비 화면을 본다', () => {
     assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'internal', isAdmin: true }), 'workspace');
     assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'internal', isAdmin: false }), 'preparation');
+    assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'limited_beta', classAllowed: false }), 'preparation');
+    assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'limited_beta', classAllowed: true }), 'workspace');
     assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'public_beta', isAdmin: false }), 'workspace');
     assert.equal(getNeighborAgitTeacherSurface({ rolloutMode: 'paused', isAdmin: true }), 'paused');
 });
@@ -34,6 +37,7 @@ test('internal에서는 관리자만 실제 작업 화면을 보고 일반 교�
 test('학생은 공개·교사 ON·활성 공간·활성 참여·두 학급 조건이 모두 맞아야 들어간다', () => {
     const allowed = {
         rolloutMode: 'public_beta',
+        classAllowed: false,
         classModuleEnabled: true,
         spaceStatus: 'active',
         membershipStatus: 'active',
@@ -41,6 +45,8 @@ test('학생은 공개·교사 ON·활성 공간·활성 참여·두 학급 조�
     };
 
     assert.equal(canEnterNeighborAgitAsStudent(allowed), true);
+    assert.equal(canEnterNeighborAgitAsStudent({ ...allowed, rolloutMode: 'limited_beta', classAllowed: true }), true);
+    assert.equal(canEnterNeighborAgitAsStudent({ ...allowed, rolloutMode: 'limited_beta', classAllowed: false }), false);
     assert.equal(canEnterNeighborAgitAsStudent({ ...allowed, rolloutMode: 'internal' }), false);
     assert.equal(canEnterNeighborAgitAsStudent({ ...allowed, classModuleEnabled: false }), false);
     assert.equal(canEnterNeighborAgitAsStudent({ ...allowed, spaceStatus: 'closed' }), false);

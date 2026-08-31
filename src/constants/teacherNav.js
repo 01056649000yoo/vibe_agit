@@ -104,12 +104,11 @@ export const TEACHER_NAV_GROUPS = [
     },
     {
         id: 'neighbor-agit',
-        label: '이웃 아지트',
+        label: '이웃 아지트(제작 중)',
         icon: '🤝',
-        badge: 'BETA',
         navSection: 'extensions',
         defaultTab: 'neighbor-agit',
-        tabs: [{ id: 'neighbor-agit', label: '이웃 아지트' }]
+        tabs: [{ id: 'neighbor-agit', label: '이웃 아지트(제작 중)' }]
     },
     {
         id: 'settings',

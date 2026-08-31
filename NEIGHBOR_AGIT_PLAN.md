@@ -1,10 +1,10 @@
 # 이웃 아지트 구현 계획
 
-> **상태**: Step 0~6 구현 완료, Step 7 운영 `internal` 배포와 관리자 테스트 교사·학급 2세트 준비 완료·실화면 인수 대기 (2026-08-30)
+> **상태**: Step 0~7 완료, 실제 학급을 골라 쓰는 `limited_beta` 제한 공개 DB 반영·앱 배포 및 학급 선택 대기 (2026-08-31)
 >
 > **이번 주 목표**: 2026-08-31~09-06에 여러 학급이 초대로 참여하는 글 교류 MVP를 구현하고,
-> 운영 서버에는 **관리자 내부 단계**로만 배포한다. 사용자가 관리자 화면에서 확인하고 명시적으로 승인하기
-> 전에는 실제 기능을 모든 교사에게 공개하지 않는다.
+> 운영 서버에는 먼저 **선택 학급 제한 공개**로 배포한다. 관리자가 고른 학급만 실제 기능을 사용하며,
+> 별도 인수와 명시적 승인 전에는 모든 교사에게 공개하지 않는다.
 >
 > **한 문장 정의**: 한 교사가 만든 공간에 최대 네 학급이 초대로 참여하고, 각 학급 학생이 자기 글을
 > 그대로 소유하면서 교사가 승인한 글만 함께 읽고 한 줄 댓글·공감·간직하기를 하는 안전한 글 교류 공간이다.
@@ -54,11 +54,14 @@
 
 | 단계 | 일반 교사 | 학생 | 관리자 |
 |---|---|---|---|
-| `internal` | 현재의 정적 `준비 중` 화면만 표시 | 메뉴·직접 URL·RPC 모두 차단 | 실제 관리 화면과 교사/학생 미리보기 사용 |
+| `internal` | 선택되지 않은 중립 닫힘 화면 | 메뉴·직접 URL·RPC 모두 차단 | 내부 시험 공간과 미리보기 사용 |
+| `limited_beta` | 관리자가 선택한 학급만 실제 화면 | 선택 학급 중 자기 교사가 ON한 경우만 표시 | 최대 8학급 선택·현황·긴급 중지 |
 | `public_beta` | 모든 승인 교사에게 실제 화면 표시 | 자기 학급 교사가 ON한 경우만 표시 | 현황·긴급 중지·공개 관리 |
 | `paused` | 점검 중 안내만 표시 | 즉시 차단 | 자료 보존 상태로 원인 확인·복구 |
 
 - 초기값과 이번 주 내부 배포값은 반드시 `internal`이다.
+- `limited_beta`는 실제 교사 학급을 최대 8개까지 선택하고, 두 학급 이상 선택했을 때만 전환한다.
+- 선택 해제한 학급은 교사 RPC가 즉시 닫히고 `neighbor-agit` 모듈과 학생 공개도 함께 OFF가 된다.
 - 날짜·배포 완료·테스트 통과만으로 `public_beta`로 자동 전환하지 않는다.
 - 관리자 `운영 → 기능 공개 → 이웃 아지트`에서 합격 항목을 모두 확인한 뒤, 사용자의 명시적 승인과
   2단계 확인을 거쳐야 `public_beta`로 바뀐다.
@@ -68,7 +71,7 @@
 최종 학생 접근 조건은 다음과 같다.
 
 ```text
-공개 단계 = public_beta
+공개 단계 = public_beta OR (limited_beta AND 자기 학급이 제한 공개 목록에 있음)
 AND 자기 학급의 neighbor-agit ON
 AND 공간 = active
 AND 자기 학급 참여 = active
@@ -128,7 +131,7 @@ AND 공간의 활성 학급 수 >= 2
 
 | 표 | 책임 | 핵심 제약·인덱스 |
 |---|---|---|
-| `neighbor_rollout_state` | 전체 공개 단계 단일 행 | `internal/public_beta/paused`, 브라우저 직접 권한 없음 |
+| `neighbor_rollout_state` | 전체 공개 단계 단일 행 | `internal/limited_beta/public_beta/paused`, 브라우저 직접 권한 없음 |
 | `neighbor_spaces` | 공간, 호스트, 상태, 공개용 이름 | 호스트 학급 직접 범위, `status` |
 | `neighbor_space_classes` | 참여 학급, 역할, 승인, 학생 ON/OFF | `UNIQUE(space_id, class_id)`, 활성 학급 인덱스 |
 | `neighbor_invites` | 초대 해시, 만료, 사용·취소 상태 | 원문 미보관, 만료·일회성 |
@@ -141,6 +144,8 @@ AND 공간의 활성 학급 수 >= 2
 | `neighbor_invite_attempts` | 계정별 초대 실패 제한 | 10분 5회 뒤 30초 차단, 키 원문 금지 |
 | `neighbor_rollout_events` | 관리자 공개 단계 변경 감사 이력 | 전·후 단계·점검표·변경자·시각, 브라우저 직접 권한 없음 |
 | `neighbor_internal_test_classes` | 관리자 내부 시험에 쓸 합성 학급 등록부 | 브라우저·`service_role` 직접 권한 없음, 운영 학급 후보 제외 |
+| `neighbor_limited_classes` | 제한 공개할 실제 교사 학급 등록부 | 최대 8개, 내부 시험 학급 제외, 브라우저·`service_role` 직접 권한 없음 |
+| `neighbor_limited_class_events` | 제한 공개 학급 선택·해제 감사 이력 | 변경자·학급·시각, 브라우저·`service_role` 직접 권한 없음 |
 
 모든 학급 관련 표는 `class_id`를 직접 저장하고, 학급 표끼리 조인할 때 `class_id`도 함께 비교한다. 브라우저
 역할에는 전용 표 직접 권한을 주지 않고 RLS를 켠 뒤 기능 전용 RPC만 실행하도록 한다.
@@ -150,8 +155,9 @@ AND 공간의 활성 학급 수 >= 2
 ### 관리자
 
 - `get_neighbor_admin_dashboard_v1` — 탭을 열 때 한 번만 공개 단계·요약·최근 공간 20개·등록된 관리자 테스트
-  학급 최대 100개·선택 공간의 안전한 글 미리보기 최대 20편 반환
+  학급 최대 100개·제한 공개 후보 최대 100개·선택 공간의 안전한 글 미리보기 최대 20편 반환
 - `create_neighbor_internal_trial_v1` — 실제 DB의 `ADMIN`만 `internal`에서 등록된 테스트 학급 2~4개를 학생 공개 OFF로 연결
+- `set_neighbor_limited_class_v1` — 실제 DB의 `ADMIN`만 제한 공개할 실제 교사 학급을 최대 8개까지 선택·해제
 - `set_neighbor_acceptance_check_v1` — 권한·PC·태블릿·모바일·성능·운영 준비 여섯 항목만 저장
 - `change_neighbor_rollout_v1` — 실제 DB의 `ADMIN`만 단계를 전환하며, `public_beta`는 여섯 항목과 정확한
   확인 문구를 서버에서도 요구하고 `neighbor_rollout_events`에 변경 이력을 남김
@@ -162,6 +168,9 @@ AND 공간의 활성 학급 수 >= 2
 - `request_neighbor_join_v1`, `review_neighbor_join_v1`
 - `set_neighbor_class_access_v1`, `leave_neighbor_space_v1`, `close_neighbor_space_v1`
 - `review_neighbor_shared_post_v1`, `moderate_neighbor_item_v1`
+- `get_neighbor_teacher_workspace_v1` — 화면을 열 때 공간·참여 학급·검토 글 100편·공개/숨김 글 50편을 한 번에 반환
+- `get_neighbor_teacher_post_detail_v1` — 교사가 글을 선택할 때 전문과 댓글 최대 100개 반환
+- `run_neighbor_teacher_action_v1` — 관리 행동 한 번과 최신 작업 공간 반환을 RPC 한 번에 처리
 
 교사 RPC는 실제 `classes.teacher_id = auth.uid()`를 확인하고, 관리 대상이 자기 학급인지 또는 자신이 호스트인
 공간 관리인지 구분한다. 클라이언트가 보낸 교사 ID는 신뢰하지 않는다.
@@ -169,6 +178,7 @@ AND 공간의 활성 학급 수 >= 2
 ### 학생
 
 - `request_neighbor_post_share_v1`, `recall_my_neighbor_shared_post_v1` — 기존 제출 글의 공개 신청·본인 회수
+- `get_neighbor_my_share_candidates_v1` — 학생이 공개할 내 글 고르기를 열 때 제출 글 최대 50편 반환
 - `get_neighbor_space_feed_v1(p_space_id, p_limit, p_cursor_at, p_cursor_id)` — 첫 20편, 절대 상한 50
 - `get_neighbor_shared_post_v1(p_space_id, p_shared_post_id)` — 선택한 글 전문과 보이는 댓글
 - `save_neighbor_comment_v1`, `toggle_neighbor_reaction_v1`, `toggle_neighbor_save_v1`
@@ -286,6 +296,13 @@ AND 공간의 활성 학급 수 >= 2
 
 ### 승인 이후 — 별도 작업
 
+- [x] 사용자의 명시적 `선택 학급 제한 공개` 방향 승인 기록 (2026-08-31)
+- [x] 교사 메뉴명을 `이웃 아지트(제작 중)`으로 바꾸고 Beta 배지 제거 (2026-08-31)
+- [x] 관리자 실제 학급 선택·최대 8개·최소 2개 전환, 선택 학급 전용 교사/학생 서버 게이트 구현 (2026-08-31)
+- [x] 교사 공간·초대·승인·학생 공개·글 검토·숨김 화면과 학생 기존 글 공개 신청·회수 화면 구현 (2026-08-31)
+- [x] 제한 공개 마이그레이션 롤백 스모크와 전체 검증 뒤 운영 DB 반영 (243/243, 2026-08-31)
+- [ ] 제한 공개 앱 배포와 운영 상태 검증
+- [ ] 관리자가 사용할 실제 학급을 선택하고 `limited_beta`로 전환
 - [ ] 사용자의 명시적 `전체 교사 공개` 승인 기록
 - [ ] `public_beta` 전환 전 최종 백업과 보안 스모크
 - [ ] 모든 승인 교사에게 실제 메뉴 공개, 모든 학급 학생 스위치 기본 OFF 확인
