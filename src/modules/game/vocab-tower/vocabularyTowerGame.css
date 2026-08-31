@@ -77,6 +77,9 @@
 .vocab-deck-card__heading > span.is-started { background: #dcf5e7; color: #27714c; }
 .vocab-deck-card__heading > span.is-conquered { background: #ffe799; color: #76500a; }
 .vocab-deck-card__heading > span.is-active { background: #f9dc8d; color: #75500b; }
+.vocab-deck-card__difficulty { display: grid; gap: 2px; margin: 0; padding: 8px 10px; border-radius: 11px; background: #eef3ff; }
+.vocab-deck-card__difficulty strong { color: #4059a0; font-size: .72rem; }
+.vocab-deck-card__difficulty span { color: #65728a; font-size: .64rem; font-weight: 750; line-height: 1.4; }
 .vocab-deck-card__progress { display: grid; gap: 5px; }
 .vocab-deck-card__progress > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .vocab-deck-card__progress > div span { color: #657289; font-size: .68rem; font-weight: 800; }
@@ -316,6 +319,9 @@
 .vocab-summary-card__reward strong { color: #cf7c13; font-size: 2.4rem; }
 .vocab-summary-card__reward small { color: #8d733e; }
 .vocab-summary-card > p { color: #6c778a; font-size: .8rem; }
+.vocab-summary-card__difficulty { display: grid; gap: 4px; margin: 12px 0 0; padding: 11px 13px; border-radius: 14px; background: #eef3ff; }
+.vocab-summary-card__difficulty strong { color: #4059a0; }
+.vocab-summary-card__difficulty span { color: #64748b; font-size: .76rem; font-weight: 750; line-height: 1.5; }
 .vocab-summary-card__stats--practice { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .vocab-summary-card__back { width: 100%; min-height: 46px; margin-top: 8px; border: 0; border-radius: 14px; background: #edf0f5; color: #596477; font: inherit; font-weight: 900; cursor: pointer; }
 

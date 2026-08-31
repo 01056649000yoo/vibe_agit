@@ -1,10 +1,12 @@
 import React from 'react';
 import GuideInfoButton from '../../../components/common/GuideInfoButton';
+import { getVocabPracticeDifficultyStage } from './practiceDifficulty';
 
 const V2DeckMap = ({
     grade,
     decks,
     activeRun,
+    practicePolicyVersion,
     submitting,
     notice,
     onStart,
@@ -253,6 +255,9 @@ const V2DeckMap = ({
 
                     {explorationDecks.map((deck) => {
                         const deckNumber = Number(deck.deck_number);
+                        const difficultyStage = Number(practicePolicyVersion) >= 2
+                            ? getVocabPracticeDifficultyStage(deckNumber)
+                            : null;
                         const isActive = activeDeckNumber === deckNumber;
                         // 잠금 판정은 서버 값을 사용한다. 마이그레이션 전 응답은 기존처럼 열림으로 읽는다.
                         const floorUnlocked = deck.unlocked !== false || isActive;
@@ -327,6 +332,12 @@ const V2DeckMap = ({
                                             <strong>전체 {itemCount}개 낱말</strong>
                                             <span className={isActive ? 'is-active' : isConquered ? 'is-conquered' : hasPractice ? 'is-started' : ''}>{cardStatus}</span>
                                         </div>
+                                        {difficultyStage && (
+                                            <p className="vocab-deck-card__difficulty">
+                                                <strong>{difficultyStage.label}</strong>
+                                                <span>{difficultyStage.description}</span>
+                                            </p>
+                                        )}
                                         <div className="vocab-deck-card__progress">
                                             <div><span>한 번 이상 학습한 낱말</span><strong>{seenCount}/{itemCount}</strong></div>
                                             <span className="vocab-deck-card__progress-track" aria-hidden="true">

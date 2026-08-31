@@ -6,6 +6,10 @@ import V2DeckMap from './V2DeckMap';
 import V2CardBox from './V2CardBox';
 import V2DeckMaster, { V2DeckMasterSummary } from './V2DeckMaster';
 import { mapV2Question, ROOM_INFO } from './vocabTowerEngine';
+import {
+    getVocabPracticeDifficultyStage,
+    getVocabPracticeNextFloorHint
+} from './practiceDifficulty';
 import './vocabularyTowerGame.css';
 
 const BOONS = Object.freeze([
@@ -117,7 +121,8 @@ const VocabularyTowerGame = ({
                 // 자격 판단은 서버가 한다. 화면은 받은 값을 그리기만 한다.
                 summit: data.summit || null,
                 masterSettings: data.master_settings || null,
-                summitSettings: data.summit_settings || null
+                summitSettings: data.summit_settings || null,
+                practicePolicyVersion: Number(data.practice_policy_version || 1)
             });
             setSelectedDeck(data.active_run?.deck_number ? Number(data.active_run.deck_number) : null);
             setPhase('deck-map');
@@ -487,6 +492,7 @@ const VocabularyTowerGame = ({
                 grade={selectedGrade}
                 decks={v2Decks}
                 activeRun={status?.active_run}
+                practicePolicyVersion={status?.practicePolicyVersion}
                 submitting={submitting}
                 notice={notice}
                 onStart={handleStart}
@@ -594,12 +600,21 @@ const VocabularyTowerGame = ({
 
     if (phase === 'summary' && summary) {
         if (isV2) {
+            const difficultyStage = Number(status?.practicePolicyVersion) >= 2
+                ? getVocabPracticeDifficultyStage(summary.deck_number)
+                : null;
             return (
                 <div className="vocab-journey vocab-journey--summary">
                     <main className="vocab-summary-card">
                         <span className="vocab-summary-card__icon">📚</span>
                         <p className="vocab-intro-card__eyebrow">{summary.deck_number}층 개인 연습 결과</p>
                         <h1>{summary.practice_completed ? '12문항 연습을 마쳤어요!' : '오늘 배운 곳까지 저장했어요'}</h1>
+                        {difficultyStage && (
+                            <p className="vocab-summary-card__difficulty">
+                                <strong>{difficultyStage.label} 수련</strong>
+                                <span>{getVocabPracticeNextFloorHint(summary.deck_number)}</span>
+                            </p>
+                        )}
                         <div className="vocab-summary-card__stats vocab-summary-card__stats--practice">
                             <div><span>풀은 문항</span><strong>{summary.answer_count}/{summary.target_question_count}</strong></div>
                             <div><span>정답</span><strong>{summary.correct_count}개</strong></div>
@@ -647,11 +662,17 @@ const VocabularyTowerGame = ({
         );
     }
 
+    const difficultyStage = isV2 && Number(status?.practicePolicyVersion) >= 2
+        ? getVocabPracticeDifficultyStage(selectedDeck)
+        : null;
+
     return (
         <div className={`vocab-journey vocab-journey--floor-${isV2 ? selectedDeck : run.currentFloor}`}>
             <header className="vocab-journey__header">
                 <button type="button" onClick={() => { setReturnPhase(phase); setPhase('confirm'); }}>← 나가기</button>
-                <div><span>{isV2 ? `${selectedDeck}층 개인 연습` : `${run.currentFloor}층`}</span><strong>{currentQuiz?.room?.name || '층 보상 선택'}</strong></div>
+                <div><span>{isV2
+                    ? `${selectedDeck}층${difficultyStage ? ` · ${difficultyStage.label}` : ''}`
+                    : `${run.currentFloor}층`}</span><strong>{currentQuiz?.room?.name || '층 보상 선택'}</strong></div>
                 {isV2
                     ? <div className="vocab-journey__timer">{run.answerCount}/{run.targetQuestionCount}</div>
                     : <div className={`vocab-journey__timer${timeLeft <= 10 ? ' is-low' : ''}`}>⏱ {timeLeft}초</div>}
