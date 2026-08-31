@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, learningStateGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -33,6 +33,7 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261112_vocab_tower_v2_progress_rewards.sql', 'utf8'),
     readFile('supabase/migrations/20261113_vocab_tower_v2_retry_practice.sql', 'utf8'),
     readFile('src/modules/game/vocab-tower/towerGuide.js', 'utf8'),
+    readFile('src/modules/game/vocab-tower/learningStateGuide.js', 'utf8'),
     readFile('src/components/student/StudentModuleGuide.jsx', 'utf8'),
     readFile('src/components/student/AgitPlayground.jsx', 'utf8'),
     readFile('src/components/student/AgitPlayground.css', 'utf8'),
@@ -211,10 +212,11 @@ test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적�
     assert.match(v2ItemLearningMigration, /v_target_focus := CASE MOD\(v_sequence - 1, 12\)/);
     assert.match(v2ItemLearningMigration, /'practice_focus', v_existing\.selection_focus/);
     assert.match(v2ItemLearningMigration, /'mastered_count', v_mastered_count/);
-    assert.match(v2DeckMap, /처음 볼 낱말/);
-    assert.match(v2DeckMap, /연습 중/);
-    assert.match(v2DeckMap, /다시 볼 낱말/);
-    assert.match(v2DeckMap, /완전히 익힘/);
+    assert.match(v2DeckMap, /VOCAB_LEARNING_STATE_GUIDE/);
+    assert.match(learningStateGuide, /처음 볼 낱말/);
+    assert.match(learningStateGuide, /연습 중/);
+    assert.match(learningStateGuide, /다시 볼 낱말/);
+    assert.match(learningStateGuide, /완전히 익힘/);
     assert.match(v2DeckMap, /deck\.learning_count[\s\S]*deck\.familiar_count/);
     assert.match(vocabularyGame, /복습할 낱말/);
 });
@@ -395,7 +397,10 @@ test('교사 도움말은 포인트 지급 기준을 오해하지 않도록 설�
 
 test('학생 도움말은 포인트·익힘 규칙을 쉬운 말로 알려준다', () => {
     assert.match(towerGuide, /한 판을 다 맞혀야 주는 게 아니에요/);
-    assert.match(towerGuide, /서로 다른 두 가지 문제를 연달아 맞혀야 익힘이에요/);
+    assert.match(learningStateGuide, /서로 다른 두 가지 문제 형태를 힌트 없이 연속으로 맞혀야/);
+    assert.match(learningStateGuide, /중간에 틀리거나 힌트를 사용하면 연속 정답은 다시 시작/);
+    assert.match(learningStateGuide, /보통 3일 뒤.*보통 14일 뒤/);
+    assert.match(learningStateGuide, /맞힌 낱말을 되풀이하지 않아요/);
     assert.match(towerGuide, /직접 쓰다가 틀려도 점수가 깎이지 않아요/);
     assert.match(towerGuide, /서너 문제 뒤에[^.]*다시 나와요/);
     assert.match(towerGuide, /별은 포인트와 상관없는 기록이에요/);
@@ -596,20 +601,23 @@ test('어휘의 탑 교사 화면은 실제 출제 형태를 설명한다', asyn
  *    이 검사는 두 화면이 **같은 네 이름**을 쓰는지, 그리고 포인트가 통과 보상이 아니라
  *    나눠 받는 것이라는 설명이 두 곳에 다 있는지 한꺼번에 본다.
  */
-test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화면이 같은 말로 설명한다', async () => {
-    const [teacher, student] = await Promise.all([
+test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화면이 같은 원본으로 설명한다', async () => {
+    const [teacher, student, stateGuide] = await Promise.all([
         readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
-        readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8')
+        readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
+        readFile('src/modules/game/vocab-tower/learningStateGuide.js', 'utf8')
     ]);
 
-    // 네 이름은 두 화면이 똑같아야 한다.
+    // 학생 지도는 별도 문장을 복사하지 않고 공용 원본을 반복해 그린다.
+    assert.match(student, /VOCAB_LEARNING_STATE_GUIDE\.states\.map/);
+    assert.match(student, /VOCAB_LEARNING_STATE_GUIDE\.details\.map/);
     for (const state of ['처음 볼 낱말', '연습 중', '다시 볼 낱말', '완전히 익힘']) {
         assert.ok(teacher.includes(state), `교사 화면에 '${state}' 설명이 없다`);
-        assert.ok(student.includes(state), `학생 화면에 '${state}'가 없다`);
+        assert.ok(stateGuide.includes(state), `학생 공용 원본에 '${state}'가 없다`);
     }
 
     // 완전히 익힘의 조건은 두 화면 모두 같은 기준을 적어야 한다.
-    for (const [name, source] of [['교사', teacher], ['학생', student]]) {
+    for (const [name, source] of [['교사', teacher], ['학생', stateGuide]]) {
         assert.ok(source.includes('두 형태를 힌트 없이 연속') || source.includes('두 가지 문제 형태를 힌트 없이 연속'),
             `${name} 화면에 완전히 익힘 조건이 없다`);
     }
@@ -617,7 +625,7 @@ test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화�
     // 포인트는 통과 보상이 아니라 나눠 받는 것이다 — 여기가 가장 헷갈리는 지점이다.
     assert.ok(teacher.includes('네 번 나눠'), '교사 화면이 포인트를 나눠 준다고 설명하지 않는다');
     assert.ok(teacher.includes('덱마스터 통과로는 포인트가 나오지 않습니다'), '교사 화면이 통과 보상 오해를 막지 않는다');
-    assert.ok(student.includes('네 번 나눠 받아요'), '학생 화면이 포인트를 나눠 받는다고 알려주지 않는다');
+    assert.ok(stateGuide.includes('네 번 나눠 받아요'), '학생 화면이 포인트를 나눠 받는다고 알려주지 않는다');
 
     // 학생 화면은 `💡 도움말` 알약을 눌러 창으로 본다. ⓘ 아이콘은 다른 뜻이라 쓰지 않는다.
     assert.ok(student.includes('variant="help"'), '학생 낱말 상태 도움말이 공용 도움말 모양이 아니다');

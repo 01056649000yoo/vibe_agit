@@ -185,3 +185,28 @@ test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을
     assert.match(tools, /`URL 단축하기`.*쌤링크/);
     assert.match(tools, /`얘들아, 밥 먹자!`.*학생 정보가 빠진 급식판/);
 });
+
+test('오늘 확장한 어휘·칭호·학급 발자국 도움말은 실제 집계와 운영 규칙을 설명한다', () => {
+    const vocab = guideText(TEACHER_GUIDES['vocab-tower']);
+    const footprints = guideText(TEACHER_GUIDES.footprints);
+    const dragon = guideText(TEACHER_GUIDES.dragon);
+
+    assert.match(vocab, /같은 형태만 반복해 맞히면 연습 중/);
+    assert.match(vocab, /틀리거나 힌트를 쓰면 연속 정답은 다시 0/);
+    assert.match(vocab, /낮은 층.*선택형.*높은 층.*직접 입력/);
+    assert.match(vocab, /보통 \*\*3일 뒤\*\*.*보통 \*\*14일 뒤\*\*/);
+    assert.match(vocab, /맞힌 낱말은 반복 출제하지 않/);
+
+    assert.match(footprints, /맨 위 12개 숫자/);
+    for (const label of ['과제 글', '독서록', '일기', '학급 활동일', '활동 포인트', '교사 조정']) {
+        assert.ok(footprints.includes(label), `학급 발자국 도움말에 '${label}'이 없다`);
+    }
+    assert.match(footprints, /교사 승인 시각.*완료본 생성 시각/);
+    assert.match(footprints, /다시쓰기·수정 제출·교사 피드백/);
+    assert.match(footprints, /시작 보너스는 활동 포인트에서 제외/);
+
+    assert.match(dragon, /작가·소통·기록가·독서가 단계/);
+    assert.match(dragon, /기록가·독서가 2~7단계 보상.*종목별 총 5,000P/);
+    assert.match(dragon, /자동 지급되지 않고.*받을 보상 모두 받기/);
+    assert.match(dragon, /시즌 종료.*미수령 보상.*받을 수 없/);
+});

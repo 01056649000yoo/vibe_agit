@@ -101,6 +101,11 @@
 .vocab-states-help__list .is-learning { background: #eef0ff; color: #4d56a3; }
 .vocab-states-help__list .is-review { background: #fff0f1; color: #b23d4b; }
 .vocab-states-help__list .is-mastered { background: #e5f7ec; color: #217047; }
+.vocab-states-help__details { margin-top: 12px; padding: 11px 12px; border-radius: 12px; background: #f4f7ff; color: #31456e; }
+.vocab-states-help__details > strong { display: block; font-size: .86rem; }
+.vocab-states-help__details ul { margin: 7px 0 0; padding-left: 18px; }
+.vocab-states-help__details li { font-size: .78rem; line-height: 1.55; }
+.vocab-states-help__details li + li { margin-top: 4px; }
 .vocab-states-help__note { margin: 14px 0 0; padding: 10px 12px; border-radius: 12px; background: #fff8e6; color: #7a5b12; font-size: .82rem; line-height: 1.55; text-align: center; }
 .vocab-deck-card__states { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vocab-deck-card__states > div { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; padding: 7px 8px; border-radius: 10px; }

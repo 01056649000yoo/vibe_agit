@@ -41,6 +41,15 @@ export const TITLE_TRACKS = Object.freeze({
     })
 });
 
+/** 학생 칭호 상세와 교사 도움말이 같은 시즌·보상 원칙을 설명하도록 하는 안내 원본. */
+export const TITLE_SYSTEM_GUIDE = Object.freeze({
+    season: '작가·소통·기록가·독서가 네 칭호는 같은 학기 시즌에서 함께 자라요.',
+    reset: '성장 마감 기간에는 수치가 멈추고, 새 학기를 시작할 때 네 칭호가 첫 단계로 돌아가요. 이미 쓴 글·보유 포인트·구입한 소품은 사라지지 않아요.',
+    reward: '기록가·독서가는 2~7단계 달성 보상이 자동 지급되지 않아요. 해제된 단계의 `받기`를 학생이 직접 눌러야 하며, 각 보상은 한 시즌에 한 번만 받아요.',
+    rewardDeadline: '보상은 이미 올라간 단계도 받을 수 있고, 성장 마감 기간까지 받을 수 있어요. 시즌 종료 후에는 지난 시즌의 미수령 보상을 받을 수 없어요.',
+    activityOnly: '작가·소통 칭호는 단계 보상 버튼이 없고, 글쓰기·소통 활동의 기존 보상을 그대로 받아요.'
+});
+
 export const getTitleTrack = (kind) => {
     if (kind === 'reader') return TITLE_TRACKS.reader;
     if (kind === 'diary') return TITLE_TRACKS.diary;

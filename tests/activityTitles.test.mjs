@@ -148,9 +148,11 @@ test('친구 아지트는 기존 명단 RPC 한 번으로 네 칭호 원자료�
 });
 
 test('기록가·독서가 보상은 시즌별 각각 5,000P이며 작가·소통에는 붙지 않는다', async () => {
-    const [migration, tracks] = await Promise.all([
+    const [migration, tracks, teacherGuides, panel] = await Promise.all([
         read('supabase/migrations/20261206_title_season_rewards.sql'),
-        read('src/modules/writing/title-status/titleTracks.js')
+        read('src/modules/writing/title-status/titleTracks.js'),
+        read('src/constants/teacherGuides.js'),
+        read('src/modules/writing/title-status/MyTitleStatusPanel.jsx')
     ]);
     const rewardArrays = [...migration.matchAll(/"(?:diary|reading)":\[(.*?)\]/g)]
         .map((match) => match[1].split(',').map(Number));
@@ -164,6 +166,29 @@ test('기록가·독서가 보상은 시즌별 각각 5,000P이며 작가·소�
     assert.match(tracks, /id: 'reader', rewardEnabled: false/);
     assert.match(tracks, /id: 'diary', rewardEnabled: true/);
     assert.match(tracks, /id: 'reading', rewardEnabled: true/);
+    assert.match(teacherGuides, /200·400·600·800·1,200·1,800P/);
+    assert.match(teacherGuides, /종목별 총 5,000P/);
+    assert.match(panel, /totalRewardPoints = rewardTrack\.levels\.reduce/);
+});
+
+test('학생 칭호 도움말은 네 칭호의 공용 시즌과 기록가·독서가 직접 수령 규칙을 안내한다', async () => {
+    const [panel, tracks] = await Promise.all([
+        read('src/modules/writing/title-status/MyTitleStatusPanel.jsx'),
+        read('src/modules/writing/title-status/titleTracks.js')
+    ]);
+
+    assert.match(tracks, /TITLE_SYSTEM_GUIDE = Object\.freeze/);
+    assert.match(tracks, /작가·소통·기록가·독서가.*같은 학기 시즌/);
+    assert.match(tracks, /새 학기.*첫 단계/);
+    assert.match(tracks, /쓴 글·보유 포인트·구입한 소품.*사라지지 않/);
+    assert.match(tracks, /자동 지급되지 않/);
+    assert.match(tracks, /한 시즌에 한 번/);
+    assert.match(tracks, /성장 마감 기간까지/);
+    assert.match(tracks, /시즌 종료 후.*미수령 보상.*받을 수 없/);
+    assert.match(panel, /TITLE_SYSTEM_GUIDE\.season/);
+    assert.match(panel, /TITLE_SYSTEM_GUIDE\.reset/);
+    assert.match(panel, /TITLE_SYSTEM_GUIDE\.reward/);
+    assert.match(panel, /totalRewardPoints/);
 });
 
 test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같은 모양으로 만든다', () => {

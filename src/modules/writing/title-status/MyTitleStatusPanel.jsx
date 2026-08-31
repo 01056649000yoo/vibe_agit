@@ -4,7 +4,7 @@ import ModalPortal from '../../../components/common/ModalPortal';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import useMyTitleStatus from './useMyTitleStatus';
 import TitleArtwork from './TitleArtwork';
-import { getTitleTrack } from './titleTracks';
+import { getTitleTrack, TITLE_SYSTEM_GUIDE } from './titleTracks';
 import { getTitleRewardTrack } from './titleSeason';
 
 const INK = '#3E2E23';
@@ -99,6 +99,7 @@ const TitleGuide = ({
 }) => {
     if (!kind) return null;
     const track = getTitleTrack(kind);
+    const totalRewardPoints = rewardTrack.levels.reduce((sum, reward) => sum + Number(reward.points || 0), 0);
 
     return (
         <ModalPortal>
@@ -127,9 +128,22 @@ const TitleGuide = ({
                             style={{ alignSelf: 'flex-start' }} />
                     </header>
                     <div style={{ padding: '14px 18px 20px' }}>
-                        <p style={{ margin: '0 0 13px', color: INK_SOFT, fontSize: '.78rem', fontWeight: 750, lineHeight: 1.55 }}>
-                            {track.description}
-                        </p>
+                        <div role="note" aria-label={`${track.label} 성장·시즌 안내`} style={{
+                            marginBottom: '13px', padding: '11px 13px', border: `1px solid ${track.accent}55`,
+                            borderRadius: '14px', background: `${track.accent}0D`, color: INK_SOFT
+                        }}>
+                            <strong style={{ display: 'block', color: track.deepAccent, fontSize: '.78rem', fontWeight: 950 }}>
+                                이 칭호는 이렇게 자라요
+                            </strong>
+                            <ul style={{ margin: '7px 0 0', paddingLeft: '18px', fontSize: '.74rem', fontWeight: 750, lineHeight: 1.55 }}>
+                                <li>{track.description}</li>
+                                <li>{TITLE_SYSTEM_GUIDE.season}</li>
+                                <li>{TITLE_SYSTEM_GUIDE.reset}</li>
+                                <li>{track.rewardEnabled
+                                    ? `${TITLE_SYSTEM_GUIDE.reward} ${TITLE_SYSTEM_GUIDE.rewardDeadline}${totalRewardPoints > 0 ? ` 이 칭호의 한 시즌 총보상은 ${num(totalRewardPoints)}P예요.` : ''}`
+                                    : TITLE_SYSTEM_GUIDE.activityOnly}</li>
+                            </ul>
+                        </div>
                         {track.rewardEnabled && rewardsEnabled && rewardTrack.claimableTotal > 0 ? (
                             <button
                                 type="button"

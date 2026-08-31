@@ -1,6 +1,7 @@
 import React from 'react';
 import GuideInfoButton from '../../../components/common/GuideInfoButton';
 import { getVocabPracticeDifficultyStage } from './practiceDifficulty';
+import { VOCAB_LEARNING_STATE_GUIDE } from './learningStateGuide';
 
 const V2DeckMap = ({
     grade,
@@ -514,26 +515,20 @@ const V2DeckMap = ({
                         <span className="vocab-journey__dialog-icon" aria-hidden="true">🧩</span>
                         <h2 id="vocab-states-help-title">낱말 상태는 이런 뜻이에요</h2>
                         <ul className="vocab-states-help__list">
-                            <li className="is-new">
-                                <strong>처음 볼 낱말</strong>
-                                <span>아직 한 번도 만나지 않았어요. 연습하면 여기부터 줄어들어요.</span>
-                            </li>
-                            <li className="is-learning">
-                                <strong>연습 중</strong>
-                                <span>만나 봤지만 아직 익히는 중이에요. 조금 더 연습하면 돼요.</span>
-                            </li>
-                            <li className="is-review">
-                                <strong>다시 볼 낱말</strong>
-                                <span>틀렸던 낱말이에요. 이 층을 연습하면 <b>먼저 나와요</b>.</span>
-                            </li>
-                            <li className="is-mastered">
-                                <strong>완전히 익힘</strong>
-                                <span><b>서로 다른 두 가지 문제 형태를 힌트 없이 연속으로</b> 맞힌 낱말이에요.</span>
-                            </li>
+                            {VOCAB_LEARNING_STATE_GUIDE.states.map((state) => (
+                                <li key={state.id} className={state.className}>
+                                    <strong>{state.label}</strong>
+                                    <span>{state.description}</span>
+                                </li>
+                            ))}
                         </ul>
-                        <p className="vocab-states-help__note">
-                            포인트는 <b>완전히 익힘</b>이 늘어날 때 4분의 1, 반, 4분의 3, 전부에서 <b>네 번 나눠 받아요</b>.
-                        </p>
+                        <div className="vocab-states-help__details" role="note" aria-label="완전히 익힘과 복습 규칙">
+                            <strong>완전히 익히려면</strong>
+                            <ul>
+                                {VOCAB_LEARNING_STATE_GUIDE.details.map((line) => <li key={line}>{line}</li>)}
+                            </ul>
+                        </div>
+                        <p className="vocab-states-help__note">{VOCAB_LEARNING_STATE_GUIDE.reward}</p>
                         <div className="vocab-journey__dialog-actions">
                             <button type="button" onClick={() => setStatesHelpOpen(false)}>알겠어요</button>
                         </div>
