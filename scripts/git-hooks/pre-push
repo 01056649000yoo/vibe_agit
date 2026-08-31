@@ -68,8 +68,12 @@ echo "${GREEN}✔ 검사 ${PASSED}개 통과.${OFF}"
 # 아무것도 밀 수 없게 된다. 볼 수 있을 때만 본다.
 if MIGRATE_STATUS="$(npm run migrate:status --silent 2>/dev/null)"; then
     # ⚠️ 파일 이름 앞자리(202x)로 거르지 않는다. 이름 규칙이 바뀌면 조용히 못 잡는다.
-    #    `migrate:status` 가 대기 목록을 3칸 들여쓴 `.sql` 줄로 내는 것만 믿는다.
-    PENDING="$(printf '%s' "$MIGRATE_STATUS" | sed -n 's/^   \([^ ].*\.sql\)$/\1/p')"
+    #    체크섬 경고에도 3칸 들여쓴 `.sql`이 있으므로 반드시 `적용 대기:` 구역 안에서만 읽는다.
+    PENDING="$(printf '%s' "$MIGRATE_STATUS" | awk '
+        $0 == "적용 대기:" { reading_pending = 1; next }
+        reading_pending && /^   [^ ].*\.sql$/ { sub(/^   /, ""); print; next }
+        reading_pending { exit }
+    ')"
     if [ -n "$PENDING" ]; then
         echo
         echo "${RED}✖ 운영 DB에 아직 안 넣은 마이그레이션이 있습니다.${OFF}"

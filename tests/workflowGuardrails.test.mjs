@@ -22,6 +22,14 @@ test('배포 관문이 검사 전체를 돌린다', async () => {
     assert.match(dockerfile, /RUN npm run test:all/, '배포 관문이 검사 전체를 돌리지 않는다');
 });
 
+test('푸시 관문은 체크섬 경고를 미적용 마이그레이션으로 오인하지 않는다', async () => {
+    const hook = await read('scripts/git-hooks/pre-push');
+
+    assert.match(hook, /\$0 == "적용 대기:" \{ reading_pending = 1; next \}/);
+    assert.ok(hook.includes('reading_pending && /^   [^ ].*\\.sql$/'));
+    assert.doesNotMatch(hook, /sed -n 's\/\^   /);
+});
+
 test('확인표 명령이 살아 있고 사람만 아는 여섯 가지를 본다', async () => {
     const [pkg, script] = await Promise.all([
         read('package.json'),
