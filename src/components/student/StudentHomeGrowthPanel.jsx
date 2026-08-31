@@ -66,10 +66,12 @@ const StudentHomeGrowthPanel = ({
                         <span><small>보유 포인트</small><strong>{formatPoints(points)}P</strong></span>
                         <em>놀이터 가기</em>
                     </button>
-                    <TitleSummary kind="writer" level={writerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
-                    <TitleSummary kind="reader" level={readerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
-                    <TitleSummary kind="diary" level={diaryLevel} loading={titleLoading} onClick={onOpenMyAgit} />
-                    <TitleSummary kind="reading" level={readingLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                    <div className="student-home-title-grid" role="group" aria-label="나의 칭호">
+                        <TitleSummary kind="writer" level={writerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                        <TitleSummary kind="reader" level={readerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                        <TitleSummary kind="diary" level={diaryLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                        <TitleSummary kind="reading" level={readingLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                    </div>
                 </div>
             </div>
 

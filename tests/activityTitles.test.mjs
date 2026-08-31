@@ -86,11 +86,12 @@ test('기록가·독서가 원자료는 확인 완료 글만 날짜와 서로 �
 });
 
 test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서 네 가지 칭호를 함께 표시한다', async () => {
-    const [hook, panel, teacher, home, dashboard, tracks] = await Promise.all([
+    const [hook, panel, teacher, home, homeCss, dashboard, tracks] = await Promise.all([
         read('src/modules/writing/title-status/useMyTitleStatus.js'),
         read('src/modules/writing/title-status/MyTitleStatusPanel.jsx'),
         read('src/components/teacher/TeacherStudentAgitViewer.jsx'),
         read('src/components/student/StudentHomeGrowthPanel.jsx'),
+        read('src/components/student/StudentHomeGrowthPanel.css'),
         read('src/components/student/StudentDashboard.jsx'),
         read('src/modules/writing/title-status/titleTracks.js')
     ]);
@@ -106,6 +107,8 @@ test('학생 홈·나의 아지트·교사 화면은 기존 칭호 RPC 안에서
     for (const kind of ['writer', 'reader', 'diary', 'reading']) {
         assert.equal(home.includes(`TitleSummary kind="${kind}"`), true);
     }
+    assert.match(home, /className="student-home-title-grid" role="group" aria-label="나의 칭호"/);
+    assert.match(homeCss, /\.student-home-title-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
     assert.match(dashboard, /diaryLevel={diaryLevel}/);
     assert.match(dashboard, /readingLevel={readingLevel}/);
     assert.match(tracks, /작가 칭호[\s\S]*소통 칭호[\s\S]*기록가 칭호[\s\S]*독서가 칭호/);
