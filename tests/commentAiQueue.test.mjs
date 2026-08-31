@@ -16,7 +16,8 @@ const [
     guides,
     playground,
     footprint,
-    writerLevels
+    writerLevels,
+    hiddenCommentPoints
 ] = await Promise.all([
     readFile('src/components/student/CommentComposer.jsx', 'utf8'),
     readFile('src/components/student/PostDetailModal.jsx', 'utf8'),
@@ -31,7 +32,8 @@ const [
     readFile('src/constants/teacherGuides.js', 'utf8'),
     readFile('src/components/student/AgitPlayground.jsx', 'utf8'),
     readFile('src/modules/writing/writing-footprint/FootprintVisuals.jsx', 'utf8'),
-    readFile('src/constants/writerLevels.js', 'utf8')
+    readFile('src/constants/writerLevels.js', 'utf8'),
+    readFile('supabase/migrations/20261215_hide_retired_comment_points.sql', 'utf8')
 ]);
 
 const extractLowEffortComments = (source) => {
@@ -102,9 +104,11 @@ test('댓글 승인 경로와 활성 포인트 계약에서 신규 댓글 보상
     assert.doesNotMatch(postDetail, /댓글 쓰면 5P|댓글.*5P/);
 });
 
-test('과거 댓글 포인트는 이전 기록으로 남고 원장 삭제 SQL은 만들지 않는다', () => {
-    assert.match(playground, /comment_reward: '친구 댓글 보상 · 이전 기록'/);
-    assert.match(footprint, /comment_reward: '친구 댓글\(이전 기록\)'/);
+test('과거 댓글 포인트는 원장만 보존하고 학생 활동 화면에서는 표시하지 않는다', () => {
+    assert.doesNotMatch(playground, /comment_reward|친구 댓글 보상/);
+    assert.doesNotMatch(footprint, /comment_reward|친구 댓글\(이전 기록\)/);
+    assert.match(hiddenCommentPoints, /activity_type, 'etc'\) <> 'comment_reward'/);
+    assert.match(hiddenCommentPoints, /get_my_point_history_v1/);
     assert.doesNotMatch(retirementMigration, /DELETE\s+FROM\s+public\.point_logs/i);
     assert.doesNotMatch(retirementMigration, /DROP\s+(?:TABLE|COLUMN)[\s\S]*comment_reward/i);
 });
@@ -132,6 +136,7 @@ test('교사 도움말은 학생 확인·3건 대기열·실패 댓글 처리 �
     assert.match(commentsGuide, /내가 쓴 댓글을 한 번 읽어 보세요/);
     assert.match(commentsGuide, /최대 3건씩/);
     assert.match(commentsGuide, /두 번 실패/);
-    assert.match(commentsGuide, /포인트 대신 \*\*소통 칭호 성장\*\*/);
-    assert.match(commentsGuide, /과거에 받은 댓글 포인트와 내역은 그대로 유지/);
+    assert.match(commentsGuide, /댓글은 포인트를 주지 않고/);
+    assert.match(commentsGuide, /\*\*소통 칭호 성장\*\*에만 반영/);
+    assert.match(commentsGuide, /과거 포인트 잔액은 그대로 유지/);
 });

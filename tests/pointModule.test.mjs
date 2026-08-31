@@ -74,14 +74,19 @@ test('학생 놀이터는 포인트 지갑과 모으기·쓰기 모듈 계약을
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_my_point_history_v1\(INTEGER\) FROM PUBLIC, anon/);
 });
 
-test('과거 댓글 포인트는 내부 PostID 없이 이전 기록으로만 표시한다', async () => {
+test('과거 댓글 포인트는 원장과 잔액만 보존하고 현재 학생 화면에서는 숨긴다', async () => {
     const playground = await read('src/components/student/AgitPlayground.jsx');
+    const footprint = await read('src/modules/writing/writing-footprint/FootprintVisuals.jsx');
     const migration = await read('supabase/migrations/20261182_normalize_historical_comment_point_reasons.sql');
+    const hiddenMigration = await read('supabase/migrations/20261215_hide_retired_comment_points.sql');
 
-    assert.match(playground, /comment_reward: '친구 댓글 보상 · 이전 기록'/);
-    assert.match(playground, /log\.activity_type === 'comment_reward'[\s\S]*ACTIVITY_LABELS\.comment_reward/);
+    assert.doesNotMatch(playground, /comment_reward|친구 댓글 보상/);
+    assert.doesNotMatch(footprint, /comment_reward|친구 댓글\(이전 기록\)/);
+    assert.match(hiddenMigration, /get_my_writing_footprint_detail_core_v1/);
+    assert.match(hiddenMigration, /get_my_point_history_v1/);
+    assert.match(hiddenMigration, /'version', 2/);
+    assert.match(hiddenMigration, /NOT IN \([\s\S]*'private_adjustment', 'starting_bonus', 'comment_reward'/);
     assert.match(migration, /UPDATE public\.point_logs[\s\S]*SET reason = '친구 댓글 보상 · 이전 기록'[\s\S]*WHERE activity_type = 'comment_reward'/);
-    assert.match(migration, /WHEN point_log\.activity_type = 'comment_reward'[\s\S]*THEN '친구 댓글 보상 · 이전 기록'/);
     assert.doesNotMatch(migration, /SET\s+(?:amount|activity_type|post_id|student_id)\s*=/i);
 });
 

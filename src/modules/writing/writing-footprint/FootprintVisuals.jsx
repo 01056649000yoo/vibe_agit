@@ -15,10 +15,10 @@ const POINT_LABELS = {
     meeting_activity: '회의 활동',
     starting_bonus: '시작 보너스',
     title_reward: '칭호 단계 보상',
-    comment_reward: '친구 댓글(이전 기록)',
     private_adjustment: '선생님 조정',
     etc: '기타'
 };
+const VISIBLE_POINT_TYPES = new Set(Object.keys(POINT_LABELS));
 
 const CHART_W = 510;
 const AXIS_L = 20;
@@ -243,17 +243,20 @@ export const TrendLine = ({ rows, valueKey, unit, fluid = false, compact = false
 };
 
 export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact = false, unit = 'P' }) => {
-    if (!rows.length) return <p style={{
+    // 현재 앱이 지원하는 활동 유형만 표시한다. 종료된 보상이나 알 수 없는 과거 유형을
+    // 새 활동처럼 학생·교사 발자국에 다시 노출하지 않는다.
+    const visibleRows = rows.filter((row) => VISIBLE_POINT_TYPES.has(row.type));
+    if (!visibleRows.length) return <p style={{
         color: INK_SOFT, fontSize: compact ? 'var(--footprint-fs-sm, .7rem)' : '.85rem',
         ...(compact ? { flex: 1, display: 'grid', placeItems: 'center', margin: 0 } : {})
     }}>{emptyMessage}</p>;
-    const maximum = Math.max(...rows.map((row) => Number(row.total || 0)), 1);
+    const maximum = Math.max(...visibleRows.map((row) => Number(row.total || 0)), 1);
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', gap: compact ? '4px' : '9px',
             flex: compact ? 1 : undefined, justifyContent: compact ? 'space-evenly' : undefined, minHeight: 0
         }}>
-            {rows.map((row) => <div key={row.type} style={{ display: 'grid', gridTemplateColumns: compact ? '68px minmax(0,1fr) 48px' : '86px minmax(0,1fr) 62px', alignItems: 'center', gap: compact ? '6px' : '10px' }}>
+            {visibleRows.map((row) => <div key={row.type} style={{ display: 'grid', gridTemplateColumns: compact ? '68px minmax(0,1fr) 48px' : '86px minmax(0,1fr) 62px', alignItems: 'center', gap: compact ? '6px' : '10px' }}>
                 <span title={POINT_LABELS[row.type] || row.type} style={{ fontSize: compact ? 'var(--footprint-fs-sm, .64rem)' : '.8rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {POINT_LABELS[row.type] || row.type}
                 </span>

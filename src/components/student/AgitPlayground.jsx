@@ -34,9 +34,9 @@ const ACTIVITY_LABELS = Object.freeze({
     hideout_purchase: '아지트 꾸미기',
     starting_bonus: '첫 포인트',
     title_reward: '칭호 단계 보상',
-    comment_reward: '친구 댓글 보상 · 이전 기록',
     private_adjustment: '선생님 포인트 조정'
 });
+const VISIBLE_ACTIVITY_TYPES = new Set(Object.keys(ACTIVITY_LABELS));
 
 const formatPoints = (value) => Number(value || 0).toLocaleString('ko-KR');
 
@@ -63,7 +63,9 @@ const getHistoryGroupLabel = (value) => {
     return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 };
 
-const groupHistory = (logs) => logs.reduce((groups, log) => {
+const groupHistory = (logs) => logs.filter(
+    (log) => VISIBLE_ACTIVITY_TYPES.has(log.activity_type)
+).reduce((groups, log) => {
     const label = getHistoryGroupLabel(log.created_at);
     const lastGroup = groups.at(-1);
     if (lastGroup?.label === label) {
@@ -74,11 +76,7 @@ const groupHistory = (logs) => logs.reduce((groups, log) => {
     return groups;
 }, []);
 
-const getHistoryReason = (log) => (
-    log.activity_type === 'comment_reward'
-        ? ACTIVITY_LABELS.comment_reward
-        : (log.reason || ACTIVITY_LABELS[log.activity_type] || '포인트 활동')
-);
+const getHistoryReason = (log) => log.reason || ACTIVITY_LABELS[log.activity_type] || '포인트 활동';
 
 /**
  * 카드 전체가 콘텐츠를 여는 버튼이므로, 안내 버튼은 그 **안에 넣을 수 없다**(버튼 중첩 금지).
