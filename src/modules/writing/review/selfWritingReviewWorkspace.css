@@ -1,6 +1,6 @@
 .self-writing-review-summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     margin: 12px 0 10px;
 }
@@ -21,6 +21,7 @@
 
 .self-writing-review-summary button.is-active { border-color: #93C5FD; background: #EFF6FF; color: #1D4ED8; }
 .self-writing-review-summary button.unreviewed.is-active { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
+.self-writing-review-summary button.revision_requested.is-active { border-color: #FDBA74; background: #FFF7ED; color: #C2410C; }
 .self-writing-review-summary button.reviewed.is-active { border-color: #86EFAC; background: #F0FDF4; color: #15803D; }
 .self-writing-review-summary strong { color: inherit; font-size: 1.12rem; line-height: 1; }
 .self-writing-review-summary small { color: inherit; font-size: .75rem; font-weight: 900; }
@@ -96,6 +97,13 @@
 .self-writing-queue-card:hover { border-color: #F59E0B; box-shadow: 0 5px 14px rgba(180,83,9,.08); }
 .self-writing-queue-card.is-selected { border-color: #60A5FA; box-shadow: 0 0 0 2px rgba(96,165,250,.18); }
 .self-writing-queue-card.is-record { grid-template-columns: minmax(0, 1fr); }
+.self-writing-queue-card.is-revision {
+    border-color: #FDBA74;
+    background: linear-gradient(145deg, #FFF7ED, #FFFFFF);
+}
+.self-writing-queue-card.is-revision:hover { border-color: #F97316; box-shadow: 0 5px 14px rgba(194,65,12,.1); }
+.self-writing-queue-card.is-revision .self-writing-queue-card__top,
+.self-writing-queue-card.is-revision .self-writing-queue-card__action { color: #C2410C; }
 .self-writing-queue-card.is-reading {
     border-color: #BFDBFE;
     background: linear-gradient(145deg, #EFF6FF, #FFFFFF);
@@ -172,11 +180,13 @@
 .self-writing-student-card__identity small { overflow: hidden; color: #94A3B8; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
 .self-writing-student-card__main em { grid-column: 2; color: #2563EB; font-size: .68rem; font-style: normal; font-weight: 900; }
 .self-writing-student-card.is-diary .self-writing-student-card__main em { color: #6D28D9; }
-.self-writing-student-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid #F1F5F9; background: #F8FAFC; }
+.self-writing-student-card__stats { display: grid; grid-template-columns: repeat(4, 1fr); border-block: 1px solid #F1F5F9; background: #F8FAFC; }
 .self-writing-student-card__stats span { display: flex; align-items: center; justify-content: center; padding: 8px 3px; color: #64748B; font-size: .66rem; font-weight: 800; gap: 3px; }
 .self-writing-student-card__stats strong { color: #334155; font-size: .82rem; }
 .self-writing-student-card__stats .has-unread,
 .self-writing-student-card__stats .has-unread strong { color: #B45309; }
+.self-writing-student-card__stats .has-revision,
+.self-writing-student-card__stats .has-revision strong { color: #C2410C; }
 .self-writing-student-card__export { width: 100%; padding: 9px 10px; border: 0; background: #FFFFFF; color: #475569; cursor: pointer; font-size: .7rem; font-weight: 900; }
 .self-writing-student-card__export:hover { background: #EFF6FF; color: #1D4ED8; }
 .self-writing-student-card.is-diary .self-writing-student-card__export:hover { background: #F5F3FF; color: #6D28D9; }

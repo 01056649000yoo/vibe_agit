@@ -12,6 +12,7 @@ import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import {
     SelfWritingBulkToolbar,
     getSelfWritingRecordTone,
+    getSelfWritingReviewLabel,
     SelfWritingQueueCard,
     SelfWritingReviewSummary,
     SelfWritingReviewViewTabs
@@ -37,7 +38,7 @@ const STUDENT_DIARY_LIMIT = 100;
 const EMPTY_OVERVIEW = Object.freeze({
     total: 0,
     pending_count: 0,
-    counts: { total: 0, unreviewed: 0, reviewed: 0, students: 0 },
+    counts: { total: 0, unreviewed: 0, revision_requested: 0, reviewed: 0, students: 0 },
     items: []
 });
 
@@ -163,7 +164,8 @@ const TeacherDiaryManager = ({ activeClass }) => {
                 counts: {
                     total,
                     unreviewed,
-                    reviewed: Number(data?.counts?.reviewed ?? Math.max(0, total - unreviewed)),
+                    revision_requested: Number(data?.counts?.revision_requested || 0),
+                    reviewed: Number(data?.counts?.reviewed || 0),
                     students: Number(data?.counts?.students || 0)
                 },
                 items: Array.isArray(data?.items) ? data.items : []
@@ -326,6 +328,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
 
     const emptyMessage = useMemo(() => {
         if (view === 'queue' || filter === 'unreviewed') return '확인을 기다리는 일기가 없어요. 모두 살펴보셨습니다. ✅';
+        if (filter === 'revision_requested') return '현재 보완을 요청한 일기가 없어요.';
         if (filter === 'reviewed') return '아직 확인한 일기가 없어요.';
         return '학생이 쓴 일기가 아직 없어요.';
     }, [filter, view]);
@@ -341,7 +344,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
     }, [students]);
 
     const selectableIds = useMemo(
-        () => overview.items.filter((item) => !item.review_status).map((item) => item.post_id),
+        () => overview.items.filter((item) => item.review_status === 'unreviewed').map((item) => item.post_id),
         [overview.items]
     );
     const allLoadedSelected = selectableIds.length > 0
@@ -487,7 +490,6 @@ const TeacherDiaryManager = ({ activeClass }) => {
                         <>
                             <div className="self-writing-student-grid">
                                 {activeStudents.map((student) => {
-                                    const reviewedCount = Math.max(0, Number(student.total) - Number(student.unreviewed));
                                     const isOpen = openStudentId === student.student_id;
                                     return (
                                         <article key={student.student_id} className={`self-writing-student-card is-diary ${isOpen ? 'is-open' : ''}`}>
@@ -507,7 +509,8 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                             <div className="self-writing-student-card__stats">
                                                 <span><strong>{student.total}</strong>전체</span>
                                                 <span className={student.unreviewed > 0 ? 'has-unread' : ''}><strong>{student.unreviewed}</strong>미확인</span>
-                                                <span><strong>{reviewedCount}</strong>확인</span>
+                                                <span className={student.revision_requested > 0 ? 'has-revision' : ''}><strong>{student.revision_requested}</strong>보완</span>
+                                                <span><strong>{student.reviewed}</strong>완료</span>
                                             </div>
                                             <button
                                                 type="button"
@@ -542,9 +545,8 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                                 className="self-writing-shelf-card is-diary"
                                                 onClick={() => openDiary(item)}
                                             >
-                                                <span className={`self-writing-shelf-card__status ${item.review_status === 'revision_requested' ? 'is-revision' : item.review_status ? 'is-checked' : ''}`}>
-                                                    {item.review_status === 'revision_requested' ? '✏️ 보완 요청'
-                                                        : item.review_status ? '✅ 확인함' : '🕓 확인 대기'}
+                                                <span className={`self-writing-shelf-card__status ${item.review_status === 'revision_requested' ? 'is-revision' : item.review_status === 'checked' || item.review_status === 'commented' ? 'is-checked' : ''}`}>
+                                                    {getSelfWritingReviewLabel(item.review_status)}
                                                 </span>
                                                 <h4>{item.title || '제목 없는 일기'}</h4>
                                                 <p>{item.char_count || 0}자 · {item.visibility === 'class' ? '친구 공개' : '나만 보기'}</p>
@@ -617,7 +619,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                 studentName={item.student_name || '이름 없음'}
                                 dateLabel={formatDiaryDate(item.diary_date)}
                                 title={item.title || '제목 없는 일기'}
-                                secondary={`${item.char_count || 0}자 · ${item.visibility === 'class' ? '친구 공개' : '나만 보기'} · ${item.review_status === 'revision_requested' ? '보완 요청' : item.review_status ? '확인함' : '확인 대기'}`}
+                                secondary={`${item.char_count || 0}자 · ${item.visibility === 'class' ? '친구 공개' : '나만 보기'} · ${getSelfWritingReviewLabel(item.review_status)}`}
                                 selectable={false}
                                 tone={getSelfWritingRecordTone(item.review_status, 'diary')}
                                 actionLabel="일기 보기 ›"

@@ -35,6 +35,7 @@
     "test:activity-titles": "node --test tests/activityTitles.test.mjs",
     "test:vocab-tower": "node --test tests/vocabTower.test.mjs tests/vocabTowerWordAudit.test.mjs tests/vocabTowerReviewWorkspace.test.mjs",
     "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs tests/readingBookCover.test.mjs",
+    "test:self-writing-review-status": "node --test tests/selfWritingReviewStatus.test.mjs tests/readingMarathon.test.mjs",
     "test:teacher-agit": "node --test tests/teacherStudentAgit.test.mjs",
     "test:teacher-submission-board": "node --test tests/teacherSubmissionBoard.test.mjs",
     "test:teacher-mission-card-size": "node --test tests/teacherMissionCardSize.test.mjs",
