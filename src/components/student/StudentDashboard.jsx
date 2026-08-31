@@ -15,6 +15,8 @@ import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
 import ActivityNotificationPanel from '../../modules/notifications/ActivityNotificationPanel';
 import { studentHomeApi } from '../../modules/home/studentHomeApi';
+import { getDragonStoryRecommendation } from '../../modules/game/dragon/storyRecommendations';
+import { getStudentBottomNavDestination } from './studentNavigation';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -56,7 +58,9 @@ const StudentDashboard = ({
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
     const [myAgitInitialPost, setMyAgitInitialPost] = useState(null);
+    const [myAgitInitialTitle, setMyAgitInitialTitle] = useState(null);
     const [activityOverride, setActivityOverride] = useState(null);
+    const [isGuideActivityOpen, setIsGuideActivityOpen] = useState(false);
     const [growthCelebration, setGrowthCelebration] = useState(null);
     const [openSpeciesPickerAfterGrowth, setOpenSpeciesPickerAfterGrowth] = useState(false);
 
@@ -86,6 +90,7 @@ const StudentDashboard = ({
             setIsFootprintOpen(false);
             setIsGuideOpen(false);
             setMyAgitInitialPost(null);
+            setMyAgitInitialTitle(null);
             setIsMyAgitOpen(true);
             onMyAgitSignalHandled?.();
         }, 0);
@@ -97,6 +102,7 @@ const StudentDashboard = ({
         const timerId = window.setTimeout(() => {
             setIsMyAgitOpen(false);
             setMyAgitInitialPost(null);
+            setMyAgitInitialTitle(null);
             setIsShopOpen(false);
             setIsDragonModalOpen(false);
             setActiveGameModuleId(null);
@@ -113,6 +119,7 @@ const StudentDashboard = ({
         const timerId = window.setTimeout(() => {
             setIsMyAgitOpen(false);
             setMyAgitInitialPost(null);
+            setMyAgitInitialTitle(null);
             setIsPlaygroundOpen(false);
             setIsShopOpen(false);
             setIsDragonModalOpen(false);
@@ -272,12 +279,61 @@ const StudentDashboard = ({
         badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${displayPetData.level}` : null,
         onOpen: () => openGameModule(module)
     }));
+    const dragonStoryRecommendation = getDragonStoryRecommendation(
+        enabledModules,
+        studentSession?.id
+    );
+
+    const openDragonStoryRecommendation = (recommendation) => {
+        const action = recommendation?.action;
+        if (!action) return;
+        if (action.type === 'shop') {
+            setIsShopOpen(true);
+            return;
+        }
+        setIsDragonModalOpen(false);
+        setOpenSpeciesPickerAfterGrowth(false);
+        if (action.type === 'module') {
+            const module = enabledModules.find((item) => item.id === action.moduleId);
+            if (module) openGameModule(module);
+            return;
+        }
+        if (action.type === 'navigate' && action.target) onNavigate(action.target);
+    };
+
+    const openStudentGuideDestination = (destination) => {
+        if (!destination) return;
+        setIsGuideOpen(false);
+        if (destination.type === 'tab') {
+            const target = getStudentBottomNavDestination(destination.tabId);
+            if (target.overlay === 'my_agit') {
+                setMyAgitInitialPost(null);
+                setMyAgitInitialTitle(null);
+                setIsMyAgitOpen(true);
+                return;
+            }
+            if (target.overlay === 'playground') {
+                setIsPlaygroundOpen(true);
+                return;
+            }
+            onNavigate(target.pageName, target.params);
+            return;
+        }
+        if (destination.type === 'route') {
+            onNavigate(destination.pageName);
+            return;
+        }
+        if (destination.action === 'feedback') openFeedback(0);
+        if (destination.action === 'activity') setIsGuideActivityOpen(true);
+        if (destination.action === 'footprint') setIsFootprintOpen(true);
+    };
 
     return (
         <>
             <StudentGuideModal
                 isOpen={isGuideOpen}
                 onClose={() => setIsGuideOpen(false)}
+                onSelectDestination={openStudentGuideDestination}
             />
 
             <Card
@@ -290,7 +346,7 @@ const StudentDashboard = ({
                         hasActivity={hasActivity}
                         onOpenFootprint={() => setIsFootprintOpen(true)}
                         openFeedback={openFeedback}
-                        setIsGuideOpen={setIsGuideOpen}
+                        onOpenGuide={() => setIsGuideOpen(true)}
                         onLogout={onLogout}
                     />
 
@@ -309,6 +365,7 @@ const StudentDashboard = ({
                         marathonMedalCount={Number(homeBootstrap?.reading_marathon?.medal_count) || 0}
                         onOpenMyAgit={() => {
                             setMyAgitInitialPost(null);
+                            setMyAgitInitialTitle(null);
                             setIsMyAgitOpen(true);
                         }}
                         onOpenDragon={() => setIsDragonModalOpen(true)}
@@ -348,9 +405,17 @@ const StudentDashboard = ({
                         }}
                         onNavigate={onNavigate}
                         onOpenPost={(post) => {
+                            setMyAgitInitialTitle(null);
                             setMyAgitInitialPost(post);
                             setIsMyAgitOpen(true);
                         }}
+                        onOpenTitle={(trackId) => {
+                            setMyAgitInitialPost(null);
+                            setMyAgitInitialTitle(trackId);
+                            setIsMyAgitOpen(true);
+                        }}
+                        requestedOpen={isGuideActivityOpen}
+                        onRequestedOpenClose={() => setIsGuideActivityOpen(false)}
                     />
                 </div>
 
@@ -360,6 +425,7 @@ const StudentDashboard = ({
                     onNavigate={onNavigate}
                     onOpenMyAgit={() => {
                         setMyAgitInitialPost(null);
+                        setMyAgitInitialTitle(null);
                         setIsMyAgitOpen(true);
                     }}
                     onOpenPlayground={() => setIsPlaygroundOpen(true)}
@@ -383,9 +449,11 @@ const StudentDashboard = ({
                             onClose={() => {
                                 setIsMyAgitOpen(false);
                                 setMyAgitInitialPost(null);
+                                setMyAgitInitialTitle(null);
                             }}
                             studentSession={studentSession}
                             initialPost={myAgitInitialPost}
+                            initialTitleKind={myAgitInitialTitle}
                             closeOnInitialPostClose={Boolean(myAgitInitialPost)}
                             points={points}
                             onPointsChange={setPoints}
@@ -396,6 +464,7 @@ const StudentDashboard = ({
                             onOpenModule={(module) => {
                                 setIsMyAgitOpen(false);
                                 setMyAgitInitialPost(null);
+                                setMyAgitInitialTitle(null);
                                 openGameModule(module);
                             }}
                         />
@@ -447,6 +516,8 @@ const StudentDashboard = ({
                             readerLevel={readerLevel}
                             selectSpecies={selectSpecies}
                             initiallyOpenSpeciesPicker={openSpeciesPickerAfterGrowth}
+                            storyRecommendation={dragonStoryRecommendation}
+                            onOpenRecommendation={openDragonStoryRecommendation}
                             onGoWrite={(target) => {
                                 setIsDragonModalOpen(false);
                                 setOpenSpeciesPickerAfterGrowth(false);

@@ -22,6 +22,12 @@ export const vocabTowerManifest = {
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100 },
   // enabled_modules가 아직 NULL인 학급의 기존 상태 및 롤백 호환용 미러 컬럼.
   legacyFlag: 'vocab_tower_enabled',
+  studentRecommendation: {
+    icon: '🏰', title: '어휘의 탑에 올라가 봐',
+    message: '낱말을 여러 번 정확히 익히면 층을 열고 포인트도 모을 수 있어.',
+    ctaLabel: '어휘의 탑 가보기', order: 20,
+    action: { type: 'module', moduleId: 'vocab-tower' }
+  },
   studentEntry: () => import('./StudentEntry'),
   teacherEntry: () => import('./TeacherManager'),
   playground: {

@@ -67,8 +67,16 @@
     color: var(--ui-ink-muted) !important;
     box-shadow: none !important;
 }
+.student-home-toolbar__guide {
+    min-height: var(--ui-control-md);
+    border-color: transparent;
+    border-radius: var(--ui-radius-pill);
+    background: transparent;
+    color: var(--ui-ink-muted);
+}
 @media (hover: hover) {
     .student-home-toolbar__action:hover,
+    .student-home-toolbar__guide:hover,
     .student-home-toolbar__logout:hover { border-color: var(--ui-border) !important; background: var(--ui-surface) !important; }
     .student-home-toolbar__action.has-notice:hover { border-color: #F08D7D !important; background: #FFF7F4 !important; }
 }
@@ -93,6 +101,8 @@
     }
     .student-home-toolbar__notice-full { display: none; }
     .student-home-toolbar__notice-compact { display: inline; }
+    .student-home-toolbar__guide { width: 100%; min-height: var(--ui-control-md); padding: 7px 4px; border-radius: 12px; }
+    .student-home-toolbar__guide > span:last-child { display: none; }
     .student-home-toolbar__logout { width: 100%; padding: 6px !important; font-size: var(--ui-text-sm) !important; }
 }
 @media (prefers-reduced-motion: reduce) {

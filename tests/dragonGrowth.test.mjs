@@ -13,6 +13,7 @@ import {
     shouldOpenDragonSpeciesReselectionAfterGrowth
 } from '../src/modules/game/dragon/presentation.js';
 import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
+import { getDragonStoryRecommendation } from '../src/modules/game/dragon/storyRecommendations.js';
 import {
     DEFAULT_EQUIPPED_DECOR,
     DRAGON_DECOR_COLLECTIONS,
@@ -50,6 +51,42 @@ test('테스트 칭호 오버라이드는 실제 글 통계를 바꾸지 않고 
     assert.equal(reader.name, '소통 달인');
     assert.equal(reader.isTestOverride, true);
     assert.equal(getReaderLevel(0, 999).level, 1);
+});
+
+test('오늘의 드래곤 활용 추천은 활성 모듈만 하루 한 가지씩 순환한다', () => {
+    const enabledModules = [
+        { id: 'dragon', studentRecommendation: { title: '공방', order: 20, action: { type: 'shop' } } },
+        { id: 'vocab', studentRecommendation: { title: '어휘', order: 10, action: { type: 'module', moduleId: 'vocab' } } },
+        { id: 'unused' }
+    ];
+    const firstDay = new Date('2026-08-31T00:00:00.000Z');
+    const secondDay = new Date('2026-09-01T00:00:00.000Z');
+    const first = getDragonStoryRecommendation(enabledModules, 'student-1', firstDay);
+
+    assert.equal(getDragonStoryRecommendation(enabledModules, 'student-1', firstDay), first);
+    assert.notEqual(getDragonStoryRecommendation(enabledModules, 'student-1', secondDay), first);
+    assert.equal(['공방', '어휘'].includes(first.title), true);
+    assert.equal(getDragonStoryRecommendation([{ id: 'empty' }], 'student-1', firstDay), null);
+});
+
+test('들려줄 글이 없을 때만 드래곤 추천과 기존 글쓰기 버튼을 함께 보여 준다', async () => {
+    const [modal, css, types, dragonManifest, vocabManifest] = await Promise.all([
+        readFile('src/modules/game/dragon/DragonHideoutModal.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/DragonHideoutModal.css', 'utf8'),
+        readFile('src/modules/types.js', 'utf8'),
+        readFile('src/modules/game/dragon/manifest.js', 'utf8'),
+        readFile('src/modules/game/vocab-tower/manifest.js', 'utf8')
+    ]);
+
+    assert.match(modal, /bondReaction\.storyState === 'none'/);
+    assert.match(modal, /오늘의 아지트 활용 추천/);
+    assert.match(modal, /storyRecommendation\.ctaLabel/);
+    assert.match(modal, /과제 글쓰기/);
+    assert.match(modal, /독서록 쓰기/);
+    assert.match(css, /dragon-room-modal__recommendation/);
+    assert.match(types, /studentRecommendation/);
+    assert.match(dragonManifest, /action: \{ type: 'shop' \}/);
+    assert.match(vocabManifest, /moduleId: 'vocab-tower'/);
 });
 
 test('실제 성장과 테스트 성장은 서로 다른 확인 기록을 사용한다', () => {

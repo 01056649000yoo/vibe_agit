@@ -41,6 +41,8 @@
  *   새 자율 글 모듈은 화면을 고치지 않고 이 계약만 선언한다.
  * @property {Array<{eventType: string, icon: string, tone: string, title: string, message: string|Function, action: 'confirm'|'rewrite'|'post'|'custom', actionLabel: string, handleAction?: Function}>} [notifications]
  *   기능 RPC가 발행하는 학생 활동 알림의 표시 계약. 공용 알림 셸은 이 목록을 자동으로 합친다.
+ * @property {{icon: string, title: string, message: string, ctaLabel: string, order: number, action: {type: 'shop'|'module'|'navigate', moduleId?: string, target?: string}}} [studentRecommendation]
+ *   오늘 들려줄 글이 없을 때 수호룡이 하루 한 가지 보여 주는 활용 안내. 활성 모듈의 선언만 추천한다.
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [available] false면 코드·데이터는 보존하되 교사·학생 UI에서 숨김
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
@@ -105,6 +107,14 @@ export function validateManifest(m) {
         problems.push(`notifications.${index}.handleAction 없음`);
       }
     });
+  }
+  if (m.studentRecommendation) {
+    const recommendation = m.studentRecommendation;
+    if (!recommendation.title || !recommendation.message || !recommendation.ctaLabel) problems.push('studentRecommendation 문구 없음');
+    if (!Number.isInteger(recommendation.order)) problems.push('studentRecommendation.order는 정수여야 함');
+    if (!['shop', 'module', 'navigate'].includes(recommendation.action?.type)) problems.push('studentRecommendation.action 유효하지 않음');
+    if (recommendation.action?.type === 'module' && !recommendation.action.moduleId) problems.push('studentRecommendation.action.moduleId 없음');
+    if (recommendation.action?.type === 'navigate' && !recommendation.action.target) problems.push('studentRecommendation.action.target 없음');
   }
   if (m.communityFeed) {
     if (m.communityFeed.group !== 'self') problems.push('communityFeed.group은 self여야 함');

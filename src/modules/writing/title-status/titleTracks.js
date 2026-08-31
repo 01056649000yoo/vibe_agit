@@ -3,7 +3,7 @@ import {
     READER_LEVELS,
     READING_LEVELS,
     WRITER_LEVELS
-} from '../../../constants/writerLevels';
+} from '../../../constants/writerLevels.js';
 
 /** 네 성장 칭호의 화면 이름·색·그림 방식을 모든 학생 화면이 함께 쓰는 원본. */
 export const TITLE_TRACKS = Object.freeze({

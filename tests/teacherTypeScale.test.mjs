@@ -49,6 +49,7 @@ const MIGRATED = [
     'src/components/student/MyShelfPostDetail.jsx',
     'src/components/student/StudentFeedbackModal.jsx',
     'src/components/student/StudentGuideModal.jsx',
+    'src/components/student/StudentGuideModal.css',
     'src/components/student/MissionList.jsx',
     'src/components/student/StudentWriting.jsx',
     'src/components/student/StudentLogin.jsx',

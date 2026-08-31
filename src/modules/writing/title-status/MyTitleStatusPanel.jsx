@@ -211,8 +211,16 @@ const TitleGuide = ({
     );
 };
 
-const MyTitleStatusPanel = ({ active = true, studentSession, points = 0, onPointsChange }) => {
-    const [activeGuide, setActiveGuide] = useState(null);
+const MyTitleStatusPanel = ({
+    active = true,
+    studentSession,
+    points = 0,
+    onPointsChange,
+    initialGuideKind = null
+}) => {
+    const [activeGuide, setActiveGuide] = useState(() => (
+        ['reader', 'diary', 'reading'].includes(initialGuideKind) ? initialGuideKind : null
+    ));
     const {
         status,
         writerLevel,

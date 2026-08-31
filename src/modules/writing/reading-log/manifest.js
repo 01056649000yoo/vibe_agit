@@ -44,6 +44,12 @@ export const readingLogManifest = {
     core: true,
     performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 50 },
     studentRoute: 'reading_logs',
+    studentRecommendation: {
+        icon: '📚', title: '오늘 읽은 책을 남겨 봐',
+        message: '책에서 기억에 남은 장면과 내 생각을 독서록 한 편으로 적어 둘 수 있어.',
+        ctaLabel: '독서록 쓰기', order: 30,
+        action: { type: 'navigate', target: 'reading_logs' }
+    },
     communityFeed: {
         group: 'self',
         label: '독서록',

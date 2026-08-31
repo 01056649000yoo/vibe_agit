@@ -40,7 +40,7 @@ const getBondReaction = (bond) => {
             ? `「${bond.storyTitle}」 오늘 선생님께 보냈구나! 승인되면 자세히 들려줘.`
             : '오늘 쓴 글을 선생님께 보냈구나! 승인되면 자세히 들려줘.';
     }
-    return '오늘은 아직 들려줄 이야기가 없네. 한 편 쓰고 다시 와 줄래?';
+    return '오늘은 들려줄 이야기가 없구나. 그럼 내가 아지트의 비밀 하나를 알려줄게!';
 };
 
 const DragonHideoutModal = ({
@@ -58,6 +58,8 @@ const DragonHideoutModal = ({
     readerLevel,
     selectSpecies,
     onGoWrite,
+    storyRecommendation,
+    onOpenRecommendation,
     initiallyOpenSpeciesPicker = false
 }) => {
     const [bondFeedback, setBondFeedback] = useState('idle');
@@ -177,10 +179,24 @@ const DragonHideoutModal = ({
                                             <motion.div role="status" aria-live="polite" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="dragon-room-modal__bond-message">
                                                 <p>{petData.name || '작가 수호룡'}: “{getBondReaction(bondReaction)}”</p>
                                                 {bondReaction.storyState === 'none' && onGoWrite && (
-                                                    <div className="dragon-room-modal__bond-actions">
-                                                        <button type="button" onClick={() => onGoWrite('mission_list')}>과제 글쓰기</button>
-                                                        <button type="button" onClick={() => onGoWrite('reading_logs')}>독서록 쓰기</button>
-                                                    </div>
+                                                    <>
+                                                        {storyRecommendation && (
+                                                            <section className="dragon-room-modal__recommendation" aria-label="오늘의 아지트 활용 추천">
+                                                                <span aria-hidden="true">{storyRecommendation.icon}</span>
+                                                                <div>
+                                                                    <strong>{storyRecommendation.title}</strong>
+                                                                    <small>{storyRecommendation.message}</small>
+                                                                </div>
+                                                                <button type="button" onClick={() => onOpenRecommendation?.(storyRecommendation)}>
+                                                                    {storyRecommendation.ctaLabel}
+                                                                </button>
+                                                            </section>
+                                                        )}
+                                                        <div className="dragon-room-modal__bond-actions">
+                                                            <button type="button" onClick={() => onGoWrite('mission_list')}>과제 글쓰기</button>
+                                                            <button type="button" onClick={() => onGoWrite('reading_logs')}>독서록 쓰기</button>
+                                                        </div>
+                                                    </>
                                                 )}
                                             </motion.div>
                                         )}

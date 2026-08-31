@@ -14,5 +14,11 @@ export const friendsHideoutManifest = {
   core: true, // 모듈 구조·지연 로딩은 유지하지만 학급별로 끌 수 없다.
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 50 },
   studentRoute: 'friends_hideout',
+  studentRecommendation: {
+    icon: '👀', title: '친구 아지트에 놀러 가 봐',
+    message: '친구 글을 읽고 따뜻한 반응이나 댓글을 남기면 소통 칭호가 자라.',
+    ctaLabel: '친구 아지트 가기', order: 50,
+    action: { type: 'navigate', target: 'friends_hideout' }
+  },
   studentEntry: () => import('./FriendsHideout'),
 };

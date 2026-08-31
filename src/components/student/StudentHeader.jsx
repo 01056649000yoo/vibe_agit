@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
+import GuideInfoButton from '../common/GuideInfoButton';
 import './StudentHeader.css';
 
 const HeaderAction = ({ icon, label, onClick, hasNotice = false }) => (
@@ -23,7 +24,7 @@ const HeaderAction = ({ icon, label, onClick, hasNotice = false }) => (
     </motion.button>
 );
 
-const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout, onOpenFootprint }) => (
+const StudentHeader = ({ hasActivity, openFeedback, onOpenGuide, onLogout, onOpenFootprint }) => (
     <header className="student-home-toolbar">
         <div className="student-home-toolbar__brand">
             <span aria-hidden="true">✏️</span>
@@ -32,7 +33,13 @@ const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout, on
         <nav aria-label="학생 홈 도움 메뉴" className="student-home-toolbar__actions">
             <HeaderAction icon="🔔" label="내 글 소식" onClick={() => openFeedback(0)} hasNotice={hasActivity} />
             <HeaderAction icon="👣" label="글쓰기 발자국" onClick={onOpenFootprint} />
-            <HeaderAction icon="?" label="사용법" onClick={() => setIsGuideOpen(true)} />
+            <GuideInfoButton
+                variant="help"
+                text="사용법"
+                label="학생 대시보드 사용법 보기"
+                className="student-home-toolbar__guide"
+                onClick={onOpenGuide}
+            />
             <Button variant="ghost" size="sm" onClick={onLogout} className="student-home-toolbar__logout">
                 로그아웃
             </Button>

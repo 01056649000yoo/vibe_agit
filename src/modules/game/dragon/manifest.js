@@ -18,6 +18,11 @@ export const dragonManifest = {
   audience: 'student',
   defaultEnabled: true, // 기존 동작 보존: 지금까지 모든 학급에 노출돼 있었음
   performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 0 },
+  studentRecommendation: {
+    icon: '🎁', title: '아지트 공방을 구경해 봐',
+    message: '모은 포인트로 수호룡의 방을 꾸미고, 산 소품은 언제든 다시 꺼내 쓸 수 있어.',
+    ctaLabel: '공방 구경하기', order: 10, action: { type: 'shop' }
+  },
   studentEntry: () => import('./DragonHideoutModal'),
   myAgitEntry: () => import('./MyAgitCard'),
   teacherEntry: () => import('./TeacherManager'),

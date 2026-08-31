@@ -29,6 +29,18 @@
 - 현재 메뉴 강조는 `getStudentActiveBottomTab`에서 정한다. 새 하위 페이지가 생기면 어느 메뉴 소속인지 이
   함수에 명시하고, 하단 메뉴 소속이 아니면 억지로 홈을 활성화하지 않고 `null`을 사용한다.
 
+## 학생 홈 전체 사용법
+
+- 상단 `사용법` 창의 문구·순서·바로 가기는 `studentGuide.js`가 유일한 원본이다.
+- 하단 메뉴에 있는 목적지는 `pageName`을 다시 적지 않고 `destination: { type: 'tab', tabId }`만 선언한다.
+  실제 페이지와 나의 아지트·놀이터 오버레이 연결은 `studentNavigation.js`가 결정한다.
+- 일기처럼 하단 메뉴가 아닌 최상위 화면은 `route`, 내 글 소식·활동 알림·글쓰기 발자국처럼 홈 안에서 여는
+  창은 `dashboard-action`을 사용한다. 새 동작 종류를 임의로 늘리기 전에 기존 메뉴·모달로 갈 수 있는지 확인한다.
+- 설명은 초등학생이 한 번에 읽을 수 있는 두 문장 이내로 쓰고, 모든 항목에 실제 이동 버튼을 둔다. 도움말을 여는
+  상단 버튼은 공용 `GuideInfoButton`을 사용한다.
+- 메뉴를 추가하거나 이름·공개 범위를 바꾸면 실제 화면과 `studentGuide.js`를 같은 작업에서 고치고
+  `tests/studentGuide.test.mjs`와 `tests/studentNavigation.test.mjs`를 함께 실행한다.
+
 ## 방문 기록
 
 - 학생 방문 기록에는 `studentPage`, `studentParams`, `studentParent`를 함께 저장한다. 이름만 저장하면 독서록

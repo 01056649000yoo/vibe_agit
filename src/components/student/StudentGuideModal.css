@@ -1,0 +1,85 @@
+.student-guide { display: grid; gap: var(--ui-space-6); }
+
+.student-guide__intro {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-5);
+    border: 1px solid #FCD34D;
+    border-radius: var(--ui-radius-lg);
+    background: #FFFBEB;
+    color: #713F12;
+}
+.student-guide__intro > span { font-size: var(--ui-text-3xl); }
+.student-guide__intro strong { display: block; font-size: var(--ui-text-lg); font-weight: 900; }
+.student-guide__intro p { margin: 4px 0 0; font-size: var(--ui-text-md); line-height: 1.55; }
+
+.student-guide__section { display: grid; gap: var(--ui-space-3); }
+.student-guide__section > header h4 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-lg);
+    font-weight: 900;
+}
+.student-guide__section > header p {
+    margin: 4px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: 1.5;
+}
+.student-guide__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-3); }
+.student-guide__card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--ui-space-3);
+    align-items: start;
+    padding: var(--ui-space-4);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-xs);
+}
+.student-guide__icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-muted);
+    font-size: var(--ui-text-xl);
+}
+.student-guide__copy { min-width: 0; }
+.student-guide__copy h5 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-md);
+    font-weight: 900;
+}
+.student-guide__copy p {
+    margin: 5px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: 1.55;
+}
+.student-guide__move {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: space-between !important;
+    box-shadow: none !important;
+}
+.student-guide__tip {
+    margin: 0;
+    padding: var(--ui-space-4);
+    border-radius: var(--ui-radius-md);
+    background: #EFF6FF;
+    color: #1E3A8A;
+    font-size: var(--ui-text-sm);
+    font-weight: 750;
+    line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+    .student-guide { gap: var(--ui-space-5); }
+    .student-guide__intro { align-items: flex-start; padding: var(--ui-space-4); }
+    .student-guide__grid { grid-template-columns: 1fr; }
+}

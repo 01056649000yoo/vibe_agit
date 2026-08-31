@@ -122,11 +122,26 @@ const NotificationDetailModal = ({ initialEvent, onClose, onRead, onAction }) =>
     );
 };
 
-const ActivityNotificationPanel = ({ summary = EMPTY_SUMMARY, loading = false, onSummaryChange, onNavigate, onOpenPost }) => {
+const ActivityNotificationPanel = ({
+    summary = EMPTY_SUMMARY,
+    loading = false,
+    onSummaryChange,
+    onNavigate,
+    onOpenPost,
+    onOpenTitle,
+    requestedOpen = false,
+    onRequestedOpenClose
+}) => {
     const [open, setOpen] = useState(false);
     const latest = summary?.latest || null;
     const unreadCount = Number(summary?.unread_count || 0);
     const presentation = useMemo(() => resolveActivityNotification(latest), [latest]);
+    const modalOpen = open || requestedOpen;
+
+    const closeModal = () => {
+        setOpen(false);
+        onRequestedOpenClose?.();
+    };
 
     const handleRead = (_event, nextLatest) => {
         onSummaryChange({
@@ -138,7 +153,7 @@ const ActivityNotificationPanel = ({ summary = EMPTY_SUMMARY, loading = false, o
 
     const handleAction = (event, eventPresentation) => {
         if (eventPresentation.action === 'custom' && typeof eventPresentation.handleAction === 'function') {
-            eventPresentation.handleAction({ event, onNavigate, onOpenPost });
+            eventPresentation.handleAction({ event, onNavigate, onOpenPost, onOpenTitle });
         } else if (eventPresentation.action === 'rewrite') {
             onNavigate('writing', {
                 missionId: event.payload?.mission_id,
@@ -195,10 +210,10 @@ const ActivityNotificationPanel = ({ summary = EMPTY_SUMMARY, loading = false, o
                 )}
             </button>
 
-            {open && (
+            {modalOpen && (
                 <NotificationDetailModal
                     initialEvent={latest}
-                    onClose={() => setOpen(false)}
+                    onClose={closeModal}
                     onRead={handleRead}
                     onAction={handleAction}
                 />

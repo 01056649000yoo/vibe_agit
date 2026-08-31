@@ -17,6 +17,12 @@ export const diaryManifest = {
     core: true,
     performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 50 },
     studentRoute: 'diaries',
+    studentRecommendation: {
+        icon: '📔', title: '오늘의 마음을 기록해 봐',
+        message: '오늘 있었던 일과 내 마음을 적으면 나만의 기록가 칭호가 자라.',
+        ctaLabel: '일기 쓰기', order: 40,
+        action: { type: 'navigate', target: 'diaries' }
+    },
     communityFeed: {
         group: 'self',
         label: '일기',

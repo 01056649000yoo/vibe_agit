@@ -10,6 +10,7 @@ import {
     getReadingLevel
 } from '../src/constants/writerLevels.js';
 import { normalizeTitleStatus } from '../src/modules/writing/title-status/titleSeason.js';
+import { titleNotificationDefinitions } from '../src/modules/writing/title-status/notifications.js';
 
 // 테스트가 넘기는 저장소 상대 경로만 읽는다.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -293,4 +294,50 @@ test('전체 공개는 전역 스위치로 현재·미래 학급에 적용되고
     assert.match(migration, /public\.auth_user_role\(\) <> 'ADMIN'/);
     assert.match(migration, /REVOKE ALL ON TABLE public\.title_reward_rollout_state FROM PUBLIC, anon, authenticated/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.set_title_reward_rollout_global_v1\(BOOLEAN\) FROM PUBLIC, anon/);
+});
+
+test('소통·기록가·독서가 레벨업은 작가 성장 모달과 분리해 활동 알림 한 갈래로 발행한다', async () => {
+    const [migration, registry, panel, dashboard, myAgit, titlePanel] = await Promise.all([
+        read('supabase/migrations/20261213_activity_title_notifications.sql'),
+        read('src/modules/notifications/registry.js'),
+        read('src/modules/notifications/ActivityNotificationPanel.jsx'),
+        read('src/components/student/StudentDashboard.jsx'),
+        read('src/components/student/MyAgitPanel.jsx'),
+        read('src/modules/writing/title-status/MyTitleStatusPanel.jsx')
+    ]);
+
+    assert.match(migration, /student_activity_title_notification_state/);
+    assert.match(migration, /track_id IN \('reader', 'diary', 'reading'\)/);
+    assert.match(migration, /'titles',\s*'titles\.level_up'/);
+    assert.match(migration, /title-level:%s:%s:%s/);
+    assert.match(migration, /last_notified_level = v_current_level/);
+    assert.match(migration, /post\.class_id = v_class_id[\s\S]*post\.student_id = p_student_id/);
+    assert.doesNotMatch(migration, /get_class_writing_title_stats_v1\(/);
+    assert.match(migration, /AFTER INSERT OR DELETE OR UPDATE OF reaction_type ON public\.post_reactions/);
+    assert.match(migration, /AFTER INSERT OR DELETE OR UPDATE OF status, content ON public\.post_comments/);
+    assert.match(migration, /ON public\.reading_log_teacher_reviews/);
+    assert.doesNotMatch(migration, /writer_level/);
+    assert.match(migration, /REVOKE ALL ON TABLE public\.student_activity_title_notification_state[\s\S]*service_role/);
+    assert.match(registry, /titleNotificationDefinitions/);
+    assert.match(panel, /onOpenTitle/);
+    assert.match(dashboard, /initialTitleKind=\{myAgitInitialTitle\}/);
+    assert.match(myAgit, /initialGuideKind=\{initialTitleKind\}/);
+    assert.match(titlePanel, /useState\(\(\) => \([\s\S]*\['reader', 'diary', 'reading'\]\.includes\(initialGuideKind\)/);
+});
+
+test('칭호 활동 알림은 화면 원본의 단계 이름을 쓰고 기록가·독서가 보상 화면으로 이어진다', () => {
+    const definition = titleNotificationDefinitions.find((item) => item.eventType === 'titles.level_up');
+    const diaryMessage = definition.message({ track_id: 'diary', level: 4, reward_claimable: true });
+    const readerMessage = definition.message({ track_id: 'reader', level: 3, reward_claimable: false });
+    let openedTrack = null;
+
+    definition.handleAction({
+        event: { payload: { track_id: 'reading' } },
+        onOpenTitle: (trackId) => { openedTrack = trackId; }
+    });
+
+    assert.match(diaryMessage, /기록가 칭호.*LV\.4 생활 관찰자.*단계 보상/);
+    assert.match(readerMessage, /소통 칭호.*LV\.3 이야기 친구/);
+    assert.doesNotMatch(readerMessage, /단계 보상/);
+    assert.equal(openedTrack, 'reading');
 });
