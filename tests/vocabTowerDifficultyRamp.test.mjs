@@ -6,9 +6,11 @@ import {
     getVocabPracticeNextFloorHint
 } from '../src/modules/game/vocab-tower/practiceDifficulty.js';
 
-const [migration, smoke, deckMap, game, styles] = await Promise.all([
+const [migration, smoke, virtualRunSmoke, packageJson, deckMap, game, styles] = await Promise.all([
     readFile('supabase/migrations/20261211_vocab_tower_practice_difficulty_ramp.sql', 'utf8'),
     readFile('tests/sql/20261211_vocab_tower_practice_difficulty_ramp.smoke.sql', 'utf8'),
+    readFile('tests/sql/vocab_tower_difficulty_virtual_run.smoke.sql', 'utf8'),
+    readFile('package.json', 'utf8'),
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8')
@@ -52,4 +54,16 @@ test('난이도 단계 UI는 정책 2 제한 공개 응답에서만 나타난다
     assert.match(migration, /'practice_policy_version', v_practice_policy_version/);
     assert.match(deckMap, /Number\(practicePolicyVersion\) >= 2/);
     assert.match(game, /Number\(status\?\.practicePolicyVersion\) >= 2/);
+});
+
+test('운영 RPC 가상 완주는 1~10층과 오답 보충 수련을 모두 롤백 검증한다', () => {
+    assert.match(packageJson, /"smoke:vocab-difficulty":\s*"node scripts\/run-rollback-smoke\.mjs tests\/sql\/vocab_tower_difficulty_virtual_run\.smoke\.sql"/);
+    assert.match(virtualRunSmoke, /FOR v_floor IN 1\.\.10 LOOP/);
+    assert.match(virtualRunSmoke, /FOR v_sequence IN 1\.\.12 LOOP/);
+    assert.match(virtualRunSmoke, /get_next_my_vocab_tower_v2_practice_question_v1/);
+    assert.match(virtualRunSmoke, /submit_my_vocab_tower_v2_practice_answer_v1/);
+    assert.match(virtualRunSmoke, /finish_my_vocab_tower_v2_practice_v1/);
+    assert.match(virtualRunSmoke, /'__가상오답__'/);
+    assert.match(virtualRunSmoke, /v_sequence = 4/);
+    assert.doesNotMatch(virtualRunSmoke, /^\s*COMMIT;\s*$/m);
 });
