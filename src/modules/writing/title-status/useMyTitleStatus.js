@@ -95,12 +95,12 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
         [status.readerLevelOverride, status.readerScore]
     );
     const diaryLevel = useMemo(
-        () => getDiaryLevel(status.diaryDays),
-        [status.diaryDays]
+        () => getDiaryLevel(status.diaryDays, status.diaryLevelOverride),
+        [status.diaryDays, status.diaryLevelOverride]
     );
     const readingLevel = useMemo(
-        () => getReadingLevel(status.readingLogCount, status.readingBookCount),
-        [status.readingBookCount, status.readingLogCount]
+        () => getReadingLevel(status.readingLogCount, status.readingBookCount, status.readingLevelOverride),
+        [status.readingBookCount, status.readingLevelOverride, status.readingLogCount]
     );
 
     return {

@@ -166,9 +166,28 @@ const getSingleMetricLevel = (levels, value = 0) => {
     };
 };
 
-export const getDiaryLevel = (days = 0) => getSingleMetricLevel(DIARY_LEVELS, days);
+export const getDiaryLevel = (days = 0, overrideLevel = null) => {
+    const requestedOverride = Number(overrideLevel);
+    if (Number.isInteger(requestedOverride) && requestedOverride >= 1 && requestedOverride <= DIARY_LEVELS.length) {
+        return { ...getSingleMetricLevel(DIARY_LEVELS, DIARY_LEVELS.at(requestedOverride - 1).from), isTestOverride: true };
+    }
+    return getSingleMetricLevel(DIARY_LEVELS, days);
+};
 
-export const getReadingLevel = (logs = 0, books = 0) => {
+export const getReadingLevel = (logs = 0, books = 0, overrideLevel = null) => {
+    const requestedOverride = Number(overrideLevel);
+    if (Number.isInteger(requestedOverride) && requestedOverride >= 1 && requestedOverride <= READING_LEVELS.length) {
+        const current = READING_LEVELS.at(requestedOverride - 1);
+        const upcoming = READING_LEVELS.at(requestedOverride);
+        return {
+            ...current,
+            nextLogs: upcoming ? upcoming.logsFrom : null,
+            nextBooks: upcoming ? upcoming.booksFrom : null,
+            progressLogs: current.logsFrom,
+            progressBooks: current.booksFrom,
+            isTestOverride: true
+        };
+    }
     const safeLogs = Math.max(0, Number(logs) || 0);
     const safeBooks = Math.max(0, Number(books) || 0);
     const index = READING_LEVELS.reduce(

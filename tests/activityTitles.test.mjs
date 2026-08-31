@@ -21,6 +21,8 @@ test('기록가 칭호는 서로 다른 일기 날짜 0·3·7·14·21·30·40일
     assert.equal(getDiaryLevel(3).name, '하루 기록가');
     assert.equal(getDiaryLevel(39).level, 6);
     assert.equal(getDiaryLevel(40).name, '위대한 기록가');
+    assert.equal(getDiaryLevel(1, 3).name, '꾸준한 기록가');
+    assert.equal(getDiaryLevel(1, 3).isTestOverride, true);
 });
 
 test('독서가 칭호는 확인 독서록 수와 서로 다른 책 수를 모두 만족해야 성장한다', () => {
@@ -32,6 +34,8 @@ test('독서가 칭호는 확인 독서록 수와 서로 다른 책 수를 모�
     assert.equal(getReadingLevel(12, 9).name, '생각 독서가');
     assert.equal(getReadingLevel(100, 17).level, 6);
     assert.equal(getReadingLevel(25, 18).name, '깊은 독서가');
+    assert.equal(getReadingLevel(0, 0, 3).name, '이야기 탐험가');
+    assert.equal(getReadingLevel(0, 0, 3).isTestOverride, true);
 });
 
 test('기존 독자 수치는 소통 칭호로 이름만 바로잡고 점수 경계는 유지한다', () => {
@@ -165,6 +169,8 @@ test('기록가·독서가 보상은 시즌별 각각 5,000P이며 작가·소�
 test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같은 모양으로 만든다', () => {
     const status = normalizeTitleStatus({
         diary_days: 14,
+        diary_level_override: 3,
+        reading_level_override: 4,
         title_rewards: {
             enabled: true,
             policy_version: 1,
@@ -186,12 +192,35 @@ test('칭호 상태 정규화는 bootstrap과 수령 RPC의 보상 응답을 같
     });
 
     assert.equal(status.diaryDays, 14);
+    assert.equal(status.diaryLevelOverride, 3);
+    assert.equal(status.readingLevelOverride, 4);
     assert.equal(status.titleRewards.enabled, true);
     assert.equal(status.titleRewards.tracks.diary.currentLevel, 4);
     assert.equal(status.titleRewards.tracks.diary.claimableTotal, 1000);
     assert.deepEqual(status.titleRewards.tracks.diary.levels.map((item) => item.status), [
         'claimed', 'claimable', 'claimable'
     ]);
+});
+
+test('기록가·독서가 시험 단계는 실제 활동을 바꾸지 않고 화면과 보상 검증이 함께 사용한다', async () => {
+    const [migration, levels, titleSeason, hook] = await Promise.all([
+        read('supabase/migrations/20261207_activity_title_test_overrides.sql'),
+        read('src/constants/writerLevels.js'),
+        read('src/modules/writing/title-status/titleSeason.js'),
+        read('src/modules/writing/title-status/useMyTitleStatus.js')
+    ]);
+
+    assert.match(migration, /ADD COLUMN IF NOT EXISTS diary_level SMALLINT/);
+    assert.match(migration, /ADD COLUMN IF NOT EXISTS reading_level SMALLINT/);
+    assert.equal((migration.match(/get_title_activity_test_state_v1\(/g) || []).length >= 3, true);
+    assert.match(migration, /'diary_level_override'/);
+    assert.match(migration, /'reading_level_override'/);
+    assert.match(levels, /getDiaryLevel = \(days = 0, overrideLevel = null\)/);
+    assert.match(levels, /getReadingLevel = \(logs = 0, books = 0, overrideLevel = null\)/);
+    assert.match(titleSeason, /diaryLevelOverride: data\?\.diary_level_override/);
+    assert.match(titleSeason, /readingLevelOverride: data\?\.reading_level_override/);
+    assert.match(hook, /getDiaryLevel\(status\.diaryDays, status\.diaryLevelOverride\)/);
+    assert.match(hook, /getReadingLevel\(status\.readingLogCount, status\.readingBookCount, status\.readingLevelOverride\)/);
 });
 
 test('칭호 보상은 명시적 수령·서버 재검증·공용 포인트 엔진·제한 공개를 한 계약으로 묶는다', async () => {
