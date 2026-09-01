@@ -47,6 +47,7 @@
     "test:meal-board": "node --test tests/mealBoard.test.mjs",
     "test:lab-sso": "node --test tests/labSsoIntegration.test.mjs",
     "test:service-management": "node --test tests/serviceManagement.test.mjs",
+    "test:service-health-report": "node --test tests/serviceHealthTelegramReport.test.mjs",
     "service:scan": "node scripts/scan-service-images.mjs",
     "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/backupMonitoring.test.mjs tests/serviceManagement.test.mjs tests/supabaseUpgrade.test.mjs tests/vibeAiEdgeFunction.test.mjs tests/labSsoIntegration.test.mjs tests/mealBoard.test.mjs tests/activityTitles.test.mjs tests/neighborAgitDataFoundation.test.mjs tests/neighborAgitSpaceLifecycle.test.mjs tests/neighborAgitPostReview.test.mjs tests/neighborAgitStudentFeed.test.mjs tests/neighborAgitInteractions.test.mjs tests/neighborAgitAdminRollout.test.mjs tests/neighborAgitInternalFixtures.test.mjs tests/neighborAgitLimitedBeta.test.mjs",
     "test:deployment": "node --test tests/deploymentArchitecture.test.mjs",

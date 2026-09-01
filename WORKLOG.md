@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-09-01 — 오픈클로 텔레그램 낮 한 줄 상태 보고 구현 (Codex)
+
+- **한 일**: 기존 5분 건강검진을 판정 원본으로 재사용하면서, 앱·DB 직접 확인과 열린 운영 경고를 대조해
+  `🟢 끄적끄적 아지트 정상` 또는 `🔴 끄적끄적 아지트 문제 있음` 한 줄만 출력하는 운영 보고기를 만들었다.
+  상세 수치·원문 로그·비밀 값은 보내지 않으며 OpenClaw command cron이 AI 모델 호출 없이 stdout만 전달한다.
+- **변경**: `scripts/report-service-health.sh`, `ops/openclaw/install-agit-daytime-health-report.sh`,
+  `tests/serviceHealthTelegramReport.test.mjs`, `docs/OUTAGE_PLAN.md`, `package.json`. 일정은 한국 시간
+  `08:00·10:00·12:00·14:00·16:00·18:00`, 선언 키는 `agit-daytime-health-report-v1`이다.
+- **결과/검증**: 정상·앱 503·DB 무응답·열린 경고·건강검진 실패에서 출력이 두 문장 밖으로 벗어나지 않는
+  전용 회귀 3/3, 전체 회귀 694/694, Vite 프로덕션 빌드 통과. ESLint 오류 0개이며 기존 경고 38개만 남았다.
+  OpenClaw 2026.7.1-2의 실제 CLI에서 command cron·`--announce`·선언 키·즉시 실행 옵션을 확인했다.
+- **남은 것 / 다음**: 검증한 커밋을 맥미니 운영 저장소에 동기화한 뒤 command cron을 등록하고 즉시 실행해
+  현재 연결된 텔레그램 대화에 한 줄만 도착하는지 확인한다. 맥미니 전원·인터넷·OpenClaw 전체 중단은 이
+  내부 보고가 보낼 수 없으므로 예정 시각 메시지 누락으로 구분한다.
+
 ## 2026-09-01 — 종료된 댓글 5P 표시 정리 운영 반영 (Codex)
 
 - **한 일**: 과거 댓글 포인트 원장·잔액은 보존하고 학생 글쓰기 발자국·놀이터 최근 내역에서만
