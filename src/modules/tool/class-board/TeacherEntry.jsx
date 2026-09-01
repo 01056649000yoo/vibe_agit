@@ -151,8 +151,10 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   };
 
   const addWidget = (widgetId) => {
-    const order = Math.max(0, ...(board?.widgets || []).filter((item) => item.zone === getClassBoardWidget(widgetId)?.defaultPlacement.zone).map((item) => item.order)) + 10;
-    const instance = createWidgetInstance(widgetId, order);
+    const zone = getClassBoardWidget(widgetId)?.defaultPlacement.zone;
+    const zoneWidgets = (board?.widgets || []).filter((item) => item.zone === zone);
+    const order = Math.max(0, ...zoneWidgets.map((item) => item.order)) + 10;
+    const instance = createWidgetInstance(widgetId, order, zone === 'content' ? zoneWidgets.length : 0);
     updateBoard((current) => ({ ...current, widgets: [...current.widgets, instance] }));
     setSelectedInstanceId(instance.instanceId);
   };
@@ -160,6 +162,13 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const updateSelected = (patch) => updateBoard((current) => ({
     ...current,
     widgets: current.widgets.map((widget) => widget.instanceId === selectedInstanceId ? { ...widget, ...patch } : widget),
+  }));
+
+  const updatePlacement = (instanceId, placement) => updateBoard((current) => ({
+    ...current,
+    widgets: current.widgets.map((widget) => (
+      widget.instanceId === instanceId ? { ...widget, placement } : widget
+    )),
   }));
 
   const moveSelected = (direction) => updateBoard((current) => {
@@ -238,8 +247,18 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       ) : (
         <div className="class-board-editor__workspace">
           <div className="class-board-preview-panel">
-            <div className="class-board-panel-heading"><strong>화면 미리보기</strong><span>왼쪽 자료 70% · 오른쪽 현황 30%</span></div>
-            <BoardCanvas board={board} classId={activeClass.id} selectedInstanceId={selectedInstanceId} onSelect={setSelectedInstanceId} />
+            <div className="class-board-panel-heading">
+              <strong>화면 미리보기</strong>
+              <span>왼쪽 자료 70% · 오른쪽 오늘의 현황 30%</span>
+            </div>
+            <p className="class-board-canvas-help">왼쪽 위젯의 이동 손잡이로 위치를 옮기고, 테두리 손잡이로 가로·세로 크기를 조절하세요. 핀을 꽂으면 움직이지 않습니다.</p>
+            <BoardCanvas
+              board={board}
+              classId={activeClass.id}
+              selectedInstanceId={selectedInstanceId}
+              onSelect={setSelectedInstanceId}
+              onPlacementChange={updatePlacement}
+            />
           </div>
 
           <aside className="class-board-settings-panel">
@@ -260,11 +279,15 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
                   onChange={(config) => updateSelected({ config })}
                 />
                 <div className="class-board-instance-controls">
-                  <button type="button" onClick={() => moveSelected(-1)}>위로</button>
-                  <button type="button" onClick={() => moveSelected(1)}>아래로</button>
-                  <select value={selectedInstance.size} onChange={(event) => updateSelected({ size: event.target.value })} aria-label="위젯 크기">
-                    <option value="small">작게</option><option value="medium">보통</option><option value="large">크게</option>
-                  </select>
+                  <button type="button" disabled={selectedInstance.zone !== 'content'} onClick={() => moveSelected(-1)}>뒤로</button>
+                  <button type="button" disabled={selectedInstance.zone !== 'content'} onClick={() => moveSelected(1)}>앞으로</button>
+                  <button
+                    type="button"
+                    disabled={selectedInstance.zone !== 'content'}
+                    onClick={() => updateSelected({
+                      placement: { ...selectedInstance.placement, pinned: !selectedInstance.placement?.pinned },
+                    })}
+                  >{selectedInstance.placement?.pinned ? '핀 해제' : '핀 꽂기'}</button>
                   <button type="button" className="is-danger" onClick={removeSelected}>빼기</button>
                 </div>
               </div>

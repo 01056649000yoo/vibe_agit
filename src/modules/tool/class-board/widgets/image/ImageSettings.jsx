@@ -35,7 +35,7 @@ export default function ImageSettings({ config = {}, onChange, classId, boardId 
       <label className="class-board-file-label">
         <span>이미지 파일</span>
         <input ref={inputRef} type="file" accept="image/*" disabled={uploading} onChange={(event) => void upload(event.target.files?.[0])} />
-        <small>긴 변 1920px·1MB 이하로 자동 최적화하며, 공개 URL은 저장하지 않습니다.</small>
+        <small>큰 이미지는 긴 변 1920px·2MB 이하의 고화질로 자동 최적화하며, 공개 URL은 저장하지 않습니다.</small>
       </label>
       {uploading ? <p className="class-board-note">이미지를 화면용으로 준비하는 중…</p> : null}
       {error ? <p className="class-board-error">{error}</p> : null}
@@ -53,4 +53,3 @@ export default function ImageSettings({ config = {}, onChange, classId, boardId 
     </div>
   );
 }
-

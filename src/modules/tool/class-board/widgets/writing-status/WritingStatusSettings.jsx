@@ -12,15 +12,14 @@ export default function WritingStatusSettings({ config = {}, onChange, classId }
           disabled={loading}
           onChange={(event) => onChange({ ...config, missionId: event.target.value || null })}
         >
-          <option value="">진행 중인 과제 전체</option>
+          <option value="">현재 진행 미션 (가장 최근)</option>
           {(status?.missionOptions || []).map((mission) => (
             <option key={mission.id} value={mission.id}>{mission.title}</option>
           ))}
         </select>
       </label>
-      <p className="class-board-note">전체는 현재 활성 과제의 제출 글 편수를, 과제 하나는 제출 학생 수를 보여 줍니다.</p>
+      <p className="class-board-note">기본값은 가장 최근 미션입니다. 다른 미션을 고정해 둘 수도 있으며, 제출자·미제출자 이름과 오늘의 일기·독서록 현황이 함께 표시됩니다.</p>
       {error ? <p className="class-board-error">과제 목록을 불러오지 못했습니다.</p> : null}
     </div>
   );
 }
-

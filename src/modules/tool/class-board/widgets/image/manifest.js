@@ -7,9 +7,12 @@ export const imageWidgetManifest = Object.freeze({
   type: 'static',
   projectorSafe: true,
   maxInstances: 12,
-  defaultPlacement: { zone: 'content', size: 'large' },
+  defaultPlacement: {
+    zone: 'content',
+    size: 'large',
+    placement: { x: 51, y: 4, width: 46, height: 48, pinned: false },
+  },
   createDefaultConfig: () => ({ path: '', caption: '', fit: 'contain' }),
   load: () => import('./ImageWidget'),
   loadSettings: () => import('./ImageSettings'),
 });
-

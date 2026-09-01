@@ -26,7 +26,8 @@ export const sampleToolManifest = {
 ## 현재 도구
 
 - `class-board`: `우리 반 스크린`. 보드 셸은 위젯 목록·배치·저장·발표만 맡고, 텍스트·이미지·글쓰기 현황은
-  `widgets/registry.js`에 등록된 독립 위젯이 소유한다. 발표 화면에는 학생 이름과 글 내용을 전달하지 않는다.
+  `widgets/registry.js`에 등록된 독립 위젯이 소유한다. 왼쪽 자료의 위치·크기·핀 상태는 보드에 저장하며, 오른쪽
+  현황은 담당 교사에게 현재 미션 이름표와 오늘의 일기·독서록 숫자만 전달하고 글 내용·내부 ID는 제외한다.
 - `meal-board`: `얘들아, 밥 먹자!` 급식·학생별 비고 확인. 첫 화면으로 열리며, 나이스 키는 서버 함수만 읽고, 공개
   전체화면에는 학생 이름과 비고를 전달하지 않는다. 비고는 선택 사항이며 담당 학급 RPC로만 읽고 쓴다.
 - `classroom-arrangement`: 자리·역할 배치
@@ -37,5 +38,6 @@ export const sampleToolManifest = {
 새 표시 기능은 `src/modules/tool/class-board/widgets/<widget-id>/`에 두고 `widgets/registry.js`에 매니페스트를
 등록한다. 보드 셸에 위젯 ID 조건문을 추가하지 않는다. 매니페스트는 `id`, `version`, `projectorSafe`,
 `defaultPlacement`, `createDefaultConfig`, 지연 `load`를 갖고, 설정 화면이 있으면 `loadSettings`도 선언한다.
-실시간 데이터가 필요한 위젯은 자신의 요청 예산을 `requestBudget`에 적고, 학생 이름·본문 없이 발표에 안전한
-응답만 사용한다. 보드는 위젯의 배치와 설정만 저장하며 살아 있는 현황 데이터는 저장하지 않는다.
+실시간 데이터가 필요한 위젯은 자신의 요청 예산을 `requestBudget`에 적는다. 교실 표시용 학생 이름이 필요하면
+담당 교사 권한·100명 상한·내부 ID와 본문 제외를 서버에서 강제한다. 보드는 위젯의 배치와 설정만 저장하며 살아
+있는 현황 데이터는 저장하지 않는다.

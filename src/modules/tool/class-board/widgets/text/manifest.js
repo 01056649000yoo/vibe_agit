@@ -7,7 +7,11 @@ export const textWidgetManifest = Object.freeze({
   type: 'static',
   projectorSafe: true,
   maxInstances: 8,
-  defaultPlacement: { zone: 'content', size: 'medium' },
+  defaultPlacement: {
+    zone: 'content',
+    size: 'medium',
+    placement: { x: 3, y: 4, width: 45, height: 42, pinned: false },
+  },
   createDefaultConfig: () => ({
     heading: '오늘의 안내',
     body: '우리 반에 보여 줄 안내를 입력해 주세요.',
@@ -16,4 +20,3 @@ export const textWidgetManifest = Object.freeze({
   load: () => import('./TextWidget'),
   loadSettings: () => import('./TextSettings'),
 });
-

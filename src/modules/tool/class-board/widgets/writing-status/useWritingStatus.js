@@ -10,7 +10,7 @@ export const useWritingStatus = ({ classId, missionId, poll = true }) => {
   const mountedRef = useRef(true);
   const runningScopeRef = useRef(null);
   const failuresRef = useRef(0);
-  const scopeKey = `${classId || 'none'}:${missionId || 'all'}:${poll ? 'poll' : 'once'}`;
+  const scopeKey = `${classId || 'none'}:${missionId || 'current'}:${poll ? 'poll' : 'once'}`;
   const currentScopeRef = useRef(scopeKey);
   currentScopeRef.current = scopeKey;
 

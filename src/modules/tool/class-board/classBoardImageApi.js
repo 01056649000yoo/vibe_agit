@@ -1,8 +1,8 @@
 import { supabase } from '../../../lib/supabaseClient';
 
 export const CLASS_BOARD_ASSET_BUCKET = 'class-board-assets';
-export const CLASS_BOARD_IMAGE_MAX_SOURCE_BYTES = 20 * 1024 * 1024;
-export const CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 1024 * 1024;
+export const CLASS_BOARD_IMAGE_MAX_SOURCE_BYTES = 30 * 1024 * 1024;
+export const CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 2 * 1024 * 1024;
 export const CLASS_BOARD_IMAGE_MAX_EDGE = 1920;
 
 const canvasToBlob = (canvas, type, quality) => new Promise((resolve, reject) => {
@@ -33,21 +33,34 @@ export const optimizeClassBoardImage = async (file) => {
     throw new Error('이미지 파일만 올릴 수 있습니다.');
   }
   if (file.size > CLASS_BOARD_IMAGE_MAX_SOURCE_BYTES) {
-    throw new Error('원본 이미지는 20MB 이하만 올릴 수 있습니다.');
+    throw new Error('원본 이미지는 30MB 이하만 올릴 수 있습니다.');
   }
 
   const loaded = await loadImage(file);
   try {
     const sourceWidth = loaded.image.naturalWidth;
     const sourceHeight = loaded.image.naturalHeight;
+    if (
+      file.size <= CLASS_BOARD_IMAGE_MAX_STORED_BYTES
+      && Math.max(sourceWidth, sourceHeight) <= CLASS_BOARD_IMAGE_MAX_EDGE
+      && ['image/webp', 'image/jpeg'].includes(file.type)
+    ) {
+      return {
+        blob: file,
+        width: sourceWidth,
+        height: sourceHeight,
+        bytes: file.size,
+        mimeType: file.type,
+      };
+    }
     const scale = Math.min(1, CLASS_BOARD_IMAGE_MAX_EDGE / Math.max(sourceWidth, sourceHeight));
     let width = Math.max(1, Math.round(sourceWidth * scale));
     let height = Math.max(1, Math.round(sourceHeight * scale));
-    let quality = 0.84;
+    let quality = 0.92;
     let type = 'image/webp';
     let blob = null;
 
-    for (let attempt = 0; attempt < 7; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
@@ -64,13 +77,13 @@ export const optimizeClassBoardImage = async (file) => {
         blob = await canvasToBlob(canvas, type, quality);
       }
       if (blob.size <= CLASS_BOARD_IMAGE_MAX_STORED_BYTES) break;
-      const shrink = Math.max(0.72, Math.sqrt(CLASS_BOARD_IMAGE_MAX_STORED_BYTES / blob.size) * 0.95);
+      const shrink = Math.max(0.78, Math.sqrt(CLASS_BOARD_IMAGE_MAX_STORED_BYTES / blob.size) * 0.98);
       width = Math.max(1, Math.round(width * shrink));
       height = Math.max(1, Math.round(height * shrink));
-      quality = Math.max(0.55, quality - 0.06);
+      quality = Math.max(0.68, quality - 0.045);
     }
     if (!blob || blob.size > CLASS_BOARD_IMAGE_MAX_STORED_BYTES) {
-      throw new Error('이미지를 1MB 이하로 줄이지 못했습니다. 다른 이미지를 골라 주세요.');
+      throw new Error('이미지를 2MB 이하로 줄이지 못했습니다. 다른 이미지를 골라 주세요.');
     }
     return { blob, width, height, bytes: blob.size, mimeType: blob.type || type };
   } finally {
@@ -118,4 +131,3 @@ export const removeClassBoardImage = async (path) => {
   const { error } = await supabase.storage.from(CLASS_BOARD_ASSET_BUCKET).remove([path]);
   if (error) throw error;
 };
-

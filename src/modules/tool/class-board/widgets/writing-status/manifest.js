@@ -1,7 +1,7 @@
 export const writingStatusWidgetManifest = Object.freeze({
   id: 'writing-status',
   name: '글쓰기 현황',
-  description: '학생 이름 없이 과제 진행 숫자만 보여 줘요',
+  description: '미션별 제출 이름표와 오늘의 일기·독서록 현황을 보여 줘요',
   icon: '✍️',
   version: 1,
   type: 'live',
@@ -13,4 +13,3 @@ export const writingStatusWidgetManifest = Object.freeze({
   load: () => import('./WritingStatusWidget'),
   loadSettings: () => import('./WritingStatusSettings'),
 });
-

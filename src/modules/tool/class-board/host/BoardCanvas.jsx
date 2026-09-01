@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getClassBoardImageUrls } from '../classBoardImageApi';
 import { getClassBoardWidget } from '../widgets/registry';
+import InteractiveWidgetFrame from './InteractiveWidgetFrame';
 import { WidgetHost } from './WidgetHost';
 
 const EMPTY_URLS = new Map();
@@ -15,6 +16,7 @@ export default function BoardCanvas({
   presentation = false,
   selectedInstanceId = null,
   onSelect,
+  onPlacementChange,
 }) {
   const [assetUrls, setAssetUrls] = useState(new Map());
   const imagePaths = useMemo(() => (
@@ -32,34 +34,48 @@ export default function BoardCanvas({
     return () => { active = false; };
   }, [imagePaths]);
 
-  const renderZone = (zone) => sortWidgets(board?.widgets || [], zone).map((instance) => {
+  const renderContent = () => sortWidgets(board?.widgets || [], 'content').map((instance) => {
     const manifest = getClassBoardWidget(instance.widgetId);
     const selected = !presentation && selectedInstanceId === instance.instanceId;
     return (
-      <div
-        key={instance.instanceId}
-        className={`class-board-widget-frame class-board-widget-frame--${instance.size}${selected ? ' is-selected' : ''}`}
-      >
-        {!presentation ? (
-          <button type="button" className="class-board-widget-select" onClick={() => onSelect?.(instance.instanceId)}>
-            <span>{manifest?.icon} {manifest?.name}</span>
-            <small>{selected ? '설정 중' : '설정 열기'}</small>
-          </button>
-        ) : null}
+      <InteractiveWidgetFrame
+        key={`${instance.instanceId}-${JSON.stringify(instance.placement)}`}
+        instance={instance}
+        manifest={manifest}
+        classId={classId}
+        assetUrl={(imagePaths.length > 0 ? assetUrls : EMPTY_URLS).get(instance.config?.path) || ''}
+        selected={selected}
+        presentation={presentation}
+        onSelect={onSelect}
+        onPlacementChange={onPlacementChange}
+      />
+    );
+  });
+
+  const renderSidebar = () => sortWidgets(board?.widgets || [], 'sidebar').map((instance) => (
+    <div
+      key={instance.instanceId}
+      className={`class-board-widget-frame class-board-widget-frame--sidebar${!presentation && selectedInstanceId === instance.instanceId ? ' is-selected' : ''}`}
+      onPointerDown={() => onSelect?.(instance.instanceId)}
+    >
+      {!presentation ? (
+        <button type="button" className="class-board-widget-select" onClick={() => onSelect?.(instance.instanceId)}>
+          <span>{getClassBoardWidget(instance.widgetId)?.icon} 현황 설정</span>
+        </button>
+      ) : null}
         <WidgetHost
           instance={instance}
           classId={classId}
           assetUrl={(imagePaths.length > 0 ? assetUrls : EMPTY_URLS).get(instance.config?.path) || ''}
           presentation={presentation}
         />
-      </div>
-    );
-  });
+    </div>
+  ));
 
   return (
     <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}`}>
-      <div className="class-board-canvas__content">{renderZone('content')}</div>
-      <aside className="class-board-canvas__sidebar">{renderZone('sidebar')}</aside>
+      <div className="class-board-canvas__content">{renderContent()}</div>
+      <aside className="class-board-canvas__sidebar">{renderSidebar()}</aside>
     </div>
   );
 }
