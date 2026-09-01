@@ -244,7 +244,7 @@ test('스크린 탭은 새 탭까지 좌우로 재정렬하고 별표 기본 화
   assert.match(teacherDashboard, /window\.open\('about:blank', 'class-board-presentation', popupFeatures\)/);
   assert.match(teacherDashboard, /`\/class-board\/\$\{result\.boardId\}\?fullscreen=1`/);
   assert.match(teacherDashboardStyles, /\.teacher-class-board-shortcut/);
-  assert.match(guides, /탭은 마우스로 좌우 드래그[\s\S]*별표[\s\S]*상단의 `우리 반 스크린` 버튼/);
+  assert.match(guides, /탭은 마우스로 좌우 드래그[\s\S]*Alt\+←\/→[\s\S]*빈 별표[\s\S]*상단의 `우리 반 스크린` 버튼[\s\S]*전체화면/);
 });
 
 test('예전 보관으로 숨겨진 스크린은 담당 교사가 상단 탭으로 복구한다', () => {
@@ -277,7 +277,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*오른쪽 손잡이는 글자 크기를 유지한 채 줄바꿈[\s\S]*아래쪽 손잡이는 보이는 줄 수[\s\S]*오른쪽 아래 모서리는 글씨 크기/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*제목과 내용이 칸을 가장 크게 채우도록 자동 정렬[\s\S]*오른쪽 손잡이는 글자 크기를 유지하고 줄바꿈만[\s\S]*아래쪽 손잡이는 보이는 줄 수[\s\S]*오른쪽 아래 모서리는 글씨 크기/);
 });
 
 test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
@@ -292,7 +292,7 @@ test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중
   assert.match(frame, /aria-keyshortcuts=\{editable && selected \? 'Escape' : undefined\}/);
   assert.match(entry, /위젯을 선택한 뒤 Esc를 누르면 화면에서 뺄 수 있습니다/);
   assert.match(presentationEditPanel, /선택한 자료는 Esc로 뺄 수 있고/);
-  assert.match(guides, /선택한 위젯은 `Esc`로 화면에서 뺄 수 있고/);
+  assert.match(guides, /선택한 자료는 `Esc` 또는 `빼기`로 화면에서 뺀/);
 });
 
 test('열린 스크린 설정창은 선택 위젯 오른쪽을 따라가고 빈 화면에서 닫힌다', () => {
@@ -394,6 +394,7 @@ test('열린 스크린은 설정 화면과 같은 16:9 논리 화면을 비율�
   assert.match(presentationLayout, /class-board-presentation-page \.class-board-viewport \{[^}]*width:100%; height:100%; aspect-ratio:auto;/);
   assert.doesNotMatch(presentationLayout, /class-board-presentation-page \.class-board-canvas[^}]*padding:0/);
   assert.match(guides, /설정 화면과 같은 16:9 화면[\s\S]*비율을 유지/);
+  assert.match(guides, /같은 1600×900 논리 화면[\s\S]*글자 크기와 줄바꿈은 두 화면에서 같게 유지/);
 });
 
 test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
@@ -412,6 +413,7 @@ test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하�
   assert.match(presentationEditPanel, /저장하지 않은 변경이 있어요/);
   assert.match(presentationEditPanel, /위치에 핀 꽂기/);
   assert.match(presentationEditPanel, /자료 삭제/);
+  assert.match(guides, /전체화면에서는 편집 중에도 상단의 `화면 편집 중` 안내가 숨겨/);
   assert.doesNotMatch(presentation, /optimizeClassBoardImage|uploadClassBoardImage|<TextWidget|<ImageWidget/);
   assert.match(canvas, /interactionEnabled = editable \?\? !presentation/);
   assert.match(canvas, /imagePathKey[\s\S]*\.sort\(\)/);

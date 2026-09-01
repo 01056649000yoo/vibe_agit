@@ -76,7 +76,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('comments', '학생 댓글 관리', '처리할 댓글을 찾고 현재 조건을 유지하며 확인 기록을 남깁니다.', 'comments'),
             step('class-footprints', '학급 발자국 확인', '학급이 쌓은 글쓰기 양과 흐름, 포인트 오고 감을 한 화면에서 봅니다.', 'footprints'),
             step('tool-overview', '학급운영도구 고르기', '현재 학급 명부를 사용하는 수업 도구를 한곳에서 엽니다.', 'tools'),
-            step('class-board', '우리 반 스크린 띄우기', '안내 자료를 자유롭게 배치하고 미션 제출 이름표와 오늘의 자율 글 현황을 함께 띄웁니다.', 'class-board'),
+            step('class-board', '우리 반 스크린 띄우기', '수업별 화면을 탭으로 준비하고 기본 스크린을 전체화면으로 열어 안내 자료와 오늘의 글쓰기 현황을 함께 보여 줍니다.', 'class-board'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
             step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat'),
             step('neighbor-agit', '이웃 학급과 글 나누기', '공간을 만들거나 초대받아 연결하고 학생 공개와 글 검토를 관리합니다.', 'neighbor-agit')
