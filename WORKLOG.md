@@ -37,7 +37,7 @@
   콜백은 ref로 전달했으며, 새 폴링·상시 조회·DB 변경은 추가하지 않았다. 기능 커밋 `7ddcb93`을 GitHub Actions
   `33481874078`로 운영 배포했다. `agit-app:prod`가 새 시각으로 `Up`이고 내부 8300·외부 HTTPS가 모두 200이며,
   운영 `ImageSettings-BgGz4Vxq.js`·`TeacherEntry-D7XhsmRn.js`·`ClassBoardPresentationPage-gMymhWhR.js`에서
-  새 `Ctrl+V` 기능 문자열을 확인했다.
+  새 `Ctrl+V` 기능 문자열을 확인했다. 맥미니 운영 저장소도 이 작업 기록까지 `main`으로 fast-forward 동기화했다.
 - **남은 것 / 다음**: 교사 실계정에서 캡처 → `Ctrl+V`, 선택 이미지 교체, 빈 칸 채우기, 새 칸 추가와 이후
   이동·크기 조절·저장을 눈으로 확인한다.
 
