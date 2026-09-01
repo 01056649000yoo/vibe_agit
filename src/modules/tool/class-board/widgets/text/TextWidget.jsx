@@ -1,10 +1,13 @@
 import React from 'react';
 import { createResponsiveTextSize } from './textScale';
+import useFittedClassBoardText from './useFittedClassBoardText';
 
 export default function TextWidget({ config = {}, dragHandleProps }) {
+  const textRef = useFittedClassBoardText(config);
   return (
     <article
       {...dragHandleProps}
+      ref={textRef}
       className={`class-board-text class-board-text--${config.tone || 'paper'}`}
       style={{
         '--class-board-text-heading-size': createResponsiveTextSize(config.fontScale, 5),

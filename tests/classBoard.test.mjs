@@ -17,6 +17,8 @@ import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/hos
 import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js';
 import {
   createResponsiveTextSize,
+  findLargestFittingTextSize,
+  getTextFillRatio,
   normalizeTextScale,
 } from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
@@ -69,7 +71,7 @@ const [
   read('PERFORMANCE_HARNESS.md'),
 ]);
 
-const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale,
+const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale, fittedTextHook,
   stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook, layerControls] = await Promise.all([
   read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
   read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
@@ -78,6 +80,7 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('src/modules/tool/class-board/widgets/audio/audioPlayer.js'),
   read('src/modules/tool/class-board/widgets/text/TextSettings.jsx'),
   read('src/modules/tool/class-board/widgets/text/textScale.js'),
+  read('src/modules/tool/class-board/widgets/text/useFittedClassBoardText.js'),
   read('supabase/migrations/20261219_class_board_stage_weather_audio.sql'),
   read('tests/sql/20261219_class_board_stage_weather_audio.smoke.sql'),
   read('Caddyfile.container'),
@@ -173,7 +176,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면[\s\S]*칸을 따라 함께 변합니다/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*아주 크게[\s\S]*오른쪽·아래쪽·오른쪽 아래 모서리를 드래그/);
 });
 
 test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
@@ -425,7 +428,7 @@ test('수업 위젯은 자유 배치 프레임 전체를 쓰고 프레임 크기
 });
 
 test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 남은 프레임에 채운다', () => {
-  assert.match(styles, /\.class-board-text\s*\{[^}]*padding:clamp\(6px,3\.5cqmin,18px\)/);
+  assert.match(styles, /\.class-board-text\s*\{[^}]*padding:clamp\(2px,\.8cqmin,5px\)/);
   assert.match(styles, /\.class-board-weather\s*\{[^}]*gap:clamp\(2px,2cqmin,10px\)[^}]*padding:clamp\(4px,2\.5cqmin,14px\)/);
   assert.match(styles, /\.class-board-weather h2\s*\{[^}]*font-size:clamp\(\.75rem,12cqmin,3\.4rem\)/);
   assert.match(styles, /\.class-board-clock\s*\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
@@ -436,16 +439,26 @@ test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 
   assert.match(styles, /\.class-board-status\s*\{[^}]*padding:16px 14px/);
 });
 
-test('텍스트는 프리셋을 유지하며 프레임 가로·세로 확대에 끝까지 반응한다', () => {
+test('텍스트는 최대 크기에서 실제 내용을 여백 없이 맞추고 프레임 변경에 다시 반응한다', () => {
   assert.match(textScale, /0\.8[\s\S]*1\.25[\s\S]*1\.5/);
-  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*가로·세로를 키우거나 줄이면/);
+  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*아주 크게는 글이 칸을 거의 채우도록 자동 맞춤/);
   assert.match(textWidget, /--class-board-text-heading-size[\s\S]*createResponsiveTextSize\(config\.fontScale, 5\)/);
+  assert.match(textWidget, /useFittedClassBoardText\(config\)[\s\S]*ref=\{textRef\}/);
   assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size[\s\S]*5cqi \+ 5cqb/);
+  assert.match(styles, /\.class-board-text h2\s*\{[^}]*overflow-wrap:anywhere[^}]*line-height:1\.05/);
+  assert.match(styles, /\.class-board-text__body\s*\{[^}]*overflow-wrap:anywhere[^}]*line-height:1\.25/);
   assert.doesNotMatch(styles, /class-board-text h2[^}]*font-size:clamp\([^}]*4rem/);
   assert.doesNotMatch(styles, /class-board-text__body[^}]*font-size:clamp\([^}]*2\.6rem/);
+  assert.match(fittedTextHook, /scrollWidth <= element\.clientWidth[\s\S]*scrollHeight <= element\.clientHeight/);
+  assert.match(fittedTextHook, /new ResizeObserver\(scheduleFit\)/);
+  assert.match(fittedTextHook, /requestAnimationFrame\(fitText\)[\s\S]*resizeObserver\?\.disconnect\(\)/);
   assert.equal(normalizeTextScale(0.2), 0.8);
   assert.equal(normalizeTextScale(1.25), 1.25);
   assert.equal(normalizeTextScale(4), 1.5);
+  assert.equal(getTextFillRatio(1.5), 1);
+  assert.equal(getTextFillRatio(0.8), 0.8 / 1.5);
+  assert.equal(findLargestFittingTextSize((size) => size <= 48.6), 48.5);
+  assert.equal(findLargestFittingTextSize(() => false), 12);
   assert.equal(createResponsiveTextSize(1, 5), 'calc(5cqi + 5cqb)');
   assert.equal(createResponsiveTextSize(1.25, 3.25), 'calc(4.063cqi + 4.063cqb)');
 
