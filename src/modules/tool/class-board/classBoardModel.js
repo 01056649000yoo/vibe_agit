@@ -1,5 +1,5 @@
 import { getClassBoardWidget, getClassBoardWidgets } from './widgets/registry';
-import { normalizePlacement } from './host/boardPlacement';
+import { fitPlacementToImage, normalizePlacement } from './host/boardPlacement';
 
 const randomId = () => globalThis.crypto?.randomUUID?.()
   || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -73,3 +73,32 @@ export const getAddableWidgets = (instances) => getClassBoardWidgets().filter((m
   manifest.maxInstances === undefined
   || instances.filter((instance) => instance.widgetId === manifest.id).length < manifest.maxInstances
 ));
+
+export const updateClassBoardWidgetConfig = (
+  board,
+  instanceId,
+  config,
+  options = {},
+  contentBounds
+) => {
+  if (!board) return board;
+  return {
+    ...board,
+    widgets: board.widgets.map((widget) => {
+      if (widget.instanceId !== instanceId) return widget;
+      const fitToImage = options?.fitToImage;
+      return {
+        ...widget,
+        config,
+        ...(fitToImage ? {
+          placement: fitPlacementToImage(
+            widget.placement,
+            fitToImage.width,
+            fitToImage.height,
+            contentBounds
+          ),
+        } : {}),
+      };
+    }),
+  };
+};

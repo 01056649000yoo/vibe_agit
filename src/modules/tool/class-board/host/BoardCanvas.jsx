@@ -15,6 +15,7 @@ export default function BoardCanvas({
   classId,
   presentation = false,
   editable,
+  contentRef,
   selectedInstanceId = null,
   onSelect,
   onPlacementChange,
@@ -79,7 +80,7 @@ export default function BoardCanvas({
 
   return (
     <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}`}>
-      <div className="class-board-canvas__content">{renderContent()}</div>
+      <div ref={contentRef} className="class-board-canvas__content">{renderContent()}</div>
       <aside className="class-board-canvas__sidebar">{renderSidebar()}</aside>
     </div>
   );

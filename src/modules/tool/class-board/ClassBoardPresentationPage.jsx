@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { classBoardApi } from './classBoardApi';
 import {
   createWidgetInstance,
   getAddableWidgets,
   normalizeClassBoard,
+  updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
@@ -22,6 +23,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [notice, setNotice] = useState('');
+  const canvasContentRef = useRef(null);
 
   const editing = Boolean(draftBoard);
   const visibleBoard = draftBoard || data?.board;
@@ -101,13 +103,14 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setNotice('');
   };
 
-  const updateSelectedConfig = (config) => {
-    setDraftBoard((current) => current ? ({
-      ...current,
-      widgets: current.widgets.map((widget) => (
-        widget.instanceId === selectedInstanceId ? { ...widget, config } : widget
-      )),
-    }) : current);
+  const updateSelectedConfig = (config, options) => {
+    setDraftBoard((current) => updateClassBoardWidgetConfig(
+      current,
+      selectedInstanceId,
+      config,
+      options,
+      canvasContentRef.current?.getBoundingClientRect()
+    ));
     setNotice('');
   };
 
@@ -202,6 +205,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         classId={data.class?.id}
         presentation
         editable={editing}
+        contentRef={canvasContentRef}
         selectedInstanceId={selectedInstanceId}
         onSelect={setSelectedInstanceId}
         onPlacementChange={updatePlacement}

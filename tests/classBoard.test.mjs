@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  fitPlacementToImage,
   movePlacementByPixels,
   normalizePlacement,
   resizePlacementByPixels,
@@ -11,7 +12,7 @@ import {
 const read = (path) => readFile(path, 'utf8');
 
 const [
-  registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi,
+  registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi, imageSettings,
   statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
   freeformSmoke, app, moduleRegistry, guides, guideRegistry, journeys, harness
 ] = await Promise.all([
@@ -25,6 +26,7 @@ const [
   read('src/modules/tool/class-board/ClassBoardPresentationPage.jsx'),
   read('src/modules/tool/class-board/presentation/PresentationEditPanel.jsx'),
   read('src/modules/tool/class-board/classBoardImageApi.js'),
+  read('src/modules/tool/class-board/widgets/image/ImageSettings.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusWidget.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusSettings.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/useWritingStatus.js'),
@@ -160,6 +162,22 @@ test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최�
   assert.deepEqual(resizePlacementByPixels(base, 900, 900, { width: 1000, height: 1000 }), {
     x: 10, y: 10, width: 90, height: 90, pinned: false,
   });
+});
+
+test('이미지 업로드는 실제 비율로 위젯을 자동 맞추고 이후 자유 크기 조절을 유지한다', () => {
+  const base = normalizePlacement({ x: 10, y: 10, width: 40, height: 30, pinned: false });
+  assert.deepEqual(fitPlacementToImage(base, 1600, 800, { width: 1000, height: 500 }), {
+    x: 10, y: 10, width: 40, height: 40, pinned: false,
+  });
+  assert.deepEqual(fitPlacementToImage(base, 800, 1600, { width: 1000, height: 500 }), {
+    x: 10, y: 10, width: 22.5, height: 90, pinned: false,
+  });
+  assert.match(imageSettings, /fitToImage: \{ width: image\.width, height: image\.height \}/);
+  assert.match(model, /updateClassBoardWidgetConfig[\s\S]*fitPlacementToImage/);
+  assert.match(entry, /canvasContentRef[\s\S]*updateClassBoardWidgetConfig[\s\S]*contentRef=\{canvasContentRef\}/);
+  assert.match(presentation, /canvasContentRef[\s\S]*updateClassBoardWidgetConfig[\s\S]*contentRef=\{canvasContentRef\}/);
+  assert.match(canvas, /ref=\{contentRef\}/);
+  assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
 });
 
 test('새 교사 도구의 도움말과 전체 활용 안내서 이동 경로가 함께 등록된다', () => {

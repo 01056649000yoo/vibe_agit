@@ -38,3 +38,37 @@ export const resizePlacementByPixels = (placement, deltaX, deltaY, bounds, axis 
   return normalizePlacement({ ...placement, width: nextWidth, height: nextHeight }, placement);
 };
 
+export const fitPlacementToImage = (placement, imageWidth, imageHeight, bounds) => {
+  const normalized = normalizePlacement(placement);
+  const sourceWidth = Number(imageWidth);
+  const sourceHeight = Number(imageHeight);
+  const canvasWidth = Number(bounds?.width);
+  const canvasHeight = Number(bounds?.height);
+  if (
+    !Number.isFinite(sourceWidth) || sourceWidth <= 0
+    || !Number.isFinite(sourceHeight) || sourceHeight <= 0
+    || !Number.isFinite(canvasWidth) || canvasWidth <= 0
+    || !Number.isFinite(canvasHeight) || canvasHeight <= 0
+  ) return normalized;
+
+  const percentAspect = (sourceWidth / sourceHeight) / (canvasWidth / canvasHeight);
+  const maximumWidth = 100 - normalized.x;
+  const maximumHeight = 100 - normalized.y;
+  const minimumFeasibleHeight = Math.max(CLASS_BOARD_MIN_HEIGHT, CLASS_BOARD_MIN_WIDTH / percentAspect);
+  const maximumFeasibleHeight = Math.min(maximumHeight, maximumWidth / percentAspect);
+
+  if (minimumFeasibleHeight <= maximumFeasibleHeight) {
+    const height = clamp(normalized.width / percentAspect, minimumFeasibleHeight, maximumFeasibleHeight);
+    return normalizePlacement({
+      ...normalized,
+      width: height * percentAspect,
+      height,
+    }, normalized);
+  }
+
+  return normalizePlacement({
+    ...normalized,
+    width: percentAspect > maximumWidth / CLASS_BOARD_MIN_HEIGHT ? maximumWidth : CLASS_BOARD_MIN_WIDTH,
+    height: percentAspect > maximumWidth / CLASS_BOARD_MIN_HEIGHT ? CLASS_BOARD_MIN_HEIGHT : maximumHeight,
+  }, normalized);
+};

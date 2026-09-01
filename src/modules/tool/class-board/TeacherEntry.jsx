@@ -6,6 +6,7 @@ import {
   createWidgetInstance,
   getAddableWidgets,
   normalizeClassBoard,
+  updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import { WidgetSettingsHost } from './host/WidgetHost';
@@ -24,6 +25,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const requestRef = useRef(0);
+  const canvasContentRef = useRef(null);
 
   const dirty = Boolean(board) && snapshot(board) !== savedSnapshot;
   const dirtyRef = useRef(dirty);
@@ -164,6 +166,16 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     widgets: current.widgets.map((widget) => widget.instanceId === selectedInstanceId ? { ...widget, ...patch } : widget),
   }));
 
+  const updateSelectedConfig = (config, options) => updateBoard((current) => (
+    updateClassBoardWidgetConfig(
+      current,
+      selectedInstanceId,
+      config,
+      options,
+      canvasContentRef.current?.getBoundingClientRect()
+    )
+  ));
+
   const updatePlacement = (instanceId, placement) => updateBoard((current) => ({
     ...current,
     widgets: current.widgets.map((widget) => (
@@ -255,6 +267,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
             <BoardCanvas
               board={board}
               classId={activeClass.id}
+              contentRef={canvasContentRef}
               selectedInstanceId={selectedInstanceId}
               onSelect={setSelectedInstanceId}
               onPlacementChange={updatePlacement}
@@ -276,7 +289,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
                   instance={selectedInstance}
                   classId={activeClass.id}
                   boardId={board.id}
-                  onChange={(config) => updateSelected({ config })}
+                  onChange={updateSelectedConfig}
                 />
                 <div className="class-board-instance-controls">
                   <button type="button" disabled={selectedInstance.zone !== 'content'} onClick={() => moveSelected(-1)}>뒤로</button>

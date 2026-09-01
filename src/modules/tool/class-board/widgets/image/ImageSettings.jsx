@@ -21,7 +21,10 @@ export default function ImageSettings({ config = {}, onChange, classId, boardId 
     try {
       const optimizedImage = await optimizeClassBoardImage(file);
       const image = await uploadClassBoardImage({ classId, boardId, optimizedImage });
-      update({ ...image, caption: config.caption || '', fit: config.fit || 'contain' });
+      onChange(
+        { ...config, ...image, caption: config.caption || '', fit: config.fit || 'contain' },
+        { fitToImage: { width: image.width, height: image.height } }
+      );
     } catch (uploadError) {
       setError(uploadError.message || '이미지를 올리지 못했습니다.');
     } finally {
@@ -35,7 +38,7 @@ export default function ImageSettings({ config = {}, onChange, classId, boardId 
       <label className="class-board-file-label">
         <span>이미지 파일</span>
         <input ref={inputRef} type="file" accept="image/*" disabled={uploading} onChange={(event) => void upload(event.target.files?.[0])} />
-        <small>큰 이미지는 긴 변 1920px·2MB 이하의 고화질로 자동 최적화하며, 공개 URL은 저장하지 않습니다.</small>
+        <small>큰 이미지는 고화질로 자동 최적화합니다. 업로드 후 이미지 비율에 맞춰 공간이 조정되며, 테두리를 드래그해 자유롭게 바꿀 수 있습니다.</small>
       </label>
       {uploading ? <p className="class-board-note">이미지를 화면용으로 준비하는 중…</p> : null}
       {error ? <p className="class-board-error">{error}</p> : null}
