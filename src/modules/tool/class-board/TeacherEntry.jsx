@@ -21,6 +21,9 @@ import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
 
 const snapshot = (board) => JSON.stringify(board);
+const workspaceRevision = (items = []) => items
+  .map((item) => `${item.id}:${item.revision}:${item.isActive ? 1 : 0}`)
+  .join('|');
 
 export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [boards, setBoards] = useState([]);
@@ -36,11 +39,14 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [notice, setNotice] = useState('');
   const requestRef = useRef(0);
   const hiddenRequestRef = useRef(0);
+  const lastReturnRefreshRef = useRef(0);
   const canvasContentRef = useRef(null);
 
   const dirty = Boolean(board) && snapshot(board) !== savedSnapshot;
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
+  const boardsRef = useRef(boards);
+  boardsRef.current = boards;
   const selectedInstance = board?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
   const addableWidgets = useMemo(() => getAddableWidgets(board?.widgets || []), [board?.widgets]);
   const receivePastedImage = (image, pasteContext = {}) => {
@@ -71,6 +77,8 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       setNotice('');
     },
   });
+  const busyRef = useRef(false);
+  busyRef.current = saving || pastingImage;
 
   const selectBoard = useCallback((nextBoard, { force = false } = {}) => {
     if (!nextBoard) return;
@@ -83,19 +91,20 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setNotice('');
   }, []);
 
-  const loadWorkspace = useCallback(async () => {
+  const loadWorkspace = useCallback(async ({ background = false } = {}) => {
     if (!activeClass?.id) {
       setLoading(false);
       return;
     }
     const requestId = requestRef.current + 1;
     requestRef.current = requestId;
-    setLoading(true);
+    if (!background) setLoading(true);
     setError('');
     try {
       const result = await classBoardApi.getWorkspace(activeClass.id);
       if (requestId !== requestRef.current) return;
       const nextBoards = Array.isArray(result?.boards) ? result.boards.map(normalizeClassBoard) : [];
+      if (background && workspaceRevision(nextBoards) === workspaceRevision(boardsRef.current)) return;
       setBoards(nextBoards);
       setHiddenPanelOpen(false);
       setHiddenBoards([]);
@@ -116,6 +125,25 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     return () => {
       requestRef.current += 1;
       hiddenRequestRef.current += 1;
+    };
+  }, [loadWorkspace]);
+
+  useEffect(() => {
+    const refreshWhenReturning = (event) => {
+      if (event?.type === 'pageshow' && !event.persisted) return;
+      if (document.visibilityState === 'hidden' || dirtyRef.current || busyRef.current) return;
+      const now = Date.now();
+      if (now - lastReturnRefreshRef.current < 750) return;
+      lastReturnRefreshRef.current = now;
+      void loadWorkspace({ background: true });
+    };
+    window.addEventListener('focus', refreshWhenReturning);
+    window.addEventListener('pageshow', refreshWhenReturning);
+    document.addEventListener('visibilitychange', refreshWhenReturning);
+    return () => {
+      window.removeEventListener('focus', refreshWhenReturning);
+      window.removeEventListener('pageshow', refreshWhenReturning);
+      document.removeEventListener('visibilitychange', refreshWhenReturning);
     };
   }, [loadWorkspace]);
 

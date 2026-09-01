@@ -232,6 +232,23 @@ test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하�
   assert.ok(canvas.includes(".join('\\n')"));
 });
 
+test('스크린 편집 뒤 대시보드로 돌아오면 서버의 최신 보드를 다시 읽는다', () => {
+  assert.match(entry, /loadWorkspace = useCallback\(async \(\{ background = false \} = \{\}\)/);
+  assert.match(entry, /workspaceRevision[\s\S]*item\.revision[\s\S]*item\.isActive/);
+  assert.match(entry, /background && workspaceRevision\(nextBoards\) === workspaceRevision\(boardsRef\.current\)/);
+  assert.match(entry, /refreshWhenReturning[\s\S]*dirtyRef\.current[\s\S]*busyRef\.current/);
+  assert.match(entry, /event\?\.type === 'pageshow' && !event\.persisted/);
+  assert.match(entry, /lastReturnRefreshRef\.current < 750/);
+  assert.match(entry, /loadWorkspace\(\{ background: true \}\)/);
+  assert.match(entry, /addEventListener\('focus', refreshWhenReturning\)/);
+  assert.match(entry, /addEventListener\('pageshow', refreshWhenReturning\)/);
+  assert.match(entry, /addEventListener\('visibilitychange', refreshWhenReturning\)/);
+  assert.match(entry, /removeEventListener\('focus', refreshWhenReturning\)/);
+  assert.match(entry, /removeEventListener\('pageshow', refreshWhenReturning\)/);
+  assert.match(entry, /removeEventListener\('visibilitychange', refreshWhenReturning\)/);
+  assert.match(guides, /열린 스크린에서 내용을 저장하고 기존 대시보드 탭으로 돌아오면 최신 탭 내용이 자동으로 반영/);
+});
+
 test('스크린 현황은 미션 이름표와 일일 자율 글 집계를 20초 가시 화면 폴링으로 표시한다', () => {
   assert.match(statusWidget, /제출자/);
   assert.match(statusWidget, /미제출자/);
