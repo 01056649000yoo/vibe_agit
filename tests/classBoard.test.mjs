@@ -8,6 +8,10 @@ import {
   normalizePlacement,
   resizePlacementByPixels,
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
+import {
+  getClassBoardWidgetLayerState,
+  moveClassBoardWidgetLayer,
+} from '../src/modules/tool/class-board/host/widgetLayers.js';
 import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
 import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/host/useClassBoardEscapeRemove.js';
 import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js';
@@ -66,7 +70,7 @@ const [
 ]);
 
 const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale,
-  stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook] = await Promise.all([
+  stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook, layerControls] = await Promise.all([
   read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
   read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
   read('src/modules/tool/class-board/widgets/timer/TimerSettings.jsx'),
@@ -79,6 +83,7 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('Caddyfile.container'),
   read('src/modules/tool/class-board/host/useClassBoardEscapeRemove.js'),
   read('src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js'),
+  read('src/modules/tool/class-board/host/WidgetLayerControls.jsx'),
 ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -466,6 +471,38 @@ test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최�
   assert.deepEqual(resizePlacementByPixels(base, 900, 900, { width: 1000, height: 1000 }), {
     x: 10, y: 10, width: 90, height: 90, pinned: false,
   });
+});
+
+test('오늘 현황은 최상위에 고정하고 자유 위젯은 두 편집 화면에서 층을 이동한다', () => {
+  const board = {
+    widgets: [
+      { instanceId: 'back', zone: 'content', order: 10, visible: true },
+      { instanceId: 'middle', zone: 'content', order: 20, visible: true },
+      { instanceId: 'front', zone: 'content', order: 30, visible: true },
+      { instanceId: 'status', zone: 'sidebar', order: 10, visible: true },
+    ],
+  };
+  assert.deepEqual(getClassBoardWidgetLayerState(board, 'middle'), {
+    position: 2,
+    total: 3,
+    canMoveBackward: true,
+    canMoveForward: true,
+  });
+  const movedForward = moveClassBoardWidgetLayer(board, 'middle', 1);
+  assert.deepEqual(
+    movedForward.widgets.filter((widget) => widget.zone === 'content').map((widget) => [widget.instanceId, widget.order]),
+    [['back', 10], ['middle', 30], ['front', 20]]
+  );
+  assert.equal(movedForward.widgets.find((widget) => widget.instanceId === 'status').order, 10);
+  assert.equal(moveClassBoardWidgetLayer(board, 'back', -1), board);
+  assert.match(styles, /\.class-board-canvas__content\s*\{[^}]*z-index:1/);
+  assert.match(styles, /\.class-board-canvas__sidebar\s*\{[^}]*z-index:2/);
+  assert.match(frame, /placementStyle\(draftPlacement, instance\.order\)/);
+  assert.doesNotMatch(frame, /selected \? 1001/);
+  assert.match(layerControls, /한 층 뒤로[\s\S]*한 층 앞으로[\s\S]*오늘 현황은 항상 가장 앞/);
+  assert.match(entry, /<WidgetLayerControls[\s\S]*onMove=\{moveSelected\}/);
+  assert.match(presentationEditPanel, /<WidgetLayerControls[\s\S]*onMove=\{onMoveLayer\}/);
+  assert.match(presentation, /moveClassBoardWidgetLayer\(current, selectedInstanceId, direction\)/);
 });
 
 test('이미지 업로드는 실제 비율로 위젯을 자동 맞추고 이후 자유 크기 조절을 유지한다', () => {

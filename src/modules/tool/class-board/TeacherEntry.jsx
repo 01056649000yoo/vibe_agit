@@ -15,6 +15,8 @@ import {
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
 import { WidgetSettingsHost } from './host/WidgetHost';
+import WidgetLayerControls from './host/WidgetLayerControls';
+import { moveClassBoardWidgetLayer } from './host/widgetLayers';
 import ClassBoardTabs from './navigation/ClassBoardTabs';
 import HiddenClassBoardPanel from './navigation/HiddenClassBoardPanel';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
@@ -302,20 +304,9 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     )),
   }));
 
-  const moveSelected = (direction) => updateBoard((current) => {
-    const sameZone = current.widgets.filter((item) => item.zone === selectedInstance.zone).sort((a, b) => a.order - b.order);
-    const index = sameZone.findIndex((item) => item.instanceId === selectedInstanceId);
-    const target = sameZone[index + direction];
-    if (!target) return current;
-    return {
-      ...current,
-      widgets: current.widgets.map((item) => {
-        if (item.instanceId === selectedInstanceId) return { ...item, order: target.order };
-        if (item.instanceId === target.instanceId) return { ...item, order: selectedInstance.order };
-        return item;
-      }),
-    };
-  });
+  const moveSelected = (direction) => updateBoard((current) => (
+    moveClassBoardWidgetLayer(current, selectedInstanceId, direction)
+  ));
 
   const removeSelected = () => {
     if (!selectedInstance || !window.confirm(`${getClassBoardWidget(selectedInstance.widgetId)?.name || '위젯'}을 화면에서 뺄까요?`)) return;
@@ -435,9 +426,13 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
                   boardId={board.id}
                   onChange={updateSelectedConfig}
                 />
+                <WidgetLayerControls
+                  board={board}
+                  instanceId={selectedInstanceId}
+                  disabled={pastingImage}
+                  onMove={moveSelected}
+                />
                 <div className="class-board-instance-controls">
-                  <button type="button" disabled={selectedInstance.zone !== 'content' || pastingImage} onClick={() => moveSelected(-1)}>뒤로</button>
-                  <button type="button" disabled={selectedInstance.zone !== 'content' || pastingImage} onClick={() => moveSelected(1)}>앞으로</button>
                   <button
                     type="button"
                     disabled={selectedInstance.zone !== 'content' || pastingImage}

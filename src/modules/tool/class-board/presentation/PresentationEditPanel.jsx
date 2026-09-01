@@ -2,9 +2,11 @@ import React from 'react';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import { getClassBoardWidget } from '../widgets/registry';
 import { WidgetSettingsHost } from '../host/WidgetHost';
+import WidgetLayerControls from '../host/WidgetLayerControls';
 
 export default function PresentationEditPanel({
   addableWidgets,
+  board,
   selectedInstance,
   settingsAnchorStyle,
   classId,
@@ -16,6 +18,7 @@ export default function PresentationEditPanel({
   notice,
   onAdd,
   onConfigChange,
+  onMoveLayer,
   onTogglePin,
   onRemove,
   onCloseSelection,
@@ -75,6 +78,12 @@ export default function PresentationEditPanel({
             classId={classId}
             boardId={boardId}
             onChange={onConfigChange}
+          />
+          <WidgetLayerControls
+            board={board}
+            instanceId={selectedInstance.instanceId}
+            disabled={busy}
+            onMove={onMoveLayer}
           />
           <div className="class-board-presentation-settings__actions">
             <button type="button" disabled={busy} onClick={onTogglePin}>

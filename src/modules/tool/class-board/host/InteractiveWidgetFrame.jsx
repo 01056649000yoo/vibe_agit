@@ -134,7 +134,7 @@ export default function InteractiveWidgetFrame({
       data-board-instance-id={instance.instanceId}
       aria-keyshortcuts={editable && selected ? 'Escape' : undefined}
       className={`class-board-widget-frame class-board-widget-frame--freeform${selected ? ' is-selected' : ''}${draftPlacement.pinned ? ' is-pinned' : ''}`}
-      style={placementStyle(draftPlacement, selected ? 1001 : instance.order)}
+      style={placementStyle(draftPlacement, instance.order)}
       onPointerDown={select}
     >
       {editable ? (

@@ -13,6 +13,7 @@ import {
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
+import { moveClassBoardWidgetLayer } from './host/widgetLayers';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
 import useClassBoardSettingsAnchor from './presentation/useClassBoardSettingsAnchor';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
@@ -175,6 +176,11 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setNotice('');
   };
 
+  const moveSelectedLayer = (direction) => {
+    setDraftBoard((current) => moveClassBoardWidgetLayer(current, selectedInstanceId, direction));
+    setNotice('');
+  };
+
   const removeSelected = () => {
     if (!selectedInstance || !window.confirm(`${getClassBoardWidget(selectedInstance.widgetId)?.name || '자료'}를 화면에서 삭제할까요?`)) return;
     setDraftBoard((current) => current ? ({
@@ -240,6 +246,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
       {editing ? (
         <PresentationEditPanel
           addableWidgets={addableWidgets}
+          board={draftBoard}
           selectedInstance={selectedInstance}
           settingsAnchorStyle={settingsAnchorStyle}
           classId={data.class?.id}
@@ -251,6 +258,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           notice={notice}
           onAdd={addWidget}
           onConfigChange={updateSelectedConfig}
+          onMoveLayer={moveSelectedLayer}
           onTogglePin={toggleSelectedPin}
           onRemove={removeSelected}
           onCloseSelection={clearSelection}
