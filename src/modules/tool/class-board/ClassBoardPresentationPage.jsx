@@ -12,6 +12,7 @@ import {
   updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
+import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
@@ -176,6 +177,11 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setSelectedInstanceId(null);
     setNotice('자료를 화면에서 뺐습니다. 저장하면 확정됩니다.');
   };
+
+  useClassBoardEscapeRemove({
+    enabled: editing && Boolean(selectedInstance) && !saving && !pastingImage,
+    onRemove: removeSelected,
+  });
 
   const save = async () => {
     if (!draftBoard || !data?.class?.id || !dirty || pastingImage) return;

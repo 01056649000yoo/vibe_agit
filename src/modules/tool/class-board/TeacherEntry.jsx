@@ -13,6 +13,7 @@ import {
   updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
+import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
 import { WidgetSettingsHost } from './host/WidgetHost';
 import ClassBoardTabs from './navigation/ClassBoardTabs';
 import HiddenClassBoardPanel from './navigation/HiddenClassBoardPanel';
@@ -322,6 +323,11 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setSelectedInstanceId(null);
   };
 
+  useClassBoardEscapeRemove({
+    enabled: Boolean(selectedInstance) && !saving && !pastingImage,
+    onRemove: removeSelected,
+  });
+
   if (!activeClass?.id) return <div className="class-board-empty">먼저 사용할 학급을 선택해 주세요.</div>;
   if (loading) return <div className="class-board-empty">우리 반 스크린을 불러오는 중…</div>;
 
@@ -400,7 +406,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
             <p className="class-board-canvas-help" aria-live="polite">
               {pastingImage
                 ? '붙여넣은 캡처를 화면용 이미지로 준비하는 중…'
-                : '캡처 이미지는 Ctrl+V로 붙여넣으면 원본 비율에 맞춰 추가됩니다. 이미지나 텍스트 자체를 드래그해 옮기고 테두리로 크기를 조절하세요.'}
+                : '캡처 이미지는 Ctrl+V로 붙여넣으면 원본 비율에 맞춰 추가됩니다. 위젯을 선택한 뒤 Esc를 누르면 화면에서 뺄 수 있습니다. 이미지나 텍스트 자체를 드래그해 옮기고 테두리로 크기를 조절하세요.'}
             </p>
             <BoardCanvas
               board={board}

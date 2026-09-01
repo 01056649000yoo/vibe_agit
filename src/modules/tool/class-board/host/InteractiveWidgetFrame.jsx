@@ -131,6 +131,7 @@ export default function InteractiveWidgetFrame({
     <div
       ref={frameRef}
       data-board-frame
+      aria-keyshortcuts={editable && selected ? 'Escape' : undefined}
       className={`class-board-widget-frame class-board-widget-frame--freeform${selected ? ' is-selected' : ''}${draftPlacement.pinned ? ' is-pinned' : ''}`}
       style={placementStyle(draftPlacement, selected ? 1001 : instance.order)}
       onPointerDown={select}

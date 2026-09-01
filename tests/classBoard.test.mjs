@@ -9,6 +9,7 @@ import {
   resizePlacementByPixels,
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
 import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
+import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/host/useClassBoardEscapeRemove.js';
 import { normalizeTextScale } from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
 
@@ -61,7 +62,7 @@ const [
 ]);
 
 const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale,
-  stageMigration, stageSmoke, caddy] = await Promise.all([
+  stageMigration, stageSmoke, caddy, escapeRemoveHook] = await Promise.all([
   read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
   read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
   read('src/modules/tool/class-board/widgets/timer/TimerSettings.jsx'),
@@ -72,6 +73,7 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('supabase/migrations/20261219_class_board_stage_weather_audio.sql'),
   read('tests/sql/20261219_class_board_stage_weather_audio.smoke.sql'),
   read('Caddyfile.container'),
+  read('src/modules/tool/class-board/host/useClassBoardEscapeRemove.js'),
 ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -161,7 +163,22 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면 위젯 내용도 칸에 맞춰 함께 변하며/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면 핵심 정보가 칸을 가득 쓰며 함께 변합니다/);
+});
+
+test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
+  assert.equal(isClassBoardTextEntryTarget({ closest: () => ({ tagName: 'INPUT' }) }), true);
+  assert.equal(isClassBoardTextEntryTarget({ closest: () => null }), false);
+  assert.match(escapeRemoveHook, /event\.key !== 'Escape'/);
+  assert.match(escapeRemoveHook, /event\.repeat[\s\S]*event\.isComposing[\s\S]*isClassBoardTextEntryTarget\(event\.target\)/);
+  assert.match(escapeRemoveHook, /window\.addEventListener\('keydown', removeWithEscape\)/);
+  assert.match(escapeRemoveHook, /window\.removeEventListener\('keydown', removeWithEscape\)/);
+  assert.match(entry, /useClassBoardEscapeRemove\([\s\S]*enabled: Boolean\(selectedInstance\) && !saving && !pastingImage/);
+  assert.match(presentation, /useClassBoardEscapeRemove\([\s\S]*enabled: editing && Boolean\(selectedInstance\) && !saving && !pastingImage/);
+  assert.match(frame, /aria-keyshortcuts=\{editable && selected \? 'Escape' : undefined\}/);
+  assert.match(entry, /위젯을 선택한 뒤 Esc를 누르면 화면에서 뺄 수 있습니다/);
+  assert.match(presentationEditPanel, /선택한 자료는 Esc로 뺄 수 있고/);
+  assert.match(guides, /선택한 위젯은 `Esc`로 화면에서 뺄 수 있고/);
 });
 
 test('캡처 이미지는 Ctrl+V로 붙여넣고 실제 비율에 맞춰 교체 또는 추가한다', () => {
@@ -359,6 +376,18 @@ test('수업 위젯은 자유 배치 프레임 전체를 쓰고 프레임 크기
   assert.match(responsiveWidgets, /cqmin/);
   assert.equal(responsiveWidgets.includes('vw'), false);
   assert.match(responsiveWidgets, /\.class-board-clock>div,\.class-board-picker>div\s*\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 남은 프레임에 채운다', () => {
+  assert.match(styles, /\.class-board-text\s*\{[^}]*padding:clamp\(6px,3\.5cqmin,18px\)/);
+  assert.match(styles, /\.class-board-weather\s*\{[^}]*gap:clamp\(2px,2cqmin,10px\)[^}]*padding:clamp\(4px,2\.5cqmin,14px\)/);
+  assert.match(styles, /\.class-board-weather h2\s*\{[^}]*font-size:clamp\(\.75rem,12cqmin,3\.4rem\)/);
+  assert.match(styles, /\.class-board-clock\s*\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
+  assert.match(styles, /\.class-board-picker\s*\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto auto/);
+  assert.match(styles, /\.class-board-clock>strong\s*\{[^}]*width:100%; height:100%[^}]*26cqmin/);
+  assert.match(styles, /\.class-board-picker>strong\s*\{[^}]*width:100%; height:100%[^}]*20cqmin/);
+  assert.match(styles, /\.class-board-clock>div,\.class-board-picker>div\s*\{[^}]*width:100%/);
+  assert.match(styles, /\.class-board-status\s*\{[^}]*padding:16px 14px/);
 });
 
 test('텍스트는 프리셋으로 크기를 고르고 위젯 크기에 같은 비율로 반응한다', () => {
