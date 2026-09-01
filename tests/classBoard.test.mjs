@@ -161,7 +161,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지나 텍스트 자체를 마우스로 드래그해 위치를 정합니다/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면 위젯 내용도 칸에 맞춰 함께 변하며/);
 });
 
 test('캡처 이미지는 Ctrl+V로 붙여넣고 실제 비율에 맞춰 교체 또는 추가한다', () => {
@@ -311,6 +311,21 @@ test('날씨·타이머·스톱워치·학생 뽑기는 필요한 때만 실행�
   assert.doesNotMatch(classroomWidgetsMigration.slice(classroomWidgetsMigration.indexOf("'names'")), /'student_id'|'auth_id'|'student_code'/);
   assert.match(stageMigration, /WHEN 'weather'[\s\S]*weatherSource[\s\S]*WHEN 'timer'[\s\S]*alarmVolume[\s\S]*WHEN 'student-picker'[\s\S]*soundVolume/);
   assert.match(stageSmoke, /범위를 벗어난 날씨 좌표[\s\S]*타이머 소리 크기[\s\S]*뽑기 소리 크기/);
+});
+
+test('수업 위젯은 자유 배치 프레임 전체를 쓰고 프레임 크기에 맞춰 함께 변형된다', () => {
+  assert.match(styles, /\.class-board-widget-frame--freeform\s*\{[^}]*container-type:size/);
+  assert.match(styles, /\.class-board-widget-frame--medium:not\(\.class-board-widget-frame--freeform\)/);
+  assert.doesNotMatch(styles, /\.class-board-widget-frame--(?:small|medium|large)\s*\{/);
+  const responsiveWidgets = styles.slice(
+    styles.indexOf('.class-board-weather {'),
+    styles.indexOf('.class-board-checkbox-field')
+  );
+  assert.match(responsiveWidgets, /\.class-board-weather\s*\{[^}]*height:100%;[^}]*overflow:hidden/);
+  assert.match(responsiveWidgets, /\.class-board-clock,\.class-board-picker\s*\{[^}]*height:100%;[^}]*overflow:hidden/);
+  assert.match(responsiveWidgets, /cqmin/);
+  assert.equal(responsiveWidgets.includes('vw'), false);
+  assert.match(responsiveWidgets, /\.class-board-clock>div,\.class-board-picker>div\s*\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 
 test('텍스트는 프리셋으로 크기를 고르고 위젯 크기에 같은 비율로 반응한다', () => {
