@@ -5,6 +5,9 @@ set -euo pipefail
 OPENCLAW="${OPENCLAW:-/opt/homebrew/bin/openclaw}"
 REPO_ROOT="${REPO_ROOT:-/Users/seunghyeonmaegmini/vibe_agit}"
 REPORT_SCRIPT="${REPO_ROOT}/scripts/report-service-health.sh"
+SQLITE3="${SQLITE3:-/usr/bin/sqlite3}"
+OPENCLAW_STATE_DB="${OPENCLAW_STATE_DB:-/Users/seunghyeonmaegmini/.openclaw/state/openclaw.sqlite}"
+TELEGRAM_TARGET="${TELEGRAM_TARGET:-}"
 
 if [ ! -x "$OPENCLAW" ]; then
     echo "OpenClaw 실행 파일을 찾지 못했습니다: $OPENCLAW" >&2
@@ -15,6 +18,23 @@ if [ ! -x "$REPORT_SCRIPT" ]; then
     exit 1
 fi
 
+# 수신자 ID는 저장소에 넣지 않는다. 명시하지 않았으면 OpenClaw가 이미 승인한
+# Telegram DM 대상이 정확히 하나일 때만 그 값을 재사용한다.
+if [ -z "$TELEGRAM_TARGET" ]; then
+    if [ ! -x "$SQLITE3" ] || [ ! -r "$OPENCLAW_STATE_DB" ]; then
+        echo "TELEGRAM_TARGET을 지정하거나 OpenClaw 상태 DB를 확인해 주세요." >&2
+        exit 1
+    fi
+    telegram_targets="$($SQLITE3 "$OPENCLAW_STATE_DB" \
+        "SELECT entry FROM channel_pairing_allow_entries WHERE channel_key = 'telegram' ORDER BY sort_order, entry;")"
+    target_count="$(printf '%s\n' "$telegram_targets" | awk 'NF { count += 1 } END { print count + 0 }')"
+    if [ "$target_count" -ne 1 ]; then
+        echo "승인된 Telegram DM 대상이 ${target_count}개입니다. TELEGRAM_TARGET을 명시해 주세요." >&2
+        exit 1
+    fi
+    TELEGRAM_TARGET="$(printf '%s\n' "$telegram_targets" | awk 'NF { print; exit }')"
+fi
+
 "$OPENCLAW" cron add \
     --name "아지트 낮 상태 보고" \
     --display-name "아지트 낮 상태 보고" \
@@ -23,11 +43,11 @@ fi
     --cron "0 8-18/2 * * *" \
     --tz "Asia/Seoul" \
     --exact \
-    --session main \
     --command "$REPORT_SCRIPT" \
     --command-cwd "$REPO_ROOT" \
     --announce \
-    --channel last \
+    --channel telegram \
+    --to "$TELEGRAM_TARGET" \
     --output-max-bytes 512 \
     --no-output-timeout-seconds 90 \
     --timeout-seconds 120 \

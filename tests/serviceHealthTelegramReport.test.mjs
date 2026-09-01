@@ -91,10 +91,12 @@ test('상태 보고는 기존 건강검진을 재사용하고 비밀이나 원�
 test('오픈클로 일정은 낮 8시부터 18시까지 2시간 간격이고 모델을 부르지 않는다', () => {
     assert.match(installScript, /--cron "0 8-18\/2 \* \* \*"/);
     assert.match(installScript, /--tz "Asia\/Seoul"/);
-    assert.match(installScript, /--session main/);
     assert.match(installScript, /--command "\$REPORT_SCRIPT"/);
     assert.match(installScript, /--announce/);
-    assert.match(installScript, /--channel last/);
+    assert.match(installScript, /--channel telegram/);
+    assert.match(installScript, /--to "\$TELEGRAM_TARGET"/);
+    assert.match(installScript, /channel_pairing_allow_entries/);
+    assert.doesNotMatch(installScript, /--to "\d+"/);
     assert.match(installScript, /--declaration-key "agit-daytime-health-report-v1"/);
     assert.match(installScript, /--output-max-bytes 512/);
     assert.doesNotMatch(installScript, /--message|--prompt|--model/);
