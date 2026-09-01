@@ -23,6 +23,7 @@ fi
     --cron "0 8-18/2 * * *" \
     --tz "Asia/Seoul" \
     --exact \
+    --session main \
     --command "$REPORT_SCRIPT" \
     --command-cwd "$REPO_ROOT" \
     --announce \

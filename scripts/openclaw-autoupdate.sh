@@ -53,24 +53,19 @@ if [ "$MODE" = "--check-only" ]; then
   exit 0
 fi
 
-# 설정 백업. 되돌릴 때 이 파일을 쓴다.
+# 설정 백업. 새 버전 진단이나 수동 복구 때 비교할 수 있게 남긴다.
 backup="$USER_HOME/.openclaw/openclaw.json.pre-$latest-$(date +%Y%m%d-%H%M%S)"
 cp "$CONFIG" "$backup"
 log "설정 백업 $backup"
 
-rollback() {
-  log "되돌리는 중: $latest → $installed"
-  npm install -g "openclaw@$installed" >>"$LOG" 2>&1 || log "되돌리기 설치 실패"
-  cp "$backup" "$CONFIG" 2>/dev/null || true
-  launchctl kickstart -k "$GATEWAY_LABEL" >>"$LOG" 2>&1 || true
-  sleep 10
-  write_status ROLLED_BACK "$latest 실패, $installed 로 복구"
-  log "ROLLED_BACK $installed"
+mark_attention() {
+  write_status NEEDS_ATTENTION "$installed → $latest; 상태 스키마가 바뀌었을 수 있어 새 패키지를 유지"
+  log "NEEDS_ATTENTION $latest 유지: 상태 마이그레이션 뒤 패키지·설정 자동 롤백은 금지"
 }
 
 if ! npm install -g "openclaw@$latest" >>"$LOG" 2>&1; then
   log "설치 실패"
-  rollback
+  write_status FAILED "$installed → $latest 설치 실패(게이트웨이 재시작 전)"
   exit 1
 fi
 
@@ -90,8 +85,15 @@ try {
 
 if [ "$code" != "200" ] || [ "$config_ok" = "broken" ]; then
   log "스모크 실패 게이트웨이=$code 설정=$config_ok"
-  rollback
-  exit 1
+  log "설치한 $latest 패키지로 doctor 복구 시도"
+  openclaw doctor --fix --non-interactive --yes >>"$LOG" 2>&1 || true
+  launchctl kickstart -k "$GATEWAY_LABEL" >>"$LOG" 2>&1 || true
+  sleep 12
+  code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$GATEWAY_URL" 2>/dev/null || echo 000)"
+  if [ "$code" != "200" ]; then
+    mark_attention
+    exit 1
+  fi
 fi
 
 now="$(node -e "console.log(require('/opt/homebrew/lib/node_modules/openclaw/package.json').version)" 2>/dev/null || echo "?")"
