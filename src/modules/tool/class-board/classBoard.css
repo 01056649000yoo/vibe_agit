@@ -3,6 +3,7 @@
 .class-board-editor__header { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; padding:22px 24px; border:1px solid var(--board-border); border-radius:22px; background:linear-gradient(135deg,#f8fbff,#f2f5ff); }
 .class-board-editor__header>div:first-child>span { color:#5270a8; font-size:.75rem; font-weight:900; letter-spacing:.03em; }
 .class-board-editor__header h2 { margin:5px 0 4px; font-size:1.55rem; }
+.class-board-beta-badge { display:inline-flex; vertical-align:middle; margin-left:5px; padding:3px 7px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:var(--ui-text-xs); font-weight:950; letter-spacing:.02em; }
 .class-board-editor__header p { margin:0; color:#64748b; font-size:.84rem; line-height:1.55; }
 .class-board-editor__header-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
 .class-board-editor__header-actions>.guide-info-button { margin-right:0; }

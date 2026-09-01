@@ -14,7 +14,7 @@ import './classBoard.css';
 
 const snapshot = (board) => JSON.stringify(board);
 
-export default function ClassBoardTeacherEntry({ activeClass }) {
+export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [boards, setBoards] = useState([]);
   const [board, setBoard] = useState(null);
   const [savedSnapshot, setSavedSnapshot] = useState('');
@@ -191,7 +191,7 @@ export default function ClassBoardTeacherEntry({ activeClass }) {
       <header className="class-board-editor__header">
         <div>
           <span>학급운영도구 · {activeClass.name}</span>
-          <h2>🖥️ 우리 반 스크린</h2>
+          <h2>🖥️ 우리 반 스크린 {module?.tool?.beta && <span className="class-board-beta-badge">Beta</span>}</h2>
           <p>안내 자료와 끄적끄적 아지트 글쓰기 현황을 한 화면에 배치합니다.</p>
         </div>
         <div className="class-board-editor__header-actions">

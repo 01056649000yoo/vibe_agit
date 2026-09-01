@@ -7,6 +7,5 @@ export const classBoardManifest = {
   audience: 'teacher',
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 20 },
   teacherEntry: () => import('./TeacherEntry'),
-  tool: { order: 5, launchMode: 'embedded' },
+  tool: { order: 5, launchMode: 'embedded', beta: true },
 };
-

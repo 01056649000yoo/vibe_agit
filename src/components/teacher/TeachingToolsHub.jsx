@@ -80,6 +80,9 @@ const TeachingToolsHub = ({
                                 }}>
                                     <span aria-hidden="true" style={{ fontSize: '1.15rem' }}>{module.icon || '🧩'}</span>
                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{module.name}</span>
+                                    {module.tool?.beta && (
+                                        <span style={{ flex: '0 0 auto', padding: '2px 6px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontSize: 'var(--ui-text-xs)', fontWeight: '950', letterSpacing: '.02em' }}>Beta</span>
+                                    )}
                                 </button>
                             );
                         })}

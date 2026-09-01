@@ -39,6 +39,7 @@ test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯
   assert.match(manifest, /writes: 'rpc'/);
   assert.match(manifest, /realtime: 'none'/);
   assert.match(manifest, /maxInitialRows: 20/);
+  assert.match(manifest, /beta: true/);
   assert.match(moduleRegistry, /classBoardManifest/);
   assert.match(registry, /textWidgetManifest[\s\S]*imageWidgetManifest[\s\S]*writingStatusWidgetManifest/);
   assert.match(registry, /projectorSafe/);

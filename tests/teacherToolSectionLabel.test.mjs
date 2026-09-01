@@ -44,4 +44,6 @@ test('학급운영도구는 우리 반 스크린 → 급식판 → 자리·역�
   assert.match(hub, /: TOOL_MODULES\[0\]\?\.module\.id \?\? null/);
   assert.match(hub, /<selected\.Entry /);
   assert.doesNotMatch(hub, /TOOL_MODULES\.map\([\s\S]*<Entry /);
+  assert.equal(classBoardManifest.tool.beta, true);
+  assert.match(hub, /module\.tool\?\.beta[\s\S]*>Beta</);
 });
