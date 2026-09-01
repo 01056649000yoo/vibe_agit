@@ -7,23 +7,65 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
+const readBinary = (relativePath) => readFile(path.join(root, relativePath));
 const canonicalOrigin = 'https://xn--vz0ba242ncqcba79xhwx.site';
+const pageTitle = '끄적끄적 아지트 | 초등 학급 글쓰기 지도 플랫폼';
+const socialDescription = '선생님이 과제와 피드백으로 글쓰기를 지도하고, 학생은 과제·독서록·일기를 쓰며 친구들과 나눠요. 꾸준히 쓸수록 나만의 수호룡과 아지트도 함께 자라요.';
+const socialImagePath = '/assets/landing-hero-reference.jpg?v=4';
 
-test('검색 대표 주소와 공개 메타데이터는 www 없는 운영 도메인 하나를 가리킨다', async () => {
-  const [index, identity, store] = await Promise.all([
+const readJpegSize = (image) => {
+  assert.equal(image.readUInt16BE(0), 0xffd8, '공유 이미지는 JPEG여야 한다');
+
+  let offset = 2;
+  while (offset + 8 < image.length) {
+    if (image.readUInt8(offset) !== 0xff) {
+      offset += 1;
+      continue;
+    }
+
+    const marker = image.readUInt8(offset + 1);
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      return {
+        height: image.readUInt16BE(offset + 5),
+        width: image.readUInt16BE(offset + 7),
+      };
+    }
+
+    offset += 2 + image.readUInt16BE(offset + 2);
+  }
+
+  assert.fail('공유 JPEG에서 크기 정보를 찾지 못했다');
+};
+
+test('검색·소셜 공유 메타데이터는 현재 서비스 문구와 메인 이미지를 함께 사용한다', async () => {
+  const [index, identity, store, socialImage] = await Promise.all([
     read('index.html'),
     read('src/constants/serviceIdentity.js'),
     read('src/store/useAppStore.js'),
+    readBinary('public/assets/landing-hero-reference.jpg'),
   ]);
 
   assert.match(index, new RegExp(`<link rel="canonical" href="${canonicalOrigin}/"`));
   assert.match(index, new RegExp(`<meta property="og:url" content="${canonicalOrigin}/"`));
-  assert.match(index, new RegExp(`<meta property="og:image" content="${canonicalOrigin}/assets/og-image\\.webp\\?v=3"`));
+  assert.ok(index.includes(`<meta property="og:image" content="${canonicalOrigin}${socialImagePath}"`));
+  assert.ok(index.includes(`<meta name="twitter:image" content="${canonicalOrigin}${socialImagePath}"`));
   assert.doesNotMatch(index, /www\.xn--vz0ba242ncqcba79xhwx\.site/);
   assert.match(index, /<meta name="robots" content="index,follow"/);
-  assert.match(index, /<title>끄적끄적 아지트 - 초등 학급 글쓰기 플랫폼<\/title>/);
-  assert.match(identity, /SERVICE_PAGE_TITLE = '끄적끄적 아지트 - 초등 학급 글쓰기 플랫폼'/);
+  assert.ok(index.includes(`<title>${pageTitle}</title>`));
+  assert.ok(identity.includes(`SERVICE_PAGE_TITLE = '${pageTitle}'`));
   assert.match(store, /document\.title = SERVICE_PAGE_TITLE/);
+  assert.ok(index.includes(`<meta property="og:title" content="${pageTitle}"`));
+  assert.ok(index.includes(`<meta name="twitter:title" content="${pageTitle}"`));
+  assert.ok(index.includes(`<meta property="og:description" content="${socialDescription}"`));
+  assert.ok(index.includes(`<meta name="twitter:description" content="${socialDescription}"`));
+  assert.match(index, /<meta property="og:locale" content="ko_KR"/);
+  assert.match(index, /<meta property="og:image:type" content="image\/jpeg"/);
+  assert.match(index, /<meta property="og:image:width" content="1723"/);
+  assert.match(index, /<meta property="og:image:height" content="913"/);
+  assert.match(index, /<meta property="og:image:alt" content="책상에서 글을 쓰는 초록 수호룡과 끄적끄적 아지트 소개"/);
+  assert.match(index, /<meta name="twitter:image:alt" content="책상에서 글을 쓰는 초록 수호룡과 끄적끄적 아지트 소개"/);
+  assert.deepEqual(readJpegSize(socialImage), { width: 1723, height: 913 });
+  assert.doesNotMatch(index, /assets\/og-image\.webp|우리 반 글쓰기 통합 플랫폼/);
 });
 
 test('robots와 sitemap은 같은 대표 주소의 공개 메인만 수집 대상으로 선언한다', async () => {

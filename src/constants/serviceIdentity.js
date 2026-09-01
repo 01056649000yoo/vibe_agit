@@ -19,7 +19,7 @@
 export const SERVICE_IDENTITY_LINE = '선생님이 지도하고 학생이 꾸준히 쓰는, 초등 학급 글쓰기 공간이에요.';
 
 /** 브라우저 탭과 검색 결과에 쓰는 기본 제목. */
-export const SERVICE_PAGE_TITLE = '끄적끄적 아지트 - 초등 학급 글쓰기 플랫폼';
+export const SERVICE_PAGE_TITLE = '끄적끄적 아지트 | 초등 학급 글쓰기 지도 플랫폼';
 
 /** 서비스 이름에 쓰인 `아지트` 가 무슨 뜻인지. 처음 온 사람은 이 말을 모른다. */
 export const AGIT_MEANING = '아지트는 학생마다 하나씩 갖는 나만의 글쓰기 공간이에요';
