@@ -1,5 +1,5 @@
 #!/bin/bash
-# 맥미니 OpenClaw에 낮 시간 2시간 간격의 한 줄 상태 보고를 선언한다.
+# 맥미니 OpenClaw에 낮 시간 2시간 간격의 간단한 상태 보고를 선언한다.
 set -euo pipefail
 
 OPENCLAW="${OPENCLAW:-/opt/homebrew/bin/openclaw}"
@@ -18,7 +18,7 @@ fi
 "$OPENCLAW" cron add \
     --name "아지트 낮 상태 보고" \
     --display-name "아지트 낮 상태 보고" \
-    --description "08~18시 2시간 간격으로 아지트 정상/문제 있음 한 줄만 텔레그램에 전달" \
+    --description "08~18시 2시간 간격으로 서비스 지속 가능성과 핵심 상태·상세 화면 위치를 텔레그램에 전달" \
     --declaration-key "agit-daytime-health-report-v1" \
     --cron "0 8-18/2 * * *" \
     --tz "Asia/Seoul" \
@@ -27,7 +27,7 @@ fi
     --command-cwd "$REPO_ROOT" \
     --announce \
     --channel last \
-    --output-max-bytes 256 \
+    --output-max-bytes 512 \
     --no-output-timeout-seconds 90 \
     --timeout-seconds 120 \
     --json
