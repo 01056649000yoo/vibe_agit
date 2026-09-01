@@ -89,7 +89,7 @@ test('첫 스크린은 자유 배치 자료와 접어서 공간을 돌려받는 
   assert.match(frame, /setPointerCapture/);
   assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
   assert.match(frame, /aria-pressed=\{draftPlacement\.pinned\}/);
-  assert.match(entry, /새 탭[\s\S]*현재 탭 저장[\s\S]*탭에서 숨기기/);
+  assert.match(tabs, /＋ 새 탭[\s\S]*저장[\s\S]*삭제/);
   assert.match(entry, /beforeunload/);
   assert.match(entry, /p_expected_revision|classBoardApi\.save/);
 });
@@ -101,18 +101,20 @@ test('저장한 스크린은 상단 탭으로 전환하고 각각 독립적으�
   assert.match(tabs, /aria-selected=\{selected\}/);
   assert.match(tabs, /onSelect\(item\)/);
   assert.match(tabs, /수정 중/);
-  assert.match(tabs, /＋ 새 탭/);
+  assert.match(tabs, /className="class-board-tabs__actions"[\s\S]*＋ 새 탭[\s\S]*저장[\s\S]*삭제[\s\S]*복제[\s\S]*복구/);
+  assert.match(entry, /onCreate=\{createBoard\}[\s\S]*onSave=[\s\S]*onDelete=[\s\S]*onDuplicate=[\s\S]*onOpenDeleted=/);
   assert.match(entry, /탭 이름/);
-  assert.match(entry, /복제해서 새 탭/);
+  assert.doesNotMatch(entry, /class-board-toolbar__actions/);
+  assert.doesNotMatch(entry, /현재 탭 저장|탭에서 숨기기|복제해서 새 탭/);
   assert.doesNotMatch(entry, /<select[^>]*value=\{board\?\.id/);
 });
 
 test('예전 보관으로 숨겨진 스크린은 담당 교사가 상단 탭으로 복구한다', () => {
   assert.match(entry, /classBoardApi\.getHidden/);
-  assert.match(entry, /숨긴 탭 복구/);
-  assert.match(entry, /aria-controls="class-board-hidden-tabs-panel"[\s\S]*aria-expanded=\{hiddenPanelOpen\}/);
+  assert.match(tabs, /aria-controls="class-board-hidden-tabs-panel"[\s\S]*aria-expanded=\{deletedPanelOpen\}/);
   assert.match(entry, /classBoardApi\.restore\(boardId\)[\s\S]*상단 탭으로 복구했습니다/);
-  assert.match(hiddenTabs, /예전 `보관`으로 사라진 스크린/);
+  assert.match(hiddenTabs, /삭제한 탭 복구/);
+  assert.match(hiddenTabs, /예전 `보관` 또는 `삭제`/);
   assert.match(hiddenTabs, /상단 탭으로 복구/);
   assert.match(boardApi, /get_teacher_archived_class_boards_v1/);
   assert.match(boardApi, /restore_teacher_class_board_v1/);

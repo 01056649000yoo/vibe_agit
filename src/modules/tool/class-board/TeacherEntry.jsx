@@ -162,7 +162,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setBoard(next);
     setSavedSnapshot('');
     setSelectedInstanceId(next.widgets[0].instanceId);
-    setNotice('탭 이름과 내용을 다듬은 뒤 `현재 탭 저장`을 눌러 주세요. 이미지는 첫 저장 후 올릴 수 있습니다.');
+    setNotice('탭 이름과 내용을 다듬은 뒤 상단 작업바의 `저장`을 눌러 주세요. 이미지는 첫 저장 후 올릴 수 있습니다.');
   };
 
   const openHiddenBoards = async () => {
@@ -184,7 +184,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       }
     } catch (loadError) {
       if (requestId === hiddenRequestRef.current) {
-        setError(loadError.message || '숨긴 탭을 불러오지 못했습니다.');
+        setError(loadError.message || '삭제한 탭을 불러오지 못했습니다.');
       }
     } finally {
       if (requestId === hiddenRequestRef.current) setHiddenLoading(false);
@@ -192,7 +192,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   };
 
   const restoreHiddenBoard = async (boardId) => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 숨긴 탭을 복구할까요?')) return;
+    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 삭제한 탭을 복구할까요?')) return;
     setSaving(true);
     setError('');
     try {
@@ -205,7 +205,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       selectBoard(restored, { force: true });
       setNotice(`‘${restored.title}’ 스크린을 상단 탭으로 복구했습니다.`);
     } catch (restoreError) {
-      setError(restoreError.message || '숨긴 탭을 복구하지 못했습니다.');
+      setError(restoreError.message || '삭제한 탭을 복구하지 못했습니다.');
     } finally {
       setSaving(false);
     }
@@ -228,15 +228,15 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   };
 
   const hideBoard = async () => {
-    if (!board?.id || dirty || !window.confirm(`‘${board.title}’ 탭을 상단에서 숨길까요?\n숨긴 탭 복구에서 다시 되돌릴 수 있습니다.`)) return;
+    if (!board?.id || dirty || !window.confirm(`‘${board.title}’ 탭을 삭제할까요?\n삭제한 탭 복구에서 다시 되돌릴 수 있습니다.`)) return;
     setSaving(true);
     setError('');
     try {
       await classBoardApi.archive(board.id);
       await loadWorkspace();
-      setNotice('스크린을 상단 탭에서 숨겼습니다. 이미지 파일은 복구와 복사본을 위해 그대로 보존됩니다.');
+      setNotice('스크린을 상단 탭에서 삭제했습니다. 이미지 파일은 복구와 복사본을 위해 그대로 보존됩니다.');
     } catch (archiveError) {
-      setError(archiveError.message || '스크린을 숨기지 못했습니다.');
+      setError(archiveError.message || '스크린을 삭제하지 못했습니다.');
     } finally {
       setSaving(false);
     }
@@ -307,8 +307,6 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         </div>
         <div className="class-board-editor__header-actions">
           <TeacherGuideButton tabId="class-board" variant="help" />
-          <button type="button" className="class-board-secondary" disabled={pastingImage} onClick={createBoard}>새 탭</button>
-          <button type="button" className="class-board-primary" disabled={!board || !dirty || saving || pastingImage} onClick={() => void save()}>{saving ? '저장 중…' : '현재 탭 저장'}</button>
           <button
             type="button"
             className="class-board-present"
@@ -327,8 +325,14 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         currentBoard={board}
         dirty={dirty}
         disabled={saving || pastingImage}
+        saving={saving}
+        deletedPanelOpen={hiddenPanelOpen}
         onSelect={selectBoard}
         onCreate={createBoard}
+        onSave={() => void save()}
+        onDelete={() => void hideBoard()}
+        onDuplicate={() => void duplicate()}
+        onOpenDeleted={() => void openHiddenBoards()}
       />
 
       <div className="class-board-toolbar">
@@ -336,17 +340,6 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
           <span>탭 이름</span>
           <input maxLength={80} disabled={!board || pastingImage} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
         </label>
-        <div className="class-board-toolbar__actions">
-          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void duplicate()}>복제해서 새 탭</button>
-          <button
-            type="button"
-            aria-controls="class-board-hidden-tabs-panel"
-            aria-expanded={hiddenPanelOpen}
-            disabled={saving || pastingImage}
-            onClick={() => void openHiddenBoards()}
-          >{hiddenPanelOpen ? '복구 목록 닫기' : '숨긴 탭 복구'}</button>
-          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void hideBoard()}>탭에서 숨기기</button>
-        </div>
       </div>
 
       {hiddenPanelOpen ? (
