@@ -6,6 +6,7 @@ import { WidgetSettingsHost } from '../host/WidgetHost';
 export default function PresentationEditPanel({
   addableWidgets,
   selectedInstance,
+  settingsAnchorStyle,
   classId,
   boardId,
   dirty,
@@ -54,7 +55,11 @@ export default function PresentationEditPanel({
       ) : null}
 
       {selectedInstance ? (
-        <aside className="class-board-presentation-settings" aria-label="선택한 자료 설정">
+        <aside
+          className={`class-board-presentation-settings${settingsAnchorStyle ? ' is-anchored' : ' is-positioning'}`}
+          style={settingsAnchorStyle || undefined}
+          aria-label="선택한 자료 설정"
+        >
           <header>
             <div>
               <span>선택한 자료</span>

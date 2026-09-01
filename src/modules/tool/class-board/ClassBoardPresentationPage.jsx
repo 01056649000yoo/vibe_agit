@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { classBoardApi } from './classBoardApi';
 import {
@@ -14,6 +14,7 @@ import {
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
+import useClassBoardSettingsAnchor from './presentation/useClassBoardSettingsAnchor';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
@@ -36,6 +37,12 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const visibleBoard = draftBoard || data?.board;
   const dirty = Boolean(draftBoard && data?.board) && snapshot(draftBoard) !== snapshot(data.board);
   const selectedInstance = draftBoard?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
+  const clearSelection = useCallback(() => setSelectedInstanceId(null), []);
+  const settingsAnchorStyle = useClassBoardSettingsAnchor({
+    contentRef: canvasContentRef,
+    enabled: editing && Boolean(selectedInstance),
+    selectedInstanceId,
+  });
   const addableWidgets = useMemo(() => getAddableWidgets(draftBoard?.widgets || [])
     .filter((manifest) => manifest.defaultPlacement.zone === 'content'), [draftBoard?.widgets]);
   const receivePastedImage = (image, pasteContext = {}) => {
@@ -234,6 +241,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         <PresentationEditPanel
           addableWidgets={addableWidgets}
           selectedInstance={selectedInstance}
+          settingsAnchorStyle={settingsAnchorStyle}
           classId={data.class?.id}
           boardId={draftBoard.id}
           dirty={dirty}
@@ -245,7 +253,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           onConfigChange={updateSelectedConfig}
           onTogglePin={toggleSelectedPin}
           onRemove={removeSelected}
-          onCloseSelection={() => setSelectedInstanceId(null)}
+          onCloseSelection={clearSelection}
           onSave={() => void save()}
           onCancel={cancelEditing}
         />
@@ -259,6 +267,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           contentRef={canvasContentRef}
           selectedInstanceId={selectedInstanceId}
           onSelect={setSelectedInstanceId}
+          onClearSelection={clearSelection}
           onPlacementChange={updatePlacement}
         />
       </div>

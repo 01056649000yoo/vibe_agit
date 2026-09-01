@@ -18,6 +18,7 @@ export default function BoardCanvas({
   contentRef,
   selectedInstanceId = null,
   onSelect,
+  onClearSelection,
   onPlacementChange,
 }) {
   const interactionEnabled = editable ?? !presentation;
@@ -87,7 +88,15 @@ export default function BoardCanvas({
 
   return (
     <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}${sidebarCollapsed || !hasSidebar ? ' is-sidebar-collapsed' : ''}`}>
-      <div ref={contentRef} className="class-board-canvas__content">{renderContent()}</div>
+      <div
+        ref={contentRef}
+        className="class-board-canvas__content"
+        onPointerDown={(event) => {
+          if (event.target === event.currentTarget) onClearSelection?.();
+        }}
+      >
+        {renderContent()}
+      </div>
       {hasSidebar ? (
         <aside className="class-board-canvas__sidebar">
           <button

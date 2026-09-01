@@ -164,6 +164,11 @@
   to { transform:scale(1.03); opacity:1; }
 }
 
+@keyframes class-board-settings-arrive {
+  from { transform:translateX(4px); opacity:.7; }
+  to { transform:translateX(0); opacity:1; }
+}
+
 .class-board-status { min-height:inherit; height:100%; overflow:auto; padding:16px 14px; box-sizing:border-box; background:linear-gradient(160deg,#172554,#1e3a8a 62%,#315fc4); color:#fff; }
 .class-board-status__eyebrow { color:#bfdbfe; font-size:.7rem; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
 .class-board-status h2 { margin:8px 0 5px; font-size:clamp(1.25rem,2.2vw,2rem); line-height:1.25; }
@@ -230,7 +235,9 @@
 .class-board-presentation-editbar button.is-save { border-color:#315fc4; background:#315fc4; color:#fff; }
 .class-board-presentation-edit-message { position:fixed; z-index:10030; top:128px; left:50%; max-width:min(620px,calc(100vw - 32px)); transform:translateX(-50%); padding:9px 13px; border:1px solid #bfdbfe; border-radius:999px; background:rgba(239,246,255,.97); color:#1e40af; box-shadow:0 6px 18px rgba(30,64,175,.12); font-size:.72rem; font-weight:850; text-align:center; }
 .class-board-presentation-edit-message.is-error { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
-.class-board-presentation-settings { position:fixed; z-index:10025; top:154px; right:calc(30% + clamp(22px,3vw,52px)); width:min(340px,calc(70vw - 60px)); max-height:calc(100vh - 180px); overflow:auto; box-sizing:border-box; padding:15px; border:1px solid #cbd7e7; border-radius:18px; background:rgba(255,255,255,.98); box-shadow:0 18px 50px rgba(15,23,42,.22); }
+.class-board-presentation-settings { position:fixed; z-index:10025; min-width:0; overflow:auto; box-sizing:border-box; padding:15px; border:1px solid #93b0e7; border-radius:18px; background:rgba(255,255,255,.98); box-shadow:0 18px 50px rgba(15,23,42,.22); }
+.class-board-presentation-settings.is-positioning { visibility:hidden; pointer-events:none; }
+.class-board-presentation-settings.is-anchored { animation:class-board-settings-arrive .12s ease-out; }
 .class-board-presentation-settings>header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px; }
 .class-board-presentation-settings>header span { color:#64748b; font-size:.65rem; font-weight:850; }
 .class-board-presentation-settings>header h2 { margin:3px 0 0; color:#172033; font-size:1rem; }
@@ -280,5 +287,5 @@
   .class-board-presentation-editbar__state { min-width:0; }
   .class-board-presentation-editbar__actions { justify-content:flex-start; }
   .class-board-presentation-edit-message { top:118px; }
-  .class-board-presentation-settings { top:auto; right:10px; bottom:10px; left:10px; width:auto; max-height:58vh; }
+  .class-board-presentation-settings { padding:12px; border-radius:14px; }
 }

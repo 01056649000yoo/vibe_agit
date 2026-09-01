@@ -10,6 +10,7 @@ import {
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
 import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
 import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/host/useClassBoardEscapeRemove.js';
+import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js';
 import { normalizeTextScale } from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
 
@@ -62,7 +63,7 @@ const [
 ]);
 
 const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale,
-  stageMigration, stageSmoke, caddy, escapeRemoveHook] = await Promise.all([
+  stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook] = await Promise.all([
   read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
   read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
   read('src/modules/tool/class-board/widgets/timer/TimerSettings.jsx'),
@@ -74,6 +75,7 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('tests/sql/20261219_class_board_stage_weather_audio.smoke.sql'),
   read('Caddyfile.container'),
   read('src/modules/tool/class-board/host/useClassBoardEscapeRemove.js'),
+  read('src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js'),
 ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -179,6 +181,42 @@ test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중
   assert.match(entry, /위젯을 선택한 뒤 Esc를 누르면 화면에서 뺄 수 있습니다/);
   assert.match(presentationEditPanel, /선택한 자료는 Esc로 뺄 수 있고/);
   assert.match(guides, /선택한 위젯은 `Esc`로 화면에서 뺄 수 있고/);
+});
+
+test('열린 스크린 설정창은 선택 위젯 오른쪽을 따라가고 빈 화면에서 닫힌다', () => {
+  assert.deepEqual(calculateClassBoardSettingsAnchor(
+    { right: 620.2, top: 240.8 },
+    { width: 1280, height: 800 }
+  ), {
+    top: 240,
+    left: 633,
+    width: 340,
+    maxHeight: 550,
+  });
+  assert.deepEqual(calculateClassBoardSettingsAnchor(
+    { right: 900, top: 760 },
+    { width: 1280, height: 800 }
+  ), {
+    top: 610,
+    left: 912,
+    width: 340,
+    maxHeight: 180,
+  });
+  assert.match(frame, /data-board-instance-id=\{instance\.instanceId\}/);
+  assert.match(settingsAnchorHook, /requestAnimationFrame/);
+  assert.match(settingsAnchorHook, /ResizeObserver/);
+  assert.match(settingsAnchorHook, /event\.buttons !== 0/);
+  assert.match(settingsAnchorHook, /window\.addEventListener\('resize'/);
+  assert.match(settingsAnchorHook, /window\.removeEventListener\('resize'/);
+  assert.match(presentation, /useClassBoardSettingsAnchor\([\s\S]*selectedInstanceId/);
+  assert.match(presentation, /settingsAnchorStyle=\{settingsAnchorStyle\}/);
+  assert.match(presentation, /onClearSelection=\{clearSelection\}/);
+  assert.match(canvas, /event\.target === event\.currentTarget[\s\S]*onClearSelection/);
+  assert.match(presentationEditPanel, /is-anchored[\s\S]*is-positioning/);
+  assert.match(presentationEditPanel, /style=\{settingsAnchorStyle \|\| undefined\}/);
+  assert.match(styles, /\.class-board-presentation-settings\.is-positioning\s*\{[^}]*visibility:hidden/);
+  assert.doesNotMatch(styles, /\.class-board-presentation-settings\s*\{[^}]*right:calc\(30%/);
+  assert.match(guides, /설정창이 해당 위젯 오른쪽에 붙어 함께 움직이고[\s\S]*빈 화면이나 닫기/);
 });
 
 test('캡처 이미지는 Ctrl+V로 붙여넣고 실제 비율에 맞춰 교체 또는 추가한다', () => {
