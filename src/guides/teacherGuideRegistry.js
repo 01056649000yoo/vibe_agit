@@ -27,6 +27,7 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     evaluation: { tab: 'evaluation' },
     activity: { tab: 'activity' },
     tools: { tab: 'tools' },
+    'class-board': { tab: 'tools', tool: 'class-board' },
     'meal-board': { tab: 'tools', tool: 'meal-board' },
     'classroom-arrangement': { tab: 'tools', tool: 'classroom-arrangement' },
     dragon: { tab: 'playground', module: 'dragon' },

@@ -18,6 +18,7 @@ import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 import { samlinkManifest } from './tool/samlink/manifest';
 import { classroomArrangementManifest } from './tool/classroom-arrangement/manifest';
 import { mealBoardManifest } from './tool/meal-board/manifest';
+import { classBoardManifest } from './tool/class-board/manifest';
 import { spellingLearningManifest } from './writing/spelling-learning/manifest';
 import { neighborAgitManifest } from './community/neighbor-agit/manifest';
 import { labActivitiesManifest } from './writing/lab-activities/manifest';
@@ -34,6 +35,7 @@ const manifests = [
   samlinkManifest, // src/modules/tool/samlink/
   classroomArrangementManifest, // src/modules/tool/classroom-arrangement/
   mealBoardManifest, // src/modules/tool/meal-board/
+  classBoardManifest, // src/modules/tool/class-board/
   spellingLearningManifest, // src/modules/writing/spelling-learning/
   neighborAgitManifest, // src/modules/community/neighbor-agit/
   labActivitiesManifest, // src/modules/writing/lab-activities/

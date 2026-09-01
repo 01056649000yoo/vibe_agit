@@ -46,6 +46,12 @@ const DiaryPage = lazy(getModule('diary').studentEntry)
 const LabActivitiesPage = lazy(getModule('lab-activities').studentEntry)
 const NeighborAgitStudentEntry = lazy(getModule('neighbor-agit').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
+const ClassBoardPresentationPage = lazy(() => import('./modules/tool/class-board/ClassBoardPresentationPage'))
+
+const getClassBoardPresentationId = () => {
+  const match = window.location.pathname.match(/^\/class-board\/([0-9a-f-]{36})$/i);
+  return match?.[1] || null;
+};
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -79,6 +85,7 @@ const BOOT_SKELETON_KIND = getBootSkeletonKind();
 const STUDENT_LOGIN_HISTORY_PAGE = 'student-login';
 
 function App() {
+  const classBoardPresentationId = getClassBoardPresentationId();
   const {
     session, profile, teacherBootstrap, studentSession, loading, profileLoading,
     checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout
@@ -434,6 +441,28 @@ function App() {
         <p>Supabase 환경 변수가 설정되지 않았습니다.</p>
         <p>프로젝트 루트의 <code>.env</code> 파일에 <code>VITE_SUPABASE_URL</code>과 <code>VITE_SUPABASE_ANON_KEY</code>를 입력해주세요.</p>
       </div>
+    );
+  }
+
+  // 새 탭 발표 화면은 교사 대시보드·푸터를 그리지 않는다. 데이터 권한은 발표 전용 RPC가
+  // board_id에서 학급을 다시 찾고 현재 로그인 교사의 담당 학급인지 확인한다.
+  if (classBoardPresentationId) {
+    if (loading || profileLoading) return <Loading />;
+    if (!session || !profile || (profile.role !== 'ADMIN' && !profile.is_approved)) {
+      return (
+        <div className="class-board-presentation-state is-error">
+          <span>🔒</span><h1>교사 로그인이 필요합니다.</h1>
+          <p>로그인한 교사만 우리 반 스크린을 열 수 있습니다.</p>
+          <a href="/">로그인 화면으로 이동</a>
+        </div>
+      );
+    }
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<Loading />}>
+          <ClassBoardPresentationPage boardId={classBoardPresentationId} />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
