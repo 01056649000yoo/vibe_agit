@@ -29,6 +29,16 @@ FROM (
     LIMIT 1
 ) fixture;
 
+-- 내부 스냅숏 함수는 브라우저 역할에 실행 권한을 열지 않는다. 함수 소유자 상태에서
+-- 비교 기준만 먼저 보관하고, 아래 실제 기능 호출은 authenticated 교사로 검증한다.
+SELECT set_config(
+    'test.board_expected_snapshot',
+    public.teacher_assignment_submission_board_snapshot_v2(
+        current_setting('test.board_class_id')::UUID, NULL, 20, 1
+    )::TEXT,
+    true
+);
+
 DO $$ BEGIN
     IF current_setting('test.board_teacher_id', true) IS NULL THEN
         RAISE EXCEPTION '우리 반 스크린 권한 스모크에 사용할 교사 학급이 없습니다.';
@@ -85,9 +95,7 @@ BEGIN
     v_status := public.get_teacher_class_board_status_v1(
         current_setting('test.board_class_id')::UUID, NULL
     );
-    v_snapshot := public.teacher_assignment_submission_board_snapshot_v2(
-        current_setting('test.board_class_id')::UUID, NULL, 20, 1
-    );
+    v_snapshot := current_setting('test.board_expected_snapshot')::JSONB;
     v_summary := v_snapshot->'scope_summary';
     IF v_status::TEXT ~ 'student_name|student_statuses|recent_submissions|post_id'
        OR (v_status->>'confirmedCount')::INTEGER <> COALESCE((v_summary->>'confirmed_count')::INTEGER, 0)
