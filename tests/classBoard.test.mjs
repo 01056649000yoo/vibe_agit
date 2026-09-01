@@ -72,7 +72,8 @@ const [
 ]);
 
 const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale, fittedTextHook,
-  stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook, layerControls] = await Promise.all([
+  stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook, layerControls, mainEntry,
+  classBoardPreview, classBoardPreviewStyles, agentInstructions] = await Promise.all([
   read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
   read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
   read('src/modules/tool/class-board/widgets/timer/TimerSettings.jsx'),
@@ -87,6 +88,10 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('src/modules/tool/class-board/host/useClassBoardEscapeRemove.js'),
   read('src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js'),
   read('src/modules/tool/class-board/host/WidgetLayerControls.jsx'),
+  read('src/main.jsx'),
+  read('src/dev/ClassBoardPreview.jsx'),
+  read('src/dev/ClassBoardPreview.css'),
+  read('AGENTS.md'),
 ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -104,6 +109,20 @@ test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯
   assert.match(host, /WidgetBoundary/);
   assert.doesNotMatch(canvas, /widgetId\s*===|switch\s*\(.*widgetId/);
   assert.doesNotMatch(entry, /<TextWidget|<ImageWidget|<WritingStatusWidget/);
+});
+
+test('화면 반복 수정은 DB 없는 로컬 미리보기에서 확인하고 명시한 마감 때만 배포한다', () => {
+  assert.match(mainEntry, /import\.meta\.env\.DEV[\s\S]*class-board-preview[\s\S]*ClassBoardPreview\.jsx/);
+  assert.match(classBoardPreview, /개발 전용 · DB 연결 없음/);
+  assert.match(classBoardPreview, /<BoardCanvas[\s\S]*editable[\s\S]*onPlacementChange=\{updatePlacement\}/);
+  assert.match(classBoardPreview, /<WidgetSettingsHost[\s\S]*onChange=\{updateConfig\}/);
+  assert.match(classBoardPreview, /짧은 안내[\s\S]*여러 줄[\s\S]*긴 본문/);
+  assert.doesNotMatch(classBoardPreview, /classBoardApi|supabase|\.save\(/);
+  assert.match(classBoardPreviewStyles, /grid-template-columns:minmax\(0,1fr\) 300px/);
+  assert.match(agentInstructions, /사용자가 \*\*`배포`·`마무리`·`확정`을 명시하기 전까지\*\*[\s\S]*작업트리에만 수정/);
+  assert.match(agentInstructions, /운영 배포를 미리보기[\s\S]*수단으로 쓰지 않는다/);
+  assert.match(agentInstructions, /다른 컴퓨터로 이어갈 때는 배포 없이 동기화[\s\S]*\[skip ci\][\s\S]*origin\/main/);
+  assert.match(agentInstructions, /단순히 `수정해 줘`·`적용해 줘`[\s\S]*`동기화`는 원격 저장 승인[\s\S]*외부 배포 승인으로 해석하지 않는다/);
 });
 
 test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어도 자료 크기를 유지한다', () => {
