@@ -11,7 +11,10 @@ import {
 import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
 import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/host/useClassBoardEscapeRemove.js';
 import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js';
-import { normalizeTextScale } from '../src/modules/tool/class-board/widgets/text/textScale.js';
+import {
+  createResponsiveTextSize,
+  normalizeTextScale,
+} from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
 
 const read = (path) => readFile(path, 'utf8');
@@ -165,7 +168,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면 핵심 정보가 칸을 가득 쓰며 함께 변합니다/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*테두리로 가로·세로 크기를 바꾸면[\s\S]*칸을 따라 함께 변합니다/);
 });
 
 test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
@@ -428,14 +431,28 @@ test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 
   assert.match(styles, /\.class-board-status\s*\{[^}]*padding:16px 14px/);
 });
 
-test('텍스트는 프리셋으로 크기를 고르고 위젯 크기에 같은 비율로 반응한다', () => {
+test('텍스트는 프리셋을 유지하며 프레임 가로·세로 확대에 끝까지 반응한다', () => {
   assert.match(textScale, /0\.8[\s\S]*1\.25[\s\S]*1\.5/);
-  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*칸을 키우거나 줄이면/);
-  assert.match(textWidget, /--class-board-text-heading-size[\s\S]*cqmin/);
-  assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size/);
+  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*가로·세로를 키우거나 줄이면/);
+  assert.match(textWidget, /--class-board-text-heading-size[\s\S]*createResponsiveTextSize\(config\.fontScale, 5\)/);
+  assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size[\s\S]*5cqi \+ 5cqb/);
+  assert.doesNotMatch(styles, /class-board-text h2[^}]*font-size:clamp\([^}]*4rem/);
+  assert.doesNotMatch(styles, /class-board-text__body[^}]*font-size:clamp\([^}]*2\.6rem/);
   assert.equal(normalizeTextScale(0.2), 0.8);
   assert.equal(normalizeTextScale(1.25), 1.25);
   assert.equal(normalizeTextScale(4), 1.5);
+  assert.equal(createResponsiveTextSize(1, 5), 'calc(5cqi + 5cqb)');
+  assert.equal(createResponsiveTextSize(1.25, 3.25), 'calc(4.063cqi + 4.063cqb)');
+
+  const responsivePixels = (width, height, coefficient) => ((width + height) * coefficient) / 100;
+  const headingCoefficient = 5;
+  const initial = responsivePixels(400, 240, headingCoefficient);
+  const wider = responsivePixels(640, 240, headingCoefficient);
+  const taller = responsivePixels(400, 400, headingCoefficient);
+  const diagonal = responsivePixels(640, 400, headingCoefficient);
+  assert.ok(wider > initial);
+  assert.ok(taller > initial);
+  assert.ok(diagonal > wider && diagonal > taller);
 });
 
 test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최소 크기를 지킨다', () => {

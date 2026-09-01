@@ -25,7 +25,7 @@ export default function TextSettings({ config = {}, onChange }) {
             >{option.label}</button>
           ))}
         </div>
-        <small>칸을 키우거나 줄이면 선택한 크기를 기준으로 글씨도 함께 바뀝니다.</small>
+        <small>칸의 가로·세로를 키우거나 줄이면 선택한 크기를 기준으로 글씨도 끝까지 함께 바뀝니다.</small>
       </fieldset>
       <label>
         <span>분위기</span>
