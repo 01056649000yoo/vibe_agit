@@ -212,6 +212,22 @@ test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체�
   assert.doesNotMatch(presentation, /student_name|studentName|student_statuses|recent_submissions/);
 });
 
+test('열린 스크린은 머리말 아래의 가용 화면을 좌우 여백 없이 채운다', () => {
+  const layoutStart = styles.indexOf('.class-board-presentation-page {');
+  const layoutEnd = styles.indexOf('.class-board-presentation-state {');
+  const presentationLayout = styles.slice(layoutStart, layoutEnd);
+
+  assert.notEqual(layoutStart, -1);
+  assert.notEqual(layoutEnd, -1);
+  assert.match(presentationLayout, /class-board-presentation-page \{[^}]*padding:0;/);
+  assert.match(presentationLayout, /class-board-presentation-stage \{[^}]*width:100%; height:100%;/);
+  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas \{[^}]*width:100%; height:100%; aspect-ratio:auto;/);
+  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas \{[^}]*padding:0; border:0; border-radius:0;/);
+  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas__content \{[^}]*border:0; border-radius:0;/);
+  assert.doesNotMatch(presentationLayout, /width:min\(100cqw/);
+  assert.match(guides, /좌우 빈 여백 없이/);
+});
+
 test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
   assert.match(presentation, /✏️ 화면 편집/);
   assert.match(presentation, /draftBoard/);
