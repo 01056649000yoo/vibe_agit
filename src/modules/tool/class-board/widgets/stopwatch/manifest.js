@@ -10,7 +10,7 @@ export const stopwatchWidgetManifest = Object.freeze({
   defaultPlacement: {
     zone: 'content',
     size: 'medium',
-    placement: { x: 66, y: 50, width: 31, height: 32, pinned: false },
+    placement: { x: 46.2, y: 50, width: 21.7, height: 32, pinned: false },
   },
   createDefaultConfig: () => ({ label: '걸린 시간' }),
   load: () => import('./StopwatchWidget'),

@@ -1,4 +1,5 @@
 import React from 'react';
+import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import { getClassBoardWidget } from '../widgets/registry';
 import { WidgetSettingsHost } from '../host/WidgetHost';
 
@@ -59,7 +60,7 @@ export default function PresentationEditPanel({
               <span>선택한 자료</span>
               <h2>{selectedManifest?.icon} {selectedManifest?.name}</h2>
             </div>
-            <button type="button" aria-label="자료 설정 닫기" onClick={onCloseSelection}>×</button>
+            <ModalCloseButton size="sm" label="자료 설정 닫기" onClick={onCloseSelection} />
           </header>
           <p className="class-board-presentation-settings__hint">
             캡처 이미지는 Ctrl+V로 붙여넣으면 원본 비율에 맞춰 들어갑니다. 이미지나 텍스트는 마우스로 옮길 수 있습니다.

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { playTimerAlarm, prepareClassBoardAudio } from '../audio/audioPlayer';
 import { formatClockTime } from '../time/timeFormat';
 
 const stopPointer = (event) => event.stopPropagation();
@@ -20,6 +21,9 @@ export default function TimerWidget({ config = {} }) {
         setNow(nextNow);
         setRemainingOverride(0);
         setEndAt(null);
+        if (config.soundEnabled !== false) {
+          void playTimerAlarm(config.alarmSound, config.alarmVolume);
+        }
         return;
       }
       setNow(nextNow);
@@ -27,7 +31,7 @@ export default function TimerWidget({ config = {} }) {
     };
     timerId = window.setTimeout(tick, 200);
     return () => window.clearTimeout(timerId);
-  }, [endAt]);
+  }, [config.alarmSound, config.alarmVolume, config.soundEnabled, endAt]);
 
   const toggle = () => {
     if (running) {
@@ -35,6 +39,7 @@ export default function TimerWidget({ config = {} }) {
       setEndAt(null);
       return;
     }
+    prepareClassBoardAudio();
     const nextRemaining = remainingMs > 0 ? remainingMs : durationMs;
     setNow(Date.now());
     setEndAt(Date.now() + nextRemaining);

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { classBoardApi } from './classBoardApi';
 import {
   applyPastedClassBoardImage,
@@ -97,6 +98,14 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
+  };
+
+  const closeScreen = async () => {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    window.close();
+    window.setTimeout(() => {
+      if (!window.closed) window.location.assign('/?tool=class-board');
+    }, 100);
   };
 
   const beginEditing = () => {
@@ -212,6 +221,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
           <button type="button" className="class-board-presentation-refresh-button" disabled={pastingImage} onClick={refresh}>새로고침</button>
           <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? '전체화면 나가기' : '전체화면'}</button>
+          <ModalCloseButton label="우리 반 스크린 닫기" onClick={() => void closeScreen()} />
         </div>
       </header>
       {editing ? (
@@ -234,16 +244,18 @@ export default function ClassBoardPresentationPage({ boardId }) {
           onCancel={cancelEditing}
         />
       ) : null}
-      <BoardCanvas
-        board={visibleBoard}
-        classId={data.class?.id}
-        presentation
-        editable={editing}
-        contentRef={canvasContentRef}
-        selectedInstanceId={selectedInstanceId}
-        onSelect={setSelectedInstanceId}
-        onPlacementChange={updatePlacement}
-      />
+      <div className="class-board-presentation-stage">
+        <BoardCanvas
+          board={visibleBoard}
+          classId={data.class?.id}
+          presentation
+          editable={editing}
+          contentRef={canvasContentRef}
+          selectedInstanceId={selectedInstanceId}
+          onSelect={setSelectedInstanceId}
+          onPlacementChange={updatePlacement}
+        />
+      </div>
     </main>
   );
 }

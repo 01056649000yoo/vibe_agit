@@ -9,6 +9,8 @@ import {
   resizePlacementByPixels,
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
 import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
+import { normalizeTextScale } from '../src/modules/tool/class-board/widgets/text/textScale.js';
+import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
 
 const read = (path) => readFile(path, 'utf8');
 
@@ -58,6 +60,20 @@ const [
   read('PERFORMANCE_HARNESS.md'),
 ]);
 
+const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale,
+  stageMigration, stageSmoke, caddy] = await Promise.all([
+  read('src/modules/tool/class-board/widgets/weather/weatherApi.js'),
+  read('src/modules/tool/class-board/widgets/weather/WeatherSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/timer/TimerSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/student-picker/StudentPickerSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/audio/audioPlayer.js'),
+  read('src/modules/tool/class-board/widgets/text/TextSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/text/textScale.js'),
+  read('supabase/migrations/20261219_class_board_stage_weather_audio.sql'),
+  read('tests/sql/20261219_class_board_stage_weather_audio.smoke.sql'),
+  read('Caddyfile.container'),
+]);
+
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
   assert.match(manifest, /id: 'class-board'/);
   assert.match(manifest, /part: 'tool'/);
@@ -75,16 +91,22 @@ test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯
   assert.doesNotMatch(entry, /<TextWidget|<ImageWidget|<WritingStatusWidget/);
 });
 
-test('첫 스크린은 자유 배치 자료와 접어서 공간을 돌려받는 오늘 현황으로 시작한다', () => {
-  assert.match(model, /preset: 'freeform-7-3'/);
+test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어도 자료 크기를 유지한다', () => {
+  assert.match(model, /version: 3, preset: 'freeform-stage-7-3'/);
   assert.match(model, /createWidgetInstance\('text'/);
   assert.match(model, /createWidgetInstance\('image'/);
   assert.match(model, /createWidgetInstance\('writing-status'/);
   assert.match(canvas, /sidebarCollapsed[\s\S]*aria-expanded=\{!sidebarCollapsed\}/);
   assert.match(canvas, /오늘 현황 펼치기[\s\S]*오늘 현황 접기/);
   assert.match(canvas, /is-sidebar-collapsed/);
-  assert.match(styles, /\.class-board-canvas\.is-sidebar-collapsed\s*\{\s*grid-template-columns:minmax\(0,1fr\)/);
-  assert.match(entry, /오늘 현황을 접으면 자료 공간이 전체로 넓어집니다/);
+  assert.match(styles, /\.class-board-canvas\s*\{[^}]*aspect-ratio:16\/9/);
+  assert.match(styles, /\.class-board-canvas__content\s*\{[^}]*width:100%;[^}]*height:100%/);
+  assert.match(styles, /\.class-board-canvas__sidebar\s*\{[^}]*position:absolute;[^}]*width:calc\(30% - 12px\)/);
+  assert.match(styles, /\.class-board-canvas\.is-sidebar-collapsed \.class-board-canvas__sidebar\s*\{/);
+  assert.match(entry, /오늘 현황을 접어도 자료의 위치와 크기는 그대로 유지/);
+  assert.match(model, /migrateLegacyContentPlacement[\s\S]*x: Number\(placement\?\.x \|\| 0\) \* LEGACY_CONTENT_STAGE_RATIO[\s\S]*width: Number\(placement\?\.width \|\| 0\) \* LEGACY_CONTENT_STAGE_RATIO/);
+  assert.match(stageMigration, /v_layout_version = 3[\s\S]*freeform-stage-7-3/);
+  assert.match(stageSmoke, /허용 범위를 넘은 텍스트 크기/);
   assert.match(entry, /Ctrl\+V로 붙여넣으면 원본 비율[\s\S]*드래그해 옮기고[\s\S]*크기를 조절/);
   assert.match(frame, /setPointerCapture/);
   assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
@@ -132,7 +154,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(frame, /dragHandleProps=\{contentDragProps\}/);
   assert.match(frame, /if \(gesture\.changed\) onPlacementChange/);
   assert.match(host, /dragHandleProps[\s\S]*<View[\s\S]*dragHandleProps=\{dragHandleProps\}/);
-  assert.match(textWidget, /<article \{\.\.\.dragHandleProps\}/);
+  assert.match(textWidget, /<article\s+\{\.\.\.dragHandleProps\}/);
   assert.match(imageWidget, /<div \{\.\.\.dragHandleProps\}/);
   assert.match(imageWidget, /<figure \{\.\.\.dragHandleProps\}/);
   assert.match(imageWidget, /<img draggable=\{false\}/);
@@ -183,6 +205,8 @@ test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체�
   assert.match(presentation, /<h1 className="class-board-presentation-class-name">\{data\.class\?\.name \|\| '우리 반'\}<\/h1>/);
   assert.doesNotMatch(presentation, /<h1>\{data\.board\.title\}<\/h1>/);
   assert.match(styles, /\.class-board-presentation-class-name\s*\{[^}]*font-size:clamp\(1\.6rem,3vw,3rem\)/);
+  assert.match(presentation, /<ModalCloseButton label="우리 반 스크린 닫기"/);
+  assert.match(presentationEditPanel, /<ModalCloseButton[\s\S]*label="자료 설정 닫기"/);
   assert.match(guides, /`스크린 열기`/);
   assert.doesNotMatch(guides, /발표 화면/);
   assert.doesNotMatch(presentation, /student_name|studentName|student_statuses|recent_submissions/);
@@ -256,21 +280,47 @@ test('보드·사진·현황은 담당 교사 RPC와 비공개 Storage 경계를
   assert.doesNotMatch(imageApi, /getPublicUrl/);
 });
 
-test('날씨·타이머·스톱워치·학생 뽑기는 지연 위젯이며 서버 저장 경계도 함께 확장한다', () => {
+test('날씨·타이머·스톱워치·학생 뽑기는 필요한 때만 실행하고 서버 저장 경계를 지킨다', () => {
   assert.match(registry, /weatherWidgetManifest[\s\S]*timerWidgetManifest[\s\S]*stopwatchWidgetManifest[\s\S]*studentPickerWidgetManifest/);
   assert.match(classroomWidgetsMigration, /'weather', 'timer', 'stopwatch', 'student-picker'/);
   assert.match(classroomWidgetsMigration, /WHEN 'weather'[\s\S]*WHEN 'timer'[\s\S]*WHEN 'stopwatch'[\s\S]*WHEN 'student-picker'/);
   assert.match(classroomWidgetsSmoke, /수업 위젯 네 종류가 한 스크린에 저장되지 않았습니다/);
-  assert.match(weatherWidget, /오늘의 날씨/);
-  assert.doesNotMatch(weatherWidget, /fetch\(|supabase|navigator\.geolocation/);
+  assert.match(weatherWidget, /getCurrentWeather/);
+  assert.match(weatherSettings, /searchWeatherLocations/);
+  assert.match(weatherApi, /https:\/\/geocoding-api\.open-meteo\.com\/v1\/search/);
+  assert.match(weatherApi, /countryCode', 'KR'/);
+  assert.match(weatherApi, /WEATHER_CACHE_TTL_MS = 30 \* 60 \* 1000/);
+  assert.equal(hasLiveWeatherLocation({ weatherSource: 'live', latitude: null, longitude: null }), false);
+  assert.equal(hasLiveWeatherLocation({ weatherSource: 'live', latitude: 37.566, longitude: 126.978 }), true);
+  assert.equal(hasLiveWeatherLocation({ weatherSource: 'live', latitude: '37.566', longitude: '126.978' }), false);
+  assert.doesNotMatch(`${weatherWidget}\n${weatherSettings}\n${weatherApi}`, /navigator\.geolocation|setInterval/);
+  assert.match(caddy, /connect-src[^;]*https:\/\/api\.open-meteo\.com[^;]*https:\/\/geocoding-api\.open-meteo\.com/);
   assert.match(timerWidget, /window\.setTimeout/);
+  assert.match(timerWidget, /playTimerAlarm/);
+  assert.match(timerSettings, /TIMER_SOUND_OPTIONS[\s\S]*type="range"/);
   assert.match(stopwatchWidget, /window\.setTimeout/);
   assert.doesNotMatch(`${timerWidget}\n${stopwatchWidget}`, /setInterval/);
   assert.match(pickerManifest, /requestBudget: \{ initial: 1, refreshMs: null, realtime: false, maxRows: 100 \}/);
   assert.match(pickerWidget, /classBoardApi\.getRoster\(classId\)/);
+  assert.match(pickerWidget, /totalSteps = 20[\s\S]*progress \* progress \* 300/);
+  assert.match(pickerWidget, /playPickerTick[\s\S]*playPickerSelected/);
+  assert.match(pickerSettings, /soundEnabled[\s\S]*type="range"/);
+  assert.match(audioPlayer, /AudioContext[\s\S]*TIMER_SEQUENCES/);
   assert.match(classroomWidgetsMigration, /get_teacher_class_board_roster_v1[\s\S]*LIMIT 100/);
   assert.match(classroomWidgetsMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
   assert.doesNotMatch(classroomWidgetsMigration.slice(classroomWidgetsMigration.indexOf("'names'")), /'student_id'|'auth_id'|'student_code'/);
+  assert.match(stageMigration, /WHEN 'weather'[\s\S]*weatherSource[\s\S]*WHEN 'timer'[\s\S]*alarmVolume[\s\S]*WHEN 'student-picker'[\s\S]*soundVolume/);
+  assert.match(stageSmoke, /범위를 벗어난 날씨 좌표[\s\S]*타이머 소리 크기[\s\S]*뽑기 소리 크기/);
+});
+
+test('텍스트는 프리셋으로 크기를 고르고 위젯 크기에 같은 비율로 반응한다', () => {
+  assert.match(textScale, /0\.8[\s\S]*1\.25[\s\S]*1\.5/);
+  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*칸을 키우거나 줄이면/);
+  assert.match(textWidget, /--class-board-text-heading-size[\s\S]*cqmin/);
+  assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size/);
+  assert.equal(normalizeTextScale(0.2), 0.8);
+  assert.equal(normalizeTextScale(1.25), 1.25);
+  assert.equal(normalizeTextScale(4), 1.5);
 });
 
 test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최소 크기를 지킨다', () => {
@@ -279,7 +329,7 @@ test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최�
     x: 60, y: 70, width: 40, height: 30, pinned: false,
   });
   assert.deepEqual(resizePlacementByPixels(base, -900, -900, { width: 1000, height: 1000 }), {
-    x: 10, y: 10, width: 16, height: 16, pinned: false,
+    x: 10, y: 10, width: 11.2, height: 16, pinned: false,
   });
   assert.deepEqual(resizePlacementByPixels(base, 900, 900, { width: 1000, height: 1000 }), {
     x: 10, y: 10, width: 90, height: 90, pinned: false,

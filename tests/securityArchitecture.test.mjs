@@ -194,6 +194,8 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
     );
     assert.match(caddy, /img-src[^;]*https:\/\/search1\.kakaocdn\.net/);
     assert.match(caddy, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
+    assert.match(caddy, /connect-src[^;]*https:\/\/api\.open-meteo\.com/);
+    assert.match(caddy, /connect-src[^;]*https:\/\/geocoding-api\.open-meteo\.com/);
 });
 
 test('Google Docs용 사진은 발견 불가 임시 공유 후 파일 또는 공개 권한을 제거한다', () => {

@@ -10,12 +10,13 @@ export const textWidgetManifest = Object.freeze({
   defaultPlacement: {
     zone: 'content',
     size: 'medium',
-    placement: { x: 3, y: 4, width: 45, height: 42, pinned: false },
+    placement: { x: 2.1, y: 4, width: 31.5, height: 42, pinned: false },
   },
   createDefaultConfig: () => ({
     heading: '오늘의 안내',
     body: '우리 반에 보여 줄 안내를 입력해 주세요.',
     tone: 'paper',
+    fontScale: 1,
   }),
   load: () => import('./TextWidget'),
   loadSettings: () => import('./TextSettings'),

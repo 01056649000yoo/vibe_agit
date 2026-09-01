@@ -10,9 +10,15 @@ export const timerWidgetManifest = Object.freeze({
   defaultPlacement: {
     zone: 'content',
     size: 'medium',
-    placement: { x: 35, y: 50, width: 29, height: 32, pinned: false },
+    placement: { x: 24.5, y: 50, width: 20.3, height: 32, pinned: false },
   },
-  createDefaultConfig: () => ({ label: '활동 시간', durationSeconds: 300 }),
+  createDefaultConfig: () => ({
+    label: '활동 시간',
+    durationSeconds: 300,
+    soundEnabled: true,
+    alarmSound: 'chime',
+    alarmVolume: 0.7,
+  }),
   load: () => import('./TimerWidget'),
   loadSettings: () => import('./TimerSettings'),
 });

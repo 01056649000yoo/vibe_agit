@@ -10,7 +10,7 @@ export const imageWidgetManifest = Object.freeze({
   defaultPlacement: {
     zone: 'content',
     size: 'large',
-    placement: { x: 51, y: 4, width: 46, height: 48, pinned: false },
+    placement: { x: 35.7, y: 4, width: 32.2, height: 48, pinned: false },
   },
   createDefaultConfig: () => ({ path: '', caption: '', fit: 'contain' }),
   load: () => import('./ImageWidget'),

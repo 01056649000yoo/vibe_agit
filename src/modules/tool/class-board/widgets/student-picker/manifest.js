@@ -11,9 +11,14 @@ export const studentPickerWidgetManifest = Object.freeze({
   defaultPlacement: {
     zone: 'content',
     size: 'medium',
-    placement: { x: 3, y: 66, width: 45, height: 30, pinned: false },
+    placement: { x: 2.1, y: 66, width: 31.5, height: 30, pinned: false },
   },
-  createDefaultConfig: () => ({ title: '오늘의 발표자', allowRepeats: false }),
+  createDefaultConfig: () => ({
+    title: '오늘의 발표자',
+    allowRepeats: false,
+    soundEnabled: true,
+    soundVolume: 0.55,
+  }),
   load: () => import('./StudentPickerWidget'),
   loadSettings: () => import('./StudentPickerSettings'),
 });

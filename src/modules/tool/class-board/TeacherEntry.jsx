@@ -367,7 +367,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
           <div className="class-board-preview-panel">
             <div className="class-board-panel-heading">
               <strong>화면 미리보기</strong>
-              <span>오늘 현황을 접으면 자료 공간이 전체로 넓어집니다</span>
+              <span>오늘 현황을 접어도 자료의 위치와 크기는 그대로 유지됩니다</span>
             </div>
             <p className="class-board-canvas-help" aria-live="polite">
               {pastingImage

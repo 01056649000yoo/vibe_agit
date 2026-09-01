@@ -4,7 +4,14 @@ import { fitPlacementToImage, normalizePlacement } from './host/boardPlacement';
 const randomId = () => globalThis.crypto?.randomUUID?.()
   || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-export const CLASS_BOARD_LAYOUT = Object.freeze({ version: 2, preset: 'freeform-7-3' });
+export const CLASS_BOARD_LAYOUT = Object.freeze({ version: 3, preset: 'freeform-stage-7-3' });
+export const LEGACY_CONTENT_STAGE_RATIO = 0.7;
+
+export const migrateLegacyContentPlacement = (placement) => ({
+  ...placement,
+  x: Number(placement?.x || 0) * LEGACY_CONTENT_STAGE_RATIO,
+  width: Number(placement?.width || 0) * LEGACY_CONTENT_STAGE_RATIO,
+});
 
 export const createWidgetInstance = (widgetId, order = 10, placementIndex = 0) => {
   const manifest = getClassBoardWidget(widgetId);
@@ -45,6 +52,7 @@ export const createDefaultClassBoard = (className = '') => ({
 
 export const normalizeClassBoard = (board) => {
   let contentIndex = 0;
+  const layoutVersion = Number(board?.layout?.version) || 1;
   const widgets = Array.isArray(board?.widgets)
     ? board.widgets.filter((widget) => Boolean(getClassBoardWidget(widget?.widgetId))).map((widget) => {
       const manifest = getClassBoardWidget(widget.widgetId);
@@ -52,9 +60,12 @@ export const normalizeClassBoard = (board) => {
       const fallback = manifest.defaultPlacement.placement;
       const cascade = Math.min(contentIndex, 6) * 2.5;
       contentIndex += 1;
+      const placement = layoutVersion < CLASS_BOARD_LAYOUT.version && widget.placement
+        ? migrateLegacyContentPlacement(widget.placement)
+        : widget.placement;
       return {
         ...widget,
-        placement: normalizePlacement(widget.placement, {
+        placement: normalizePlacement(placement, {
           ...fallback,
           x: fallback.x + cascade,
           y: fallback.y + cascade,

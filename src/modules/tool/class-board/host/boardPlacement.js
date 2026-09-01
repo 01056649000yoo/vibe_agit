@@ -1,4 +1,4 @@
-export const CLASS_BOARD_MIN_WIDTH = 16;
+export const CLASS_BOARD_MIN_WIDTH = 11.2;
 export const CLASS_BOARD_MIN_HEIGHT = 16;
 
 const round = (value) => Math.round(value * 10) / 10;
