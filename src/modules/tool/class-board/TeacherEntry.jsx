@@ -2,14 +2,19 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import { classBoardApi } from './classBoardApi';
 import {
+  applyPastedClassBoardImage,
+  CLASS_BOARD_IMAGE_PASTE_FAILED_MESSAGE,
   createDefaultClassBoard,
   createWidgetInstance,
   getAddableWidgets,
+  getClassBoardImagePasteError,
+  getClassBoardImagePasteNotice,
   normalizeClassBoard,
   updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import { WidgetSettingsHost } from './host/WidgetHost';
+import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
 
@@ -32,6 +37,34 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   dirtyRef.current = dirty;
   const selectedInstance = board?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
   const addableWidgets = useMemo(() => getAddableWidgets(board?.widgets || []), [board?.widgets]);
+  const receivePastedImage = (image, pasteContext = {}) => {
+    try {
+      const result = applyPastedClassBoardImage(
+        board,
+        pasteContext.selectedInstanceId,
+        image,
+        canvasContentRef.current?.getBoundingClientRect()
+      );
+      setBoard(result.board);
+      setSelectedInstanceId(result.instanceId);
+      setError('');
+      setNotice(getClassBoardImagePasteNotice(result.replaced));
+    } catch (pasteError) {
+      setError(pasteError.message || CLASS_BOARD_IMAGE_PASTE_FAILED_MESSAGE);
+    }
+  };
+  const pastingImage = useClassBoardImagePaste({
+    enabled: Boolean(board),
+    classId: activeClass?.id,
+    boardId: board?.id,
+    validate: () => getClassBoardImagePasteError(board, selectedInstanceId),
+    getPasteContext: () => ({ selectedInstanceId }),
+    onImage: receivePastedImage,
+    onError: (message) => {
+      setError(message);
+      setNotice('');
+    },
+  });
 
   const selectBoard = useCallback((nextBoard, { force = false } = {}) => {
     if (!nextBoard) return;
@@ -217,12 +250,12 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         </div>
         <div className="class-board-editor__header-actions">
           <TeacherGuideButton tabId="class-board" variant="help" />
-          <button type="button" className="class-board-secondary" onClick={createBoard}>새 스크린</button>
-          <button type="button" className="class-board-primary" disabled={!board || !dirty || saving} onClick={() => void save()}>{saving ? '저장 중…' : '저장'}</button>
+          <button type="button" className="class-board-secondary" disabled={pastingImage} onClick={createBoard}>새 스크린</button>
+          <button type="button" className="class-board-primary" disabled={!board || !dirty || saving || pastingImage} onClick={() => void save()}>{saving ? '저장 중…' : '저장'}</button>
           <button
             type="button"
             className="class-board-present"
-            disabled={!board?.id || dirty || saving}
+            disabled={!board?.id || dirty || saving || pastingImage}
             title={dirty ? '먼저 변경 내용을 저장해 주세요.' : ''}
             onClick={() => window.open(`/class-board/${board.id}`, '_blank', 'noopener')}
           >발표 화면 열기 ↗</button>
@@ -235,18 +268,18 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       <div className="class-board-toolbar">
         <label>
           <span>저장된 스크린</span>
-          <select value={board?.id || ''} onChange={(event) => selectBoard(boards.find((item) => item.id === event.target.value))}>
+          <select disabled={pastingImage} value={board?.id || ''} onChange={(event) => selectBoard(boards.find((item) => item.id === event.target.value))}>
             {!board?.id ? <option value="">새 스크린 (아직 저장 안 됨)</option> : null}
             {boards.map((item) => <option key={item.id} value={item.id}>{item.title}{item.isActive ? ' · 현재' : ''}</option>)}
           </select>
         </label>
         <label className="class-board-title-field">
           <span>스크린 제목</span>
-          <input maxLength={80} disabled={!board} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
+          <input maxLength={80} disabled={!board || pastingImage} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
         </label>
         <div className="class-board-toolbar__actions">
-          <button type="button" disabled={!board?.id || dirty || saving} onClick={() => void duplicate()}>복제</button>
-          <button type="button" disabled={!board?.id || dirty || saving} onClick={() => void archive()}>보관</button>
+          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void duplicate()}>복제</button>
+          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void archive()}>보관</button>
         </div>
       </div>
 
@@ -263,7 +296,11 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
               <strong>화면 미리보기</strong>
               <span>왼쪽 자료 70% · 오른쪽 오늘의 현황 30%</span>
             </div>
-            <p className="class-board-canvas-help">이미지나 텍스트 자체를 마우스로 드래그해 옮기세요. 상단 이동 손잡이도 사용할 수 있고, 테두리 손잡이로 가로·세로 크기를 조절합니다. 핀을 꽂으면 움직이지 않습니다.</p>
+            <p className="class-board-canvas-help" aria-live="polite">
+              {pastingImage
+                ? '붙여넣은 캡처를 화면용 이미지로 준비하는 중…'
+                : '캡처 이미지는 Ctrl+V로 붙여넣으면 원본 비율에 맞춰 추가됩니다. 이미지나 텍스트 자체를 드래그해 옮기고 테두리로 크기를 조절하세요.'}
+            </p>
             <BoardCanvas
               board={board}
               classId={activeClass.id}
@@ -279,7 +316,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
             <div className="class-board-add-widget">
               <span>위젯 추가</span>
               <div>{addableWidgets.map((manifest) => (
-                <button key={manifest.id} type="button" onClick={() => addWidget(manifest.id)}>{manifest.icon} {manifest.name}</button>
+                <button key={manifest.id} type="button" disabled={pastingImage} onClick={() => addWidget(manifest.id)}>{manifest.icon} {manifest.name}</button>
               ))}</div>
             </div>
             {selectedInstance ? (
@@ -292,16 +329,16 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
                   onChange={updateSelectedConfig}
                 />
                 <div className="class-board-instance-controls">
-                  <button type="button" disabled={selectedInstance.zone !== 'content'} onClick={() => moveSelected(-1)}>뒤로</button>
-                  <button type="button" disabled={selectedInstance.zone !== 'content'} onClick={() => moveSelected(1)}>앞으로</button>
+                  <button type="button" disabled={selectedInstance.zone !== 'content' || pastingImage} onClick={() => moveSelected(-1)}>뒤로</button>
+                  <button type="button" disabled={selectedInstance.zone !== 'content' || pastingImage} onClick={() => moveSelected(1)}>앞으로</button>
                   <button
                     type="button"
-                    disabled={selectedInstance.zone !== 'content'}
+                    disabled={selectedInstance.zone !== 'content' || pastingImage}
                     onClick={() => updateSelected({
                       placement: { ...selectedInstance.placement, pinned: !selectedInstance.placement?.pinned },
                     })}
                   >{selectedInstance.placement?.pinned ? '핀 해제' : '핀 꽂기'}</button>
-                  <button type="button" className="is-danger" onClick={removeSelected}>빼기</button>
+                  <button type="button" className="is-danger" disabled={pastingImage} onClick={removeSelected}>빼기</button>
                 </div>
               </div>
             ) : <p className="class-board-note">미리보기에서 위젯을 눌러 내용을 수정하세요.</p>}

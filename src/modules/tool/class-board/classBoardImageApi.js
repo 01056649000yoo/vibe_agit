@@ -114,6 +114,11 @@ export const uploadClassBoardImage = async ({ classId, boardId, optimizedImage }
   };
 };
 
+export const prepareAndUploadClassBoardImage = async ({ file, classId, boardId }) => {
+  const optimizedImage = await optimizeClassBoardImage(file);
+  return uploadClassBoardImage({ classId, boardId, optimizedImage });
+};
+
 export const getClassBoardImageUrls = async (paths) => {
   const uniquePaths = [...new Set((paths || []).filter(Boolean))];
   if (uniquePaths.length === 0) return new Map();

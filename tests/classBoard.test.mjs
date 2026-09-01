@@ -8,12 +8,13 @@ import {
   normalizePlacement,
   resizePlacementByPixels,
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
+import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/image/clipboardImage.js';
 
 const read = (path) => readFile(path, 'utf8');
 
 const [
   registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi, imageSettings,
-  textWidget, imageWidget, styles, statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
+  imagePasteHook, textWidget, imageWidget, styles, statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
   freeformSmoke, app, moduleRegistry, guides, guideRegistry, journeys, harness
 ] = await Promise.all([
   read('src/modules/tool/class-board/widgets/registry.js'),
@@ -27,6 +28,7 @@ const [
   read('src/modules/tool/class-board/presentation/PresentationEditPanel.jsx'),
   read('src/modules/tool/class-board/classBoardImageApi.js'),
   read('src/modules/tool/class-board/widgets/image/ImageSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/image/useClassBoardImagePaste.js'),
   read('src/modules/tool/class-board/widgets/text/TextWidget.jsx'),
   read('src/modules/tool/class-board/widgets/image/ImageWidget.jsx'),
   read('src/modules/tool/class-board/classBoard.css'),
@@ -69,7 +71,7 @@ test('첫 스크린은 70:30 화면의 자유 배치 자료와 고정 현황으�
   assert.match(model, /createWidgetInstance\('writing-status'/);
   assert.match(canvas, /renderContent\(\)[\s\S]*renderSidebar\(\)/);
   assert.match(entry, /왼쪽 자료 70% · 오른쪽 오늘의 현황 30%/);
-  assert.match(entry, /이동 손잡이[\s\S]*가로·세로 크기[\s\S]*핀/);
+  assert.match(entry, /Ctrl\+V로 붙여넣으면 원본 비율[\s\S]*드래그해 옮기고[\s\S]*크기를 조절/);
   assert.match(frame, /setPointerCapture/);
   assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
   assert.match(frame, /aria-pressed=\{draftPlacement\.pinned\}/);
@@ -89,9 +91,38 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(imageWidget, /<figure \{\.\.\.dragHandleProps\}/);
   assert.match(imageWidget, /<img draggable=\{false\}/);
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
-  assert.match(entry, /이미지나 텍스트 자체를 마우스로 드래그해 옮기세요/);
-  assert.match(presentationEditPanel, /이미지나 텍스트 자체를 마우스로 옮기고/);
+  assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
+  assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
   assert.match(guides, /이미지나 텍스트 자체를 마우스로 드래그해 위치를 정합니다/);
+});
+
+test('캡처 이미지는 Ctrl+V로 붙여넣고 실제 비율에 맞춰 교체 또는 추가한다', () => {
+  const clipboardFile = { type: 'image/png', size: 1000 };
+  assert.equal(getClipboardImageFile({
+    items: [
+      { kind: 'string', type: 'text/plain', getAsFile: () => null },
+      { kind: 'file', type: 'image/png', getAsFile: () => clipboardFile },
+    ],
+  }), clipboardFile);
+  assert.equal(getClipboardImageFile({ items: [], files: [{ type: 'text/plain' }] }), null);
+
+  assert.match(imagePasteHook, /window\.addEventListener\('paste'/);
+  assert.match(imagePasteHook, /event\.preventDefault\(\)/);
+  assert.match(imagePasteHook, /prepareAndUploadClassBoardImage/);
+  assert.match(imagePasteHook, /getPasteContext/);
+  assert.match(imageApi, /prepareAndUploadClassBoardImage[\s\S]*optimizeClassBoardImage[\s\S]*uploadClassBoardImage/);
+  assert.match(imageSettings, /prepareAndUploadClassBoardImage/);
+  assert.match(model, /findImagePasteTarget[\s\S]*selected\?\.widgetId === 'image'[\s\S]*!widget\.config\?\.path/);
+  assert.match(model, /getClassBoardImagePasteError[\s\S]*한 번 저장[\s\S]*imageManifest\.maxInstances/);
+  const pasteModel = model.slice(model.indexOf('export const applyPastedClassBoardImage'));
+  const newImageBranchIndex = pasteModel.indexOf('const contentWidgets');
+  assert.match(pasteModel.slice(0, newImageBranchIndex), /updateClassBoardWidgetConfig[\s\S]*fitToImage/);
+  assert.match(pasteModel.slice(newImageBranchIndex), /createWidgetInstance\('image'[\s\S]*fitPlacementToImage/);
+  assert.match(entry, /useClassBoardImagePaste[\s\S]*applyPastedClassBoardImage/);
+  assert.match(presentation, /useClassBoardImagePaste[\s\S]*applyPastedClassBoardImage/);
+  assert.match(entry, /Ctrl\+V로 붙여넣으면 원본 비율에 맞춰 추가/);
+  assert.match(presentationEditPanel, /Ctrl\+V로 붙여넣으면 원본 비율에 맞춰/);
+  assert.match(guides, /Ctrl\+V[\s\S]*빈 이미지 칸 또는 새 이미지 칸에 원본 비율/);
 });
 
 test('발표 화면은 별도 교사 전용 경로이며 저장한 위젯만 전체화면으로 그린다', () => {

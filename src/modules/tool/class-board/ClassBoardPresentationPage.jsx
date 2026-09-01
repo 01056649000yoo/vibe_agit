@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { classBoardApi } from './classBoardApi';
 import {
+  applyPastedClassBoardImage,
+  CLASS_BOARD_IMAGE_PASTE_FAILED_MESSAGE,
   createWidgetInstance,
   getAddableWidgets,
+  getClassBoardImagePasteError,
+  getClassBoardImagePasteNotice,
   normalizeClassBoard,
   updateClassBoardWidgetConfig,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
+import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
 
@@ -31,6 +36,34 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const selectedInstance = draftBoard?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
   const addableWidgets = useMemo(() => getAddableWidgets(draftBoard?.widgets || [])
     .filter((manifest) => manifest.defaultPlacement.zone === 'content'), [draftBoard?.widgets]);
+  const receivePastedImage = (image, pasteContext = {}) => {
+    try {
+      const result = applyPastedClassBoardImage(
+        draftBoard,
+        pasteContext.selectedInstanceId,
+        image,
+        canvasContentRef.current?.getBoundingClientRect()
+      );
+      setDraftBoard(result.board);
+      setSelectedInstanceId(result.instanceId);
+      setEditError('');
+      setNotice(getClassBoardImagePasteNotice(result.replaced));
+    } catch (pasteError) {
+      setEditError(pasteError.message || CLASS_BOARD_IMAGE_PASTE_FAILED_MESSAGE);
+    }
+  };
+  const pastingImage = useClassBoardImagePaste({
+    enabled: editing,
+    classId: data?.class?.id,
+    boardId: draftBoard?.id,
+    validate: () => getClassBoardImagePasteError(draftBoard, selectedInstanceId),
+    getPasteContext: () => ({ selectedInstanceId }),
+    onImage: receivePastedImage,
+    onError: (message) => {
+      setEditError(message);
+      setNotice('');
+    },
+  });
 
   useEffect(() => {
     let active = true;
@@ -136,7 +169,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   };
 
   const save = async () => {
-    if (!draftBoard || !data?.class?.id || !dirty) return;
+    if (!draftBoard || !data?.class?.id || !dirty || pastingImage) return;
     setSaving(true);
     setEditError('');
     try {
@@ -177,7 +210,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         <div>
           <time>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</time>
           {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
-          <button type="button" className="class-board-presentation-refresh-button" onClick={refresh}>새로고침</button>
+          <button type="button" className="class-board-presentation-refresh-button" disabled={pastingImage} onClick={refresh}>새로고침</button>
           <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? '전체화면 나가기' : '전체화면'}</button>
         </div>
       </header>
@@ -189,6 +222,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           boardId={draftBoard.id}
           dirty={dirty}
           saving={saving}
+          pastingImage={pastingImage}
           error={editError}
           notice={notice}
           onAdd={addWidget}

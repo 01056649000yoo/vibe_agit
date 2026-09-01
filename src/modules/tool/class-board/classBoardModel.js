@@ -102,3 +102,74 @@ export const updateClassBoardWidgetConfig = (
     }),
   };
 };
+
+const findImagePasteTarget = (board, selectedInstanceId) => {
+  const selected = board?.widgets.find((widget) => widget.instanceId === selectedInstanceId);
+  if (selected?.widgetId === 'image') return selected;
+  return board?.widgets.find((widget) => widget.widgetId === 'image' && !widget.config?.path) || null;
+};
+
+export const CLASS_BOARD_IMAGE_PASTE_FAILED_MESSAGE = '붙여넣은 이미지를 화면에 추가하지 못했습니다.';
+
+export const getClassBoardImagePasteNotice = (replaced) => replaced
+  ? '선택한 이미지를 붙여넣은 캡처로 교체하고 비율에 맞춰 조정했습니다.'
+  : '붙여넣은 캡처를 이미지 비율에 맞춰 화면에 추가했습니다.';
+
+export const getClassBoardImagePasteError = (board, selectedInstanceId) => {
+  if (!board?.id) return '캡처 이미지를 붙여넣기 전에 스크린을 한 번 저장해 주세요.';
+  if (findImagePasteTarget(board, selectedInstanceId)) return '';
+  const imageManifest = getClassBoardWidget('image');
+  const imageCount = board.widgets.filter((widget) => widget.widgetId === 'image').length;
+  if (imageCount >= imageManifest.maxInstances) {
+    return `이미지는 한 스크린에 최대 ${imageManifest.maxInstances}개까지 넣을 수 있습니다.`;
+  }
+  return '';
+};
+
+export const applyPastedClassBoardImage = (
+  board,
+  selectedInstanceId,
+  image,
+  contentBounds
+) => {
+  const validationError = getClassBoardImagePasteError(board, selectedInstanceId);
+  if (validationError) throw new Error(validationError);
+  const target = findImagePasteTarget(board, selectedInstanceId);
+  if (target) {
+    return {
+      board: updateClassBoardWidgetConfig(
+        board,
+        target.instanceId,
+        {
+          ...target.config,
+          ...image,
+          caption: target.config?.caption || '',
+          fit: target.config?.fit || 'contain',
+        },
+        { fitToImage: { width: image.width, height: image.height } },
+        contentBounds
+      ),
+      instanceId: target.instanceId,
+      replaced: Boolean(target.config?.path),
+    };
+  }
+
+  const contentWidgets = board.widgets.filter((widget) => widget.zone === 'content');
+  const order = Math.max(0, ...contentWidgets.map((widget) => widget.order)) + 10;
+  const instance = createWidgetInstance('image', order, contentWidgets.length);
+  const pastedInstance = {
+    ...instance,
+    config: { ...instance.config, ...image, caption: '', fit: 'contain' },
+    placement: fitPlacementToImage(
+      instance.placement,
+      image.width,
+      image.height,
+      contentBounds
+    ),
+  };
+  return {
+    board: { ...board, widgets: [...board.widgets, pastedInstance] },
+    instanceId: pastedInstance.instanceId,
+    replaced: false,
+  };
+};
