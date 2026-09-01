@@ -11,7 +11,7 @@ const entries = new Map(getClassBoardWidgets().map((manifest) => [
   },
 ]));
 
-export function WidgetHost({ instance, classId, assetUrl, presentation = false }) {
+export function WidgetHost({ instance, classId, assetUrl, presentation = false, dragHandleProps }) {
   const entry = entries.get(instance.widgetId);
   if (!entry || instance.visible === false) return null;
   const View = entry.View;
@@ -23,6 +23,7 @@ export function WidgetHost({ instance, classId, assetUrl, presentation = false }
           classId={classId}
           assetUrl={assetUrl}
           presentation={presentation}
+          dragHandleProps={dragHandleProps}
         />
       </Suspense>
     </WidgetBoundary>
@@ -41,4 +42,3 @@ export function WidgetSettingsHost({ instance, classId, boardId, onChange }) {
     </WidgetBoundary>
   );
 }
-

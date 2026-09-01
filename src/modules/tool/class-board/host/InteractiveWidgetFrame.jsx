@@ -6,6 +6,8 @@ import {
   resizePlacementByPixels,
 } from './boardPlacement';
 
+const MOVE_START_THRESHOLD_PX = 3;
+
 const placementStyle = (placement, zIndex) => ({
   left: `${placement.x}%`,
   top: `${placement.y}%`,
@@ -34,11 +36,12 @@ export default function InteractiveWidgetFrame({
   const select = () => onSelect?.(instance.instanceId);
 
   const beginGesture = (type, event) => {
-    if (draftPlacement.pinned) return;
+    if (draftPlacement.pinned || (event.pointerType === 'mouse' && event.button !== 0)) return;
     event.preventDefault();
     event.stopPropagation();
     select();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    latestPlacementRef.current = draftPlacement;
     gestureRef.current = {
       type,
       pointerId: event.pointerId,
@@ -46,6 +49,7 @@ export default function InteractiveWidgetFrame({
       startY: event.clientY,
       startPlacement: draftPlacement,
       bounds: frameRef.current?.parentElement?.getBoundingClientRect(),
+      changed: false,
     };
   };
 
@@ -55,6 +59,11 @@ export default function InteractiveWidgetFrame({
     event.preventDefault();
     const deltaX = event.clientX - gesture.startX;
     const deltaY = event.clientY - gesture.startY;
+    if (
+      gesture.type === 'move'
+      && !gesture.changed
+      && Math.hypot(deltaX, deltaY) < MOVE_START_THRESHOLD_PX
+    ) return;
     const next = gesture.type === 'move'
       ? movePlacementByPixels(gesture.startPlacement, deltaX, deltaY, gesture.bounds)
       : resizePlacementByPixels(
@@ -64,6 +73,12 @@ export default function InteractiveWidgetFrame({
         gesture.bounds,
         gesture.type === 'resize-x' ? 'x' : gesture.type === 'resize-y' ? 'y' : 'both'
       );
+    gesture.changed = gesture.changed
+      || next.x !== gesture.startPlacement.x
+      || next.y !== gesture.startPlacement.y
+      || next.width !== gesture.startPlacement.width
+      || next.height !== gesture.startPlacement.height;
+    if (!gesture.changed) return;
     latestPlacementRef.current = next;
     setDraftPlacement(next);
   };
@@ -73,7 +88,7 @@ export default function InteractiveWidgetFrame({
     if (!gesture || gesture.pointerId !== event.pointerId) return;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
     gestureRef.current = null;
-    onPlacementChange?.(instance.instanceId, latestPlacementRef.current);
+    if (gesture.changed) onPlacementChange?.(instance.instanceId, latestPlacementRef.current);
   };
 
   const nudge = (type, event) => {
@@ -106,6 +121,11 @@ export default function InteractiveWidgetFrame({
     onPointerUp: finishGesture,
     onPointerCancel: finishGesture,
   });
+  const contentDragProps = editable && !draftPlacement.pinned ? {
+    'data-board-drag-surface': 'true',
+    title: '마우스로 드래그해서 이동',
+    ...pointerHandlers('move'),
+  } : undefined;
 
   return (
     <div
@@ -143,6 +163,7 @@ export default function InteractiveWidgetFrame({
         classId={classId}
         assetUrl={assetUrl}
         presentation={presentation}
+        dragHandleProps={contentDragProps}
       />
       {editable && selected && !draftPlacement.pinned ? (
         <>

@@ -60,7 +60,7 @@ export default function PresentationEditPanel({
             <button type="button" aria-label="자료 설정 닫기" onClick={onCloseSelection}>×</button>
           </header>
           <p className="class-board-presentation-settings__hint">
-            화면의 손잡이로 옮기고 테두리로 크기를 조절하세요.
+            이미지나 텍스트 자체를 마우스로 옮기고 테두리로 크기를 조절하세요.
           </p>
           <WidgetSettingsHost
             instance={selectedInstance}

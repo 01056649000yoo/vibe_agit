@@ -67,6 +67,9 @@
 .class-board-widget-move { padding:5px 8px; cursor:grab; touch-action:none; }
 .class-board-widget-move:active { cursor:grabbing; }
 .class-board-widget-move:disabled { cursor:not-allowed; }
+.class-board-widget-frame [data-board-drag-surface="true"] { cursor:grab; user-select:none; touch-action:none; }
+.class-board-widget-frame [data-board-drag-surface="true"]:active { cursor:grabbing; }
+.class-board-widget-frame [data-board-drag-surface="true"] img { -webkit-user-drag:none; }
 .class-board-widget-pin { width:32px; padding:4px; border-left:1px solid #e2e8f0!important; }
 .class-board-widget-frame.is-pinned .class-board-widget-tools { border-color:#f7c96b; background:#fffbeb; }
 .class-board-resize { position:absolute; z-index:7; display:block; border:0; padding:0; background:transparent; touch-action:none; }

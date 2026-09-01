@@ -13,7 +13,7 @@ const read = (path) => readFile(path, 'utf8');
 
 const [
   registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi, imageSettings,
-  statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
+  textWidget, imageWidget, styles, statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
   freeformSmoke, app, moduleRegistry, guides, guideRegistry, journeys, harness
 ] = await Promise.all([
   read('src/modules/tool/class-board/widgets/registry.js'),
@@ -27,6 +27,9 @@ const [
   read('src/modules/tool/class-board/presentation/PresentationEditPanel.jsx'),
   read('src/modules/tool/class-board/classBoardImageApi.js'),
   read('src/modules/tool/class-board/widgets/image/ImageSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/text/TextWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/image/ImageWidget.jsx'),
+  read('src/modules/tool/class-board/classBoard.css'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusWidget.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusSettings.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/useWritingStatus.js'),
@@ -73,6 +76,22 @@ test('첫 스크린은 70:30 화면의 자유 배치 자료와 고정 현황으�
   assert.match(entry, /새 스크린[\s\S]*복제[\s\S]*보관/);
   assert.match(entry, /beforeunload/);
   assert.match(entry, /p_expected_revision|classBoardApi\.save/);
+});
+
+test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이동하고 핀 상태를 지킨다', () => {
+  assert.match(frame, /MOVE_START_THRESHOLD_PX = 3/);
+  assert.match(frame, /contentDragProps = editable && !draftPlacement\.pinned/);
+  assert.match(frame, /dragHandleProps=\{contentDragProps\}/);
+  assert.match(frame, /if \(gesture\.changed\) onPlacementChange/);
+  assert.match(host, /dragHandleProps[\s\S]*<View[\s\S]*dragHandleProps=\{dragHandleProps\}/);
+  assert.match(textWidget, /<article \{\.\.\.dragHandleProps\}/);
+  assert.match(imageWidget, /<div \{\.\.\.dragHandleProps\}/);
+  assert.match(imageWidget, /<figure \{\.\.\.dragHandleProps\}/);
+  assert.match(imageWidget, /<img draggable=\{false\}/);
+  assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
+  assert.match(entry, /이미지나 텍스트 자체를 마우스로 드래그해 옮기세요/);
+  assert.match(presentationEditPanel, /이미지나 텍스트 자체를 마우스로 옮기고/);
+  assert.match(guides, /이미지나 텍스트 자체를 마우스로 드래그해 위치를 정합니다/);
 });
 
 test('발표 화면은 별도 교사 전용 경로이며 저장한 위젯만 전체화면으로 그린다', () => {

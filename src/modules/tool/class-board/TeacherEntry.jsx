@@ -263,7 +263,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
               <strong>화면 미리보기</strong>
               <span>왼쪽 자료 70% · 오른쪽 오늘의 현황 30%</span>
             </div>
-            <p className="class-board-canvas-help">왼쪽 위젯의 이동 손잡이로 위치를 옮기고, 테두리 손잡이로 가로·세로 크기를 조절하세요. 핀을 꽂으면 움직이지 않습니다.</p>
+            <p className="class-board-canvas-help">이미지나 텍스트 자체를 마우스로 드래그해 옮기세요. 상단 이동 손잡이도 사용할 수 있고, 테두리 손잡이로 가로·세로 크기를 조절합니다. 핀을 꽂으면 움직이지 않습니다.</p>
             <BoardCanvas
               board={board}
               classId={activeClass.id}
