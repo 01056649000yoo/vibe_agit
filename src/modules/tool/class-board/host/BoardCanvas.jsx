@@ -14,14 +14,19 @@ export default function BoardCanvas({
   board,
   classId,
   presentation = false,
+  editable,
   selectedInstanceId = null,
   onSelect,
   onPlacementChange,
 }) {
+  const interactionEnabled = editable ?? !presentation;
   const [assetUrls, setAssetUrls] = useState(new Map());
-  const imagePaths = useMemo(() => (
+  const imagePathKey = useMemo(() => (
     [...new Set((board?.widgets || []).map((widget) => widget?.config?.path).filter(Boolean))]
+      .sort()
+      .join('\n')
   ), [board?.widgets]);
+  const imagePaths = useMemo(() => imagePathKey ? imagePathKey.split('\n') : [], [imagePathKey]);
 
   useEffect(() => {
     let active = true;
@@ -36,7 +41,7 @@ export default function BoardCanvas({
 
   const renderContent = () => sortWidgets(board?.widgets || [], 'content').map((instance) => {
     const manifest = getClassBoardWidget(instance.widgetId);
-    const selected = !presentation && selectedInstanceId === instance.instanceId;
+    const selected = interactionEnabled && selectedInstanceId === instance.instanceId;
     return (
       <InteractiveWidgetFrame
         key={`${instance.instanceId}-${JSON.stringify(instance.placement)}`}
@@ -46,6 +51,7 @@ export default function BoardCanvas({
         assetUrl={(imagePaths.length > 0 ? assetUrls : EMPTY_URLS).get(instance.config?.path) || ''}
         selected={selected}
         presentation={presentation}
+        editable={interactionEnabled}
         onSelect={onSelect}
         onPlacementChange={onPlacementChange}
       />
@@ -55,10 +61,9 @@ export default function BoardCanvas({
   const renderSidebar = () => sortWidgets(board?.widgets || [], 'sidebar').map((instance) => (
     <div
       key={instance.instanceId}
-      className={`class-board-widget-frame class-board-widget-frame--sidebar${!presentation && selectedInstanceId === instance.instanceId ? ' is-selected' : ''}`}
-      onPointerDown={() => onSelect?.(instance.instanceId)}
+      className="class-board-widget-frame class-board-widget-frame--sidebar"
     >
-      {!presentation ? (
+      {!presentation && interactionEnabled ? (
         <button type="button" className="class-board-widget-select" onClick={() => onSelect?.(instance.instanceId)}>
           <span>{getClassBoardWidget(instance.widgetId)?.icon} 현황 설정</span>
         </button>

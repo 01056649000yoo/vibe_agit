@@ -21,6 +21,7 @@ export default function InteractiveWidgetFrame({
   assetUrl,
   selected,
   presentation,
+  editable,
   onSelect,
   onPlacementChange,
 }) {
@@ -114,7 +115,7 @@ export default function InteractiveWidgetFrame({
       style={placementStyle(draftPlacement, selected ? 1001 : instance.order)}
       onPointerDown={select}
     >
-      {!presentation ? (
+      {editable ? (
         <div className="class-board-widget-tools">
           <button
             type="button"
@@ -143,7 +144,7 @@ export default function InteractiveWidgetFrame({
         assetUrl={assetUrl}
         presentation={presentation}
       />
-      {!presentation && selected && !draftPlacement.pinned ? (
+      {editable && selected && !draftPlacement.pinned ? (
         <>
           <button type="button" className="class-board-resize class-board-resize--x" aria-label="위젯 가로 크기 조절" {...pointerHandlers('resize-x')} />
           <button type="button" className="class-board-resize class-board-resize--y" aria-label="위젯 세로 크기 조절" {...pointerHandlers('resize-y')} />

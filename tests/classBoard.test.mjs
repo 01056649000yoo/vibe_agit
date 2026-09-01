@@ -11,7 +11,7 @@ import {
 const read = (path) => readFile(path, 'utf8');
 
 const [
-  registry, manifest, model, entry, canvas, frame, host, presentation, imageApi,
+  registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi,
   statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
   freeformSmoke, app, moduleRegistry, guides, guideRegistry, journeys, harness
 ] = await Promise.all([
@@ -23,6 +23,7 @@ const [
   read('src/modules/tool/class-board/host/InteractiveWidgetFrame.jsx'),
   read('src/modules/tool/class-board/host/WidgetHost.jsx'),
   read('src/modules/tool/class-board/ClassBoardPresentationPage.jsx'),
+  read('src/modules/tool/class-board/presentation/PresentationEditPanel.jsx'),
   read('src/modules/tool/class-board/classBoardImageApi.js'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusWidget.jsx'),
   read('src/modules/tool/class-board/widgets/writing-status/WritingStatusSettings.jsx'),
@@ -80,6 +81,26 @@ test('발표 화면은 별도 교사 전용 경로이며 저장한 위젯만 전
   assert.match(presentation, /requestFullscreen/);
   assert.match(presentation, /<BoardCanvas[\s\S]*presentation/);
   assert.doesNotMatch(presentation, /student_name|studentName|student_statuses|recent_submissions/);
+});
+
+test('발표 화면은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
+  assert.match(presentation, /✏️ 화면 편집/);
+  assert.match(presentation, /draftBoard/);
+  assert.match(presentation, /beforeunload/);
+  assert.match(presentation, /classBoardApi\.save/);
+  assert.match(presentation, /editable=\{editing\}/);
+  assert.match(presentation, /getAddableWidgets[\s\S]*defaultPlacement\.zone === 'content'/);
+  assert.match(presentation, /createWidgetInstance\(widgetId/);
+  assert.match(presentation, /저장하지 않은 변경을 모두 취소/);
+  assert.match(presentationEditPanel, /WidgetSettingsHost/);
+  assert.match(presentationEditPanel, /manifest\.name\} 추가/);
+  assert.match(presentationEditPanel, /저장하지 않은 변경이 있어요/);
+  assert.match(presentationEditPanel, /위치에 핀 꽂기/);
+  assert.match(presentationEditPanel, /자료 삭제/);
+  assert.doesNotMatch(presentation, /optimizeClassBoardImage|uploadClassBoardImage|<TextWidget|<ImageWidget/);
+  assert.match(canvas, /interactionEnabled = editable \?\? !presentation/);
+  assert.match(canvas, /imagePathKey[\s\S]*\.sort\(\)/);
+  assert.ok(canvas.includes(".join('\\n')"));
 });
 
 test('발표용 현황은 미션 이름표와 일일 자율 글 집계를 20초 가시 화면 폴링으로 표시한다', () => {

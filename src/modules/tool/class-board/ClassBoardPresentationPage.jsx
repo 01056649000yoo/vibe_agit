@@ -1,14 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { classBoardApi } from './classBoardApi';
-import { normalizeClassBoard } from './classBoardModel';
+import {
+  createWidgetInstance,
+  getAddableWidgets,
+  normalizeClassBoard,
+} from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
+import PresentationEditPanel from './presentation/PresentationEditPanel';
+import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
+
+const snapshot = (board) => JSON.stringify(board);
 
 export default function ClassBoardPresentationPage({ boardId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [draftBoard, setDraftBoard] = useState(null);
+  const [selectedInstanceId, setSelectedInstanceId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  const editing = Boolean(draftBoard);
+  const visibleBoard = draftBoard || data?.board;
+  const dirty = Boolean(draftBoard && data?.board) && snapshot(draftBoard) !== snapshot(data.board);
+  const selectedInstance = draftBoard?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
+  const addableWidgets = useMemo(() => getAddableWidgets(draftBoard?.widgets || [])
+    .filter((manifest) => manifest.defaultPlacement.zone === 'content'), [draftBoard?.widgets]);
 
   useEffect(() => {
     let active = true;
@@ -29,9 +49,111 @@ export default function ClassBoardPresentationPage({ boardId }) {
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
 
+  useEffect(() => {
+    const warn = (event) => {
+      if (!dirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
+  };
+
+  const beginEditing = () => {
+    setDraftBoard(normalizeClassBoard(data.board));
+    setSelectedInstanceId(null);
+    setEditError('');
+    setNotice('왼쪽 자료를 누르거나 새 텍스트·이미지를 추가해 보세요.');
+  };
+
+  const cancelEditing = () => {
+    if (dirty && !window.confirm('저장하지 않은 변경을 모두 취소하고 편집을 끝낼까요?')) return;
+    setDraftBoard(null);
+    setSelectedInstanceId(null);
+    setEditError('');
+    setNotice('');
+  };
+
+  const addWidget = (widgetId) => {
+    const manifest = getClassBoardWidget(widgetId);
+    if (!manifest || manifest.defaultPlacement.zone !== 'content' || !draftBoard) return;
+    const contentWidgets = draftBoard.widgets.filter((widget) => widget.zone === 'content');
+    const order = Math.max(0, ...contentWidgets.map((widget) => widget.order)) + 10;
+    const instance = createWidgetInstance(widgetId, order, contentWidgets.length);
+    setDraftBoard((current) => current ? { ...current, widgets: [...current.widgets, instance] } : current);
+    setSelectedInstanceId(instance.instanceId);
+    setEditError('');
+    setNotice(`${manifest.name} 자료를 추가했습니다. 내용을 정한 뒤 저장해 주세요.`);
+  };
+
+  const updatePlacement = (instanceId, placement) => {
+    setDraftBoard((current) => current ? ({
+      ...current,
+      widgets: current.widgets.map((widget) => (
+        widget.instanceId === instanceId ? { ...widget, placement } : widget
+      )),
+    }) : current);
+    setNotice('');
+  };
+
+  const updateSelectedConfig = (config) => {
+    setDraftBoard((current) => current ? ({
+      ...current,
+      widgets: current.widgets.map((widget) => (
+        widget.instanceId === selectedInstanceId ? { ...widget, config } : widget
+      )),
+    }) : current);
+    setNotice('');
+  };
+
+  const toggleSelectedPin = () => {
+    setDraftBoard((current) => current ? ({
+      ...current,
+      widgets: current.widgets.map((widget) => widget.instanceId === selectedInstanceId ? {
+        ...widget,
+        placement: { ...widget.placement, pinned: !widget.placement?.pinned },
+      } : widget),
+    }) : current);
+    setNotice('');
+  };
+
+  const removeSelected = () => {
+    if (!selectedInstance || !window.confirm(`${getClassBoardWidget(selectedInstance.widgetId)?.name || '자료'}를 화면에서 삭제할까요?`)) return;
+    setDraftBoard((current) => current ? ({
+      ...current,
+      widgets: current.widgets.filter((widget) => widget.instanceId !== selectedInstanceId),
+    }) : current);
+    setSelectedInstanceId(null);
+    setNotice('자료를 화면에서 뺐습니다. 저장하면 확정됩니다.');
+  };
+
+  const save = async () => {
+    if (!draftBoard || !data?.class?.id || !dirty) return;
+    setSaving(true);
+    setEditError('');
+    try {
+      const saved = normalizeClassBoard(await classBoardApi.save({
+        classId: data.class.id,
+        board: draftBoard,
+      }));
+      setData((current) => ({ ...current, board: saved }));
+      setDraftBoard(saved);
+      setNotice('스크린을 저장했습니다. 지금 화면과 다음에 여는 화면에 그대로 적용됩니다.');
+    } catch (saveError) {
+      setEditError(saveError.message || '스크린을 저장하지 못했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const refresh = () => {
+    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 화면을 새로고침할까요?')) return;
+    window.location.reload();
   };
 
   if (loading) return <div className="class-board-presentation-state">우리 반 스크린을 준비하는 중…</div>;
@@ -46,16 +168,44 @@ export default function ClassBoardPresentationPage({ boardId }) {
   }
 
   return (
-    <main className="class-board-presentation-page">
+    <main className={`class-board-presentation-page${editing ? ' is-editing' : ''}`}>
       <header className="class-board-presentation-header">
         <div><span>{data.class?.name}</span><h1>{data.board.title}</h1></div>
         <div>
           <time>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</time>
-          <button type="button" onClick={() => window.location.reload()}>새로고침</button>
+          {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
+          <button type="button" className="class-board-presentation-refresh-button" onClick={refresh}>새로고침</button>
           <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? '전체화면 나가기' : '전체화면'}</button>
         </div>
       </header>
-      <BoardCanvas board={data.board} classId={data.class?.id} presentation />
+      {editing ? (
+        <PresentationEditPanel
+          addableWidgets={addableWidgets}
+          selectedInstance={selectedInstance}
+          classId={data.class?.id}
+          boardId={draftBoard.id}
+          dirty={dirty}
+          saving={saving}
+          error={editError}
+          notice={notice}
+          onAdd={addWidget}
+          onConfigChange={updateSelectedConfig}
+          onTogglePin={toggleSelectedPin}
+          onRemove={removeSelected}
+          onCloseSelection={() => setSelectedInstanceId(null)}
+          onSave={() => void save()}
+          onCancel={cancelEditing}
+        />
+      ) : null}
+      <BoardCanvas
+        board={visibleBoard}
+        classId={data.class?.id}
+        presentation
+        editable={editing}
+        selectedInstanceId={selectedInstanceId}
+        onSelect={setSelectedInstanceId}
+        onPlacementChange={updatePlacement}
+      />
     </main>
   );
 }
