@@ -55,6 +55,7 @@ DO $$
 DECLARE
     v_board JSONB;
     v_copy JSONB;
+    v_archive JSONB;
     v_workspace JSONB;
     v_presentation JSONB;
     v_status JSONB;
@@ -110,11 +111,21 @@ BEGIN
     IF v_copy->>'id' = v_board->>'id' OR v_copy->>'isActive' <> 'true' THEN
         RAISE EXCEPTION '스크린 복제 결과가 올바르지 않습니다.';
     END IF;
-    PERFORM public.archive_teacher_class_board_v1((v_copy->>'id')::UUID);
-    IF NOT EXISTS (
-        SELECT 1 FROM public.class_boards item
-        WHERE item.id = (v_board->>'id')::UUID AND item.is_active IS TRUE AND item.archived_at IS NULL
-    ) THEN
+    v_archive := public.archive_teacher_class_board_v1((v_copy->>'id')::UUID);
+    v_workspace := public.get_teacher_class_board_workspace_v1(
+        current_setting('test.board_class_id')::UUID, 20
+    );
+    IF v_archive->>'activeBoardId' <> v_board->>'id'
+       OR NOT EXISTS (
+           SELECT 1
+           FROM JSONB_ARRAY_ELEMENTS(v_workspace->'boards') item
+           WHERE item->>'id' = v_board->>'id' AND item->>'isActive' = 'true'
+       )
+       OR EXISTS (
+           SELECT 1
+           FROM JSONB_ARRAY_ELEMENTS(v_workspace->'boards') item
+           WHERE item->>'id' = v_copy->>'id'
+       ) THEN
         RAISE EXCEPTION '현재 스크린 보관 뒤 이전 스크린이 활성화되지 않았습니다.';
     END IF;
 END;
