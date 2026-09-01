@@ -10,6 +10,7 @@ import {
   getClassBoardImagePasteNotice,
   normalizeClassBoard,
   updateClassBoardWidgetConfig,
+  updateClassBoardWidgetPlacement,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
@@ -23,10 +24,12 @@ import './classBoard.css';
 const snapshot = (board) => JSON.stringify(board);
 
 export default function ClassBoardPresentationPage({ boardId }) {
+  const autoFullscreen = new URLSearchParams(window.location.search).get('fullscreen') === '1';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [fullscreenPrompt, setFullscreenPrompt] = useState(false);
   const [draftBoard, setDraftBoard] = useState(null);
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -95,6 +98,19 @@ export default function ClassBoardPresentationPage({ boardId }) {
   }, []);
 
   useEffect(() => {
+    if (!autoFullscreen || !data?.board || document.fullscreenElement) return undefined;
+    if (typeof document.documentElement.requestFullscreen !== 'function') {
+      setFullscreenPrompt(true);
+      return undefined;
+    }
+    let active = true;
+    void document.documentElement.requestFullscreen()
+      .then(() => { if (active) setFullscreenPrompt(false); })
+      .catch(() => { if (active) setFullscreenPrompt(true); });
+    return () => { active = false; };
+  }, [autoFullscreen, data?.board]);
+
+  useEffect(() => {
     const warn = (event) => {
       if (!dirty) return;
       event.preventDefault();
@@ -106,7 +122,11 @@ export default function ClassBoardPresentationPage({ boardId }) {
 
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.documentElement.requestFullscreen();
+    else {
+      if (typeof document.documentElement.requestFullscreen !== 'function') return;
+      await document.documentElement.requestFullscreen();
+      setFullscreenPrompt(false);
+    }
   };
 
   const closeScreen = async () => {
@@ -144,13 +164,13 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setNotice(`${manifest.name} 자료를 추가했습니다. 내용을 정한 뒤 저장해 주세요.`);
   };
 
-  const updatePlacement = (instanceId, placement) => {
-    setDraftBoard((current) => current ? ({
-      ...current,
-      widgets: current.widgets.map((widget) => (
-        widget.instanceId === instanceId ? { ...widget, placement } : widget
-      )),
-    }) : current);
+  const updatePlacement = (instanceId, placement, metadata) => {
+    setDraftBoard((current) => updateClassBoardWidgetPlacement(
+      current,
+      instanceId,
+      placement,
+      metadata
+    ));
     setNotice('');
   };
 
@@ -232,7 +252,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   }
 
   return (
-    <main className={`class-board-presentation-page${editing ? ' is-editing' : ''}`}>
+    <main className={`class-board-presentation-page${editing ? ' is-editing' : ''}${fullscreen ? ' is-fullscreen' : ''}`}>
       <header className="class-board-presentation-header">
         <h1 className="class-board-presentation-class-name">{data.class?.name || '우리 반'}</h1>
         <div>
@@ -265,6 +285,13 @@ export default function ClassBoardPresentationPage({ boardId }) {
           onSave={() => void save()}
           onCancel={cancelEditing}
         />
+      ) : null}
+      {fullscreenPrompt ? (
+        <button
+          type="button"
+          className="class-board-presentation-fullscreen-prompt"
+          onClick={() => void toggleFullscreen()}
+        >화면을 한 번 눌러 전체화면 시작</button>
       ) : null}
       <div className="class-board-presentation-stage">
         <BoardCanvas

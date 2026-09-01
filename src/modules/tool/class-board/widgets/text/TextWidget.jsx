@@ -10,8 +10,8 @@ export default function TextWidget({ config = {}, dragHandleProps }) {
       ref={textRef}
       className={`class-board-text class-board-text--${config.tone || 'paper'}`}
       style={{
-        '--class-board-text-heading-size': createResponsiveTextSize(config.fontScale, 5),
-        '--class-board-text-body-size': createResponsiveTextSize(config.fontScale, 3.25),
+        '--class-board-text-heading-size': createResponsiveTextSize(1.5, 5),
+        '--class-board-text-body-size': createResponsiveTextSize(1.5, 3.25),
       }}
     >
       {config.heading ? <h2>{config.heading}</h2> : null}

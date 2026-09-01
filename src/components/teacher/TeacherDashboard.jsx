@@ -113,6 +113,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [missionWorkspaceView, setMissionWorkspaceView] = useState(loadMissionWorkspaceView);
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
     const [guideCenterRequest, setGuideCenterRequest] = useState(null);
+    const [openingClassBoard, setOpeningClassBoard] = useState(false);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -206,6 +207,33 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         setAdminPasswordError('');
         setIsAdminPasswordOpen(true);
     }, []);
+
+    const handleOpenDefaultClassBoard = useCallback(async () => {
+        if (!activeClass?.id || openingClassBoard) return;
+        const popupFeatures = [
+            'popup=yes',
+            `width=${window.screen.availWidth}`,
+            `height=${window.screen.availHeight}`,
+            'left=0',
+            'top=0'
+        ].join(',');
+        const presentationWindow = window.open('about:blank', 'class-board-presentation', popupFeatures);
+        if (presentationWindow) presentationWindow.opener = null;
+        setOpeningClassBoard(true);
+        try {
+            const { classBoardApi } = await import('../../modules/tool/class-board/classBoardApi');
+            const result = await classBoardApi.getDefault(activeClass.id);
+            if (!result?.boardId) throw new Error('기본 스크린이 아직 없습니다. 학급운영도구에서 스크린을 만들고 별표로 지정해 주세요.');
+            const href = `/class-board/${result.boardId}?fullscreen=1`;
+            if (presentationWindow && !presentationWindow.closed) presentationWindow.location.replace(href);
+            else window.open(href, '_blank', 'noopener');
+        } catch (openError) {
+            if (presentationWindow && !presentationWindow.closed) presentationWindow.close();
+            window.alert(openError.message || '기본 스크린을 열지 못했습니다.');
+        } finally {
+            setOpeningClassBoard(false);
+        }
+    }, [activeClass?.id, openingClassBoard]);
 
     const handleConfirmAdminPassword = useCallback(async () => {
         if (!adminPassword.trim()) {
@@ -308,6 +336,17 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
                         })}
                     />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="teacher-class-board-shortcut"
+                        disabled={!activeClass?.id || openingClassBoard}
+                        title="별표로 지정한 기본 우리 반 스크린 열기"
+                        onClick={() => void handleOpenDefaultClassBoard()}
+                    >
+                        <span aria-hidden="true">🖥️</span>
+                        <span>{openingClassBoard ? '여는 중…' : '우리 반 스크린'}</span>
+                    </Button>
                     {isAdmin && (
                         <Button variant="primary" size="sm" onClick={handleOpenAdminPasswordModal} style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}>
                             🛡️ 관리자

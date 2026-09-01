@@ -16,7 +16,7 @@ export const textWidgetManifest = Object.freeze({
     heading: '오늘의 안내',
     body: '우리 반에 보여 줄 안내를 입력해 주세요.',
     tone: 'paper',
-    fontScale: 1,
+    fontScale: 1.5,
   }),
   load: () => import('./TextWidget'),
   loadSettings: () => import('./TextSettings'),

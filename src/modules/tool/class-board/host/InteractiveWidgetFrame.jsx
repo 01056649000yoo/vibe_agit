@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WidgetHost } from './WidgetHost';
 import {
+  getDiagonalResizeScale,
   movePlacementByPixels,
   normalizePlacement,
   resizePlacementByPixels,
@@ -16,6 +17,24 @@ const placementStyle = (placement, zIndex) => ({
   zIndex,
 });
 
+const getRenderedTextBodySize = (frame) => {
+  const text = frame?.querySelector('.class-board-text');
+  if (!text) return null;
+  const value = Number.parseFloat(text.style.getPropertyValue('--class-board-text-body-size'));
+  return Number.isFinite(value) && value > 0 ? value : null;
+};
+
+const getPlacementChangeMeta = (instance, gesture, placement) => {
+  if (gesture?.type !== 'resize-both') return { resizeAxis: gesture?.type?.replace('resize-', '') || null };
+  const scale = getDiagonalResizeScale(gesture.startPlacement, placement);
+  return {
+    resizeAxis: 'both',
+    ...(instance.widgetId === 'text' && gesture.startTextBodySize ? {
+      textBodySize: gesture.startTextBodySize * scale,
+    } : {}),
+  };
+};
+
 export default function InteractiveWidgetFrame({
   instance,
   manifest,
@@ -29,11 +48,28 @@ export default function InteractiveWidgetFrame({
 }) {
   const normalized = normalizePlacement(instance.placement, manifest?.defaultPlacement?.placement);
   const [draftPlacement, setDraftPlacement] = useState(normalized);
+  const [resizeAxis, setResizeAxis] = useState(null);
+  const [resizeScale, setResizeScale] = useState(1);
+  const [resizeSession, setResizeSession] = useState(0);
   const frameRef = useRef(null);
   const gestureRef = useRef(null);
   const latestPlacementRef = useRef(normalized);
+  const clearResizeFrameRef = useRef(0);
+
+  useEffect(() => () => {
+    if (clearResizeFrameRef.current) cancelAnimationFrame(clearResizeFrameRef.current);
+  }, []);
 
   const select = () => onSelect?.(instance.instanceId);
+  const scheduleResizeModeClear = () => {
+    if (clearResizeFrameRef.current) cancelAnimationFrame(clearResizeFrameRef.current);
+    clearResizeFrameRef.current = requestAnimationFrame(() => {
+      clearResizeFrameRef.current = requestAnimationFrame(() => {
+        clearResizeFrameRef.current = 0;
+        setResizeAxis(null);
+      });
+    });
+  };
 
   const beginGesture = (type, event) => {
     if (draftPlacement.pinned || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -41,6 +77,14 @@ export default function InteractiveWidgetFrame({
     event.stopPropagation();
     select();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    if (clearResizeFrameRef.current) cancelAnimationFrame(clearResizeFrameRef.current);
+    if (type === 'resize-x') setResizeAxis('x');
+    else if (type === 'resize-y') setResizeAxis('y');
+    else if (type === 'resize-both') {
+      setResizeAxis('both');
+      setResizeScale(1);
+      setResizeSession((current) => current + 1);
+    }
     latestPlacementRef.current = draftPlacement;
     gestureRef.current = {
       type,
@@ -49,6 +93,7 @@ export default function InteractiveWidgetFrame({
       startY: event.clientY,
       startPlacement: draftPlacement,
       bounds: frameRef.current?.parentElement?.getBoundingClientRect(),
+      startTextBodySize: getRenderedTextBodySize(frameRef.current),
       changed: false,
     };
   };
@@ -80,6 +125,9 @@ export default function InteractiveWidgetFrame({
       || next.height !== gesture.startPlacement.height;
     if (!gesture.changed) return;
     latestPlacementRef.current = next;
+    if (gesture.type === 'resize-both') {
+      setResizeScale(getDiagonalResizeScale(gesture.startPlacement, next));
+    }
     setDraftPlacement(next);
   };
 
@@ -88,7 +136,14 @@ export default function InteractiveWidgetFrame({
     if (!gesture || gesture.pointerId !== event.pointerId) return;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
     gestureRef.current = null;
-    if (gesture.changed) onPlacementChange?.(instance.instanceId, latestPlacementRef.current);
+    if (gesture.changed) {
+      onPlacementChange?.(
+        instance.instanceId,
+        latestPlacementRef.current,
+        getPlacementChangeMeta(instance, gesture, latestPlacementRef.current)
+      );
+    }
+    scheduleResizeModeClear();
   };
 
   const nudge = (type, event) => {
@@ -101,9 +156,23 @@ export default function InteractiveWidgetFrame({
     const next = type === 'move'
       ? movePlacementByPixels(draftPlacement, horizontal, vertical, virtualBounds)
       : resizePlacementByPixels(draftPlacement, horizontal, vertical, virtualBounds, 'both');
+    let placementMeta;
+    if (type === 'resize') {
+      const scale = getDiagonalResizeScale(draftPlacement, next);
+      setResizeAxis('both');
+      setResizeSession((current) => current + 1);
+      setResizeScale(scale);
+      placementMeta = {
+        resizeAxis: 'both',
+        ...(instance.widgetId === 'text' ? {
+          textBodySize: (getRenderedTextBodySize(frameRef.current) || 0) * scale,
+        } : {}),
+      };
+    }
     latestPlacementRef.current = next;
     setDraftPlacement(next);
-    onPlacementChange?.(instance.instanceId, next);
+    onPlacementChange?.(instance.instanceId, next, placementMeta);
+    if (type === 'resize') scheduleResizeModeClear();
   };
 
   const togglePinned = (event) => {
@@ -132,6 +201,9 @@ export default function InteractiveWidgetFrame({
       ref={frameRef}
       data-board-frame
       data-board-instance-id={instance.instanceId}
+      data-board-resize-axis={resizeAxis || undefined}
+      data-board-resize-scale={resizeAxis === 'both' ? resizeScale : undefined}
+      data-board-resize-session={resizeAxis === 'both' ? resizeSession : undefined}
       aria-keyshortcuts={editable && selected ? 'Escape' : undefined}
       className={`class-board-widget-frame class-board-widget-frame--freeform${selected ? ' is-selected' : ''}${draftPlacement.pinned ? ' is-pinned' : ''}`}
       style={placementStyle(draftPlacement, instance.order)}

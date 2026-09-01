@@ -11,6 +11,7 @@ import {
   getClassBoardImagePasteNotice,
   normalizeClassBoard,
   updateClassBoardWidgetConfig,
+  updateClassBoardWidgetPlacement,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
@@ -19,13 +20,20 @@ import WidgetLayerControls from './host/WidgetLayerControls';
 import { moveClassBoardWidgetLayer } from './host/widgetLayers';
 import ClassBoardTabs from './navigation/ClassBoardTabs';
 import HiddenClassBoardPanel from './navigation/HiddenClassBoardPanel';
+import { sortClassBoards } from './navigation/tabOrder';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
 
-const snapshot = (board) => JSON.stringify(board);
+const snapshot = (board) => JSON.stringify(board ? {
+  id: board.id,
+  title: board.title,
+  layout: board.layout,
+  widgets: board.widgets,
+  revision: board.revision,
+} : null);
 const workspaceRevision = (items = []) => items
-  .map((item) => `${item.id}:${item.revision}:${item.isActive ? 1 : 0}`)
+  .map((item) => `${item.id}:${item.revision}:${item.isActive ? 1 : 0}:${item.isDefault ? 1 : 0}:${item.displayOrder}`)
   .join('|');
 
 export default function ClassBoardTeacherEntry({ activeClass, module }) {
@@ -35,6 +43,9 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [defaultingBoardId, setDefaultingBoardId] = useState(null);
+  const [draftIndex, setDraftIndex] = useState(0);
   const [hiddenPanelOpen, setHiddenPanelOpen] = useState(false);
   const [hiddenBoards, setHiddenBoards] = useState([]);
   const [hiddenLoading, setHiddenLoading] = useState(false);
@@ -81,7 +92,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     },
   });
   const busyRef = useRef(false);
-  busyRef.current = saving || pastingImage;
+  busyRef.current = saving || pastingImage || reordering || Boolean(defaultingBoardId);
 
   const selectBoard = useCallback((nextBoard, { force = false } = {}) => {
     if (!nextBoard) return;
@@ -106,7 +117,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     try {
       const result = await classBoardApi.getWorkspace(activeClass.id);
       if (requestId !== requestRef.current) return;
-      const nextBoards = Array.isArray(result?.boards) ? result.boards.map(normalizeClassBoard) : [];
+      const nextBoards = Array.isArray(result?.boards) ? sortClassBoards(result.boards.map(normalizeClassBoard)) : [];
       if (background && workspaceRevision(nextBoards) === workspaceRevision(boardsRef.current)) return;
       setBoards(nextBoards);
       setHiddenPanelOpen(false);
@@ -170,13 +181,25 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setSaving(true);
     setError('');
     try {
-      const saved = normalizeClassBoard(await classBoardApi.save({ classId: activeClass.id, board }));
+      const isNewBoard = !board.id;
+      const saved = normalizeClassBoard(await classBoardApi.save({
+        classId: activeClass.id,
+        board,
+        tabPosition: isNewBoard ? draftIndex : null,
+      }));
       setBoard(saved);
       setSavedSnapshot(snapshot(saved));
-      setBoards((current) => [saved, ...current.filter((item) => item.id !== saved.id)].map((item) => ({
-        ...item,
-        isActive: item.id === saved.id,
-      })));
+      setBoards((current) => {
+        const remaining = current.filter((item) => item.id !== saved.id).map((item) => ({
+          ...item,
+          isActive: false,
+          displayOrder: isNewBoard && item.displayOrder >= saved.displayOrder
+            ? item.displayOrder + 1
+            : item.displayOrder,
+        }));
+        return sortClassBoards([saved, ...remaining]);
+      });
+      setDraftIndex(0);
       setNotice(`‘${saved.title}’ 탭을 저장했습니다. 상단 탭과 열린 스크린에 최신 내용이 보입니다.`);
       return saved;
     } catch (saveError) {
@@ -190,6 +213,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const createBoard = () => {
     if (dirty && !window.confirm('저장하지 않은 변경을 버리고 새 탭을 만들까요?')) return;
     const next = createDefaultClassBoard(activeClass?.name);
+    setDraftIndex(0);
     setBoard(next);
     setSavedSnapshot('');
     setSelectedInstanceId(next.widgets[0].instanceId);
@@ -228,10 +252,14 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setError('');
     try {
       const restored = normalizeClassBoard(await classBoardApi.restore(boardId));
-      setBoards((current) => [restored, ...current.filter((item) => item.id !== restored.id)].map((item) => ({
-        ...item,
-        isActive: item.id === restored.id,
-      })));
+      setBoards((current) => sortClassBoards([
+        restored,
+        ...current.filter((item) => item.id !== restored.id).map((item) => ({
+          ...item,
+          isActive: false,
+          displayOrder: item.displayOrder + 1,
+        })),
+      ]));
       setHiddenBoards((current) => current.filter((item) => item.id !== restored.id));
       selectBoard(restored, { force: true });
       setNotice(`‘${restored.title}’ 스크린을 상단 탭으로 복구했습니다.`);
@@ -248,7 +276,10 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setError('');
     try {
       const copy = normalizeClassBoard(await classBoardApi.duplicate(board.id));
-      setBoards((current) => [copy, ...current.map((item) => ({ ...item, isActive: false }))]);
+      setBoards((current) => sortClassBoards([
+        copy,
+        ...current.map((item) => ({ ...item, isActive: false, displayOrder: item.displayOrder + 1 })),
+      ]));
       selectBoard(copy, { force: true });
       setNotice('복사본을 새 탭으로 만들었습니다. 원본과 별도로 수정할 수 있습니다.');
     } catch (copyError) {
@@ -270,6 +301,45 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       setError(archiveError.message || '스크린을 삭제하지 못했습니다.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const reorderTabs = async (orderedIds) => {
+    const nextDraftIndex = orderedIds.indexOf('draft');
+    if (nextDraftIndex >= 0) setDraftIndex(nextDraftIndex);
+    const savedIds = orderedIds.filter((id) => id !== 'draft');
+    const previousBoards = boards;
+    const previousIds = previousBoards.map((item) => item.id);
+    if (savedIds.join('|') === previousIds.join('|')) return;
+    const byId = new Map(previousBoards.map((item) => [item.id, item]));
+    const nextBoards = savedIds.map((id, index) => ({ ...byId.get(id), displayOrder: index }));
+    setBoards(nextBoards);
+    setReordering(true);
+    setError('');
+    try {
+      await classBoardApi.reorder(activeClass.id, savedIds);
+      setNotice('스크린 탭 순서를 저장했습니다.');
+    } catch (reorderError) {
+      setBoards(previousBoards);
+      setError(reorderError.message || '스크린 탭 순서를 저장하지 못했습니다.');
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const setDefaultBoard = async (nextDefault) => {
+    if (!nextDefault?.id || nextDefault.isDefault) return;
+    setDefaultingBoardId(nextDefault.id);
+    setError('');
+    try {
+      await classBoardApi.setDefault(nextDefault.id);
+      setBoards((current) => current.map((item) => ({ ...item, isDefault: item.id === nextDefault.id })));
+      setBoard((current) => current ? { ...current, isDefault: current.id === nextDefault.id } : current);
+      setNotice(`‘${nextDefault.title}’을 기본 스크린으로 지정했습니다. 상단의 우리 반 스크린 버튼으로 바로 열 수 있습니다.`);
+    } catch (defaultError) {
+      setError(defaultError.message || '기본 스크린을 지정하지 못했습니다.');
+    } finally {
+      setDefaultingBoardId(null);
     }
   };
 
@@ -297,12 +367,9 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     )
   ));
 
-  const updatePlacement = (instanceId, placement) => updateBoard((current) => ({
-    ...current,
-    widgets: current.widgets.map((widget) => (
-      widget.instanceId === instanceId ? { ...widget, placement } : widget
-    )),
-  }));
+  const updatePlacement = (instanceId, placement, metadata) => updateBoard((current) => (
+    updateClassBoardWidgetPlacement(current, instanceId, placement, metadata)
+  ));
 
   const moveSelected = (direction) => updateBoard((current) => (
     moveClassBoardWidgetLayer(current, selectedInstanceId, direction)
@@ -349,15 +416,19 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         boards={boards}
         currentBoard={board}
         dirty={dirty}
-        disabled={saving || pastingImage}
+        disabled={saving || pastingImage || reordering || Boolean(defaultingBoardId)}
         saving={saving}
         deletedPanelOpen={hiddenPanelOpen}
+        draftIndex={draftIndex}
+        defaultingBoardId={defaultingBoardId}
         onSelect={selectBoard}
         onCreate={createBoard}
         onSave={() => void save()}
         onDelete={() => void hideBoard()}
         onDuplicate={() => void duplicate()}
         onOpenDeleted={() => void openHiddenBoards()}
+        onReorder={(orderedIds) => void reorderTabs(orderedIds)}
+        onSetDefault={(item) => void setDefaultBoard(item)}
       />
 
       <div className="class-board-toolbar">

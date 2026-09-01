@@ -15,7 +15,7 @@ export const classBoardApi = Object.freeze({
     return call('get_teacher_archived_class_boards_v1', { p_class_id: classId, p_limit: 20 });
   },
 
-  save({ classId, board }) {
+  save({ classId, board, tabPosition = null }) {
     return call('save_teacher_class_board_v1', {
       p_class_id: classId,
       p_board_id: board.id || null,
@@ -23,7 +23,23 @@ export const classBoardApi = Object.freeze({
       p_layout: board.layout,
       p_widgets: board.widgets,
       p_expected_revision: board.id ? board.revision : null,
+      p_tab_position: board.id ? null : tabPosition,
     });
+  },
+
+  reorder(classId, boardIds) {
+    return call('reorder_teacher_class_boards_v1', {
+      p_class_id: classId,
+      p_board_ids: boardIds,
+    });
+  },
+
+  setDefault(boardId) {
+    return call('set_teacher_default_class_board_v1', { p_board_id: boardId });
+  },
+
+  getDefault(classId) {
+    return call('get_teacher_default_class_board_v1', { p_class_id: classId });
   },
 
   duplicate(boardId) {

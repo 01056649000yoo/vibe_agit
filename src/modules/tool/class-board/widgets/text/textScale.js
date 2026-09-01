@@ -1,10 +1,3 @@
-export const TEXT_SCALE_OPTIONS = Object.freeze([
-  { id: 'small', label: '작게', value: 0.8 },
-  { id: 'normal', label: '보통', value: 1 },
-  { id: 'large', label: '크게', value: 1.25 },
-  { id: 'xlarge', label: '아주 크게', value: 1.5 },
-]);
-
 export const normalizeTextScale = (value) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 1;
@@ -15,15 +8,24 @@ const roundContainerUnit = (value) => Math.round(value * 1000) / 1000;
 
 export const CLASS_BOARD_TEXT_HEADING_RATIO = 1.54;
 export const CLASS_BOARD_TEXT_MIN_BODY_PX = 12;
-export const CLASS_BOARD_TEXT_MAX_BODY_PX = 240;
+export const CLASS_BOARD_TEXT_MAX_BODY_PX = 900;
 export const CLASS_BOARD_TEXT_FIT_PRECISION_PX = 0.25;
 
-export const getTextFillRatio = (value) => normalizeTextScale(value) / 1.5;
+export const normalizeClassBoardTextBodySize = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return Math.min(
+    CLASS_BOARD_TEXT_MAX_BODY_PX,
+    Math.max(CLASS_BOARD_TEXT_MIN_BODY_PX, Math.round(numeric * 4) / 4)
+  );
+};
+
+export const shouldRefitClassBoardText = (_resizeAxis, force = false) => force;
 
 export const findLargestFittingTextSize = (
   fits,
   minimum = CLASS_BOARD_TEXT_MIN_BODY_PX,
-  maximum = CLASS_BOARD_TEXT_MAX_BODY_PX,
+  maximum = 240,
   precision = CLASS_BOARD_TEXT_FIT_PRECISION_PX
 ) => {
   if (typeof fits !== 'function' || !fits(minimum)) return minimum;

@@ -38,6 +38,14 @@ export const resizePlacementByPixels = (placement, deltaX, deltaY, bounds, axis 
   return normalizePlacement({ ...placement, width: nextWidth, height: nextHeight }, placement);
 };
 
+export const getDiagonalResizeScale = (startPlacement, nextPlacement) => {
+  const startWidth = Math.max(CLASS_BOARD_MIN_WIDTH, Number(startPlacement?.width) || CLASS_BOARD_MIN_WIDTH);
+  const startHeight = Math.max(CLASS_BOARD_MIN_HEIGHT, Number(startPlacement?.height) || CLASS_BOARD_MIN_HEIGHT);
+  const widthRatio = Math.max(0.01, Number(nextPlacement?.width) / startWidth || 1);
+  const heightRatio = Math.max(0.01, Number(nextPlacement?.height) / startHeight || 1);
+  return Math.sqrt(widthRatio * heightRatio);
+};
+
 export const fitPlacementToImage = (placement, imageWidth, imageHeight, bounds) => {
   const normalized = normalizePlacement(placement);
   const sourceWidth = Number(imageWidth);

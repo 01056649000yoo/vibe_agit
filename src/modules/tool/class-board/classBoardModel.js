@@ -1,5 +1,6 @@
 import { getClassBoardWidget, getClassBoardWidgets } from './widgets/registry';
 import { fitPlacementToImage, normalizePlacement } from './host/boardPlacement';
+export { updateClassBoardWidgetPlacement } from './host/widgetPlacement';
 
 const randomId = () => globalThis.crypto?.randomUUID?.()
   || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -48,6 +49,8 @@ export const createDefaultClassBoard = (className = '') => ({
   ],
   revision: null,
   isActive: true,
+  isDefault: false,
+  displayOrder: 0,
 });
 
 export const normalizeClassBoard = (board) => {

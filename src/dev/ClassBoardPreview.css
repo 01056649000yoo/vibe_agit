@@ -1,18 +1,36 @@
 .class-board-preview { min-height:100vh; padding:24px; box-sizing:border-box; background:#e9eef5; color:#172033; }
+.class-board-preview__teacher-bar { display:flex; max-width:1500px; align-items:center; justify-content:space-between; gap:18px; margin:0 auto 18px; padding:12px 16px; box-sizing:border-box; border:1px solid #dce4ef; border-radius:16px; background:#fff; box-shadow:0 8px 24px rgba(30,50,80,.06); }
+.class-board-preview__teacher-bar>strong { color:#4f46e5; }
+.class-board-preview__teacher-bar>div { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+.class-board-preview__teacher-bar button { border:1px solid #e2e8f0; border-radius:9px; padding:8px 10px; background:#fff; color:#64748b; font-size:.76rem; font-weight:850; cursor:pointer; }
+.class-board-preview__teacher-bar button.is-screen { border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8; }
 .class-board-preview__header { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; max-width:1500px; margin:0 auto 18px; }
 .class-board-preview__header span { display:inline-flex; border-radius:999px; padding:5px 9px; background:#dbeafe; color:#244a99; font-size:.72rem; font-weight:900; }
 .class-board-preview__header h1 { margin:9px 0 4px; font-size:clamp(1.45rem,2.6vw,2.4rem); }
 .class-board-preview__header p { margin:0; color:#64748b; font-size:.86rem; }
 .class-board-preview__header code { border:1px solid #cbd7e7; border-radius:10px; padding:8px 10px; background:#fff; color:#526176; font-size:.72rem; }
+.class-board-preview__tabs { max-width:1500px; margin:0 auto 18px; }
+.class-board-preview__tabs>.class-board-tabs { margin-top:0; }
+.class-board-preview__tabs>p { margin:7px 3px 0; color:#64748b; font-size:.72rem; font-weight:750; }
+.class-board-preview__notice { max-width:1500px; margin:0 auto 10px; padding:10px 13px; box-sizing:border-box; border:1px solid #bfdbfe; border-radius:11px; background:#eff6ff; color:#1e40af; font-size:.78rem; font-weight:800; }
 .class-board-preview__layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:18px; align-items:start; max-width:1500px; margin:0 auto; }
 .class-board-preview__stage { min-width:0; border:1px solid #cbd7e7; border-radius:20px; padding:10px; background:#fff; box-shadow:0 12px 32px rgba(30,50,80,.08); }
 .class-board-preview__settings { position:sticky; top:18px; display:grid; gap:14px; border:1px solid #cbd7e7; border-radius:18px; padding:16px; background:#fff; box-shadow:0 12px 32px rgba(30,50,80,.08); }
 .class-board-preview__presets { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
 .class-board-preview__presets button,.class-board-preview__reset { min-width:0; border:1px solid #bfd0ef; border-radius:9px; padding:8px 5px; background:#eff6ff; color:#315fc4; font-size:.68rem; font-weight:900; cursor:pointer; }
 .class-board-preview__reset { width:100%; background:#fff; color:#526176; }
+.class-board-preview__presentation { position:fixed; z-index:20000; inset:0; display:grid; grid-template-rows:auto minmax(0,1fr); overflow:hidden; background:#eef2f7; }
+.class-board-preview__presentation>header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 18px; background:#fff; box-shadow:0 4px 14px rgba(30,50,80,.09); }
+.class-board-preview__presentation>header>div { display:grid; gap:2px; }
+.class-board-preview__presentation>header strong { color:#31538f; font-size:1.35rem; }
+.class-board-preview__presentation>header span { color:#64748b; font-size:.68rem; font-weight:800; }
+.class-board-preview__presentation>header button { border:1px solid #cbd5e1; border-radius:9px; padding:8px 10px; background:#fff; color:#475569; font-weight:850; cursor:pointer; }
+.class-board-preview__presentation>div { min-width:0; min-height:0; }
+.class-board-preview__presentation .class-board-viewport { width:100%; height:100%; aspect-ratio:auto; border-radius:0; }
 
 @media (max-width:900px) {
   .class-board-preview { padding:14px; }
+  .class-board-preview__teacher-bar { align-items:flex-start; flex-direction:column; }
   .class-board-preview__header { align-items:flex-start; flex-direction:column; gap:10px; }
   .class-board-preview__layout { grid-template-columns:1fr; }
   .class-board-preview__settings { position:static; }

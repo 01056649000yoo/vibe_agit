@@ -1,6 +1,11 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { getClassBoardImageUrls } from '../classBoardImageApi';
 import { getClassBoardWidget } from '../widgets/registry';
+import {
+  calculateClassBoardStageTransform,
+  CLASS_BOARD_STAGE_HEIGHT,
+  CLASS_BOARD_STAGE_WIDTH,
+} from './boardStage';
 import InteractiveWidgetFrame from './InteractiveWidgetFrame';
 import { WidgetHost } from './WidgetHost';
 
@@ -22,6 +27,8 @@ export default function BoardCanvas({
   onPlacementChange,
 }) {
   const interactionEnabled = editable ?? !presentation;
+  const viewportRef = useRef(null);
+  const [stageTransform, setStageTransform] = useState({ scale: 0, x: 0, y: 0 });
   const [assetUrls, setAssetUrls] = useState(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const sidebarId = useId();
@@ -36,6 +43,23 @@ export default function BoardCanvas({
       .join('\n')
   ), [board?.widgets]);
   const imagePaths = useMemo(() => imagePathKey ? imagePathKey.split('\n') : [], [imagePathKey]);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return undefined;
+    const measure = () => {
+      const bounds = viewport.getBoundingClientRect();
+      setStageTransform(calculateClassBoardStageTransform(bounds.width, bounds.height));
+    };
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    observer?.observe(viewport);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -87,30 +111,45 @@ export default function BoardCanvas({
   ));
 
   return (
-    <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}${sidebarCollapsed || !hasSidebar ? ' is-sidebar-collapsed' : ''}`}>
+    <div
+      ref={viewportRef}
+      className={`class-board-viewport${presentation ? ' is-presentation' : ''}`}
+      data-board-stage-width={CLASS_BOARD_STAGE_WIDTH}
+      data-board-stage-height={CLASS_BOARD_STAGE_HEIGHT}
+    >
       <div
-        ref={contentRef}
-        className="class-board-canvas__content"
-        onPointerDown={(event) => {
-          if (event.target === event.currentTarget) onClearSelection?.();
+        className="class-board-viewport__surface"
+        style={{
+          transform: `translate(${stageTransform.x}px, ${stageTransform.y}px) scale(${stageTransform.scale})`,
+          visibility: stageTransform.scale > 0 ? 'visible' : 'hidden',
         }}
       >
-        {renderContent()}
-      </div>
-      {hasSidebar ? (
-        <aside className="class-board-canvas__sidebar">
-          <button
-            type="button"
-            className="class-board-canvas__sidebar-toggle"
-            aria-controls={sidebarId}
-            aria-expanded={!sidebarCollapsed}
-            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+        <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}${sidebarCollapsed || !hasSidebar ? ' is-sidebar-collapsed' : ''}`}>
+          <div
+            ref={contentRef}
+            className="class-board-canvas__content"
+            onPointerDown={(event) => {
+              if (event.target === event.currentTarget) onClearSelection?.();
+            }}
           >
-            {sidebarCollapsed ? '📊 오늘 현황 펼치기' : '오늘 현황 접기'}
-          </button>
-          {!sidebarCollapsed ? <div id={sidebarId} className="class-board-canvas__sidebar-content">{renderSidebar()}</div> : null}
-        </aside>
-      ) : null}
+            {renderContent()}
+          </div>
+          {hasSidebar ? (
+            <aside className="class-board-canvas__sidebar">
+              <button
+                type="button"
+                className="class-board-canvas__sidebar-toggle"
+                aria-controls={sidebarId}
+                aria-expanded={!sidebarCollapsed}
+                onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+              >
+                {sidebarCollapsed ? '📊 오늘 현황 펼치기' : '오늘 현황 접기'}
+              </button>
+              {!sidebarCollapsed ? <div id={sidebarId} className="class-board-canvas__sidebar-content">{renderSidebar()}</div> : null}
+            </aside>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

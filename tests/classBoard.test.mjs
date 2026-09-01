@@ -4,10 +4,17 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
   fitPlacementToImage,
+  getDiagonalResizeScale,
   movePlacementByPixels,
   normalizePlacement,
   resizePlacementByPixels,
 } from '../src/modules/tool/class-board/host/boardPlacement.js';
+import {
+  calculateClassBoardStageTransform,
+  CLASS_BOARD_STAGE_HEIGHT,
+  CLASS_BOARD_STAGE_WIDTH,
+} from '../src/modules/tool/class-board/host/boardStage.js';
+import { updateClassBoardWidgetPlacement } from '../src/modules/tool/class-board/host/widgetPlacement.js';
 import {
   getClassBoardWidgetLayerState,
   moveClassBoardWidgetLayer,
@@ -18,10 +25,12 @@ import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-boa
 import {
   createResponsiveTextSize,
   findLargestFittingTextSize,
-  getTextFillRatio,
+  normalizeClassBoardTextBodySize,
   normalizeTextScale,
+  shouldRefitClassBoardText,
 } from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
+import { moveClassBoardTab, sortClassBoards } from '../src/modules/tool/class-board/navigation/tabOrder.js';
 
 const read = (path) => readFile(path, 'utf8');
 
@@ -94,6 +103,18 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
   read('AGENTS.md'),
 ]);
 
+const [tabOrder, tabOrderMigration, tabOrderSmoke, teacherDashboard, teacherDashboardStyles,
+  devLab, devLabRegistry, devLabReadme] = await Promise.all([
+  read('src/modules/tool/class-board/navigation/tabOrder.js'),
+  read('supabase/migrations/20261220_class_board_tab_order_and_default.sql'),
+  read('tests/sql/20261220_class_board_tab_order_and_default.smoke.sql'),
+  read('src/components/teacher/TeacherDashboard.jsx'),
+  read('src/components/teacher/TeacherDashboard.css'),
+  read('src/dev/DevLab.jsx'),
+  read('src/dev/devLabRegistry.js'),
+  read('src/dev/README.md'),
+]);
+
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
   assert.match(manifest, /id: 'class-board'/);
   assert.match(manifest, /part: 'tool'/);
@@ -117,12 +138,29 @@ test('화면 반복 수정은 DB 없는 로컬 미리보기에서 확인하고 �
   assert.match(classBoardPreview, /<BoardCanvas[\s\S]*editable[\s\S]*onPlacementChange=\{updatePlacement\}/);
   assert.match(classBoardPreview, /<WidgetSettingsHost[\s\S]*onChange=\{updateConfig\}/);
   assert.match(classBoardPreview, /짧은 안내[\s\S]*여러 줄[\s\S]*긴 본문/);
+  assert.match(classBoardPreview, /createWidgetInstance\('weather'[\s\S]*바깥 활동하기 좋은 날이에요/);
+  assert.match(classBoardPreview, /<ClassBoardTabs[\s\S]*onReorder=\{reorderLocalBoards\}[\s\S]*onSetDefault=\{setLocalDefault\}/);
+  assert.match(classBoardPreview, /활용 안내서[\s\S]*우리 반 스크린[\s\S]*정보 수정/);
+  assert.match(classBoardPreview, /openedDefaultBoard[\s\S]*<BoardCanvas board=\{openedDefaultBoard\} presentation editable=\{false\}/);
   assert.doesNotMatch(classBoardPreview, /classBoardApi|supabase|\.save\(/);
   assert.match(classBoardPreviewStyles, /grid-template-columns:minmax\(0,1fr\) 300px/);
   assert.match(agentInstructions, /사용자가 \*\*`배포`·`마무리`·`확정`을 명시하기 전까지\*\*[\s\S]*작업트리에만 수정/);
   assert.match(agentInstructions, /운영 배포를 미리보기[\s\S]*수단으로 쓰지 않는다/);
   assert.match(agentInstructions, /다른 컴퓨터로 이어갈 때는 배포 없이 동기화[\s\S]*\[skip ci\][\s\S]*origin\/main/);
   assert.match(agentInstructions, /단순히 `수정해 줘`·`적용해 줘`[\s\S]*`동기화`는 원격 저장 승인[\s\S]*외부 배포 승인으로 해석하지 않는다/);
+});
+
+test('개발 실험실은 개발 서버에서만 실제 컴포넌트 시나리오를 DB 없이 반복 실행한다', () => {
+  assert.match(mainEntry, /import\.meta\.env\.DEV[\s\S]*dev-lab[\s\S]*DevLab\.jsx/);
+  assert.match(devLabRegistry, /lazy\(\(\) => import\('\.\/ClassBoardPreview\.jsx'\)\)/);
+  assert.match(devLabRegistry, /id: 'class-board'/);
+  assert.match(devLab, /DEV_LAB_SCENARIOS\.map/);
+  assert.match(devLab, /PC[\s\S]*태블릿[\s\S]*모바일/);
+  assert.match(devLab, /setResetKey/);
+  assert.match(devLab, /<Scenario key=/);
+  assert.match(devLabReadme, /운영 화면의 컴포넌트를 그대로 불러오고 화면을 복사하지 않는다/);
+  assert.match(devLabReadme, /classBoardApi.*supabase.*운영 데이터 클라이언트/);
+  assert.match(devLabReadme, /migrate:check/);
 });
 
 test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어도 자료 크기를 유지한다', () => {
@@ -133,7 +171,7 @@ test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어�
   assert.match(canvas, /sidebarCollapsed[\s\S]*aria-expanded=\{!sidebarCollapsed\}/);
   assert.match(canvas, /오늘 현황 펼치기[\s\S]*오늘 현황 접기/);
   assert.match(canvas, /is-sidebar-collapsed/);
-  assert.match(styles, /\.class-board-canvas\s*\{[^}]*aspect-ratio:16\/9/);
+  assert.match(styles, /\.class-board-viewport\s*\{[^}]*aspect-ratio:16\/9/);
   assert.match(styles, /\.class-board-canvas__content\s*\{[^}]*width:100%;[^}]*height:100%/);
   assert.match(styles, /\.class-board-canvas__sidebar\s*\{[^}]*position:absolute;[^}]*width:calc\(30% - 12px\)/);
   assert.match(styles, /\.class-board-canvas\.is-sidebar-collapsed \.class-board-canvas__sidebar\s*\{/);
@@ -144,6 +182,10 @@ test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어�
   assert.match(entry, /Ctrl\+V로 붙여넣으면 원본 비율[\s\S]*드래그해 옮기고[\s\S]*크기를 조절/);
   assert.match(frame, /setPointerCapture/);
   assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
+  assert.match(frame, /data-board-resize-axis=\{resizeAxis \|\| undefined\}/);
+  assert.match(frame, /data-board-resize-scale=\{resizeAxis === 'both' \? resizeScale : undefined\}/);
+  assert.match(frame, /getDiagonalResizeScale\(gesture\.startPlacement, next\)/);
+  assert.match(frame, /type === 'resize-x'[\s\S]*setResizeAxis\('x'\)[\s\S]*type === 'resize-y'[\s\S]*setResizeAxis\('y'\)[\s\S]*setResizeAxis\('both'\)/);
   assert.match(frame, /aria-pressed=\{draftPlacement\.pinned\}/);
   assert.match(tabs, /＋ 새 탭[\s\S]*저장[\s\S]*삭제/);
   assert.match(entry, /beforeunload/);
@@ -163,6 +205,46 @@ test('저장한 스크린은 상단 탭으로 전환하고 각각 독립적으�
   assert.doesNotMatch(entry, /class-board-toolbar__actions/);
   assert.doesNotMatch(entry, /현재 탭 저장|탭에서 숨기기|복제해서 새 탭/);
   assert.doesNotMatch(entry, /<select[^>]*value=\{board\?\.id/);
+});
+
+test('스크린 탭은 새 탭까지 좌우로 재정렬하고 별표 기본 화면을 상단에서 바로 연다', () => {
+  const items = [{ id: 'a' }, { id: 'draft' }, { id: 'b' }];
+  assert.deepEqual(moveClassBoardTab(items, 'draft', 'b').map((item) => item.id), ['a', 'b', 'draft']);
+  assert.equal(moveClassBoardTab(items, 'missing', 'a'), items);
+  assert.deepEqual(sortClassBoards([
+    { id: 'b', displayOrder: 2 },
+    { id: 'a', displayOrder: 0 },
+  ]).map((item) => item.id), ['a', 'b']);
+  assert.match(tabOrder, /moveClassBoardTab/);
+  assert.match(tabs, /draggable=\{!disabled\}/);
+  assert.match(tabs, /onDragStart[\s\S]*onDragOver[\s\S]*onDrop/);
+  assert.match(tabs, /Alt\+←\/→/);
+  assert.match(tabs, /item\.isDefault \? '★' : '☆'/);
+  assert.match(tabs, /onSetDefault\(item\)/);
+  assert.match(entry, /draftIndex=\{draftIndex\}/);
+  assert.match(entry, /classBoardApi\.reorder\(activeClass\.id, savedIds\)/);
+  assert.match(entry, /classBoardApi\.setDefault\(nextDefault\.id\)/);
+  assert.match(boardApi, /p_tab_position/);
+  assert.match(boardApi, /reorder_teacher_class_boards_v1/);
+  assert.match(boardApi, /set_teacher_default_class_board_v1/);
+  assert.match(boardApi, /get_teacher_default_class_board_v1/);
+  assert.match(tabOrderMigration, /ADD COLUMN IF NOT EXISTS display_order INTEGER/);
+  assert.match(tabOrderMigration, /ADD COLUMN IF NOT EXISTS is_default BOOLEAN/);
+  assert.match(tabOrderMigration, /idx_class_boards_one_default_per_class/);
+  assert.match(tabOrderMigration, /CREATE OR REPLACE FUNCTION public\.reorder_teacher_class_boards_v1/);
+  assert.match(tabOrderMigration, /CREATE OR REPLACE FUNCTION public\.set_teacher_default_class_board_v1/);
+  assert.match(tabOrderMigration, /CREATE OR REPLACE FUNCTION public\.get_teacher_default_class_board_v1/);
+  assert.match(tabOrderMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
+  assert.match(tabOrderSmoke, /별표로 지정한 스크린이 기본 화면 조회에 반영되지 않았습니다/);
+  assert.match(tabOrderSmoke, /드래그 탭 순서 또는 기본 별표가 작업공간에 유지되지 않았습니다/);
+  assert.match(teacherDashboard, /GuideInfoButton[\s\S]*teacher-class-board-shortcut[\s\S]*⚙️ 정보 수정/);
+  assert.match(teacherDashboard, /import\('\.\.\/\.\.\/modules\/tool\/class-board\/classBoardApi'\)/);
+  assert.match(teacherDashboard, /classBoardApi\.getDefault\(activeClass\.id\)/);
+  assert.match(teacherDashboard, /popup=yes[\s\S]*window\.screen\.availWidth[\s\S]*window\.screen\.availHeight/);
+  assert.match(teacherDashboard, /window\.open\('about:blank', 'class-board-presentation', popupFeatures\)/);
+  assert.match(teacherDashboard, /`\/class-board\/\$\{result\.boardId\}\?fullscreen=1`/);
+  assert.match(teacherDashboardStyles, /\.teacher-class-board-shortcut/);
+  assert.match(guides, /탭은 마우스로 좌우 드래그[\s\S]*별표[\s\S]*상단의 `우리 반 스크린` 버튼/);
 });
 
 test('예전 보관으로 숨겨진 스크린은 담당 교사가 상단 탭으로 복구한다', () => {
@@ -186,7 +268,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(frame, /MOVE_START_THRESHOLD_PX = 3/);
   assert.match(frame, /contentDragProps = editable && !draftPlacement\.pinned/);
   assert.match(frame, /dragHandleProps=\{contentDragProps\}/);
-  assert.match(frame, /if \(gesture\.changed\) onPlacementChange/);
+  assert.match(frame, /if \(gesture\.changed\) \{[\s\S]*onPlacementChange/);
   assert.match(host, /dragHandleProps[\s\S]*<View[\s\S]*dragHandleProps=\{dragHandleProps\}/);
   assert.match(textWidget, /<article\s+\{\.\.\.dragHandleProps\}/);
   assert.match(imageWidget, /<div \{\.\.\.dragHandleProps\}/);
@@ -195,7 +277,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*아주 크게[\s\S]*오른쪽·아래쪽·오른쪽 아래 모서리를 드래그/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*오른쪽 손잡이는 글자 크기를 유지한 채 줄바꿈[\s\S]*아래쪽 손잡이는 보이는 줄 수[\s\S]*오른쪽 아래 모서리는 글씨 크기/);
 });
 
 test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
@@ -284,6 +366,9 @@ test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체�
   assert.match(app, /ClassBoardPresentationPage boardId=/);
   assert.match(presentation, /getPresentation\(boardId\)/);
   assert.match(presentation, /requestFullscreen/);
+  assert.match(presentation, /autoFullscreen[\s\S]*fullscreenPrompt/);
+  assert.match(presentation, /화면을 한 번 눌러 전체화면 시작/);
+  assert.match(styles, /\.class-board-presentation-fullscreen-prompt/);
   assert.match(presentation, /<BoardCanvas[\s\S]*presentation/);
   assert.match(entry, />스크린 열기 ↗<\/button>/);
   assert.doesNotMatch(entry, /발표 화면 열기/);
@@ -297,7 +382,7 @@ test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체�
   assert.doesNotMatch(presentation, /student_name|studentName|student_statuses|recent_submissions/);
 });
 
-test('열린 스크린은 머리말 아래의 가용 화면을 좌우 여백 없이 채운다', () => {
+test('열린 스크린은 설정 화면과 같은 16:9 논리 화면을 비율대로 확대한다', () => {
   const layoutStart = styles.indexOf('.class-board-presentation-page {');
   const layoutEnd = styles.indexOf('.class-board-presentation-state {');
   const presentationLayout = styles.slice(layoutStart, layoutEnd);
@@ -306,15 +391,15 @@ test('열린 스크린은 머리말 아래의 가용 화면을 좌우 여백 없
   assert.notEqual(layoutEnd, -1);
   assert.match(presentationLayout, /class-board-presentation-page \{[^}]*padding:0;/);
   assert.match(presentationLayout, /class-board-presentation-stage \{[^}]*width:100%; height:100%;/);
-  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas \{[^}]*width:100%; height:100%; aspect-ratio:auto;/);
-  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas \{[^}]*padding:0; border:0; border-radius:0;/);
-  assert.match(presentationLayout, /class-board-presentation-page \.class-board-canvas__content \{[^}]*border:0; border-radius:0;/);
-  assert.doesNotMatch(presentationLayout, /width:min\(100cqw/);
-  assert.match(guides, /좌우 빈 여백 없이/);
+  assert.match(presentationLayout, /class-board-presentation-page \.class-board-viewport \{[^}]*width:100%; height:100%; aspect-ratio:auto;/);
+  assert.doesNotMatch(presentationLayout, /class-board-presentation-page \.class-board-canvas[^}]*padding:0/);
+  assert.match(guides, /설정 화면과 같은 16:9 화면[\s\S]*비율을 유지/);
 });
 
 test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
   assert.match(presentation, /✏️ 화면 편집/);
+  assert.match(presentation, /fullscreen \? ' is-fullscreen' : ''/);
+  assert.match(styles, /\.class-board-presentation-page\.is-fullscreen \.class-board-presentation-editbar__state\s*\{[^}]*display:none/);
   assert.match(presentation, /draftBoard/);
   assert.match(presentation, /beforeunload/);
   assert.match(presentation, /classBoardApi\.save/);
@@ -447,9 +532,13 @@ test('수업 위젯은 자유 배치 프레임 전체를 쓰고 프레임 크기
 });
 
 test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 남은 프레임에 채운다', () => {
-  assert.match(styles, /\.class-board-text\s*\{[^}]*padding:clamp\(2px,\.8cqmin,5px\)/);
-  assert.match(styles, /\.class-board-weather\s*\{[^}]*gap:clamp\(2px,2cqmin,10px\)[^}]*padding:clamp\(4px,2\.5cqmin,14px\)/);
-  assert.match(styles, /\.class-board-weather h2\s*\{[^}]*font-size:clamp\(\.75rem,12cqmin,3\.4rem\)/);
+  assert.match(styles, /\.class-board-text\s*\{[^}]*padding:0/);
+  assert.match(styles, /\.class-board-weather\s*\{[^}]*gap:0[^}]*align-items:stretch[^}]*padding:0/);
+  assert.match(styles, /\.class-board-weather__icon\s*\{[^}]*width:100%; height:100%[^}]*48cqmin/);
+  assert.match(styles, /\.class-board-weather>div\s*\{[^}]*display:flex[^}]*justify-content:center[^}]*height:100%/);
+  assert.match(styles, /\.class-board-weather>div>span\s*\{[^}]*9cqmin/);
+  assert.match(styles, /\.class-board-weather h2\s*\{[^}]*flex:0 0 auto[^}]*18cqmin/);
+  assert.match(styles, /\.class-board-weather p\s*\{[^}]*8cqmin/);
   assert.match(styles, /\.class-board-clock\s*\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
   assert.match(styles, /\.class-board-picker\s*\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto auto/);
   assert.match(styles, /\.class-board-clock>strong\s*\{[^}]*width:100%; height:100%[^}]*26cqmin/);
@@ -458,38 +547,80 @@ test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 
   assert.match(styles, /\.class-board-status\s*\{[^}]*padding:16px 14px/);
 });
 
-test('텍스트는 최대 크기에서 실제 내용을 여백 없이 맞추고 프레임 변경에 다시 반응한다', () => {
-  assert.match(textScale, /0\.8[\s\S]*1\.25[\s\S]*1\.5/);
-  assert.match(textSettings, /글씨 크기[\s\S]*aria-pressed[\s\S]*아주 크게는 글이 칸을 거의 채우도록 자동 맞춤/);
-  assert.match(textWidget, /--class-board-text-heading-size[\s\S]*createResponsiveTextSize\(config\.fontScale, 5\)/);
+test('텍스트는 수동 배율 없이 실제 내용을 여백 없이 맞추고 프레임 변경에 다시 반응한다', () => {
+  assert.match(textSettings, /오른쪽은 줄바꿈[\s\S]*아래쪽은 보이는 줄 수[\s\S]*모서리는 글씨 크기/);
+  assert.doesNotMatch(textSettings, /<legend>글씨 크기<\/legend>|aria-pressed|TEXT_SCALE_OPTIONS/);
+  assert.match(textWidget, /--class-board-text-heading-size[\s\S]*createResponsiveTextSize\(1\.5, 5\)/);
   assert.match(textWidget, /useFittedClassBoardText\(config\)[\s\S]*ref=\{textRef\}/);
-  assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size[\s\S]*5cqi \+ 5cqb/);
-  assert.match(styles, /\.class-board-text h2\s*\{[^}]*overflow-wrap:anywhere[^}]*line-height:1\.05/);
-  assert.match(styles, /\.class-board-text__body\s*\{[^}]*overflow-wrap:anywhere[^}]*line-height:1\.25/);
+  assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size[\s\S]*7\.5cqi \+ 7\.5cqb/);
+  assert.match(styles, /\.class-board-text h2\s*\{[^}]*margin:0[^}]*overflow-wrap:anywhere[^}]*line-height:1/);
+  assert.match(styles, /\.class-board-text__body\s*\{[^}]*overflow-wrap:anywhere[^}]*line-height:1\.05/);
   assert.doesNotMatch(styles, /class-board-text h2[^}]*font-size:clamp\([^}]*4rem/);
   assert.doesNotMatch(styles, /class-board-text__body[^}]*font-size:clamp\([^}]*2\.6rem/);
   assert.match(fittedTextHook, /scrollWidth <= element\.clientWidth[\s\S]*scrollHeight <= element\.clientHeight/);
-  assert.match(fittedTextHook, /new ResizeObserver\(scheduleFit\)/);
+  assert.match(fittedTextHook, /maximumSize = Math\.max\([\s\S]*element\.clientWidth,[\s\S]*element\.clientHeight/);
+  assert.match(fittedTextHook, /findLargestFittingTextSize\([\s\S]*CLASS_BOARD_TEXT_MIN_BODY_PX, maximumSize\)/);
+  assert.doesNotMatch(fittedTextHook, /getTextFillRatio|fontScale/);
+  assert.match(fittedTextHook, /new ResizeObserver\(\(\) => scheduleFit\(false\)\)/);
+  assert.match(fittedTextHook, /closest\('\[data-board-frame\]'\)[\s\S]*shouldRefitClassBoardText\(resizeAxis, force\)/);
   assert.match(fittedTextHook, /requestAnimationFrame\(fitText\)[\s\S]*resizeObserver\?\.disconnect\(\)/);
+  assert.match(fittedTextHook, /normalizeClassBoardTextBodySize\(bodySize\)[\s\S]*applyTextSize\(element, savedBodySize\)/);
+  assert.match(textSettings, /resetFittedSize[\s\S]*delete next\.bodySize/);
+  assert.match(frame, /startTextBodySize[\s\S]*textBodySize: gesture\.startTextBodySize \* scale/);
+  assert.match(model, /export \{ updateClassBoardWidgetPlacement \} from '\.\/host\/widgetPlacement'/);
+  assert.equal(shouldRefitClassBoardText(undefined), false);
+  assert.equal(shouldRefitClassBoardText('x'), false);
+  assert.equal(shouldRefitClassBoardText('y'), false);
+  assert.equal(shouldRefitClassBoardText('both'), false);
+  assert.equal(shouldRefitClassBoardText('x', true), true);
+  assert.doesNotMatch(fittedTextHook, /window\.addEventListener\('resize', fitAfterWindowResize\)/);
+  assert.equal(getDiagonalResizeScale({ width: 30, height: 20 }, { width: 60, height: 40 }), 2);
+  assert.equal(getDiagonalResizeScale({ width: 30, height: 20 }, { width: 15, height: 10 }), 0.5);
   assert.equal(normalizeTextScale(0.2), 0.8);
   assert.equal(normalizeTextScale(1.25), 1.25);
   assert.equal(normalizeTextScale(4), 1.5);
-  assert.equal(getTextFillRatio(1.5), 1);
-  assert.equal(getTextFillRatio(0.8), 0.8 / 1.5);
+  assert.equal(normalizeClassBoardTextBodySize(undefined), null);
+  assert.equal(normalizeClassBoardTextBodySize(44.12), 44);
+  assert.equal(normalizeClassBoardTextBodySize(1200), 900);
   assert.equal(findLargestFittingTextSize((size) => size <= 48.6), 48.5);
   assert.equal(findLargestFittingTextSize(() => false), 12);
   assert.equal(createResponsiveTextSize(1, 5), 'calc(5cqi + 5cqb)');
   assert.equal(createResponsiveTextSize(1.25, 3.25), 'calc(4.063cqi + 4.063cqb)');
 
-  const responsivePixels = (width, height, coefficient) => ((width + height) * coefficient) / 100;
-  const headingCoefficient = 5;
-  const initial = responsivePixels(400, 240, headingCoefficient);
-  const wider = responsivePixels(640, 240, headingCoefficient);
-  const taller = responsivePixels(400, 400, headingCoefficient);
-  const diagonal = responsivePixels(640, 400, headingCoefficient);
-  assert.ok(wider > initial);
-  assert.ok(taller > initial);
-  assert.ok(diagonal > wider && diagonal > taller);
+  const board = {
+    widgets: [{
+      instanceId: 'text-1',
+      widgetId: 'text',
+      placement: { x: 2, y: 3, width: 30, height: 40 },
+      config: { heading: '안내', body: '내용' },
+    }],
+  };
+  const horizontal = updateClassBoardWidgetPlacement(
+    board,
+    'text-1',
+    { x: 2, y: 3, width: 45, height: 40 },
+    { resizeAxis: 'x' }
+  );
+  assert.equal(horizontal.widgets[0].config.bodySize, undefined);
+  const diagonal = updateClassBoardWidgetPlacement(
+    board,
+    'text-1',
+    { x: 2, y: 3, width: 45, height: 60 },
+    { resizeAxis: 'both', textBodySize: 38.62 }
+  );
+  assert.equal(diagonal.widgets[0].config.bodySize, 38.5);
+});
+
+test('편집 화면과 전체화면은 같은 1600×900 논리 캔버스를 균일하게 확대한다', () => {
+  assert.equal(CLASS_BOARD_STAGE_WIDTH, 1600);
+  assert.equal(CLASS_BOARD_STAGE_HEIGHT, 900);
+  assert.deepEqual(calculateClassBoardStageTransform(800, 450), { scale: 0.5, x: 0, y: 0 });
+  assert.deepEqual(calculateClassBoardStageTransform(1000, 450), { scale: 0.5, x: 100, y: 0 });
+  assert.deepEqual(calculateClassBoardStageTransform(800, 600), { scale: 0.5, x: 0, y: 75 });
+  assert.match(canvas, /calculateClassBoardStageTransform[\s\S]*class-board-viewport__surface/);
+  assert.match(styles, /\.class-board-viewport__surface\s*\{[^}]*width:1600px; height:900px[^}]*transform-origin:top left/);
+  assert.match(styles, /\.class-board-presentation-page \.class-board-viewport\s*\{[^}]*width:100%; height:100%; aspect-ratio:auto/);
+  assert.doesNotMatch(styles, /class-board-presentation-page \.class-board-canvas[^}]*padding:0/);
 });
 
 test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최소 크기를 지킨다', () => {

@@ -8,9 +8,13 @@ const isArrangementPreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get('arrangement-preview') === '1'
 const isClassBoardPreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get('class-board-preview') === '1'
+const isDevLab = import.meta.env.DEV
+  && Boolean(new URLSearchParams(window.location.search).get('dev-lab'))
 
-const { default: RootComponent } = isClassBoardPreview
-  ? await import('./dev/ClassBoardPreview.jsx')
+const { default: RootComponent } = isDevLab
+  ? await import('./dev/DevLab.jsx')
+  : isClassBoardPreview
+    ? await import('./dev/ClassBoardPreview.jsx')
   : isArrangementPreview
     ? await import('./dev/ArrangementPreview.jsx')
     : isUiPreview

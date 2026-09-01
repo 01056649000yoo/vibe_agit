@@ -72,6 +72,15 @@
 }
 
 .teacher-guide-center-trigger { margin-right: 0; }
+.teacher-class-board-shortcut {
+    gap: 5px;
+    border: 1px solid #BFDBFE!important;
+    border-radius: 8px!important;
+    background: #EFF6FF!important;
+    color: #1D4ED8!important;
+    font-size: var(--ui-text-xs)!important;
+    font-weight: 800!important;
+}
 
 /* 헤더 왼쪽: 현재 학급 이름(고정) + 오른쪽 전환 버튼.
    이름을 박스로 감싸지 않는다 — 헤더가 무거워 보인다. 색과 굵기만으로 구분한다. */
@@ -375,6 +384,14 @@
     }
 
     .teacher-guide-center-trigger > span:last-child { display: none; }
+
+    .teacher-class-board-shortcut {
+        width: 34px;
+        justify-content: center;
+        padding: 0!important;
+    }
+
+    .teacher-class-board-shortcut > span:last-child { display: none; }
 }
 
 @media (max-width: 600px) {
