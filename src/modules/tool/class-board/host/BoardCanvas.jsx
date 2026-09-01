@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { getClassBoardImageUrls } from '../classBoardImageApi';
 import { getClassBoardWidget } from '../widgets/registry';
 import InteractiveWidgetFrame from './InteractiveWidgetFrame';
@@ -22,6 +22,13 @@ export default function BoardCanvas({
 }) {
   const interactionEnabled = editable ?? !presentation;
   const [assetUrls, setAssetUrls] = useState(new Map());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarId = useId();
+  const sidebarWidgets = useMemo(
+    () => sortWidgets(board?.widgets || [], 'sidebar'),
+    [board?.widgets]
+  );
+  const hasSidebar = sidebarWidgets.length > 0;
   const imagePathKey = useMemo(() => (
     [...new Set((board?.widgets || []).map((widget) => widget?.config?.path).filter(Boolean))]
       .sort()
@@ -59,7 +66,7 @@ export default function BoardCanvas({
     );
   });
 
-  const renderSidebar = () => sortWidgets(board?.widgets || [], 'sidebar').map((instance) => (
+  const renderSidebar = () => sidebarWidgets.map((instance) => (
     <div
       key={instance.instanceId}
       className="class-board-widget-frame class-board-widget-frame--sidebar"
@@ -79,9 +86,22 @@ export default function BoardCanvas({
   ));
 
   return (
-    <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}`}>
+    <div className={`class-board-canvas${presentation ? ' is-presentation' : ''}${sidebarCollapsed || !hasSidebar ? ' is-sidebar-collapsed' : ''}`}>
       <div ref={contentRef} className="class-board-canvas__content">{renderContent()}</div>
-      <aside className="class-board-canvas__sidebar">{renderSidebar()}</aside>
+      {hasSidebar ? (
+        <aside className="class-board-canvas__sidebar">
+          <button
+            type="button"
+            className="class-board-canvas__sidebar-toggle"
+            aria-controls={sidebarId}
+            aria-expanded={!sidebarCollapsed}
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          >
+            {sidebarCollapsed ? '📊 오늘 현황 펼치기' : '오늘 현황 접기'}
+          </button>
+          {!sidebarCollapsed ? <div id={sidebarId} className="class-board-canvas__sidebar-content">{renderSidebar()}</div> : null}
+        </aside>
+      ) : null}
     </div>
   );
 }

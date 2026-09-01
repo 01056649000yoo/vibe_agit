@@ -34,7 +34,7 @@ export default function ImageSettings({ config = {}, onChange, classId, boardId 
       <label className="class-board-file-label">
         <span>이미지 파일</span>
         <input ref={inputRef} type="file" accept="image/*" disabled={uploading} onChange={(event) => void upload(event.target.files?.[0])} />
-        <small>큰 이미지는 고화질로 자동 최적화합니다. 업로드하거나 캡처 이미지를 Ctrl+V로 붙여넣으면 이미지 비율에 맞춰 공간이 조정되며, 테두리를 드래그해 자유롭게 바꿀 수 있습니다.</small>
+        <small>큰 이미지는 긴 변 1920px·1MB 이하로 자동 최적화합니다. 업로드하거나 캡처 이미지를 Ctrl+V로 붙여넣으면 이미지 비율에 맞춰 공간이 조정되며, 테두리를 드래그해 자유롭게 바꿀 수 있습니다.</small>
       </label>
       {uploading ? <p className="class-board-note">이미지를 화면용으로 준비하는 중…</p> : null}
       {error ? <p className="class-board-error">{error}</p> : null}

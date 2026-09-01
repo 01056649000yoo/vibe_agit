@@ -2,7 +2,7 @@ import { supabase } from '../../../lib/supabaseClient';
 
 export const CLASS_BOARD_ASSET_BUCKET = 'class-board-assets';
 export const CLASS_BOARD_IMAGE_MAX_SOURCE_BYTES = 30 * 1024 * 1024;
-export const CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 2 * 1024 * 1024;
+export const CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 1 * 1024 * 1024;
 export const CLASS_BOARD_IMAGE_MAX_EDGE = 1920;
 
 const canvasToBlob = (canvas, type, quality) => new Promise((resolve, reject) => {
@@ -83,7 +83,7 @@ export const optimizeClassBoardImage = async (file) => {
       quality = Math.max(0.68, quality - 0.045);
     }
     if (!blob || blob.size > CLASS_BOARD_IMAGE_MAX_STORED_BYTES) {
-      throw new Error('이미지를 2MB 이하로 줄이지 못했습니다. 다른 이미지를 골라 주세요.');
+      throw new Error('이미지를 1MB 이하로 줄이지 못했습니다. 다른 이미지를 골라 주세요.');
     }
     return { blob, width, height, bytes: blob.size, mimeType: blob.type || type };
   } finally {

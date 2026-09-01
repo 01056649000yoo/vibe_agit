@@ -14,6 +14,8 @@ import {
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
 import { WidgetSettingsHost } from './host/WidgetHost';
+import ClassBoardTabs from './navigation/ClassBoardTabs';
+import HiddenClassBoardPanel from './navigation/HiddenClassBoardPanel';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
@@ -27,9 +29,13 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hiddenPanelOpen, setHiddenPanelOpen] = useState(false);
+  const [hiddenBoards, setHiddenBoards] = useState([]);
+  const [hiddenLoading, setHiddenLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const requestRef = useRef(0);
+  const hiddenRequestRef = useRef(0);
   const canvasContentRef = useRef(null);
 
   const dirty = Boolean(board) && snapshot(board) !== savedSnapshot;
@@ -91,6 +97,8 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       if (requestId !== requestRef.current) return;
       const nextBoards = Array.isArray(result?.boards) ? result.boards.map(normalizeClassBoard) : [];
       setBoards(nextBoards);
+      setHiddenPanelOpen(false);
+      setHiddenBoards([]);
       if (nextBoards.length > 0) selectBoard(nextBoards.find((item) => item.isActive) || nextBoards[0], { force: true });
       else {
         setBoard(null);
@@ -105,7 +113,10 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
 
   useEffect(() => {
     void loadWorkspace();
-    return () => { requestRef.current += 1; };
+    return () => {
+      requestRef.current += 1;
+      hiddenRequestRef.current += 1;
+    };
   }, [loadWorkspace]);
 
   useEffect(() => {
@@ -135,7 +146,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         ...item,
         isActive: item.id === saved.id,
       })));
-      setNotice('스크린을 저장했습니다. 발표 화면에 최신 내용이 보입니다.');
+      setNotice(`‘${saved.title}’ 탭을 저장했습니다. 상단 탭과 열린 스크린에 최신 내용이 보입니다.`);
       return saved;
     } catch (saveError) {
       setError(saveError.message || '스크린을 저장하지 못했습니다.');
@@ -146,12 +157,58 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   };
 
   const createBoard = () => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 새 스크린을 만들까요?')) return;
+    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 새 탭을 만들까요?')) return;
     const next = createDefaultClassBoard(activeClass?.name);
     setBoard(next);
     setSavedSnapshot('');
     setSelectedInstanceId(next.widgets[0].instanceId);
-    setNotice('내용을 다듬은 뒤 저장해 주세요. 이미지는 첫 저장 후 올릴 수 있습니다.');
+    setNotice('탭 이름과 내용을 다듬은 뒤 `현재 탭 저장`을 눌러 주세요. 이미지는 첫 저장 후 올릴 수 있습니다.');
+  };
+
+  const openHiddenBoards = async () => {
+    if (hiddenPanelOpen) {
+      hiddenRequestRef.current += 1;
+      setHiddenPanelOpen(false);
+      setHiddenLoading(false);
+      return;
+    }
+    const requestId = hiddenRequestRef.current + 1;
+    hiddenRequestRef.current = requestId;
+    setHiddenPanelOpen(true);
+    setHiddenLoading(true);
+    setError('');
+    try {
+      const result = await classBoardApi.getHidden(activeClass.id);
+      if (requestId === hiddenRequestRef.current) {
+        setHiddenBoards(Array.isArray(result?.boards) ? result.boards : []);
+      }
+    } catch (loadError) {
+      if (requestId === hiddenRequestRef.current) {
+        setError(loadError.message || '숨긴 탭을 불러오지 못했습니다.');
+      }
+    } finally {
+      if (requestId === hiddenRequestRef.current) setHiddenLoading(false);
+    }
+  };
+
+  const restoreHiddenBoard = async (boardId) => {
+    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 숨긴 탭을 복구할까요?')) return;
+    setSaving(true);
+    setError('');
+    try {
+      const restored = normalizeClassBoard(await classBoardApi.restore(boardId));
+      setBoards((current) => [restored, ...current.filter((item) => item.id !== restored.id)].map((item) => ({
+        ...item,
+        isActive: item.id === restored.id,
+      })));
+      setHiddenBoards((current) => current.filter((item) => item.id !== restored.id));
+      selectBoard(restored, { force: true });
+      setNotice(`‘${restored.title}’ 스크린을 상단 탭으로 복구했습니다.`);
+    } catch (restoreError) {
+      setError(restoreError.message || '숨긴 탭을 복구하지 못했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const duplicate = async () => {
@@ -162,7 +219,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       const copy = normalizeClassBoard(await classBoardApi.duplicate(board.id));
       setBoards((current) => [copy, ...current.map((item) => ({ ...item, isActive: false }))]);
       selectBoard(copy, { force: true });
-      setNotice('복사본을 만들었습니다. 원본과 별도로 수정할 수 있습니다.');
+      setNotice('복사본을 새 탭으로 만들었습니다. 원본과 별도로 수정할 수 있습니다.');
     } catch (copyError) {
       setError(copyError.message || '스크린을 복제하지 못했습니다.');
     } finally {
@@ -170,16 +227,16 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     }
   };
 
-  const archive = async () => {
-    if (!board?.id || dirty || !window.confirm(`‘${board.title}’ 스크린을 보관할까요?`)) return;
+  const hideBoard = async () => {
+    if (!board?.id || dirty || !window.confirm(`‘${board.title}’ 탭을 상단에서 숨길까요?\n숨긴 탭 복구에서 다시 되돌릴 수 있습니다.`)) return;
     setSaving(true);
     setError('');
     try {
       await classBoardApi.archive(board.id);
       await loadWorkspace();
-      setNotice('스크린을 보관했습니다. 이미지 파일은 복구와 복사본을 위해 그대로 보존됩니다.');
+      setNotice('스크린을 상단 탭에서 숨겼습니다. 이미지 파일은 복구와 복사본을 위해 그대로 보존됩니다.');
     } catch (archiveError) {
-      setError(archiveError.message || '스크린을 보관하지 못했습니다.');
+      setError(archiveError.message || '스크린을 숨기지 못했습니다.');
     } finally {
       setSaving(false);
     }
@@ -250,51 +307,74 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         </div>
         <div className="class-board-editor__header-actions">
           <TeacherGuideButton tabId="class-board" variant="help" />
-          <button type="button" className="class-board-secondary" disabled={pastingImage} onClick={createBoard}>새 스크린</button>
-          <button type="button" className="class-board-primary" disabled={!board || !dirty || saving || pastingImage} onClick={() => void save()}>{saving ? '저장 중…' : '저장'}</button>
+          <button type="button" className="class-board-secondary" disabled={pastingImage} onClick={createBoard}>새 탭</button>
+          <button type="button" className="class-board-primary" disabled={!board || !dirty || saving || pastingImage} onClick={() => void save()}>{saving ? '저장 중…' : '현재 탭 저장'}</button>
           <button
             type="button"
             className="class-board-present"
             disabled={!board?.id || dirty || saving || pastingImage}
             title={dirty ? '먼저 변경 내용을 저장해 주세요.' : ''}
             onClick={() => window.open(`/class-board/${board.id}`, '_blank', 'noopener')}
-          >발표 화면 열기 ↗</button>
+          >스크린 열기 ↗</button>
         </div>
       </header>
 
       {error ? <div className="class-board-alert is-error">{error}<button type="button" onClick={() => setError('')}>닫기</button></div> : null}
       {notice ? <div className="class-board-alert is-notice">{notice}<button type="button" onClick={() => setNotice('')}>닫기</button></div> : null}
 
+      <ClassBoardTabs
+        boards={boards}
+        currentBoard={board}
+        dirty={dirty}
+        disabled={saving || pastingImage}
+        onSelect={selectBoard}
+        onCreate={createBoard}
+      />
+
       <div className="class-board-toolbar">
-        <label>
-          <span>저장된 스크린</span>
-          <select disabled={pastingImage} value={board?.id || ''} onChange={(event) => selectBoard(boards.find((item) => item.id === event.target.value))}>
-            {!board?.id ? <option value="">새 스크린 (아직 저장 안 됨)</option> : null}
-            {boards.map((item) => <option key={item.id} value={item.id}>{item.title}{item.isActive ? ' · 현재' : ''}</option>)}
-          </select>
-        </label>
         <label className="class-board-title-field">
-          <span>스크린 제목</span>
+          <span>탭 이름</span>
           <input maxLength={80} disabled={!board || pastingImage} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
         </label>
         <div className="class-board-toolbar__actions">
-          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void duplicate()}>복제</button>
-          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void archive()}>보관</button>
+          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void duplicate()}>복제해서 새 탭</button>
+          <button
+            type="button"
+            aria-controls="class-board-hidden-tabs-panel"
+            aria-expanded={hiddenPanelOpen}
+            disabled={saving || pastingImage}
+            onClick={() => void openHiddenBoards()}
+          >{hiddenPanelOpen ? '복구 목록 닫기' : '숨긴 탭 복구'}</button>
+          <button type="button" disabled={!board?.id || dirty || saving || pastingImage} onClick={() => void hideBoard()}>탭에서 숨기기</button>
         </div>
       </div>
+
+      {hiddenPanelOpen ? (
+        <HiddenClassBoardPanel
+          boards={hiddenBoards}
+          loading={hiddenLoading}
+          disabled={saving || pastingImage}
+          onRestore={(boardId) => void restoreHiddenBoard(boardId)}
+          onClose={() => {
+            hiddenRequestRef.current += 1;
+            setHiddenPanelOpen(false);
+            setHiddenLoading(false);
+          }}
+        />
+      ) : null}
 
       {!board ? (
         <div className="class-board-empty class-board-empty--create">
           <span>🧩</span><h3>첫 우리 반 스크린을 만들어 보세요</h3>
-          <p>텍스트·이미지·글쓰기 현황 위젯이 담긴 기본 화면에서 시작합니다.</p>
-          <button type="button" className="class-board-primary" onClick={createBoard}>첫 스크린 만들기</button>
+          <p>텍스트·이미지·글쓰기 현황 위젯이 담긴 기본 화면을 첫 탭으로 만듭니다.</p>
+          <button type="button" className="class-board-primary" onClick={createBoard}>첫 탭 만들기</button>
         </div>
       ) : (
         <div className="class-board-editor__workspace">
           <div className="class-board-preview-panel">
             <div className="class-board-panel-heading">
               <strong>화면 미리보기</strong>
-              <span>왼쪽 자료 70% · 오른쪽 오늘의 현황 30%</span>
+              <span>오늘 현황을 접으면 자료 공간이 전체로 넓어집니다</span>
             </div>
             <p className="class-board-canvas-help" aria-live="polite">
               {pastingImage

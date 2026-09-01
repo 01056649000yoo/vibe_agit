@@ -15,7 +15,8 @@ const read = (path) => readFile(path, 'utf8');
 const [
   registry, manifest, model, entry, canvas, frame, host, presentation, presentationEditPanel, imageApi, imageSettings,
   imagePasteHook, textWidget, imageWidget, styles, statusWidget, statusSettings, statusHook, pollPolicy, migration, freeformMigration,
-  freeformSmoke, app, moduleRegistry, guides, guideRegistry, journeys, harness
+  freeformSmoke, classroomWidgetsMigration, classroomWidgetsSmoke, tabs, weatherWidget, timerWidget, stopwatchWidget,
+  pickerWidget, pickerManifest, hiddenTabs, boardApi, app, moduleRegistry, guides, guideRegistry, journeys, harness
 ] = await Promise.all([
   read('src/modules/tool/class-board/widgets/registry.js'),
   read('src/modules/tool/class-board/manifest.js'),
@@ -39,6 +40,16 @@ const [
   read('supabase/migrations/20261216_class_board_module.sql'),
   read('supabase/migrations/20261217_class_board_freeform_daily_status.sql'),
   read('tests/sql/20261217_class_board_freeform_daily_status.smoke.sql'),
+  read('supabase/migrations/20261218_class_board_tabs_and_classroom_widgets.sql'),
+  read('tests/sql/20261218_class_board_tabs_and_classroom_widgets.smoke.sql'),
+  read('src/modules/tool/class-board/navigation/ClassBoardTabs.jsx'),
+  read('src/modules/tool/class-board/widgets/weather/WeatherWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/timer/TimerWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/stopwatch/StopwatchWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/student-picker/StudentPickerWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/student-picker/manifest.js'),
+  read('src/modules/tool/class-board/navigation/HiddenClassBoardPanel.jsx'),
+  read('src/modules/tool/class-board/classBoardApi.js'),
   read('src/App.jsx'),
   read('src/modules/registry.js'),
   read('src/constants/teacherGuides.js'),
@@ -64,20 +75,53 @@ test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯
   assert.doesNotMatch(entry, /<TextWidget|<ImageWidget|<WritingStatusWidget/);
 });
 
-test('첫 스크린은 70:30 화면의 자유 배치 자료와 고정 현황으로 시작한다', () => {
+test('첫 스크린은 자유 배치 자료와 접어서 공간을 돌려받는 오늘 현황으로 시작한다', () => {
   assert.match(model, /preset: 'freeform-7-3'/);
   assert.match(model, /createWidgetInstance\('text'/);
   assert.match(model, /createWidgetInstance\('image'/);
   assert.match(model, /createWidgetInstance\('writing-status'/);
-  assert.match(canvas, /renderContent\(\)[\s\S]*renderSidebar\(\)/);
-  assert.match(entry, /왼쪽 자료 70% · 오른쪽 오늘의 현황 30%/);
+  assert.match(canvas, /sidebarCollapsed[\s\S]*aria-expanded=\{!sidebarCollapsed\}/);
+  assert.match(canvas, /오늘 현황 펼치기[\s\S]*오늘 현황 접기/);
+  assert.match(canvas, /is-sidebar-collapsed/);
+  assert.match(styles, /\.class-board-canvas\.is-sidebar-collapsed\s*\{\s*grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(entry, /오늘 현황을 접으면 자료 공간이 전체로 넓어집니다/);
   assert.match(entry, /Ctrl\+V로 붙여넣으면 원본 비율[\s\S]*드래그해 옮기고[\s\S]*크기를 조절/);
   assert.match(frame, /setPointerCapture/);
   assert.match(frame, /resize-x[\s\S]*resize-y[\s\S]*resize-both/);
   assert.match(frame, /aria-pressed=\{draftPlacement\.pinned\}/);
-  assert.match(entry, /새 스크린[\s\S]*복제[\s\S]*보관/);
+  assert.match(entry, /새 탭[\s\S]*현재 탭 저장[\s\S]*탭에서 숨기기/);
   assert.match(entry, /beforeunload/);
   assert.match(entry, /p_expected_revision|classBoardApi\.save/);
+});
+
+test('저장한 스크린은 상단 탭으로 전환하고 각각 독립적으로 수정한다', () => {
+  assert.match(entry, /<ClassBoardTabs[\s\S]*boards=\{boards\}[\s\S]*currentBoard=\{board\}/);
+  assert.match(tabs, /role="tablist"/);
+  assert.match(tabs, /role="tab"/);
+  assert.match(tabs, /aria-selected=\{selected\}/);
+  assert.match(tabs, /onSelect\(item\)/);
+  assert.match(tabs, /수정 중/);
+  assert.match(tabs, /＋ 새 탭/);
+  assert.match(entry, /탭 이름/);
+  assert.match(entry, /복제해서 새 탭/);
+  assert.doesNotMatch(entry, /<select[^>]*value=\{board\?\.id/);
+});
+
+test('예전 보관으로 숨겨진 스크린은 담당 교사가 상단 탭으로 복구한다', () => {
+  assert.match(entry, /classBoardApi\.getHidden/);
+  assert.match(entry, /숨긴 탭 복구/);
+  assert.match(entry, /aria-controls="class-board-hidden-tabs-panel"[\s\S]*aria-expanded=\{hiddenPanelOpen\}/);
+  assert.match(entry, /classBoardApi\.restore\(boardId\)[\s\S]*상단 탭으로 복구했습니다/);
+  assert.match(hiddenTabs, /예전 `보관`으로 사라진 스크린/);
+  assert.match(hiddenTabs, /상단 탭으로 복구/);
+  assert.match(boardApi, /get_teacher_archived_class_boards_v1/);
+  assert.match(boardApi, /restore_teacher_class_board_v1/);
+  assert.match(classroomWidgetsMigration, /CREATE OR REPLACE FUNCTION public\.get_teacher_archived_class_boards_v1/);
+  assert.match(classroomWidgetsMigration, /CREATE OR REPLACE FUNCTION public\.restore_teacher_class_board_v1/);
+  assert.match(classroomWidgetsMigration, /board\.archived_at IS NOT NULL[\s\S]*class\.teacher_id = auth\.uid\(\)/);
+  assert.match(classroomWidgetsMigration, /SET archived_at = NULL,[\s\S]*is_active = TRUE/);
+  assert.match(classroomWidgetsSmoke, /숨긴 스크린이 복구 목록에 나타나지 않았습니다/);
+  assert.match(classroomWidgetsSmoke, /숨긴 스크린이 활성 상단 탭으로 복구되지 않았습니다/);
 });
 
 test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이동하고 핀 상태를 지킨다', () => {
@@ -125,17 +169,24 @@ test('캡처 이미지는 Ctrl+V로 붙여넣고 실제 비율에 맞춰 교체 
   assert.match(guides, /Ctrl\+V[\s\S]*빈 이미지 칸 또는 새 이미지 칸에 원본 비율/);
 });
 
-test('발표 화면은 별도 교사 전용 경로이며 저장한 위젯만 전체화면으로 그린다', () => {
+test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체화면으로 그린다', () => {
   assert.match(app, /getClassBoardPresentationId[\s\S]*\{36\}/);
   assert.match(app, /profile\.role !== 'ADMIN' && !profile\.is_approved/);
   assert.match(app, /ClassBoardPresentationPage boardId=/);
   assert.match(presentation, /getPresentation\(boardId\)/);
   assert.match(presentation, /requestFullscreen/);
   assert.match(presentation, /<BoardCanvas[\s\S]*presentation/);
+  assert.match(entry, />스크린 열기 ↗<\/button>/);
+  assert.doesNotMatch(entry, /발표 화면 열기/);
+  assert.match(presentation, /<h1 className="class-board-presentation-class-name">\{data\.class\?\.name \|\| '우리 반'\}<\/h1>/);
+  assert.doesNotMatch(presentation, /<h1>\{data\.board\.title\}<\/h1>/);
+  assert.match(styles, /\.class-board-presentation-class-name\s*\{[^}]*font-size:clamp\(1\.6rem,3vw,3rem\)/);
+  assert.match(guides, /`스크린 열기`/);
+  assert.doesNotMatch(guides, /발표 화면/);
   assert.doesNotMatch(presentation, /student_name|studentName|student_statuses|recent_submissions/);
 });
 
-test('발표 화면은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
+test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
   assert.match(presentation, /✏️ 화면 편집/);
   assert.match(presentation, /draftBoard/);
   assert.match(presentation, /beforeunload/);
@@ -155,7 +206,7 @@ test('발표 화면은 임시 편집 모드에서 텍스트·이미지를 추가
   assert.ok(canvas.includes(".join('\\n')"));
 });
 
-test('발표용 현황은 미션 이름표와 일일 자율 글 집계를 20초 가시 화면 폴링으로 표시한다', () => {
+test('스크린 현황은 미션 이름표와 일일 자율 글 집계를 20초 가시 화면 폴링으로 표시한다', () => {
   assert.match(statusWidget, /제출자/);
   assert.match(statusWidget, /미제출자/);
   assert.match(statusWidget, /오늘의 자율 글/);
@@ -171,6 +222,7 @@ test('발표용 현황은 미션 이름표와 일일 자율 글 집계를 20초 
   assert.match(statusHook, /visibilitychange/);
   assert.match(statusHook, /window\.setTimeout/);
   assert.doesNotMatch(statusHook, /setInterval|\.channel\(|postgres_changes/);
+  assert.match(canvas, /!sidebarCollapsed \? <div[^>]+className="class-board-canvas__sidebar-content">\{renderSidebar\(\)\}<\/div> : null/);
   assert.match(harness, /우리 반 스크린/);
 });
 
@@ -187,7 +239,7 @@ test('보드·사진·현황은 담당 교사 RPC와 비공개 Storage 경계를
   assert.match(freeformMigration, /nonSubmitterNames/);
   assert.match(freeformMigration, /dailyWriting/);
   assert.match(freeformMigration, /writing_type IN \('diary', 'reading_log'\)/);
-  assert.match(freeformMigration, /file_size_limit = 2097152/);
+  assert.match(classroomWidgetsMigration, /file_size_limit = 1048576/);
   assert.match(migration, /image\/webp[\s\S]*image\/jpeg/);
   assert.match(migration, /Class_Board_Assets_Select_V1[\s\S]*Class_Board_Assets_Insert_V1[\s\S]*Class_Board_Assets_Delete_V1/);
   assert.match(freeformSmoke, /자유 배치 좌표·핀 상태/);
@@ -196,9 +248,27 @@ test('보드·사진·현황은 담당 교사 RPC와 비공개 Storage 경계를
   assert.match(imageApi, /createSignedUrls/);
   assert.match(imageApi, /CLASS_BOARD_IMAGE_MAX_EDGE = 1920/);
   assert.match(imageApi, /CLASS_BOARD_IMAGE_MAX_SOURCE_BYTES = 30 \* 1024 \* 1024/);
-  assert.match(imageApi, /CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 2 \* 1024 \* 1024/);
+  assert.match(imageApi, /CLASS_BOARD_IMAGE_MAX_STORED_BYTES = 1 \* 1024 \* 1024/);
+  assert.match(imageSettings, /1920px·1MB 이하/);
   assert.match(imageApi, /\['image\/webp', 'image\/jpeg'\]\.includes\(file\.type\)/);
   assert.doesNotMatch(imageApi, /getPublicUrl/);
+});
+
+test('날씨·타이머·스톱워치·학생 뽑기는 지연 위젯이며 서버 저장 경계도 함께 확장한다', () => {
+  assert.match(registry, /weatherWidgetManifest[\s\S]*timerWidgetManifest[\s\S]*stopwatchWidgetManifest[\s\S]*studentPickerWidgetManifest/);
+  assert.match(classroomWidgetsMigration, /'weather', 'timer', 'stopwatch', 'student-picker'/);
+  assert.match(classroomWidgetsMigration, /WHEN 'weather'[\s\S]*WHEN 'timer'[\s\S]*WHEN 'stopwatch'[\s\S]*WHEN 'student-picker'/);
+  assert.match(classroomWidgetsSmoke, /수업 위젯 네 종류가 한 스크린에 저장되지 않았습니다/);
+  assert.match(weatherWidget, /오늘의 날씨/);
+  assert.doesNotMatch(weatherWidget, /fetch\(|supabase|navigator\.geolocation/);
+  assert.match(timerWidget, /window\.setTimeout/);
+  assert.match(stopwatchWidget, /window\.setTimeout/);
+  assert.doesNotMatch(`${timerWidget}\n${stopwatchWidget}`, /setInterval/);
+  assert.match(pickerManifest, /requestBudget: \{ initial: 1, refreshMs: null, realtime: false, maxRows: 100 \}/);
+  assert.match(pickerWidget, /classBoardApi\.getRoster\(classId\)/);
+  assert.match(classroomWidgetsMigration, /get_teacher_class_board_roster_v1[\s\S]*LIMIT 100/);
+  assert.match(classroomWidgetsMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
+  assert.doesNotMatch(classroomWidgetsMigration.slice(classroomWidgetsMigration.indexOf("'names'")), /'student_id'|'auth_id'|'student_code'/);
 });
 
 test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최소 크기를 지킨다', () => {

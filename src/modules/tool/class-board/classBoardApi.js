@@ -11,6 +11,10 @@ export const classBoardApi = Object.freeze({
     return call('get_teacher_class_board_workspace_v1', { p_class_id: classId, p_limit: 20 });
   },
 
+  getHidden(classId) {
+    return call('get_teacher_archived_class_boards_v1', { p_class_id: classId, p_limit: 20 });
+  },
+
   save({ classId, board }) {
     return call('save_teacher_class_board_v1', {
       p_class_id: classId,
@@ -30,6 +34,10 @@ export const classBoardApi = Object.freeze({
     return call('archive_teacher_class_board_v1', { p_board_id: boardId });
   },
 
+  restore(boardId) {
+    return call('restore_teacher_class_board_v1', { p_board_id: boardId });
+  },
+
   getPresentation(boardId) {
     return call('get_teacher_class_board_presentation_v1', { p_board_id: boardId });
   },
@@ -40,5 +48,8 @@ export const classBoardApi = Object.freeze({
       p_mission_id: missionId || null,
     });
   },
-});
 
+  getRoster(classId) {
+    return call('get_teacher_class_board_roster_v1', { p_class_id: classId });
+  },
+});

@@ -73,7 +73,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         setData({ ...result, board: normalizeClassBoard(result.board) });
         document.title = `${result.board?.title || '우리 반 스크린'} | 끄적끄적 아지트`;
       })
-      .catch((loadError) => { if (active) setError(loadError.message || '발표 화면을 불러오지 못했습니다.'); })
+      .catch((loadError) => { if (active) setError(loadError.message || '스크린을 불러오지 못했습니다.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [boardId]);
@@ -196,7 +196,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   if (error || !data?.board) {
     return (
       <div className="class-board-presentation-state is-error">
-        <span>🔒</span><h1>발표 화면을 열 수 없습니다.</h1>
+        <span>🔒</span><h1>스크린을 열 수 없습니다.</h1>
         <p>{error || '스크린 정보를 찾지 못했습니다.'}</p>
         <a href="/?tool=class-board">우리 반 스크린으로 돌아가기</a>
       </div>
@@ -206,7 +206,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   return (
     <main className={`class-board-presentation-page${editing ? ' is-editing' : ''}`}>
       <header className="class-board-presentation-header">
-        <div><span>{data.class?.name}</span><h1>{data.board.title}</h1></div>
+        <h1 className="class-board-presentation-class-name">{data.class?.name || '우리 반'}</h1>
         <div>
           <time>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</time>
           {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
