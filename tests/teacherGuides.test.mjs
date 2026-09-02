@@ -165,8 +165,11 @@ test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을
     const mealBoard = guideText(TEACHER_GUIDES['meal-board']);
     const tools = guideText(TEACHER_GUIDES.tools);
 
-    assert.match(dashboard, /기본값인 `전체 활성 글 과제`.*학생별 표로 합산/);
-    assert.match(dashboard, /특정 미션[\s\S]*24명을 한눈에 볼 수 있는 상태 색상 카드/);
+    // 2026-09-02: 기본값이 `전체 활성 글 과제` 합산에서 `가장 최근에 낸 과제`로 바뀌었다.
+    assert.match(dashboard, /열자마자 \*\*가장 최근에 낸 과제\*\*의 현황/);
+    assert.match(dashboard, /`현황 범위`에서 다른 과제나 `전체 활성 글 과제`를 고르면 그 선택을 그대로 유지/);
+    assert.match(dashboard, /`전체 활성 글 과제`.*학생별 표로 합산/);
+    assert.match(dashboard, /과제 하나를 고르면[\s\S]*24명을 한눈에 볼 수 있는 상태 색상 카드/);
     assert.match(dashboard, /실시간 크게 보기.*6×4 확대 화면/);
     assert.match(dashboard, /12초 자동 갱신.*첫 제출.*다시 제출.*3회 제출/);
     assert.match(dashboard, /최근 제출 행을 누르면 해당 글이 바로 열/);
@@ -209,4 +212,34 @@ test('오늘 확장한 어휘·칭호·학급 발자국 도움말은 실제 집�
     assert.match(dragon, /기록가·독서가 2~7단계 보상.*종목별 총 5,000P/);
     assert.match(dragon, /자동 지급되지 않고.*받을 보상 모두 받기/);
     assert.match(dragon, /시즌 종료.*미수령 보상.*받을 수 없/);
+});
+
+test('우리 반 스크린·알림장 도움말은 2026-09-02 변경을 그대로 안내한다', () => {
+    const classBoard = guideText(TEACHER_GUIDES['class-board']);
+    const classNotice = guideText(TEACHER_GUIDES['class-notice']);
+
+    // 탭 작업바가 미리보기 바로 위로 내려왔다.
+    assert.match(classBoard, /작업바는 화면 미리보기 바로 위에 있습니다/);
+    assert.doesNotMatch(classBoard, /상단 탭 작업바의 `저장`/);
+
+    // 급식·알림 글씨는 위젯 크기에 비례해 커진다(상한이 없다).
+    assert.match(classBoard, /글씨는 위젯 크기에 비례해 커지므로/);
+
+    // 알림장은 날짜별 저장·삭제 버튼·글씨 크기 고르기·창 넘김을 함께 안내한다.
+    assert.match(classBoard, /알림장은 날짜마다 따로 저장됩니다/);
+    assert.match(classBoard, /`삭제`를 누르면 한 번 확인한 뒤 그 날짜 알림만 지웁니다/);
+    assert.doesNotMatch(classBoard, /내용을 비우고 저장하면 그 날짜 알림을 지웁니다/);
+    assert.match(classBoard, /`보통·크게·더 크게·아주 크게`/);
+    assert.match(classBoard, /아주 크게`\(64px\)/);
+    assert.match(classBoard, /다른 창\(프로젝터\)에 띄웠다면, 저장하는 즉시/);
+    assert.match(classBoard, /알림장 위젯을 빼거나 스크린 탭을 지워도 기록은 그대로 남습니다/);
+
+    // 오늘 현황은 배경색과 구성 항목을 고른다.
+    assert.match(classBoard, /배경은 남색·숲색·자주빛·먹색과 밝은 종이색 다섯 가지/);
+    assert.match(classBoard, /켠 항목만 서버가 계산하므로/);
+
+    // 알림장 도구 쪽도 같은 사용법을 말한다.
+    assert.match(classNotice, /지울 때는 `삭제`를 누릅니다/);
+    assert.match(classNotice, /아주 크게`\(64px\)/);
+    assert.match(classNotice, /여기 기록은 그대로 남습니다/);
 });
