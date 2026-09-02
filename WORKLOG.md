@@ -19,6 +19,28 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-02 — 연구소·자비스 실행 이미지에서 패키지 관리자 걷어내기 (Claude)
+
+- **배경**: 남은 긴급 CVE 중 `tar`(CVE-2026-59873) 4건은 우리 의존성이 아니라 **node 베이스 이미지에 딸려 온
+  npm 자신의 번들 복사본**이었다(`/usr/local/lib/node_modules/npm/node_modules/tar`). 압축을 푸는 통로가 없어
+  실제 위험은 아니지만, 지우면 매달 다시 판단할 일이 없어진다. 사용자가 "연구소와 자비스만 먼저" 지시했다.
+- **한 일**: 두 앱의 Dockerfile 실행 단계에서 `npm`·`npx`·`corepack`·`yarn` 을 지웠다(`node` 는 그대로).
+  두 앱 모두 `node server.js` 로만 도는 Next.js standalone 이라 실행 경로가 바뀌지 않는다.
+  **단축링크(url-app)는 손대지 않았다** — 실행 명령이 `npm run start` 라 npm 을 먼저 지우면 컨테이너가 안 뜬다.
+- **다른 저장소 변경(이 저장소 커밋 아님)**: `~/writing-helper` `fb60809`, `~/Jarvis_Brain_Local` `b493c0c`.
+  ⚠️ **연구소는 아직 푸시하지 않았다.** CI(`deploy.yml`)가 git 내용으로 다시 빌드하므로, 푸시 전에 배포가 돌면
+  npm 이 되살아난다. 자비스는 원격 저장소가 없어 로컬 커밋으로 끝이다.
+- **배포·검증**: 연구소 `docker compose --env-file ~/agit-supabase/.env -f docker-compose.lab.yml up -d --build`
+  → healthy, `/lab/login` 200(로컬·공개 경로). 자비스 `docker compose up -d --build frontend`
+  → running(재시작 0), `/` 307 → `/login` 200. 두 컨테이너 모두 `npm`·`yarn`·`npx` 없음, `node v20.20.2` 정상.
+- **검사 재실행(12:55)**: 긴급 **16 → 14**, 그중 우리 이미지 **5 → 3**, HIGH **534 → 496**.
+  두 이미지에서 `tar` 계열 CVE(CRITICAL 1 + HIGH 2씩)가 완전히 사라졌다.
+  화면의 `지금 확인할 항목`은 **15건**(긴급 14 + 진행 중 점검 1)이다.
+- **남은 우리 이미지 긴급 3건**: `agit-app`·`classroom-tools` 의 `x/crypto`(CVE-2026-56854, Caddy 실행 이미지 —
+  상류가 다시 빌드해야 풀림), `url-app` 의 `tar`(실행 명령을 바꾼 뒤에 지울 수 있음).
+- **남은 것 / 다음**: ① 연구소 푸시(사용자 승인 대기) ② 단축링크는 `output: "standalone"` 으로 바꿔
+  `node server.js` 로 돌린 뒤 같은 정리 ③ 분기 점검표 마무리.
+
 ## 2026-09-02 — 서비스 점검 24건의 정체와 잡음 걷어내기 (Claude)
 
 - **배경**: 사용자가 "관리자 대시보드 서비스 점검에 24건이 떠 있는데 쓸모없는 건 빼고 나머지는 점검해 달라"고 요청했다.
