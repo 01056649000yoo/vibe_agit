@@ -2,6 +2,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import {
+    SERVICE_FINDING_NOTES,
+    getActiveFindingNotes,
+    getExpiredFindingNotes
+} from '../src/constants/serviceFindingNotes.js';
 
 const read = (file) => readFile(file, 'utf8');
 const [migration, ignoreMigration, dashboard, panel, hook, scanner, plist, catalog] = await Promise.all([
@@ -115,4 +120,35 @@ test('검사기 이미지가 지워져 있어도 월간 검사가 멈추지 않�
     assert.match(scanner, /run\(DOCKER, \['pull', '--quiet', TRIVY_IMAGE\]/);
     assert.match(scanner, /고정한 검사기 이미지를 준비하지 못했습니다/);
     assert.match(scanner, /const TRIVY_IMAGE = 'aquasec\/trivy@sha256:[a-f0-9]{64}'/);
+});
+
+test('해당 없음 판단은 근거와 기한을 함께 적고, 기한이 지나면 다시 센다', () => {
+    assert.ok(SERVICE_FINDING_NOTES.length > 0);
+
+    for (const note of SERVICE_FINDING_NOTES) {
+        assert.match(note.id, /^CVE-\d{4}-\d{4,}$/, '취약점 번호 형식이어야 합니다.');
+        assert.ok(String(note.reason || '').trim().length >= 20, `${note.id}: 근거를 적어야 합니다.`);
+        assert.match(note.checkedAt, /^\d{4}-\d{2}-\d{2}$/);
+        assert.match(note.expiresAt, /^\d{4}-\d{2}-\d{2}$/);
+        assert.ok(new Date(note.expiresAt) > new Date(note.checkedAt), `${note.id}: 기한이 확인일보다 뒤여야 합니다.`);
+
+        // 구성 정보를 브라우저 번들에 싣지 않는다 — 이 파일은 관리자 화면과 함께 배포된다.
+        assert.doesNotMatch(`${note.title} ${note.reason}`, /\b\d{4,5}\s*번?\s*포트|container_name|agit-[a-z]+\b/,
+            `${note.id}: 근거에 서비스 이름·포트를 적지 않습니다.`);
+    }
+
+    // 기한이 지난 판단은 유효 목록에서 빠지고 '다시 확인' 목록으로 간다
+    const far = new Date('2999-01-01');
+    assert.equal(getActiveFindingNotes(far).length, 0);
+    assert.equal(getExpiredFindingNotes(far).length, SERVICE_FINDING_NOTES.length);
+
+    const early = new Date('2000-01-01');
+    assert.equal(getExpiredFindingNotes(early).length, 0);
+
+    // 검사기와 화면이 같은 원본을 읽는다
+    assert.match(scanner, /from '\.\.\/src\/constants\/serviceFindingNotes\.js'/);
+    assert.match(scanner, /activeNoteIds\.has/);
+    assert.match(scanner, /유효기간이 지난 '해당 없음' 판단/);
+    assert.match(panel, /getActiveFindingNotes\(\)/);
+    assert.match(panel, /다시 확인 필요/);
 });

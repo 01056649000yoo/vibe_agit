@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import { PanelHeader, SectionCard } from './adminUsageUi';
+import { getActiveFindingNotes, getExpiredFindingNotes } from '../../constants/serviceFindingNotes';
 
 const STATUS_META = {
     PENDING: { label: '미확인', color: '#64748B', background: '#F1F5F9' },
@@ -128,6 +129,9 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
     const scanRuns = Array.isArray(data?.scan_runs) ? data.scan_runs : [];
     const images = Array.isArray(latestScan?.images) ? latestScan.images : [];
     const pendingCount = [...activeItems.values()].filter((item) => item.status === 'PENDING').length;
+    // 판단에는 기한이 있다. 지난 것은 초록이 아니라 빨강으로 보여 다시 확인하게 한다.
+    const activeNotes = getActiveFindingNotes();
+    const expiredNotes = getExpiredFindingNotes();
 
     const startReview = async () => {
         if (!window.confirm('서비스 정기점검을 시작하시겠습니까? 완료한 시각을 기준으로 다음 점검일이 3개월 뒤로 정해집니다.')) return;
@@ -261,6 +265,49 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
                         </table>
                     </div>
                 )}
+            </SectionCard>
+
+            <SectionCard>
+                <PanelHeader
+                    title="확인하고 해당 없음으로 정리한 항목"
+                    description="검사기는 라이브러리가 이미지에 들어 있는지만 볼 뿐, 그 코드가 실제로 실행되는지는 못 봅니다. 확인해 보고 우리에게 해당하지 않는 것은 근거와 함께 여기 적어 두고 세지 않습니다. 판단에는 기한이 있어 지나면 다시 셉니다."
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {activeNotes.length === 0 && expiredNotes.length === 0 ? (
+                        <div style={{ padding: '18px', borderRadius: '10px', background: '#F8FAFC', color: '#64748B' }}>
+                            해당 없음으로 정리한 항목이 없습니다.
+                        </div>
+                    ) : (
+                        <>
+                            {activeNotes.map((note) => (
+                                <div key={note.id} style={{ padding: '13px 15px', border: '1px solid #BBF7D0', background: '#F0FDF4', borderRadius: '10px' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 900, color: '#166534' }}>해당 없음</span>
+                                        <strong style={{ color: '#1E293B' }}>{note.id}</strong>
+                                        <span style={{ color: '#475569', fontSize: '0.82rem' }}>{note.title}</span>
+                                    </div>
+                                    <div style={{ marginTop: '6px', color: '#334155', fontSize: '0.84rem', lineHeight: 1.65 }}>{note.reason}</div>
+                                    <div style={{ marginTop: '5px', color: '#64748B', fontSize: '0.76rem' }}>
+                                        확인 {note.checkedAt} · 다시 확인할 날 {note.expiresAt}
+                                    </div>
+                                </div>
+                            ))}
+                            {expiredNotes.map((note) => (
+                                <div key={note.id} style={{ padding: '13px 15px', border: '1px solid #FCA5A5', background: '#FFF1F2', borderRadius: '10px' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 900, color: '#B91C1C' }}>다시 확인 필요</span>
+                                        <strong style={{ color: '#1E293B' }}>{note.id}</strong>
+                                        <span style={{ color: '#475569', fontSize: '0.82rem' }}>{note.title}</span>
+                                    </div>
+                                    <div style={{ marginTop: '6px', color: '#334155', fontSize: '0.84rem', lineHeight: 1.65 }}>{note.reason}</div>
+                                    <div style={{ marginTop: '5px', color: '#B91C1C', fontSize: '0.76rem' }}>
+                                        {note.expiresAt}에 기한이 지났습니다. 다음 검사부터 다시 셉니다.
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+                </div>
             </SectionCard>
 
             {scanRuns.length > 0 && (

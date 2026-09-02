@@ -16,6 +16,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { getActiveFindingNotes, getExpiredFindingNotes } from '../src/constants/serviceFindingNotes.js';
 
 const TRIVY_IMAGE = 'aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969';
 const DOCKER = existsSync('/Applications/Docker.app/Contents/Resources/bin/docker')
@@ -63,7 +64,23 @@ const ignoredPackages = new Map((config.ignoredPackages || []).map((entry) => {
     }
     return [entry.package.trim(), entry.reason.trim()];
 }));
-const isIgnoredFinding = (finding) => ignoredPackages.has(String(finding?.PkgName || ''));
+const isIgnoredPackage = (finding) => ignoredPackages.has(String(finding?.PkgName || ''));
+
+/*
+ * 확인해 보고 `해당 없음`으로 정리한 취약점(원본: src/constants/serviceFindingNotes.js).
+ *
+ * 검사기는 라이브러리가 들어 있는지만 볼 뿐 그 코드가 실행되는지는 못 본다. 그래서 SSH 를 켜지도
+ * 않는 컨테이너에 SSH 인증 우회 CRITICAL 이 뜬다. 근거를 적어 두고 그 건은 세지 않는다.
+ * **유효기간이 지난 판단은 다시 센다** — 구성은 바뀌고, 오늘의 근거가 반년 뒤에도 참이라는 보장은 없다.
+ */
+const activeNoteIds = new Set(getActiveFindingNotes().map((note) => note.id));
+const expiredNotes = getExpiredFindingNotes();
+if (expiredNotes.length > 0) {
+    console.log(`⚠ 유효기간이 지난 '해당 없음' 판단 ${expiredNotes.length}건은 다시 셉니다: `
+        + expiredNotes.map((note) => note.id).join(', '));
+}
+const isNotApplicable = (finding) => activeNoteIds.has(String(finding?.VulnerabilityID || ''));
+const isIgnoredFinding = (finding) => isIgnoredPackage(finding) || isNotApplicable(finding);
 
 const latestSuccessful = psql(`
     SELECT finished_at FROM public.system_service_scan_runs
@@ -283,7 +300,9 @@ try {
 {
     const ours = rawScans.filter((scan) => !scan.upstream);
     const oursUrgent = ours.reduce((sum, scan) => {
-        const vulns = (scan.report?.Results || []).flatMap((r) => r.Vulnerabilities || []);
+        // 원장과 같은 기준으로 센다 — 이유를 적어 뺀 것은 여기서도 빼야 두 숫자가 어긋나지 않는다.
+        const vulns = (scan.report?.Results || []).flatMap((r) => r.Vulnerabilities || [])
+            .filter((finding) => !isIgnoredFinding(finding));
         return sum + (scan.exposure === 'public'
             ? vulns.filter((v) => v.Severity === 'CRITICAL' && v.FixedVersion).length
             : 0);
