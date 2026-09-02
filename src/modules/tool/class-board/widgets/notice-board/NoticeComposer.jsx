@@ -52,13 +52,14 @@ export default function NoticeComposer({
 
   const dirty = state.body !== state.savedBody;
   const isToday = Boolean(state.today) && state.date === state.today;
+  const hasSaved = state.savedBody.length > 0;
 
-  const save = async () => {
-    if (!classId || saving || !dirty) return;
+  const write = async (body) => {
+    if (!classId || saving) return;
     setSaving(true);
     setError('');
     try {
-      const result = await noticeBoardApi.saveNotice(classId, state.date, state.body);
+      const result = await noticeBoardApi.saveNotice(classId, state.date, body);
       const savedBody = result?.notice?.body || '';
       setState((current) => {
         const withoutDate = current.recent.filter((item) => item.date !== current.date);
@@ -76,6 +77,15 @@ export default function NoticeComposer({
     } finally {
       setSaving(false);
     }
+  };
+
+  const save = () => { if (dirty) void write(state.body); };
+
+  const remove = () => {
+    if (!hasSaved) return;
+    const label = formatSeoulDate(state.date) || state.date;
+    if (!window.confirm(`${label} 알림을 지울까요? 지우면 교실 화면에서도 사라집니다.`)) return;
+    void write('');
   };
 
   if (state.status === 'loading') return <p className="class-board-note">알림장을 불러오는 중…</p>;
@@ -101,9 +111,11 @@ export default function NoticeComposer({
 
       <label>
         <span>알림 내용</span>
+        {/* 아이들과 함께 보면서 적는 자리라 입력칸 글씨도 교실에서 읽히는 크기로 둔다. */}
         <textarea
+          className="class-board-notice-composer__body"
           maxLength={NOTICE_LIMIT}
-          rows={8}
+          rows={4}
           disabled={saving}
           value={state.body}
           placeholder="예) 내일 준비물은 색연필과 풀입니다."
@@ -113,9 +125,16 @@ export default function NoticeComposer({
 
       <div className="class-board-notice-composer__actions">
         <span>{state.body.length} / {NOTICE_LIMIT}자</span>
-        <button type="button" className="class-board-primary" disabled={saving || !dirty} onClick={() => void save()}>
-          {saving ? '저장 중…' : '알림 저장'}
-        </button>
+        <div className="class-board-notice-composer__buttons">
+          {hasSaved ? (
+            <button type="button" className="class-board-notice-composer__delete" disabled={saving} onClick={remove}>
+              삭제
+            </button>
+          ) : null}
+          <button type="button" className="class-board-primary" disabled={saving || !dirty} onClick={save}>
+            {saving ? '저장 중…' : '알림 저장'}
+          </button>
+        </div>
       </div>
 
       {error ? <p className="class-board-error">{error}</p> : null}
@@ -143,7 +162,7 @@ export default function NoticeComposer({
       ) : null}
 
       <p className="class-board-note">
-        알림은 날짜마다 따로 저장됩니다. 내용을 비우고 저장하면 그 날짜의 알림을 지웁니다.
+        알림은 날짜마다 따로 저장되고, 저장하면 교실 화면의 알림장에 바로 나타납니다.
         {widgetHint ? ' 위젯의 제목과 색은 아래에서 정하며 스크린 `저장`을 눌러야 함께 보관됩니다.' : ''}
       </p>
     </div>

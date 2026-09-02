@@ -190,7 +190,7 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
   assert.match(noticeApi, /get_teacher_class_board_notices_v1/);
   assert.match(noticeApi, /save_teacher_class_board_notice_v1/);
   assert.match(noticeApi, /Number\(data\?\.version\) !== 1/);
-  assert.match(noticeComposer, /noticeBoardApi\.saveNotice\(classId, state\.date, state\.body\)/);
+  assert.match(noticeComposer, /noticeBoardApi\.saveNotice\(classId, state\.date, body\)/);
   assert.match(noticeComposer, /publishClassBoardNotice/);
   assert.match(noticeComposer, /maxLength=\{NOTICE_LIMIT\}/);
   assert.match(noticeComposer, /지난 알림/);
@@ -846,4 +846,25 @@ test('알림장은 학급운영도구의 독립 도구로도 열리고 위젯을
   assert.match(noticeLogSmoke, /알림장 목록의 다음 커서가 올바르지 않습니다/);
   assert.match(noticeLogSmoke, /알림장 목록에 본문 전체가 담겼습니다/);
   assert.match(noticeLogSmoke, /담당하지 않는 학급의 알림장 목록을 읽었습니다/);
+});
+
+test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지우기는 확인을 받는다', () => {
+  // 아이들과 함께 보면서 적는 자리라 입력칸 글씨도 교실에서 읽히는 계단을 쓴다.
+  assert.match(noticeComposer, /className="class-board-notice-composer__body"/);
+  assert.match(noticeComposerStyles, /\.class-board-notice-composer__body \{[^}]*font-size:var\(--ui-text-xl\)/);
+  assert.doesNotMatch(noticeComposer, /rows=\{8\}/);
+
+  // 비우고 저장하는 대신 눈에 보이는 삭제 버튼을 두고, 지울 때는 한 번 물어본다.
+  assert.match(noticeComposer, /const remove = \(\) => \{[\s\S]*window\.confirm[\s\S]*void write\(''\)/);
+  assert.match(noticeComposer, /hasSaved \? \([\s\S]*class-board-notice-composer__delete/);
+  assert.match(noticeComposer, /const hasSaved = state\.savedBody\.length > 0/);
+  assert.match(noticeComposerStyles, /\.class-board-notice-composer__delete \{/);
+
+  // 도구 창에서 적고 프로젝터 창에 띄우는 흐름이라 같은 브라우저의 다른 창까지 잇는다.
+  assert.match(noticeStore, /new BroadcastChannel\(CHANNEL_NAME\)/);
+  assert.match(noticeStore, /channel\.onmessage = \(event\) => \{[\s\S]*notify\(/);
+  assert.match(noticeStore, /notify\(payload\);\s*\n?\s*try \{\s*\n?\s*channel\?\.postMessage\(payload\)/);
+  // 받은 것을 다시 내보내면 창 사이를 돌게 되므로, 내보내는 곳은 발행 함수 한 군데뿐이다.
+  assert.equal(noticeStore.match(/postMessage/g).length, 1);
+  assert.doesNotMatch(noticeStore, /setInterval|localStorage/);
 });
