@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton from './PromptRuleButton';
+import FeedbackPhrasePicker from './FeedbackPhrasePicker';
 import { getMissionReactionOptions } from '../../modules/writing/mission-types/registry';
 import { fetchTeacherMissionEngagement } from '../../modules/writing/reactions/reactionApi';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
@@ -14,7 +15,7 @@ const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
     handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile,
-    handleRecallPosts, handleUndoRecall
+    handleRecallPosts, handleUndoRecall, handleBulkPhraseRewrite, phraseStore
 }) => {
     /**
      * 회수 전 교사에게 보여줄 안내문.
@@ -92,6 +93,7 @@ const SubmissionStatusModal = ({
         }
     };
 
+    const [isPhrasePanelOpen, setIsPhrasePanelOpen] = React.useState(false);
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
     const [reactionPosts, setReactionPosts] = React.useState([]);
@@ -295,6 +297,42 @@ const SubmissionStatusModal = ({
                                             {/* 실행 직전에 규칙을 고칠 수 있도록 버튼 바로 아래에 둔다 */}
                                             <PromptRuleButton kind="feedback" isMobile={isMobile} style={{ width: '100%', justifyContent: 'center' }} />
                                         </div>
+
+                                        {/* 두 번째 갈래 — 저장해 둔 문장으로 보낸다. AI 를 부르지 않아 곧바로 끝난다. */}
+                                        {handleBulkPhraseRewrite && posts.some(p => p.is_submitted && !p.is_confirmed && !p.is_returned) && (
+                                            <div style={{ flex: '1 1 100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <Button
+                                                    onClick={() => {
+                                                        phraseStore?.ensurePhrasesLoaded?.();
+                                                        setIsPhrasePanelOpen((open) => !open);
+                                                    }}
+                                                    disabled={isGenerating || loadingPosts}
+                                                    style={{
+                                                        width: '100%',
+                                                        backgroundColor: '#E0F2FE',
+                                                        color: '#0369A1',
+                                                        border: '2px solid #BAE6FD',
+                                                        fontWeight: '900',
+                                                        fontSize: 'var(--ui-text-sm)',
+                                                        padding: '12px 8px'
+                                                    }}
+                                                >
+                                                    📌 문장으로 일괄 다시쓰기 ({posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned).length}명)
+                                                </Button>
+                                                {isPhrasePanelOpen && phraseStore && (
+                                                    <FeedbackPhrasePicker
+                                                        phraseStore={phraseStore}
+                                                        applyLabel="이 문장으로 일괄 요청"
+                                                        applyHint="반 전체에 보낼 문장을 고르세요."
+                                                        disabled={isGenerating || loadingPosts}
+                                                        onApply={(message) => {
+                                                            setIsPhrasePanelOpen(false);
+                                                            handleBulkPhraseRewrite(message);
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
 
                                         {posts.some(p => p.is_confirmed) && (
                                             <Button

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton, { PROMPT_ACCENT } from './PromptRuleButton';
+import FeedbackPhrasePicker from './FeedbackPhrasePicker';
+import { appendFeedbackMessage } from '../../constants/feedbackPhrases';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
@@ -17,7 +19,7 @@ const PostDetailViewer = ({
     isGenerating, postComments,
     isMobile, onUpdate, isEvaluationMode, posts = [],
     addTeacherComment, deleteTeacherComment, handleTeacherEditPost,
-    outlineReference, postDetailLoading, onRefreshPostDetail
+    outlineReference, postDetailLoading, onRefreshPostDetail, phraseStore
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -26,6 +28,7 @@ const PostDetailViewer = ({
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [currentTeacherUid, setCurrentTeacherUid] = useState(null);
+    const [isPhrasePanelOpen, setIsPhrasePanelOpen] = useState(false);
     const [isTeacherEditMode, setIsTeacherEditMode] = useState(false);
     const [editedTitle, setEditedTitle] = useState('');
     const [editedContent, setEditedContent] = useState('');
@@ -633,6 +636,34 @@ const PostDetailViewer = ({
                                                     {isGenerating ? '✨ 분석 중…' : '✨ AI 생성'}
                                                 </Button>
                                             </div>
+                                            {/* 두 번째 갈래 — 저장해 둔 지시문을 골라 넣는다.
+                                                AI 와 나란히 두되 줄을 나눈다(380px 사이드바에 세 버튼은 들어가지 않는다). */}
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    // 펼칠 때 처음 읽는다(안 쓰는 교사에게 조회를 붙이지 않는다).
+                                                    phraseStore?.ensurePhrasesLoaded?.();
+                                                    setIsPhrasePanelOpen((open) => !open);
+                                                }}
+                                                style={{ width: '100%', marginTop: '8px', justifyContent: 'center' }}
+                                            >
+                                                📌 자주 쓰는 말{phraseStore?.phrases?.length ? ` (${phraseStore.phrases.length})` : ''}
+                                            </Button>
+                                            {isPhrasePanelOpen && phraseStore && (
+                                                <div style={{ marginTop: '8px' }}>
+                                                    <FeedbackPhrasePicker
+                                                        phraseStore={phraseStore}
+                                                        applyLabel="피드백에 넣기"
+                                                        applyHint="넣을 문장을 고르세요."
+                                                        onApply={(message) => {
+                                                            // 덮어쓰지 않는다 — AI 초안 아래에 덧붙는다.
+                                                            setTempFeedback(appendFeedbackMessage(tempFeedback, message));
+                                                            setIsPhrasePanelOpen(false);
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
                                             <textarea

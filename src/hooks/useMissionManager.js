@@ -6,6 +6,7 @@ import { dataCache } from '../lib/cache';
 import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
 import { assignmentApi } from '../modules/writing/assignmentApi';
+import { appendFeedbackMessage } from '../constants/feedbackPhrases';
 import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 import { getLatestSubmissionBoardMission } from '../modules/writing/submission-board/boardMissionScope';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
@@ -1009,6 +1010,88 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    /*
+     * 저장해 둔 문장으로 일괄 다시 쓰기 요청 (AI 를 거치지 않는 두 번째 갈래).
+     *
+     * 왜 따로 있나: `handleBulkAIAction` 은 글마다 AI 를 부르느라 25명이면 1분 가까이 걸리고
+     * 호출도 25번 나간다. 반 전체에 같은 지시를 내릴 때는 AI 가 필요 없다. 여기서는 호출이 0회다.
+     * `handleBulkRequestRewrite` 와도 다르다 — 그쪽은 **아무 말 없이** 돌려보낸다.
+     *
+     * 이미 피드백이 적힌 글은 덮어쓰지 않고 아래에 덧붙인다(낱개와 같은 규칙).
+     * 덧붙일 것이 없는 글은 한 번의 일괄 호출로 보내 왕복을 줄인다.
+     */
+    const handleBulkPhraseRewrite = async (message) => {
+        const text = String(message || '').trim();
+        if (!text) return;
+
+        const targets = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
+        if (targets.length === 0) {
+            alert('다시 쓰기를 요청할 미확인 제출글이 없습니다.');
+            return;
+        }
+
+        const hasFeedback = (post) => Boolean(String(post.ai_feedback || '').trim());
+        const toAppend = targets.filter(hasFeedback);
+        const toSend = targets.filter((post) => !hasFeedback(post));
+
+        const confirmMessage = [
+            `제출된 ${targets.length}개의 글에 아래 문장으로 다시 쓰기를 요청할까요? ♻️`,
+            '',
+            text,
+            '',
+            toAppend.length > 0 ? `※ ${toAppend.length}건은 이미 적힌 피드백을 지우지 않고 아래에 덧붙입니다.` : null,
+            '학생들에게 돌아가기 알림이 전송됩니다.'
+        ].filter((line) => line !== null).join('\n');
+        if (!confirm(confirmMessage)) return;
+
+        setLoadingPosts(true);
+        try {
+            const applied = new Map();
+            let requestedCount = 0;
+
+            // 서버가 한 번에 받는 최대 건수(bulk_request_assignment_rewrite_v1)
+            const BULK_LIMIT = 100;
+            for (let index = 0; index < toSend.length; index += BULK_LIMIT) {
+                const chunk = toSend.slice(index, index + BULK_LIMIT);
+                const result = await assignmentApi.requestRewrites(chunk.map((post) => post.id), text);
+                requestedCount += Number(result?.requested_count ?? chunk.length);
+                chunk.forEach((post) => applied.set(post.id, text));
+            }
+
+            for (const post of toAppend) {
+                const merged = appendFeedbackMessage(post.ai_feedback, text);
+                const result = await assignmentApi.requestRewrite(post.id, merged);
+                if (result?.status === 'requested') {
+                    requestedCount += 1;
+                    applied.set(post.id, merged);
+                }
+            }
+
+            alert(requestedCount > 0
+                ? `✅ ${requestedCount}건에 문장을 담아 다시 쓰기를 요청했습니다!`
+                : '이미 다시 쓰기를 요청한 글이라 새로 보낸 것이 없습니다.');
+
+            setPosts((current) => current.map((post) => (applied.has(post.id)
+                ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false, ai_feedback: applied.get(post.id) }
+                : post)));
+            if (requestedCount > 0) {
+                transitionMissionStatus(
+                    selectedMission.id,
+                    'request-rewrite',
+                    requestedCount,
+                    targets.filter((post) => applied.has(post.id)).slice(0, requestedCount).map((post) => post.student_id)
+                );
+            }
+            // 일괄 호출은 건별 결과를 돌려주지 않는다. 화면 값을 서버 값으로 다시 맞춘다.
+            await fetchPostsForMission(selectedMission);
+        } catch (err) {
+            console.error('문장 일괄 다시 쓰기 요청 실패:', err.message);
+            alert(`일괄 처리 중 오류가 발생했습니다: ${err.message}`);
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
     const handleFinalArchive = async () => {
         if (!archiveModal.mission) return;
         try {
@@ -1157,6 +1240,7 @@ ${postArray.map((p, idx) => {
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleRecallPosts, handleUndoRecall,
         handleBulkRequestRewrite,
+        handleBulkPhraseRewrite,
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,

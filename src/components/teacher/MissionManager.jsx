@@ -15,6 +15,7 @@ import MissionTypePicker from './MissionTypePicker';
 import MissionList from './MissionList';
 import SubmissionStatusModal from './SubmissionStatusModal';
 import PostDetailViewer from './PostDetailViewer';
+import useFeedbackPhrases from '../../hooks/useFeedbackPhrases';
 import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
@@ -67,6 +68,7 @@ const MissionManager = ({
         handleApprovePost, handleBulkApprove, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
         handleBulkRequestRewrite,
+        handleBulkPhraseRewrite,
         handleRecallPosts, handleUndoRecall,
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
@@ -77,6 +79,9 @@ const MissionManager = ({
     } = useMissionManager(activeClass, bootstrapProfile, {
         submissionBoardPollingEnabled: isSubmissionBoardView
     });
+
+    // 자주 쓰는 피드백 문장은 낱개·일괄 두 곳이 함께 쓰므로 여기서 한 번만 읽는다.
+    const phraseStore = useFeedbackPhrases();
 
     const [reportMission, setReportMission] = useState(null);
 
@@ -455,6 +460,8 @@ const MissionManager = ({
                 handleBulkApprove={handleBulkApprove}
                 handleBulkRecovery={handleBulkRecovery}
                 handleBulkRequestRewrite={handleBulkRequestRewrite}
+                handleBulkPhraseRewrite={handleBulkPhraseRewrite}
+                phraseStore={phraseStore}
                 handleRecallPosts={handleRecallPosts}
                 handleUndoRecall={handleUndoRecall}
                 setSelectedPost={setSelectedPost}
@@ -487,6 +494,7 @@ const MissionManager = ({
                 addTeacherComment={addTeacherComment}
                 deleteTeacherComment={deleteTeacherComment}
                 handleTeacherEditPost={handleTeacherEditPost}
+                phraseStore={phraseStore}
             />
 
             {/* 보관 확인 커스텀 모달 */}
