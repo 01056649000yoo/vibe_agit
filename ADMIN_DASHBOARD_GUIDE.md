@@ -80,9 +80,13 @@ cd ~/vibe_agit && git pull
 # macOS launchd 설정 설치
 cp ops/launchd/com.agit.service-health.plist ~/Library/LaunchAgents/
 cp ops/launchd/com.agit.system-metrics.plist ~/Library/LaunchAgents/
+cp ops/launchd/com.agit.docker-cache-trim.plist ~/Library/LaunchAgents/
 
 # 5분마다 점검 + 관리자 서비스 현황 기록
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.service-health.plist
+
+# 하루 한 번 도커 빌드 캐시 정리 — 기준을 넘을 때만 (04:20)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.docker-cache-trim.plist
 
 # 하루 한 번 지표 기록 (백업·복구 리허설 뒤인 04:50)
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.system-metrics.plist
@@ -91,6 +95,13 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.system-metrics.
 설정은 저장소의 `ops/launchd/`를 원본으로 둡니다. 운영 파일을 직접 고치지 말고 원본을 고친 뒤 다시
 복사합니다. 등록 여부는 `launchctl print gui/$(id -u)/com.agit.service-health`와
 `launchctl print gui/$(id -u)/com.agit.system-metrics`로 확인합니다.
+
+> **도커 캐시 정리(2026-09-02 추가)**: 이 맥의 도커 데이터는 **외장 SSD 위 `Docker.raw`(상한 32GB)** 안에 있어서,
+> 맥 내장 디스크가 아무리 남아도 도커 쪽은 찰 수 있습니다(하루치 빌드로 57%까지 간 적이 있습니다).
+> `com.agit.docker-cache-trim`이 매일 04:20에 훑고, **사용률 60% 또는 캐시 5GB를 넘을 때만** 빌드 캐시를 비웁니다.
+> 이미지·컨테이너·볼륨은 건드리지 않습니다. 배포 관문(`scripts/preflight-disk.sh`)도 같은 검사를 먼저 돌리고,
+> 비운 뒤에도 90%를 넘으면 배포를 중단합니다. 손으로 돌릴 때는 `bash scripts/trim-docker-cache.sh`
+> (기준을 바꾸려면 `bash scripts/trim-docker-cache.sh 70 8`). 로그는 `~/Library/Logs/agit-docker-cache-trim.log`.
 
 - `RESEND_API_KEY`는 의견 제보 메일 함수가 사용하므로 운영 시크릿에 유지합니다. 장애 점검 스크립트는 읽지 않습니다.
 - 처음 하루는 트래픽이 비어 있습니다 — **어제와의 차이**로 계산하기 때문입니다.
