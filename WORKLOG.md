@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-09-02 — Windows GNU Awk 사용자 PATH 영구 등록 재점검 (Codex)
+
+- **배경**: `awk.exe`는 설치되어 있었지만 새 Windows 실행 환경에서 명령을 찾지 못하는 일이 반복됐다. 점검 결과
+  현재 Codex 프로세스 PATH에는 `C:\Program Files\Git\usr\bin`이 임시로 들어 있었으나 Windows 사용자 PATH와
+  시스템 PATH에는 등록되어 있지 않아, 터미널이나 앱을 새로 여는 방식에 따라 인식 여부가 달라지는 상태였다.
+- **변경**: git 밖 Windows 사용자 환경 변수 `HKCU\Environment\Path`에 기존 항목을 보존하면서
+  `C:\Program Files\Git\usr\bin`을 중복 없이 한 번 등록하고 Windows 환경 변경 알림을 보냈다. 시스템 PATH는
+  건드리지 않았으며 Git for Windows에 포함된 기존 `awk.exe`를 그대로 사용한다.
+- **결과/검증**: 레지스트리의 사용자 PATH에 해당 경로가 1회만 존재하고 `Get-Command awk`가
+  `C:\Program Files\Git\usr\bin\awk.exe`를 가리키며 GNU Awk 5.3.2가 실행되는 것을 확인했다. 임시 경로를 넣지
+  않고 시스템 PATH와 사용자 PATH만 합친 새 실행 조건에서 실제 `serviceMetricsCollector` 검사 4/4도 통과했다.
+- **남은 것 / 다음**: 이미 열려 있던 터미널·VS Code·Codex는 이전 환경을 보유할 수 있으므로 한 번 완전히
+  닫았다 다시 연다. 이후에는 별도 `$env:PATH` 추가 없이 `awk --version`과 전체 검사를 실행한다.
+
 ## 2026-09-01 — 우리 반 스크린 도움말 전체 흐름 마감 (Codex)
 
 - **배경**: 우리 반 스크린 기능이 탭 순서·별표 기본 화면·교사 상단 바로가기·1600×900 공용 캔버스까지
