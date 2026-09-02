@@ -90,6 +90,10 @@ test('저장 문장 갈래가 낱개·일괄 두 곳에 모두 연결돼 있다'
     assert.match(viewer, /ensurePhrasesLoaded\?\.\(\)/);
     assert.match(statusModal, /ensurePhrasesLoaded\?\.\(\)/);
 
+    // 보낼 사람이 없으면 두 갈래 버튼이 **같이** 잠긴다(한쪽만 늘 눌리면 안 된다)
+    assert.match(statusModal, /disabled=\{isGenerating \|\| loadingPosts \|\| !canBulkAiFeedback\}/);
+    assert.match(statusModal, /disabled=\{isGenerating \|\| loadingPosts \|\| !canBulkPhraseRewrite\}/);
+
     // 일괄도 덮어쓰지 않는다
     assert.match(missionHook, /const handleBulkPhraseRewrite = async \(message\)/);
     assert.match(missionHook, /appendFeedbackMessage\(post\.ai_feedback, text\)/);

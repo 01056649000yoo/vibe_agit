@@ -95,9 +95,16 @@ const SubmissionStatusModal = ({
 
     const [isPhrasePanelOpen, setIsPhrasePanelOpen] = React.useState(false);
 
-    // 일괄 버튼 줄에서 두 번 세지 않도록 여기서 한 번만 판단한다.
-    const phraseRewriteTargets = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
-    const phraseRewriteTargetCount = phraseRewriteTargets.length;
+    /*
+     * 일괄 버튼 줄에서 두 번 세지 않도록 여기서 한 번만 판단한다.
+     *
+     * 보낼 사람이 없으면 **버튼을 숨기지 않고 흐리게 잠근다.** 숨기면 배치가 들썩이고
+     * "있던 버튼이 어디 갔나"를 다시 찾게 된다. 두 갈래(AI·저장 문장)의 규칙을 같게 둔다 —
+     * 예전에는 AI 버튼만 늘 눌리고 눌러야 "대상이 없다"는 알림이 떴다.
+     */
+    const aiFeedbackTargetCount = posts.filter(p => p.is_submitted && !p.is_confirmed).length;
+    const phraseRewriteTargetCount = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned).length;
+    const canBulkAiFeedback = aiFeedbackTargetCount > 0;
     const canBulkPhraseRewrite = Boolean(handleBulkPhraseRewrite) && phraseRewriteTargetCount > 0;
     const hasConfirmedPosts = posts.some(p => p.is_confirmed);
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
@@ -289,7 +296,8 @@ const SubmissionStatusModal = ({
                                         <div style={{ flex: '1 1 48%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <Button
                                                 onClick={handleBulkAIAction}
-                                                disabled={isGenerating || loadingPosts}
+                                                disabled={isGenerating || loadingPosts || !canBulkAiFeedback}
+                                                title={canBulkAiFeedback ? undefined : '피드백이 필요한 미확인 제출글이 없습니다.'}
                                                 style={{
                                                     width: '100%',
                                                     backgroundColor: '#F3E5F5',
@@ -300,21 +308,22 @@ const SubmissionStatusModal = ({
                                                     padding: '12px 8px'
                                                 }}
                                             >
-                                                {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백'}
+                                                {isGenerating ? '🤖 피드백 생성 중...' : `🤖 일괄 AI 피드백${canBulkAiFeedback ? ` (${aiFeedbackTargetCount}명)` : ''}`}
                                             </Button>
                                             {/* 실행 직전에 규칙을 고칠 수 있도록 버튼 바로 아래에 둔다 */}
                                             <PromptRuleButton kind="feedback" isMobile={isMobile} style={{ width: '100%', justifyContent: 'center' }} />
                                         </div>
 
-                                        {(canBulkPhraseRewrite || hasConfirmedPosts) && (
+                                        {(handleBulkPhraseRewrite || hasConfirmedPosts) && (
                                             <div style={{ flex: '1 1 48%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                {canBulkPhraseRewrite && (
+                                                {handleBulkPhraseRewrite && (
                                                     <Button
                                                         onClick={() => {
                                                             phraseStore?.ensurePhrasesLoaded?.();
                                                             setIsPhrasePanelOpen((open) => !open);
                                                         }}
-                                                        disabled={isGenerating || loadingPosts}
+                                                        disabled={isGenerating || loadingPosts || !canBulkPhraseRewrite}
+                                                        title={canBulkPhraseRewrite ? undefined : '다시 쓰기를 요청할 미확인 제출글이 없습니다.'}
                                                         style={{
                                                             width: '100%',
                                                             backgroundColor: '#E0F2FE',
@@ -325,7 +334,7 @@ const SubmissionStatusModal = ({
                                                             padding: '12px 8px'
                                                         }}
                                                     >
-                                                        📌 문장으로 일괄 다시쓰기 ({phraseRewriteTargetCount}명)
+                                                        📌 문장으로 일괄 다시쓰기{canBulkPhraseRewrite ? ` (${phraseRewriteTargetCount}명)` : ''}
                                                     </Button>
                                                 )}
                                                 {hasConfirmedPosts && (
