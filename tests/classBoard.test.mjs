@@ -128,8 +128,8 @@ const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, not
   read('src/modules/tool/meal-board/mealBoardApi.js'),
 ]);
 
-const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine]
-  = await Promise.all([
+const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine,
+  designSystem] = await Promise.all([
     read('src/modules/tool/class-board/widgets/notice-board/NoticeComposer.jsx'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeBoardApi.js'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeStore.js'),
@@ -137,6 +137,7 @@ const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seo
     read('tests/sql/20261223_class_board_daily_notices.smoke.sql'),
     read('src/utils/seoulDate.js'),
     read('src/modules/tool/meal-board/mealBoardEngine.js'),
+    read('src/styles/design-system.css'),
   ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -851,16 +852,19 @@ test('알림장은 학급운영도구의 독립 도구로도 열리고 위젯을
 test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지우기는 확인을 받는다', () => {
   // 아이들과 함께 보면서 적는 자리라 입력칸 글씨 크기를 교사가 고르고 기본은 가장 큰 계단이다.
   assert.match(noticeComposer, /className="class-board-notice-composer__body"/);
-  assert.match(noticeComposer, /const DEFAULT_FONT_STEP = '3xl'/);
+  assert.match(noticeComposer, /const DEFAULT_FONT_STEP = 'display'/);
   assert.match(noticeComposer, /style=\{\{ fontSize: getFontStep\(fontStepId\)\.size \}\}/);
-  assert.match(noticeComposerStyles, /\.class-board-notice-composer__body \{[^}]*font-size:var\(--ui-text-3xl\)/);
+  assert.match(noticeComposerStyles, /\.class-board-notice-composer__body \{[^}]*font-size:var\(--notice-input-display\)/);
   assert.doesNotMatch(noticeComposer, /rows=\{8\}/);
-  // 크기는 계단 이름으로만 적고 픽셀을 직접 쓰지 않는다.
+  // 크기는 이름 붙은 값으로만 적고 픽셀을 직접 쓰지 않는다.
   assert.match(noticeComposer, /size: 'var\(--ui-text-lg\)'/);
   assert.match(noticeComposer, /size: 'var\(--ui-text-xl\)'/);
-  assert.match(noticeComposer, /size: 'var\(--ui-text-2xl\)'/);
   assert.match(noticeComposer, /size: 'var\(--ui-text-3xl\)'/);
+  assert.match(noticeComposer, /size: 'var\(--notice-input-display\)'/);
   assert.doesNotMatch(noticeComposer, /fontSize: '\d/);
+  // 가장 큰 단계는 공용 계단(최대 2rem)보다 크므로 부품 안에서만 정의한다.
+  assert.match(noticeComposerStyles, /--notice-input-display:4rem/);
+  assert.doesNotMatch(designSystem, /--ui-text-\w+:\s*[4-9]rem/);
   // 고른 크기는 이 브라우저의 화면 편의 설정으로만 남긴다(서버에 보내지 않는다).
   assert.match(noticeComposer, /writeLocalStorageJson\(FONT_STORAGE_KEY, id\)/);
   assert.match(noticeComposer, /const FONT_STORAGE_KEY = 'class_board_notice_font'/);

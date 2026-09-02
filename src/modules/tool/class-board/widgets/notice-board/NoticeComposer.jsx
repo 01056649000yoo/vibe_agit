@@ -23,10 +23,12 @@ const FONT_STORAGE_KEY = 'class_board_notice_font';
 const FONT_STEPS = Object.freeze([
   Object.freeze({ id: 'lg', label: '보통', size: 'var(--ui-text-lg)' }),
   Object.freeze({ id: 'xl', label: '크게', size: 'var(--ui-text-xl)' }),
-  Object.freeze({ id: '2xl', label: '더 크게', size: 'var(--ui-text-2xl)' }),
-  Object.freeze({ id: '3xl', label: '아주 크게', size: 'var(--ui-text-3xl)' }),
+  Object.freeze({ id: '3xl', label: '더 크게', size: 'var(--ui-text-3xl)' }),
+  // 가장 큰 단계는 공용 글자 계단의 맨 위(2rem)보다 크다. 계단을 흔들지 않으려고
+  // 이 부품 안에서만 쓰는 값으로 두었다(정의는 noticeComposer.css).
+  Object.freeze({ id: 'display', label: '아주 크게', size: 'var(--notice-input-display)' }),
 ]);
-const DEFAULT_FONT_STEP = '3xl';
+const DEFAULT_FONT_STEP = 'display';
 const getFontStep = (id) => FONT_STEPS.find((step) => step.id === id) || FONT_STEPS.at(-1);
 
 export default function NoticeComposer({
@@ -154,7 +156,7 @@ export default function NoticeComposer({
           className="class-board-notice-composer__body"
           style={{ fontSize: getFontStep(fontStepId).size }}
           maxLength={NOTICE_LIMIT}
-          rows={4}
+          rows={3}
           disabled={saving}
           value={state.body}
           placeholder="예) 내일 준비물은 색연필과 풀입니다."

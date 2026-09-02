@@ -366,7 +366,7 @@
 /* 알림장 — 날짜별로 쓰고 고치는 부분(설정창과 발표 화면이 함께 쓴다). */
 
 .class-board-presentation-header .class-board-presentation-notice-button { border-color:#c9a227; background:#fef9c3; color:#713f12; }
-.class-board-presentation-notice-panel { position:absolute; top:64px; right:clamp(14px,1.8vw,28px); z-index:6; width:min(360px,calc(100vw - 28px)); max-height:min(70vh,620px); overflow:auto; border:1px solid #e5d9a8; border-radius:17px; padding:13px; background:#fff; box-shadow:0 16px 38px rgba(30,50,80,.18); }
+.class-board-presentation-notice-panel { position:absolute; top:64px; right:clamp(14px,1.8vw,28px); z-index:6; width:min(600px,calc(100vw - 28px)); max-height:min(70vh,620px); overflow:auto; border:1px solid #e5d9a8; border-radius:17px; padding:13px; background:#fff; box-shadow:0 16px 38px rgba(30,50,80,.18); }
 .class-board-presentation-notice-panel .class-board-panel-heading button { border:0; padding:3px 6px; background:transparent; color:#64748b; font-size:.72rem; font-weight:900; cursor:pointer; }
 
 .class-board-notice__state { display:grid; place-items:center; min-height:0; margin:0; padding:clamp(6px,3cqmin,18px); font-size:max(.68rem,5cqmin); font-weight:800; opacity:.72; text-align:center; }
