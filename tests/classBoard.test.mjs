@@ -115,6 +115,19 @@ const [tabOrder, tabOrderMigration, tabOrderSmoke, teacherDashboard, teacherDash
   read('src/dev/README.md'),
 ]);
 
+const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, noticeManifest,
+  mealNoticeMigration, mealNoticeSmoke, mealApi] = await Promise.all([
+  read('src/modules/tool/class-board/widgets/meal-board/MealBoardWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/meal-board/MealBoardSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/meal-board/manifest.js'),
+  read('src/modules/tool/class-board/widgets/notice-board/NoticeBoardWidget.jsx'),
+  read('src/modules/tool/class-board/widgets/notice-board/NoticeBoardSettings.jsx'),
+  read('src/modules/tool/class-board/widgets/notice-board/manifest.js'),
+  read('supabase/migrations/20261222_class_board_meal_and_notice_widgets.sql'),
+  read('tests/sql/20261222_class_board_meal_and_notice_widgets.smoke.sql'),
+  read('src/modules/tool/meal-board/mealBoardApi.js'),
+]);
+
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
   assert.match(manifest, /id: 'class-board'/);
   assert.match(manifest, /part: 'tool'/);
@@ -130,6 +143,34 @@ test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯
   assert.match(host, /WidgetBoundary/);
   assert.doesNotMatch(canvas, /widgetId\s*===|switch\s*\(.*widgetId/);
   assert.doesNotMatch(entry, /<TextWidget|<ImageWidget|<WritingStatusWidget/);
+});
+
+test('식단표는 얘들아 밥 먹자의 학교 설정을 재사용해 열 때만 오늘 급식을 읽는다', () => {
+  assert.match(registry, /mealBoardWidgetManifest/);
+  assert.match(mealManifest, /id: 'meal-board'/);
+  assert.match(mealManifest, /requestBudget: \{ initial: 2, refreshMs: null, realtime: false, maxRows: 10 \}/);
+  assert.match(mealWidget, /mealBoardApi\.getWorkspace\(classId\)[\s\S]*mealBoardApi\.getMeal/);
+  assert.match(mealWidget, /getSeoulDateString/);
+  assert.match(mealWidget, /workspace\?\.school/);
+  assert.match(mealSettings, /`얘들아, 밥 먹자!`에서 설정/);
+  assert.doesNotMatch(mealWidget, /setInterval|postgres_changes|localStorage|saveSchool/);
+  assert.match(mealApi, /get_teacher_meal_board_workspace_v1/);
+});
+
+test('알림장은 보드 설정에 교사 작성 내용을 저장하고 다시 렌더링한다', () => {
+  assert.match(registry, /noticeBoardWidgetManifest/);
+  assert.match(noticeManifest, /id: 'notice-board'/);
+  assert.match(noticeManifest, /type: 'static'/);
+  assert.match(noticeManifest, /heading: '알림장'[\s\S]*body:[\s\S]*tone: 'yellow'/);
+  assert.match(noticeSettings, /maxLength=\{2000\}[\s\S]*현재 스크린의 `저장`/);
+  assert.match(noticeWidget, /config\.heading/);
+  assert.match(noticeWidget, /config\.body/);
+  assert.match(noticeWidget, /config\.tone/);
+  assert.match(mealNoticeMigration, /'meal-board', 'notice-board'/);
+  assert.match(mealNoticeMigration, /CHAR_LENGTH\(COALESCE\(v_config ->> 'body', ''\)\) > 2000/);
+  assert.match(mealNoticeMigration, /v_meal_count > 1[\s\S]*v_notice_count > 1/);
+  assert.match(mealNoticeMigration, /REVOKE ALL ON FUNCTION public\.validate_class_board_legacy_widgets/);
+  assert.match(mealNoticeSmoke, /알림장 2000자 상한[\s\S]*식단표가 한 스크린에 두 개/);
 });
 
 test('화면 반복 수정은 DB 없는 로컬 미리보기에서 확인하고 명시한 마감 때만 배포한다', () => {

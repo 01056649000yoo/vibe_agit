@@ -168,6 +168,33 @@
 .class-board-checkbox-field input { width:auto; }
 .class-board-sound-preview:disabled { opacity:.45; cursor:not-allowed; }
 
+.class-board-meal { display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(3px,2cqmin,10px); min-width:0; min-height:0; height:100%; overflow:hidden; box-sizing:border-box; padding:clamp(7px,3cqmin,18px); background:linear-gradient(145deg,#f0fdf4,#dcfce7); color:#14532d; }
+.class-board-meal>header { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:clamp(4px,2cqmin,10px); min-width:0; }
+.class-board-meal>header>span { font-size:clamp(1.2rem,9cqmin,3.2rem); }
+.class-board-meal>header>div { min-width:0; }
+.class-board-meal>header small,.class-board-meal>header h2 { display:block; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.class-board-meal>header small { color:#4d7c5c; font-size:clamp(.5rem,3.5cqmin,.8rem); font-weight:850; }
+.class-board-meal>header h2 { font-size:clamp(.9rem,8cqmin,2.4rem); line-height:1; }
+.class-board-meal>header em { max-width:38%; overflow:hidden; color:#4d7c5c; font-size:clamp(.48rem,3.5cqmin,.8rem); font-style:normal; font-weight:900; text-overflow:ellipsis; white-space:nowrap; }
+.class-board-meal__state { display:grid; place-items:center; min-height:0; margin:0; padding:clamp(6px,3cqmin,18px); color:#4d7c5c; font-size:clamp(.62rem,5cqmin,1.15rem); font-weight:850; text-align:center; }
+.class-board-meal__meals { min-height:0; overflow:auto; display:grid; gap:clamp(4px,2cqmin,10px); align-content:center; }
+.class-board-meal__meals article { min-width:0; padding:clamp(5px,2.5cqmin,12px); border:1px solid rgba(34,197,94,.18); border-radius:clamp(7px,3cqmin,15px); background:rgba(255,255,255,.72); }
+.class-board-meal__meals article>strong { display:block; margin-bottom:clamp(3px,1.5cqmin,8px); color:#15803d; font-size:clamp(.55rem,4cqmin,.9rem); }
+.class-board-meal__meals article>div { display:flex; flex-wrap:wrap; gap:clamp(3px,1.4cqmin,7px); }
+.class-board-meal__meals article span { display:inline-flex; align-items:baseline; gap:3px; border-radius:999px; padding:clamp(3px,1.5cqmin,7px) clamp(5px,2cqmin,10px); background:#fff; }
+.class-board-meal__meals b { font-size:clamp(.58rem,4.6cqmin,1.08rem); line-height:1.12; }
+.class-board-meal__meals span small { color:#b45309; font-size:clamp(.42rem,2.8cqmin,.68rem); font-weight:800; }
+.class-board-meal>footer { color:#4d7c5c; font-size:clamp(.42rem,2.8cqmin,.65rem); font-weight:750; text-align:right; }
+
+.class-board-notice { display:grid; grid-template-rows:auto minmax(0,1fr); gap:clamp(5px,3cqmin,14px); min-width:0; min-height:0; height:100%; overflow:hidden; box-sizing:border-box; padding:clamp(8px,4cqmin,24px); color:#713f12; background:repeating-linear-gradient(to bottom,#fef9c3 0,#fef9c3 calc(10cqmin - 1px),rgba(180,83,9,.14) 10cqmin); }
+.class-board-notice--sky { color:#1e3a8a; background:repeating-linear-gradient(to bottom,#eff6ff 0,#eff6ff calc(10cqmin - 1px),rgba(30,64,175,.13) 10cqmin); }
+.class-board-notice--mint { color:#14532d; background:repeating-linear-gradient(to bottom,#ecfdf5 0,#ecfdf5 calc(10cqmin - 1px),rgba(21,128,61,.13) 10cqmin); }
+.class-board-notice--rose { color:#881337; background:repeating-linear-gradient(to bottom,#fff1f2 0,#fff1f2 calc(10cqmin - 1px),rgba(190,24,93,.12) 10cqmin); }
+.class-board-notice>header { display:flex; align-items:center; gap:clamp(5px,2.5cqmin,12px); min-width:0; border-bottom:clamp(1px,.7cqmin,3px) solid currentColor; padding-bottom:clamp(4px,2cqmin,9px); }
+.class-board-notice>header span { font-size:clamp(1rem,8cqmin,3rem); }
+.class-board-notice h2 { min-width:0; margin:0; overflow:hidden; font-size:clamp(.9rem,9cqmin,2.8rem); line-height:1; text-overflow:ellipsis; white-space:nowrap; }
+.class-board-notice>div { min-height:0; overflow:auto; overflow-wrap:anywhere; white-space:pre-wrap; font-size:clamp(.68rem,6cqmin,1.8rem); font-weight:800; line-height:1.42; }
+
 @keyframes class-board-picker-pulse {
   from { transform:scale(.97); opacity:.72; }
   to { transform:scale(1.03); opacity:1; }
