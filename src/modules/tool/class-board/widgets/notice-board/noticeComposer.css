@@ -13,8 +13,16 @@
  * 알림 내용은 아이들과 함께 보면서 적는다. 그래서 입력칸 글씨도 교실에서 읽히는 크기로 둔다.
  * 줄 수는 다섯 줄이면 충분하고, 더 필요하면 아래 모서리로 늘린다.
  */
-/* 위의 `font:inherit`보다 약하면 안 되므로 클래스를 하나 더 겹쳐 적는다. */
-.class-board-notice-composer .class-board-notice-composer__body { resize:vertical; min-height:6.5em; padding:var(--ui-space-3); font-size:var(--ui-text-xl); font-weight:700; line-height:1.5; }
+/*
+ * 위의 `font:inherit`보다 약하면 안 되므로 클래스를 하나 더 겹쳐 적는다.
+ * 실제 글씨 크기는 교사가 고른 계단을 화면이 인라인으로 얹는다(여기 값은 그 전 기본).
+ */
+.class-board-notice-composer .class-board-notice-composer__body { resize:vertical; min-height:4.5em; padding:var(--ui-space-3); font-size:var(--ui-text-3xl); font-weight:700; line-height:1.45; }
+
+.class-board-notice-composer__body-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; }
+.class-board-notice-composer__font { display:flex; gap:3px; }
+.class-board-notice-composer__font button { border:1px solid #cbd7e7; border-radius:var(--ui-radius-xs); padding:4px 7px; background:#fff; color:#64748b; font-size:var(--ui-text-xs); font-weight:900; }
+.class-board-notice-composer__font button.is-active { border-color:#c9a227; background:#fffbe6; color:#713f12; }
 .class-board-notice-composer .class-board-note { margin:0; color:#758296; font-size:.72rem; line-height:1.55; }
 .class-board-notice-composer .class-board-note.is-done { color:#047857; font-weight:850; }
 .class-board-notice-composer .class-board-error { margin:0; color:#b91c1c; font-size:.75rem; font-weight:800; }

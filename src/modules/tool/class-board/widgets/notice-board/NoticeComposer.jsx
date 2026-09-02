@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { readLocalStorageJson, writeLocalStorageJson } from '../../../../../lib/browserStorage';
 import { formatSeoulDate } from '../../../../../utils/seoulDate';
 import { noticeBoardApi } from './noticeBoardApi';
 import { publishClassBoardNotice } from './noticeStore';
@@ -14,6 +15,20 @@ import './noticeComposer.css';
 const NOTICE_LIMIT = 2000;
 const emptyState = { status: 'loading', today: '', date: '', recent: [], body: '', savedBody: '' };
 
+/*
+ * 입력칸 글씨 크기는 교사가 고른다. 아이들과 함께 보면서 적는 자리라 기본을 가장 큰 계단에 둔다.
+ * 고른 값은 이 브라우저에만 남는 화면 편의 설정이다(내용이 아니므로 서버에 저장하지 않는다).
+ */
+const FONT_STORAGE_KEY = 'class_board_notice_font';
+const FONT_STEPS = Object.freeze([
+  Object.freeze({ id: 'lg', label: '보통', size: 'var(--ui-text-lg)' }),
+  Object.freeze({ id: 'xl', label: '크게', size: 'var(--ui-text-xl)' }),
+  Object.freeze({ id: '2xl', label: '더 크게', size: 'var(--ui-text-2xl)' }),
+  Object.freeze({ id: '3xl', label: '아주 크게', size: 'var(--ui-text-3xl)' }),
+]);
+const DEFAULT_FONT_STEP = '3xl';
+const getFontStep = (id) => FONT_STEPS.find((step) => step.id === id) || FONT_STEPS.at(-1);
+
 export default function NoticeComposer({
   classId,
   initialDate = null,
@@ -25,6 +40,15 @@ export default function NoticeComposer({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [fontStepId, setFontStepId] = useState(() => {
+    const saved = readLocalStorageJson(FONT_STORAGE_KEY, null);
+    return FONT_STEPS.some((step) => step.id === saved) ? saved : DEFAULT_FONT_STEP;
+  });
+
+  const chooseFontStep = (id) => {
+    setFontStepId(id);
+    writeLocalStorageJson(FONT_STORAGE_KEY, id);
+  };
 
   const load = useCallback((date = null) => {
     if (!classId) return;
@@ -110,10 +134,25 @@ export default function NoticeComposer({
       </p>
 
       <label>
-        <span>알림 내용</span>
-        {/* 아이들과 함께 보면서 적는 자리라 입력칸 글씨도 교실에서 읽히는 크기로 둔다. */}
+        <div className="class-board-notice-composer__body-heading">
+          <span>알림 내용</span>
+          {/* 아이들과 함께 보면서 적는 자리라 입력칸 글씨 크기를 교사가 고른다. */}
+          <div className="class-board-notice-composer__font" role="group" aria-label="입력 글씨 크기">
+            {FONT_STEPS.map((step) => (
+              <button
+                key={step.id}
+                type="button"
+                className={step.id === fontStepId ? 'is-active' : undefined}
+                aria-pressed={step.id === fontStepId}
+                title={`입력 글씨 ${step.label}`}
+                onClick={() => chooseFontStep(step.id)}
+              >{step.label}</button>
+            ))}
+          </div>
+        </div>
         <textarea
           className="class-board-notice-composer__body"
+          style={{ fontSize: getFontStep(fontStepId).size }}
           maxLength={NOTICE_LIMIT}
           rows={4}
           disabled={saving}

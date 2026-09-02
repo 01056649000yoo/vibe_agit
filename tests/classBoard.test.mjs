@@ -849,10 +849,22 @@ test('알림장은 학급운영도구의 독립 도구로도 열리고 위젯을
 });
 
 test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지우기는 확인을 받는다', () => {
-  // 아이들과 함께 보면서 적는 자리라 입력칸 글씨도 교실에서 읽히는 계단을 쓴다.
+  // 아이들과 함께 보면서 적는 자리라 입력칸 글씨 크기를 교사가 고르고 기본은 가장 큰 계단이다.
   assert.match(noticeComposer, /className="class-board-notice-composer__body"/);
-  assert.match(noticeComposerStyles, /\.class-board-notice-composer__body \{[^}]*font-size:var\(--ui-text-xl\)/);
+  assert.match(noticeComposer, /const DEFAULT_FONT_STEP = '3xl'/);
+  assert.match(noticeComposer, /style=\{\{ fontSize: getFontStep\(fontStepId\)\.size \}\}/);
+  assert.match(noticeComposerStyles, /\.class-board-notice-composer__body \{[^}]*font-size:var\(--ui-text-3xl\)/);
   assert.doesNotMatch(noticeComposer, /rows=\{8\}/);
+  // 크기는 계단 이름으로만 적고 픽셀을 직접 쓰지 않는다.
+  assert.match(noticeComposer, /size: 'var\(--ui-text-lg\)'/);
+  assert.match(noticeComposer, /size: 'var\(--ui-text-xl\)'/);
+  assert.match(noticeComposer, /size: 'var\(--ui-text-2xl\)'/);
+  assert.match(noticeComposer, /size: 'var\(--ui-text-3xl\)'/);
+  assert.doesNotMatch(noticeComposer, /fontSize: '\d/);
+  // 고른 크기는 이 브라우저의 화면 편의 설정으로만 남긴다(서버에 보내지 않는다).
+  assert.match(noticeComposer, /writeLocalStorageJson\(FONT_STORAGE_KEY, id\)/);
+  assert.match(noticeComposer, /const FONT_STORAGE_KEY = 'class_board_notice_font'/);
+  assert.doesNotMatch(noticeComposer, /p_font|fontStep.*saveNotice/);
 
   // 비우고 저장하는 대신 눈에 보이는 삭제 버튼을 두고, 지울 때는 한 번 물어본다.
   assert.match(noticeComposer, /const remove = \(\) => \{[\s\S]*window\.confirm[\s\S]*void write\(''\)/);
