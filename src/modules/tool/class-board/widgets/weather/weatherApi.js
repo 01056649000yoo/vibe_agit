@@ -59,7 +59,13 @@ export const searchWeatherLocations = async (query) => {
   });
 };
 
-export const getCurrentWeather = async (latitude, longitude) => {
+/*
+ * 오늘 지금 날씨와 내일 예보를 한 번에 읽는다.
+ *
+ * 교사가 `내일`만 켜도 요청은 그대로 한 번이다. 날짜를 나눠 두 번 부르면 30분 캐시가 둘로 쪼개져
+ * 화면을 열 때마다 요청이 늘기 때문이다. 응답이 커지는 폭은 하루치 최고·최저·날씨 코드 세 값뿐이다.
+ */
+export const getWeatherForecast = async (latitude, longitude) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('날씨 지역 좌표가 올바르지 않습니다.');
@@ -71,24 +77,48 @@ export const getCurrentWeather = async (latitude, longitude) => {
     url.searchParams.set('latitude', String(roundedLat));
     url.searchParams.set('longitude', String(roundedLon));
     url.searchParams.set('current', 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day');
+    url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min');
     url.searchParams.set('timezone', 'auto');
-    url.searchParams.set('forecast_days', '1');
+    url.searchParams.set('forecast_days', '2');
     const data = await fetchJson(url);
     const current = data?.current;
     if (!current || !Number.isFinite(Number(current.temperature_2m))) {
       throw new Error('현재 날씨 정보가 비어 있습니다.');
     }
+    const daily = data?.daily;
+    const list = (value) => Array.isArray(value) ? value : [];
+    const times = list(daily?.time);
+    const codes = list(daily?.weather_code);
+    const highs = list(daily?.temperature_2m_max);
+    const lows = list(daily?.temperature_2m_min);
+    const readDay = (date, code, highValue, lowValue) => {
+      const high = Number(highValue);
+      const low = Number(lowValue);
+      if (!Number.isFinite(high) || !Number.isFinite(low)) return null;
+      return {
+        date: String(date || ''),
+        weatherCode: Number(code),
+        high: Math.round(high),
+        low: Math.round(low),
+      };
+    };
+    const todayRange = readDay(times[0], codes[0], highs[0], lows[0]);
     return {
-      temperature: Math.round(Number(current.temperature_2m)),
-      apparentTemperature: Number.isFinite(Number(current.apparent_temperature))
-        ? Math.round(Number(current.apparent_temperature))
-        : Math.round(Number(current.temperature_2m)),
-      weatherCode: Number(current.weather_code),
-      windSpeed: Number.isFinite(Number(current.wind_speed_10m))
-        ? Math.round(Number(current.wind_speed_10m))
-        : 0,
-      isDay: Number(current.is_day) === 1,
-      observedAt: String(current.time || ''),
+      today: {
+        temperature: Math.round(Number(current.temperature_2m)),
+        apparentTemperature: Number.isFinite(Number(current.apparent_temperature))
+          ? Math.round(Number(current.apparent_temperature))
+          : Math.round(Number(current.temperature_2m)),
+        weatherCode: Number(current.weather_code),
+        windSpeed: Number.isFinite(Number(current.wind_speed_10m))
+          ? Math.round(Number(current.wind_speed_10m))
+          : 0,
+        isDay: Number(current.is_day) === 1,
+        observedAt: String(current.time || ''),
+        ...(todayRange ? { high: todayRange.high, low: todayRange.low } : {}),
+      },
+      // 예보가 비면 내일 칸은 그리지 않는다(오늘만 보여 준다).
+      tomorrow: readDay(times[1], codes[1], highs[1], lows[1]),
     };
   });
 };

@@ -597,7 +597,7 @@ test('날씨·타이머·스톱워치·학생 뽑기는 필요한 때만 실행�
   assert.match(classroomWidgetsMigration, /'weather', 'timer', 'stopwatch', 'student-picker'/);
   assert.match(classroomWidgetsMigration, /WHEN 'weather'[\s\S]*WHEN 'timer'[\s\S]*WHEN 'stopwatch'[\s\S]*WHEN 'student-picker'/);
   assert.match(classroomWidgetsSmoke, /수업 위젯 네 종류가 한 스크린에 저장되지 않았습니다/);
-  assert.match(weatherWidget, /getCurrentWeather/);
+  assert.match(weatherWidget, /getWeatherForecast/);
   assert.match(weatherSettings, /searchWeatherLocations/);
   assert.match(weatherApi, /https:\/\/geocoding-api\.open-meteo\.com\/v1\/search/);
   assert.match(weatherApi, /countryCode', 'KR'/);
@@ -946,4 +946,63 @@ test('오늘 현황은 교사가 고른 항목만 서버가 계산하고 배경�
   assert.match(statusWidget, /서로 읽어 준 정도/);
   // 칭호 이름은 학생 화면과 같은 원본을 쓴다.
   assert.match(statusWidget, /getTitleTrack/);
+});
+
+const [weatherOptionsSource, weatherManifest, weatherDaysMigration, weatherDaysSmoke] = await Promise.all([
+  read('src/modules/tool/class-board/widgets/weather/weatherOptions.js'),
+  read('src/modules/tool/class-board/widgets/weather/manifest.js'),
+  read('supabase/migrations/20261226_class_board_weather_days.sql'),
+  read('tests/sql/20261226_class_board_weather_days.smoke.sql'),
+]);
+
+test('날씨 위젯은 오늘과 내일을 골라 보여 주고 요청은 한 번만 한다', async () => {
+  const { WEATHER_DAY_IDS, normalizeWeatherDays } = await import(
+    '../src/modules/tool/class-board/widgets/weather/weatherOptions.js'
+  );
+
+  // 화면·서버가 같은 이름을 쓴다.
+  assert.deepEqual([...WEATHER_DAY_IDS], ['today', 'tomorrow']);
+  for (const id of WEATHER_DAY_IDS) {
+    assert.ok(weatherDaysMigration.includes(`'${id}'`), `${id}: 서버 허용 목록에 없다`);
+  }
+
+  // 저장된 값이 무엇이든 정해진 순서만 남기고, 다 끄면 오늘만 본다.
+  assert.deepEqual(normalizeWeatherDays(['tomorrow', 'today']), ['today', 'tomorrow']);
+  assert.deepEqual(normalizeWeatherDays(['tomorrow']), ['tomorrow']);
+  assert.deepEqual(normalizeWeatherDays([]), ['today']);
+  assert.deepEqual(normalizeWeatherDays(['yesterday']), ['today']);
+  // 옛 화면(값이 없는 보드)은 지금까지처럼 오늘만 본다.
+  assert.deepEqual(normalizeWeatherDays(undefined), ['today']);
+  // 새로 넣는 위젯은 둘 다 켜진 채로 시작한다.
+  assert.match(weatherManifest, /days: \['today', 'tomorrow'\]/);
+
+  // 오늘과 내일을 한 번에 읽는다. 날짜별로 나눠 부르지 않는다.
+  assert.match(weatherApi, /export const getWeatherForecast/);
+  assert.match(weatherApi, /url\.searchParams\.set\('daily', 'weather_code,temperature_2m_max,temperature_2m_min'\)/);
+  assert.match(weatherApi, /url\.searchParams\.set\('forecast_days', '2'\)/);
+  assert.match(weatherApi, /WEATHER_CACHE_TTL_MS = 30 \* 60 \* 1000/);
+  assert.equal(weatherApi.match(/fetchJson\(url\)/g).length, 2); // 지역 검색 1 + 날씨 1
+  assert.match(weatherManifest, /requestBudget: \{ initial: 1, refreshMs: null, realtime: false, maxRows: 5 \}/);
+
+  // 둘 다 켰을 때만 아래에 내일 줄이 붙고, 내일만 켜면 큰 칸이 내일을 그린다.
+  assert.match(weatherWidget, /normalizeWeatherDays\(config\.days\)/);
+  assert.match(weatherWidget, /const leadIsTomorrow = !showsToday && Boolean\(tomorrow\)/);
+  assert.match(weatherWidget, /const strip = showsToday \? tomorrow : null/);
+  assert.match(weatherWidget, /has-tomorrow/);
+  assert.match(styles, /\.class-board-weather\.has-tomorrow \{[^}]*grid-template-rows:minmax\(0,1fr\) auto/);
+  assert.match(styles, /\.class-board-weather>\.class-board-weather__tomorrow \{[^}]*grid-column:1 \/ -1/);
+  // 프레임 크기에 반응해야 하므로 내일 줄도 cqmin 을 쓴다.
+  assert.match(styles, /\.class-board-weather__tomorrow>span \{[^}]*cqmin/);
+
+  // 설정창에서 켜고 끄며, 기기 위치는 여전히 쓰지 않는다.
+  assert.match(weatherSettings, /WEATHER_DAYS\.map/);
+  assert.match(weatherSettings, /days: next\.length > 0 \? next : \['today'\]/);
+  assert.doesNotMatch(`${weatherWidget}\n${weatherSettings}\n${weatherApi}`, /navigator\.geolocation|setInterval/);
+
+  assert.match(weatherDaysSmoke, /허용하지 않은 날이 저장됐습니다/);
+  assert.match(weatherDaysSmoke, /같은 날이 두 번 저장됐습니다/);
+  assert.match(weatherDaysSmoke, /빈 날 목록이 저장됐습니다/);
+  // 이 마이그레이션이 검증 함수를 통째로 다시 만들므로 기존 검증이 사라지지 않았는지도 본다.
+  assert.match(weatherDaysSmoke, /오늘 현황 배경색 검증이 사라졌습니다/);
+  assert.match(weatherDaysSmoke, /알림장 색상 검증이 사라졌습니다/);
 });
