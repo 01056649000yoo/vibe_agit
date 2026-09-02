@@ -46,6 +46,25 @@ if (config.version !== 1 || !Number.isInteger(config.scanIntervalDays) || config
     throw new Error('서비스 관리 설정 버전 또는 검사 간격이 올바르지 않습니다.');
 }
 
+/*
+ * 세지 않을 패키지.
+ *
+ * 왜 필요한가: 관리자 화면의 `지금 확인할 항목` 24건 중 12건이 `linux-libc-dev`(커널 헤더) 였다.
+ * 컨테이너는 자기 커널을 띄우지 않고 호스트 커널을 쓴다 — 이미지 안의 커널 헤더는 실행되지 않으므로
+ * 이미지를 고쳐 막을 수도, 이미지를 통해 공격당할 수도 없다. **진짜 조치할 11건이 여기 묻혀 있었다.**
+ *
+ * 규칙: 목록에 넣으려면 **이유를 함께 적어야 한다.** 그리고 조용히 지우지 않고 몇 건을 뺐는지
+ * `ignored_count` 로 함께 기록해 화면에 `숨김 N건`으로 보여 준다. 원본 보고서에는 그대로 남는다.
+ */
+const ignoredPackages = new Map((config.ignoredPackages || []).map((entry) => {
+    if (!entry || typeof entry.package !== 'string' || !entry.package.trim()
+        || typeof entry.reason !== 'string' || entry.reason.trim().length < 10) {
+        throw new Error('무시할 패키지는 이름과 10자 이상의 이유를 함께 적어야 합니다.');
+    }
+    return [entry.package.trim(), entry.reason.trim()];
+}));
+const isIgnoredFinding = (finding) => ignoredPackages.has(String(finding?.PkgName || ''));
+
 const latestSuccessful = psql(`
     SELECT finished_at FROM public.system_service_scan_runs
     WHERE status = 'PASS' ORDER BY finished_at DESC LIMIT 1;
@@ -122,6 +141,19 @@ for (const container of containers) {
     imagesById.set(container.imageId, current);
 }
 
+/*
+ * 고정한 검사기를 먼저 내려받는다.
+ *
+ * 2026-09-02에 실제로 겪은 일: 배포 워크플로가 도커 빌드 캐시를 정리하면서 이 이미지를 지웠고,
+ * 다음 검사가 `No such image` 로 시작도 못 하고 끝났다. 월 1회만 도는 작업이라 조용히 밀렸을 것이다.
+ * 이미 있으면 아무 일도 하지 않으며, **다이제스트 고정은 그대로**라 내려받는 것이 바뀌지는 않는다.
+ */
+try {
+    run(DOCKER, ['pull', '--quiet', TRIVY_IMAGE], { stdio: ['ignore', 'pipe', 'pipe'] });
+} catch (error) {
+    throw new Error(`고정한 검사기 이미지를 준비하지 못했습니다: ${String(error.stderr || error.message).trim()}`);
+}
+
 const versionOutput = run(DOCKER, ['run', '--rm', TRIVY_IMAGE, '--version']);
 const scannerVersion = versionOutput.match(/Version:\s*([A-Za-z0-9._+-]+)/)?.[1];
 if (!scannerVersion) throw new Error('Trivy 버전을 확인하지 못했습니다.');
@@ -164,7 +196,9 @@ try {
         }
 
         if (!vulnerabilityDbUpdatedAt && report.Metadata?.UpdatedAt) vulnerabilityDbUpdatedAt = report.Metadata.UpdatedAt;
-        const vulnerabilities = (report.Results || []).flatMap((result) => result.Vulnerabilities || []);
+        const allFindings = (report.Results || []).flatMap((result) => result.Vulnerabilities || []);
+        const ignored = allFindings.filter(isIgnoredFinding).length;
+        const vulnerabilities = allFindings.filter((finding) => !isIgnoredFinding(finding));
         const critical = vulnerabilities.filter((finding) => finding.Severity === 'CRITICAL').length;
         const high = vulnerabilities.filter((finding) => finding.Severity === 'HIGH').length;
         const fixable = vulnerabilities.filter((finding) => Boolean(finding.FixedVersion)).length;
@@ -185,7 +219,8 @@ try {
             high_count: high,
             fixable_count: fixable,
             urgent_count: urgent,
-            attention_count: attention
+            attention_count: attention,
+            ignored_count: ignored
         });
         rawScans.push({
             image_ref: image.imageRef,
@@ -217,8 +252,9 @@ try {
         high: result.high + image.high_count,
         fixable: result.fixable + image.fixable_count,
         urgent: result.urgent + image.urgent_count,
-        attention: result.attention + image.attention_count
-    }), { critical: 0, high: 0, fixable: 0, urgent: 0, attention: 0 });
+        attention: result.attention + image.attention_count,
+        ignored: result.ignored + image.ignored_count
+    }), { critical: 0, high: 0, fixable: 0, urgent: 0, attention: 0, ignored: 0 });
     const payload = {
         run_key: runKey,
         status: failedImages > 0 ? 'FAIL' : 'PASS',
@@ -232,6 +268,7 @@ try {
         fixable_count: totals.fixable,
         urgent_count: totals.urgent,
         attention_count: totals.attention,
+        ignored_count: totals.ignored,
         detail_code: failedImages > 0 ? 'image_scan_failed' : 'scan_complete',
         raw_report_sha256: reportHash,
         images: summaries
@@ -240,7 +277,7 @@ try {
     psql(null, `SELECT public.record_service_scan_v1(
         convert_from(decode('${encodedPayload}', 'base64'), 'UTF8')::JSONB
     );\n`);
-    console.log(`서비스 이미지 검사 기록 완료: 이미지 ${summaries.length}개 · CRITICAL ${totals.critical} · HIGH ${totals.high} · 긴급 ${totals.urgent}`);
+    console.log(`서비스 이미지 검사 기록 완료: 이미지 ${summaries.length}개 · CRITICAL ${totals.critical} · HIGH ${totals.high} · 긴급 ${totals.urgent} · 이유를 적어 뺀 것 ${totals.ignored}`);
 
 // 우리가 실제로 손댈 수 있는 것이 몇 건인지 따로 알려 준다.
 {

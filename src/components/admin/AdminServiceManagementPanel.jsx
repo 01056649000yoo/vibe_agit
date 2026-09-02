@@ -186,7 +186,9 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
                     <SummaryCard
                         label="Docker 이미지 CVE"
                         value={scanValue}
-                        detail={latestScan ? `최근 검사 ${formatDateTime(latestScan.finished_at)} · 이미지 ${latestScan.image_count}개` : '첫 점검 때 호스트 검사기로 기준을 만듭니다.'}
+                        detail={latestScan
+                            ? `최근 검사 ${formatDateTime(latestScan.finished_at)} · 이미지 ${latestScan.image_count}개${Number(latestScan.ignored_count || 0) > 0 ? ` · 이유를 적어 뺀 항목 ${latestScan.ignored_count}건` : ''}`
+                            : '첫 점검 때 호스트 검사기로 기준을 만듭니다.'}
                         tone={summary.scan_failed || Number(latestScan?.urgent_count || 0) > 0 ? 'danger' : latestScan ? 'good' : 'neutral'}
                     />
                     <SummaryCard label="CRITICAL / HIGH" value={latestScan ? `${latestScan.critical_count} / ${latestScan.high_count}` : '-'} detail={`수정 가능 ${latestScan?.fixable_count ?? '-'}건`} />
@@ -228,7 +230,10 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
             </SectionCard>
 
             <SectionCard>
-                <PanelHeader title="최근 이미지 취약점" description="공개 경로의 수정 가능한 CRITICAL은 긴급, 수정 가능한 CRITICAL·HIGH는 조치 대상으로 집계합니다." />
+                <PanelHeader
+                    title="최근 이미지 취약점"
+                    description="공개 경로의 수정 가능한 CRITICAL은 긴급, 수정 가능한 CRITICAL·HIGH는 조치 대상으로 집계합니다. 컨테이너에서 실행되지 않는 커널 헤더 패키지처럼 이미지를 고쳐 막을 수 없는 것은 이유를 적어 세지 않고 `숨김` 열에 건수만 남깁니다(원본 기록에는 그대로 남습니다)."
+                />
                 {!latestScan ? (
                     <div style={{ padding: '24px', color: '#64748B', background: '#F8FAFC', borderRadius: '12px' }}>첫 호스트 검사가 실행되면 이미지별 결과가 여기에 표시됩니다.</div>
                 ) : (
@@ -239,6 +244,7 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
                                 <th style={{ padding: '11px', textAlign: 'left' }}>노출</th><th style={{ padding: '11px', textAlign: 'right' }}>CRITICAL</th>
                                 <th style={{ padding: '11px', textAlign: 'right' }}>HIGH</th><th style={{ padding: '11px', textAlign: 'right' }}>수정 가능</th>
                                 <th style={{ padding: '11px', textAlign: 'right' }}>긴급</th>
+                                <th style={{ padding: '11px', textAlign: 'right' }}>숨김</th>
                             </tr></thead>
                             <tbody>{images.map((image) => (
                                 <tr key={image.image_key} style={{ borderBottom: '1px solid #F1F5F9' }}>
@@ -249,6 +255,7 @@ const AdminServiceManagementPanel = ({ serviceManagement }) => {
                                     <td style={{ padding: '11px', textAlign: 'right' }}>{image.high_count}</td>
                                     <td style={{ padding: '11px', textAlign: 'right' }}>{image.fixable_count}</td>
                                     <td style={{ padding: '11px', textAlign: 'right', color: image.urgent_count > 0 ? '#B91C1C' : '#166534', fontWeight: 900 }}>{image.urgent_count}</td>
+                                    <td style={{ padding: '11px', textAlign: 'right', color: '#94A3B8' }}>{image.ignored_count ?? 0}</td>
                                 </tr>
                             ))}</tbody>
                         </table>

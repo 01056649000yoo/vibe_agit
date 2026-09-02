@@ -1,22 +1,80 @@
 {
   "version": 1,
   "scanIntervalDays": 30,
+  "ignoredPackages": [
+    {
+      "package": "linux-libc-dev",
+      "reason": "리눅스 커널 헤더 패키지다. 컨테이너는 자기 커널을 띄우지 않고 호스트 커널을 쓰므로 이미지 안에서 실행되지 않는다. 이미지를 고쳐 막을 수도, 이미지를 통해 공격당할 수도 없다."
+    },
+    {
+      "package": "linux-headers-generic",
+      "reason": "위와 같은 커널 헤더 패키지다."
+    }
+  ],
   "services": {
-    "agit-app": { "group": "agit", "exposure": "public" },
-    "agit-kong": { "group": "supabase", "exposure": "public" },
-    "agit-auth": { "group": "supabase", "exposure": "public" },
-    "agit-rest": { "group": "supabase", "exposure": "public" },
-    "agit-realtime": { "group": "supabase", "exposure": "public" },
-    "agit-storage": { "group": "supabase", "exposure": "public" },
-    "agit-imgproxy": { "group": "supabase", "exposure": "public" },
-    "agit-edge-functions": { "group": "supabase", "exposure": "public" },
-    "agit-db": { "group": "supabase", "exposure": "internal" },
-    "agit-templates-server-1": { "group": "supabase", "exposure": "internal" },
-    "writing-helper-lab-app": { "group": "lab", "exposure": "public" },
-    "samlink-app": { "group": "samlink", "exposure": "public" },
-    "samlink-cleanup": { "group": "samlink", "exposure": "internal" },
-    "jarvis-frontend": { "group": "jarvis", "exposure": "public" },
-    "jarvis-caddy": { "group": "jarvis", "exposure": "public" },
-    "classroom-tools": { "group": "classroom", "exposure": "public" }
+    "agit-app": {
+      "group": "agit",
+      "exposure": "public"
+    },
+    "agit-kong": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-auth": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-rest": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-realtime": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-storage": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-imgproxy": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-edge-functions": {
+      "group": "supabase",
+      "exposure": "public"
+    },
+    "agit-db": {
+      "group": "supabase",
+      "exposure": "internal"
+    },
+    "agit-templates-server-1": {
+      "group": "supabase",
+      "exposure": "internal"
+    },
+    "writing-helper-lab-app": {
+      "group": "lab",
+      "exposure": "public"
+    },
+    "samlink-app": {
+      "group": "samlink",
+      "exposure": "public"
+    },
+    "samlink-cleanup": {
+      "group": "samlink",
+      "exposure": "internal"
+    },
+    "jarvis-frontend": {
+      "group": "jarvis",
+      "exposure": "public"
+    },
+    "jarvis-caddy": {
+      "group": "jarvis",
+      "exposure": "public"
+    },
+    "classroom-tools": {
+      "group": "classroom",
+      "exposure": "public"
+    }
   }
 }

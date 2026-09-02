@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const read = (file) => readFile(file, 'utf8');
-const [migration, dashboard, panel, hook, scanner, plist, catalog] = await Promise.all([
+const [migration, ignoreMigration, dashboard, panel, hook, scanner, plist, catalog] = await Promise.all([
     read('supabase/migrations/20261198_service_management_dashboard.sql'),
+    read('supabase/migrations/20261228_service_scan_ignored_packages.sql'),
     read('src/components/admin/AdminDashboard.jsx'),
     read('src/components/admin/AdminServiceManagementPanel.jsx'),
     read('src/components/admin/useAdminServiceManagement.js'),
@@ -77,4 +78,41 @@ test('월간 LaunchAgent는 매일 짧게 확인하되 DB의 30일 기준 전에
     for (const service of ['agit-app', 'agit-db', 'writing-helper-lab-app', 'samlink-app', 'jarvis-frontend', 'classroom-tools']) {
         assert.ok(Object.hasOwn(parsed.services, service), `${service} 분류가 없다`);
     }
+});
+
+test('이미지를 고쳐 막을 수 없는 취약점은 세지 않되, 몇 건인지는 남긴다', () => {
+    const config = JSON.parse(catalog);
+
+    // 목록에 넣으려면 이유를 함께 적어야 한다 — 조용히 늘어나면 안 되는 목록이다.
+    assert.ok(Array.isArray(config.ignoredPackages) && config.ignoredPackages.length > 0);
+    for (const entry of config.ignoredPackages) {
+        assert.equal(typeof entry.package, 'string');
+        assert.ok(entry.package.trim().length > 0);
+        assert.ok(String(entry.reason || '').trim().length >= 10, `${entry.package}: 왜 세지 않는지 적어야 합니다.`);
+    }
+    // 커널 헤더는 컨테이너에서 실행되지 않는다(이번에 12건이 여기서 나왔다).
+    assert.ok(config.ignoredPackages.some((entry) => entry.package === 'linux-libc-dev'));
+
+    // 검사기는 이유 없는 항목을 거부하고, 뺀 건수를 따로 세어 기록한다
+    assert.match(scanner, /entry\.reason.*trim\(\)\.length < 10|reason.*10자 이상/);
+    assert.match(scanner, /const isIgnoredFinding =/);
+    assert.match(scanner, /ignored_count: ignored/);
+    assert.match(scanner, /ignored_count: totals\.ignored/);
+
+    // 원장도 화면도 숨긴 건수를 함께 들고 다닌다 — 조용히 사라지지 않는다
+    assert.match(ignoreMigration, /ADD COLUMN IF NOT EXISTS ignored_count INTEGER NOT NULL DEFAULT 0/);
+    assert.match(ignoreMigration, /'scan_ignored_count', COALESCE\(\(v_latest_scan->>'ignored_count'\)::INTEGER, 0\)/);
+    assert.match(panel, /이유를 적어 뺀 항목/);
+    assert.match(panel, /image\.ignored_count/);
+
+    // 커널 헤더를 빼는 이유가 마이그레이션에도 남아 있어야 다음 사람이 다시 캐지 않는다
+    assert.match(ignoreMigration, /호스트 커널/);
+});
+
+test('검사기 이미지가 지워져 있어도 월간 검사가 멈추지 않는다', () => {
+    // 2026-09-02: 배포의 도커 캐시 정리가 고정된 Trivy 이미지를 지워 검사가 `No such image` 로 죽었다.
+    // 다이제스트 고정은 유지한 채, 쓰기 전에 먼저 내려받는다.
+    assert.match(scanner, /run\(DOCKER, \['pull', '--quiet', TRIVY_IMAGE\]/);
+    assert.match(scanner, /고정한 검사기 이미지를 준비하지 못했습니다/);
+    assert.match(scanner, /const TRIVY_IMAGE = 'aquasec\/trivy@sha256:[a-f0-9]{64}'/);
 });
