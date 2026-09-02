@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CenteredDialog from '../common/CenteredDialog';
+import { getSubmissionBoardMissions } from '../../modules/writing/submission-board/boardMissionScope';
 import './TeacherSubmissionBoard.css';
 
 const STUDENT_STATUS_COLUMNS = Object.freeze([
@@ -267,10 +268,7 @@ const TeacherSubmissionBoard = ({
         () => new Map(missions.map((mission) => [mission.id, mission])),
         [missions]
     );
-    const eligibleMissions = useMemo(
-        () => missions.filter((mission) => mission.is_archived !== true && mission.mission_type !== 'meeting'),
-        [missions]
-    );
+    const eligibleMissions = useMemo(() => getSubmissionBoardMissions(missions), [missions]);
     const selectedMission = selectedMissionId ? missionsById.get(selectedMissionId) || null : null;
     const isMissionScope = Boolean(selectedMissionId);
     const scopeKey = `${classId || 'none'}:${selectedMissionId || 'all'}`;

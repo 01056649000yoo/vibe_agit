@@ -141,6 +141,8 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
     const [selectedMissionId, setSelectedMissionId] = useState(null);
     const [isScopeLoading, setIsScopeLoading] = useState(false);
     const localMutationVersionRef = useRef(0);
+    // 교사가 범위를 한 번이라도 직접 고르면 그 뒤로는 기본값을 덮어쓰지 않는다.
+    const scopeChosenRef = useRef(false);
 
     useEffect(() => {
         setBoard(emptyBoard());
@@ -149,6 +151,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
         setSelectedMissionId(null);
         setIsScopeLoading(false);
         localMutationVersionRef.current = 0;
+        scopeChosenRef.current = false;
     }, [classId]);
 
     const hydrateBoard = useCallback((value, fallback = {}) => {
@@ -235,11 +238,22 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
 
     const selectMissionScope = useCallback((missionId) => {
         const nextMissionId = missionId || null;
+        scopeChosenRef.current = true;
         if (selectedMissionId === nextMissionId) return;
         setIsScopeLoading(true);
         setPollError(false);
         setSelectedMissionId(nextMissionId);
     }, [selectedMissionId]);
+
+    // 화면을 처음 열 때 한 번만 가장 최근 과제로 맞춘다. 과제 목록은 전광판을 연 뒤에
+    // 도착할 수 있으므로 도착 시점에 적용하며, 교사가 이미 범위를 골랐다면 건드리지 않는다.
+    const applyDefaultMissionScope = useCallback((missionId) => {
+        if (!missionId || scopeChosenRef.current) return;
+        scopeChosenRef.current = true;
+        setIsScopeLoading(true);
+        setPollError(false);
+        setSelectedMissionId(missionId);
+    }, []);
 
     const transitionMissionStatus = useCallback((missionId, transition, count = 1, studentIds = []) => {
         const delta = TRANSITION_DELTAS.get(transition);
@@ -324,6 +338,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
         isScopeLoading,
         hydrateBoard,
         selectMissionScope,
+        applyDefaultMissionScope,
         transitionMissionStatus,
         loadSubmissionHistory
     };

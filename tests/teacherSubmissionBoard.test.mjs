@@ -145,19 +145,22 @@ test('교사 전광판 폴링은 현황 탭에서만 즉시 시작하고 12초·
 });
 
 test('전광판은 전체와 미션별 현황을 한 폴링으로 전환하고 갱신 변화를 눈에 보이게 표시한다', async () => {
-    const [board, styles, hook, api, manager, migration, smoke] = await Promise.all([
+    const [board, styles, hook, api, manager, migration, smoke, scope] = await Promise.all([
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
         read('src/components/teacher/TeacherSubmissionBoard.css'),
         read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
         read('src/modules/writing/submission-board/teacherSubmissionBoardApi.js'),
         read('src/components/teacher/MissionManager.jsx'),
         read('supabase/migrations/20261177_teacher_submission_board_mission_scope.sql'),
-        read('tests/sql/20261177_teacher_submission_board_mission_scope.smoke.sql')
+        read('tests/sql/20261177_teacher_submission_board_mission_scope.smoke.sql'),
+        read('src/modules/writing/submission-board/boardMissionScope.js')
     ]);
 
     assert.match(board, /현황 범위/);
     assert.match(board, /전체 활성 글 과제/);
-    assert.match(board, /mission\.is_archived !== true && mission\.mission_type !== 'meeting'/);
+    // 범위 규칙은 공용 모듈이 원본이고 화면은 그것만 부른다.
+    assert.match(board, /getSubmissionBoardMissions\(missions\)/);
+    assert.match(scope, /mission\?\.is_archived !== true && mission\?\.mission_type !== 'meeting'/);
     assert.match(board, /MissionStudentStatusCards[\s\S]*현재 상태 \$\{column\.label\}/);
     assert.match(board, /학생 상태 필터[\s\S]*scopeSummary/);
     assert.match(board, /previous\?\.scopeKey === scopeKey[\s\S]*previous\.version === 2/);
@@ -285,4 +288,55 @@ test('최근 제출 줄은 읽히는 크기이고 같은 제목 과제를 가른
     assert.match(board, /titleCounts\.get\(group\.title\) > 1 && group\.createdAt/);
     assert.match(board, /낸 과제/);
     assert.match(board, /group\.subtitle && \(/);
+});
+
+test('전광판은 열자마자 가장 최근 과제를 보여 주고 교사가 고른 범위는 덮지 않는다', async () => {
+    const [hook, manager, board] = await Promise.all([
+        read('src/modules/writing/submission-board/useTeacherSubmissionBoard.js'),
+        read('src/hooks/useMissionManager.js'),
+        read('src/components/teacher/TeacherSubmissionBoard.jsx')
+    ]);
+
+    // 기본값은 화면을 열 때 한 번만 적용하고, 교사가 직접 고르면 그 선택이 이긴다.
+    assert.match(hook, /const scopeChosenRef = useRef\(false\)/);
+    assert.match(hook, /const selectMissionScope = useCallback\([\s\S]*?scopeChosenRef\.current = true/);
+    assert.match(hook, /applyDefaultMissionScope = useCallback\(\(missionId\) => \{\s*\n?\s*if \(!missionId \|\| scopeChosenRef\.current\) return;/);
+    assert.match(hook, /\}, \[classId\]\);/);
+    assert.match(hook, /scopeChosenRef\.current = false;/);
+
+    // 과제 목록은 전광판을 연 뒤에 도착할 수 있으므로 도착 시점에 기본값을 건다.
+    assert.match(manager, /applyDefaultMissionScope: applyDefaultSubmissionBoardMission/);
+    assert.match(manager, /applyDefaultSubmissionBoardMission\(getLatestSubmissionBoardMission\(nextMissions\)\?\.id \|\| null\)/);
+    assert.match(manager, /\}, \[activeClass\?\.id, applyDefaultSubmissionBoardMission, hydrateSubmissionBoard\]\);/);
+
+    // 범위 규칙은 한 곳에서만 정한다 — 화면이 같은 필터를 다시 적지 않는다.
+    assert.match(board, /getSubmissionBoardMissions\(missions\)/);
+    assert.doesNotMatch(board, /mission\.is_archived !== true && mission\.mission_type !== 'meeting'/);
+});
+
+test('전광판 기본 과제는 보관·회의를 빼고 가장 최근에 만든 것을 고른다', async () => {
+    const { getLatestSubmissionBoardMission, getSubmissionBoardMissions } = await import(
+        '../src/modules/writing/submission-board/boardMissionScope.js'
+    );
+
+    const missions = [
+        { id: 'a', created_at: '2026-09-01T00:00:00Z' },
+        { id: 'b', created_at: '2026-09-02T00:00:00Z' },
+        { id: 'c', created_at: '2026-09-03T00:00:00Z', is_archived: true },
+        { id: 'd', created_at: '2026-09-04T00:00:00Z', mission_type: 'meeting' }
+    ];
+
+    assert.deepEqual(getSubmissionBoardMissions(missions).map((mission) => mission.id), ['a', 'b']);
+    assert.equal(getLatestSubmissionBoardMission(missions).id, 'b');
+
+    // 만든 시각이 같으면 ID가 큰 쪽을 고른다(서버의 created_at DESC, id DESC와 같은 순서).
+    assert.equal(getLatestSubmissionBoardMission([
+        { id: 'aaa', created_at: '2026-09-02T00:00:00Z' },
+        { id: 'zzz', created_at: '2026-09-02T00:00:00Z' }
+    ]).id, 'zzz');
+
+    // 볼 과제가 없으면 기본값을 걸지 않는다(전체 합산 화면 그대로).
+    assert.equal(getLatestSubmissionBoardMission([]), null);
+    assert.equal(getLatestSubmissionBoardMission([{ id: 'x', is_archived: true }]), null);
+    assert.deepEqual(getSubmissionBoardMissions(null), []);
 });

@@ -7,6 +7,7 @@ import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
 import { assignmentApi } from '../modules/writing/assignmentApi';
 import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
+import { getLatestSubmissionBoardMission } from '../modules/writing/submission-board/boardMissionScope';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
 
 export const useMissionManager = (
@@ -23,6 +24,7 @@ export const useMissionManager = (
         isScopeLoading: submissionBoardScopeLoading,
         hydrateBoard: hydrateSubmissionBoard,
         selectMissionScope: selectSubmissionBoardMission,
+        applyDefaultMissionScope: applyDefaultSubmissionBoardMission,
         transitionMissionStatus,
         loadSubmissionHistory
     } = useTeacherSubmissionBoard(activeClass?.id, { enabled: submissionBoardPollingEnabled });
@@ -235,7 +237,10 @@ export const useMissionManager = (
             });
             if (overviewError) throw overviewError;
             if (Number(overview?.version) !== 1) throw new Error('지원하지 않는 교사 과제 개요 응답입니다.');
-            setMissions(overview.missions || []);
+            const nextMissions = overview.missions || [];
+            setMissions(nextMissions);
+            // 전광판은 매번 범위를 고르지 않아도 되게 가장 최근 과제로 열린다.
+            applyDefaultSubmissionBoardMission(getLatestSubmissionBoardMission(nextMissions)?.id || null);
             setTotalStudentCount(Number(overview.total_students || 0));
             hydrateSubmissionBoard(overview.submission_board, {
                 totalStudents: overview.total_students,
@@ -246,7 +251,7 @@ export const useMissionManager = (
         } finally {
             setLoading(false);
         }
-    }, [activeClass?.id, hydrateSubmissionBoard]);
+    }, [activeClass?.id, applyDefaultSubmissionBoardMission, hydrateSubmissionBoard]);
 
     useEffect(() => {
         if (activeClass?.id) {
