@@ -31,6 +31,34 @@ export const SERVICE_FINDING_NOTES = Object.freeze([
         reason: '취약한 코드는 gRPC 권한 모듈이다. gRPC 로 요청을 받는 서비스가 없어 실행되는 경로가 없다.',
         checkedAt: '2026-09-02',
         expiresAt: '2026-12-02'
+    }),
+    Object.freeze({
+        id: 'CVE-2026-33845',
+        title: 'GnuTLS DTLS 서비스 거부',
+        reason: '요청을 처리하는 실행 파일이 이 라이브러리를 링크하지 않는 것을 확인했다. 이미지 안에서 이 라이브러리를 쓰는 것은 패키지 관리·내려받기 도구뿐이고, DTLS 로 요청을 받는 서비스도 없다.',
+        checkedAt: '2026-09-02',
+        expiresAt: '2026-12-02'
+    }),
+    Object.freeze({
+        id: 'CVE-2026-42010',
+        title: 'GnuTLS 인증 우회',
+        reason: '위와 같은 라이브러리다. 요청을 처리하는 실행 파일이 링크하지 않는 것을 확인했고, 인증은 이 라이브러리를 거치지 않는다.',
+        checkedAt: '2026-09-02',
+        expiresAt: '2026-12-02'
+    }),
+    Object.freeze({
+        id: 'CVE-2026-59873',
+        title: 'node-tar 압축폭탄 서비스 거부',
+        reason: '우리 이미지에서는 패키지 관리자를 지워 사라졌고, 상류 이미지에 남은 것도 실행 명령이 node 직접 실행이라 패키지 관리자가 호출되지 않는다. 남이 건넨 압축 파일을 푸는 통로가 없다.',
+        checkedAt: '2026-09-02',
+        expiresAt: '2026-12-02'
+    }),
+    Object.freeze({
+        id: 'CVE-2025-68121',
+        title: 'Go TLS 세션 재개 시 인증서 검증 오류',
+        reason: '해당 서비스는 로컬 파일에서 원본을 읽고 내부 평문 경로로만 호출된다. 바깥으로 TLS 연결을 맺지 않아 세션 재개 경로 자체가 없다.',
+        checkedAt: '2026-09-02',
+        expiresAt: '2026-12-02'
     })
 ]);
 
