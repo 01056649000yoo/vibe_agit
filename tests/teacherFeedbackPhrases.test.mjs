@@ -10,6 +10,7 @@ import {
     buildFeedbackPhraseMessage,
     moveFeedbackPhrase,
     normalizeFeedbackPhrases,
+    reorderFeedbackPhrases,
     validateFeedbackPhrase
 } from '../src/constants/feedbackPhrases.js';
 
@@ -51,6 +52,23 @@ test('자주 쓰는 문장을 위로 올리고 아래로 내린다', () => {
     assert.deepEqual(list, ['첫째', '둘째', '셋째']);
 });
 
+test('문장을 끌어 아무 자리로나 옮긴다', () => {
+    const list = ['첫째', '둘째', '셋째', '넷째'];
+
+    // 맨 아래를 맨 위로 (한 칸씩이 아니라 한 번에)
+    assert.deepEqual(reorderFeedbackPhrases(list, 3, 0), ['넷째', '첫째', '둘째', '셋째']);
+    // 맨 위를 가운데로
+    assert.deepEqual(reorderFeedbackPhrases(list, 0, 2), ['둘째', '셋째', '첫째', '넷째']);
+
+    // 제자리·범위 밖은 그대로 둔다
+    assert.deepEqual(reorderFeedbackPhrases(list, 1, 1), list);
+    assert.deepEqual(reorderFeedbackPhrases(list, 0, 9), list);
+    assert.deepEqual(reorderFeedbackPhrases(list, -1, 0), list);
+
+    // 원래 목록은 건드리지 않는다
+    assert.deepEqual(list, ['첫째', '둘째', '셋째', '넷째']);
+});
+
 test('하나면 그대로, 둘 이상이면 번호를 붙인다', () => {
     assert.equal(buildFeedbackPhraseMessage([]), '');
     assert.equal(buildFeedbackPhraseMessage(['AI 맞춤법 검사 후 제출하세요.']), 'AI 맞춤법 검사 후 제출하세요.');
@@ -82,6 +100,26 @@ test('화면 한도와 DB CHECK 제약이 같은 값을 쓴다', async () => {
     assert.match(migration, /jsonb_typeof\(feedback_phrases\) = 'array'/);
     assert.match(migration, /@\? '\$\[\*\] \? \(@\.type\(\) != "string"\)'/);
     assert.match(migration, /ADD COLUMN IF NOT EXISTS feedback_phrases JSONB NOT NULL DEFAULT '\[\]'::JSONB/);
+});
+
+test('개발 실험실에서 두 폭을 DB 없이 미리 본다', async () => {
+    const [registry, preview] = await Promise.all([
+        read('src/dev/devLabRegistry.js'),
+        read('src/dev/FeedbackPhrasePreview.jsx')
+    ]);
+
+    assert.match(registry, /id: 'feedback-phrases'/);
+    assert.match(registry, /lazy\(\(\) => import\('\.\/FeedbackPhrasePreview\.jsx'\)\)/);
+
+    // 좁은 사이드바(380px)와 넓은 폭을 한 화면에서 나란히 본다 — 좁은 쪽에서 문장이 끊기는 문제를 겪었다
+    assert.match(preview, /width: '380px'/);
+    assert.match(preview, /FeedbackPhrasePicker/);
+
+    // 실험실은 운영 데이터 클라이언트를 부르지 않는다(src/dev/README.md 원칙).
+    // 글로 적힌 다짐이 아니라 **실제 import·호출**만 본다.
+    assert.ok(!/from '[^']*supabase/i.test(preview), '개발 미리보기가 운영 데이터 클라이언트를 불러오면 안 됩니다.');
+    assert.ok(!/supabase\s*\./.test(preview), '개발 미리보기가 운영 데이터 클라이언트를 부르면 안 됩니다.');
+    assert.ok(!/useFeedbackPhrases/.test(preview), '개발 미리보기는 저장 훅 대신 메모리 fixture 를 씁니다.');
 });
 
 test('저장 문장 갈래가 낱개·일괄 두 곳에 모두 연결돼 있다', async () => {
@@ -116,9 +154,14 @@ test('저장 문장 갈래가 낱개·일괄 두 곳에 모두 연결돼 있다'
     // 순서 바꾸기가 화면과 보관함 양쪽에 연결돼 있다
     const phraseHook = await read('src/hooks/useFeedbackPhrases.js');
     const picker = await read('src/components/teacher/FeedbackPhrasePicker.jsx');
-    assert.match(phraseHook, /const movePhrase = useCallback/);
+    assert.match(phraseHook, /const reorderPhrases = useCallback/);
     assert.match(picker, /handleMove\(index, -1\)/);
     assert.match(picker, /handleMove\(index, 1\)/);
+
+    // 줄을 통째로 끌어 옮기고, 순번이 문장 앞에 보인다
+    assert.match(picker, /draggable=\{editMode && !isEditing\}/);
+    assert.match(picker, /handleDrop\(index\)/);
+    assert.match(picker, /\{index \+ 1\}/);
 
     // 일괄도 덮어쓰지 않는다
     assert.match(missionHook, /const handleBulkPhraseRewrite = async \(message\)/);

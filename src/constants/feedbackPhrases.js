@@ -76,27 +76,28 @@ export const validateFeedbackPhrase = (text, existing = []) => {
 };
 
 /**
- * 문장 하나를 한 칸 위(-1) 또는 아래(+1)로 옮긴 새 목록을 돌려준다.
+ * 문장 하나를 `from` 자리에서 `to` 자리로 옮긴 새 목록을 돌려준다(끌어다 놓기).
  *
  * 왜 손으로 옮기게 하나: 문장이 늘어나면 정작 매일 쓰는 한두 개가 아래로 밀린다. 쓴 횟수로
  * 자동 정렬하면 목록이 자꾸 움직여 손이 기억한 자리를 잃는다. **자리는 교사가 정하고 그대로 있는다.**
- * 목록 순서는 번호를 붙일 때의 순서이기도 하다.
+ * 목록 순서는 화면에 보이는 순번이자, 여러 개를 고를 때 붙는 번호 순서이기도 하다.
  *
- * 옮길 수 없으면(맨 위에서 위로 등) 원래 목록을 그대로 돌려준다.
+ * 옮길 수 없으면 원래 목록을 그대로 돌려준다.
  */
-export const moveFeedbackPhrase = (phrases, index, direction) => {
+export const reorderFeedbackPhrases = (phrases, from, to) => {
     const list = normalizeFeedbackPhrases(phrases);
-    const target = index + direction;
-    if (index < 0 || index >= list.length) return list;
-    if (target < 0 || target >= list.length) return list;
+    if (from < 0 || from >= list.length) return list;
+    if (to < 0 || to >= list.length || from === to) return list;
 
-    // 색인으로 직접 넣지 않고 자리마다 다시 그린다(동적 색인 접근 경고를 늘리지 않는다).
-    return list.map((phrase, position) => {
-        if (position === index) return list.at(target);
-        if (position === target) return list.at(index);
-        return phrase;
-    });
+    const moved = list.at(from);
+    const rest = list.filter((_, position) => position !== from);
+    // 색인 대입을 쓰지 않는다(동적 색인 접근 경고를 늘리지 않는다).
+    return [...rest.slice(0, to), moved, ...rest.slice(to)];
 };
+
+/** 한 칸 위(-1)·아래(+1)로 옮긴다. 끌어다 놓기를 못 쓰는 곳(키보드·터치)을 위한 길이다. */
+export const moveFeedbackPhrase = (phrases, index, direction) =>
+    reorderFeedbackPhrases(phrases, index, index + direction);
 
 /**
  * 고른 문장들을 학생에게 보낼 한 덩어리로 만든다.

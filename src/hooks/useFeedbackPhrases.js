@@ -2,8 +2,8 @@ import { useCallback, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
     DEFAULT_FEEDBACK_PHRASES,
-    moveFeedbackPhrase,
     normalizeFeedbackPhrases,
+    reorderFeedbackPhrases,
     validateFeedbackPhrase
 } from '../constants/feedbackPhrases';
 
@@ -99,14 +99,16 @@ const useFeedbackPhrases = () => {
         return persist(next, phrases);
     }, [phrases, persist]);
 
-    /** 자주 쓰는 것을 위로 올린다. 자리는 교사가 정하고 저장된다. */
-    const movePhrase = useCallback(async (index, direction) => {
-        const next = moveFeedbackPhrase(phrases, index, direction);
+    /** 자리를 옮긴다(끌어다 놓기·화살표 공통). 자리는 교사가 정하고 그대로 저장된다. */
+    const reorderPhrases = useCallback(async (from, to) => {
+        const next = reorderFeedbackPhrases(phrases, from, to);
         if (next.length === phrases.length && next.every((item, position) => item === phrases.at(position))) {
             return false;
         }
         return persist(next, phrases);
     }, [phrases, persist]);
+
+    const movePhrase = useCallback((index, direction) => reorderPhrases(index, index + direction), [reorderPhrases]);
 
     const removePhrase = useCallback(async (index) => {
         if (index < 0 || index >= phrases.length) return false;
@@ -121,7 +123,7 @@ const useFeedbackPhrases = () => {
 
     return {
         phrases, loading, error, ensurePhrasesLoaded,
-        addPhrase, updatePhrase, movePhrase, removePhrase, seedDefaultPhrases,
+        addPhrase, updatePhrase, movePhrase, reorderPhrases, removePhrase, seedDefaultPhrases,
         clearPhraseError: () => setError(null),
         reloadPhrases: load
     };
