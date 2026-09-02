@@ -196,7 +196,7 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
   assert.match(noticeComposer, /지난 알림/);
   assert.match(noticeStore, /subscribeClassBoardNotice[\s\S]*publishClassBoardNotice/);
   // 설정창은 같은 작성 부품을 쓰고 제목·색만 보드 config로 넘긴다.
-  assert.match(noticeSettings, /<NoticeComposer classId=\{classId\} \/>/);
+  assert.match(noticeSettings, /<NoticeComposer classId=\{classId\} widgetHint \/>/);
   assert.doesNotMatch(noticeSettings, /config\.body/);
 
   // 서버가 담당 학급·길이·날짜 범위를 강제하고 표는 브라우저 역할에 열지 않는다.
@@ -797,4 +797,53 @@ test('새 교사 도구의 도움말과 전체 활용 안내서 이동 경로가
   assert.match(guides, /'class-board'/);
   assert.match(guideRegistry, /'class-board': \{ tab: 'tools', tool: 'class-board' \}/);
   assert.match(journeys, /step\('class-board'/);
+});
+
+const [noticeToolEntry, noticeToolManifest, noticeToolStyles, noticeLogMigration, noticeLogSmoke,
+  moduleRegistrySource, noticeComposerStyles] = await Promise.all([
+    read('src/modules/tool/class-notice/TeacherEntry.jsx'),
+    read('src/modules/tool/class-notice/manifest.js'),
+    read('src/modules/tool/class-notice/classNotice.css'),
+    read('supabase/migrations/20261224_class_board_notice_log.sql'),
+    read('tests/sql/20261224_class_board_notice_log.smoke.sql'),
+    read('src/modules/registry.js'),
+    read('src/modules/tool/class-board/widgets/notice-board/noticeComposer.css'),
+  ]);
+
+test('알림장은 학급운영도구의 독립 도구로도 열리고 위젯을 지워도 기록이 남는다', () => {
+  // 알림은 학급에 매인 기록이라 보드·위젯과 연결이 없다. 스크린을 지워도 남는다.
+  assert.doesNotMatch(noticeMigration, /class_boards|board_id|widgets/);
+  assert.match(noticeMigration, /REFERENCES public\.classes\(id\) ON DELETE CASCADE/);
+
+  // 도구로 등록되어 스크린 없이도 들어갈 수 있다.
+  assert.match(moduleRegistrySource, /classNoticeManifest/);
+  assert.match(noticeToolManifest, /id: 'class-notice'/);
+  assert.match(noticeToolManifest, /part: 'tool'/);
+  assert.match(noticeToolManifest, /audience: 'teacher'/);
+  assert.match(noticeToolManifest, /home: 'none'[\s\S]*load: 'on-open'[\s\S]*realtime: 'none'[\s\S]*maxInitialRows: 40/);
+  assert.match(noticeToolManifest, /tool: \{ order: 15, launchMode: 'embedded' \}/);
+
+  // 목록은 커서로 넘기고, 고르면 스크린과 같은 작성 부품으로 그 날짜를 고친다.
+  assert.match(noticeToolEntry, /noticeBoardApi\.getLog\(classId\)/);
+  assert.match(noticeToolEntry, /noticeBoardApi\.getLog\(classId, log\.nextCursor\)/);
+  assert.match(noticeToolEntry, /지난 알림 더 보기/);
+  assert.match(noticeToolEntry, /<NoticeComposer[\s\S]*initialDate=\{writingDate\}[\s\S]*showRecent=\{false\}[\s\S]*onSaved=\{loadLog\}/);
+  assert.doesNotMatch(noticeToolEntry, /setInterval|postgres_changes|localStorage/);
+  assert.match(noticeToolStyles, /class-notice__workspace/);
+
+  // 작성 부품은 세 화면에서 쓰이므로 자기 스타일을 들고 다닌다.
+  assert.match(noticeComposer, /import '\.\/noticeComposer\.css'/);
+  assert.match(noticeComposerStyles, /\.class-board-notice-composer \{/);
+  assert.doesNotMatch(styles, /\.class-board-notice-composer/);
+
+  // 목록 RPC는 담당 학급·한 쪽 40개·미리보기 120자를 서버에서 강제한다.
+  assert.match(noticeLogMigration, /LEAST\(GREATEST\(COALESCE\(p_limit, 40\), 1\), 40\)/);
+  assert.match(noticeLogMigration, /LEFT\(page\.body, 120\)/);
+  assert.match(noticeLogMigration, /LIMIT v_limit \+ 1/);
+  assert.match(noticeLogMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
+  assert.match(noticeLogMigration, /REVOKE ALL ON FUNCTION public\.get_teacher_class_board_notice_log_v1[\s\S]*FROM PUBLIC, anon/);
+  assert.match(noticeLogSmoke, /알림장 목록이 한 쪽 상한 40개를 지키지 않았습니다/);
+  assert.match(noticeLogSmoke, /알림장 목록의 다음 커서가 올바르지 않습니다/);
+  assert.match(noticeLogSmoke, /알림장 목록에 본문 전체가 담겼습니다/);
+  assert.match(noticeLogSmoke, /담당하지 않는 학급의 알림장 목록을 읽었습니다/);
 });

@@ -31,4 +31,13 @@ export const noticeBoardApi = Object.freeze({
       p_body: body ?? '',
     });
   },
+
+  // 알림장 도구의 날짜 목록. 최신순 40개씩 날짜 커서로 넘기고 미리보기 120자만 받는다.
+  getLog(classId, before = null, limit = 40) {
+    return call('get_teacher_class_board_notice_log_v1', {
+      p_class_id: classId,
+      p_before: before || null,
+      p_limit: limit,
+    });
+  },
 });

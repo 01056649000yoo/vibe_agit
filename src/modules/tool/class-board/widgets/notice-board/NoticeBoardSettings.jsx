@@ -5,7 +5,7 @@ export default function NoticeBoardSettings({ config = {}, classId, onChange }) 
   const update = (patch) => onChange({ ...config, ...patch });
   return (
     <div className="class-board-settings-grid">
-      <NoticeComposer classId={classId} />
+      <NoticeComposer classId={classId} widgetHint />
       <label>
         <span>위젯 제목</span>
         <input maxLength={80} value={config.heading || ''} onChange={(event) => update({ heading: event.target.value })} />

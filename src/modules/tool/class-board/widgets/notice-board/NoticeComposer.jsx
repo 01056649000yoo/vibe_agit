@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { formatSeoulDate } from '../../../../../utils/seoulDate';
 import { noticeBoardApi } from './noticeBoardApi';
 import { publishClassBoardNotice } from './noticeStore';
+import './noticeComposer.css';
 
 /*
  * 날짜별 알림을 쓰고 고치는 부분. 설정창과 발표 화면이 같은 것을 쓴다.
@@ -13,7 +14,13 @@ import { publishClassBoardNotice } from './noticeStore';
 const NOTICE_LIMIT = 2000;
 const emptyState = { status: 'loading', today: '', date: '', recent: [], body: '', savedBody: '' };
 
-export default function NoticeComposer({ classId }) {
+export default function NoticeComposer({
+  classId,
+  initialDate = null,
+  showRecent = true,
+  widgetHint = false,
+  onSaved,
+}) {
   const [state, setState] = useState(emptyState);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -40,8 +47,8 @@ export default function NoticeComposer({ classId }) {
 
   useEffect(() => {
     setState(emptyState);
-    load(null);
-  }, [load]);
+    load(initialDate);
+  }, [initialDate, load]);
 
   const dirty = state.body !== state.savedBody;
   const isToday = Boolean(state.today) && state.date === state.today;
@@ -62,6 +69,7 @@ export default function NoticeComposer({ classId }) {
         return { ...current, body: savedBody, savedBody, recent: nextRecent };
       });
       publishClassBoardNotice({ classId, date: state.date, body: savedBody });
+      onSaved?.({ date: state.date, body: savedBody });
       setMessage(savedBody ? '알림을 저장했습니다. 화면에 바로 반영됩니다.' : '이 날짜의 알림을 지웠습니다.');
     } catch (saveError) {
       setError(saveError.message || '알림을 저장하지 못했습니다.');
@@ -113,7 +121,7 @@ export default function NoticeComposer({ classId }) {
       {error ? <p className="class-board-error">{error}</p> : null}
       {message ? <p className="class-board-note is-done">{message}</p> : null}
 
-      {state.recent.length > 0 ? (
+      {showRecent && state.recent.length > 0 ? (
         <div className="class-board-notice-composer__recent">
           <span>지난 알림</span>
           <ul>
@@ -136,7 +144,7 @@ export default function NoticeComposer({ classId }) {
 
       <p className="class-board-note">
         알림은 날짜마다 따로 저장됩니다. 내용을 비우고 저장하면 그 날짜의 알림을 지웁니다.
-        위젯의 제목과 색은 아래에서 정하며 스크린 `저장`을 눌러야 함께 보관됩니다.
+        {widgetHint ? ' 위젯의 제목과 색은 아래에서 정하며 스크린 `저장`을 눌러야 함께 보관됩니다.' : ''}
       </p>
     </div>
   );

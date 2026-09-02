@@ -334,28 +334,9 @@
 }
 
 /* 알림장 — 날짜별로 쓰고 고치는 부분(설정창과 발표 화면이 함께 쓴다). */
-.class-board-notice-composer { display:grid; gap:9px; padding:11px; border:1px solid #e5d9a8; border-radius:13px; background:#fffdf3; }
-.class-board-notice-composer__date { display:flex; gap:6px; align-items:center; }
-.class-board-notice-composer__date input { flex:1 1 auto; min-width:0; }
-.class-board-notice-composer__date button { flex:0 0 auto; border:1px solid #cbd7e7; border-radius:9px; padding:8px 11px; background:#fff; color:#526176; font-size:.73rem; font-weight:900; cursor:pointer; }
-.class-board-notice-composer__actions { display:flex; align-items:center; justify-content:space-between; gap:9px; }
-.class-board-notice-composer__actions>span { color:#8a7a4a; font-size:.7rem; font-weight:850; }
-.class-board-notice-composer__actions button { cursor:pointer; }
-.class-board-notice-composer__actions button:disabled { opacity:.45; cursor:not-allowed; }
-.class-board-notice-composer .class-board-note.is-done { color:#047857; font-weight:850; }
-.class-board-notice-composer__recent { display:grid; gap:5px; padding-top:8px; border-top:1px solid #ece0b6; }
-.class-board-notice-composer__recent>span { color:#8a7a4a; font-size:.7rem; font-weight:900; }
-.class-board-notice-composer__recent ul { display:grid; gap:4px; max-height:172px; margin:0; padding:0; overflow:auto; list-style:none; }
-.class-board-notice-composer__recent button { display:grid; gap:2px; width:100%; border:1px solid #ece0b6; border-radius:10px; padding:7px 9px; background:#fff; color:#5b4a1e; text-align:left; cursor:pointer; }
-.class-board-notice-composer__recent button:disabled { border-color:#c9a227; background:#fffbe6; cursor:default; }
-.class-board-notice-composer__recent strong { font-size:.74rem; }
-.class-board-notice-composer__recent small { overflow:hidden; color:#8a7a4a; font-size:.68rem; text-overflow:ellipsis; white-space:nowrap; }
 
 .class-board-presentation-header .class-board-presentation-notice-button { border-color:#c9a227; background:#fef9c3; color:#713f12; }
 .class-board-presentation-notice-panel { position:absolute; top:64px; right:clamp(14px,1.8vw,28px); z-index:6; width:min(360px,calc(100vw - 28px)); max-height:min(70vh,620px); overflow:auto; border:1px solid #e5d9a8; border-radius:17px; padding:13px; background:#fff; box-shadow:0 16px 38px rgba(30,50,80,.18); }
 .class-board-presentation-notice-panel .class-board-panel-heading button { border:0; padding:3px 6px; background:transparent; color:#64748b; font-size:.72rem; font-weight:900; cursor:pointer; }
-.class-board-presentation-notice-panel label { display:grid; gap:6px; min-width:0; }
-.class-board-presentation-notice-panel label>span { color:#64748b; font-size:.72rem; font-weight:900; }
-.class-board-presentation-notice-panel input,.class-board-presentation-notice-panel textarea { width:100%; min-width:0; box-sizing:border-box; border:1px solid #cbd7e7; border-radius:10px; padding:9px 10px; background:#fff; color:#172033; font:inherit; }
 
 .class-board-notice__state { display:grid; place-items:center; min-height:0; margin:0; padding:clamp(6px,3cqmin,18px); font-size:max(.68rem,5cqmin); font-weight:800; opacity:.72; text-align:center; }

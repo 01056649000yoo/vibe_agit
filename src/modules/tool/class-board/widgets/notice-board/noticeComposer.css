@@ -1,0 +1,32 @@
+/*
+ * 알림 작성 부품의 스타일. 부품이 스스로 들고 다닌다.
+ *
+ * 이 부품은 우리 반 스크린 설정창, 열린 스크린 머리말, 알림장 도구 세 곳에서 쓰인다.
+ * 스크린 스타일시트에 두면 도구 화면에서 모양이 깨지므로 필요한 것을 여기서 모두 정한다.
+ */
+
+.class-board-notice-composer { display:grid; gap:9px; padding:11px; border:1px solid #e5d9a8; border-radius:13px; background:#fffdf3; box-sizing:border-box; }
+.class-board-notice-composer label { display:grid; gap:6px; min-width:0; }
+.class-board-notice-composer label>span { color:#64748b; font-size:.72rem; font-weight:900; }
+.class-board-notice-composer input,.class-board-notice-composer textarea { width:100%; min-width:0; box-sizing:border-box; border:1px solid #cbd7e7; border-radius:10px; padding:9px 10px; background:#fff; color:#172033; font:inherit; }
+.class-board-notice-composer textarea { resize:vertical; line-height:1.55; }
+.class-board-notice-composer .class-board-note { margin:0; color:#758296; font-size:.72rem; line-height:1.55; }
+.class-board-notice-composer .class-board-note.is-done { color:#047857; font-weight:850; }
+.class-board-notice-composer .class-board-error { margin:0; color:#b91c1c; font-size:.75rem; font-weight:800; }
+.class-board-notice-composer .class-board-primary { border:1px solid #315fc4; border-radius:11px; padding:10px 14px; background:#315fc4; color:#fff; font:inherit; font-weight:900; }
+
+.class-board-notice-composer__date { display:flex; gap:6px; align-items:center; }
+.class-board-notice-composer__date input { flex:1 1 auto; min-width:0; }
+.class-board-notice-composer__date button { flex:0 0 auto; border:1px solid #cbd7e7; border-radius:9px; padding:8px 11px; background:#fff; color:#526176; font-size:.73rem; font-weight:900; cursor:pointer; }
+.class-board-notice-composer__actions { display:flex; align-items:center; justify-content:space-between; gap:9px; }
+.class-board-notice-composer__actions>span { color:#8a7a4a; font-size:.7rem; font-weight:850; }
+.class-board-notice-composer button { cursor:pointer; }
+.class-board-notice-composer button:disabled { opacity:.45; cursor:not-allowed; }
+
+.class-board-notice-composer__recent { display:grid; gap:5px; padding-top:8px; border-top:1px solid #ece0b6; }
+.class-board-notice-composer__recent>span { color:#8a7a4a; font-size:.7rem; font-weight:900; }
+.class-board-notice-composer__recent ul { display:grid; gap:4px; max-height:172px; margin:0; padding:0; overflow:auto; list-style:none; }
+.class-board-notice-composer__recent button { display:grid; gap:2px; width:100%; border:1px solid #ece0b6; border-radius:10px; padding:7px 9px; background:#fff; color:#5b4a1e; text-align:left; }
+.class-board-notice-composer__recent button:disabled { border-color:#c9a227; background:#fffbe6; opacity:1; cursor:default; }
+.class-board-notice-composer__recent strong { font-size:.74rem; }
+.class-board-notice-composer__recent small { overflow:hidden; color:#8a7a4a; font-size:.68rem; text-overflow:ellipsis; white-space:nowrap; }
