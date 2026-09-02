@@ -25,7 +25,7 @@ const FeedbackPhrasePicker = ({
 }) => {
     const {
         phrases = [], loading, error,
-        addPhrase, updatePhrase, removePhrase, seedDefaultPhrases, clearPhraseError
+        addPhrase, updatePhrase, movePhrase, removePhrase, seedDefaultPhrases, clearPhraseError
     } = phraseStore || {};
 
     const [selected, setSelected] = useState([]);
@@ -37,7 +37,7 @@ const FeedbackPhrasePicker = ({
     const selectedPhrases = selected
         .filter((index) => index < phrases.length)
         .sort((a, b) => a - b)
-        .map((index) => phrases[index]);
+        .map((index) => phrases.at(index));
     const message = buildFeedbackPhraseMessage(selectedPhrases);
 
     const toggle = (index) => {
@@ -62,8 +62,24 @@ const FeedbackPhrasePicker = ({
         if (saved) { setEditingIndex(null); setEditingText(''); }
     };
 
+    /*
+     * 자리를 옮긴다. 골라 둔 것이 있으면 자리를 따라 같이 옮겨 준다 —
+     * 옮길 때마다 선택이 풀리면 번호를 붙여 넣기가 번거로워진다.
+     */
+    const handleMove = async (index, direction) => {
+        const target = index + direction;
+        if (target < 0 || target >= phrases.length) return;
+        const moved = await runSave(() => movePhrase(index, direction));
+        if (!moved) return;
+        setSelected((current) => current.map((position) => {
+            if (position === index) return target;
+            if (position === target) return index;
+            return position;
+        }));
+    };
+
     const handleRemove = async (index) => {
-        if (!confirm(`"${phrases[index]}"\n\n이 문장을 지울까요?`)) return;
+        if (!confirm(`"${phrases.at(index)}"\n\n이 문장을 지울까요?`)) return;
         const removed = await runSave(() => removePhrase(index));
         // 지운 뒤에는 자리가 밀리므로 골라 둔 것을 비운다.
         if (removed) setSelected([]);
@@ -157,6 +173,36 @@ const FeedbackPhrasePicker = ({
                                         />
                                         <span>{phrase}</span>
                                     </label>
+                                    {/* 자주 쓰는 문장을 위로 올려 둔다. 좁은 사이드바라 화살표는 한 칸에 쌓는다. */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                                        <button
+                                            type="button"
+                                            title="위로 올리기"
+                                            disabled={busy || index === 0}
+                                            onClick={() => handleMove(index, -1)}
+                                            style={{
+                                                background: 'none', border: 'none', lineHeight: 1, padding: '1px 2px',
+                                                fontSize: '0.7rem', color: index === 0 ? 'var(--ui-ink-subtle)' : 'var(--ui-ink-muted)',
+                                                cursor: index === 0 ? 'default' : 'pointer'
+                                            }}
+                                        >
+                                            ▲
+                                        </button>
+                                        <button
+                                            type="button"
+                                            title="아래로 내리기"
+                                            disabled={busy || index === phrases.length - 1}
+                                            onClick={() => handleMove(index, 1)}
+                                            style={{
+                                                background: 'none', border: 'none', lineHeight: 1, padding: '1px 2px',
+                                                fontSize: '0.7rem',
+                                                color: index === phrases.length - 1 ? 'var(--ui-ink-subtle)' : 'var(--ui-ink-muted)',
+                                                cursor: index === phrases.length - 1 ? 'default' : 'pointer'
+                                            }}
+                                        >
+                                            ▼
+                                        </button>
+                                    </div>
                                     <button
                                         type="button"
                                         title="문장 고치기"

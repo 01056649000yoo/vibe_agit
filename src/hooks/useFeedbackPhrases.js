@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
     DEFAULT_FEEDBACK_PHRASES,
+    moveFeedbackPhrase,
     normalizeFeedbackPhrases,
     validateFeedbackPhrase
 } from '../constants/feedbackPhrases';
@@ -94,8 +95,16 @@ const useFeedbackPhrases = () => {
         const message = validateFeedbackPhrase(text, others);
         if (message) { setError(message); return false; }
 
-        const next = [...phrases];
-        next[index] = String(text).trim();
+        const next = phrases.map((phrase, position) => (position === index ? String(text).trim() : phrase));
+        return persist(next, phrases);
+    }, [phrases, persist]);
+
+    /** 자주 쓰는 것을 위로 올린다. 자리는 교사가 정하고 저장된다. */
+    const movePhrase = useCallback(async (index, direction) => {
+        const next = moveFeedbackPhrase(phrases, index, direction);
+        if (next.length === phrases.length && next.every((item, position) => item === phrases.at(position))) {
+            return false;
+        }
         return persist(next, phrases);
     }, [phrases, persist]);
 
@@ -112,7 +121,7 @@ const useFeedbackPhrases = () => {
 
     return {
         phrases, loading, error, ensurePhrasesLoaded,
-        addPhrase, updatePhrase, removePhrase, seedDefaultPhrases,
+        addPhrase, updatePhrase, movePhrase, removePhrase, seedDefaultPhrases,
         clearPhraseError: () => setError(null),
         reloadPhrases: load
     };

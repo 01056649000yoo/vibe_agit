@@ -8,6 +8,7 @@ import {
     MAX_FEEDBACK_PHRASE_LENGTH,
     appendFeedbackMessage,
     buildFeedbackPhraseMessage,
+    moveFeedbackPhrase,
     normalizeFeedbackPhrases,
     validateFeedbackPhrase
 } from '../src/constants/feedbackPhrases.js';
@@ -35,6 +36,21 @@ test('저장할 수 없는 문장은 이유를 말해 준다', () => {
     assert.match(validateFeedbackPhrase('하나 더', full), /지워/);
 });
 
+test('자주 쓰는 문장을 위로 올리고 아래로 내린다', () => {
+    const list = ['첫째', '둘째', '셋째'];
+
+    assert.deepEqual(moveFeedbackPhrase(list, 2, -1), ['첫째', '셋째', '둘째']);
+    assert.deepEqual(moveFeedbackPhrase(list, 0, 1), ['둘째', '첫째', '셋째']);
+
+    // 끝에서 더 갈 곳이 없으면 그대로 둔다
+    assert.deepEqual(moveFeedbackPhrase(list, 0, -1), list);
+    assert.deepEqual(moveFeedbackPhrase(list, 2, 1), list);
+    assert.deepEqual(moveFeedbackPhrase(list, 9, -1), list);
+
+    // 원래 목록은 건드리지 않는다
+    assert.deepEqual(list, ['첫째', '둘째', '셋째']);
+});
+
 test('하나면 그대로, 둘 이상이면 번호를 붙인다', () => {
     assert.equal(buildFeedbackPhraseMessage([]), '');
     assert.equal(buildFeedbackPhraseMessage(['AI 맞춤법 검사 후 제출하세요.']), 'AI 맞춤법 검사 후 제출하세요.');
@@ -59,7 +75,10 @@ test('화면 한도와 DB CHECK 제약이 같은 값을 쓴다', async () => {
     const migration = await read('supabase/migrations/20261227_teacher_feedback_phrases.sql');
 
     // 한도 원본은 src/constants/feedbackPhrases.js 다. 두 곳이 어긋나면 저장이 조용히 막힌다.
-    assert.match(migration, new RegExp(`jsonb_array_length\\(feedback_phrases\\) <= ${MAX_FEEDBACK_PHRASES}`));
+    assert.ok(
+        migration.includes(`jsonb_array_length(feedback_phrases) <= ${MAX_FEEDBACK_PHRASES}`),
+        `DB CHECK 한도가 화면 한도(${MAX_FEEDBACK_PHRASES})와 다릅니다.`
+    );
     assert.match(migration, /jsonb_typeof\(feedback_phrases\) = 'array'/);
     assert.match(migration, /@\? '\$\[\*\] \? \(@\.type\(\) != "string"\)'/);
     assert.match(migration, /ADD COLUMN IF NOT EXISTS feedback_phrases JSONB NOT NULL DEFAULT '\[\]'::JSONB/);
@@ -93,6 +112,13 @@ test('저장 문장 갈래가 낱개·일괄 두 곳에 모두 연결돼 있다'
     // 보낼 사람이 없으면 두 갈래 버튼이 **같이** 잠긴다(한쪽만 늘 눌리면 안 된다)
     assert.match(statusModal, /disabled=\{isGenerating \|\| loadingPosts \|\| !canBulkAiFeedback\}/);
     assert.match(statusModal, /disabled=\{isGenerating \|\| loadingPosts \|\| !canBulkPhraseRewrite\}/);
+
+    // 순서 바꾸기가 화면과 보관함 양쪽에 연결돼 있다
+    const phraseHook = await read('src/hooks/useFeedbackPhrases.js');
+    const picker = await read('src/components/teacher/FeedbackPhrasePicker.jsx');
+    assert.match(phraseHook, /const movePhrase = useCallback/);
+    assert.match(picker, /handleMove\(index, -1\)/);
+    assert.match(picker, /handleMove\(index, 1\)/);
 
     // 일괄도 덮어쓰지 않는다
     assert.match(missionHook, /const handleBulkPhraseRewrite = async \(message\)/);

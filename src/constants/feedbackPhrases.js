@@ -76,6 +76,29 @@ export const validateFeedbackPhrase = (text, existing = []) => {
 };
 
 /**
+ * 문장 하나를 한 칸 위(-1) 또는 아래(+1)로 옮긴 새 목록을 돌려준다.
+ *
+ * 왜 손으로 옮기게 하나: 문장이 늘어나면 정작 매일 쓰는 한두 개가 아래로 밀린다. 쓴 횟수로
+ * 자동 정렬하면 목록이 자꾸 움직여 손이 기억한 자리를 잃는다. **자리는 교사가 정하고 그대로 있는다.**
+ * 목록 순서는 번호를 붙일 때의 순서이기도 하다.
+ *
+ * 옮길 수 없으면(맨 위에서 위로 등) 원래 목록을 그대로 돌려준다.
+ */
+export const moveFeedbackPhrase = (phrases, index, direction) => {
+    const list = normalizeFeedbackPhrases(phrases);
+    const target = index + direction;
+    if (index < 0 || index >= list.length) return list;
+    if (target < 0 || target >= list.length) return list;
+
+    // 색인으로 직접 넣지 않고 자리마다 다시 그린다(동적 색인 접근 경고를 늘리지 않는다).
+    return list.map((phrase, position) => {
+        if (position === index) return list.at(target);
+        if (position === target) return list.at(index);
+        return phrase;
+    });
+};
+
+/**
  * 고른 문장들을 학생에게 보낼 한 덩어리로 만든다.
  *
  * 하나면 문장 그대로, 둘 이상이면 번호를 붙인다 — 지시가 두 개 이상이면 학생이 무엇을
