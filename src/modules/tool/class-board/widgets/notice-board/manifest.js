@@ -1,12 +1,14 @@
 export const noticeBoardWidgetManifest = Object.freeze({
   id: 'notice-board',
   name: '알림장',
-  description: '교사가 작성한 알림을 저장해 다시 보여 줘요',
+  description: '오늘 날짜와 함께 그날의 알림을 보여 주고 지난 알림도 다시 불러와요',
   icon: '📒',
   version: 1,
-  type: 'static',
+  // 내용은 학급+날짜 표에 있고 제목·색만 보드 JSON에 남는다. 열 때 오늘 알림 1회만 읽는다.
+  type: 'live-once',
   projectorSafe: true,
   maxInstances: 1,
+  requestBudget: { initial: 1, refreshMs: null, realtime: false, maxRows: 30 },
   defaultPlacement: {
     zone: 'content',
     size: 'large',
@@ -14,7 +16,6 @@ export const noticeBoardWidgetManifest = Object.freeze({
   },
   createDefaultConfig: () => ({
     heading: '알림장',
-    body: '우리 반 알림을 입력해 주세요.',
     tone: 'yellow',
   }),
   load: () => import('./NoticeBoardWidget'),

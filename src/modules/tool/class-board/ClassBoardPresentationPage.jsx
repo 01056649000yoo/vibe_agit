@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { classBoardApi } from './classBoardApi';
 import {
@@ -23,6 +23,10 @@ import './classBoard.css';
 
 const snapshot = (board) => JSON.stringify(board);
 
+// 알림장은 화면 편집을 켜지 않고도 바로 쓸 수 있어야 해서 발표 화면이 직접 연다.
+// 아이들이 보는 화면이므로 알림장 위젯을 실제로 올린 스크린에서만 버튼을 내보인다.
+const NoticeComposer = lazy(() => import('./widgets/notice-board/NoticeComposer'));
+
 export default function ClassBoardPresentationPage({ boardId }) {
   const autoFullscreen = new URLSearchParams(window.location.search).get('fullscreen') === '1';
   const [data, setData] = useState(null);
@@ -35,10 +39,12 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [notice, setNotice] = useState('');
+  const [noticeOpen, setNoticeOpen] = useState(false);
   const canvasContentRef = useRef(null);
 
   const editing = Boolean(draftBoard);
   const visibleBoard = draftBoard || data?.board;
+  const hasNoticeWidget = Boolean(data?.board?.widgets?.some((widget) => widget.widgetId === 'notice-board'));
   const dirty = Boolean(draftBoard && data?.board) && snapshot(draftBoard) !== snapshot(data.board);
   const selectedInstance = draftBoard?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
   const clearSelection = useCallback(() => setSelectedInstanceId(null), []);
@@ -257,12 +263,31 @@ export default function ClassBoardPresentationPage({ boardId }) {
         <h1 className="class-board-presentation-class-name">{data.class?.name || '우리 반'}</h1>
         <div>
           <time>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</time>
+          {!editing && hasNoticeWidget ? (
+            <button
+              type="button"
+              className="class-board-presentation-notice-button"
+              aria-expanded={noticeOpen}
+              onClick={() => setNoticeOpen((open) => !open)}
+            >📒 {noticeOpen ? '알림장 닫기' : '알림장 쓰기'}</button>
+          ) : null}
           {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
           <button type="button" className="class-board-presentation-refresh-button" disabled={pastingImage} onClick={refresh}>새로고침</button>
           <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? '전체화면 나가기' : '전체화면'}</button>
           <ModalCloseButton label="우리 반 스크린 닫기" onClick={() => void closeScreen()} />
         </div>
       </header>
+      {!editing && noticeOpen && hasNoticeWidget ? (
+        <aside className="class-board-presentation-notice-panel" aria-label="오늘 알림장 쓰기">
+          <div className="class-board-panel-heading">
+            <strong>📒 알림장</strong>
+            <button type="button" onClick={() => setNoticeOpen(false)}>닫기</button>
+          </div>
+          <Suspense fallback={<p className="class-board-note">알림장을 여는 중…</p>}>
+            <NoticeComposer classId={data.class?.id} />
+          </Suspense>
+        </aside>
+      ) : null}
       {editing ? (
         <PresentationEditPanel
           addableWidgets={addableWidgets}

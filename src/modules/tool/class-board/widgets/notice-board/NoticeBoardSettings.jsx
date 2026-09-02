@@ -1,16 +1,14 @@
 import React from 'react';
+import NoticeComposer from './NoticeComposer';
 
-export default function NoticeBoardSettings({ config = {}, onChange }) {
+export default function NoticeBoardSettings({ config = {}, classId, onChange }) {
   const update = (patch) => onChange({ ...config, ...patch });
   return (
     <div className="class-board-settings-grid">
+      <NoticeComposer classId={classId} />
       <label>
-        <span>제목</span>
+        <span>위젯 제목</span>
         <input maxLength={80} value={config.heading || ''} onChange={(event) => update({ heading: event.target.value })} />
-      </label>
-      <label>
-        <span>알림 내용</span>
-        <textarea maxLength={2000} rows={9} value={config.body || ''} onChange={(event) => update({ body: event.target.value })} />
       </label>
       <label>
         <span>알림장 색</span>
@@ -21,7 +19,6 @@ export default function NoticeBoardSettings({ config = {}, onChange }) {
           <option value="rose">분홍</option>
         </select>
       </label>
-      <p className="class-board-note">작성한 내용은 현재 스크린의 `저장`을 누르면 함께 보관됩니다. 다시 열거나 발표 화면을 열어도 그대로 불러옵니다.</p>
     </div>
   );
 }

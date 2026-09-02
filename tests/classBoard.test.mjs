@@ -128,6 +128,17 @@ const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, not
   read('src/modules/tool/meal-board/mealBoardApi.js'),
 ]);
 
+const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine]
+  = await Promise.all([
+    read('src/modules/tool/class-board/widgets/notice-board/NoticeComposer.jsx'),
+    read('src/modules/tool/class-board/widgets/notice-board/noticeBoardApi.js'),
+    read('src/modules/tool/class-board/widgets/notice-board/noticeStore.js'),
+    read('supabase/migrations/20261223_class_board_daily_notices.sql'),
+    read('tests/sql/20261223_class_board_daily_notices.smoke.sql'),
+    read('src/utils/seoulDate.js'),
+    read('src/modules/tool/meal-board/mealBoardEngine.js'),
+  ]);
+
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
   assert.match(manifest, /id: 'class-board'/);
   assert.match(manifest, /part: 'tool'/);
@@ -157,20 +168,74 @@ test('식단표는 얘들아 밥 먹자의 학교 설정을 재사용해 열 때
   assert.match(mealApi, /get_teacher_meal_board_workspace_v1/);
 });
 
-test('알림장은 보드 설정에 교사 작성 내용을 저장하고 다시 렌더링한다', () => {
+test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 고칠 수 있다', () => {
   assert.match(registry, /noticeBoardWidgetManifest/);
   assert.match(noticeManifest, /id: 'notice-board'/);
-  assert.match(noticeManifest, /type: 'static'/);
-  assert.match(noticeManifest, /heading: '알림장'[\s\S]*body:[\s\S]*tone: 'yellow'/);
-  assert.match(noticeSettings, /maxLength=\{2000\}[\s\S]*현재 스크린의 `저장`/);
+  // 내용은 학급+날짜 표에 있으므로 위젯은 열 때 한 번 읽는 live-once다.
+  assert.match(noticeManifest, /type: 'live-once'/);
+  assert.match(noticeManifest, /requestBudget: \{ initial: 1, refreshMs: null, realtime: false, maxRows: 30 \}/);
+  // 제목·색만 보드 JSON에 남고 본문은 더 이상 위젯 설정에 저장하지 않는다.
+  assert.match(noticeManifest, /createDefaultConfig: \(\) => \(\{\s*\n?\s*heading: '알림장',\s*\n?\s*tone: 'yellow',\s*\n?\s*\}\)/);
+  assert.doesNotMatch(noticeManifest, /body:/);
+
+  // 위젯은 오늘 날짜를 자동으로 붙이고 오늘 알림만 1회 읽으며 폴링하지 않는다.
+  assert.match(noticeWidget, /formatSeoulDate\(current\.today\)/);
+  assert.match(noticeWidget, /noticeBoardApi\.getNotices\(classId\)/);
+  assert.match(noticeWidget, /subscribeClassBoardNotice/);
   assert.match(noticeWidget, /config\.heading/);
-  assert.match(noticeWidget, /config\.body/);
   assert.match(noticeWidget, /config\.tone/);
+  assert.doesNotMatch(noticeWidget, /setInterval|postgres_changes|localStorage|config\.body/);
+
+  // 저장은 보드 저장과 분리된 전용 RPC 두 개만 쓴다.
+  assert.match(noticeApi, /get_teacher_class_board_notices_v1/);
+  assert.match(noticeApi, /save_teacher_class_board_notice_v1/);
+  assert.match(noticeApi, /Number\(data\?\.version\) !== 1/);
+  assert.match(noticeComposer, /noticeBoardApi\.saveNotice\(classId, state\.date, state\.body\)/);
+  assert.match(noticeComposer, /publishClassBoardNotice/);
+  assert.match(noticeComposer, /maxLength=\{NOTICE_LIMIT\}/);
+  assert.match(noticeComposer, /지난 알림/);
+  assert.match(noticeStore, /subscribeClassBoardNotice[\s\S]*publishClassBoardNotice/);
+  // 설정창은 같은 작성 부품을 쓰고 제목·색만 보드 config로 넘긴다.
+  assert.match(noticeSettings, /<NoticeComposer classId=\{classId\} \/>/);
+  assert.doesNotMatch(noticeSettings, /config\.body/);
+
+  // 서버가 담당 학급·길이·날짜 범위를 강제하고 표는 브라우저 역할에 열지 않는다.
+  assert.match(noticeMigration, /CREATE TABLE IF NOT EXISTS public\.class_board_notices/);
+  assert.match(noticeMigration, /PRIMARY KEY \(class_id, notice_date\)/);
+  assert.match(noticeMigration, /CHECK \(CHAR_LENGTH\(body\) BETWEEN 1 AND 2000\)/);
+  assert.match(noticeMigration, /REVOKE ALL ON TABLE public\.class_board_notices FROM PUBLIC, anon, authenticated/);
+  assert.match(noticeMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
+  assert.match(noticeMigration, /v_date < v_today - 365 OR v_date > v_today \+ 365/);
+  assert.match(noticeMigration, /LEFT\(recent\.body, 40\)/);
+  assert.match(noticeMigration, /LEAST\(GREATEST\(COALESCE\(p_limit, 14\), 1\), 30\)/);
+  assert.match(noticeMigration, /REVOKE ALL ON FUNCTION public\.get_teacher_class_board_notices_v1[\s\S]*FROM PUBLIC, anon/);
+  assert.match(noticeSmoke, /알림장 표가 브라우저 역할에 직접 공개됐습니다/);
+  assert.match(noticeSmoke, /같은 날짜 알림이 두 줄로 쌓였습니다/);
+  assert.match(noticeSmoke, /지난 날짜 알림을 불러오지 못했습니다/);
+  assert.match(noticeSmoke, /담당하지 않는 학급의 알림장을 읽었습니다/);
+
+  // 기존 보드 payload 검증은 그대로 남아 옛 보드의 config.body도 계속 통과한다.
   assert.match(mealNoticeMigration, /'meal-board', 'notice-board'/);
   assert.match(mealNoticeMigration, /CHAR_LENGTH\(COALESCE\(v_config ->> 'body', ''\)\) > 2000/);
   assert.match(mealNoticeMigration, /v_meal_count > 1[\s\S]*v_notice_count > 1/);
   assert.match(mealNoticeMigration, /REVOKE ALL ON FUNCTION public\.validate_class_board_legacy_widgets/);
   assert.match(mealNoticeSmoke, /알림장 2000자 상한[\s\S]*식단표가 한 스크린에 두 개/);
+});
+
+test('발표 화면은 알림장을 넣은 스크린에서만 화면 편집 없이 알림을 바로 쓴다', () => {
+  assert.match(presentation, /const NoticeComposer = lazy\(\(\) => import\('\.\/widgets\/notice-board\/NoticeComposer'\)\)/);
+  assert.match(presentation, /hasNoticeWidget = Boolean\(data\?\.board\?\.widgets\?\.some\(\(widget\) => widget\.widgetId === 'notice-board'\)\)/);
+  assert.match(presentation, /!editing && hasNoticeWidget[\s\S]*class-board-presentation-notice-button/);
+  assert.match(presentation, /!editing && noticeOpen && hasNoticeWidget[\s\S]*<NoticeComposer classId=\{data\.class\?\.id\} \/>/);
+});
+
+test('서울 기준 오늘과 날짜 표기는 한 곳에서만 계산한다', () => {
+  assert.match(seoulDate, /export function getSeoulDateString/);
+  assert.match(seoulDate, /export function formatSeoulDate/);
+  // 급식판은 이름만 유지하고 계산은 공용 파일에 위임한다.
+  assert.match(mealEngine, /from '\.\.\/\.\.\/\.\.\/utils\/seoulDate\.js'/);
+  assert.match(mealEngine, /export const formatMealDate = formatSeoulDate/);
+  assert.doesNotMatch(mealEngine, /const SEOUL_TIME_ZONE/);
 });
 
 test('화면 반복 수정은 DB 없는 로컬 미리보기에서 확인하고 명시한 마감 때만 배포한다', () => {

@@ -1,26 +1,9 @@
-const SEOUL_TIME_ZONE = 'Asia/Seoul';
+// 서울 기준 오늘과 `9월 2일 화요일` 표기는 급식판·알림장이 함께 쓰므로 src/utils/seoulDate.js가 원본이다.
+// 급식 쪽 이름은 부르는 곳이 많아 그대로 두고 여기서 다시 내보낸다.
+import { formatSeoulDate, getSeoulDateString } from '../../../utils/seoulDate.js';
 
-export function getSeoulDateString(date = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: SEOUL_TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).formatToParts(date);
-  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${value.year}-${value.month}-${value.day}`;
-}
-
-export function formatMealDate(dateString) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateString || ''))) return '';
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Intl.DateTimeFormat('ko-KR', {
-    timeZone: SEOUL_TIME_ZONE,
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  }).format(new Date(Date.UTC(year, month - 1, day, 3)));
-}
+export { getSeoulDateString };
+export const formatMealDate = formatSeoulDate;
 
 export function summarizeRoster(students = []) {
   return (Array.isArray(students) ? students : []).reduce((summary, student) => {
