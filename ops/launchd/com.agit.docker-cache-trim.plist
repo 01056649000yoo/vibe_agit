@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.docker-cache-trim</string>
+    <!--
+      도커 빌드 캐시를 기준을 넘을 때만 비운다 (2026-09-02).
+
+      왜 배포 워크플로만으로 부족한가: 아지트 배포는 끝나고 캐시를 깎지만, 연구소·자비스·단축링크는
+      그 단계가 없고 손으로 빌드하는 날도 있다. 실제로 2026-09-02에 여러 앱을 다시 빌드하며
+      캐시만 9.39GB 쌓여 도커 32GB 상한의 57%까지 찼다. 여기가 차면 배포가 알 수 없는 오류로 죽는다.
+      그래서 어디서 빌드했든 하루 한 번 훑는 그물을 둔다. 이미지·볼륨은 건드리지 않는다.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/trim-docker-cache.sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>20</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-docker-cache-trim.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-docker-cache-trim.log</string>
+</dict>
+</plist>

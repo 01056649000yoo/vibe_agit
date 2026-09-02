@@ -14,6 +14,35 @@ MIN_GB="${1:-10}"
 VOL="/System/Volumes/Data"
 [ -d "$VOL" ] || VOL="/"          # 리눅스 러너에서도 돌게 둔다
 
+# ── 도커 쪽 먼저 본다 (2026-09-02 추가) ─────────────────────────────────────
+# 왜: 이 맥에서 **도커 데이터는 외장 SSD 위 32GB 상한 파일** 안에 있다. 맥 내장 디스크가
+# 93GB 남아 있어도 도커 안쪽은 꽉 찰 수 있고, 실제로 하루치 빌드로 57%까지 갔다.
+# 그러니 아래 맥 디스크 검사만으로는 위험을 못 본다. 기준을 넘으면 빌드 캐시만 비운다.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash "$SCRIPT_DIR/trim-docker-cache.sh" || true
+
+DOCKER_USE=""
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    RUNNING=$(docker ps --format '{{.Names}}' | head -1)
+    [ -n "$RUNNING" ] && DOCKER_USE=$(docker exec "$RUNNING" df -P / 2>/dev/null | awk 'NR==2{gsub("%","",$5); print $5}')
+fi
+if [ -n "${DOCKER_USE:-}" ] && [ "$DOCKER_USE" -ge 90 ]; then
+    cat >&2 <<MSG
+
+✗ 배포를 중단합니다 — 캐시를 비운 뒤에도 **도커 디스크가 ${DOCKER_USE}%** 입니다.
+
+  도커 데이터는 외장 SSD 위 32GB 상한 파일 안에 있습니다. 여기가 차면 빌드가 알 수 없는 오류로
+  죽고 DB 가 쓰기를 못 합니다. 쓰지 않는 이미지를 먼저 정리하세요(캐시는 이미 비었습니다):
+
+    docker images        # 무엇이 있는지 보고
+    docker image prune   # 떠도는 것부터
+    docker system df
+
+MSG
+    exit 1
+fi
+
+
 FREE_MB=$(df -m "$VOL" 2>/dev/null | awk 'NR==2{print $4}')
 if [ -z "${FREE_MB:-}" ]; then
     echo "⚠ 디스크 여유를 읽지 못했습니다 — 점검을 건너뜁니다." >&2

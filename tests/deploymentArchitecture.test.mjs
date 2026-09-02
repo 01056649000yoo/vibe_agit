@@ -11,12 +11,15 @@ import test from 'node:test';
  */
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
-const [workflow, dockerfile, dockerignore, caddy, localDeploy] = await Promise.all([
+const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist] = await Promise.all([
     readText('.github/workflows/deploy.yml'),
     readText('Dockerfile'),
     readText('.dockerignore'),
     readText('Caddyfile.container'),
-    readText('scripts/deploy-local.sh')
+    readText('scripts/deploy-local.sh'),
+    readText('scripts/preflight-disk.sh'),
+    readText('scripts/trim-docker-cache.sh'),
+    readText('ops/launchd/com.agit.docker-cache-trim.plist')
 ]);
 
 test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
@@ -84,4 +87,26 @@ test('저장소 배포 경로에는 Vercel 호스팅 설정이 없다', async ()
     await assert.rejects(access('vercel.json'), { code: 'ENOENT' });
     assert.doesNotMatch(workflow, /vercel/i);
     assert.doesNotMatch(dockerfile, /vercel/i);
+});
+
+test('배포 관문은 맥 디스크뿐 아니라 도커 안쪽 공간도 본다', () => {
+    // 이 맥의 도커 데이터는 외장 SSD 위 32GB 상한 파일 안에 있다. 맥이 93GB 남아도 도커는 찰 수 있고,
+    // 실제로 하루치 빌드로 57%까지 갔다. 맥 디스크만 보는 관문은 그 위험을 못 본다.
+    assert.match(preflight, /trim-docker-cache\.sh/);
+    assert.match(preflight, /docker exec .* df -P \//);
+    assert.match(preflight, /DOCKER_USE" -ge 90/);
+
+    // 캐시만 지운다 — 이미지·컨테이너·볼륨을 지우면 되돌릴 수 없는 것이 사라진다
+    assert.match(trimCache, /docker builder prune -a -f/);
+    assert.doesNotMatch(trimCache, /docker system prune|image prune|volume prune|-a -f --volumes/);
+
+    // 기준을 넘을 때만 비운다(사용률·캐시 크기 두 갈래)
+    assert.match(trimCache, /MAX_USE_PCT="\$\{1:-\d+\}"/);
+    assert.match(trimCache, /MAX_CACHE_GB="\$\{2:-\d+\}"/);
+    assert.match(trimCache, /기준 안이라 그대로 둡니다/);
+
+    // 배포 밖에서 빌드한 날도 훑는 그물이 있다
+    assert.match(trimPlist, /com\.agit\.docker-cache-trim/);
+    assert.match(trimPlist, /scripts\/trim-docker-cache\.sh/);
+    assert.match(trimPlist, /StartCalendarInterval/);
 });
