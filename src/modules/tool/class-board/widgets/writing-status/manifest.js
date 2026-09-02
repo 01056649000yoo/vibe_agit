@@ -1,3 +1,5 @@
+import { DEFAULT_STATUS_SECTIONS } from './statusSections';
+
 export const writingStatusWidgetManifest = Object.freeze({
   id: 'writing-status',
   name: '글쓰기 현황',
@@ -9,7 +11,7 @@ export const writingStatusWidgetManifest = Object.freeze({
   maxInstances: 1,
   requestBudget: { initial: 1, refreshMs: 20_000, realtime: false },
   defaultPlacement: { zone: 'sidebar', size: 'large' },
-  createDefaultConfig: () => ({ missionId: null }),
+  createDefaultConfig: () => ({ missionId: null, tone: 'navy', sections: [...DEFAULT_STATUS_SECTIONS] }),
   load: () => import('./WritingStatusWidget'),
   loadSettings: () => import('./WritingStatusSettings'),
 });

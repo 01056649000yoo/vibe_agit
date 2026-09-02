@@ -58,10 +58,12 @@ export const classBoardApi = Object.freeze({
     return call('get_teacher_class_board_presentation_v1', { p_board_id: boardId });
   },
 
-  getWritingStatus(classId, missionId = null) {
+  // 20초마다 다시 부르는 자리라 교사가 켠 항목만 서버가 계산하도록 함께 보낸다.
+  getWritingStatus(classId, missionId = null, sections = null) {
     return call('get_teacher_class_board_status_v1', {
       p_class_id: classId,
       p_mission_id: missionId || null,
+      p_sections: Array.isArray(sections) ? sections : null,
     });
   },
 

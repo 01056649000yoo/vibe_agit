@@ -880,3 +880,66 @@ test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지�
   assert.equal(noticeStore.match(/postMessage/g).length, 1);
   assert.doesNotMatch(noticeStore, /setInterval|localStorage/);
 });
+
+const [statusSectionsSource, statusManifest, statusSectionsMigration, statusSectionsSmoke, boardApiSource]
+  = await Promise.all([
+    read('src/modules/tool/class-board/widgets/writing-status/statusSections.js'),
+    read('src/modules/tool/class-board/widgets/writing-status/manifest.js'),
+    read('supabase/migrations/20261225_class_board_status_sections.sql'),
+    read('tests/sql/20261225_class_board_status_sections.smoke.sql'),
+    read('src/modules/tool/class-board/classBoardApi.js'),
+  ]);
+
+test('오늘 현황은 교사가 고른 항목만 서버가 계산하고 배경색도 고른다', async () => {
+  const { STATUS_SECTION_IDS, STATUS_TONE_IDS, DEFAULT_STATUS_SECTIONS, normalizeStatusSections, normalizeStatusTone }
+    = await import('../src/modules/tool/class-board/widgets/writing-status/statusSections.js');
+
+  // 화면·서버·저장 검증이 같은 이름을 써야 하므로 세 곳을 대조한다.
+  for (const id of STATUS_SECTION_IDS) {
+    assert.ok(statusSectionsMigration.includes(`'${id}'`), `${id}: 서버 허용 목록에 없다`);
+  }
+  for (const tone of STATUS_TONE_IDS) {
+    assert.ok(statusSectionsMigration.includes(`'${tone}'`), `${tone}: 서버 배경색 허용 목록에 없다`);
+    assert.ok(styles.includes(`.class-board-status--${tone}`) || tone === 'navy', `${tone}: 스타일이 없다`);
+  }
+  assert.deepEqual([...DEFAULT_STATUS_SECTIONS], ['mission', 'daily']);
+
+  // 저장된 값이 무엇이든 정해진 순서·이름만 남긴다.
+  assert.deepEqual(normalizeStatusSections(['reactions', 'mission', '없는것']), ['mission', 'reactions']);
+  assert.deepEqual(normalizeStatusSections(null), ['mission', 'daily']);
+  assert.deepEqual(normalizeStatusSections([]), []);
+  assert.equal(normalizeStatusTone('무지개'), 'navy');
+  assert.equal(normalizeStatusTone('paper'), 'paper');
+
+  // 20초마다 부르는 자리라 켠 항목을 함께 보내고, 목록이 바뀌면 다시 읽는다.
+  assert.match(boardApiSource, /p_sections: Array\.isArray\(sections\) \? sections : null/);
+  assert.match(statusHook, /const sectionKey = Array\.isArray\(sections\) \? sections\.join\(','\) : 'default'/);
+  assert.match(statusHook, /classBoardApi\.getWritingStatus\(classId, missionId \|\| null, sections\)/);
+  assert.match(statusWidget, /normalizeStatusSections\(config\.sections\)/);
+  assert.match(statusWidget, /class-board-status--\$\{tone\}/);
+  assert.match(statusSettings, /sections: \[\]/);
+  assert.match(statusManifest, /sections: \[\.\.\.DEFAULT_STATUS_SECTIONS\]/);
+
+  // 색은 규칙마다 적지 않고 변수 한 벌만 색깔별로 바꾼다.
+  assert.match(styles, /\.class-board-status \{[\s\S]*--status-bg:/);
+  assert.match(styles, /background:var\(--status-bg\); color:var\(--status-fg\)/);
+
+  // 가장 비싼 과제 스냅샷은 그 항목을 켰을 때만 돌린다.
+  assert.match(statusSectionsMigration, /IF v_selected_mission_id IS NOT NULL AND 'mission' = ANY\(v_sections\) THEN/);
+  assert.match(statusSectionsMigration, /DROP FUNCTION IF EXISTS public\.get_teacher_class_board_status_v1\(UUID, UUID\)/);
+  assert.match(statusSectionsMigration, /p_sections TEXT\[\] DEFAULT NULL/);
+  assert.match(statusSectionsMigration, /WHERE item = ANY\(v_allowed\)/);
+  assert.match(statusSectionsMigration, /LIMIT 100/);
+  assert.match(statusSectionsSmoke, /옛 2인수 오늘 현황 함수가 남아 있습니다/);
+  assert.match(statusSectionsSmoke, /켜지 않은 오늘 현황 항목이 함께 왔습니다/);
+  assert.match(statusSectionsSmoke, /허용하지 않은 오늘 현황 배경색이 저장됐습니다/);
+  assert.match(statusSectionsSmoke, /같은 오늘 현황 항목이 두 번 저장됐습니다/);
+
+  // 새 명단·칭호는 이름만 주고 글 내용이나 포인트는 주지 않는다.
+  assert.doesNotMatch(statusSectionsMigration, /reward_points|point_log_id|post_content|comment\.content|student\.id AS/);
+  assert.match(statusWidget, /오늘 자율 글 쓴 친구/);
+  assert.match(statusWidget, /오늘 새 칭호/);
+  assert.match(statusWidget, /서로 읽어 준 정도/);
+  // 칭호 이름은 학생 화면과 같은 원본을 쓴다.
+  assert.match(statusWidget, /getTitleTrack/);
+});
