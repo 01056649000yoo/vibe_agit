@@ -10,7 +10,8 @@
 | 세션의 최소 활성 정보 | [SESSION_CONTEXT.md](../../SESSION_CONTEXT.md) |
 | 작업 방법과 절대 규칙 | [AGENTS.md](../../AGENTS.md) |
 | 현재 위치와 앞으로 할 일 | [ROADMAP.md](../../ROADMAP.md) |
-| 최근 변경과 변경 이유 | [WORKLOG.md](../../WORKLOG.md) |
+| 최근 변경과 변경 이유 | [WORKLOG.md](../../WORKLOG.md) (지난 달은 [docs/worklog/](../worklog/)) |
+| **되풀이하지 말 것** | [PITFALLS.md](PITFALLS.md) — 작업 시작 전에 훑는다 |
 
 ## 작업별 라우팅
 

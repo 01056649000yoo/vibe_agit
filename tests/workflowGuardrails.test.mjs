@@ -71,3 +71,32 @@ test('"한 곳만 고치고 끝내지 않는다" 가 지침에 남아 있다', a
     assert.match(agents, /한꺼번에 보는/);
     assert.match(agents, /npm run checklist/);
 });
+
+test('작업 로그는 통째로 읽어도 되는 크기로 유지한다', async () => {
+    /*
+     * 2026-09-02: WORKLOG.md 가 18,248줄(2.0MB)까지 자랐다. 통째로 읽으면 한 세션 예산을 통째로 쓴다.
+     * 규칙에는 "상단 몇 항목만 읽어라"라고 적혀 있었지만, 방어가 사람 습관에만 걸려 있으면 언젠가 뚫린다.
+     * 그래서 기계가 막는다 — 넘치면 지난 달치를 docs/worklog/ 로 옮긴다(내용을 지우지 않는다).
+     */
+    const MAX_LINES = 2500;
+    const worklog = await read('WORKLOG.md');
+    const lines = worklog.split('\n').length;
+    assert.ok(
+        lines <= MAX_LINES,
+        `WORKLOG.md 가 ${lines}줄입니다(한도 ${MAX_LINES}줄). 지난 달치를 docs/worklog/YYYY-MM.md 로 옮기고 `
+        + '맨 위 `지난 기록` 표에 줄을 더하세요. 기록을 지우는 것이 아니라 옮기는 것입니다.'
+    );
+
+    // 옮긴 기록으로 가는 길이 파일 안에 남아 있어야 한다
+    assert.match(worklog, /docs\/worklog\//);
+
+    // 되풀이하지 말 것 목록은 짧게 유지한다 — 길어지면 아무도 안 읽는다
+    const pitfalls = await read('docs/wiki/PITFALLS.md');
+    assert.ok(pitfalls.split('\n').length <= 80, 'PITFALLS.md 는 짧게 유지합니다(80줄 이내).');
+    assert.match(pitfalls, /되풀이하지 말 것/);
+
+    // 세션 훅은 최근 작업 제목만 넣는다(본문을 넣으면 매 세션 비용이 된다)
+    const hook = await read('.claude/hooks/session-start-context.sh');
+    assert.match(hook, /startsWith\("## 20"\)/);
+    assert.match(hook, /slice\(0, 5\)/);
+});

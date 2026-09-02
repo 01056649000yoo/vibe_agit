@@ -6,9 +6,13 @@
 
 ## 시작 순서
 
+0. **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** 를 훑는다 — 되풀이하지 말 것 한 장(36줄).
+   사고를 겪거나 잘못 판단했으면 작업 끝에 여기 한 줄을 더한다.
 1. `git log --oneline -20`과 `git branch -a`로 다른 모델의 최근 작업과 미병합 브랜치를 확인한다.
 2. [ROADMAP.md](ROADMAP.md)의 `현재 위치`와 최신 `결정 기록`을 읽고 실제 코드와 대조한다.
 3. [WORKLOG.md](WORKLOG.md)의 최신 항목 몇 개를 읽는다. 이 파일의 요약만으로 작업 완료 여부를 단정하지 않는다.
+   **WORKLOG 를 통째로 읽지 않는다** — 최근치만 두고(2,500줄 한도) 지난 달치는 [docs/worklog/](docs/worklog/) 에 있다.
+   옛일은 `grep -n "찾을 말" docs/worklog/*.md` 로 찾는다. 세션 시작 훅이 최근 5건 제목은 이미 넣어 준다.
 
 ## 절대 규칙 요약
 

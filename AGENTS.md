@@ -9,7 +9,8 @@
 |---|---|
 | **AGENTS.md**(이 파일) | 어떻게 작업할지 — 읽는 순서, 절대 규칙, 운영 함정, 검증 명령 |
 | **[ROADMAP.md](ROADMAP.md)** | 앞으로 할 일만 — 현재 위치, 스테이지별 계획, 결정 기록. 지난 작업 서술은 없다 |
-| **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — "언제 무엇을 왜 했는지"는 전부 여기 |
+| **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — 최근치만 둔다(2,500줄 한도, 검사가 막는다). 지난 달치는 [docs/worklog/](docs/worklog/) |
+| **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** | 되풀이하지 말 것 — 작업 시작 전 3초 훑기 |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | 이 시스템이 왜 이렇게 생겼는지 — 목표 아키텍처, 핵심 설계 불변식, 맥미니 인프라 상식 |
 | **[PERFORMANCE_HARNESS.md](PERFORMANCE_HARNESS.md)** | 성능 설계 원칙·1,000명 합격선·측정 기록표 |
 | **[SECURITY_HARNESS.md](SECURITY_HARNESS.md)** | 보안 설계 원칙·검사 명령 |
@@ -33,6 +34,10 @@
    **단, "다음 할 일" 메모는 실행 전에 실제 코드로 재확인한다.** 다른 모델이 이미 처리했는데 메모만
    안 지워진 경우가 실제로 여러 번 있었다(성능 최적화 항목 4개 연속으로 이미 끝나 있었음).
 3. **`WORKLOG.md`** 상단 몇 항목을 읽는다 — 직전까지 무엇을 왜 했는지, 무엇이 남았는지.
+   **통째로 읽지 않는다**(한 세션 예산을 통째로 쓴다). 지난 달치는 [docs/worklog/](docs/worklog/) 에 있고,
+   옛일은 열어 읽지 말고 `grep -n "찾을 말" docs/worklog/*.md` 로 찾는다.
+4. **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** 를 훑는다 — 되풀이하지 말 것 한 장짜리 목록.
+   사고를 겪거나 잘못 판단했으면 여기 한 줄을 더한다.
 4. 시스템이 어떻게 생겼는지 궁금하면 **`ARCHITECTURE.md`**, 이관/인프라 상세가 필요하면 **`INTEGRATION_PLAN.md`**.
 5. **백업·복구를 건드릴 일이면 [`backup.md`](backup.md)** — 무엇이 언제 어디로 가는지, 복구 절차,
    매월 1일 자동 리허설. 백업 설정을 바꾸면 그 파일도 함께 고친다.
