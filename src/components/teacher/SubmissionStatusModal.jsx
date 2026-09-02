@@ -94,6 +94,12 @@ const SubmissionStatusModal = ({
     };
 
     const [isPhrasePanelOpen, setIsPhrasePanelOpen] = React.useState(false);
+
+    // 일괄 버튼 줄에서 두 번 세지 않도록 여기서 한 번만 판단한다.
+    const phraseRewriteTargets = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
+    const phraseRewriteTargetCount = phraseRewriteTargets.length;
+    const canBulkPhraseRewrite = Boolean(handleBulkPhraseRewrite) && phraseRewriteTargetCount > 0;
+    const hasConfirmedPosts = posts.some(p => p.is_confirmed);
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
     const [reactionPosts, setReactionPosts] = React.useState([]);
@@ -277,7 +283,9 @@ const SubmissionStatusModal = ({
                                             </>
                                         )}
 
-                                        {/* Row 3: AI 피드백 및 승인 취소 버튼들 */}
+                                        {/* Row 3 — 왼쪽은 AI 갈래(버튼 + 기준), 오른쪽은 저장 문장과 승인 취소.
+                                            네 개를 한 줄씩 쌓으면 목록이 화면 밖으로 밀려나므로 두 칸 두 줄로 담는다.
+                                            문장 고르기 판만 아래 전체 폭에 편다 — 48% 칸에서는 문장이 읽히지 않는다. */}
                                         <div style={{ flex: '1 1 48%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <Button
                                                 onClick={handleBulkAIAction}
@@ -298,58 +306,61 @@ const SubmissionStatusModal = ({
                                             <PromptRuleButton kind="feedback" isMobile={isMobile} style={{ width: '100%', justifyContent: 'center' }} />
                                         </div>
 
-                                        {/* 두 번째 갈래 — 저장해 둔 문장으로 보낸다. AI 를 부르지 않아 곧바로 끝난다. */}
-                                        {handleBulkPhraseRewrite && posts.some(p => p.is_submitted && !p.is_confirmed && !p.is_returned) && (
-                                            <div style={{ flex: '1 1 100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                <Button
-                                                    onClick={() => {
-                                                        phraseStore?.ensurePhrasesLoaded?.();
-                                                        setIsPhrasePanelOpen((open) => !open);
-                                                    }}
-                                                    disabled={isGenerating || loadingPosts}
-                                                    style={{
-                                                        width: '100%',
-                                                        backgroundColor: '#E0F2FE',
-                                                        color: '#0369A1',
-                                                        border: '2px solid #BAE6FD',
-                                                        fontWeight: '900',
-                                                        fontSize: 'var(--ui-text-sm)',
-                                                        padding: '12px 8px'
-                                                    }}
-                                                >
-                                                    📌 문장으로 일괄 다시쓰기 ({posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned).length}명)
-                                                </Button>
-                                                {isPhrasePanelOpen && phraseStore && (
-                                                    <FeedbackPhrasePicker
-                                                        phraseStore={phraseStore}
-                                                        applyLabel="이 문장으로 일괄 요청"
-                                                        applyHint="반 전체에 보낼 문장을 고르세요."
-                                                        disabled={isGenerating || loadingPosts}
-                                                        onApply={(message) => {
-                                                            setIsPhrasePanelOpen(false);
-                                                            handleBulkPhraseRewrite(message);
+                                        {(canBulkPhraseRewrite || hasConfirmedPosts) && (
+                                            <div style={{ flex: '1 1 48%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                {canBulkPhraseRewrite && (
+                                                    <Button
+                                                        onClick={() => {
+                                                            phraseStore?.ensurePhrasesLoaded?.();
+                                                            setIsPhrasePanelOpen((open) => !open);
                                                         }}
-                                                    />
+                                                        disabled={isGenerating || loadingPosts}
+                                                        style={{
+                                                            width: '100%',
+                                                            backgroundColor: '#E0F2FE',
+                                                            color: '#0369A1',
+                                                            border: '2px solid #BAE6FD',
+                                                            fontWeight: '900',
+                                                            fontSize: 'var(--ui-text-sm)',
+                                                            padding: '12px 8px'
+                                                        }}
+                                                    >
+                                                        📌 문장으로 일괄 다시쓰기 ({phraseRewriteTargetCount}명)
+                                                    </Button>
+                                                )}
+                                                {hasConfirmedPosts && (
+                                                    <Button
+                                                        onClick={handleBulkRecovery}
+                                                        disabled={isGenerating || loadingPosts}
+                                                        style={{
+                                                            width: '100%',
+                                                            backgroundColor: '#FFEBEE',
+                                                            color: '#C62828',
+                                                            border: '2px solid #FFCDD2',
+                                                            fontWeight: '900',
+                                                            fontSize: 'var(--ui-text-sm)',
+                                                            padding: '12px 8px'
+                                                        }}
+                                                    >
+                                                        ⚠️ 일괄 승인 취소/회수
+                                                    </Button>
                                                 )}
                                             </div>
                                         )}
 
-                                        {posts.some(p => p.is_confirmed) && (
-                                            <Button
-                                                onClick={handleBulkRecovery}
-                                                disabled={isGenerating || loadingPosts}
-                                                style={{
-                                                    flex: '1 1 48%',
-                                                    backgroundColor: '#FFEBEE',
-                                                    color: '#C62828',
-                                                    border: '2px solid #FFCDD2',
-                                                    fontWeight: '900',
-                                                    fontSize: 'var(--ui-text-sm)',
-                                                    padding: '12px 8px'
-                                                }}
-                                            >
-                                                ⚠️ 일괄 승인 취소/회수
-                                            </Button>
+                                        {canBulkPhraseRewrite && isPhrasePanelOpen && phraseStore && (
+                                            <div style={{ flex: '1 1 100%' }}>
+                                                <FeedbackPhrasePicker
+                                                    phraseStore={phraseStore}
+                                                    applyLabel="이 문장으로 일괄 요청"
+                                                    applyHint="반 전체에 보낼 문장을 고르세요."
+                                                    disabled={isGenerating || loadingPosts}
+                                                    onApply={(message) => {
+                                                        setIsPhrasePanelOpen(false);
+                                                        handleBulkPhraseRewrite(message);
+                                                    }}
+                                                />
+                                            </div>
                                         )}
                                     </div>
 
