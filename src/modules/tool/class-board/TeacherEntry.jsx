@@ -412,6 +412,13 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       {error ? <div className="class-board-alert is-error">{error}<button type="button" onClick={() => setError('')}>닫기</button></div> : null}
       {notice ? <div className="class-board-alert is-notice">{notice}<button type="button" onClick={() => setNotice('')}>닫기</button></div> : null}
 
+      <div className="class-board-toolbar">
+        <label className="class-board-title-field">
+          <span>탭 이름</span>
+          <input maxLength={80} disabled={!board || pastingImage} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
+        </label>
+      </div>
+
       <ClassBoardTabs
         boards={boards}
         currentBoard={board}
@@ -430,13 +437,6 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         onReorder={(orderedIds) => void reorderTabs(orderedIds)}
         onSetDefault={(item) => void setDefaultBoard(item)}
       />
-
-      <div className="class-board-toolbar">
-        <label className="class-board-title-field">
-          <span>탭 이름</span>
-          <input maxLength={80} disabled={!board || pastingImage} value={board?.title || ''} onChange={(event) => updateBoard((current) => ({ ...current, title: event.target.value }))} />
-        </label>
-      </div>
 
       {hiddenPanelOpen ? (
         <HiddenClassBoardPanel

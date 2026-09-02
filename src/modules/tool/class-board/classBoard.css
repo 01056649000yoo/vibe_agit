@@ -16,7 +16,7 @@
 .class-board-alert.is-error { border:1px solid #fecaca; background:#fef2f2; color:#991b1b; }
 .class-board-alert.is-notice { border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; }
 .class-board-alert button { border:0; background:transparent; color:inherit; font-weight:900; }
-.class-board-tabs { display:flex; align-items:stretch; gap:8px; margin-top:14px; padding:8px; overflow:hidden; border:1px solid var(--board-border); border-radius:16px; background:#eef2f7; }
+.class-board-tabs { display:flex; align-items:stretch; gap:8px; margin:0 0 14px; padding:8px; overflow:hidden; border:1px solid var(--board-border); border-radius:16px; background:#eef2f7; }
 .class-board-tabs__scroller { display:flex; flex:1 1 auto; gap:6px; min-width:0; overflow-x:auto; scrollbar-width:thin; }
 .class-board-tab-item { display:flex; flex:0 0 auto; max-width:260px; align-items:stretch; border:1px solid transparent; border-radius:11px; background:transparent; color:#64748b; transition:border-color .15s,background .15s,opacity .15s,transform .15s; }
 .class-board-tab-item>button { border:0; background:transparent; color:inherit; font-size:.78rem; font-weight:900; white-space:nowrap; }
@@ -33,7 +33,7 @@
 .class-board-tabs__actions button { flex:0 0 auto; min-width:48px; border:1px solid #cbd7e7; border-radius:10px; padding:8px 10px; background:#fff; color:#526176; font-size:.74rem; font-weight:900; }
 .class-board-tabs__actions button.is-save { border-color:var(--board-blue); background:var(--board-blue); color:#fff; }
 .class-board-tabs__actions button.is-delete { border-color:#fecaca; color:#b91c1c; }
-.class-board-toolbar { display:block; margin:10px 0 14px; padding:13px; border:1px solid var(--board-border); border-radius:17px; background:#fff; }
+.class-board-toolbar { display:block; margin:14px 0 10px; padding:13px; border:1px solid var(--board-border); border-radius:17px; background:#fff; }
 .class-board-toolbar label,.class-board-settings-grid label { display:grid; gap:6px; min-width:0; }
 .class-board-toolbar label>span,.class-board-settings-grid label>span,.class-board-add-widget>span { color:#64748b; font-size:.72rem; font-weight:900; }
 .class-board-toolbar input,.class-board-toolbar select,.class-board-settings-grid input,.class-board-settings-grid textarea,.class-board-settings-grid select { width:100%; min-width:0; border:1px solid #cbd7e7; border-radius:10px; padding:9px 10px; background:#fff; color:#172033; }
