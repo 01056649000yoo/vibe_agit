@@ -225,6 +225,8 @@ test('우리 반 스크린·알림장 도움말은 2026-09-02~03 변경을 그�
     // 급식 이름은 남는 자리에 맞춰 저절로 커지고, 열 수는 교사가 고른다(2026-09-03).
     assert.match(classBoard, /급식 이름은 위젯에 남는 자리에 가득 차도록 저절로 커집니다/);
     assert.match(classBoard, /급식 이름 배열은 .2열.과 .3열. 중에 고릅니다/);
+    assert.match(classBoard, /알레르기 안내는 급식 이름 바로 아래 줄에 붙습니다/);
+    assert.doesNotMatch(classBoard, /열이 적을수록 한 칸이 넓어 글씨가 더 커지므로/);
     assert.doesNotMatch(classBoard, /\*\*글씨는 위젯 크기에 비례해 커지므로\*\*/);
     // 알림장 글씨는 지금까지처럼 위젯 크기에 비례한다(상한이 없다).
     assert.match(classBoard, /알림장 글씨는 지금까지처럼 위젯 크기에 비례합니다/);

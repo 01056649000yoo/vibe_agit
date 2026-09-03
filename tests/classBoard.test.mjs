@@ -297,6 +297,20 @@ test('식단표는 급식 이름을 고른 열 수로 세우고 남은 자리에
   assert.match(mealFitHook, /MIN_DISH_SIZE_PX = 12\.8/);
   assert.doesNotMatch(mealFitHook, /setInterval|window\.addEventListener\('resize'/);
 
+  // 급식 한 가지는 이름 한 줄과 그 아래 알레르기 한 줄로 세운다(전체화면 급식판과 같은 모양).
+  assert.match(styles, /\.class-board-meal__meals article span\s*\{[^}]*flex-direction:column[^}]*text-align:center/);
+  assert.match(styles, /\.class-board-meal__meals article>div\s*\{[^}]*align-items:start/);
+  assert.match(mealWidget, /join\(' · '\)/);
+  // 이름과 알레르기 안내 모두 낱말 가운데서 잘리지 않게 한다.
+  assert.match(styles, /\.class-board-meal__meals b\s*\{[^}]*word-break:keep-all/);
+  assert.match(styles, /\.class-board-meal__meals span small\s*\{[^}]*word-break:keep-all/);
+  // 두 줄이 되면서 알약 배경은 걷어냈다.
+  assert.doesNotMatch(styles, /\.class-board-meal__meals article span\s*\{[^}]*background:#fff/);
+  // 학교가 열량을 주면 급식 종류 줄 오른쪽에 붙인다.
+  assert.match(mealWidget, /meal\.calories \? <em>\{meal\.calories\}<\/em> : null/);
+  assert.match(styles, /\.class-board-meal__meals article>strong\s*\{[^}]*justify-content:space-between/);
+  assert.match(guides, /알레르기 안내는 급식 이름 바로 아래 줄에 붙습니다/);
+
   // 열 수는 CSS 변수 하나로만 바뀌고 급식 이름은 맞춘 크기를 그대로 따라간다.
   assert.match(styles, /\.class-board-meal__meals article>div\s*\{[^}]*grid-template-columns:repeat\(var\(--class-board-meal-columns\),minmax\(0,1fr\)\)[^}]*font-size:var\(--class-board-meal-dish-size\)/);
   assert.match(styles, /\.class-board-meal__meals b\s*\{[^}]*font-size:1em/);

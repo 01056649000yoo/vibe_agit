@@ -67,10 +67,10 @@ export default function MealBoardWidget({ config = {}, classId, dragHandleProps 
         style={{ '--class-board-meal-columns': columns }}
       >
         {current.meals.map((meal, mealIndex) => <article key={`${meal.mealType}-${mealIndex}`}>
-          <strong>{meal.mealType || '급식'}</strong>
+          <strong>{meal.mealType || '급식'}{meal.calories ? <em>{meal.calories}</em> : null}</strong>
           <div>{(meal.dishes || []).slice(0, 10).map((dish, dishIndex) => <span key={`${dish.name}-${dishIndex}`}>
             <b>{dish.name}</b>
-            {showAllergens && dish.allergenCodes?.length ? <small>{dish.allergenCodes.map((code) => allergenMap.get(Number(code)) || code).join('·')}</small> : null}
+            {showAllergens && dish.allergenCodes?.length ? <small>{dish.allergenCodes.map((code) => allergenMap.get(Number(code)) || code).join(' · ')}</small> : null}
           </span>)}</div>
         </article>)}
       </div> : null}
