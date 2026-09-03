@@ -105,3 +105,18 @@ test('반복 보너스는 현행 추가 보너스 기준 뒤부터 구간별로 
     });
     assert.equal(calculateWritingReward(policy, { charCount: 1500 }).total, 160);
 });
+
+test('완료조건·포인트 설정은 넓은 화면에서 묶음을 나란히 편다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile('src/modules/writing/policy/writingPolicy.css', 'utf8');
+
+    /*
+     * 2026-09-03: 묶음이 한 열로만 쌓여 오른쪽이 비고 화면만 길어졌다.
+     * 실측 1,080px 폭에서 801px → 426px로 줄었다. 다시 한 열로 되돌아가지 않게 못 박는다.
+     */
+    assert.match(css, /\.writing-policy-fields \{[^}]*grid-template-columns:repeat\(auto-fit,minmax\(360px,1fr\)\)/);
+    // 묶음마다 칸 수가 둘 또는 셋이라 안쪽도 자리에 맞게 접혀야 한다.
+    assert.match(css, /\.writing-policy-fields__grid \{[^}]*grid-template-columns:repeat\(auto-fit,minmax\(130px,1fr\)\)/);
+    // `문단`·`자마다` 같은 단위가 두 줄로 깨지지 않아야 한다.
+    assert.match(css, /\.writing-policy-field__input strong \{[^}]*white-space:nowrap/);
+});

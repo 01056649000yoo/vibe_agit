@@ -1,27 +1,33 @@
-.writing-policy-fields { display:grid; gap:18px; }
+/*
+ * 설정 묶음은 넓은 화면에서 나란히 편다.
+ * 한 열로 쌓으면 묶음마다 오른쪽이 비고 화면만 길어져, 한눈에 보기 어렵다는 지적을 받았다(2026-09-03).
+ * 묶음 하나가 360px 아래로 눌리면 저절로 한 열로 돌아간다.
+ */
+.writing-policy-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:18px; align-items:start; }
 .writing-policy-fields__group { padding:16px; border:1px solid #E2E8F0; border-radius:16px; background:#F8FAFC; }
-.writing-policy-fields__group h4 { margin:0 0 12px; color:#334155; font-size:.9rem; }
-.writing-policy-fields__grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
-.writing-policy-field { display:flex; flex-direction:column; gap:7px; color:#64748B; font-size:.78rem; font-weight:800; }
+.writing-policy-fields__group h4 { margin:0 0 12px; color:#334155; font-size:var(--ui-text-md); }
+/* 묶음마다 칸 수가 달라(둘 또는 셋) 자리에 맞게 접힌다. */
+.writing-policy-fields__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
+.writing-policy-field { display:flex; flex-direction:column; gap:7px; color:#64748B; font-size:var(--ui-text-sm); font-weight:800; }
 .writing-policy-field__input { display:flex; align-items:center; gap:7px; }
-.writing-policy-field input { min-width:0; width:100%; padding:10px 11px; border:1px solid #CBD5E1; border-radius:10px; background:white; color:#1E293B; box-sizing:border-box; font:inherit; font-size:.95rem; text-align:right; }
-.writing-policy-field__input strong { color:#475569; font-size:.8rem; }
-.writing-policy-switch { display:flex; align-items:center; gap:9px; margin-bottom:12px; color:#475569; font-size:.85rem; font-weight:900; }
+.writing-policy-field input { min-width:0; width:100%; padding:10px 11px; border:1px solid #CBD5E1; border-radius:10px; background:white; color:#1E293B; box-sizing:border-box; font:inherit; font-size:var(--ui-text-md); text-align:right; }
+.writing-policy-field__input strong { color:#475569; font-size:var(--ui-text-sm); white-space:nowrap; }
+.writing-policy-switch { display:flex; align-items:center; gap:9px; margin-bottom:12px; color:#475569; font-size:var(--ui-text-md); font-weight:900; }
 .writing-policy-switch input { width:19px; height:19px; accent-color:#2563EB; }
 .writing-policy-progress { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin:18px 0; }
 .writing-policy-progress > div { display:flex; min-width:0; flex-direction:column; gap:4px; padding:13px 15px; border:1px solid #FED7AA; border-radius:14px; background:#FFF7ED; color:#9A3412; }
 .writing-policy-progress > div.is-complete { border-color:#BBF7D0; background:#F0FDF4; color:#15803D; }
-.writing-policy-progress span { font-size:.72rem; font-weight:800; }
-.writing-policy-progress strong { font-size:.95rem; }
-.writing-policy-progress small { color:#64748B; font-size:.68rem; font-weight:700; }
-.writing-policy-progress > p { grid-column:1 / -1; margin:0; padding:10px 13px; border-radius:12px; background:#FFF7ED; color:#C2410C; font-size:.8rem; font-weight:800; }
+.writing-policy-progress span { font-size:var(--ui-text-xs); font-weight:800; }
+.writing-policy-progress strong { font-size:var(--ui-text-md); }
+.writing-policy-progress small { color:#64748B; font-size:var(--ui-text-xs); font-weight:700; }
+.writing-policy-progress > p { grid-column:1 / -1; margin:0; padding:10px 13px; border-radius:12px; background:#FFF7ED; color:#C2410C; font-size:var(--ui-text-sm); font-weight:800; }
 .writing-policy-progress > p.is-complete { background:#F0FDF4; color:#15803D; }
 .writing-policy-settings { margin:22px 0; padding:20px; border:1px solid #BFDBFE; border-radius:20px; background:#F8FBFF; }
 .writing-policy-settings > header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:16px; }
-.writing-policy-settings > header span { color:#2563EB; font-size:.72rem; font-weight:900; }
-.writing-policy-settings h3 { margin:5px 0; color:#1E293B; font-size:1.05rem; }
-.writing-policy-settings header p { margin:0; color:#64748B; font-size:.82rem; line-height:1.55; }
-.writing-policy-settings__loading, .writing-policy-settings__message { margin:12px 0 0; color:#64748B; font-size:.8rem; font-weight:800; }
+.writing-policy-settings > header span { color:#2563EB; font-size:var(--ui-text-xs); font-weight:900; }
+.writing-policy-settings h3 { margin:5px 0; color:#1E293B; font-size:var(--ui-text-lg); }
+.writing-policy-settings header p { margin:0; color:#64748B; font-size:var(--ui-text-sm); line-height:1.55; }
+.writing-policy-settings__loading, .writing-policy-settings__message { margin:12px 0 0; color:#64748B; font-size:var(--ui-text-sm); font-weight:800; }
 .writing-policy-settings__message { color:#1D4ED8; }
 @media (max-width: 640px) {
     .writing-policy-fields__grid, .writing-policy-progress { grid-template-columns:1fr; }

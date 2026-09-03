@@ -7,6 +7,7 @@ import { useDataExport } from '../../../../hooks/useDataExport';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
+import './teacherReadingLog.css';
 import { READING_LOG_POLICY_DEFAULTS } from '../../policy/writingPolicy';
 import {
     SelfWritingBulkToolbar,
@@ -889,97 +890,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             />
             </>)}
 
-            <style>{`
-                .teacher-reading-manager { width:100%; padding:20px; box-sizing:border-box; border:1px solid #E2E8F0; border-radius:26px; background:white; box-shadow:0 8px 26px rgba(15,23,42,.04); }
-                .teacher-reading-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-                .teacher-reading-kicker { color:#2563EB; font-size:.78rem; font-weight:900; }
-                .teacher-reading-header h2 { margin:4px 0; color:#1E293B; font-size:1.45rem; }
-                .teacher-reading-header p { margin:0; color:#64748B; font-size:.88rem; }
-                .teacher-reading-sections { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin:14px 0 10px; padding:4px; border:1px solid #E2E8F0; border-radius:17px; background:#F1F5F9; }
-                .teacher-reading-sections button { display:flex; min-height:42px; align-items:center; justify-content:center; gap:9px; padding:8px 14px; border:0; border-radius:13px; background:transparent; color:#64748B; font-size:.86rem; font-weight:900; cursor:pointer; }
-                .teacher-reading-sections button span { line-height:1.35; word-break:keep-all; }
-                .teacher-reading-sections button.active { background:white; color:#1D4ED8; box-shadow:0 2px 8px rgba(15,23,42,.1); }
-                .teacher-reading-sections button strong { display:grid; min-width:22px; height:22px; place-items:center; padding:0 5px; border-radius:999px; background:#FEF3C7; color:#B45309; box-sizing:border-box; font-size:.7rem; }
-                .teacher-reading-policy-panel { min-height:360px; }
-                .teacher-reading-policy-panel .writing-policy-settings { margin:0; }
-                .teacher-reading-event-panel { min-height:360px; }
-                .teacher-reading-filters { display:grid; grid-template-columns:minmax(0, 1fr) 220px; gap:8px; padding:8px; border-radius:13px; background:#F8FAFC; }
-                .teacher-reading-filters.is-wide { grid-template-columns:minmax(0, 1fr); }
-                .teacher-reading-filters input, .teacher-reading-filters select { width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:10px; background:white; color:#334155; box-sizing:border-box; }
-                .teacher-reading-list-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:10px 2px 7px; }
-                .teacher-reading-list-heading > div { display:flex; min-width:0; flex-direction:column; gap:3px; }
-                .teacher-reading-list-heading h3 { margin:0; color:#334155; }
-                .teacher-reading-list-heading small { color:#94A3B8; }
-                .teacher-reading-success-notice { margin-bottom:14px; padding:13px 16px; border:1px solid #86EFAC; border-radius:14px; background:#F0FDF4; color:#15803D; font-weight:900; animation:readingReviewDone .28s ease-out; }
-                .teacher-reading-status { justify-self:start; padding:6px 9px; border-radius:9px; background:#F1F5F9; color:#64748B; font-size:.72rem; font-weight:900; }
-                .teacher-reading-status.checked { background:#F0FDF4; color:#15803D; }
-                .teacher-reading-status.commented { background:#F5F3FF; color:#6D28D9; }
-                .teacher-reading-group { border-bottom:1px solid #E2E8F0; }
-                .teacher-reading-grouprow { display:grid; grid-template-columns:22px 150px minmax(0, 1fr) auto; align-items:center; gap:12px; width:100%; padding:16px 12px; border:0; background:white; text-align:left; cursor:pointer; }
-                .teacher-reading-grouprow:hover { background:#F8FAFC; }
-                .teacher-reading-grouprow[aria-expanded="true"] { background:#F8FAFC; }
-                .teacher-reading-caret { color:#94A3B8; font-size:.9rem; }
-                .teacher-reading-grouprow strong { color:#1E293B; }
-                .teacher-reading-groupmeta { display:flex; align-items:center; gap:8px; color:#64748B; font-size:.85rem; font-weight:800; }
-                .teacher-reading-unread { padding:4px 8px; border-radius:8px; background:#FFFBEB; color:#B45309; font-style:normal; font-size:.74rem; font-weight:900; }
-                .teacher-reading-grouprow small { color:#94A3B8; font-size:.78rem; }
-                .teacher-reading-grouploading { padding:18px 12px 18px 46px; color:#94A3B8; font-size:.88rem; }
-                .teacher-reading-sublist { padding-left:34px; border-top:1px solid #E2E8F0; background:#FCFDFE; }
-                .teacher-reading-sublist .teacher-reading-row:last-child { border-bottom:0; }
-                .teacher-reading-sublist .teacher-reading-row { background:transparent; }
-                .teacher-reading-quiet { padding:16px 12px; }
-                .teacher-reading-quiet button { display:flex; align-items:center; gap:8px; padding:0; border:0; background:transparent; color:#64748B; font-size:.85rem; font-weight:800; cursor:pointer; }
-                .teacher-reading-quiet button span { color:#94A3B8; }
-                .teacher-reading-quiet p { margin:10px 0 0 20px; color:#94A3B8; font-size:.85rem; line-height:1.8; }
-                .teacher-reading-more { display:flex; justify-content:center; padding:18px 0 4px; }
-                .teacher-reading-empty { padding:70px 20px; border:2px dashed #CBD5E1; border-radius:18px; color:#94A3B8; text-align:center; }
-                .teacher-reading-empty.error { border-color:#FECACA; color:#B91C1C; background:#FEF2F2; }
-                .teacher-reading-empty.done { border-color:#BBF7D0; background:#F0FDF4; color:#15803D; }
-                .teacher-reading-empty.done strong { display:block; font-size:1.15rem; }
-                .teacher-reading-empty.done p { margin:8px 0 16px; color:#3F8F5F; }
-                .teacher-reading-modal-backdrop { position:fixed; inset:0; z-index:2700; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,.62); }
-                /* 일기 확인 창(공용 Modal, 880px)과 같은 크기로 맞춘다 — 둘은 하는 일이 같으므로 크기도 같아야 한다. */
-                .teacher-reading-modal { width:min(880px, 100%); max-height:86vh; overflow-y:auto; border-radius:26px; background:white; box-shadow:0 30px 90px rgba(15,23,42,.32); }
-                .teacher-reading-modal > header { position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; gap:18px; padding:20px 24px; border-bottom:1px solid #E2E8F0; background:white; }
-                .teacher-reading-modal > header span { color:#64748B; font-size:.84rem; font-weight:800; }
-                .teacher-reading-modal > header h2 { margin:6px 0 0; color:#1E293B; }
-                .teacher-reading-detail-loading { padding:100px 24px; text-align:center; color:#94A3B8; }
-                .teacher-reading-detail-meta { display:flex; justify-content:space-between; gap:12px; padding:16px 24px 0; color:#64748B; font-size:.82rem; font-weight:800; }
-                .teacher-reading-content { min-height:200px; margin:14px 24px 20px; padding:24px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:1rem; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
-                .teacher-reading-review-box { margin:0 24px 24px; padding:20px; border-radius:20px; background:#EFF6FF; }
-                .teacher-reading-review-box.is-reviewed { border:2px solid #86EFAC; background:linear-gradient(145deg,#F0FDF4,#FFFFFF); }
-                .teacher-reading-review-box > div:first-child { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-                .teacher-reading-review-box h3 { margin:0; color:#1E3A8A; }
-                .teacher-reading-review-state { padding:7px 10px; border-radius:999px; background:#FEF3C7; color:#92400E; font-size:.8rem; font-weight:950; }
-                .teacher-reading-review-state.checked { background:#DCFCE7; color:#15803D; }
-                .teacher-reading-review-state.commented { background:#EDE9FE; color:#6D28D9; }
-                .teacher-reading-review-state.revision_requested { background:#FEF3C7; color:#B45309; }
-                @keyframes readingReviewDone { from { opacity:0; transform:translateY(5px) scale(.985); } to { opacity:1; transform:none; } }
-                .teacher-reading-review-box textarea { width:100%; margin-top:14px; padding:14px; border:1px solid #BFDBFE; border-radius:13px; box-sizing:border-box; resize:vertical; color:#334155; font:inherit; line-height:1.6; }
-                .teacher-reading-review-box > small { display:block; margin-top:6px; color:#64748B; text-align:right; }
-                .teacher-reading-review-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
-                @media (max-width: 1100px) {
-                }
-                @media (max-width: 760px) {
-                    .teacher-reading-manager { padding:18px 14px; border-radius:20px; }
-                    .teacher-reading-header { flex-direction:column; }
-                    .teacher-reading-sections { margin:18px 0 16px; }
-                    .teacher-reading-sections button { min-height:48px; padding:9px 8px; font-size:.8rem; }
-                    .teacher-reading-filters, .teacher-reading-filters.is-wide { grid-template-columns:1fr; }
-                    .teacher-reading-list-heading { align-items:flex-start; flex-direction:column; gap:5px; }
-                    .teacher-reading-grouprow { grid-template-columns:20px minmax(0, 1fr) auto; gap:8px; padding:14px 8px; }
-                    .teacher-reading-grouprow small { display:none; }
-                    .teacher-reading-sublist { padding-left:14px; }
-                    .teacher-reading-modal-backdrop { padding:0; }
-                    .teacher-reading-modal { width:100%; height:100%; max-height:none; border-radius:0; }
-                    .teacher-reading-modal > header { padding:18px; }
-                    .teacher-reading-detail-meta { flex-direction:column; padding:16px 18px 0; }
-                    .teacher-reading-content { margin:14px 18px 20px; padding:22px 18px; }
-                    .teacher-reading-review-box { margin:0 18px 24px; padding:18px; }
-                    .teacher-reading-review-actions { flex-direction:column-reverse; }
-                    .teacher-reading-review-actions button { width:100%; }
-                }
-            `}</style>
         </section>
     );
 };

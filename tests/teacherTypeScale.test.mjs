@@ -44,6 +44,11 @@ const MIGRATED = [
     'src/modules/game/dragon/TeacherManager.css',
     'src/modules/game/dragon/TeacherWorkshopPreview.css',
     'src/modules/game/dragon/TeacherStagePreview.css',
+    // 학생 독서록 세 화면 — 확인 / 완료조건·포인트 / 이벤트 (2026-09-03).
+    // 옮기기 전 이벤트 화면은 크기 89곳 중 64곳이 바닥(0.8rem)보다 작았다.
+    'src/modules/writing/reading-log/teacher/teacherReadingLog.css',
+    'src/modules/writing/reading-log/marathon/readingMarathon.css',
+    'src/modules/writing/policy/writingPolicy.css',
     // 학생 화면 — 글 위주부터 옮긴다(2026-08-25). 게임 화면은 좁은 칸이 많아 뒤로 미룬다.
     'src/components/student/PostDetailModal.jsx',
     'src/components/student/MyShelfPostDetail.jsx',
