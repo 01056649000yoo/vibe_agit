@@ -10,6 +10,22 @@ const AI_SCOPE_LABELS = {
     student_spell_check: '맞춤법 검사'
 };
 
+/*
+ * 경보를 두 갈래로 나눈다 (2026-09-03).
+ *
+ * 그전에는 `최근 장애 이력` 한 목록에 **경고와 장애를 섞어** 모두 늘어놓아, 실제로는 별일 없었는데
+ * 문제가 많았던 것처럼 보였다. 실제 기록을 보니 19건 중 다수가 이런 것이었다.
+ *   · 메모리 여유가 65%(6.2GB)나 되는데 뜬 `도커 메모리 압박`(빌드 중 잠깐 생기는 지연)
+ *   · 복구 예행연습 컨테이너가 일을 마치고 내려간 것(원래 뜨고 지는 것이다)
+ *   · 배포로 앱을 새로 띄우는 사이의 11초
+ * 서비스가 실제로 끊긴 것과 "지켜볼 만한 일"은 무게가 다르므로 갈라서 보여 준다.
+ */
+const OUTAGE_KEYS = new Set(['app_down', 'db_down', 'container_down']);
+
+/** 예행연습·일회성 컨테이너는 일을 마치면 내려간다. 꺼졌다고 장애가 아니다. */
+const isPlannedContainer = (alert) => alert.alert_key === 'container_down'
+    && /rehearsal|migrate|oneshot/i.test(alert.detail || '');
+
 const ALERT_LABELS = {
     app_down: '앱이 응답하지 않음',
     disk_low: '디스크 여유 부족',
@@ -99,6 +115,9 @@ const AdminServicePanel = () => {
     const commentQueue = data?.comment_ai_queue || {};
     const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
     const openAlerts = alerts.filter((a) => a.status === 'open');
+    const resolved = alerts.filter((a) => a.status !== 'open' && !isPlannedContainer(a));
+    const resolvedOutages = resolved.filter((a) => OUTAGE_KEYS.has(a.alert_key));
+    const resolvedWatches = resolved.filter((a) => !OUTAGE_KEYS.has(a.alert_key));
     const dockerMemoryAlertOpen = openAlerts.some((alert) => alert.alert_key === 'docker_memory_pressure');
     const hostMemoryAlertOpen = openAlerts.some((alert) => alert.alert_key === 'host_memory_pressure');
 
@@ -207,7 +226,26 @@ const AdminServicePanel = () => {
 
             {alerts.length > 0 && (
                 <div>
-                    <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: '#2D3748' }}>최근 장애 이력</h3>
+                    <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: '#2D3748' }}>최근 경보 기록</h3>
+                    <div style={{
+                        display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px',
+                        fontSize: '0.85rem', color: '#4A5568'
+                    }}>
+                        <span style={{
+                            padding: '5px 11px', borderRadius: '999px', fontWeight: 800,
+                            background: openAlerts.length > 0 ? '#FFF5F5' : '#F0FFF4',
+                            color: openAlerts.length > 0 ? '#C53030' : '#276749'
+                        }}>
+                            {openAlerts.length > 0 ? `진행 중 ${openAlerts.length}건` : '진행 중인 문제 없음'}
+                        </span>
+                        <span style={{ padding: '5px 11px', borderRadius: '999px', background: '#F7FAFC' }}>
+                            지난 기록 · 서비스 끊김 {resolvedOutages.length}건 · 지켜본 일 {resolvedWatches.length}건
+                        </span>
+                    </div>
+                    <details>
+                        <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#4A5568', marginBottom: '8px' }}>
+                            지난 기록 펼쳐 보기
+                        </summary>
                     <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF', overflow: 'hidden' }}>
                         {alerts.map((alert, index) => (
                             <div
@@ -230,6 +268,7 @@ const AdminServicePanel = () => {
                             </div>
                         ))}
                     </div>
+                    </details>
                 </div>
             )}
         </div>

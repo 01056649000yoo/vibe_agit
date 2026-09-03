@@ -9,7 +9,7 @@ import {
 } from '../src/constants/serviceFindingNotes.js';
 
 const read = (file) => readFile(file, 'utf8');
-const [migration, ignoreMigration, dashboard, panel, hook, scanner, plist, catalog] = await Promise.all([
+const [migration, ignoreMigration, dashboard, panel, hook, scanner, plist, catalog, servicePanel, health] = await Promise.all([
     read('supabase/migrations/20261198_service_management_dashboard.sql'),
     read('supabase/migrations/20261228_service_scan_ignored_packages.sql'),
     read('src/components/admin/AdminDashboard.jsx'),
@@ -17,7 +17,9 @@ const [migration, ignoreMigration, dashboard, panel, hook, scanner, plist, catal
     read('src/components/admin/useAdminServiceManagement.js'),
     read('scripts/scan-service-images.mjs'),
     read('ops/launchd/com.agit.service-vulnerability-scan.plist'),
-    read('ops/service-management/services.json')
+    read('ops/service-management/services.json'),
+    read('src/components/admin/AdminServicePanel.jsx'),
+    read('scripts/check-service-health.sh')
 ]);
 
 test('서비스 관리 원장은 직접 공개하지 않고 관리자·호스트 RPC 경계를 나눈다', () => {
@@ -151,4 +153,27 @@ test('해당 없음 판단은 근거와 기한을 함께 적고, 기한이 지�
     assert.match(scanner, /유효기간이 지난 '해당 없음' 판단/);
     assert.match(panel, /getActiveFindingNotes\(\)/);
     assert.match(panel, /다시 확인 필요/);
+});
+
+test('경보는 실제로 끊긴 것과 지켜볼 일을 갈라서 보여 준다', () => {
+    /*
+     * 2026-09-03: `최근 장애 이력` 한 목록에 경고·계획된 재시작·실제 장애를 모두 늘어놓아
+     * 별일 없었는데 문제가 많았던 것처럼 보였다. 기록 19건 중 다수가 이런 것이었다 —
+     * 여유 65%(6.2GB)인데 뜬 메모리 경고, 예행연습 컨테이너가 일을 마치고 내려간 것, 배포 중 11초.
+     */
+    assert.match(servicePanel, /const OUTAGE_KEYS = new Set\(\['app_down', 'db_down', 'container_down'\]\)/);
+    assert.match(servicePanel, /const isPlannedContainer =/, '예행연습 컨테이너를 장애로 세고 있다');
+    assert.match(servicePanel, /최근 경보 기록/, '제목이 아직 모든 것을 장애라고 부른다');
+    assert.match(servicePanel, /서비스 끊김 \{resolvedOutages\.length\}건 · 지켜본 일 \{resolvedWatches\.length\}건/);
+    assert.match(servicePanel, /<details>/, '지난 기록이 접히지 않고 늘 펼쳐져 있다');
+
+    /*
+     * 경보 자체도 줄였다. 메모리 지연(PSI)은 도커 빌드 중에도 잠깐 넘는다 —
+     * 여유가 실제로 빠듯할 때만 알린다. 스왑 조건들이 쓰던 것과 같은 기준이다.
+     */
+    assert.match(
+        health,
+        /if \[ "\$MEM_PCT" -lt "\$VM_MEM_WATCH_PCT" \][\s\S]{0,160}decimal_ge "\$VM_PSI_SOME_AVG60"/,
+        'PSI 만으로 메모리 경고가 다시 뜬다'
+    );
 });

@@ -246,8 +246,15 @@ if [ -n "${MEM_TOTAL:-}" ] && [ "${MEM_TOTAL:-0}" -gt 0 ] 2>/dev/null; then
     if [ "$MEM_PCT" -lt "$VM_MEM_CRITICAL_PCT" ]; then
         DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "메모리 여유 ${VM_MEM_CRITICAL_PCT}% 미만")"
     fi
-    if decimal_ge "$VM_PSI_SOME_AVG60" "$VM_PSI_SOME_ALERT_PCT" \
-       || decimal_ge "$VM_PSI_FULL_AVG60" "$VM_PSI_FULL_ALERT_PCT"; then
+    # 메모리 지연(PSI)만으로는 알리지 않는다 — 여유가 실제로 빠듯할 때만 본다 (2026-09-03).
+    #
+    # 그전에는 PSI 만 넘으면 알려서, **여유가 65%(6.2GB) 인데도 "메모리 지연 발생"** 이 떴다.
+    # 도커 이미지를 빌드하거나 큰 파일을 읽으면 PSI 는 잠깐 1% 를 넘는다 — 정상적인 일이다.
+    # 그렇게 뜬 경고가 `최근 장애 이력` 을 채워 실제 장애가 묻혔다(9월 2일 하루에만 2건).
+    # 아래 스왑 조건들이 이미 `여유 ${VM_MEM_WATCH_PCT}% 미만` 을 함께 보는 것과 같은 규칙으로 맞춘다.
+    if [ "$MEM_PCT" -lt "$VM_MEM_WATCH_PCT" ] \
+       && { decimal_ge "$VM_PSI_SOME_AVG60" "$VM_PSI_SOME_ALERT_PCT" \
+            || decimal_ge "$VM_PSI_FULL_AVG60" "$VM_PSI_FULL_ALERT_PCT"; }; then
         DOCKER_MEMORY_REASON="$(append_reason "$DOCKER_MEMORY_REASON" "메모리 지연 발생")"
     fi
     if [ "$SWAP_PCT" -ge "$VM_SWAP_NEAR_FULL_PCT" ] && [ "$MEM_PCT" -lt "$VM_MEM_WATCH_PCT" ]; then
