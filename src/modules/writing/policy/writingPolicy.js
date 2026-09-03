@@ -137,8 +137,13 @@ export const calculateWritingReward = (sourcePolicy, metrics) => {
     };
 };
 
+/*
+ * 이미 제출한 글은 제출 순간에 찍은 값을 먼저 쓴다(`awarded_*`).
+ * 최소 글자 수까지 포함하는 이유는 반복 보너스 구간이 여기서 시작하기 때문이다 —
+ * 이것만 현재 설정을 따라가면 교사가 최소 글자 수를 바꿀 때 이미 낸 글의 반복 횟수가 흔들린다.
+ */
 export const writingPolicyFromMission = (mission = {}, post = null) => normalizeWritingPolicy({
-    min_chars: mission.min_chars,
+    min_chars: post?.awarded_min_chars ?? mission.min_chars,
     min_paragraphs: mission.min_paragraphs,
     base_reward: post?.awarded_base_reward ?? mission.base_reward,
     bonus_enabled: (post?.awarded_bonus_threshold ?? mission.bonus_threshold ?? 0) > 0

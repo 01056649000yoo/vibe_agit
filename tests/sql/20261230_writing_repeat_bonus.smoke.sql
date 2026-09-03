@@ -21,11 +21,25 @@ BEGIN
     IF (
         SELECT COUNT(*) FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'student_posts'
-          AND column_name IN ('awarded_repeat_bonus_enabled', 'awarded_repeat_bonus_threshold',
-                              'awarded_repeat_bonus_reward', 'awarded_repeat_bonus_max_count')
-    ) <> 4 THEN
-        RAISE EXCEPTION '제출 스냅샷 네 열이 모두 있지 않습니다.';
+          AND column_name IN ('awarded_min_chars', 'awarded_repeat_bonus_enabled',
+                              'awarded_repeat_bonus_threshold', 'awarded_repeat_bonus_reward',
+                              'awarded_repeat_bonus_max_count')
+    ) <> 5 THEN
+        RAISE EXCEPTION '제출 스냅샷 다섯 열이 모두 있지 않습니다.';
     END IF;
+
+    -- 최소 글자 수도 스냅샷을 우선해야 반복 구간 시작점이 제출 뒤에 흔들리지 않는다.
+    FOR v_definition IN
+        SELECT pg_get_functiondef(p.oid)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public'
+          AND p.proname IN ('approve_assignment_post', 'award_self_writing_review_points_v1',
+                            'emit_assignment_status_notification_v1')
+    LOOP
+        IF v_definition NOT LIKE '%awarded_min_chars%' THEN
+            RAISE EXCEPTION '지급 경로 하나가 최소 글자 수 스냅샷을 쓰지 않습니다.';
+        END IF;
+    END LOOP;
 
     -- 지급 계산 함수는 브라우저 역할에 열지 않는다.
     IF has_function_privilege('anon',
@@ -154,7 +168,8 @@ BEGIN
     END IF;
 
     SELECT public.calculate_writing_reward_total_v1(
-        COALESCE(post.awarded_base_reward, mission.base_reward, 0), mission.min_chars, post.char_count,
+        COALESCE(post.awarded_base_reward, mission.base_reward, 0),
+        COALESCE(post.awarded_min_chars, mission.min_chars, 0), post.char_count,
         COALESCE(post.awarded_bonus_threshold, mission.bonus_threshold, 0),
         COALESCE(post.awarded_bonus_reward, mission.bonus_reward, 0),
         COALESCE(post.awarded_repeat_bonus_enabled, mission.repeat_bonus_enabled, FALSE),
@@ -166,14 +181,15 @@ BEGIN
     JOIN public.writing_missions mission ON mission.id = post.mission_id
     WHERE post.id = v_post.id;
 
-    -- 교사가 제출 뒤에 반복 보너스를 크게 켠다.
+    -- 교사가 제출 뒤에 반복 보너스를 크게 켜고 최소 글자 수까지 낮춰 본다.
     UPDATE public.writing_missions
     SET repeat_bonus_enabled = TRUE, repeat_bonus_threshold = 1,
-        repeat_bonus_reward = 1000, repeat_bonus_max_count = 20
+        repeat_bonus_reward = 1000, repeat_bonus_max_count = 20, min_chars = 0
     WHERE id = v_post.mission_id;
 
     SELECT public.calculate_writing_reward_total_v1(
-        COALESCE(post.awarded_base_reward, mission.base_reward, 0), mission.min_chars, post.char_count,
+        COALESCE(post.awarded_base_reward, mission.base_reward, 0),
+        COALESCE(post.awarded_min_chars, mission.min_chars, 0), post.char_count,
         COALESCE(post.awarded_bonus_threshold, mission.bonus_threshold, 0),
         COALESCE(post.awarded_bonus_reward, mission.bonus_reward, 0),
         COALESCE(post.awarded_repeat_bonus_enabled, mission.repeat_bonus_enabled, FALSE),

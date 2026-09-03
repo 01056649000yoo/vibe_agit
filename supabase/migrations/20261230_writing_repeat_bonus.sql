@@ -22,6 +22,7 @@ ALTER TABLE public.class_writing_policies
         CHECK (repeat_bonus_max_count BETWEEN 0 AND 20);
 
 ALTER TABLE public.student_posts
+    ADD COLUMN IF NOT EXISTS awarded_min_chars INTEGER,
     ADD COLUMN IF NOT EXISTS awarded_repeat_bonus_enabled BOOLEAN,
     ADD COLUMN IF NOT EXISTS awarded_repeat_bonus_threshold INTEGER,
     ADD COLUMN IF NOT EXISTS awarded_repeat_bonus_reward INTEGER,
@@ -91,6 +92,7 @@ DECLARE
     v_threshold INTEGER := 0;
     v_reward INTEGER := 0;
     v_max_count INTEGER := 0;
+    v_min_chars INTEGER := 0;
 BEGIN
     IF NEW.is_submitted IS NOT TRUE
       OR (TG_OP = 'UPDATE' AND OLD.is_submitted IS TRUE) THEN
@@ -99,19 +101,22 @@ BEGIN
 
     IF NEW.writing_context = 'assignment' AND NEW.mission_id IS NOT NULL THEN
         SELECT mission.repeat_bonus_enabled, mission.repeat_bonus_threshold,
-               mission.repeat_bonus_reward, mission.repeat_bonus_max_count
-        INTO v_enabled, v_threshold, v_reward, v_max_count
+               mission.repeat_bonus_reward, mission.repeat_bonus_max_count, mission.min_chars
+        INTO v_enabled, v_threshold, v_reward, v_max_count, v_min_chars
         FROM public.writing_missions mission
         WHERE mission.id = NEW.mission_id AND mission.class_id = NEW.class_id;
     ELSIF NEW.writing_context = 'self' AND NEW.self_writing_type IN ('reading_log', 'diary') THEN
         SELECT policy.repeat_bonus_enabled, policy.repeat_bonus_threshold,
-               policy.repeat_bonus_reward, policy.repeat_bonus_max_count
-        INTO v_enabled, v_threshold, v_reward, v_max_count
+               policy.repeat_bonus_reward, policy.repeat_bonus_max_count, policy.min_chars
+        INTO v_enabled, v_threshold, v_reward, v_max_count, v_min_chars
         FROM public.class_writing_policies policy
         WHERE policy.class_id = NEW.class_id
           AND policy.writing_type = NEW.self_writing_type;
     END IF;
 
+    -- 최소 글자 수도 함께 찍는다. 반복 구간 시작점이 여기에 걸려 있어, 이것만 살아 있으면
+    -- 제출 뒤 교사가 최소 글자 수를 바꿀 때 이미 낸 글의 반복 횟수가 흔들린다.
+    NEW.awarded_min_chars := GREATEST(0, COALESCE(v_min_chars, 0));
     NEW.awarded_repeat_bonus_enabled := COALESCE(v_enabled, FALSE);
     NEW.awarded_repeat_bonus_threshold := CASE WHEN COALESCE(v_enabled, FALSE)
         THEN GREATEST(0, COALESCE(v_threshold, 0)) ELSE 0 END;
@@ -141,6 +146,7 @@ BEGIN
         NEW.awarded_base_reward := NULL;
         NEW.awarded_bonus_reward := NULL;
         NEW.awarded_bonus_threshold := NULL;
+        NEW.awarded_min_chars := NULL;
         NEW.awarded_repeat_bonus_enabled := NULL;
         NEW.awarded_repeat_bonus_threshold := NULL;
         NEW.awarded_repeat_bonus_reward := NULL;
@@ -154,6 +160,7 @@ BEGIN
         NEW.awarded_base_reward := OLD.awarded_base_reward;
         NEW.awarded_bonus_reward := OLD.awarded_bonus_reward;
         NEW.awarded_bonus_threshold := OLD.awarded_bonus_threshold;
+        NEW.awarded_min_chars := OLD.awarded_min_chars;
         NEW.awarded_repeat_bonus_enabled := OLD.awarded_repeat_bonus_enabled;
         NEW.awarded_repeat_bonus_threshold := OLD.awarded_repeat_bonus_threshold;
         NEW.awarded_repeat_bonus_reward := OLD.awarded_repeat_bonus_reward;
@@ -227,7 +234,7 @@ BEGIN
 
     v_amount := public.calculate_writing_reward_total_v1(
         COALESCE(v_post.awarded_base_reward, v_mission.base_reward, 0),
-        v_mission.min_chars,
+        COALESCE(v_post.awarded_min_chars, v_mission.min_chars, 0),
         v_post.char_count,
         COALESCE(v_post.awarded_bonus_threshold, v_mission.bonus_threshold, 0),
         COALESCE(v_post.awarded_bonus_reward, v_mission.bonus_reward, 0),
@@ -304,6 +311,7 @@ BEGIN
            COALESCE(post.awarded_base_reward, 0) AS base_reward,
            COALESCE(post.awarded_bonus_threshold, 0) AS bonus_threshold,
            COALESCE(post.awarded_bonus_reward, 0) AS bonus_reward,
+           post.awarded_min_chars,
            COALESCE(post.awarded_repeat_bonus_enabled, FALSE) AS repeat_bonus_enabled,
            COALESCE(post.awarded_repeat_bonus_threshold, 0) AS repeat_bonus_threshold,
            COALESCE(post.awarded_repeat_bonus_reward, 0) AS repeat_bonus_reward,
@@ -386,7 +394,7 @@ BEGIN
         v_status := 'daily_limit';
     ELSE
         v_points := public.calculate_writing_reward_total_v1(
-            v_post.base_reward, v_min_chars, v_post.char_count,
+            v_post.base_reward, COALESCE(v_post.awarded_min_chars, v_min_chars, 0), v_post.char_count,
             v_post.bonus_threshold, v_post.bonus_reward,
             v_post.repeat_bonus_enabled, v_post.repeat_bonus_threshold,
             v_post.repeat_bonus_reward, v_post.repeat_bonus_max_count
@@ -482,7 +490,7 @@ BEGIN
     IF NEW.is_confirmed IS TRUE AND OLD.is_confirmed IS DISTINCT FROM TRUE THEN
         v_points := public.calculate_writing_reward_total_v1(
             COALESCE(NEW.awarded_base_reward, v_mission.base_reward, 0),
-            v_mission.min_chars, NEW.char_count,
+            COALESCE(NEW.awarded_min_chars, v_mission.min_chars, 0), NEW.char_count,
             COALESCE(NEW.awarded_bonus_threshold, v_mission.bonus_threshold, 0),
             COALESCE(NEW.awarded_bonus_reward, v_mission.bonus_reward, 0),
             COALESCE(NEW.awarded_repeat_bonus_enabled, v_mission.repeat_bonus_enabled, FALSE),
