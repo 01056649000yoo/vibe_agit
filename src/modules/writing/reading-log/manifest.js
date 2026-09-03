@@ -22,6 +22,21 @@ const readingLogNotifications = Object.freeze([
         actionLabel: '내 독서록 확인하기'
     },
     {
+        /*
+         * 2026-09-03: 완주하면 메달이 조용히 쌓이기만 해 아이가 모르고 지나갔다.
+         * 다른 성취와 같은 원장에 넣어 🔔 와 학생 홈에 함께 뜨게 한다.
+         */
+        eventType: 'reading-log.marathon_completed',
+        icon: '🏅',
+        tone: 'positive',
+        title: '독서마라톤을 완주했어요!',
+        message: (payload) => (payload.medal_kind === 'team'
+            ? `${payload.team_name ? `‘${payload.team_name}’와 함께 ` : '친구들과 함께 '}‘${payload.campaign_title || '독서마라톤'}’을 완주했어요. 메달을 확인해 보세요!`
+            : `‘${payload.campaign_title || '독서마라톤'}’ 목표 거리를 다 달렸어요. 메달을 확인해 보세요!`),
+        action: 'confirm',
+        actionLabel: '메달 보러 가기'
+    },
+    {
         eventType: 'reading-log.revision_requested',
         icon: '✏️',
         tone: 'rewrite',

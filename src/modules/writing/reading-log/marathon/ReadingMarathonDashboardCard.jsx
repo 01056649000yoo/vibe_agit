@@ -1,16 +1,41 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
+import { readLocalStorageJson, writeLocalStorageJson } from '../../../../lib/browserStorage';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import {
     formatMarathonDistance,
     getCompetitionLabel,
     getMedalRequirementLabel,
     getProgressPercent,
+    isMarathonCompletedForStudent,
     normalizeMarathonSnapshot
 } from './readingMarathon';
 import './readingMarathon.css';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
+
+/*
+ * 완주 축하 창을 **한 번만** 띄우기 위한 자리(2026-09-03).
+ *
+ * 알림(🔔)은 서버가 남기지만, 완주한 뒤 처음 화면에 들어왔을 때 한 번은 크게 축하해 주고 싶다.
+ * 매번 뜨면 성가시므로 이 기기에 본 기록을 남긴다. 기기마다 한 번씩 뜨는 것은 괜찮다 —
+ * 기록이 없어도(다른 기기·사생활 보호 창) 축하를 한 번 더 볼 뿐 잘못되는 것이 없다.
+ * 학생 식별 정보는 넣지 않고 캠페인 id 만 쓴다.
+ */
+const CELEBRATION_STORAGE_KEY = 'agit.marathon.celebrated';
+
+const hasCelebrated = (campaignId) => {
+    const seen = readLocalStorageJson(CELEBRATION_STORAGE_KEY, []);
+    return Array.isArray(seen) && seen.includes(campaignId);
+};
+
+const rememberCelebrated = (campaignId) => {
+    const seen = readLocalStorageJson(CELEBRATION_STORAGE_KEY, []);
+    const next = Array.isArray(seen) ? seen : [];
+    if (next.includes(campaignId)) return;
+    // 지난 마라톤까지 쌓이지 않게 최근 다섯 개만 들고 있는다.
+    writeLocalStorageJson(CELEBRATION_STORAGE_KEY, [...next, campaignId].slice(-5));
+};
 
 const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
@@ -19,7 +44,23 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
     const [detailsLoading, setDetailsLoading] = useState(false);
     const [failed, setFailed] = useState(false);
     const [expanded, setExpanded] = useState(false);
+    const [celebrating, setCelebrating] = useState(false);
     const loadedCampaignIdRef = useRef(initialSnapshot?.leaderboard ? initialSnapshot?.campaign?.id : null);
+
+    /*
+     * 완주한 뒤 **처음 들어왔을 때 한 번만** 크게 축하한다(2026-09-03).
+     *
+     * 자료가 도착한 그 자리에서 판정한다 — 렌더 중에 판정하면 저장소를 읽는 부수효과가 렌더에 섞이고,
+     * effect 본문에서 상태를 바꾸면 렌더가 한 번 더 돈다. 알림(🔔)은 서버가 따로 남기므로
+     * 이 창을 놓쳐도 완주 사실은 알림에 남아 있다.
+     */
+    const celebrateIfFirstTime = useCallback((next) => {
+        const campaignId = next?.campaign?.id;
+        if (!campaignId || !next?.campaign?.is_enabled) return;
+        if (!isMarathonCompletedForStudent(next) || hasCelebrated(campaignId)) return;
+        rememberCelebrated(campaignId);
+        setCelebrating(true);
+    }, []);
 
     useEffect(() => {
         if (!classId || initialSnapshot) return undefined;
@@ -32,13 +73,15 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
                 setFailed(true);
                 return;
             }
-            setSnapshot(normalizeMarathonSnapshot(data));
+            const next = normalizeMarathonSnapshot(data);
+            setSnapshot(next);
             setFullLoaded(true);
             loadedCampaignIdRef.current = data?.campaign?.id || null;
+            celebrateIfFirstTime(next);
         };
         load();
         return () => { active = false; };
-    }, [classId, initialSnapshot]);
+    }, [classId, initialSnapshot, celebrateIfFirstTime]);
 
     useEffect(() => {
         if (!initialSnapshot) return;
@@ -56,9 +99,10 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
                 : compact);
             setFullLoaded(loadedCampaignIdRef.current === compact.campaign?.id || Boolean(initialSnapshot.leaderboard));
             setFailed(false);
+            celebrateIfFirstTime(compact);
         }, 0);
         return () => window.clearTimeout(timerId);
-    }, [initialSnapshot]);
+    }, [initialSnapshot, celebrateIfFirstTime]);
 
     useEffect(() => {
         if (!expanded || fullLoaded || !classId) return undefined;
@@ -70,7 +114,9 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
             if (error) {
                 console.error('독서마라톤 상세 로드 실패:', error.message);
             } else {
-                setSnapshot(normalizeMarathonSnapshot(data));
+                const next = normalizeMarathonSnapshot(data);
+                setSnapshot(next);
+                celebrateIfFirstTime(next);
                 setFullLoaded(true);
                 loadedCampaignIdRef.current = data?.campaign?.id || null;
             }
@@ -78,7 +124,7 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
         };
         void loadDetails();
         return () => { active = false; };
-    }, [classId, expanded, fullLoaded]);
+    }, [classId, expanded, fullLoaded, celebrateIfFirstTime]);
 
     if (failed || !snapshot?.campaign?.is_enabled) return null;
 
@@ -103,13 +149,31 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
         contributors: myTeam.member_count,
         progressPercent: getProgressPercent(myTeam.total_distance_m, snapshot.campaign.target_distance_m)
     } : snapshot.summary;
-    const completed = isIndividual
-        ? Boolean(my?.completed_at)
-        : isGroup ? Boolean(myTeam?.completed_at) : snapshot.campaign.status === 'completed';
+    const completed = isMarathonCompletedForStudent(snapshot);
     const detailsId = `reading-marathon-details-${snapshot.campaign.id}`;
 
     return (
-        <section className={`reading-marathon-card ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-labelledby="reading-marathon-dashboard-title">
+        <section className={`reading-marathon-card ${expanded ? 'is-expanded' : 'is-collapsed'}${celebrating ? ' is-celebrating' : ''}`} aria-labelledby="reading-marathon-dashboard-title">
+            {celebrating && (
+                <div className="reading-marathon-celebrate" role="dialog" aria-modal="true" aria-labelledby="reading-marathon-celebrate-title">
+                    <div className="reading-marathon-celebrate__card">
+                        <div className="reading-marathon-celebrate__confetti" aria-hidden="true">
+                            {['🎉', '🏅', '✨', '🎊', '📚', '🥳', '⭐', '🎈'].map((mark, index) => (
+                                <span key={mark} style={{ '--i': index }}>{mark}</span>
+                            ))}
+                        </div>
+                        <strong id="reading-marathon-celebrate-title">🏅 완주했어요!</strong>
+                        <p>
+                            {isGroup && myTeam?.name ? `‘${myTeam.name}’와 함께 ` : ''}
+                            ‘{snapshot.campaign.title}’ 목표를 다 달렸어요.
+                        </p>
+                        <p className="reading-marathon-celebrate__record">
+                            {formatMarathonDistance(raceSummary.totalDistanceM)} · 책 {raceSummary.bookCount || 0}권
+                        </p>
+                        <button type="button" onClick={() => setCelebrating(false)}>메달 보러 가기</button>
+                    </div>
+                </div>
+            )}
             <button
                 type="button"
                 className="reading-marathon-card__header"

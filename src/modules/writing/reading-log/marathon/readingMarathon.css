@@ -7,7 +7,13 @@
     box-shadow: 0 12px 30px rgba(154, 52, 18, .08);
 }
 
-.reading-marathon-card { margin: 20px 0; padding: 0; overflow: hidden; }
+/* 완주 축하 창이 이 카드 위에만 덮이도록 기준을 잡는다(2026-09-03). */
+.reading-marathon-card { position: relative; margin: 20px 0; padding: 0; overflow: hidden; }
+/*
+ * 축하 창이 떠 있는 동안에는 카드를 자르지 않는다.
+ * 접힌 카드는 높이가 낮아 축하 창의 버튼이 잘려 나갔다(2026-09-03 실험실에서 확인).
+ */
+.reading-marathon-card.is-celebrating { overflow: visible; min-height: 320px; }
 /* 바깥 상자 · 구획 · 안쪽 카드가 겹쳐 여백이 세 번 쌓인다. 각 단계를 조금씩 줄인다. */
 .reading-marathon-settings { padding: clamp(16px, 2vw, 22px); }
 
@@ -114,6 +120,20 @@
 .reading-marathon-course.is-complete .reading-marathon-course__runner circle { stroke: #facc15; animation: marathonPulse 1.2s ease-in-out infinite; }
 
 @keyframes marathonPulse { 50% { r: 25px; } }
+
+/*
+ * 완주하면 결승선도 함께 반짝인다 (2026-09-03).
+ * 그전에는 달리는 사람 동그라미만 깜빡여, 다 왔다는 느낌이 약했다.
+ */
+.reading-marathon-course.is-complete .reading-marathon-course__landmarks text:last-child {
+    animation: marathonFinishGlow 1.6s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+@keyframes marathonFinishGlow {
+    0%, 100% { transform: scale(1); filter: none; }
+    50% { transform: scale(1.22); filter: drop-shadow(0 0 6px #facc15); }
+}
 
 .reading-marathon-course__caption { display: flex; justify-content: space-between; gap: 10px; padding: 0 16px 10px; color: #475569; font-size: var(--ui-text-sm); font-weight: 800; }
 .reading-marathon-course__caption strong { color: #c2410c; font-size: var(--ui-text-md); }
@@ -646,4 +666,70 @@
 .reading-marathon-status-modal__note { margin: 0; color: #a8a29e; font-size: var(--ui-text-xs); font-weight: 800; }
 @media (max-width: 640px) {
     .reading-marathon-status-modal__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/*
+ * 완주 축하 창 (2026-09-03).
+ *
+ * 카드 위에만 덮는다 — 화면 전체를 가리면 다른 활동을 하려던 아이의 길을 막는다.
+ * 이모지는 CSS 로만 흩뿌리고 자료를 만들지 않는다.
+ */
+.reading-marathon-celebrate {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    background: rgba(255, 247, 237, .92);
+    border-radius: inherit;
+}
+.reading-marathon-celebrate__card {
+    position: relative;
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+    max-width: 420px;
+    padding: 20px 24px;
+    border: 2px solid #fdba74;
+    border-radius: var(--ui-radius-xl);
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(194, 65, 12, .18);
+    text-align: center;
+}
+.reading-marathon-celebrate__card strong { font-size: var(--ui-text-2xl); color: #c2410c; }
+.reading-marathon-celebrate__card p { margin: 0; color: var(--ui-ink-strong); line-height: 1.6; }
+.reading-marathon-celebrate__record { font-weight: 800; color: #b45309; }
+.reading-marathon-celebrate__card button {
+    margin-top: 8px;
+    padding: 10px 22px;
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: #f97316;
+    color: #fff;
+    font-size: var(--ui-text-md);
+    font-weight: 800;
+    cursor: pointer;
+}
+.reading-marathon-celebrate__confetti {
+    position: absolute;
+    inset: -14px -10px auto;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+.reading-marathon-celebrate__confetti span {
+    font-size: var(--ui-text-xl);
+    animation: marathonConfetti 2.4s ease-in-out infinite;
+    animation-delay: calc(var(--i) * .18s);
+}
+@keyframes marathonConfetti {
+    0% { transform: translateY(-6px) rotate(-8deg); opacity: .35; }
+    50% { transform: translateY(6px) rotate(8deg); opacity: 1; }
+    100% { transform: translateY(-6px) rotate(-8deg); opacity: .35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reading-marathon-celebrate__confetti span,
+    .reading-marathon-course.is-complete .reading-marathon-course__landmarks text:last-child { animation: none; }
 }

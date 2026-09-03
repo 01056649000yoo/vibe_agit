@@ -181,3 +181,19 @@ export const getMedalRequirementLabel = (campaign) => {
         ? `팀 완주 + 개인 ${value.toLocaleString('ko-KR')}쪽 이상이면 메달을 받아요.`
         : `팀 완주 + 개인 ${value.toLocaleString('ko-KR')}권 이상이면 메달을 받아요.`;
 };
+
+/*
+ * 이 학생이 완주했는가.
+ *
+ * 개인전은 내 거리, 모둠전은 우리 모둠, 학급 전체전은 캠페인 상태로 가른다.
+ * 화면 표시(`🎉 완주!`)와 축하 창이 **같은 기준**을 쓰도록 한 곳에 둔다 —
+ * 두 곳에서 따로 세면 한쪽만 고쳐져 어긋난다(2026-09-03).
+ */
+export const isMarathonCompletedForStudent = (snapshot) => {
+    const campaign = snapshot?.campaign;
+    if (!campaign) return false;
+    const type = campaign.competition_type || 'class_team';
+    if (type === 'individual') return Boolean(snapshot.my?.completed_at);
+    if (type === 'group_team') return Boolean(snapshot.myTeam?.completed_at);
+    return campaign.status === 'completed';
+};

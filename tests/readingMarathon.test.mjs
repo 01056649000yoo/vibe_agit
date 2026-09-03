@@ -354,3 +354,56 @@ test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면
     assert.match(css, /\.reading-marathon-tabs ~ \.reading-marathon-overview[\s\S]{0,120}> span \{ display: none; \}/);
 });
 
+test('완주하면 알림·축하 창·결승선 반짝임이 함께 움직인다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [migration, manifest, card, engine, css, preview] = await Promise.all([
+        readFile('supabase/migrations/20261231_reading_marathon_completion_notification.sql', 'utf8'),
+        readFile('src/modules/writing/reading-log/manifest.js', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonDashboardCard.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/readingMarathon.js', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8'),
+        readFile('src/dev/ReadingMarathonCelebratePreview.jsx', 'utf8')
+    ]);
+
+    /*
+     * ① 알림 — 그전에는 메달이 조용히 쌓이기만 해 아이가 완주한 줄도 몰랐다.
+     *    다른 성취와 같은 원장을 쓰고, 같은 완주로 두 번 알리지 않는다.
+     */
+    assert.match(migration, /notification_emit_v1/);
+    assert.match(migration, /'reading-log\.marathon_completed'/);
+    assert.match(migration, /format\('marathon-medal:%s:%s'/, '같은 완주로 알림이 여러 번 쌓일 수 있다');
+    assert.match(migration, /EXCEPTION WHEN OTHERS THEN/, '알림 실패가 메달·거리 계산을 되돌리면 안 된다');
+    assert.match(manifest, /eventType: 'reading-log\.marathon_completed'/, '학생 화면에 문구가 없어 기본 문구로 뜬다');
+
+    /*
+     * ② 축하 창 — 완주 뒤 처음 들어왔을 때 한 번만.
+     *    렌더 중이나 effect 본문에서 상태를 바꾸지 않는다(자료가 도착한 자리에서 판정).
+     */
+    assert.match(card, /const celebrateIfFirstTime = useCallback/);
+    assert.match(card, /hasCelebrated\(campaignId\)/);
+    assert.match(card, /rememberCelebrated\(campaignId\)/);
+    assert.match(card, /reading-marathon-celebrate/);
+    assert.match(card, /role="dialog"/);
+
+    // 완주 판정은 한 곳에서만 한다 — 두 곳에서 따로 세면 한쪽만 고쳐져 어긋난다
+    assert.match(engine, /export const isMarathonCompletedForStudent/);
+    assert.equal((card.match(/isMarathonCompletedForStudent\(/g) || []).length, 2);
+    assert.doesNotMatch(card, /Boolean\(my\?\.completed_at\)/, '완주 판정이 화면에 다시 복사됐다');
+
+    /*
+     * ③ 결승선 반짝임 — 그전에는 달리는 사람 동그라미만 깜빡였다.
+     *    움직임을 줄이도록 설정한 기기에서는 멈춘다.
+     */
+    assert.match(css, /marathonFinishGlow/);
+    assert.match(
+        css,
+        /prefers-reduced-motion: reduce\)[\s\S]{0,300}landmarks text:last-child \{ animation: none/,
+        '움직임을 줄이도록 설정한 기기에서 결승선 반짝임이 멈추지 않는다'
+    );
+    // 접힌 카드가 축하 창을 잘라 먹지 않는다(실험실에서 실제로 잘렸다)
+    assert.match(css, /\.reading-marathon-card\.is-celebrating \{ overflow: visible/);
+
+    // 완주는 실제로 만들기 어려운 상태다 — 실험실에서 눈으로 볼 수 있어야 한다
+    assert.match(preview, /ReadingMarathonDashboardCard/);
+    assert.doesNotMatch(preview, /supabase/, '미리보기가 운영 데이터를 부르면 안 됩니다');
+});
