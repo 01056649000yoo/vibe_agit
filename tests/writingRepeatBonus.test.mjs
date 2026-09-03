@@ -56,3 +56,29 @@ test('반복 보너스는 SQL 스모크로 공식·호환·제출 스냅샷 경�
      */
     assert.match(smoke, /보다 뒤에 돌아 스냅샷이 지워집니다/);
 });
+
+test('학생 글쓰기 창도 반복 보너스 설정을 받아 남은 글자 수를 안내한다', async () => {
+    const [workspaceMigration, workspaceSmoke, progress, diary, readingLog] = await Promise.all([
+        readFile('supabase/migrations/20261231_student_workspace_repeat_bonus.sql', 'utf8'),
+        readFile('tests/sql/20261231_student_workspace_repeat_bonus.smoke.sql', 'utf8'),
+        readFile('src/modules/writing/policy/WritingPolicyProgress.jsx', 'utf8'),
+        readFile('src/modules/writing/diary/DiaryPage.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/ReadingLogPage.jsx', 'utf8')
+    ]);
+
+    /*
+     * 교사가 켜도 학생 화면이 설정을 못 받으면 계산기는 늘 `꺼짐`으로 보고
+     * 안내를 그리지 않는다. 과제는 RPC가, 일기·독서록은 학생이 읽는 열 목록이 통로다.
+     */
+    assert.match(workspaceMigration, /mission\.repeat_bonus_enabled, mission\.repeat_bonus_threshold/);
+    assert.match(workspaceMigration, /mission\.repeat_bonus_reward, mission\.repeat_bonus_max_count/);
+    assert.match(workspaceSmoke, /학생 작업공간이 반복 보너스 설정을 돌려주지 않습니다/);
+    for (const source of [diary, readingLog]) {
+        assert.match(source, /repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count/);
+    }
+
+    // 남은 글자 수와 진행 횟수를 함께 보여 준다.
+    assert.match(progress, /nextRepeatTarget/);
+    assert.match(progress, /reward\.repeatCount >= evaluation\.policy\.repeat_bonus_max_count/);
+    assert.match(progress, /자 남음/);
+});
