@@ -317,15 +317,91 @@ test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면
      * ⚠️ 출발·목표 글자를 선 **위**에 두면 위로 어긋난 점과 겹친다(실제로 겹쳐 보였다).
      *    선 양옆에 두어야 겹치지 않고 띠 높이도 줄어든다.
      */
-    assert.match(course, /const LABEL_LEFT = (\d+)/);
-    const labelLeft = Number(course.match(/const LABEL_LEFT = (\d+)/)[1]);
-    const trackLeft = Number(course.match(/const TRACK_LEFT = (\d+)/)[1]);
-    assert.ok(labelLeft < trackLeft, '출발 글자가 선 안쪽에 있다 — 점과 겹친다');
+    const { LABEL_LEFT, TRACK_LEFT } =
+        await import('../src/modules/writing/reading-log/marathon/classCourseLayout.js');
+    assert.ok(LABEL_LEFT < TRACK_LEFT, '출발 글자가 선 안쪽에 있다 — 점과 겹친다');
     assert.doesNotMatch(course, /y=\{TRACK_Y - \d+\}/, '글자가 다시 선 위로 올라갔다');
 
+    /*
+     * ⚠️ 아이를 이름으로 지목하지 않는다(2026-09-03). 예전에는 가장 느린 아이를 빨간 점과
+     *    "가장 뒤처진 친구 ○○○" 한 줄로 따로 불렀는데, 그 표현을 뺐다. 다시 들어오면 여기서 걸린다.
+     */
+    // 주석은 왜 뺐는지를 적어 두는 곳이라 함께 보지 않는다. 화면에 나오는 글만 본다.
+    const withoutComments = (source) => source
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+    for (const source of [course, settings, css]) {
+        assert.doesNotMatch(withoutComments(source), /뒤처진/, '아이를 뒤처졌다고 부르는 표현이 다시 들어왔다');
+    }
+    assert.doesNotMatch(course, /is-behind/, '느린 아이만 다른 색으로 칠하고 있다');
+
+    // 아이들 위치는 늘 펼쳐 두지 않고 눌러서 여는 창으로 본다.
+    assert.match(settings, /ReadingMarathonStatusModal/);
+    assert.match(settings, /🏃 우리 반 마라톤 현황 보기/);
+    assert.doesNotMatch(settings, /<ReadingMarathonClassCourse/, '트랙이 아직 화면에 그대로 펼쳐져 있다');
+
+    const modal = await readFile(
+        'src/modules/writing/reading-log/marathon/ReadingMarathonStatusModal.jsx', 'utf8');
+    // 거리순으로 줄을 세우면 맨 아래가 "꼴찌 자리"로 굳는다. 이름 차례로 늘어놓는다.
+    assert.match(modal, /localeCompare\(right\.name, 'ko'\)/, '명단이 가나다순이 아니다');
+    assert.match(modal, /학생 화면과 교실 화면에는 나오지 않습니다/);
     // 낮은 화면에서만 한 번 더 조인다. 큰 화면까지 조이면 답답해진다.
     assert.match(css, /@media \(max-height: 950px\)/);
     assert.match(css, /@media \(max-height: 830px\)/);
     // 탭 이름이 '운영 현황'이라 카드 안 꼬리표는 접는다.
     assert.match(css, /\.reading-marathon-tabs ~ \.reading-marathon-overview[\s\S]{0,120}> span \{ display: none; \}/);
+});
+
+/*
+ * 2026-09-03: 트랙 위 점이 서로 가리는지는 **눈이 아니라 좌표로** 본다.
+ * 처음에는 위아래 네 줄로만 어긋나게 놓았는데, 학기 초처럼 스물넷이 같은 자리에 서면
+ * 네 줄에 여섯씩 겹쳐 앉아 실제로 60쌍이 서로 가렸다(dev-lab 에서 재어 확인).
+ */
+test('트랙 위의 점은 아이가 몰려도 서로 가리지 않는다', async () => {
+    const { buildRunners, DOT_RADIUS, TRACK_LEFT, TRACK_RIGHT } =
+        await import('../src/modules/writing/reading-log/marathon/classCourseLayout.js');
+
+    // 첨자로 꺼내면 lint 가 경고한다. 짝을 잘라 내며 훑는다.
+    const closestGap = (placed) => {
+        let min = Infinity;
+        placed.forEach((one, index) => {
+            placed.slice(index + 1).forEach((other) => {
+                min = Math.min(min, Math.hypot(one.x - other.x, one.y - other.y));
+            });
+        });
+        return min;
+    };
+
+    const names = Array.from({ length: 24 }, (_, index) => ({
+        student_id: `s${index}`, name: `학생${index}`, distance_m: 0
+    }));
+
+    // 학기 초 — 스물넷이 모두 출발선에 서 있다.
+    const allAtStart = buildRunners(names, 20000);
+    assert.equal(allAtStart.length, 24);
+    assert.ok(closestGap(allAtStart) >= DOT_RADIUS * 2,
+        `출발선에 몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(allAtStart).toFixed(1)})`);
+
+    // 거의 같은 자리에 몰린 경우도 마찬가지다.
+    const huddled = names.map((row, index) => ({ ...row, distance_m: 9000 + (index % 3) * 60 }));
+    const placedHuddled = buildRunners(huddled, 20000);
+    assert.ok(closestGap(placedHuddled) >= DOT_RADIUS * 2,
+        `몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(placedHuddled).toFixed(1)})`);
+
+    // 반이 다 같이 목표에 닿은 경우 — 오른쪽 끝에서도 겹치거나 넘치면 안 된다.
+    const allAtGoal = buildRunners(
+        names.map((row) => ({ ...row, distance_m: 30000 })), 20000);
+    assert.ok(closestGap(allAtGoal) >= DOT_RADIUS * 2,
+        `목표선에 몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(allAtGoal).toFixed(1)})`);
+
+    // 벌리다가 트랙 밖으로 나가면 안 된다.
+    for (const runner of [...allAtStart, ...placedHuddled, ...allAtGoal]) {
+        assert.ok(runner.x >= TRACK_LEFT && runner.x <= TRACK_RIGHT,
+            `점이 트랙 밖으로 나갔다 (${runner.x})`);
+    }
+
+    // ⚠️ 빈 학급에서 터졌다(2026-09-03). 마지막 flush 가 빈 무리로 들어온다.
+    assert.deepEqual(buildRunners([], 20000), []);
+    assert.deepEqual(buildRunners(null, 20000), []);
+    assert.deepEqual(buildRunners([{ name: '' }], 20000), []);
 });

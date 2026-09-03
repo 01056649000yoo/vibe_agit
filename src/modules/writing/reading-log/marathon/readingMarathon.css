@@ -490,8 +490,6 @@
 .reading-marathon-class-course__end:first-of-type { text-anchor: end; }
 .reading-marathon-class-course__end.is-goal { text-anchor: start; fill: #c2410c; }
 .reading-marathon-class-course__runner circle { fill: #fb923c; stroke: #fff; stroke-width: 2.5; }
-/* 가장 뒤처진 아이는 눈에 먼저 들어와야 한다. */
-.reading-marathon-class-course__runner.is-behind circle { fill: #ef4444; }
 .reading-marathon-class-course__runner text { fill: #b91c1c; font-size: 17px; font-weight: 900; text-anchor: middle; }
 .reading-marathon-class-course__runner:hover circle { stroke: #7c2d12; }
 .reading-marathon-class-course__hint,
@@ -505,9 +503,6 @@
 .reading-marathon-student-preview[open] > summary { margin-bottom: 15px; }
 .reading-marathon-student-preview[open] > summary::after { content: '접기 ▴'; }
 .reading-marathon-student-preview > summary:focus-visible { outline: 2px solid #0284c7; outline-offset: 3px; border-radius: 12px; }
-.reading-marathon-class-course__behind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 6px 0 0; color: #78716c; font-size: var(--ui-text-xs); font-weight: 800; }
-.reading-marathon-class-course__behind strong { color: #b91c1c; font-size: var(--ui-text-sm); }
-.reading-marathon-class-course__behind span { color: #a8a29e; }
 
 /*
  * 독서마라톤 안쪽 탭.
@@ -594,4 +589,43 @@
     .reading-marathon-tabs { margin-top: 8px; }
     .reading-marathon-overview__stats div { padding: 4px 6px; }
     .reading-marathon-teacher-ranking li { padding: 4px; }
+}
+
+/* 우리 반 마라톤 현황 — 운영 현황 탭의 버튼으로 여는 창 (2026-09-03) */
+.reading-marathon-status-open { width: 100%; margin-top: 10px; }
+.reading-marathon-status-modal { display: grid; gap: 14px; }
+.reading-marathon-status-modal__summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+.reading-marathon-status-modal__summary div { padding: 10px 8px; border-radius: 13px; background: #fff7ed; text-align: center; }
+.reading-marathon-status-modal__summary dt { color: #9a3412; font-size: var(--ui-text-xs); font-weight: 850; }
+.reading-marathon-status-modal__summary dd { margin: 3px 0 0; color: #7c2d12; font-size: var(--ui-text-md); font-weight: 950; }
+/* 이름은 가나다순이다 — 거리순으로 줄을 세우면 맨 아래가 '꼴찌 자리'로 굳는다. */
+.reading-marathon-status-modal__roster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 4px 10px;
+    max-height: 42vh;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+.reading-marathon-status-modal__roster li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ffedd5;
+}
+.reading-marathon-status-modal__roster strong { min-width: 0; overflow: hidden; color: #431407; font-size: var(--ui-text-sm); text-overflow: ellipsis; white-space: nowrap; }
+.reading-marathon-status-modal__roster span { color: #78716c; font-size: var(--ui-text-xs); font-weight: 800; }
+.reading-marathon-status-modal__roster em { color: #c2410c; font-size: var(--ui-text-xs); font-style: normal; font-weight: 900; }
+.reading-marathon-status-modal__note { margin: 0; color: #a8a29e; font-size: var(--ui-text-xs); font-weight: 800; }
+@media (max-width: 640px) {
+    .reading-marathon-status-modal__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

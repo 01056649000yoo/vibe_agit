@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
-import ReadingMarathonClassCourse from './ReadingMarathonClassCourse';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
+import ReadingMarathonStatusModal from './ReadingMarathonStatusModal';
 import ReadingMarathonTeamAssignmentDialog from './ReadingMarathonTeamAssignmentDialog';
 import {
     DEFAULT_TARGET_DISTANCE_M,
@@ -60,6 +60,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [pageSavingId, setPageSavingId] = useState(null);
     const [pageValues, setPageValues] = useState({});
     const [historyOpen, setHistoryOpen] = useState(false);
+    // 아이들 위치는 늘 펼쳐 두지 않는다 — 필요할 때만 여는 창으로 본다.
+    const [statusOpen, setStatusOpen] = useState(false);
     // 운영 중 기본은 현황이다. 설정은 필요할 때만 연다.
     const [section, setSection] = useState('status');
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -381,10 +383,14 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                             <div><dt>참여 학생</dt><dd>{summary.contributors}명</dd></div>
                             <div><dt>종료일</dt><dd>{formatDate(campaign.ends_on)}</dd></div>
                         </dl>
-                        <ReadingMarathonClassCourse
-                            leaderboard={snapshot?.leaderboard}
-                            targetDistanceM={summary?.targetDistanceM}
-                        />
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="reading-marathon-status-open"
+                            onClick={() => setStatusOpen(true)}
+                        >
+                            🏃 우리 반 마라톤 현황 보기
+                        </Button>
                     </section>
 
                     <details className="reading-marathon-student-preview" aria-labelledby="reading-marathon-preview-title">
@@ -628,7 +634,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                         </div>
                     </fieldset>
                 )}
-                <ReadingMarathonTeamAssignmentDialog
+
+            <ReadingMarathonTeamAssignmentDialog
                     isOpen={teamAssignmentDialogOpen}
                     onClose={() => setTeamAssignmentDialogOpen(false)}
                     teams={form.teams}
@@ -759,6 +766,14 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 )}
             </section>
             )}
+
+            <ReadingMarathonStatusModal
+                isOpen={statusOpen}
+                onClose={() => setStatusOpen(false)}
+                leaderboard={snapshot?.leaderboard}
+                targetDistanceM={summary?.targetDistanceM}
+                summary={summary}
+            />
 
         </section>
     );
