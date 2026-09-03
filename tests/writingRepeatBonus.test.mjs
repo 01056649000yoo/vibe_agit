@@ -82,3 +82,38 @@ test('학생 글쓰기 창도 반복 보너스 설정을 받아 남은 글자 �
     assert.match(progress, /reward\.repeatCount >= evaluation\.policy\.repeat_bonus_max_count/);
     assert.match(progress, /자 남음/);
 });
+
+test('교사 도움말은 설정을 바꿨을 때 이미 낸 글이 어떻게 되는지 세 곳 모두 설명한다', async () => {
+    const { TEACHER_GUIDES } = await import('../src/constants/teacherGuides.js');
+    const text = (guide) => [
+        guide.summary,
+        ...(guide.steps || []),
+        ...(guide.notes || []),
+        ...(guide.sections || []).flatMap((section) => [
+            section.summary, ...section.steps, ...section.notes
+        ])
+    ].join('\n');
+
+    /*
+     * 교사가 도중에 포인트를 바꾸면 "이미 낸 글은 어떻게 되나"를 반드시 알아야 한다.
+     * 과제·독서록·일기 세 곳 모두에서 안내하고, 최소 글자 수만 예외라는 것도 함께 적는다.
+     */
+    const guides = [
+        ['선생님 과제', text(TEACHER_GUIDES.dashboard)],
+        ['학생 독서록', text(TEACHER_GUIDES['reading-logs'])],
+        ['학생 일기', text(TEACHER_GUIDES.diaries)]
+    ];
+    for (const [label, guide] of guides) {
+        assert.match(guide, /포인트 설정을 바꿔도 이미 낸 (글|일기)의 포인트는 달라지지 않습니다/,
+            `${label}: 제출 시점 기준 안내가 없다`);
+        assert.match(guide, /최소 글자 수만 예외입니다/, `${label}: 최소 글자 수 예외 안내가 없다`);
+    }
+
+    // 다시 낸 글은 그때 설정으로 계산한다는 것도 과제·독서록에 적는다.
+    assert.match(text(TEACHER_GUIDES.dashboard), /다시 낸 글은 그때의 설정/);
+    assert.match(text(TEACHER_GUIDES['reading-logs']), /다시 낸 때의 설정/);
+
+    // 계산 방식은 예시 표로 설명한다.
+    assert.match(text(TEACHER_GUIDES['reading-logs']),
+        /300자 100P → 500자 130P → 700자 140P → 900자 150P → 1,100자부터 160P/);
+});
