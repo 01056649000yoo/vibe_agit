@@ -283,3 +283,49 @@ test('자율 글은 자유롭게 제출하고 포인트는 교사 확인 뒤에�
     assert.match(migration, /public\.point_engine_apply\(/);
     assert.match(migration, /FROM public\.student_posts post[\s\S]*post\.self_writing_type IN \('reading_log', 'diary'\)/);
 });
+
+/*
+ * 2026-09-03: 마라톤을 시작하면 교사 화면이 세로로 길게 늘어져 스크롤해야만 전체가 보였다.
+ * 실측 1440×900 기준 884px(쓸 수 있는 높이 710px)로 174px 넘쳤다.
+ *
+ * ⚠️ 여백을 줄여 맞춘 것이라 **누가 다시 여백을 늘리면 조용히 되돌아간다.**
+ *    그래서 "무엇을 접었는지"를 여기서 못 박는다. 글자 크기는 건드리지 않았으므로
+ *    바닥(0.8rem)은 `tests/teacherTypeScale.test.mjs` 가 따로 지킨다.
+ */
+test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면에 들어간다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [settings, course, css] = await Promise.all([
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonClassCourse.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8')
+    ]);
+
+    // 셋으로 나누고, 운영 중에는 현황부터 연다 — 설정은 필요할 때만 들어간다.
+    for (const label of ['운영 현황', '설정', '지난 기록']) {
+        assert.ok(settings.includes(`label: '${label}'`), `탭 '${label}' 이(가) 없다`);
+    }
+    assert.match(settings, /useState\('status'\)/, '기본 탭이 운영 현황이 아니다');
+    // 시작 전에는 탭이 없어야 한다. 볼 현황이 없는데 탭만 있으면 빈 화면을 보여 준다.
+    assert.match(settings, /const showTabs = Boolean\(campaign\)/);
+
+    // 학생 미리보기는 접힌 채로 시작한다. 펼치면 자리를 크게 먹는다.
+    const previewTag = settings.match(/<details[^>]*reading-marathon-student-preview[^>]*>/)?.[0];
+    assert.ok(previewTag, '학생 미리보기가 접었다 폈다 하는 칸이 아니다');
+    assert.doesNotMatch(previewTag, /\bopen\b/, '학생 미리보기가 펼친 채로 시작한다');
+
+    /*
+     * ⚠️ 출발·목표 글자를 선 **위**에 두면 위로 어긋난 점과 겹친다(실제로 겹쳐 보였다).
+     *    선 양옆에 두어야 겹치지 않고 띠 높이도 줄어든다.
+     */
+    assert.match(course, /const LABEL_LEFT = (\d+)/);
+    const labelLeft = Number(course.match(/const LABEL_LEFT = (\d+)/)[1]);
+    const trackLeft = Number(course.match(/const TRACK_LEFT = (\d+)/)[1]);
+    assert.ok(labelLeft < trackLeft, '출발 글자가 선 안쪽에 있다 — 점과 겹친다');
+    assert.doesNotMatch(course, /y=\{TRACK_Y - \d+\}/, '글자가 다시 선 위로 올라갔다');
+
+    // 낮은 화면에서만 한 번 더 조인다. 큰 화면까지 조이면 답답해진다.
+    assert.match(css, /@media \(max-height: 950px\)/);
+    assert.match(css, /@media \(max-height: 830px\)/);
+    // 탭 이름이 '운영 현황'이라 카드 안 꼬리표는 접는다.
+    assert.match(css, /\.reading-marathon-tabs ~ \.reading-marathon-overview[\s\S]{0,120}> span \{ display: none; \}/);
+});

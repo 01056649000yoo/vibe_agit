@@ -487,8 +487,8 @@
 .reading-marathon-class-course svg { display: block; width: 100%; height: auto; margin-top: 4px; }
 .reading-marathon-class-course__track { stroke: #fed7aa; stroke-width: 6; stroke-linecap: round; }
 .reading-marathon-class-course__end { fill: #a8a29e; font-size: 17px; font-weight: 900; }
-.reading-marathon-class-course__end:first-of-type { text-anchor: start; }
-.reading-marathon-class-course__end.is-goal { text-anchor: end; fill: #c2410c; }
+.reading-marathon-class-course__end:first-of-type { text-anchor: end; }
+.reading-marathon-class-course__end.is-goal { text-anchor: start; fill: #c2410c; }
 .reading-marathon-class-course__runner circle { fill: #fb923c; stroke: #fff; stroke-width: 2.5; }
 /* 가장 뒤처진 아이는 눈에 먼저 들어와야 한다. */
 .reading-marathon-class-course__runner.is-behind circle { fill: #ef4444; }
@@ -508,3 +508,90 @@
 .reading-marathon-class-course__behind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 6px 0 0; color: #78716c; font-size: var(--ui-text-xs); font-weight: 800; }
 .reading-marathon-class-course__behind strong { color: #b91c1c; font-size: var(--ui-text-sm); }
 .reading-marathon-class-course__behind span { color: #a8a29e; }
+
+/*
+ * 독서마라톤 안쪽 탭.
+ *
+ * 이 화면은 이미 `독서록 확인 / 완료조건·포인트 / 독서록 이벤트` 탭 안에 있다.
+ * 안쪽 탭을 바깥 탭처럼 그리면 둘이 경쟁해 어느 쪽이 지금 화면인지 헷갈린다.
+ * 그래서 상자 대신 밑줄만 쓰고 글자도 한 단계 작게 둔다.
+ */
+.reading-marathon-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 14px; border-bottom: 1px solid #fed7aa; }
+.reading-marathon-tabs button { position: relative; bottom: -1px; min-height: 36px; padding: 7px 13px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #a8a29e; font: inherit; font-size: var(--ui-text-sm); font-weight: 900; cursor: pointer; }
+.reading-marathon-tabs button:hover { color: #c2410c; }
+.reading-marathon-tabs button.is-active { border-bottom-color: #ea580c; color: #7c2d12; }
+.reading-marathon-tabs button:focus-visible { outline: 2px solid #ea580c; outline-offset: -2px; border-radius: 8px; }
+/* 탭 바로 아래 구획은 위 여백을 줄여 탭 줄과 붙여 둔다. */
+.reading-marathon-tabs + .reading-marathon-overview,
+.reading-marathon-tabs + .reading-marathon-config,
+.reading-marathon-tabs + .reading-marathon-history { margin-top: 14px; }
+
+/*
+ * 운영 현황 탭을 한 화면에 담기 위한 조정(2026-09-03 실측 기준).
+ * 결과 카드가 셋인데 두 열이라 두 줄이 됐다. 자리에 맞게 펴면 한 줄로 들어간다.
+ */
+.reading-marathon-settings__tracks { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+/* 접어 둔 미리보기는 한 줄짜리 안내다. 카드만큼 자리를 먹을 이유가 없다. */
+.reading-marathon-student-preview:not([open]) { padding: 11px 14px; }
+.reading-marathon-student-preview:not([open]) > summary { margin-bottom: 0; }
+.reading-marathon-student-preview:not([open]) > summary p { display: none; }
+.reading-marathon-student-preview:not([open]) > summary h4 { margin: 0; font-size: var(--ui-text-md); }
+.reading-marathon-class-course { padding-bottom: 7px; }
+.reading-marathon-class-course__hint { display: none; }
+/* 운영 중에는 화면 이름과 탭만 있으면 된다. 소개 문장은 시작 전에만 보여 준다. */
+.reading-marathon-settings:has(.reading-marathon-tabs) > header > div > p { display: none; }
+.reading-marathon-settings:has(.reading-marathon-tabs) > header { margin-bottom: 0; }
+
+/*
+ * 운영 현황 탭은 스크롤 없이 한 화면에 들어와야 한다(2026-09-03).
+ * 아래는 "읽을 내용"이 아니라 "자리만 먹던 것"만 걷어낸 것이다 — 숫자와 트랙은 그대로 둔다.
+ */
+/* 탭 이름이 이미 '운영 현황'이다. 카드 안에서 한 번 더 말하지 않는다. */
+.reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading > div > span { display: none; }
+/* 이벤트 이름과 방식 설명을 한 줄에 둔다. 줄을 나누면 그만큼 아래가 통째로 밀린다. */
+.reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+}
+.reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading > div > h4,
+.reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading > div > p { margin: 0; }
+.reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading { margin-bottom: 10px; }
+/* 숫자 칸은 이름과 값 두 줄뿐이다. 그만큼만 남긴다. */
+.reading-marathon-overview__stats div { padding: 8px; }
+.reading-marathon-overview__stats dd { margin-top: 2px; }
+/* 결과 카드의 안내 문장은 제목만 봐도 아는 말이다. */
+.reading-marathon-settings__tracks > section > p { display: none; }
+.reading-marathon-settings__tracks > section h4 { margin-bottom: 6px; }
+/* 카드 사이 틈. 셋을 붙여 놓으면 마지막 줄이 화면 밖으로 밀린다. */
+.reading-marathon-tabs ~ .reading-marathon-overview,
+.reading-marathon-tabs ~ .reading-marathon-student-preview,
+.reading-marathon-settings__tracks { margin-top: 10px; }
+
+/*
+ * 낮은 화면(노트북 800~900px)에서만 한 번 더 조인다.
+ * 여백을 줄일 뿐 글자 크기와 내용은 그대로 두므로, 큰 화면에서는 이 규칙이 아예 켜지지 않는다.
+ */
+@media (max-height: 950px) {
+    .reading-marathon-tabs ~ .reading-marathon-overview,
+    .reading-marathon-tabs ~ .reading-marathon-student-preview { padding: 12px 14px; }
+    .reading-marathon-tabs ~ .reading-marathon-overview .reading-marathon-section-heading { margin-bottom: 8px; }
+    .reading-marathon-overview__stats div { padding: 5px 6px; }
+    .reading-marathon-class-course { padding: 9px 11px 4px; }
+    .reading-marathon-class-course__heading { margin-bottom: 2px; }
+    .reading-marathon-student-preview:not([open]) { padding: 8px 14px; }
+    .reading-marathon-settings__tracks > section { padding: 10px 11px; }
+    .reading-marathon-settings__tracks > section h4 { margin-bottom: 3px; }
+    .reading-marathon-teacher-ranking li { padding: 5px 4px; }
+}
+
+/* 아주 낮은 화면(1366×768 같은 것)에서는 화면 이름 위 꼬리표까지 접는다. 탭 이름이 자리를 대신한다. */
+@media (max-height: 830px) {
+    .reading-marathon-settings:has(.reading-marathon-tabs) { padding: 14px 16px; }
+    .reading-marathon-settings:has(.reading-marathon-tabs) > header > div > span { display: none; }
+    .reading-marathon-settings:has(.reading-marathon-tabs) > header h3 { font-size: var(--ui-text-lg); }
+    .reading-marathon-tabs { margin-top: 8px; }
+    .reading-marathon-overview__stats div { padding: 4px 6px; }
+    .reading-marathon-teacher-ranking li { padding: 4px; }
+}

@@ -46,6 +46,12 @@ const finishReasonLabel = (reason) => {
     return '🔄 새 마라톤으로 교체';
 };
 
+const MARATHON_TABS = Object.freeze([
+    { id: 'status', label: '운영 현황' },
+    { id: 'config', label: '설정' },
+    { id: 'history', label: '지난 기록' }
+]);
+
 const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [snapshot, setSnapshot] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -54,6 +60,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [pageSavingId, setPageSavingId] = useState(null);
     const [pageValues, setPageValues] = useState({});
     const [historyOpen, setHistoryOpen] = useState(false);
+    // 운영 중 기본은 현황이다. 설정은 필요할 때만 연다.
+    const [section, setSection] = useState('status');
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState('');
     const [history, setHistory] = useState([]);
@@ -314,6 +322,14 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         teams: distributeMarathonRosterRandomly(current.teams, roster)
     }));
 
+    /*
+     * 운영 중에는 현황만 보면 되는데 설정 폼과 모둠 편집기가 늘 아래에 펼쳐져 있어
+     * 한 화면에 담기지 않았다(2026-09-03). 세 갈래로 나눠 필요한 것만 보인다.
+     * 폼 값은 이 컴포넌트가 들고 있어 탭을 옮겼다 돌아와도 그대로다.
+     */
+    const showTabs = Boolean(campaign);
+    const tab = showTabs ? section : 'config';
+
     return (
         <section className="reading-marathon-settings" aria-labelledby="reading-marathon-settings-title">
             <header>
@@ -330,7 +346,22 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 )}
             </header>
 
-            {campaign ? (
+            {showTabs && (
+                <nav className="reading-marathon-tabs" role="tablist" aria-label="독서마라톤 화면 나누기">
+                    {MARATHON_TABS.map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === item.id}
+                            className={tab === item.id ? 'is-active' : ''}
+                            onClick={() => setSection(item.id)}
+                        >{item.label}</button>
+                    ))}
+                </nav>
+            )}
+
+            {campaign && tab === 'status' ? (
                 <>
                     <section className="reading-marathon-overview" aria-labelledby="reading-marathon-overview-title">
                         <div className="reading-marathon-section-heading">
@@ -454,6 +485,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 </div>
             )}
 
+            {tab === 'config' && (
             <section className="reading-marathon-config" aria-labelledby="reading-marathon-config-title">
                 <div className="reading-marathon-section-heading">
                     <div>
@@ -642,7 +674,9 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 )}
                 </form>
             </section>
+            )}
 
+            {tab === 'history' && (
             <section className="reading-marathon-history" aria-labelledby="reading-marathon-history-title">
                 <button
                     type="button"
@@ -724,6 +758,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     </div>
                 )}
             </section>
+            )}
 
         </section>
     );

@@ -16,15 +16,20 @@ import './readingMarathon.css';
  *    새로 읽는 자료는 없다 — 이미 받아 둔 순위표를 트랙 위 자리로 옮겨 그릴 뿐이다.
  */
 
-const TRACK_LEFT = 30;
-const TRACK_RIGHT = 870;
-const TRACK_Y = 62;
+// 출발·목표 글자를 선 위가 아니라 선 양옆에 둔다. 위에 두면 위로 뜬 점과 글자가 겹쳤다.
+const LABEL_LEFT = 42;
+const LABEL_RIGHT = 776;
+const TRACK_LEFT = 52;
+const TRACK_RIGHT = 768;
+const TRACK_Y = 32;
 // 점이 서로 가리지 않게 이만큼 가까우면 위아래로 어긋나게 놓는다.
 const CROWDED_GAP = 24;
 const ROW_OFFSET = 17;
 // 한 무리가 아무리 몰려도 이만큼 줄까지만 쌓는다. 더 쌓으면 트랙 밖으로 나간다.
 const MAX_ROWS = 4;
-const VIEW_BOX = `0 0 900 ${TRACK_Y + ((MAX_ROWS - 1) / 2) * ROW_OFFSET + 14}`;
+// 위아래로 어긋난 점과 점 반지름만 들어가면 된다. 그만큼만 남긴다.
+const LANE_LIFT = ((MAX_ROWS - 1) / 2) * ROW_OFFSET;
+const VIEW_BOX = `0 0 900 ${TRACK_Y + LANE_LIFT + 12}`;
 
 const buildRunners = (leaderboard, targetDistanceM) => {
     const rows = (Array.isArray(leaderboard) ? leaderboard : [])
@@ -83,8 +88,8 @@ export default function ReadingMarathonClassCourse({ leaderboard = [], targetDis
                     className="reading-marathon-class-course__track"
                     x1={TRACK_LEFT} y1={TRACK_Y} x2={TRACK_RIGHT} y2={TRACK_Y}
                 />
-                <text className="reading-marathon-class-course__end" x={TRACK_LEFT} y={TRACK_Y - 28}>출발</text>
-                <text className="reading-marathon-class-course__end is-goal" x={TRACK_RIGHT} y={TRACK_Y - 28}>목표 🏁</text>
+                <text className="reading-marathon-class-course__end" x={LABEL_LEFT} y={TRACK_Y + 6}>출발</text>
+                <text className="reading-marathon-class-course__end is-goal" x={LABEL_RIGHT} y={TRACK_Y + 6}>목표 🏁</text>
                 {runners.map((runner) => {
                     const isLast = lastRunner && keyOf(runner) === keyOf(lastRunner);
                     return (
