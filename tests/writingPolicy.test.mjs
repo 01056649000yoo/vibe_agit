@@ -26,6 +26,10 @@ test('독서록 기본 정책은 200자·1문단·100P·하루 1편이다', () =
         bonus_enabled: false,
         bonus_threshold: 0,
         bonus_reward: 0,
+        repeat_bonus_enabled: false,
+        repeat_bonus_threshold: 0,
+        repeat_bonus_reward: 0,
+        repeat_bonus_max_count: 0,
         daily_reward_limit: 1
     });
 });
@@ -61,7 +65,10 @@ test('추가 분량 보너스는 최소 글자와 추가 기준을 모두 넘을
         total: 70,
         base: 50,
         bonus: 20,
-        bonusAchieved: true
+        bonusAchieved: true,
+        repeatBonus: 0,
+        repeatCount: 0,
+        repeatStartsAt: 200
     });
 });
 
@@ -71,4 +78,30 @@ test('과제 승인 보상은 제출 당시 저장된 보상값을 우선한다'
         { awarded_base_reward: 80, awarded_bonus_threshold: 50, awarded_bonus_reward: 5 }
     );
     assert.equal(calculateWritingReward(policy, { charCount: 150 }).total, 85);
+});
+
+test('반복 보너스는 현행 추가 보너스 기준 뒤부터 구간별로 최대 횟수까지만 계산한다', () => {
+    const policy = {
+        min_chars: 300,
+        base_reward: 100,
+        bonus_enabled: true,
+        bonus_threshold: 200,
+        bonus_reward: 30,
+        repeat_bonus_enabled: true,
+        repeat_bonus_threshold: 200,
+        repeat_bonus_reward: 10,
+        repeat_bonus_max_count: 3
+    };
+    assert.equal(calculateWritingReward(policy, { charCount: 499 }).total, 100);
+    assert.equal(calculateWritingReward(policy, { charCount: 500 }).total, 130);
+    assert.deepEqual(calculateWritingReward(policy, { charCount: 900 }), {
+        total: 150,
+        base: 100,
+        bonus: 30,
+        bonusAchieved: true,
+        repeatBonus: 20,
+        repeatCount: 2,
+        repeatStartsAt: 500
+    });
+    assert.equal(calculateWritingReward(policy, { charCount: 1500 }).total, 160);
 });

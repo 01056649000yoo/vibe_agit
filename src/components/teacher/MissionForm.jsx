@@ -110,7 +110,7 @@ const MissionForm = ({
             try {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
                     .eq('id', editingMissionId)
                     .maybeSingle();
 
@@ -133,6 +133,10 @@ const MissionForm = ({
                     base_reward: data.base_reward ?? 100,
                     bonus_threshold: data.bonus_threshold ?? 100,
                     bonus_reward: data.bonus_reward ?? 10,
+                    repeat_bonus_enabled: data.repeat_bonus_enabled ?? false,
+                    repeat_bonus_threshold: data.repeat_bonus_threshold ?? 100,
+                    repeat_bonus_reward: data.repeat_bonus_reward ?? 10,
+                    repeat_bonus_max_count: data.repeat_bonus_max_count ?? 3,
                     allow_comments: data.allow_comments ?? true,
                     mission_type: data.mission_type || data.genre || '글쓰기',
                     guide_questions: data.guide_questions || [],
@@ -1028,6 +1032,36 @@ const MissionForm = ({
                                                         />
                                                         <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#D35400' }}>P</span>
                                                     </div>
+                                                </div>
+
+                                                <div style={{
+                                                    background: '#FFFDF0', padding: '12px 14px', borderRadius: '16px',
+                                                    border: '1px solid #F9E79F', display: 'flex', flexDirection: 'column', gap: '10px'
+                                                }}>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--ui-text-sm)', color: '#7F6000', fontWeight: 'bold' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={Boolean(formData.repeat_bonus_enabled)}
+                                                            onChange={e => setFormData({ ...formData, repeat_bonus_enabled: e.target.checked })}
+                                                        />
+                                                        글자 수 구간별 반복 보너스 사용
+                                                    </label>
+                                                    {formData.repeat_bonus_enabled && (
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                                반복 글자 수
+                                                                <input type="number" min="1" max="20000" step="50" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
+                                                            </label>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                                구간당 포인트
+                                                                <input type="number" min="1" max="10000" step="10" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
+                                                            </label>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                                최대 반복 횟수
+                                                                <input type="number" min="1" max="20" value={formData.repeat_bonus_max_count} onChange={e => setFormData({ ...formData, repeat_bonus_max_count: Math.min(20, Math.max(1, parseInt(e.target.value) || 1)) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
+                                                            </label>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -98,6 +98,10 @@ export const useMissionManager = (
                 base_reward: missionDefaultSettings.base_reward ?? prev.base_reward,
                 bonus_threshold: missionDefaultSettings.bonus_threshold ?? prev.bonus_threshold,
                 bonus_reward: missionDefaultSettings.bonus_reward ?? prev.bonus_reward,
+                repeat_bonus_enabled: missionDefaultSettings.repeat_bonus_enabled ?? prev.repeat_bonus_enabled,
+                repeat_bonus_threshold: missionDefaultSettings.repeat_bonus_threshold ?? prev.repeat_bonus_threshold,
+                repeat_bonus_reward: missionDefaultSettings.repeat_bonus_reward ?? prev.repeat_bonus_reward,
+                repeat_bonus_max_count: missionDefaultSettings.repeat_bonus_max_count ?? prev.repeat_bonus_max_count,
                 allow_comments: missionDefaultSettings.allow_comments ?? prev.allow_comments
             }));
         }
@@ -143,6 +147,10 @@ export const useMissionManager = (
             base_reward: defaults.base_reward ?? 100,
             bonus_threshold: defaults.bonus_threshold ?? 100,
             bonus_reward: defaults.bonus_reward ?? 10,
+            repeat_bonus_enabled: defaults.repeat_bonus_enabled ?? false,
+            repeat_bonus_threshold: defaults.repeat_bonus_threshold ?? 100,
+            repeat_bonus_reward: defaults.repeat_bonus_reward ?? 10,
+            repeat_bonus_max_count: defaults.repeat_bonus_max_count ?? 3,
             allow_comments: defaults.allow_comments ?? true,
             mission_type: '일기',
             guide_questions: [],
@@ -186,6 +194,10 @@ export const useMissionManager = (
             base_reward: formData.base_reward,
             bonus_threshold: formData.bonus_threshold,
             bonus_reward: formData.bonus_reward,
+            repeat_bonus_enabled: formData.repeat_bonus_enabled,
+            repeat_bonus_threshold: formData.repeat_bonus_threshold,
+            repeat_bonus_reward: formData.repeat_bonus_reward,
+            repeat_bonus_max_count: formData.repeat_bonus_max_count,
             allow_comments: formData.allow_comments
         };
 
@@ -220,7 +232,7 @@ export const useMissionManager = (
 
         const { data, error } = await supabase
             .from('writing_missions')
-            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
             .eq('id', missionId)
             .maybeSingle();
 
@@ -276,6 +288,10 @@ export const useMissionManager = (
             base_reward: mission.base_reward ?? 100,
             bonus_threshold: mission.bonus_threshold ?? 100,
             bonus_reward: mission.bonus_reward ?? 10,
+            repeat_bonus_enabled: mission.repeat_bonus_enabled ?? false,
+            repeat_bonus_threshold: mission.repeat_bonus_threshold ?? 100,
+            repeat_bonus_reward: mission.repeat_bonus_reward ?? 10,
+            repeat_bonus_max_count: mission.repeat_bonus_max_count ?? 3,
             allow_comments: mission.allow_comments ?? true,
             mission_type: mission.mission_type || mission.genre || '일기',
             guide_questions: mission.guide_questions || [],
@@ -302,7 +318,7 @@ export const useMissionManager = (
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
                 .eq('id', mission.id)
                 .maybeSingle();
 
@@ -500,6 +516,8 @@ export const useMissionManager = (
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at, updated_at, recalled_at, recalled_by,
                     original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers, structured_content,
                     awarded_base_reward, awarded_bonus_reward, awarded_bonus_threshold,
+                    awarded_repeat_bonus_enabled, awarded_repeat_bonus_threshold,
+                    awarded_repeat_bonus_reward, awarded_repeat_bonus_max_count,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
                     students!inner(name, class_id)
                 `)

@@ -68,6 +68,22 @@ const WritingPolicyFields = ({ value, onChange, showDailyLimit = false, showBonu
                     )}
                 </div>
             )}
+
+            {showBonus && (
+                <div className="writing-policy-fields__group writing-policy-fields__bonus">
+                    <label className="writing-policy-switch">
+                        <input type="checkbox" checked={policy.repeat_bonus_enabled} onChange={(event) => update('repeat_bonus_enabled', event.target.checked)} />
+                        <span>글자 수 구간별 반복 보너스 사용</span>
+                    </label>
+                    {policy.repeat_bonus_enabled && (
+                        <div className="writing-policy-fields__grid">
+                            <NumberField label="반복 글자 수" value={fieldValue('repeat_bonus_threshold')} min={1} max={20000} step={50} onChange={(next) => update('repeat_bonus_threshold', next)} suffix="자마다" />
+                            <NumberField label="구간당 포인트" value={fieldValue('repeat_bonus_reward')} min={1} max={10000} step={10} onChange={(next) => update('repeat_bonus_reward', next)} suffix="P" />
+                            <NumberField label="최대 반복 횟수" value={fieldValue('repeat_bonus_max_count')} min={1} max={20} onChange={(next) => update('repeat_bonus_max_count', next)} suffix="회" />
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

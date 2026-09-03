@@ -8,6 +8,10 @@ const DEFAULT_WRITING_POLICY = Object.freeze({
     bonus_enabled: false,
     bonus_threshold: 0,
     bonus_reward: 0,
+    repeat_bonus_enabled: false,
+    repeat_bonus_threshold: 0,
+    repeat_bonus_reward: 0,
+    repeat_bonus_max_count: 0,
     daily_reward_limit: 3
 });
 
@@ -33,6 +37,13 @@ export const normalizeWritingPolicy = (source = {}, defaults = DEFAULT_WRITING_P
         ?? (toSafeInteger(source.bonus_threshold) > 0 && toSafeInteger(source.bonus_reward) > 0),
     bonus_threshold: toSafeInteger(source.bonus_threshold, defaults.bonus_threshold),
     bonus_reward: toSafeInteger(source.bonus_reward, defaults.bonus_reward),
+    repeat_bonus_enabled: source.repeat_bonus_enabled
+        ?? (toSafeInteger(source.repeat_bonus_threshold) > 0
+            && toSafeInteger(source.repeat_bonus_reward) > 0
+            && toSafeInteger(source.repeat_bonus_max_count) > 0),
+    repeat_bonus_threshold: toSafeInteger(source.repeat_bonus_threshold, defaults.repeat_bonus_threshold),
+    repeat_bonus_reward: toSafeInteger(source.repeat_bonus_reward, defaults.repeat_bonus_reward),
+    repeat_bonus_max_count: toSafeInteger(source.repeat_bonus_max_count, defaults.repeat_bonus_max_count),
     daily_reward_limit: Math.max(1, toSafeInteger(source.daily_reward_limit, defaults.daily_reward_limit || 1))
 });
 
@@ -88,7 +99,10 @@ export const getWritingPolicyError = (evaluation) => {
 
 export const calculateWritingReward = (sourcePolicy, metrics) => {
     const policy = normalizeWritingPolicy(sourcePolicy);
-    if (!policy.is_enabled) return { total: 0, base: 0, bonus: 0, bonusAchieved: false };
+    if (!policy.is_enabled) return {
+        total: 0, base: 0, bonus: 0, bonusAchieved: false,
+        repeatBonus: 0, repeatCount: 0, repeatStartsAt: policy.min_chars
+    };
 
     const charCount = toSafeInteger(metrics?.charCount);
     const bonusAchieved = policy.bonus_enabled
@@ -96,12 +110,30 @@ export const calculateWritingReward = (sourcePolicy, metrics) => {
         && policy.bonus_reward > 0
         && charCount >= policy.min_chars + policy.bonus_threshold;
     const bonus = bonusAchieved ? policy.bonus_reward : 0;
+    const repeatStartsAt = policy.min_chars + (
+        policy.bonus_enabled && policy.bonus_threshold > 0 && policy.bonus_reward > 0
+            ? policy.bonus_threshold
+            : 0
+    );
+    const repeatCount = policy.repeat_bonus_enabled
+        && policy.repeat_bonus_threshold > 0
+        && policy.repeat_bonus_reward > 0
+        && policy.repeat_bonus_max_count > 0
+        ? Math.min(
+            policy.repeat_bonus_max_count,
+            Math.max(0, Math.floor((charCount - repeatStartsAt) / policy.repeat_bonus_threshold))
+        )
+        : 0;
+    const repeatBonus = repeatCount * policy.repeat_bonus_reward;
 
     return {
-        total: policy.base_reward + bonus,
+        total: policy.base_reward + bonus + repeatBonus,
         base: policy.base_reward,
         bonus,
-        bonusAchieved
+        bonusAchieved,
+        repeatBonus,
+        repeatCount,
+        repeatStartsAt
     };
 };
 
@@ -113,5 +145,9 @@ export const writingPolicyFromMission = (mission = {}, post = null) => normalize
         && (post?.awarded_bonus_reward ?? mission.bonus_reward ?? 0) > 0,
     bonus_threshold: post?.awarded_bonus_threshold ?? mission.bonus_threshold,
     bonus_reward: post?.awarded_bonus_reward ?? mission.bonus_reward,
+    repeat_bonus_enabled: post?.awarded_repeat_bonus_enabled ?? mission.repeat_bonus_enabled,
+    repeat_bonus_threshold: post?.awarded_repeat_bonus_threshold ?? mission.repeat_bonus_threshold,
+    repeat_bonus_reward: post?.awarded_repeat_bonus_reward ?? mission.repeat_bonus_reward,
+    repeat_bonus_max_count: post?.awarded_repeat_bonus_max_count ?? mission.repeat_bonus_max_count,
     daily_reward_limit: 1
 });

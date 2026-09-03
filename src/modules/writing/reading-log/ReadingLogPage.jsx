@@ -177,7 +177,7 @@ const ReadingLogEditor = ({
             setPolicyLoading(true);
             const { data, error } = await supabase
                 .from('class_writing_policies')
-                .select('is_enabled, min_chars, min_paragraphs, base_reward, bonus_enabled, bonus_threshold, bonus_reward, daily_reward_limit')
+                .select('is_enabled, min_chars, min_paragraphs, base_reward, bonus_enabled, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, daily_reward_limit')
                 .eq('class_id', studentClassId)
                 .eq('writing_type', 'reading_log')
                 .maybeSingle();

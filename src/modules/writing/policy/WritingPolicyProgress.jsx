@@ -15,6 +15,8 @@ const WritingPolicyProgress = ({
     const evaluation = evaluateWritingPolicy(policy, metrics, { unitLabel, skipParagraphValidation });
     const reward = calculateWritingReward(evaluation.policy, evaluation.metrics);
     const bonusTarget = evaluation.policy.min_chars + evaluation.policy.bonus_threshold;
+    const nextRepeatTarget = reward.repeatStartsAt
+        + ((reward.repeatCount + 1) * evaluation.policy.repeat_bonus_threshold);
 
     return (
         <aside className={`writing-policy-progress ${className}`.trim()} aria-label="글쓰기 완료 조건">
@@ -40,6 +42,13 @@ const WritingPolicyProgress = ({
                     {reward.bonusAchieved
                         ? `🔥 추가 분량 보너스 +${evaluation.policy.bonus_reward}P 달성!`
                         : `${bonusTarget}자를 쓰면 +${evaluation.policy.bonus_reward}P · ${Math.max(0, bonusTarget - evaluation.metrics.charCount)}자 남음`}
+                </p>
+            )}
+            {evaluation.policy.repeat_bonus_enabled && evaluation.policy.repeat_bonus_threshold > 0 && evaluation.policy.repeat_bonus_reward > 0 && evaluation.policy.repeat_bonus_max_count > 0 && (
+                <p className={reward.repeatCount >= evaluation.policy.repeat_bonus_max_count ? 'is-complete' : ''}>
+                    {reward.repeatCount >= evaluation.policy.repeat_bonus_max_count
+                        ? `🔥 반복 보너스 최대 ${reward.repeatBonus}P 달성!`
+                        : `${nextRepeatTarget}자를 쓰면 +${evaluation.policy.repeat_bonus_reward}P · ${Math.max(0, nextRepeatTarget - evaluation.metrics.charCount)}자 남음 (${reward.repeatCount}/${evaluation.policy.repeat_bonus_max_count}회)`}
                 </p>
             )}
         </aside>

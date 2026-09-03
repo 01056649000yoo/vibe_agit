@@ -41,6 +41,10 @@ export const diaryManifest = {
             bonus_enabled: false,
             bonus_threshold: 0,
             bonus_reward: 0,
+            repeat_bonus_enabled: false,
+            repeat_bonus_threshold: 0,
+            repeat_bonus_reward: 0,
+            repeat_bonus_max_count: 0,
             daily_reward_limit: 1
         }
     },
