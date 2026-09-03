@@ -8,7 +8,8 @@
 }
 
 .reading-marathon-card { margin: 20px 0; padding: 0; overflow: hidden; }
-.reading-marathon-settings { padding: clamp(18px, 3vw, 28px); }
+/* 바깥 상자 · 구획 · 안쪽 카드가 겹쳐 여백이 세 번 쌓인다. 각 단계를 조금씩 줄인다. */
+.reading-marathon-settings { padding: clamp(16px, 2vw, 22px); }
 
 .reading-marathon-card__header,
 .reading-marathon-settings > header {
@@ -119,11 +120,15 @@
 .reading-marathon-course__bar { height: 8px; background: rgba(255,255,255,.7); }
 .reading-marathon-course__bar span { display: block; height: 100%; border-radius: 0 999px 999px 0; background: linear-gradient(90deg,#fb923c,#facc15); transition: width .7s ease; }
 
+/*
+ * 두 칸은 담는 내용이 달라 길이가 다르다. 늘여서 높이를 맞추면 짧은 쪽 아래가 크게 빈다
+ * (2026-09-03 실측: 오른쪽 카드에 133px 남았다). 각자 내용만큼만 차지하게 둔다.
+ */
 .reading-marathon-card__tracks,
-.reading-marathon-settings__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.reading-marathon-settings__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; align-items: start; }
 
 .reading-marathon-track,
-.reading-marathon-settings__tracks > section { min-width: 0; padding: 16px; border: 1px solid #fed7aa; border-radius: 17px; background: rgba(255,255,255,.82); }
+.reading-marathon-settings__tracks > section { min-width: 0; padding: 13px; border: 1px solid #fed7aa; border-radius: 17px; background: rgba(255,255,255,.82); }
 .reading-marathon-track > header { display: flex; align-items: center; gap: 10px; }
 .reading-marathon-track > header > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #ffedd5; font-size: var(--ui-text-xl); }
 .reading-marathon-track > header div { display: grid; gap: 2px; }
@@ -151,8 +156,8 @@
 .reading-marathon-overview,
 .reading-marathon-student-preview,
 .reading-marathon-config {
-    margin-top: 18px;
-    padding: clamp(16px, 2.5vw, 22px);
+    margin-top: 14px;
+    padding: clamp(14px, 1.8vw, 18px);
     border: 1px solid #fed7aa;
     border-radius: 20px;
     background: rgba(255,255,255,.82);

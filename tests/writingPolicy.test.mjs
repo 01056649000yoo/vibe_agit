@@ -120,3 +120,22 @@ test('완료조건·포인트 설정은 넓은 화면에서 묶음을 나란히 
     // `문단`·`자마다` 같은 단위가 두 줄로 깨지지 않아야 한다.
     assert.match(css, /\.writing-policy-field__input strong \{[^}]*white-space:nowrap/);
 });
+
+test('독서마라톤 진행 화면은 짧은 칸 아래를 비우지 않고 겹친 여백을 줄인다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8');
+
+    /*
+     * 2026-09-03: 두 순위 칸을 늘여 높이를 맞추는 바람에 짧은 쪽 아래가 133px 비어 있었다.
+     * 각자 내용만큼만 차지하게 바꾸니 14px로 줄었다. 되돌아가면 다시 빈다.
+     */
+    assert.match(css, /\.reading-marathon-settings__tracks \{[^}]*align-items: start/);
+
+    /*
+     * 바깥 상자 · 구획 · 안쪽 카드가 겹쳐 글이 시작하는 자리가 69px 안쪽이었다(실측).
+     * 세 단계를 조금씩 줄여 56px로 당겼다. 한 단계라도 되돌리면 다시 밀린다.
+     */
+    assert.match(css, /\.reading-marathon-settings \{ padding: clamp\(16px, 2vw, 22px\); \}/);
+    assert.match(css, /padding: clamp\(14px, 1\.8vw, 18px\)/);
+    assert.match(css, /\.reading-marathon-settings__tracks > section \{[^}]*padding: 13px/);
+});
