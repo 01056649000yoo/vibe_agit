@@ -29,6 +29,9 @@ const TARGET_M = 20000
 const buildRow = (name, index, distanceM) => ({
   student_id: `s${index}`,
   name,
+  // 실제 순위표에는 확인 완료한 책 수가 함께 온다(2026-09-03에 표로 바꾸며 열을 더했다).
+  // 거리 1km 남짓에 한 권꼴로 어림해 둔다 — 미리보기가 0권만 보여 주면 그 열을 못 본다.
+  book_count: Math.max(0, Math.round(distanceM / 1200)),
   distance_m: distanceM,
 })
 
@@ -88,6 +91,7 @@ const ReadingMarathonStatusPreview = () => {
               background: item.id === scenarioId ? '#fff7ed' : 'var(--ui-surface)',
               fontSize: 'var(--ui-text-sm)',
               fontWeight: 800,
+              color: 'var(--ui-ink)',
               cursor: 'pointer',
             }}
           >

@@ -294,9 +294,8 @@ test('자율 글은 자유롭게 제출하고 포인트는 교사 확인 뒤에�
  */
 test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면에 들어간다', async () => {
     const { readFile } = await import('node:fs/promises');
-    const [settings, course, css] = await Promise.all([
+    const [settings, css] = await Promise.all([
         readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
-        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonClassCourse.jsx', 'utf8'),
         readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8')
     ]);
 
@@ -308,19 +307,21 @@ test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면
     // 시작 전에는 탭이 없어야 한다. 볼 현황이 없는데 탭만 있으면 빈 화면을 보여 준다.
     assert.match(settings, /const showTabs = Boolean\(campaign\)/);
 
+    /*
+     * `아직 만든 독서마라톤이 없습니다` 는 **마라톤이 정말 없을 때만** 나와야 한다.
+     * 2026-09-03: 조건이 `campaign && tab === 'status'` 하나뿐이라, 마라톤이 있어도 `설정` 탭으로 옮기면
+     * 이 안내가 떴다(사용자가 발견). 탭을 나누면서 딸려 온 실수다.
+     */
+    assert.match(
+        settings,
+        /\) : campaign \? null : \(/,
+        '마라톤이 있는데도 탭에 따라 "없습니다" 안내가 나온다'
+    );
+
     // 학생 미리보기는 접힌 채로 시작한다. 펼치면 자리를 크게 먹는다.
     const previewTag = settings.match(/<details[^>]*reading-marathon-student-preview[^>]*>/)?.[0];
     assert.ok(previewTag, '학생 미리보기가 접었다 폈다 하는 칸이 아니다');
     assert.doesNotMatch(previewTag, /\bopen\b/, '학생 미리보기가 펼친 채로 시작한다');
-
-    /*
-     * ⚠️ 출발·목표 글자를 선 **위**에 두면 위로 어긋난 점과 겹친다(실제로 겹쳐 보였다).
-     *    선 양옆에 두어야 겹치지 않고 띠 높이도 줄어든다.
-     */
-    const { LABEL_LEFT, TRACK_LEFT } =
-        await import('../src/modules/writing/reading-log/marathon/classCourseLayout.js');
-    assert.ok(LABEL_LEFT < TRACK_LEFT, '출발 글자가 선 안쪽에 있다 — 점과 겹친다');
-    assert.doesNotMatch(course, /y=\{TRACK_Y - \d+\}/, '글자가 다시 선 위로 올라갔다');
 
     /*
      * ⚠️ 아이를 이름으로 지목하지 않는다(2026-09-03). 예전에는 가장 느린 아이를 빨간 점과
@@ -330,15 +331,16 @@ test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면
     const withoutComments = (source) => source
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\s*\/\/.*$/gm, '');
-    for (const source of [course, settings, css]) {
+    for (const source of [settings, css]) {
         assert.doesNotMatch(withoutComments(source), /뒤처진/, '아이를 뒤처졌다고 부르는 표현이 다시 들어왔다');
     }
-    assert.doesNotMatch(course, /is-behind/, '느린 아이만 다른 색으로 칠하고 있다');
+    assert.doesNotMatch(css, /is-behind/, '느린 아이만 다른 색으로 칠하고 있다');
 
     // 아이들 위치는 늘 펼쳐 두지 않고 눌러서 여는 창으로 본다.
     assert.match(settings, /ReadingMarathonStatusModal/);
     assert.match(settings, /🏃 우리 반 마라톤 현황 보기/);
-    assert.doesNotMatch(settings, /<ReadingMarathonClassCourse/, '트랙이 아직 화면에 그대로 펼쳐져 있다');
+    // 2026-09-03: 트랙 그림 자체를 걷어내고 표로 바꿨다. 부품도 함께 지웠으므로 다시 들어오면 눈에 띈다.
+    assert.doesNotMatch(settings, /ClassCourse/, '걷어낸 트랙이 다시 들어왔다');
 
     const modal = await readFile(
         'src/modules/writing/reading-log/marathon/ReadingMarathonStatusModal.jsx', 'utf8');
@@ -352,56 +354,3 @@ test('마라톤 운영 화면은 탭으로 나뉘고 운영 현황이 한 화면
     assert.match(css, /\.reading-marathon-tabs ~ \.reading-marathon-overview[\s\S]{0,120}> span \{ display: none; \}/);
 });
 
-/*
- * 2026-09-03: 트랙 위 점이 서로 가리는지는 **눈이 아니라 좌표로** 본다.
- * 처음에는 위아래 네 줄로만 어긋나게 놓았는데, 학기 초처럼 스물넷이 같은 자리에 서면
- * 네 줄에 여섯씩 겹쳐 앉아 실제로 60쌍이 서로 가렸다(dev-lab 에서 재어 확인).
- */
-test('트랙 위의 점은 아이가 몰려도 서로 가리지 않는다', async () => {
-    const { buildRunners, DOT_RADIUS, TRACK_LEFT, TRACK_RIGHT } =
-        await import('../src/modules/writing/reading-log/marathon/classCourseLayout.js');
-
-    // 첨자로 꺼내면 lint 가 경고한다. 짝을 잘라 내며 훑는다.
-    const closestGap = (placed) => {
-        let min = Infinity;
-        placed.forEach((one, index) => {
-            placed.slice(index + 1).forEach((other) => {
-                min = Math.min(min, Math.hypot(one.x - other.x, one.y - other.y));
-            });
-        });
-        return min;
-    };
-
-    const names = Array.from({ length: 24 }, (_, index) => ({
-        student_id: `s${index}`, name: `학생${index}`, distance_m: 0
-    }));
-
-    // 학기 초 — 스물넷이 모두 출발선에 서 있다.
-    const allAtStart = buildRunners(names, 20000);
-    assert.equal(allAtStart.length, 24);
-    assert.ok(closestGap(allAtStart) >= DOT_RADIUS * 2,
-        `출발선에 몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(allAtStart).toFixed(1)})`);
-
-    // 거의 같은 자리에 몰린 경우도 마찬가지다.
-    const huddled = names.map((row, index) => ({ ...row, distance_m: 9000 + (index % 3) * 60 }));
-    const placedHuddled = buildRunners(huddled, 20000);
-    assert.ok(closestGap(placedHuddled) >= DOT_RADIUS * 2,
-        `몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(placedHuddled).toFixed(1)})`);
-
-    // 반이 다 같이 목표에 닿은 경우 — 오른쪽 끝에서도 겹치거나 넘치면 안 된다.
-    const allAtGoal = buildRunners(
-        names.map((row) => ({ ...row, distance_m: 30000 })), 20000);
-    assert.ok(closestGap(allAtGoal) >= DOT_RADIUS * 2,
-        `목표선에 몰린 아이들의 점이 겹친다 (가장 가까운 사이 ${closestGap(allAtGoal).toFixed(1)})`);
-
-    // 벌리다가 트랙 밖으로 나가면 안 된다.
-    for (const runner of [...allAtStart, ...placedHuddled, ...allAtGoal]) {
-        assert.ok(runner.x >= TRACK_LEFT && runner.x <= TRACK_RIGHT,
-            `점이 트랙 밖으로 나갔다 (${runner.x})`);
-    }
-
-    // ⚠️ 빈 학급에서 터졌다(2026-09-03). 마지막 flush 가 빈 무리로 들어온다.
-    assert.deepEqual(buildRunners([], 20000), []);
-    assert.deepEqual(buildRunners(null, 20000), []);
-    assert.deepEqual(buildRunners([{ name: '' }], 20000), []);
-});

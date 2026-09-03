@@ -483,7 +483,12 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                         </section>
                     </div>
                 </>
-            ) : (
+            ) : campaign ? null : (
+                /*
+                 * 이 안내는 **마라톤이 정말 없을 때만** 나와야 한다.
+                 * 2026-09-03: 조건이 `campaign && tab === 'status'` 하나였던 탓에, 마라톤이 있어도
+                 * `설정` 탭으로 옮기면 "아직 만든 독서마라톤이 없습니다"가 떴다. 탭을 나누면서 생긴 실수다.
+                 */
                 <div className="reading-marathon-settings__empty">
                     <span>🏁</span>
                     <strong>아직 만든 독서마라톤이 없습니다.</strong>

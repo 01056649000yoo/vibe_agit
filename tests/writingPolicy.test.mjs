@@ -142,9 +142,7 @@ test('독서마라톤 진행 화면은 짧은 칸 아래를 비우지 않고 겹
 
 test('독서마라톤 교사 화면은 반 전체 위치를 보여 주되 학생 화면과 섞지 않는다', async () => {
     const { readFile } = await import('node:fs/promises');
-    const [course, layout, modal, screen, css] = await Promise.all([
-        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonClassCourse.jsx', 'utf8'),
-        readFile('src/modules/writing/reading-log/marathon/classCourseLayout.js', 'utf8'),
+    const [modal, screen, css] = await Promise.all([
         readFile('src/modules/writing/reading-log/marathon/ReadingMarathonStatusModal.jsx', 'utf8'),
         readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
         readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8')
@@ -157,18 +155,22 @@ test('독서마라톤 교사 화면은 반 전체 위치를 보여 주되 학생
      * 아이들 위치가 화면에 늘 떠 있지 않도록.
      */
     assert.match(screen, /reading-marathon-overview[\s\S]*reading-marathon-status-open[\s\S]*<\/section>[\s\S]*reading-marathon-student-preview/);
-    assert.match(course, /교사 확인용 · 학생 화면에는 나오지 않습니다/);
     assert.match(modal, /학생 화면과 교실 화면에는 나오지 않습니다/);
+
+    /*
+     * 2026-09-03: 아이 위치를 트랙 위 점으로 흩어 놓던 그림을 걷어내고 **표**로 바꿨다(사용자 요청).
+     * 점은 자리를 크게 먹으면서 "누가 얼마나 왔는지"는 표보다 읽기 어려웠다.
+     * 다만 **줄을 세우지 않는다는 원칙은 그대로다** — 순위 열을 두지 않고 이름 차례로만 늘어놓는다.
+     */
+    assert.match(modal, /<table className="reading-marathon-status-modal__table">/);
+    for (const column of ['이름', '읽은 책', '달린 거리', '달성률']) {
+        assert.ok(modal.includes(`>${column}</th>`), `표에 '${column}' 열이 없다`);
+    }
+    assert.ok(!modal.includes('>순위</th>') && !/row\.rank/.test(modal), '표에 등수를 매기고 있다');
 
     // 새로 읽는 자료 없이 이미 받아 둔 순위표만 쓴다. 창을 열어도 요청이 늘지 않는다.
     assert.match(screen, /leaderboard=\{snapshot\?\.leaderboard\}/);
-    for (const source of [course, layout, modal]) {
-        assert.doesNotMatch(source, /supabase|rpc\(|fetch\(/);
-    }
-
-    // 굽은 코스는 위아래로 자리를 크게 먹어 곧은 트랙으로 그린다.
-    assert.doesNotMatch(course, /getCoursePosition/);
-    assert.match(layout, /const MAX_ROWS = 4/);
+    assert.doesNotMatch(modal, /supabase|rpc\(|fetch\(/);
 
     // 학생 화면 확인은 접어 두고 필요할 때만 편다.
     assert.match(screen, /<details className="reading-marathon-student-preview"/);
