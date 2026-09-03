@@ -30,6 +30,15 @@ import {
   shouldRefitClassBoardText,
 } from '../src/modules/tool/class-board/widgets/text/textScale.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
+import {
+  DEFAULT_MEAL_COLUMNS,
+  MEAL_COLUMN_CHOICES,
+  normalizeMealColumns,
+} from '../src/modules/tool/class-board/widgets/meal-board/mealColumns.js';
+import {
+  buildNoticeDates,
+  getNeighborNoticeDate,
+} from '../src/modules/tool/class-board/widgets/notice-board/noticeHistory.js';
 import { moveClassBoardTab, sortClassBoards } from '../src/modules/tool/class-board/navigation/tabOrder.js';
 
 const read = (path) => readFile(path, 'utf8');
@@ -129,7 +138,7 @@ const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, not
 ]);
 
 const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine,
-  designSystem] = await Promise.all([
+  designSystem, mealFitHook, mealColumnsMigration, mealColumnsSmoke] = await Promise.all([
     read('src/modules/tool/class-board/widgets/notice-board/NoticeComposer.jsx'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeBoardApi.js'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeStore.js'),
@@ -138,6 +147,9 @@ const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seo
     read('src/utils/seoulDate.js'),
     read('src/modules/tool/meal-board/mealBoardEngine.js'),
     read('src/styles/design-system.css'),
+    read('src/modules/tool/class-board/widgets/meal-board/useFittedMealDishes.js'),
+    read('supabase/migrations/20261229_class_board_meal_columns.sql'),
+    read('tests/sql/20261229_class_board_meal_columns.smoke.sql'),
   ]);
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
@@ -180,8 +192,8 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
   assert.doesNotMatch(noticeManifest, /body:/);
 
   // 위젯은 오늘 날짜를 자동으로 붙이고 오늘 알림만 1회 읽으며 폴링하지 않는다.
-  assert.match(noticeWidget, /formatSeoulDate\(current\.today\)/);
-  assert.match(noticeWidget, /noticeBoardApi\.getNotices\(classId\)/);
+  assert.match(noticeWidget, /formatSeoulDate\(current\.date\)/);
+  assert.match(noticeWidget, /noticeBoardApi\.getNotices\(classId, null, NOTICE_HISTORY_LIMIT\)/);
   assert.match(noticeWidget, /subscribeClassBoardNotice/);
   assert.match(noticeWidget, /config\.heading/);
   assert.match(noticeWidget, /config\.tone/);
@@ -221,6 +233,91 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
   assert.match(mealNoticeMigration, /v_meal_count > 1[\s\S]*v_notice_count > 1/);
   assert.match(mealNoticeMigration, /REVOKE ALL ON FUNCTION public\.validate_class_board_legacy_widgets/);
   assert.match(mealNoticeSmoke, /알림장 2000자 상한[\s\S]*식단표가 한 스크린에 두 개/);
+});
+
+test('알림장 위젯은 지난 알림을 앞뒤로 넘기고 전체화면에서도 같은 버튼을 쓴다', () => {
+  // 넘길 날짜 계산은 순수 함수 한 곳에 모은다. 오늘은 알림이 없어도 목록에 남아야
+  // `오늘`로 돌아올 수 있다.
+  assert.deepEqual(
+    buildNoticeDates('2026-09-03', [{ date: '2026-09-01' }, { date: '2026-09-02' }]),
+    ['2026-09-03', '2026-09-02', '2026-09-01']
+  );
+  assert.deepEqual(buildNoticeDates('2026-09-03', ['2026-09-03', '2026-08-31']), ['2026-09-03', '2026-08-31']);
+  assert.deepEqual(buildNoticeDates('2026-09-03', null), ['2026-09-03']);
+  assert.deepEqual(buildNoticeDates('', [{ date: '2026-09-01' }]), ['2026-09-01']);
+
+  const dates = ['2026-09-03', '2026-09-02', '2026-08-31'];
+  assert.equal(getNeighborNoticeDate(dates, '2026-09-03', 'older'), '2026-09-02');
+  assert.equal(getNeighborNoticeDate(dates, '2026-09-02', 'older'), '2026-08-31');
+  assert.equal(getNeighborNoticeDate(dates, '2026-08-31', 'older'), null);
+  assert.equal(getNeighborNoticeDate(dates, '2026-09-02', 'newer'), '2026-09-03');
+  assert.equal(getNeighborNoticeDate(dates, '2026-09-03', 'newer'), null);
+  assert.equal(getNeighborNoticeDate(dates, '2026-07-01', 'older'), null);
+
+  // 열 때 한 번 읽고, 아직 펼치지 않은 날짜만 그때 한 건 더 읽는다(폴링 없음).
+  assert.match(noticeWidget, /NOTICE_HISTORY_LIMIT = 30/);
+  assert.match(noticeWidget, /hasBody\(state\.bodies, date\)\) return[\s\S]*getNotices\(classId, date, NOTICE_HISTORY_LIMIT\)/);
+  assert.match(noticeWidget, /bodies: \{ \.\.\.current\.bodies, \[date\]: result\?\.notice\?\.body \|\| '' \}/);
+  assert.match(noticeWidget, /buildNoticeDates\(current\.today, result\?\.recent\)/);
+  assert.match(noticeManifest, /지난 알림으로 넘긴 날짜만 그때 한 건씩 더 읽는다/);
+
+  // 버튼은 위젯 안에 있어 전체화면에서도 그대로 눌린다. 편집 중 드래그로는 새지 않는다.
+  assert.match(noticeWidget, /class-board-notice__nav[\s\S]*aria-label="지난 알림"[\s\S]*aria-label="다음 알림"/);
+  assert.match(noticeWidget, /disabled=\{!olderDate\}[\s\S]*disabled=\{!newerDate\}/);
+  assert.match(noticeWidget, /title="오늘 알림으로 돌아가기"/);
+  assert.match(noticeWidget, /onPointerDown=\{stopPointer\}/);
+  assert.match(styles, /\.class-board-notice__nav\s*\{[^}]*margin-inline-start:auto/);
+  assert.match(styles, /\.class-board-notice__nav button:disabled\s*\{[^}]*opacity/);
+  // 전체화면은 같은 화면에 클래스만 더한다. 넘기기 버튼을 숨기는 규칙이 있으면 안 된다.
+  assert.doesNotMatch(styles, /is-fullscreen[^{]*class-board-notice/);
+  // 교사 도움말도 같은 사용법을 적어 둔다.
+  assert.match(guides, /교실 화면의 알림장에서도 지난 알림을 바로 넘겨 볼 수 있습니다[\s\S]*전체화면에서도 같은 버튼/);
+});
+
+test('식단표는 급식 이름을 고른 열 수로 세우고 남은 자리에 맞춰 글씨를 키운다', () => {
+  assert.deepEqual(MEAL_COLUMN_CHOICES.map((choice) => choice.value), ['2', '3']);
+  assert.equal(DEFAULT_MEAL_COLUMNS, '2');
+  assert.equal(normalizeMealColumns('3'), '3');
+  assert.equal(normalizeMealColumns(3), '3');
+  assert.equal(normalizeMealColumns('4'), '2');
+  assert.equal(normalizeMealColumns(undefined), '2');
+
+  assert.match(mealManifest, /columns: DEFAULT_MEAL_COLUMNS/);
+  assert.match(mealWidget, /normalizeMealColumns\(config\.columns\)/);
+  assert.match(mealWidget, /'--class-board-meal-columns': columns/);
+  assert.match(mealWidget, /useFittedMealDishes\(\[/);
+  assert.match(mealSettings, /MEAL_COLUMN_CHOICES\.map/);
+
+  // 글씨는 위젯 크기 비례가 아니라 실제로 그려 본 뒤 넘치지 않는 가장 큰 크기로 맞춘다.
+  assert.match(mealFitHook, /findLargestFittingTextSize/);
+  assert.match(mealFitHook, /scrollWidth <= element\.clientWidth[\s\S]*scrollHeight <= element\.clientHeight/);
+  assert.match(mealFitHook, /new ResizeObserver\(scheduleFit\)/);
+  assert.match(mealFitHook, /requestAnimationFrame\(fitDishes\)[\s\S]*resizeObserver\?\.disconnect\(\)/);
+  // 디자인 가이드의 글자 바닥(0.8rem) 아래로는 줄이지 않는다.
+  assert.match(mealFitHook, /MIN_DISH_SIZE_PX = 12\.8/);
+  assert.doesNotMatch(mealFitHook, /setInterval|window\.addEventListener\('resize'/);
+
+  // 열 수는 CSS 변수 하나로만 바뀌고 급식 이름은 맞춘 크기를 그대로 따라간다.
+  assert.match(styles, /\.class-board-meal__meals article>div\s*\{[^}]*grid-template-columns:repeat\(var\(--class-board-meal-columns\),minmax\(0,1fr\)\)[^}]*font-size:var\(--class-board-meal-dish-size\)/);
+  assert.match(styles, /\.class-board-meal__meals b\s*\{[^}]*font-size:1em/);
+  assert.doesNotMatch(styles, /\.class-board-meal__meals b\s*\{[^}]*cqmin/);
+
+  // 저장 검증은 화면과 같은 값만 받는다(같은 목록을 두 곳에 적었는지 대조한다).
+  const allowedColumns = MEAL_COLUMN_CHOICES.map((choice) => "'" + choice.value + "'").join(', ');
+  assert.match(mealColumnsMigration, /CREATE OR REPLACE FUNCTION public\.validate_class_board_payload_v1/);
+  assert.ok(mealColumnsMigration.includes("COALESCE(v_config ->> 'columns', '2') NOT IN (" + allowedColumns + ')'));
+  assert.match(mealColumnsMigration, /REVOKE ALL ON FUNCTION public\.validate_class_board_payload_v1[\s\S]*FROM PUBLIC, anon, authenticated, service_role/);
+  assert.match(mealColumnsSmoke, /허용하지 않은 급식 열 수가 저장됐습니다/);
+  // 검증 함수를 통째로 다시 만드는 마이그레이션이라 앞서 넣은 검증이 남았는지도 본다.
+  assert.match(mealColumnsSmoke, /식단표 알레르기 표시 검증이 사라졌습니다/);
+  assert.match(mealColumnsSmoke, /날씨 보여 줄 날 검증이 사라졌습니다/);
+  assert.match(mealColumnsSmoke, /오늘 현황 배경색 검증이 사라졌습니다/);
+  assert.match(mealColumnsSmoke, /알림장 색상 검증이 사라졌습니다/);
+
+  // 교사 도움말도 새 배열 선택과 자동 크기를 설명한다.
+  assert.match(guides, /급식 이름은 위젯에 남는 자리에 가득 차도록 저절로 커집니다/);
+  assert.match(guides, /급식 이름 배열은 .2열.과 .3열. 중에 고릅니다/);
+  assert.doesNotMatch(guides, /식단표는 .얘들아, 밥 먹자!.에서 현재 학급에 설정한 학교의 오늘 급식을 사용합니다\. \*\*글씨는 위젯 크기에 비례해 커지므로\*\*/);
 });
 
 test('발표 화면은 알림장을 넣은 스크린에서만 화면 편집 없이 알림을 바로 쓴다', () => {

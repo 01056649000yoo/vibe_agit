@@ -214,7 +214,7 @@ test('오늘 확장한 어휘·칭호·학급 발자국 도움말은 실제 집�
     assert.match(dragon, /시즌 종료.*미수령 보상.*받을 수 없/);
 });
 
-test('우리 반 스크린·알림장 도움말은 2026-09-02 변경을 그대로 안내한다', () => {
+test('우리 반 스크린·알림장 도움말은 2026-09-02~03 변경을 그대로 안내한다', () => {
     const classBoard = guideText(TEACHER_GUIDES['class-board']);
     const classNotice = guideText(TEACHER_GUIDES['class-notice']);
 
@@ -222,8 +222,12 @@ test('우리 반 스크린·알림장 도움말은 2026-09-02 변경을 그대�
     assert.match(classBoard, /작업바는 화면 미리보기 바로 위에 있습니다/);
     assert.doesNotMatch(classBoard, /상단 탭 작업바의 `저장`/);
 
-    // 급식·알림 글씨는 위젯 크기에 비례해 커진다(상한이 없다).
-    assert.match(classBoard, /글씨는 위젯 크기에 비례해 커지므로/);
+    // 급식 이름은 남는 자리에 맞춰 저절로 커지고, 열 수는 교사가 고른다(2026-09-03).
+    assert.match(classBoard, /급식 이름은 위젯에 남는 자리에 가득 차도록 저절로 커집니다/);
+    assert.match(classBoard, /급식 이름 배열은 .2열.과 .3열. 중에 고릅니다/);
+    assert.doesNotMatch(classBoard, /\*\*글씨는 위젯 크기에 비례해 커지므로\*\*/);
+    // 알림장 글씨는 지금까지처럼 위젯 크기에 비례한다(상한이 없다).
+    assert.match(classBoard, /알림장 글씨는 지금까지처럼 위젯 크기에 비례합니다/);
 
     // 알림장은 날짜별 저장·삭제 버튼·글씨 크기 고르기·창 넘김을 함께 안내한다.
     assert.match(classBoard, /알림장은 날짜마다 따로 저장됩니다/);
@@ -237,6 +241,11 @@ test('우리 반 스크린·알림장 도움말은 2026-09-02 변경을 그대�
     // 오늘 현황은 배경색과 구성 항목을 고른다.
     assert.match(classBoard, /배경은 남색·숲색·자주빛·먹색과 밝은 종이색 다섯 가지/);
     assert.match(classBoard, /켠 항목만 서버가 계산하므로/);
+
+    // 교실 화면의 알림장에서도 지난 알림을 넘겨 본다(2026-09-03).
+    assert.match(classBoard, /위젯 오른쪽 위의 .◀.·.▶.로 앞뒤 날짜를 오가고/);
+    assert.match(classBoard, /전체화면에서도 같은 버튼을 그대로 누릅니다/);
+    assert.match(classNotice, /교실 화면에 올려 둔 알림장 위젯에서도 .◀.·.▶.로 지난 알림을 넘겨/);
 
     // 알림장 도구 쪽도 같은 사용법을 말한다.
     assert.match(classNotice, /지울 때는 `삭제`를 누릅니다/);

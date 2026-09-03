@@ -4,7 +4,8 @@ export const noticeBoardWidgetManifest = Object.freeze({
   description: '오늘 날짜와 함께 그날의 알림을 보여 주고 지난 알림도 다시 불러와요',
   icon: '📒',
   version: 1,
-  // 내용은 학급+날짜 표에 있고 제목·색만 보드 JSON에 남는다. 열 때 오늘 알림 1회만 읽는다.
+  // 내용은 학급+날짜 표에 있고 제목·색만 보드 JSON에 남는다. 열 때 오늘 알림과 최근 날짜
+  // 목록을 1회만 읽고, 교사가 지난 알림으로 넘긴 날짜만 그때 한 건씩 더 읽는다.
   type: 'live-once',
   projectorSafe: true,
   maxInstances: 1,

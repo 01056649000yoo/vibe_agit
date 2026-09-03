@@ -1,3 +1,5 @@
+import { DEFAULT_MEAL_COLUMNS } from './mealColumns';
+
 export const mealBoardWidgetManifest = Object.freeze({
   id: 'meal-board',
   name: '식단표',
@@ -16,6 +18,8 @@ export const mealBoardWidgetManifest = Object.freeze({
   createDefaultConfig: () => ({
     heading: '오늘의 급식',
     showAllergens: true,
+    // 급식 이름을 몇 열로 세울지. 글씨는 남은 자리에 맞춰 저절로 커진다.
+    columns: DEFAULT_MEAL_COLUMNS,
   }),
   load: () => import('./MealBoardWidget'),
   loadSettings: () => import('./MealBoardSettings'),
