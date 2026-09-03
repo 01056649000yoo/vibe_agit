@@ -139,3 +139,34 @@ test('독서마라톤 진행 화면은 짧은 칸 아래를 비우지 않고 겹
     assert.match(css, /padding: clamp\(14px, 1\.8vw, 18px\)/);
     assert.match(css, /\.reading-marathon-settings__tracks > section \{[^}]*padding: 13px/);
 });
+
+test('독서마라톤 교사 화면은 반 전체 위치를 보여 주되 학생 화면과 섞지 않는다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [course, screen, css] = await Promise.all([
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonClassCourse.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/readingMarathon.css', 'utf8')
+    ]);
+
+    /*
+     * 학생 화면은 달리는 사람이 하나뿐이다. 반 전체 위치는 교사만 보는 것이라
+     * `학생에게 이렇게 보여요` 안에 넣으면 그 구획의 제목이 거짓말이 된다.
+     * 반드시 `현재 운영 현황` 쪽에 있어야 한다.
+     */
+    assert.match(screen, /reading-marathon-overview[\s\S]*<ReadingMarathonClassCourse[\s\S]*<\/section>[\s\S]*reading-marathon-student-preview/);
+    assert.match(course, /교사 확인용 · 학생 화면에는 나오지 않습니다/);
+
+    // 새로 읽는 자료 없이 이미 받아 둔 순위표만 쓴다.
+    assert.match(screen, /leaderboard=\{snapshot\?\.leaderboard\}/);
+    assert.doesNotMatch(course, /supabase|rpc\(|fetch\(/);
+
+    // 굽은 코스는 위아래로 자리를 크게 먹어 곧은 트랙으로 그린다.
+    assert.doesNotMatch(course, /getCoursePosition/);
+    assert.match(course, /const MAX_ROWS = 4/);
+
+    // 학생 화면 확인은 접어 두고 필요할 때만 편다.
+    assert.match(screen, /<details className="reading-marathon-student-preview"/);
+    assert.match(screen, /<summary className="reading-marathon-section-heading"/);
+    assert.match(css, /\.reading-marathon-student-preview > summary::after \{[^}]*펼쳐 보기/);
+    assert.match(css, /\.reading-marathon-student-preview\[open\] > summary::after \{[^}]*접기/);
+});

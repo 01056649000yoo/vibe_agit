@@ -475,3 +475,36 @@
     .reading-marathon-course__bar span { transition: none; }
     .reading-marathon-course.is-complete .reading-marathon-course__runner circle { animation: none; }
 }
+
+/*
+ * 교사만 보는 우리 반 전체 코스.
+ * 학생 화면에는 달리는 사람이 하나뿐이라, 여기서만 아이들을 점으로 함께 찍는다.
+ */
+.reading-marathon-class-course { margin-top: 12px; padding: 11px 13px 9px; border: 1px solid #fed7aa; border-radius: 15px; background: #fffdf8; }
+.reading-marathon-class-course__heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.reading-marathon-class-course__heading strong { color: #7c2d12; font-size: var(--ui-text-sm); }
+.reading-marathon-class-course__heading span { color: #a8a29e; font-size: var(--ui-text-xs); font-weight: 800; }
+.reading-marathon-class-course svg { display: block; width: 100%; height: auto; margin-top: 4px; }
+.reading-marathon-class-course__track { stroke: #fed7aa; stroke-width: 6; stroke-linecap: round; }
+.reading-marathon-class-course__end { fill: #a8a29e; font-size: 17px; font-weight: 900; }
+.reading-marathon-class-course__end:first-of-type { text-anchor: start; }
+.reading-marathon-class-course__end.is-goal { text-anchor: end; fill: #c2410c; }
+.reading-marathon-class-course__runner circle { fill: #fb923c; stroke: #fff; stroke-width: 2.5; }
+/* 가장 뒤처진 아이는 눈에 먼저 들어와야 한다. */
+.reading-marathon-class-course__runner.is-behind circle { fill: #ef4444; }
+.reading-marathon-class-course__runner text { fill: #b91c1c; font-size: 17px; font-weight: 900; text-anchor: middle; }
+.reading-marathon-class-course__runner:hover circle { stroke: #7c2d12; }
+.reading-marathon-class-course__hint,
+.reading-marathon-class-course__empty { margin: 2px 0 0; color: #a8a29e; font-size: var(--ui-text-xs); line-height: 1.5; }
+.reading-marathon-class-course__empty { margin-top: 12px; }
+
+/* 학생 화면 확인은 늘 볼 것이 아니라 접어 둔다. 머리말을 눌러 편다. */
+.reading-marathon-student-preview > summary { cursor: pointer; list-style: none; margin-bottom: 0; }
+.reading-marathon-student-preview > summary::-webkit-details-marker { display: none; }
+.reading-marathon-student-preview > summary::after { content: '펼쳐 보기 ▾'; flex: 0 0 auto; align-self: center; color: #0369a1; font-size: var(--ui-text-xs); font-weight: 900; white-space: nowrap; }
+.reading-marathon-student-preview[open] > summary { margin-bottom: 15px; }
+.reading-marathon-student-preview[open] > summary::after { content: '접기 ▴'; }
+.reading-marathon-student-preview > summary:focus-visible { outline: 2px solid #0284c7; outline-offset: 3px; border-radius: 12px; }
+.reading-marathon-class-course__behind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 6px 0 0; color: #78716c; font-size: var(--ui-text-xs); font-weight: 800; }
+.reading-marathon-class-course__behind strong { color: #b91c1c; font-size: var(--ui-text-sm); }
+.reading-marathon-class-course__behind span { color: #a8a29e; }

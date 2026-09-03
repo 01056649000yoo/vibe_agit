@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
+import ReadingMarathonClassCourse from './ReadingMarathonClassCourse';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import ReadingMarathonTeamAssignmentDialog from './ReadingMarathonTeamAssignmentDialog';
 import {
@@ -349,17 +350,21 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                             <div><dt>참여 학생</dt><dd>{summary.contributors}명</dd></div>
                             <div><dt>종료일</dt><dd>{formatDate(campaign.ends_on)}</dd></div>
                         </dl>
+                        <ReadingMarathonClassCourse
+                            leaderboard={snapshot?.leaderboard}
+                            targetDistanceM={summary?.targetDistanceM}
+                        />
                     </section>
 
-                    <section className="reading-marathon-student-preview" aria-labelledby="reading-marathon-preview-title">
-                        <div className="reading-marathon-section-heading">
+                    <details className="reading-marathon-student-preview" aria-labelledby="reading-marathon-preview-title">
+                        <summary className="reading-marathon-section-heading">
                             <div>
                                 <span>학생 화면 확인</span>
                                 <h4 id="reading-marathon-preview-title">학생에게 이렇게 보여요</h4>
                                 <p>학생 대시보드에 표시되는 실제 공동 코스와 순위 구성입니다.</p>
                             </div>
                             <strong>{campaign.is_enabled ? '현재 표시 중' : '기능을 켜면 표시'}</strong>
-                        </div>
+                        </summary>
 
                         <ReadingMarathonCourse title={campaign.title} summary={summary} completed={completed} />
 
@@ -395,7 +400,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                                 )}
                             </article>
                         </div>
-                    </section>
+                    </details>
 
                     <div className="reading-marathon-settings__tracks">
                         {competitionType === 'group_team' && (
