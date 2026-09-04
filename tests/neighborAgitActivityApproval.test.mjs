@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, teacherEntry, studentEntry, missionForm, promptFields, teacherGuides, packageJson, readme, plan] = await Promise.all([
+const [migration, teacherEntry, studentEntry, activityTypes, missionForm, promptFields, teacherGuides, packageJson, readme, plan] = await Promise.all([
     readFile('supabase/migrations/20261238_neighbor_activity_teacher_approval.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
+    readFile('src/modules/community/neighbor-agit/activityTypes.js', 'utf8'),
     readFile('src/components/teacher/MissionForm.jsx', 'utf8'),
     readFile('src/modules/writing/mission-form/MissionPromptFields.jsx', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8'),
@@ -67,8 +68,8 @@ test('승인 대기 활동은 학생 요약과 직접 활동 피드 양쪽에서
 });
 
 test('교사 화면은 호스트·게스트 모두 제안하고 상대 교사가 승인 또는 거절한다', () => {
-    assert.ok(teacherEntry.includes('새 공동 활동 제안하기'));
-    assert.ok(teacherEntry.includes('활동 제안하기'));
+    assert.match(teacherEntry, /새 \{getNeighborActivityLabel\(activeActivityTab\)\} 제안하기/);
+    assert.match(teacherEntry, /\{getNeighborActivityLabel\(activeActivityTab\)\} 제안하기<\/Button>/);
     assert.ok(teacherEntry.includes('활동 승인'));
     assert.ok(teacherEntry.includes('활동 제안을 거절했습니다.'));
     assert.match(teacherEntry, /activity\.can_review/);
@@ -87,10 +88,11 @@ test('일반 미션과 이웃 공동 활동은 같은 주제·안내 제시틀�
 });
 
 test('세 활동의 현재 이름과 기존 미션 재사용 설명을 한 계약으로 유지한다', () => {
-    for (const label of ['전시·나눔', '같이 쓰는 주제', '글짝 교환']) {
-        assert.ok(teacherEntry.includes(label));
-        assert.ok(studentEntry.includes(label));
+    for (const label of ['글 나눔 공간', '함께 쓰는 주제', '글짝 교환 활동']) {
+        assert.ok(activityTypes.includes(label));
     }
+    assert.match(teacherEntry, /getNeighborActivityLabel/);
+    assert.match(studentEntry, /getNeighborActivityLabel/);
     assert.match(readme, /기존 `writing_missions` 과제/);
     assert.match(plan, /교사.*승인/);
     const scripts = JSON.parse(packageJson).scripts;

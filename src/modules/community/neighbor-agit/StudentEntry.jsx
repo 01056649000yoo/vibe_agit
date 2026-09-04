@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Button from '../../../components/common/Button';
 import Modal from '../../../components/common/Modal';
 import StudentBackButton from '../../../components/student/StudentBackButton';
+import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
 import { neighborAgitApi } from './api';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import './StudentEntry.css';
@@ -339,11 +340,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
             </header>
 
             <nav className="neighbor-student-activities" aria-label="이웃 아지트 활동">
-                {[
-                    ['gallery', '🖼️', '전시·나눔'],
-                    ['topic', '✍️', '같이 쓰는 주제'],
-                    ['exchange', '💌', '글짝 교환']
-                ].map(([id, icon, label]) => (
+                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => (
                     <button type="button" key={id} className={activeSection === id ? 'is-active' : ''} aria-pressed={activeSection === id} onClick={() => selectSection(id)}>
                         <span aria-hidden="true">{icon}</span><strong>{label}</strong>
                     </button>
@@ -352,7 +349,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
 
             {activeSection === 'gallery' && <section className="neighbor-share-panel">
                 <div>
-                    <span>전시·나눔</span>
+                    <span>{getNeighborActivityLabel('gallery')}</span>
                     <h2>내 아지트 글을 이웃에게 소개해요</h2>
                     <p>이미 제출한 글 중 하나를 골라 선생님께 공개 확인을 요청할 수 있어요.</p>
                 </div>
@@ -387,7 +384,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
             {activeSection !== 'gallery' && !loading && (
                 <section className="neighbor-activity-space">
                     <header>
-                        <span>{activeSection === 'topic' ? '같이 쓰는 주제' : '글짝 교환'}</span>
+                        <span>{getNeighborActivityLabel(activeSection)}</span>
                         <h2>{activeSection === 'topic' ? '같은 생각거리로 쓰고 함께 읽어요' : '정해진 글짝과 글로 인사해요'}</h2>
                     </header>
                     {(feed?.activities || []).filter((activity) => activity.type === activeSection).length === 0 ? (

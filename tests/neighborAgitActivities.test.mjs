@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, teacherEntry, studentEntry, teacherApi, studentApi, app, navigation, missionSubmit, readme, security, performance] = await Promise.all([
+const [migration, teacherEntry, studentEntry, activityTypes, teacherApi, studentApi, app, navigation, missionSubmit, readme, security, performance] = await Promise.all([
     readFile('supabase/migrations/20261237_neighbor_activity_spaces.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
+    readFile('src/modules/community/neighbor-agit/activityTypes.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/teacherApi.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/api.js', 'utf8'),
     readFile('src/App.jsx', 'utf8'),
@@ -23,13 +24,15 @@ const functionSource = (name) => {
     return migration.slice(start, next < 0 ? migration.length : next);
 };
 
-test('이웃 아지트는 전시 나눔·공동 주제·글짝 교환 세 활동을 한 공간에서 구분한다', () => {
+test('이웃 아지트는 글 나눔 공간·함께 쓰는 주제·글짝 교환 활동을 탭으로 구분한다', () => {
     assert.match(migration, /activity_type IN \('topic', 'exchange'\)/);
     assert.match(migration, /activity_id UUID/);
-    for (const label of ['전시·나눔', '같이 쓰는 주제', '글짝 교환']) {
-        assert.ok(teacherEntry.includes(label), `교사 화면에 ${label} 표시가 없습니다.`);
-        assert.ok(studentEntry.includes(label), `학생 화면에 ${label} 표시가 없습니다.`);
+    for (const label of ['글 나눔 공간', '함께 쓰는 주제', '글짝 교환 활동']) {
+        assert.ok(activityTypes.includes(label), `공용 활동 이름에 ${label} 표시가 없습니다.`);
     }
+    assert.match(teacherEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
+    assert.match(teacherEntry, /aria-label="세 가지 활동 전환"/);
+    assert.match(studentEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
     assert.match(readme, /세 가지 활동/);
 });
 
