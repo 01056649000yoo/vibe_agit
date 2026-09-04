@@ -107,6 +107,12 @@ WITH source_candidate AS (
      AND post.is_submitted IS TRUE
      AND post.recalled_at IS NULL
     WHERE class.deleted_at IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM public.neighbor_space_classes existing_membership
+          WHERE existing_membership.class_id = class.id
+            AND existing_membership.status IN ('pending', 'active')
+      )
 )
 SELECT
     set_config('test.neighbor_post_class', COALESCE(max(class_id::TEXT) FILTER (WHERE position = 1), ''), TRUE),
@@ -135,6 +141,12 @@ JOIN public.students student
 WHERE class.deleted_at IS NULL
   AND class.id <> current_setting('test.neighbor_post_class')::UUID
   AND class.teacher_id <> current_setting('test.neighbor_post_teacher')::UUID
+  AND NOT EXISTS (
+      SELECT 1
+      FROM public.neighbor_space_classes existing_membership
+      WHERE existing_membership.class_id = class.id
+        AND existing_membership.status IN ('pending', 'active')
+  )
 ORDER BY class.created_at DESC
 LIMIT 1;
 
@@ -883,6 +895,12 @@ WITH teacher_classes AS (
      AND profile.is_approved IS TRUE
      AND profile.approval_revoked_at IS NULL
     WHERE class.deleted_at IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM public.neighbor_space_classes existing_membership
+          WHERE existing_membership.class_id = class.id
+            AND existing_membership.status IN ('pending', 'active')
+      )
     ORDER BY class.teacher_id, class.created_at DESC
 ), ranked AS (
     SELECT teacher_id, class_id, row_number() OVER (ORDER BY teacher_id) AS position

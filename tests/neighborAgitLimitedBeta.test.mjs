@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, panel, adminApi, teacherEntry, teacherApi, studentEntry, studentApi, security, performance] = await Promise.all([
+const [migration, reconciliation, foundationSmoke, panel, adminApi, teacherEntry, teacherApi, studentEntry, studentApi, security, performance] = await Promise.all([
     readFile('supabase/migrations/20261201_neighbor_limited_beta.sql', 'utf8'),
+    readFile('supabase/migrations/20261235_neighbor_limited_beta_checksum_reconciliation.sql', 'utf8'),
+    readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
     readFile('src/components/admin/AdminNeighborAgitPanel.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/adminApi.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
@@ -89,4 +91,17 @@ test('제한 공개의 직접 권한·요청 상한이 보안과 성능 정본�
     assert.match(security, /제한 공개/);
     assert.match(performance, /이웃 아지트 교사 작업 공간/);
     assert.match(performance, /내 글 공개 후보/);
+});
+
+test('적용 뒤 서식만 바뀐 마이그레이션은 함수 정의를 검증한 새 파일로 checksum을 보정한다', () => {
+    assert.match(reconciliation, /3e46ce9365f24bb08ce34648f6bee17f896258b8ddd397eded57883085f043d9/);
+    assert.match(reconciliation, /25e0c973cf30d02cc81bfd53b47b22b42067e5af1078ee34b102a480ab886914/);
+    assert.equal((reconciliation.match(/compact_definition_hash/g) || []).length, 2);
+    assert.equal((reconciliation.match(/\('[a-z0-9_]+\([^']*\)', '[a-f0-9]{32}'\)/g) || []).length, 13);
+    assert.match(reconciliation, /pg_get_functiondef/);
+    assert.match(reconciliation, /예상하지 못한 20261201 checksum/);
+});
+
+test('기반 스모크는 이미 운영 중인 내부 시험 공간의 학급을 후보에서 제외한다', () => {
+    assert.ok((foundationSmoke.match(/existing_membership\.status IN \('pending', 'active'\)/g) || []).length >= 3);
 });
