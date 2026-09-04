@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import useConfirmDialog from '../../../components/common/useConfirmDialog';
+import useNotice from '../../../components/common/useNotice';
 
 // 설정 갈래. 세 벌 모두 같은 `config` 를 저장하므로 순서만 정하면 된다.
 const SETTING_PANELS = Object.freeze([
@@ -78,6 +80,8 @@ const normalizeSummitSettings = (config) => {
 };
 
 const VocabularyTowerTeacherManager = ({ activeClass }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const classId = activeClass?.id;
     const [config, setConfig] = useState(DEFAULT_CONFIG);
     /*
@@ -190,7 +194,12 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
         if (error) {
             setSaving(false);
             console.error('어휘의 탑 설정 저장 실패:', error.message);
-            window.alert('설정 저장에 실패했습니다.');
+            await ask({
+                title: '설정을 저장하지 못했습니다',
+                body: '고른 값은 화면에 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
 
@@ -201,14 +210,19 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
         setSaving(false);
         if (versionError) {
             console.error('어휘의 탑 출제 버전 저장 실패:', versionError.message);
-            window.alert(versionError.message || '출제 버전을 저장하지 못했습니다.');
+            await ask({
+                title: '출제 버전을 저장하지 못했습니다',
+                body: `${versionError.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             void loadConfig();
             return;
         }
         setConfig(nextConfig);
-        window.alert(versionResult?.changed
-            ? '설정을 저장하고 현재 덱 10개를 기본 출제자료로 전환했습니다.'
-            : '설정을 저장했습니다. 현재 덱 10개가 자동으로 출제됩니다.');
+        notify(versionResult?.changed
+            ? '💾 설정을 저장하고 현재 덱 10개를 기본 출제자료로 바꿨어요.'
+            : '💾 설정을 저장했어요. 현재 덱 10개가 자동으로 출제됩니다.');
     };
 
     if (!activeClass) return <div className="vocab-teacher-empty">학급을 먼저 선택해주세요.</div>;
@@ -513,6 +527,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 </div>
             </section>
             )}
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

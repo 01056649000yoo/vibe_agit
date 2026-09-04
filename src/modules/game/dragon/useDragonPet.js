@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import useConfirmDialog from '../../../components/common/useConfirmDialog';
+import useNotice from '../../../components/common/useNotice';
 import { supabase } from '../../../lib/supabaseClient';
 import { DRAGON_SPECIES } from './presentation';
 import { DEFAULT_EQUIPPED_DECOR } from './decorCatalog';
@@ -28,6 +30,9 @@ const normalizePetData = (petData) => ({
 });
 
 export const useDragonPet = (studentId, points, setPoints, initialPetData = null) => {
+    // 앱 안 창은 여기서 만들고 학생 화면(StudentDashboard)이 그린다.
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const [petData, setPetData] = useState(() => normalizePetData());
     const [isFlashing, setIsFlashing] = useState(false);
     const [isBusy, setIsBusy] = useState(false); 
@@ -102,7 +107,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             };
         } catch (err) {
             console.error('드래곤 교감 기록 실패:', err.message);
-            alert('교감 기록을 저장하지 못했어요. 다시 시도해 주세요.');
+            await ask({
+                title: '교감 기록을 저장하지 못했어요',
+                body: `잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return null;
         } finally {
             setIsBusy(false);
@@ -113,7 +123,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         if (points === undefined || points === null || isBusy) return;
 
         if (points < item.price) {
-            alert('포인트가 부족해요! 꾸준히 글을 써 보세요. ✍️');
+            notify('포인트가 모자라요. 꾸준히 글을 써 보세요. ✍️');
             return;
         }
 
@@ -134,7 +144,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (err) {
             console.error('아지트 소품 구매 실패:', err.message);
-            alert('구매에 실패했습니다. 다시 시도해 주세요.');
+            await ask({
+                title: '사지 못했어요',
+                body: `포인트는 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setIsBusy(false);
@@ -157,7 +172,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (err) {
             console.error('아지트 장식 변경 실패:', err.message);
-            alert('장식을 바꾸지 못했어요. 다시 시도해 주세요.');
+            await ask({
+                title: '장식을 바꾸지 못했어요',
+                body: `잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setIsBusy(false);
@@ -176,7 +196,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (error) {
             console.error('전설 아지트 세트 개봉 실패:', error.message);
-            alert(error.message || '전설 세트를 열지 못했어요. 잠시 후 다시 시도해 주세요.');
+            await ask({
+                title: '전설 세트를 열지 못했어요',
+                body: `${error.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setIsBusy(false);
@@ -200,7 +225,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (error) {
             console.error('수호룡 종류 저장 실패:', error.message);
-            alert('수호룡 선택을 저장하지 못했어요. 다시 시도해 주세요.');
+            await ask({
+                title: '수호룡 선택을 저장하지 못했어요',
+                body: `잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setIsBusy(false);
@@ -222,7 +252,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             };
         } catch (error) {
             console.error('수호룡 성장 확인 저장 실패:', error.message);
-            alert('새 모습을 기록하지 못했어요. 잠시 후 다시 눌러 주세요.');
+            await ask({
+                title: '새 모습을 기록하지 못했어요',
+                body: `잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setIsBusy(false);
@@ -230,6 +265,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
     };
 
     return {
+        confirmDialog, notice,
         petData,
         setPetData,
         isFlashing,

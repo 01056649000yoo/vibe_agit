@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
@@ -62,6 +63,7 @@ const DragonHideoutModal = ({
     onOpenRecommendation,
     initiallyOpenSpeciesPicker = false
 }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
     const [bondFeedback, setBondFeedback] = useState('idle');
     const [bondReaction, setBondReaction] = useState(null);
     const [speciesPickerOpen, setSpeciesPickerOpen] = useState(() => (
@@ -89,7 +91,11 @@ const DragonHideoutModal = ({
 
     const handleSpeciesSelect = async (speciesId) => {
         const isReselection = Boolean(petData?.species);
-        if (isReselection && !window.confirm('수호룡을 다시 고를 기회는 한 번뿐이에요. 이 모습으로 바꿀까요?')) return;
+        if (isReselection && !await ask({
+            title: '이 모습으로 바꿀까요?',
+            body: '수호룡을 다시 고를 기회는 한 번뿐이에요.',
+            confirmLabel: '이 모습으로 하기'
+        })) return;
         const success = await selectSpecies(speciesId, { isReselection });
         if (success) setSpeciesPickerOpen(false);
     };
@@ -209,6 +215,7 @@ const DragonHideoutModal = ({
                     </div>
                 )}
             </AnimatePresence>
+            {confirmDialog}
         </ModalPortal>
     );
 };

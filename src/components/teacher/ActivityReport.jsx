@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { readLocalStorageJson } from '../../lib/browserStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import useConfirmDialog from '../common/useConfirmDialog';
+import useNotice from '../common/useNotice';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { callAI } from '../../lib/openai';
 import { exportObjectsToExcel } from '../../lib/excelExport';
@@ -31,6 +33,8 @@ const GENERATION_HISTORY_LIMIT = 100;
  * 역할: 선생님 - 글쓰기 평가 덧붙임 문장 작성 및 내보내기 📊
  */
 const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     // 규칙 보관함에서 방금 적용한 내용을 즉시 반영하기 위한 덮어쓰기 값.
     // (promptTemplate 은 대시보드가 마운트될 때 읽어온 값이라 바로 갱신되지 않는다)
     const [livePromptTemplate, setLivePromptTemplate] = useState(null);
@@ -134,7 +138,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     // [신규] 생성 이력 삭제
     const handleDeleteHistory = async (e, recordId) => {
         e.stopPropagation(); // 부모 클릭 이벤트(불러오기) 방지
-        if (!window.confirm('🗑️ 이 기록을 삭제하시겠습니까? (학생별 기록은 보존됩니다)')) return;
+        if (!await ask({
+            title: '이 기록을 삭제할까요?',
+            body: '학생별 기록은 그대로 남습니다.',
+            confirmLabel: '삭제하기 🗑️',
+            tone: 'danger'
+        })) return;
 
         try {
             const { error } = await supabase
@@ -146,7 +155,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             setGenerationHistory(prev => prev.filter(r => r.id !== recordId));
         } catch (err) {
             console.error('기록 삭제 실패:', err);
-            alert('삭제에 실패했습니다.');
+            await ask({
+                title: '기록을 삭제하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -177,7 +191,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             rubricDraft.curriculum
         );
         if (!rubricDraft.use_rubric || !getCurriculumGradeBand(rubricDraft.curriculum) || standards.length === 0) {
-            alert('평가 루브릭을 켜고 학년군과 관련 국어 성취기준을 1개 이상 선택해주세요.');
+            notify('평가 루브릭을 켜고 학년군과 성취기준을 하나 이상 골라 주세요.');
             return;
         }
 
@@ -188,7 +202,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
         if (error) {
             console.error('평가·성취기준 저장 실패:', error.message);
-            alert('평가 설정을 저장하지 못했습니다.');
+            await ask({
+                title: '평가 설정을 저장하지 못했습니다',
+                body: `고른 값은 화면에 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
 
@@ -202,7 +221,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         setDataRefreshToken((current) => current + 1);
         setRubricMission(null);
         setRubricDraft(null);
-        alert('성취기준과 평가 루브릭을 저장했습니다.');
+        notify('성취기준과 평가 루브릭을 저장했어요.');
     };
 
     const openEvaluationEntry = (mission) => {
@@ -215,7 +234,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             || !getCurriculumGradeBand(mission.evaluation_rubric?.curriculum)
             || standards.length === 0
         ) {
-            alert('먼저 해당 글의 학년군과 관련 국어 성취기준을 선택해주세요.');
+            notify('먼저 이 글의 학년군과 성취기준을 골라 주세요.');
             openRubricSettings(mission);
             return;
         }
@@ -355,7 +374,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 setStudentPosts(activeInMissions);
             } catch (err) {
                 console.error('데이터 수합 실패:', err.message);
-                alert('학생 데이터를 불러오는 중 오류가 발생했습니다.');
+                await ask({
+                    title: '학생 자료를 불러오지 못했습니다',
+                    body: `잠시 뒤 다시 시도해 주세요.`,
+                    confirmLabel: '알겠어요',
+                    acknowledgeOnly: true
+                });
             } finally {
                 setLoadingDetails(false);
             }
@@ -416,10 +440,10 @@ ${activitiesInfo}`;
         return `아래 글쓰기 평가 자료를 바탕으로 선택된 2022 개정 국어과 성취기준을 반영한 글쓰기 평가 덧붙임 문장을 작성해줘.\n\n${contextData.trim()}\n\n${outputRules}`;
     };
 
-    const validateGenerationReadiness = (studentId = null) => {
+    const validateGenerationReadiness = async (studentId = null) => {
         if (missionsWithoutStandards.length > 0) {
             const mission = missionsWithoutStandards[0];
-            alert(`"${mission.title}" 미션의 관련 국어 성취기준을 먼저 선택해주세요.`);
+            notify(`‘${mission.title}’ 과제의 성취기준을 먼저 골라 주세요.`);
             openRubricSettings(mission);
             return false;
         }
@@ -429,7 +453,7 @@ ${activitiesInfo}`;
         ));
         if (unevaluated.length > 0) {
             const mission = missions.find((item) => item.id === unevaluated[0].missionId);
-            alert('평가결과가 없습니다. 평가결과를 입력해주세요.');
+            notify('평가 결과가 없어요. 먼저 평가를 입력해 주세요.');
             if (mission) openEvaluationEntry(mission);
             return false;
         }
@@ -442,10 +466,11 @@ ${activitiesInfo}`;
             const visibleNames = studentNames.slice(0, 8).join(', ');
             const extraCount = Math.max(0, studentNames.length - 8);
             const nameSummary = `${visibleNames}${extraCount > 0 ? ` 외 ${extraCount}명` : ''}`;
-            const shouldExclude = window.confirm(
-                `선택한 미션에 제출 글이 없는 학생이 있습니다: ${nameSummary}\n\n`
-                + '결석 등으로 평가 대상이 아닌 학생을 제외하고 나머지 학생의 평어를 작성할까요?'
-            );
+            const shouldExclude = await ask({
+                title: '제출 글이 없는 학생은 빼고 작성할까요?',
+                body: `제출 글이 없는 학생: ${nameSummary}\n\n결석 등으로 평가 대상이 아니라면 빼고 나머지 학생만 작성합니다.`,
+                confirmLabel: '빼고 작성하기'
+            });
             if (!shouldExclude) return false;
         }
 
@@ -454,7 +479,7 @@ ${activitiesInfo}`;
 
     // 5. 단일 생성
     const generateCombinedReview = async (studentData) => {
-        if (!validateGenerationReadiness(studentData.student.id)) return;
+        if (!await validateGenerationReadiness(studentData.student.id)) return;
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
             const prompt = getWritingAppendPrompt(studentData.posts);
@@ -472,7 +497,12 @@ ${activitiesInfo}`;
             }
         } catch (err) {
             console.error('단일 생성 오류:', err);
-            alert(`생성 중 오류 발생: ${err.message}`);
+            await ask({
+                title: '덧붙임 문장을 만들지 못했습니다',
+                body: `${err.message}\n\n잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsGenerating(prev => ({ ...prev, [studentData.student.id]: false }));
         }
@@ -480,18 +510,24 @@ ${activitiesInfo}`;
 
     // 6. 일괄 생성 및 재생성
     const handleBatchGenerate = async () => {
-        if (!validateGenerationReadiness()) return;
+        if (!await validateGenerationReadiness()) return;
         if (studentPosts.length === 0) {
-            alert('평가결과가 없습니다. 평가결과를 입력해주세요.');
+            notify('평가 결과가 없어요. 먼저 평가를 입력해 주세요.');
             return;
         }
 
         const isRegen = generatedCount > 0;
-        const msg = isRegen
-            ? '기존 내용은 삭제되고 재생성됩니다. 진행하시겠습니까?'
-            : `평가 완료 학생 ${studentPosts.length}명의 덧붙임 문장을 일괄 작성하시겠습니까?`;
 
-        if (!confirm(msg)) return;
+        if (!await ask({
+            title: isRegen
+                ? `${studentPosts.length}명의 덧붙임 문장을 다시 작성할까요?`
+                : `${studentPosts.length}명의 덧붙임 문장을 일괄 작성할까요?`,
+            body: isRegen
+                ? '이미 만들어 둔 문장은 지워지고 새로 씁니다.'
+                : '학생 수만큼 AI를 부르므로 시간이 걸립니다. 끝나면 화면에 표시됩니다.',
+            confirmLabel: isRegen ? '다시 작성하기' : '일괄 작성하기 ✨',
+            tone: isRegen ? 'danger' : undefined
+        })) return;
 
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
@@ -548,12 +584,22 @@ ${activitiesInfo}`;
         }
 
         if (fatalError) {
-            alert('일괄 처리를 계속하지 못했습니다. 생성된 내용은 화면과 이 단말에 보존했습니다.');
+            await ask({
+                title: '일괄 작성을 끝까지 하지 못했습니다',
+                body: `이미 만든 내용은 화면과 이 기기에 그대로 있습니다.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } else if (failedStudentIds.length > 0 || historySaveFailed) {
             const saveMessage = historySaveFailed ? ' 서버 이력 저장도 완료하지 못했습니다.' : '';
-            alert(`${generatedThisRun.length}명 작성 완료, ${failedStudentIds.length}명 실패했습니다.${saveMessage} 실패한 학생만 다시 시도해 주세요.`);
+            await ask({
+                title: '${generatedThisRun.length}명 작성, ${failedStudentIds.length}명 실패했습니다',
+                body: `${saveMessage}실패한 학생만 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } else {
-            alert(isRegen ? '덧붙임 문장 일괄 재작성이 완료되었습니다! ✨' : '덧붙임 문장 일괄 작성이 완료되었습니다! ✨');
+            notify(isRegen ? '✨ 덧붙임 문장을 다시 작성했어요.' : '✨ 덧붙임 문장을 모두 작성했어요.');
         }
     };
 
@@ -636,7 +682,7 @@ ${activitiesInfo}`;
         }).join('\n---\n\n');
 
         navigator.clipboard.writeText(text);
-        alert('전체 학생의 덧붙임 문장이 클립보드에 복사되었습니다! 📋\n작성 중인 국어 평어의 앞이나 뒤에 붙여넣어 사용하세요.');
+        notify('📋 전체 학생의 덧붙임 문장을 복사했어요. 평어 앞뒤에 붙여 쓰세요.');
     };
 
     const toggleTag = (tag) => {
@@ -806,7 +852,7 @@ ${activitiesInfo}`;
                                                             ai_synthesis: resolvedResults.get(s.student.id) || s.ai_synthesis
                                                         }));
                                                     });
-                                                    alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);
+                                                    notify(`${new Date(record.created_at).toLocaleString()}에 만든 기록을 불러왔어요.`);
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1073,7 +1119,7 @@ ${activitiesInfo}`;
                                                                     <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#6366F1' }}>✨ 글쓰기 평가 덧붙임 문장</div>
                                                                     {data.ai_synthesis && (
                                                                         <button
-                                                                            onClick={() => { navigator.clipboard.writeText(data.ai_synthesis); alert('복사되었습니다! 📋'); }}
+                                                                            onClick={() => { navigator.clipboard.writeText(data.ai_synthesis); notify('📋 복사했어요.'); }}
                                                                             style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 'var(--ui-text-sm)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
                                                                         >
                                                                             <Copy size={14} /> 복사
@@ -1206,6 +1252,8 @@ ${activitiesInfo}`;
 
             {/* AI 일괄 생성 진행 모달 */}
             <BulkAIProgressModal isGenerating={batchLoading} progress={batchProgress} />
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

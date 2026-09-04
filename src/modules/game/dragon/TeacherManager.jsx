@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import useConfirmDialog from '../../../components/common/useConfirmDialog';
+import useNotice from '../../../components/common/useNotice';
 import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
@@ -307,6 +309,8 @@ const HistoryPanel = ({ history, onOpenStudent }) => {
 };
 
 const DragonTeacherManager = ({ activeClass }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const classId = activeClass?.id;
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -373,19 +377,35 @@ const DragonTeacherManager = ({ activeClass }) => {
         });
     }, [students, search, levelFilter]);
 
-    const runSeasonAction = async ({ action, confirmMessage, successMessage, nextTab = 'overview' }) => {
+    /*
+     * 시즌을 여닫는 일은 되돌릴 수 없다(단계와 모습이 그 순간으로 동결된다).
+     * 물음은 제목에, 무엇이 굳는지는 본문에 적고 붉은 단추로 받는다(2026-09-04).
+     */
+    const runSeasonAction = async ({ action, confirmTitle, confirmMessage, confirmLabel, successMessage, nextTab = 'overview' }) => {
         if (closingSeason || !classId) return;
-        if (!window.confirm(confirmMessage)) return;
+        if (!await ask({
+            title: confirmTitle,
+            body: confirmMessage,
+            confirmLabel: confirmLabel || '진행하기',
+            tone: 'danger'
+        })) return;
 
         setClosingSeason(true);
         try {
             const data = await action();
-            window.alert(successMessage(data));
+            notify(successMessage(data));
             await loadDashboard();
             setActiveTab(nextTab);
         } catch (actionError) {
             console.error('수호룡 시즌 처리 실패:', actionError);
-            window.alert(actionError.message || '시즌을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');
+            // ⚠️ 창을 띄우기 전에 잠금을 푼다 — finally 는 창을 닫은 뒤에야 돈다.
+            setClosingSeason(false);
+            await ask({
+                title: '시즌을 처리하지 못했습니다',
+                body: `${actionError.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setClosingSeason(false);
         }
@@ -398,7 +418,9 @@ const DragonTeacherManager = ({ activeClass }) => {
                 seasonName: currentName,
                 farewellDeadline
             }),
-            confirmMessage: `“${currentName}”의 작별 기간을 열까요?\n\n이 순간의 작가·소통·기록가·독서가 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
+            confirmTitle: `“${currentName}”의 작별 기간을 열까요?`,
+            confirmMessage: `이 순간의 작가·소통·기록가·독서가 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
+            confirmLabel: '작별 기간 열기',
             successMessage: () => `${currentName}의 성장을 마무리하고 작별 편지 쓰기를 열었습니다.`
         });
     };
@@ -407,7 +429,9 @@ const DragonTeacherManager = ({ activeClass }) => {
         const pending = Math.max(0, Number(season.farewell_total || students.length) - Number(season.farewell_completed || 0));
         runSeasonAction({
             action: () => titleSeasonApi.finalize(classId),
-            confirmMessage: `현재 시즌을 최종 종료할까요?\n\n작별 편지 미완성 학생 ${pending}명도 그대로 보관됩니다. 종료 뒤에는 편지를 수정할 수 없습니다.`,
+            confirmTitle: `현재 시즌을 최종 종료할까요?`,
+            confirmMessage: `작별 편지 미완성 학생 ${pending}명도 그대로 보관됩니다. 종료 뒤에는 편지를 수정할 수 없습니다.`,
+            confirmLabel: '시즌 종료하기',
             successMessage: (data) => `${data?.season_name || season.name}을 보관했습니다. 새 학기는 준비가 되었을 때 별도로 시작하세요.`,
             nextTab: 'history'
         });
@@ -420,7 +444,9 @@ const DragonTeacherManager = ({ activeClass }) => {
     const handleCancelFinalize = () => {
         runSeasonAction({
             action: () => titleSeasonApi.cancelFinalize(classId),
-            confirmMessage: `“${season.name}” 종료를 취소하고 시즌 종료를 누르기 전, 학기 성장 중 상태로 되돌릴까요?\n\n학생이 쓴 작별 편지는 지워지지 않고 그대로 남아요. 새 학기를 이미 시작했다면 되돌릴 수 없어요.`,
+            confirmTitle: `“${season.name}” 종료를 취소하고 시즌 종료를 누르기 전, 학기 성장 중 상태로 되돌릴까요?`,
+            confirmMessage: `학생이 쓴 작별 편지는 지워지지 않고 그대로 남아요. 새 학기를 이미 시작했다면 되돌릴 수 없어요.`,
+            confirmLabel: '되돌리기',
             successMessage: (data) => `${data?.season_name || season.name}을 시즌 종료 이전, 학기 성장 중 상태로 되돌렸습니다.`,
             nextTab: 'overview'
         });
@@ -431,7 +457,9 @@ const DragonTeacherManager = ({ activeClass }) => {
         const nextName = seasonName.trim() && seasonName.trim() !== season.name ? seasonName.trim() : `${nextNumber}번째 시즌`;
         runSeasonAction({
             action: () => titleSeasonApi.start(classId, nextName),
-            confirmMessage: `“${nextName}”을 시작할까요?\n\n학생의 포인트·구입한 소품·지난 글은 보존됩니다. 새 수호룡은 알부터 시작하며 학생이 종류를 다시 고릅니다.`,
+            confirmTitle: `“${nextName}”을 시작할까요?`,
+            confirmMessage: `학생의 포인트·구입한 소품·지난 글은 보존됩니다. 새 수호룡은 알부터 시작하며 학생이 종류를 다시 고릅니다.`,
+            confirmLabel: '새 시즌 시작하기',
             successMessage: (data) => `${data?.season_name || nextName}을 시작했습니다. 학생들은 새 수호룡을 선택할 수 있습니다.`
         });
     };
@@ -585,6 +613,8 @@ const DragonTeacherManager = ({ activeClass }) => {
                 seasonLabel={selectedStudentSeasonLabel}
                 onClose={() => { setSelectedStudent(null); setSelectedStudentSeasonLabel(null); }}
             />
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

@@ -253,7 +253,13 @@ const DIALOG_FREE_FILES = [
     'src/hooks/useTeacherDashboard.js',
     'src/components/teacher/TeacherDashboard.jsx',
     // 2026-09-04: 독서마라톤 설정. 시작 안내는 시작 뒤 경기 방식·배정을 못 바꾸므로 특히 중요하다.
-    'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx'
+    'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx',
+    // 2026-09-04: 사용자가 쓰다 마주친 화면들. 평어 도우미 일괄 작성, 수호룡 시즌·작별 편지, 어휘의 탑 설정.
+    'src/components/teacher/ActivityReport.jsx',
+    'src/modules/game/dragon/TeacherManager.jsx',
+    'src/modules/game/dragon/DragonHideoutModal.jsx',
+    'src/modules/game/dragon/useDragonPet.js',
+    'src/modules/game/vocab-tower/TeacherManager.jsx'
 ];
 
 test('과제 화면에는 브라우저 기본 창이 하나도 없다', async () => {
@@ -319,7 +325,8 @@ test('되돌릴 수 없는 일은 붉은 단추로 묻는다', async () => {
         { file: 'src/hooks/useMissionManager.js', title: '승인을 취소하고 포인트를 회수할까요?' },
         { file: 'src/components/teacher/ArchiveManager.jsx', title: '과제를 영구 삭제할까요?' },
         { file: 'src/hooks/useTeacherDashboard.js', title: '정말 탈퇴할까요?' },
-        { file: 'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', title: '을 지금 종료할까요?' }
+        { file: 'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', title: '을 지금 종료할까요?' },
+        { file: 'src/components/teacher/ActivityReport.jsx', title: '이 기록을 삭제할까요?' }
     ];
     for (const { file, title } of cases) {
         const source = await readFile(file, 'utf8');

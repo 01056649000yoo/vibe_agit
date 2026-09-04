@@ -159,6 +159,7 @@ const StudentDashboard = ({
     // 드래곤 관련 상태 및 액션
     const {
         petData, isFlashing, isBusy,
+        confirmDialog: dragonDialog, notice: dragonNotice,
         handleBond, buyDecorItem, claimLegendaryReward, equipDecorItem, selectSpecies, acknowledgeGrowth
     } = useDragonPet(
         studentSession?.id,
@@ -599,6 +600,9 @@ const StudentDashboard = ({
                 )}
             </AnimatePresence>
 
+            {/* 수호룡 훅이 만든 앱 안 창은 여기서 그린다 — 훅에는 그릴 자리가 없다. */}
+            {dragonDialog}
+            {dragonNotice}
         </>
     );
 };

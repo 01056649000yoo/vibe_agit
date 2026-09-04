@@ -61,8 +61,17 @@ test('앱 안 창을 부른 곳은 그 창을 반드시 화면에 그린다', as
             const consumers = [...sources].filter(([other, otherSource]) =>
                 other !== file && new RegExp(`from '[^']*${moduleName}'`).test(otherSource));
             assert.ok(consumers.length > 0, `${file}: ${element} 을 돌려주는데 쓰는 곳이 없다`);
+            /*
+             * 쓰는 쪽이 이름을 바꿔 받을 수 있다 — 한 화면이 훅 둘의 창을 함께 그릴 때 그렇다
+             * (예: `confirmDialog: dragonDialog`). 그때는 바뀐 이름으로 그렸는지 본다.
+             */
+            const rendersElement = ([, otherSource]) => {
+                if (otherSource.includes(`{${element}}`)) return true;
+                const renamed = new RegExp(`\\b${element}\\s*:\\s*(\\w+)`).exec(otherSource);
+                return Boolean(renamed && otherSource.includes(`{${renamed[1]}}`));
+            };
             assert.ok(
-                consumers.some(([, otherSource]) => otherSource.includes(`{${element}}`)),
+                consumers.some(rendersElement),
                 `${file}: ${element} 을 돌려주지만 그리는 곳이 없다 — 창이 영원히 안 뜬다`
             );
         }
