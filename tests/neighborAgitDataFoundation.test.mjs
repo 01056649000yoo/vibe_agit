@@ -46,6 +46,8 @@ test('공개 기본값과 학급·피드 제한은 화면 정책과 DB 제약 �
     assert.equal(NEIGHBOR_AGIT_LIMITS.maximumFeedRows, 50);
     assert.match(migration, /mode TEXT NOT NULL DEFAULT 'internal'/);
     assert.match(migration, /mode IN \('internal', 'public_beta', 'paused'\)/);
+    assert.match(smoke, /NOT IN \('internal', 'limited_beta', 'public_beta', 'paused'\)/);
+    assert.doesNotMatch(smoke, /mode FROM public\.neighbor_rollout_state WHERE singleton\) <> 'internal'/);
     assert.match(migration, /v_active_count >= 4/);
     assert.match(migration, /uq_neighbor_space_classes_one_active_space/);
     assert.match(smoke, /fifth active class must be blocked/);

@@ -13,6 +13,7 @@ import {
     describePresetResult,
     getGenrePreset
 } from '../../modules/writing/mission-types/genreCatalog';
+import MissionPromptFields from '../../modules/writing/mission-form/MissionPromptFields';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
@@ -214,43 +215,27 @@ const MissionForm = ({
                                 </div>
                             ) : (
                             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="글쓰기 주제"
-                                        value={formData.title}
-                                        onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                        style={{
-                                            flex: 2,
-                                            padding: '14px',
-                                            borderRadius: '12px',
-                                            border: '1px solid #ddd',
-                                            fontSize: 'var(--ui-text-lg)',
-                                            minHeight: '48px',
-                                            width: '100%',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-
-                                    <select value={formData.genre} onChange={e => handleGenreChange(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
-                                        {genreCategories.map(cat => (
-                                            <optgroup key={cat.label} label={cat.label}>
-                                                {cat.entries.map(entry => <option key={entry.id} value={entry.id}>{entry.id}</option>)}
-                                            </optgroup>
-                                        ))}
-                                        {/* 목록에서 빠진 지난 종류(일기·동시 등)로 저장된 미션도 값이 조용히 바뀌지 않게 남긴다. */}
-                                        {!genreCategories.some(cat => cat.entries.some(entry => entry.id === formData.genre)) && formData.genre && (
-                                            <optgroup label="🗂 지난 종류">
-                                                <option value={formData.genre}>{formData.genre}</option>
-                                            </optgroup>
-                                        )}
-                                    </select>
-                                </div>
-                                <textarea
-                                    placeholder="안내 가이드 (학생들에게 보여줄 기본 설명)"
-                                    value={formData.guide}
-                                    onChange={e => setFormData({ ...formData, guide: e.target.value })}
-                                    style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '80px', fontSize: 'var(--ui-text-lg)', width: '100%', boxSizing: 'border-box' }}
+                                <MissionPromptFields
+                                    title={formData.title}
+                                    guide={formData.guide}
+                                    onTitleChange={(title) => setFormData({ ...formData, title })}
+                                    onGuideChange={(guide) => setFormData({ ...formData, guide })}
+                                    isMobile={isMobile}
+                                    titleAccessory={(
+                                        <select value={formData.genre} onChange={e => handleGenreChange(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
+                                            {genreCategories.map(cat => (
+                                                <optgroup key={cat.label} label={cat.label}>
+                                                    {cat.entries.map(entry => <option key={entry.id} value={entry.id}>{entry.id}</option>)}
+                                                </optgroup>
+                                            ))}
+                                            {/* 목록에서 빠진 지난 종류(일기·동시 등)로 저장된 미션도 값이 조용히 바뀌지 않게 남긴다. */}
+                                            {!genreCategories.some(cat => cat.entries.some(entry => entry.id === formData.genre)) && formData.genre && (
+                                                <optgroup label="🗂 지난 종류">
+                                                    <option value={formData.genre}>{formData.genre}</option>
+                                                </optgroup>
+                                            )}
+                                        </select>
+                                    )}
                                 />
 
                                 {getGenrePreset(formData.genre) && (

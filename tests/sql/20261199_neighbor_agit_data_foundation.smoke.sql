@@ -22,9 +22,13 @@ BEGIN
         END IF;
     END LOOP;
 
-    IF (SELECT mode FROM public.neighbor_rollout_state WHERE singleton) <> 'internal'
+    -- 새 DB의 기본값이 internal인지는 정적 검사가 원본 마이그레이션에서 확인한다.
+    -- 이 역할 스모크는 운영 DB에서도 다시 돌기 때문에 이미 limited/public/paused로 전환된
+    -- 합법적인 운영 상태를 internal로 되돌리라고 요구하면 안 된다.
+    IF (SELECT mode FROM public.neighbor_rollout_state WHERE singleton)
+           NOT IN ('internal', 'limited_beta', 'public_beta', 'paused')
        OR (SELECT count(*) FROM public.neighbor_rollout_state) <> 1 THEN
-        RAISE EXCEPTION 'neighbor rollout must start as one internal row';
+        RAISE EXCEPTION 'neighbor rollout must have one valid state row';
     END IF;
 
     IF has_function_privilege('authenticated', 'public.guard_neighbor_space_class_v1()', 'EXECUTE')

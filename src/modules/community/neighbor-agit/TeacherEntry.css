@@ -58,6 +58,11 @@
 .neighbor-teacher__activity-list article span { color: #0f766e; font-size: var(--ui-text-xs); font-weight: 900; }
 .neighbor-teacher__activity-list article ul { display: flex; gap: 7px; flex-wrap: wrap; margin: 10px 0 0; padding: 0; list-style: none; }
 .neighbor-teacher__activity-list article li { padding: 5px 8px; border-radius: 999px; background: #f0fdfa; color: #52706d; font-size: var(--ui-text-xs); }
+.neighbor-teacher__activity-list .neighbor-teacher__approvals { margin-top: 12px; }
+.neighbor-teacher__activity-list .neighbor-teacher__approvals li { border: 1px solid #d9e2ec; background: #f8fafc; }
+.neighbor-teacher__activity-list .neighbor-teacher__approvals li[data-status="approved"] { border-color: #a7f3d0; background: #ecfdf5; color: #047857; }
+.neighbor-teacher__activity-list .neighbor-teacher__approvals li[data-status="pending"] { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+.neighbor-teacher__activity-list .neighbor-teacher__approvals li[data-status="rejected"] { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
 
 @media (max-width: 1050px) {
     .neighbor-teacher__space-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

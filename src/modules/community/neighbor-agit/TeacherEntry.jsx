@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import { neighborAgitTeacherApi } from './teacherApi';
 import './TeacherEntry.css';
 
@@ -53,7 +54,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setPostDetail(null);
         setSpaceForm({ name: '', publicClassName: activeClass?.name || '', description: '' });
         setJoinForm({ inviteKey: '', publicClassName: activeClass?.name || '' });
-        setActivityForm({ type: 'topic', title: '', prompt: '', classIds: [] });
+        setActivityForm({ type: 'topic', title: '', prompt: '', classIds: classId ? [classId] : [] });
         void loadWorkspace();
     }, [activeClass?.name, classId, loadWorkspace]);
 
@@ -124,15 +125,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             title: activityForm.title.trim(),
             prompt: activityForm.prompt.trim(),
             exchange_class_ids: activityForm.type === 'exchange' ? activityForm.classIds : null
-        }, activityForm.type === 'topic' ? '같이 쓰는 주제를 열었습니다.' : '글짝 교환 글쓰기를 열었습니다.');
+        }, activityForm.type === 'topic'
+            ? '같이 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
+            : '글짝 교환을 제안했습니다. 상대 학급 교사의 승인을 기다려 주세요.');
         if (result) setActivityForm((current) => ({ ...current, title: '', prompt: '' }));
     };
 
     const toggleExchangeClass = (targetClassId) => {
+        if (targetClassId === classId) return;
         setActivityForm((current) => {
             const selected = current.classIds.includes(targetClassId)
-                ? current.classIds.filter((id) => id !== targetClassId)
-                : [...current.classIds, targetClassId].slice(-2);
+                ? [classId]
+                : [classId, targetClassId];
             return { ...current, classIds: selected };
         });
     };
@@ -293,43 +297,59 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 <p>두 학급이 같은 주제로 쓴 뒤 글짝을 맺습니다. 인원이 다르면 한 학생이 최대 두 명과 연결됩니다.</p>
                             </section>
 
-                            {workspace.space.my_role === 'host' && (
-                                <form className="neighbor-teacher-card neighbor-teacher__activity-form" onSubmit={createActivity}>
-                                    <div><span>호스트</span><h2>새 공동 활동 열기</h2></div>
+                            <form className="neighbor-teacher-card neighbor-teacher__activity-form" onSubmit={createActivity}>
+                                    <div><span>참여 교사</span><h2>새 공동 활동 제안하기</h2></div>
+                                    <p>한 학급이 제안하고 다른 참여 학급 교사가 모두 승인하면 양쪽 학생에게 동시에 열립니다.</p>
                                     <div className="neighbor-teacher__activity-choice" role="group" aria-label="활동 종류">
-                                        <button type="button" className={activityForm.type === 'topic' ? 'is-active' : ''} onClick={() => setActivityForm((current) => ({ ...current, type: 'topic' }))}>같이 쓰는 주제</button>
-                                        <button type="button" className={activityForm.type === 'exchange' ? 'is-active' : ''} onClick={() => setActivityForm((current) => ({ ...current, type: 'exchange' }))}>글짝 교환</button>
+                                        <button type="button" className={activityForm.type === 'topic' ? 'is-active' : ''} onClick={() => setActivityForm((current) => ({ ...current, type: 'topic', classIds: [classId] }))}>같이 쓰는 주제</button>
+                                        <button type="button" className={activityForm.type === 'exchange' ? 'is-active' : ''} onClick={() => setActivityForm((current) => ({ ...current, type: 'exchange', classIds: [classId] }))}>글짝 교환</button>
                                     </div>
-                                    <label>활동 제목<input value={activityForm.title} maxLength={80} required placeholder="예: 우리 동네의 숨은 보물" onChange={(event) => setActivityForm({ ...activityForm, title: event.target.value })} /></label>
-                                    <label>학생 글쓰기 안내<textarea value={activityForm.prompt} maxLength={1000} required placeholder="무엇을 떠올리고 어떻게 써 볼지 안내해 주세요." onChange={(event) => setActivityForm({ ...activityForm, prompt: event.target.value })} /></label>
+                                    <MissionPromptFields
+                                        title={activityForm.title}
+                                        guide={activityForm.prompt}
+                                        onTitleChange={(title) => setActivityForm((current) => ({ ...current, title }))}
+                                        onGuideChange={(prompt) => setActivityForm((current) => ({ ...current, prompt }))}
+                                        isMobile={isMobile}
+                                        titleMaxLength={80}
+                                        guideMaxLength={1000}
+                                        required
+                                        titlePlaceholder="글쓰기 주제 (예: 우리 동네의 숨은 보물)"
+                                        guidePlaceholder="안내 가이드 (무엇을 떠올리고 어떻게 써 볼지 알려 주세요)"
+                                    />
                                     {activityForm.type === 'exchange' && (
                                         <fieldset className="neighbor-teacher__class-choice">
                                             <legend>교환할 두 학급</legend>
                                             {activeMemberships.map((membership) => (
                                                 <label key={membership.class_id}>
-                                                    <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} onChange={() => toggleExchangeClass(membership.class_id)} />
-                                                    {membership.class_name}
+                                                    <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} disabled={membership.class_id === classId} onChange={() => toggleExchangeClass(membership.class_id)} />
+                                                    {membership.class_name}{membership.class_id === classId ? ' (우리 학급)' : ''}
                                                 </label>
                                             ))}
-                                            <small>{activityForm.classIds.length}/2 선택</small>
+                                            <small>상대 학급 {Math.max(activityForm.classIds.length - 1, 0)}/1 선택</small>
                                         </fieldset>
                                     )}
-                                    <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy) || (activityForm.type === 'exchange' && activityForm.classIds.length !== 2)}>활동 열기</Button>
+                                    <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy) || (activityForm.type === 'exchange' && activityForm.classIds.length !== 2)}>활동 제안하기</Button>
                                 </form>
-                            )}
 
                             <section className="neighbor-teacher-card neighbor-teacher__activity-list">
                                 <div><span>진행 현황</span><h2>공동 활동</h2></div>
                                 {activities.length === 0 ? <p className="neighbor-teacher__empty">아직 연 공동 활동이 없습니다.</p> : activities.map((activity) => (
                                     <article key={activity.id}>
                                         <div>
-                                            <span>{activity.type === 'topic' ? '같이 쓰는 주제' : '글짝 교환'} · {activity.status === 'closed' ? '종료' : activity.status === 'matched' ? '매칭 완료' : '글 쓰는 중'}</span>
+                                            <span>{activity.type === 'topic' ? '같이 쓰는 주제' : '글짝 교환'} · {activity.status === 'pending_approval' ? '교사 승인 대기' : activity.status === 'closed' ? '종료' : activity.status === 'matched' ? '매칭 완료' : '글 쓰는 중'}</span>
                                             <h3>{activity.title}</h3>
                                             <p>{activity.prompt}</p>
+                                            {activity.approvals?.length > 0 && <ul className="neighbor-teacher__approvals">{activity.approvals.map((approval) => <li key={approval.class_id} data-status={approval.status}>{approval.class_name} · {approval.is_proposer ? '제안함' : approval.status === 'approved' ? '승인' : approval.status === 'rejected' ? '거절' : approval.status === 'cancelled' ? '종료' : '확인 전'}</li>)}</ul>}
                                             <ul>{activity.class_stats.map((item) => <li key={item.class_id}>{item.class_name} · 제출 {item.submitted_count} · 검토 {item.review_count} · 공개 {item.published_count}</li>)}</ul>
                                             {activity.type === 'exchange' && activity.status === 'matched' && <small>{activity.pair_count}쌍 연결됨</small>}
                                         </div>
-                                        {workspace.space.my_role === 'host' && activity.status !== 'closed' && (
+                                        {activity.can_review && (
+                                            <div className="neighbor-teacher__row-actions">
+                                                <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '활동 제안을 승인했습니다. 모든 교사가 승인하면 학생에게 열립니다.')}>활동 승인</Button>
+                                                <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
+                                            </div>
+                                        )}
+                                        {activity.can_manage && activity.status !== 'pending_approval' && activity.status !== 'closed' && (
                                             <div className="neighbor-teacher__row-actions">
                                                 {activity.type === 'exchange' && activity.status === 'open' && <Button type="button" loading={busy === 'match_exchange'} disabled={Boolean(busy)} onClick={() => runAction('match_exchange', { space_id: workspace.space.id, activity_id: activity.id }, '제출한 학생들의 글짝을 정하고 담임 검토함으로 보냈습니다.')}>글짝 정하기</Button>}
                                                 <Button type="button" variant="outline" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => window.confirm('이 활동의 새 글쓰기를 마칠까요? 공개된 글은 남습니다.') && runAction('close_activity', { space_id: workspace.space.id, activity_id: activity.id }, '활동을 마쳤습니다.')}>활동 종료</Button>

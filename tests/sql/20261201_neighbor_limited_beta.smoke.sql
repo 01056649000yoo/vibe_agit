@@ -416,6 +416,101 @@ END;
 $$;
 RESET ROLE;
 
+-- 제안 직후 과제는 보관 상태이고 학생에게 보이지 않는다. 상대 학급 교사가 두 활동을 승인하면 함께 열린다.
+DO $$
+BEGIN
+    IF (SELECT count(*) FROM public.neighbor_activities activity
+        WHERE activity.id IN (
+            current_setting('test.neighbor_topic')::UUID,
+            current_setting('test.neighbor_exchange')::UUID
+        ) AND activity.status = 'pending_approval') <> 2
+       OR (SELECT count(*) FROM public.neighbor_activity_approvals approval
+           WHERE approval.activity_id IN (
+               current_setting('test.neighbor_topic')::UUID,
+               current_setting('test.neighbor_exchange')::UUID
+           ) AND approval.class_id = current_setting('test.limited_class_2')::UUID
+             AND approval.status = 'pending') <> 2
+       OR (SELECT count(*) FROM public.writing_missions mission
+           JOIN public.neighbor_activity_classes link ON link.mission_id = mission.id
+           WHERE link.activity_id IN (
+               current_setting('test.neighbor_topic')::UUID,
+               current_setting('test.neighbor_exchange')::UUID
+           ) AND mission.is_archived IS TRUE) <> 4 THEN
+        RAISE EXCEPTION 'activity proposal was visible before counterpart approval';
+    END IF;
+END;
+$$;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_gallery JSONB;
+    v_blocked BOOLEAN := FALSE;
+BEGIN
+    v_gallery := public.get_neighbor_space_feed_v1(current_setting('test.limited_space')::UUID, 20, NULL, NULL);
+    BEGIN
+        PERFORM public.get_neighbor_activity_feed_v1(
+            current_setting('test.limited_space')::UUID,
+            current_setting('test.neighbor_topic')::UUID, 20, NULL, NULL
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_blocked := TRUE;
+    END;
+    IF jsonb_array_length(v_gallery->'activities') <> 0 OR NOT v_blocked THEN
+        RAISE EXCEPTION 'pending activity leaked to student: %, %', v_gallery, v_blocked;
+    END IF;
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_result JSONB;
+BEGIN
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_2')::UUID, 'review_activity',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'activity_id', current_setting('test.neighbor_topic'), 'approve', TRUE)
+    );
+    IF v_result #>> '{action_result,status}' <> 'open' THEN
+        RAISE EXCEPTION 'topic activity did not open after counterpart approval: %', v_result;
+    END IF;
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_2')::UUID, 'review_activity',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'activity_id', current_setting('test.neighbor_exchange'), 'approve', TRUE)
+    );
+    IF v_result #>> '{action_result,status}' <> 'open' THEN
+        RAISE EXCEPTION 'exchange activity did not open after counterpart approval: %', v_result;
+    END IF;
+END;
+$$;
+RESET ROLE;
+
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM public.writing_missions mission
+        JOIN public.neighbor_activity_classes link ON link.mission_id = mission.id
+        WHERE link.activity_id IN (
+            current_setting('test.neighbor_topic')::UUID,
+            current_setting('test.neighbor_exchange')::UUID
+        ) AND mission.is_archived IS TRUE
+    ) THEN
+        RAISE EXCEPTION 'approved activity missions remained archived';
+    END IF;
+END;
+$$;
+
 SELECT set_config('test.neighbor_topic_mission_1', (
     SELECT link.mission_id::TEXT FROM public.neighbor_activity_classes link
     WHERE link.activity_id = current_setting('test.neighbor_topic')::UUID
@@ -576,6 +671,68 @@ BEGIN
        OR jsonb_array_length(v_feed->'items') <> 2
        OR v_detail->>'author_name' <> v_partner_name THEN
         RAISE EXCEPTION 'student activity feed or real name failed: %, %, %', v_gallery, v_feed, v_detail;
+    END IF;
+END;
+$$;
+RESET ROLE;
+
+-- 게스트 교사도 제안할 수 있지만 상대 교사가 거절하면 보관 과제와 활동은 학생에게 보이지 않는다.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+SELECT public.run_neighbor_teacher_action_v1(
+    current_setting('test.limited_class_1')::UUID, 'close_activity',
+    jsonb_build_object('space_id', current_setting('test.limited_space'),
+        'activity_id', current_setting('test.neighbor_topic'))
+);
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE v_result JSONB;
+BEGIN
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_2')::UUID, 'create_activity',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'type', 'topic', 'title', '거절 확인용 주제', 'prompt', '학생에게 보이면 안 됩니다.')
+    );
+    PERFORM set_config('test.neighbor_rejected_topic', v_result #>> '{action_result,activity_id}', TRUE);
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+SELECT public.run_neighbor_teacher_action_v1(
+    current_setting('test.limited_class_1')::UUID, 'review_activity',
+    jsonb_build_object('space_id', current_setting('test.limited_space'),
+        'activity_id', current_setting('test.neighbor_rejected_topic'), 'approve', FALSE)
+);
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE v_gallery JSONB;
+BEGIN
+    v_gallery := public.get_neighbor_space_feed_v1(current_setting('test.limited_space')::UUID, 20, NULL, NULL);
+    IF EXISTS (
+        SELECT 1 FROM jsonb_array_elements(v_gallery->'activities') item
+        WHERE item->>'id' = current_setting('test.neighbor_rejected_topic')
+    ) THEN
+        RAISE EXCEPTION 'rejected activity leaked into student summary: %', v_gallery;
     END IF;
 END;
 $$;
