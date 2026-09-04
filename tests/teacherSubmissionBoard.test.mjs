@@ -214,7 +214,10 @@ test('미션별 학생 현황은 24명 카드 배치와 같은 실시간 데이�
     assert.match(styles, /mission-card\.is-confirmed[\s\S]*mission-card\.is-pending[\s\S]*mission-card\.is-rewriting[\s\S]*mission-card\.is-waiting/);
     assert.match(styles, /mission-card\.is-status-changed[\s\S]*teacher-submission-card-change 2\.2s/);
     assert.match(styles, /@media \(max-width: 640px\)[\s\S]*mission-card-grid\.is-expanded[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
-    assert.match(dialog, /ModalCloseButton[\s\S]*tone="onDark"/);
+    // 2026-09-04: 머리말을 옅은 파랑으로 바꾸며 닫기 단추도 밝은 배경용(기본)으로 되돌렸다.
+    //             색 대비 근거는 tests/approvePostDialog.test.mjs 가 지킨다.
+    assert.match(dialog, /ModalCloseButton onClick=\{onClose\} label=/);
+    assert.doesNotMatch(dialog, /tone="onDark"/, '밝은 머리말에 어두운 배경용 단추를 쓴다');
     assert.match(dialog, /document\.body\.style\.overflow = 'hidden'[\s\S]*event\.key === 'Escape'/);
 });
 

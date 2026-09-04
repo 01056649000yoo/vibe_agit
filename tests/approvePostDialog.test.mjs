@@ -240,3 +240,21 @@ test('물어볼 것이 없는 안내는 창을 띄우지 않는다', async () =>
         assert.match(hook.slice(at, at + 260), /tone: 'danger'/, `${title}: 붉은 단추로 묻지 않는다`);
     }
 });
+
+test('창 머리말은 옅은 바탕에 진한 글씨다 — 대시보드보다 짙지 않게', async () => {
+    const dialog = await readFile('src/components/common/CenteredDialog.jsx', 'utf8');
+
+    /*
+     * 2026-09-04: 예전 머리말은 진한 파랑 위 흰 글씨였다. 대시보드의 다른 카드보다 짙어 창만 튀었고,
+     * **그라데이션 오른쪽 끝(#0EA5E9)은 흰 글씨 대비가 2.77:1** 로 큰 글씨 기준(3:1)에도 못 미쳤다.
+     * 꼬리표·설명은 12px 라 4.5:1 이 필요한데 한참 모자랐다.
+     * 옅은 바탕(#eff6ff)에 진한 파랑 글씨(#1d4ed8)로 뒤집으면 6.16:1 — 더 옅으면서 더 잘 읽힌다.
+     * 되돌리려면 이 숫자부터 다시 재야 한다.
+     */
+    assert.match(dialog, /background: 'linear-gradient\(135deg,var\(--ui-primary-soft\),#e0f2fe\)'/);
+    assert.match(dialog, /color: 'var\(--ui-primary-hover\)'/, '제목이 옅은 바탕에 묻히는 색이다');
+    assert.doesNotMatch(dialog, /color: 'white'/, '옅은 바탕에 흰 글씨가 남아 있다');
+    assert.doesNotMatch(dialog, /tone="onDark"/, '밝은 머리말에 어두운 배경용 닫기 단추를 쓴다');
+    // 바탕과 본문이 모두 밝아 경계가 사라지므로 아래 선으로 가른다.
+    assert.match(dialog, /borderBottom: '1px solid var\(--ui-primary-border\)'/);
+});
