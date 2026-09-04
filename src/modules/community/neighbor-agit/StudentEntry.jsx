@@ -173,7 +173,9 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
             setSelectedActivity((current) => current?.id === activity.id
                 ? { ...current, shared_post_id: result.shared_post_id, share_status: result.status }
                 : current);
-            setActivityMessage('선생님께 공동 주제 글 공개 확인을 요청했어요.');
+            setActivityMessage(activity.type === 'exchange'
+                ? '선생님께 글짝 활동 글 확인을 요청했어요.'
+                : '선생님께 함께 쓴 글 공개 확인을 요청했어요.');
         } catch {
             setActivityMessage('공개를 요청하지 못했어요. 제출 상태를 확인해 주세요.');
         } finally {
@@ -402,13 +404,13 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                         <h3>{activity.title}</h3>
                                         <p>{activity.prompt}</p>
                                         {activity.type === 'exchange' && activity.partner_names?.length > 0 && <strong>내 글짝: {activity.partner_names.join(', ')}</strong>}
-                                        {activity.type === 'exchange' && activity.status === 'open' && activity.is_submitted && <small>선생님이 모두의 제출을 확인한 뒤 글짝을 정해요.</small>}
+                                        {activity.type === 'exchange' && <small>{activity.exchange_share_scope === 'space' ? '글짝 교환 뒤 두 학급 전체와 글을 나눠요.' : '나와 연결된 글짝끼리만 글과 댓글을 나눠요.'}</small>}
                                         {activity.share_status === 'pending' && <small>담임 선생님이 공개 확인 중이에요.</small>}
                                         {activity.share_status === 'returned' && <small>다시 확인해 주세요{activity.review_note ? ` · ${activity.review_note}` : ''}</small>}
                                     </div>
                                     <div className="neighbor-activity-list__actions">
                                         {activity.status !== 'closed' && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
-                                        {activity.type === 'topic' && activity.is_submitted && !['pending', 'published'].includes(activity.share_status) && <Button type="button" loading={shareBusy === activity.id} disabled={Boolean(shareBusy)} onClick={() => requestActivityShare(activity)}>나눔 요청</Button>}
+                                        {activity.is_submitted && !['pending', 'published'].includes(activity.share_status) && <Button type="button" loading={shareBusy === activity.id} disabled={Boolean(shareBusy)} onClick={() => requestActivityShare(activity)}>{activity.type === 'exchange' ? '글짝에게 보내기' : '나눔 요청'}</Button>}
                                         {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>활동 글 보기</Button>}
                                     </div>
                                 </article>
@@ -431,7 +433,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                 <section className="neighbor-student-state" aria-live="polite">활동 글을 불러오고 있어요…</section>
             ) : visibleFeed?.items?.length ? (
                 <>
-                    {selectedActivity && <div className="neighbor-activity-feed-heading"><span>{selectedActivity.type === 'topic' ? '같이 쓴 글' : '내 글짝의 글'}</span><h2>{selectedActivity.title}</h2></div>}
+                    {selectedActivity && <div className="neighbor-activity-feed-heading"><span>{selectedActivity.type === 'topic' ? '같이 쓴 글' : selectedActivity.exchange_share_scope === 'space' ? '두 학급이 함께 보는 글' : '내 글짝의 글'}</span><h2>{selectedActivity.title}</h2></div>}
                     <section className="neighbor-student-feed" aria-label={selectedActivity ? `${selectedActivity.title} 글 목록` : '이웃 글 목록'}>
                         {visibleFeed.items.map((item) => (
                             <button

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [baseMigration, activityMigration, smoke, api, entry, manifest, performance, security] = await Promise.all([
+const [baseMigration, activityMigration, matchingMigration, smoke, api, entry, manifest, performance, security] = await Promise.all([
     readFile('supabase/migrations/20261199_neighbor_agit_data_foundation.sql', 'utf8'),
     readFile('supabase/migrations/20261237_neighbor_activity_spaces.sql', 'utf8'),
+    readFile('supabase/migrations/20261239_neighbor_teacher_sharing_exchange_matching.sql', 'utf8'),
     readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/api.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
@@ -12,7 +13,7 @@ const [baseMigration, activityMigration, smoke, api, entry, manifest, performanc
     readFile('PERFORMANCE_HARNESS.md', 'utf8'),
     readFile('SECURITY_HARNESS.md', 'utf8')
 ]);
-const migration = `${baseMigration}\n${activityMigration}`;
+const migration = `${baseMigration}\n${activityMigration}\n${matchingMigration}`;
 
 const functionSource = (name) => {
     const start = migration.lastIndexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);

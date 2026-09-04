@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, teacherEntry, studentEntry, activityTypes, missionForm, promptFields, teacherGuides, packageJson, readme, plan] = await Promise.all([
+const [approvalMigration, matchingMigration, teacherEntry, studentEntry, activityTypes, missionForm, promptFields, teacherGuides, packageJson, readme, plan] = await Promise.all([
     readFile('supabase/migrations/20261238_neighbor_activity_teacher_approval.sql', 'utf8'),
+    readFile('supabase/migrations/20261239_neighbor_teacher_sharing_exchange_matching.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/activityTypes.js', 'utf8'),
@@ -14,9 +15,10 @@ const [migration, teacherEntry, studentEntry, activityTypes, missionForm, prompt
     readFile('src/modules/community/neighbor-agit/README.md', 'utf8'),
     readFile('NEIGHBOR_AGIT_PLAN.md', 'utf8')
 ]);
+const migration = `${approvalMigration}\n${matchingMigration}`;
 
 const functionSource = (name) => {
-    const start = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
+    const start = migration.lastIndexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
     assert.ok(start >= 0, `${name} 함수가 없습니다.`);
     const next = migration.indexOf('\nCREATE OR REPLACE FUNCTION public.', start + 1);
     return migration.slice(start, next < 0 ? migration.length : next);
@@ -24,7 +26,7 @@ const functionSource = (name) => {
 
 test('공동 활동은 참여 교사가 제안하고 다른 학급 승인을 기다리는 상태로 시작한다', () => {
     const create = functionSource('create_neighbor_activity_v1');
-    assert.match(migration, /'pending_approval', 'open', 'matched', 'closed'/);
+    assert.match(migration, /'pending_approval', 'open', 'matching_review', 'matched', 'closed'/);
     assert.match(create, /assert_neighbor_participating_teacher_v1/);
     assert.doesNotMatch(create, /호스트 교사만 새 활동/);
     assert.match(create, /'pending_approval', v_user_id/);
@@ -32,14 +34,25 @@ test('공동 활동은 참여 교사가 제안하고 다른 학급 승인을 기
     assert.match(create, /jsonb_build_array\('이웃 아지트'/);
 });
 
-test('승인 전 기존 미션은 보관 상태이고 마지막 교사 승인 뒤 양 학급에 함께 열린다', () => {
+test('승인 전 미션은 보관 상태이고 주제 활동만 마지막 활동 승인 뒤 학급에 열린다', () => {
     const create = functionSource('create_neighbor_activity_v1');
     const review = functionSource('review_neighbor_activity_v1');
     assert.match(create, /'\[\]'::JSONB,[\s\S]*TRUE[\s\S]*FROM public\.classes/);
     assert.match(review, /approval\.status = 'pending'/);
     assert.match(review, /NOT EXISTS[\s\S]*approval\.status = 'pending'/);
     assert.match(review, /UPDATE public\.neighbor_activities SET status = 'open'/);
+    assert.match(review, /v_activity\.activity_type = 'topic'/);
     assert.match(review, /SET is_archived = FALSE/);
+});
+
+test('글짝 활동은 활동 승인 뒤에도 매칭안 상대 교사 승인 전까지 미션을 열지 않는다', () => {
+    const reviewActivity = functionSource('review_neighbor_activity_v1');
+    const reviewMatch = functionSource('review_neighbor_exchange_matches_v1');
+    assert.match(reviewActivity, /v_activity\.activity_type = 'topic'/);
+    assert.match(reviewMatch, /status <> 'matching_review'/);
+    assert.match(reviewMatch, /match_review_class_id <> p_actor_class_id/);
+    assert.match(reviewMatch, /SET status = 'matched'/);
+    assert.match(reviewMatch, /SET is_archived = FALSE/);
 });
 
 test('상대 교사가 거절하면 활동을 닫고 보관된 미션을 학생에게 열지 않는다', () => {

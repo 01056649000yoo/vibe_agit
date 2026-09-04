@@ -34,7 +34,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [activeActivityTab, setActiveActivityTab] = useState('gallery');
     const [postDetail, setPostDetail] = useState(null);
     const [detailBusy, setDetailBusy] = useState(false);
-    const [activityForm, setActivityForm] = useState({ type: 'topic', title: '', prompt: '', classIds: [] });
+    const [activityForm, setActivityForm] = useState({ type: 'topic', title: '', prompt: '', classIds: [], shareScope: 'partners' });
+    const [galleryCandidates, setGalleryCandidates] = useState(null);
+    const [galleryLoading, setGalleryLoading] = useState(false);
+    const [galleryQuery, setGalleryQuery] = useState('');
+    const [matchingRoster, setMatchingRoster] = useState(null);
+    const [matchingRows, setMatchingRows] = useState([]);
+    const [matchingLoading, setMatchingLoading] = useState(false);
 
     const loadWorkspace = useCallback(async () => {
         if (!classId) return;
@@ -54,10 +60,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setWorkspace(null);
         setInvite(null);
         setPostDetail(null);
+        setGalleryCandidates(null);
+        setGalleryQuery('');
+        setMatchingRoster(null);
+        setMatchingRows([]);
         setSpaceForm({ name: '', publicClassName: activeClass?.name || '', description: '' });
         setJoinForm({ inviteKey: '', publicClassName: activeClass?.name || '' });
         setActiveActivityTab('gallery');
-        setActivityForm({ type: 'topic', title: '', prompt: '', classIds: classId ? [classId] : [] });
+        setActivityForm({ type: 'topic', title: '', prompt: '', classIds: classId ? [classId] : [], shareScope: 'partners' });
         void loadWorkspace();
     }, [activeClass?.name, classId, loadWorkspace]);
 
@@ -127,7 +137,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             type: activityForm.type,
             title: activityForm.title.trim(),
             prompt: activityForm.prompt.trim(),
-            exchange_class_ids: activityForm.type === 'exchange' ? activityForm.classIds : null
+            exchange_class_ids: activityForm.type === 'exchange' ? activityForm.classIds : null,
+            exchange_share_scope: activityForm.type === 'exchange' ? activityForm.shareScope : null
         }, activityForm.type === 'topic'
             ? '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
             : '글짝 교환 활동을 제안했습니다. 상대 학급 교사의 승인을 기다려 주세요.');
@@ -136,8 +147,100 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     const selectActivityTab = (tabId) => {
         setActiveActivityTab(tabId);
+        setMatchingRoster(null);
+        setMatchingRows([]);
         if (tabId === 'gallery') return;
         setActivityForm((current) => ({ ...current, type: tabId, classIds: [classId] }));
+    };
+
+    const loadGalleryCandidates = async () => {
+        if (!workspace?.space?.id || galleryLoading) return;
+        setGalleryLoading(true);
+        setErrorMessage('');
+        try {
+            setGalleryCandidates(await api.getShareCandidates({
+                spaceId: workspace.space.id,
+                classId,
+                limit: 100
+            }));
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error, '우리 학급 글을 불러오지 못했습니다.'));
+        } finally {
+            setGalleryLoading(false);
+        }
+    };
+
+    const publishGalleryPost = async (post) => {
+        const result = await runAction('publish_gallery_post', {
+            space_id: workspace.space.id,
+            post_id: post.post_id
+        }, `${post.student_name} 학생의 글을 글 나눔 공간에 올렸습니다.`);
+        if (!result) return;
+        setGalleryCandidates((current) => current?.map((item) => item.post_id === post.post_id
+            ? { ...item, shared_post_id: result.shared_post_id, share_status: result.status, review_note: '' }
+            : item));
+    };
+
+    const openExchangeMatching = async (activity) => {
+        if (matchingLoading) return;
+        setMatchingLoading(true);
+        setErrorMessage('');
+        try {
+            const roster = await api.getExchangeRoster({
+                spaceId: workspace.space.id,
+                classId,
+                activityId: activity.id
+            });
+            const [firstClass, secondClass] = roster.classes;
+            const largerClass = firstClass.students.length >= secondClass.students.length ? firstClass : secondClass;
+            const smallerClass = largerClass.class_id === firstClass.class_id ? secondClass : firstClass;
+            setMatchingRoster({ ...roster, activity, largerClass, smallerClass });
+            setMatchingRows(largerClass.students.map((student, index) => ({
+                studentKey: student.student_key,
+                studentName: student.name,
+                partnerKey: smallerClass.students.length > 0
+                    ? smallerClass.students[index % smallerClass.students.length].student_key
+                    : ''
+            })));
+        } catch (error) {
+            setMatchingRoster(null);
+            setMatchingRows([]);
+            setErrorMessage(getErrorMessage(error, '두 학급 학생을 불러오지 못했습니다.'));
+        } finally {
+            setMatchingLoading(false);
+        }
+    };
+
+    const updateMatchingPartner = (studentKey, partnerKey) => {
+        setMatchingRows((current) => current.map((row) => row.studentKey === studentKey
+            ? { ...row, partnerKey }
+            : row));
+    };
+
+    const proposeExchangeMatches = async () => {
+        if (!matchingRoster || matchingRows.some((row) => !row.partnerKey)) return;
+        const partnerCounts = new Map();
+        matchingRows.forEach((row) => partnerCounts.set(row.partnerKey, (partnerCounts.get(row.partnerKey) || 0) + 1));
+        const isBalanced = matchingRoster.smallerClass.students.every((student) => {
+            const count = partnerCounts.get(student.student_key) || 0;
+            return count >= 1 && count <= 2;
+        });
+        if (!isBalanced) {
+            setErrorMessage('모든 학생에게 한 명 또는 두 명의 글짝이 연결되도록 조정해 주세요.');
+            return;
+        }
+        const result = await runAction('propose_exchange_matches', {
+            space_id: workspace.space.id,
+            activity_id: matchingRoster.activity.id,
+            pairs: matchingRows.map((row) => ({
+                student_key: row.studentKey,
+                partner_key: row.partnerKey
+            }))
+        }, '글짝 매칭안을 보냈습니다. 상대 학급 교사의 승인을 기다려 주세요.');
+        if (result) {
+            setMatchingRoster(null);
+            setMatchingRows([]);
+        }
     };
 
     const toggleExchangeClass = (targetClassId) => {
@@ -184,6 +287,10 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const selectedActivities = activeActivityTab === 'gallery'
         ? []
         : activities.filter((activity) => activity.type === activeActivityTab);
+    const visibleGalleryCandidates = (galleryCandidates || []).filter((post) => {
+        const query = galleryQuery.trim().toLocaleLowerCase('ko-KR');
+        return !query || `${post.student_name} ${post.title}`.toLocaleLowerCase('ko-KR').includes(query);
+    });
 
     if (loading) {
         return <section className="neighbor-teacher-state">이웃 아지트 정보를 불러오는 중입니다…</section>;
@@ -309,11 +416,44 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             {activeActivityTab === 'gallery' ? (
                                 <section className="neighbor-teacher-card neighbor-teacher__activity-panel" role="tabpanel">
                                     <div><span>활동 1</span><h2>🖼️ {getNeighborActivityLabel('gallery')}</h2></div>
-                                    <p>학생이 이미 제출한 개인 글을 골라 요청하면, 담임 확인 뒤 모든 참여 학급이 함께 읽습니다.</p>
+                                    <p>학생이 공개를 요청한 글을 승인하거나, 교사가 우리 학급의 제출 글을 직접 골라 모든 참여 학급에 소개할 수 있습니다.</p>
                                     <div className="neighbor-teacher__row-actions">
                                         <Button type="button" onClick={() => setActiveTab('review')}>글 검토로 이동{pendingPosts.length > 0 ? ` (${pendingPosts.length})` : ''}</Button>
                                         <Button type="button" variant="outline" onClick={() => setActiveTab('feed')}>공개 글 관리로 이동</Button>
+                                        <Button type="button" variant="outline" loading={galleryLoading} disabled={Boolean(busy)} onClick={loadGalleryCandidates}>우리 학급 글 불러오기</Button>
                                     </div>
+                                    {galleryCandidates && (
+                                        <div className="neighbor-teacher__candidate-panel">
+                                            <label>
+                                                학생 이름이나 글 제목 찾기
+                                                <input value={galleryQuery} maxLength={80} placeholder="예: 김하늘, 우리 동네" onChange={(event) => setGalleryQuery(event.target.value)} />
+                                            </label>
+                                            {visibleGalleryCandidates.length === 0 ? (
+                                                <p className="neighbor-teacher__empty">조건에 맞는 제출 글이 없습니다.</p>
+                                            ) : (
+                                                <div className="neighbor-teacher__candidate-list">
+                                                    {visibleGalleryCandidates.map((post) => (
+                                                        <article key={post.post_id}>
+                                                            <div>
+                                                                <span><strong>{post.student_name}</strong><small>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : post.share_status === 'pending' ? '학생 요청 대기' : '공유 전'}</small></span>
+                                                                <h3>{post.title || '제목 없는 글'}</h3>
+                                                                <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant={post.share_status ? 'outline' : 'primary'}
+                                                                loading={busy === 'publish_gallery_post'}
+                                                                disabled={Boolean(busy) || ['published', 'hidden'].includes(post.share_status)}
+                                                                onClick={() => publishGalleryPost(post)}
+                                                            >
+                                                                {post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공개 글 관리에서 복원' : '공유에 올리기'}
+                                                            </Button>
+                                                        </article>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </section>
                             ) : (
                                 <>
@@ -343,16 +483,29 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             guidePlaceholder="안내 가이드 (무엇을 떠올리고 어떻게 써 볼지 알려 주세요)"
                                         />
                                         {activityForm.type === 'exchange' && (
-                                            <fieldset className="neighbor-teacher__class-choice">
-                                                <legend>교환할 두 학급</legend>
-                                                {activeMemberships.map((membership) => (
-                                                    <label key={membership.class_id}>
-                                                        <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} disabled={membership.class_id === classId} onChange={() => toggleExchangeClass(membership.class_id)} />
-                                                        {membership.class_name}{membership.class_id === classId ? ' (우리 학급)' : ''}
+                                            <>
+                                                <fieldset className="neighbor-teacher__class-choice">
+                                                    <legend>교환할 두 학급</legend>
+                                                    {activeMemberships.map((membership) => (
+                                                        <label key={membership.class_id}>
+                                                            <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} disabled={membership.class_id === classId} onChange={() => toggleExchangeClass(membership.class_id)} />
+                                                            {membership.class_name}{membership.class_id === classId ? ' (우리 학급)' : ''}
+                                                        </label>
+                                                    ))}
+                                                    <small>상대 학급 {Math.max(activityForm.classIds.length - 1, 0)}/1 선택</small>
+                                                </fieldset>
+                                                <fieldset className="neighbor-teacher__scope-choice">
+                                                    <legend>글을 나눌 범위</legend>
+                                                    <label>
+                                                        <input type="radio" name="exchange-share-scope" value="partners" checked={activityForm.shareScope === 'partners'} onChange={() => setActivityForm((current) => ({ ...current, shareScope: 'partners' }))} />
+                                                        <span><strong>글짝끼리만 나누기</strong><small>나와 연결된 글짝의 글만 읽고 댓글을 씁니다.</small></span>
                                                     </label>
-                                                ))}
-                                                <small>상대 학급 {Math.max(activityForm.classIds.length - 1, 0)}/1 선택</small>
-                                            </fieldset>
+                                                    <label>
+                                                        <input type="radio" name="exchange-share-scope" value="space" checked={activityForm.shareScope === 'space'} onChange={() => setActivityForm((current) => ({ ...current, shareScope: 'space' }))} />
+                                                        <span><strong>교환 뒤 전체 글 공개</strong><small>두 학급의 검토 완료 글을 활동 참여 학생 모두가 읽고 댓글을 씁니다.</small></span>
+                                                    </label>
+                                                </fieldset>
+                                            </>
                                         )}
                                         <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy) || (activityForm.type === 'exchange' && activityForm.classIds.length !== 2)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                     </form>
@@ -362,12 +515,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 활동이 없습니다.</p> : selectedActivities.map((activity) => (
                                     <article key={activity.id}>
                                         <div>
-                                            <span>{getNeighborActivityLabel(activity.type)} · {activity.status === 'pending_approval' ? '교사 승인 대기' : activity.status === 'closed' ? '종료' : activity.status === 'matched' ? '매칭 완료' : '글 쓰는 중'}</span>
+                                            <span>{getNeighborActivityLabel(activity.type)} · {activity.status === 'pending_approval' ? '활동 승인 대기' : activity.status === 'matching_review' ? '매칭 승인 대기' : activity.status === 'closed' ? '종료' : activity.status === 'matched' ? '매칭 완료' : activity.type === 'exchange' ? '매칭 준비' : '글 쓰는 중'}</span>
                                             <h3>{activity.title}</h3>
                                             <p>{activity.prompt}</p>
+                                            {activity.type === 'exchange' && <small className="neighbor-teacher__scope-label">공유 범위 · {activity.exchange_share_scope === 'space' ? '두 학급 전체' : '글짝끼리만'}</small>}
                                             {activity.approvals?.length > 0 && <ul className="neighbor-teacher__approvals">{activity.approvals.map((approval) => <li key={approval.class_id} data-status={approval.status}>{approval.class_name} · {approval.is_proposer ? '제안함' : approval.status === 'approved' ? '승인' : approval.status === 'rejected' ? '거절' : approval.status === 'cancelled' ? '종료' : '확인 전'}</li>)}</ul>}
                                             <ul>{activity.class_stats.map((item) => <li key={item.class_id}>{item.class_name} · 제출 {item.submitted_count} · 검토 {item.review_count} · 공개 {item.published_count}</li>)}</ul>
-                                            {activity.type === 'exchange' && activity.status === 'matched' && <small>{activity.pair_count}쌍 연결됨</small>}
+                                            {activity.type === 'exchange' && activity.match_pairs?.length > 0 && (
+                                                <details className="neighbor-teacher__match-summary" open={activity.status === 'matching_review'}>
+                                                    <summary>{activity.match_pairs.length}개 글짝 연결 보기</summary>
+                                                    <ul>{activity.match_pairs.map((pair, index) => <li key={`${pair.student_name}-${pair.partner_name}-${index}`}>{pair.student_class_name} {pair.student_name} ↔ {pair.partner_class_name} {pair.partner_name}</li>)}</ul>
+                                                </details>
+                                            )}
                                         </div>
                                         {activity.can_review && (
                                             <div className="neighbor-teacher__row-actions">
@@ -375,15 +534,47 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                 <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
                                             </div>
                                         )}
+                                        {activity.can_review_match && (
+                                            <div className="neighbor-teacher__row-actions">
+                                                <Button type="button" loading={busy === 'review_exchange_matches'} disabled={Boolean(busy)} onClick={() => runAction('review_exchange_matches', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '글짝 매칭을 승인했습니다. 두 학급 학생에게 글쓰기 활동이 열렸습니다.')}>매칭 승인</Button>
+                                                <Button type="button" variant="outline" loading={busy === 'review_exchange_matches'} disabled={Boolean(busy)} onClick={() => runAction('review_exchange_matches', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '매칭안을 돌려보냈습니다. 호스트 교사가 다시 정할 수 있습니다.')}>다시 매칭 요청</Button>
+                                            </div>
+                                        )}
                                         {activity.can_manage && activity.status !== 'pending_approval' && activity.status !== 'closed' && (
                                             <div className="neighbor-teacher__row-actions">
-                                                {activity.type === 'exchange' && activity.status === 'open' && <Button type="button" loading={busy === 'match_exchange'} disabled={Boolean(busy)} onClick={() => runAction('match_exchange', { space_id: workspace.space.id, activity_id: activity.id }, '제출한 학생들의 글짝을 정하고 담임 검토함으로 보냈습니다.')}>글짝 정하기</Button>}
+                                                {activity.can_propose_match && <Button type="button" loading={matchingLoading} disabled={Boolean(busy) || matchingLoading} onClick={() => openExchangeMatching(activity)}>학생 불러와 매칭하기</Button>}
                                                 <Button type="button" variant="outline" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => window.confirm('이 활동의 새 글쓰기를 마칠까요? 공개된 글은 남습니다.') && runAction('close_activity', { space_id: workspace.space.id, activity_id: activity.id }, '활동을 마쳤습니다.')}>활동 종료</Button>
                                             </div>
                                         )}
                                     </article>
                                         ))}
                                     </section>
+
+                                    {activeActivityTab === 'exchange' && matchingRoster && (
+                                        <section className="neighbor-teacher-card neighbor-teacher__matching-editor" aria-labelledby="neighbor-matching-title">
+                                            <div><span>호스트 매칭안</span><h2 id="neighbor-matching-title">두 학급 학생 연결하기</h2></div>
+                                            <p>{matchingRoster.largerClass.class_name} 학생마다 {matchingRoster.smallerClass.class_name} 글짝을 한 명씩 골라 주세요. 학생 수가 다르면 한 학생에게 두 명까지 연결할 수 있습니다.</p>
+                                            <div className="neighbor-teacher__matching-counts">
+                                                {matchingRoster.classes.map((item) => <span key={item.class_id}>{item.class_name} <strong>{item.students.length}</strong>명</span>)}
+                                            </div>
+                                            <div className="neighbor-teacher__matching-list">
+                                                {matchingRows.map((row) => (
+                                                    <label key={row.studentKey}>
+                                                        <strong>{matchingRoster.largerClass.class_name} · {row.studentName}</strong>
+                                                        <span aria-hidden="true">↔</span>
+                                                        <select value={row.partnerKey} onChange={(event) => updateMatchingPartner(row.studentKey, event.target.value)}>
+                                                            <option value="">글짝 선택</option>
+                                                            {matchingRoster.smallerClass.students.map((student) => <option key={student.student_key} value={student.student_key}>{matchingRoster.smallerClass.class_name} · {student.name}</option>)}
+                                                        </select>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            <div className="neighbor-teacher__row-actions">
+                                                <Button type="button" loading={busy === 'propose_exchange_matches'} disabled={Boolean(busy) || matchingRows.some((row) => !row.partnerKey)} onClick={proposeExchangeMatches}>상대 교사에게 승인 요청</Button>
+                                                <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => { setMatchingRoster(null); setMatchingRows([]); }}>취소</Button>
+                                            </div>
+                                        </section>
+                                    )}
                                 </>
                             )}
                         </div>
