@@ -7,6 +7,7 @@ import { stopwatchWidgetManifest } from './stopwatch/manifest';
 import { studentPickerWidgetManifest } from './student-picker/manifest';
 import { mealBoardWidgetManifest } from './meal-board/manifest';
 import { noticeBoardWidgetManifest } from './notice-board/manifest';
+import { arrangementBoardWidgetManifest } from './arrangement-board/manifest';
 
 const widgets = Object.freeze([
   textWidgetManifest,
@@ -18,6 +19,7 @@ const widgets = Object.freeze([
   studentPickerWidgetManifest,
   mealBoardWidgetManifest,
   noticeBoardWidgetManifest,
+  arrangementBoardWidgetManifest,
 ]);
 
 const ids = new Set();

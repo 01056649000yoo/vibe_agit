@@ -2,12 +2,20 @@ import { lazy } from 'react'
 
 const ClassBoardPreview = lazy(() => import('./ClassBoardPreview.jsx'))
 const ApprovePostFlowPreview = lazy(() => import('./ApprovePostFlowPreview.jsx'))
+const ArrangementBoardWidgetPreview = lazy(() => import('./ArrangementBoardWidgetPreview.jsx'))
 const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonStudentCardPreview.jsx'))
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'arrangement-board-widget',
+    icon: '🪑',
+    title: '스크린 자리·역할 위젯',
+    description: '자리표와 역할표가 교실 뒤에서도 읽히는 크기인지, 위젯 상자를 키웠다 줄이며 본다',
+    Component: ArrangementBoardWidgetPreview,
+  }),
   Object.freeze({
     id: 'reading-marathon-student-card',
     icon: '🏃',

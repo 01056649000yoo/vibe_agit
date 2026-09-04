@@ -1117,3 +1117,79 @@ test('날씨 위젯은 오늘과 내일을 골라 보여 주고 요청은 한 �
   assert.match(weatherDaysSmoke, /오늘 현황 배경색 검증이 사라졌습니다/);
   assert.match(weatherDaysSmoke, /알림장 색상 검증이 사라졌습니다/);
 });
+
+/*
+ * 2026-09-03: 교사가 "자리·역할 배치 결과를 스크린에서 불러와 보고 싶다"고 요청해 위젯을 더했다.
+ *
+ * ⚠️ 새 위젯 ID 는 **서버가 먼저 알아야 한다.** 검증 함수는 아는 ID 만 통과시키고 나머지는
+ *    `지원하지 않는 스크린 위젯 설정입니다` 로 막는다. 2026-09-02 에 이 순서를 놓쳐
+ *    화면만 배포했다가 교사가 저장할 때마다 경고를 봤다. 그래서 화면과 서버를 함께 본다.
+ */
+test('자리·역할 배치 위젯은 화면과 서버가 같은 ID·설정을 안다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [manifest, registry, migration, settings, api] = await Promise.all([
+        readFile('src/modules/tool/class-board/widgets/arrangement-board/manifest.js', 'utf8'),
+        readFile('src/modules/tool/class-board/widgets/registry.js', 'utf8'),
+        readFile('supabase/migrations/20261233_class_board_arrangement_widget.sql', 'utf8'),
+        readFile('src/modules/tool/class-board/widgets/arrangement-board/ArrangementBoardSettings.jsx', 'utf8'),
+        readFile('src/modules/tool/class-board/widgets/arrangement-board/arrangementBoardApi.js', 'utf8')
+    ]);
+
+    // 화면이 쓰는 ID 를 서버가 알아야 한다.
+    assert.match(manifest, /id: 'arrangement-board'/);
+    // ⚠️ 이름만 보면 import 줄에도 있어서, 목록에서 빼도 못 잡는다. 배열 안에 있는지 본다.
+    assert.match(registry, /const widgets = Object\.freeze\(\[[\s\S]*?arrangementBoardWidgetManifest,[\s\S]*?\]\)/,
+        '위젯이 스크린 목록에 없다');
+    // ⚠️ 아래 NOT IN 줄에도 같은 세 이름이 있어, 그냥 찾으면 검사 대상에서 빠져도 못 잡는다.
+    assert.match(migration, /widgetId' IN \('meal-board', 'notice-board', 'arrangement-board'\)/,
+        '서버가 새 위젯을 검사 대상에 넣지 않는다');
+    // 옛 검증으로 넘어가면 허용 목록에 없어 거부된다.
+    assert.match(migration, /NOT IN \('meal-board', 'notice-board', 'arrangement-board'\)/);
+
+    // 고를 수 있는 값이 화면과 서버에서 같아야 한다. 한쪽만 늘리면 저장이 막힌다.
+    assert.match(migration, /v_config ->> 'kind', ''\) NOT IN \('seat', 'role'\)/);
+    for (const value of ['seat', 'role']) {
+        assert.ok(settings.includes(`value: '${value}'`), `설정에 ${value} 가 없다`);
+    }
+    assert.doesNotMatch(settings, /value: '(?!seat|role)[a-z_]+'/,
+        '서버가 모르는 배치 종류를 고를 수 있다');
+
+    /*
+     * ⚠️ 스크린은 교실 프로젝터에 하루 종일 떠 있다. 지난 기록을 통째로 읽는
+     *    `get_teacher_classroom_arrangement_v1` 을 쓰면 안 된다 — 한 건만 읽는 함수를 따로 뒀다.
+     */
+    // 주석은 "왜 그걸 안 쓰는지" 적어 두는 곳이라 함께 보지 않는다. 실제 호출만 본다.
+    assert.match(api, /rpc\('get_class_board_arrangement_result_v1'/);
+    assert.doesNotMatch(api, /rpc\('get_teacher_classroom_arrangement_v1'/,
+        '스크린이 지난 기록을 통째로 읽는 함수를 부른다');
+    assert.match(migration, /LIMIT 1/);
+    // 남의 학급 배치를 볼 수 없어야 한다.
+    assert.match(migration, /class\.teacher_id = auth\.uid\(\)/);
+    assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.get_class_board_arrangement_result_v1[\s\S]{0,80}TO authenticated/);
+
+    // 열 때 한 번만 읽는다.
+    assert.match(manifest, /type: 'live-once'/);
+    assert.match(manifest, /refreshMs: null/);
+    assert.match(manifest, /maxInstances: 1/);
+});
+
+/*
+ * 교실 뒤에서 읽어야 하는 화면이다. 배치 도구의 글자 크기(이름 0.76rem)를 그대로 쓰면 안 되고,
+ * 상한이 걸린 clamp 를 쓰면 위젯을 키워도 글씨가 안 커진다(2026-09-02 급식판에서 겪었다).
+ */
+test('스크린 배치 위젯은 상자를 채우고 글씨에 상한을 두지 않는다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile(
+        'src/modules/tool/class-board/widgets/arrangement-board/arrangementBoard.css', 'utf8');
+
+    // 위젯 틀이 flex 라, 늘어나라고 말하지 않으면 상자 오른쪽이 빈다(실측 800px 상자에 452px).
+    assert.match(css, /\.class-board-arrangement \{[\s\S]{0,240}flex: 1 1 auto;/);
+    assert.match(css, /\.class-board-arrangement__body \.arrange-history-seat-grid \{ width: 100%; \}/);
+
+    // 이름은 상자를 따라 커져야 한다 — 상한이 있는 clamp 를 쓰지 않는다.
+    assert.match(css, /\.arrange-seat-lottery-seat strong[\s\S]{0,160}font-size: max\(/);
+    assert.doesNotMatch(css, /font-size:\s*clamp\(/, '글씨 크기에 상한이 걸렸다');
+
+    // 역할 이름이 잘리면 무슨 역할인지 알 수 없다.
+    assert.match(css, /arrange-role-lottery-card header strong \{[\s\S]{0,200}white-space: normal;/);
+});

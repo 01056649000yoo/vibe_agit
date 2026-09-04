@@ -1,0 +1,144 @@
+/*
+ * 자리·역할 배치 위젯.
+ *
+ * 그림 자체는 배치 도구의 `HistoryResultBoard` 를 그대로 쓴다. 여기서는 **교실 뒤에서도 읽히게**
+ * 크기만 다시 잡는다. 도구 화면은 가까이서 보는 곳이라 이름이 0.76rem 이고, 프로젝터에서는 못 읽는다.
+ *
+ * ⚠️ `clamp(작게, 크게, 상한)` 을 쓰지 않는다. 상한이 걸리면 위젯을 키워도 글씨가 안 커진다
+ *    (2026-09-02 급식판에서 그렇게 걸렸다). 바닥만 두는 `max(바닥, N cqmin)` 을 쓴다.
+ *    위젯 틀에 `container-type: size` 가 이미 걸려 있어 cqmin 이 위젯 크기를 따라간다.
+ */
+
+.class-board-arrangement {
+    display: flex;
+    /* ⚠️ 위젯 틀이 flex 다. 늘어나라고 말하지 않으면 상자 오른쪽이 빈다(실측 800px 상자에 452px). */
+    flex: 1 1 auto;
+    width: 100%;
+    flex-direction: column;
+    gap: max(4px, 1.5cqmin);
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: max(8px, 2.5cqmin);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.class-board-arrangement__head {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: max(4px, 1.5cqmin);
+    min-width: 0;
+}
+
+.class-board-arrangement__head strong {
+    min-width: 0;
+    overflow: hidden;
+    color: #172033;
+    font-size: max(0.9rem, 7cqmin);
+    font-weight: 950;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.class-board-arrangement__head span {
+    flex: 0 0 auto;
+    color: #7c8698;
+    font-size: max(0.75rem, 3.4cqmin);
+    font-weight: 850;
+}
+
+.class-board-arrangement__note {
+    display: grid;
+    place-content: center;
+    flex: 1 1 auto;
+    margin: 0;
+    color: #7c8698;
+    font-size: max(0.8rem, 4cqmin);
+    font-weight: 800;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* 결과는 위젯 안에서만 넘치게 두고, 스크린 전체가 밀리지 않게 한다. */
+.class-board-arrangement__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+.class-board-arrangement__body .arrange-history-board {
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+/* 칠판·역할표 제목 */
+.class-board-arrangement__body .arrange-seat-lottery-blackboard,
+.class-board-arrangement__body .arrange-role-lottery-title {
+    margin-bottom: max(6px, 2cqmin);
+    padding: max(4px, 1.2cqmin);
+    font-size: max(0.8rem, 3.6cqmin);
+}
+
+.class-board-arrangement__body .arrange-history-seat-grid {
+    gap: max(3px, 1cqmin);
+}
+
+/* 교실 뒤에서 읽는 것은 결국 **이름**이다. 자리 칸과 이름을 가장 크게 잡는다. */
+.class-board-arrangement__body .arrange-seat-lottery-seat {
+    min-height: max(38px, 11cqmin);
+    border-radius: max(6px, 1.6cqmin);
+}
+
+.class-board-arrangement__body .arrange-seat-lottery-seat small {
+    font-size: max(0.62rem, 2.2cqmin);
+}
+
+.class-board-arrangement__body .arrange-seat-lottery-seat strong,
+.class-board-arrangement__body .arrange-seat-lottery-seat.is-filled strong {
+    margin-top: max(1px, 0.5cqmin);
+    font-size: max(0.85rem, 4.2cqmin);
+}
+
+.class-board-arrangement__body .arrange-history-role-cards,
+.class-board-arrangement__body .arrange-role-lottery-cards {
+    grid-template-columns: repeat(auto-fit, minmax(max(120px, 26cqmin), 1fr));
+    gap: max(6px, 2cqmin);
+}
+
+.class-board-arrangement__body .arrange-role-lottery-card header strong {
+    font-size: max(0.85rem, 4cqmin);
+}
+
+.class-board-arrangement__body .arrange-role-lottery-slot strong {
+    font-size: max(0.85rem, 3.8cqmin);
+}
+
+.class-board-arrangement__body .arrange-role-lottery-slot small {
+    font-size: max(0.62rem, 2.2cqmin);
+}
+
+/*
+ * 도구 화면에서는 자리표가 내용만큼만 넓어도 되지만, 스크린에서는 **상자를 다 써야** 한다.
+ * 남은 자리를 비워 두면 그만큼 이름이 작아진다(실측: 800px 상자에서 432px 만 씀).
+ */
+.class-board-arrangement__body .arrange-history-board { width: 100%; }
+.class-board-arrangement__body .arrange-history-seat-grid { width: 100%; }
+
+/*
+ * ⚠️ 도구 화면은 역할 이름을 한 줄로 자르지만(`…`), 교실 화면에서 이름이 잘리면 무슨 역할인지 모른다.
+ *    실측에서 `책상 줄 맞추기` 가 `책상 줄 …` 로 잘렸다. 줄을 바꿔서라도 다 보여 준다.
+ */
+.class-board-arrangement__body .arrange-role-lottery-card header strong {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.2;
+}
