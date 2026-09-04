@@ -1170,7 +1170,16 @@ test('자리·역할 배치 위젯은 화면과 서버가 같은 ID·설정을 �
     // 열 때 한 번만 읽는다.
     assert.match(manifest, /type: 'live-once'/);
     assert.match(manifest, /refreshMs: null/);
-    assert.match(manifest, /maxInstances: 1/);
+    /*
+     * ⚠️ 자리표와 역할표를 나란히 띄우려면 **화면과 서버가 같은 수**를 허용해야 한다.
+     *    한쪽만 늘리면 화면에서는 넣히는데 저장할 때 막힌다(교사 제보 2026-09-03).
+     */
+    assert.match(manifest, /maxInstances: 2/);
+    assert.match(
+        await readFile('supabase/migrations/20261234_class_board_arrangement_two_widgets.sql', 'utf8'),
+        /IF v_arrangement_count > 2/,
+        '서버가 아직 하나만 받는다'
+    );
 });
 
 /*
@@ -1186,10 +1195,44 @@ test('스크린 배치 위젯은 상자를 채우고 글씨에 상한을 두지 
     assert.match(css, /\.class-board-arrangement \{[\s\S]{0,240}flex: 1 1 auto;/);
     assert.match(css, /\.class-board-arrangement__body \.arrange-history-seat-grid \{ width: 100%; \}/);
 
-    // 이름은 상자를 따라 커져야 한다 — 상한이 있는 clamp 를 쓰지 않는다.
-    assert.match(css, /\.arrange-seat-lottery-seat strong[\s\S]{0,160}font-size: max\(/);
+    /*
+     * ⚠️ 크기를 상자에만 비례시키면 **사람이 몇 명인지 모른다** — 24명이면 아래가 잘려 다 안 보이고
+     *    6명이면 쓸데없이 작다(교사 제보 2026-09-03). 실제로 그려 보고 들어가는 가장 큰 값을 찾아
+     *    `--arrange-fit-unit` 하나에 넣고, 칸 높이·이름·틈이 모두 그 값에서 나오게 한다.
+     */
+    assert.match(css, /--arrange-fit-unit/, '내용 양에 맞추는 값이 없다');
+    assert.match(css, /\.arrange-seat-lottery-seat strong[\s\S]{0,200}font-size: var\(--arrange-fit-unit\)/,
+        '이름 크기가 맞춤 값에서 나오지 않는다');
+    // 상한이 걸린 clamp 를 쓰면 위젯을 키워도 글씨가 안 커진다.
     assert.doesNotMatch(css, /font-size:\s*clamp\(/, '글씨 크기에 상한이 걸렸다');
+    // 넘칠 때 스크롤로 넘기면 안 된다 — 교실 화면은 스크롤할 수 없다.
+    assert.match(css, /\.class-board-arrangement__body \{ overflow: hidden; \}/);
 
     // 역할 이름이 잘리면 무슨 역할인지 알 수 없다.
-    assert.match(css, /arrange-role-lottery-card header strong \{[\s\S]{0,200}white-space: normal;/);
+    assert.match(css, /arrange-role-lottery-card header strong \{[\s\S]{0,400}white-space: normal;/);
+});
+
+/*
+ * 2026-09-03: "배치표가 위젯 크기에 자동으로 맞았으면 좋겠다"는 요청.
+ * 이분 탐색은 텍스트·급식 위젯과 **같은 원본**을 쓴다 — 따로 만들면 맞추는 규칙이 갈라진다.
+ */
+test('자리·역할 배치표는 상자에 들어가는 가장 큰 크기를 찾아 맞춘다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [hook, widget] = await Promise.all([
+        readFile('src/modules/tool/class-board/widgets/arrangement-board/useFittedArrangement.js', 'utf8'),
+        readFile('src/modules/tool/class-board/widgets/arrangement-board/ArrangementBoardWidget.jsx', 'utf8')
+    ]);
+
+    assert.match(hook, /from '\.\.\/text\/textScale'/);
+    assert.match(hook, /findLargestFittingTextSize\(/);
+    // 넘쳤는지는 짐작이 아니라 실제로 그려 본 크기로 판단한다.
+    assert.match(hook, /scrollWidth <= element\.clientWidth/);
+    assert.match(hook, /scrollHeight <= element\.clientHeight/);
+    // 상자 크기가 바뀌면 다시 맞춘다.
+    assert.match(hook, /new ResizeObserver\(schedule\)/);
+    // 글자 바닥(0.8rem = 12.8px)보다 작게 뭉개지 않는다.
+    assert.match(hook, /MIN_UNIT_PX = 12\.8/);
+
+    assert.match(widget, /useFittedArrangement\(/);
+    assert.match(widget, /className="class-board-arrangement__body" ref=\{fitRef\}/);
 });

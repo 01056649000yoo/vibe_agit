@@ -21,14 +21,16 @@ const NAMES = [
     '조아람', '최다솜', '한여름', '허재이', '홍모아', '황윤슬'
 ]
 
-const SEAT_PAYLOAD = {
-    layout: { rows: 4, cols: 6 },
-    assignments: NAMES.map((name, index) => ({
-        seatKey: `${Math.floor(index / 6)},${index % 6}`,
+const seatPayloadOf = (count, cols) => ({
+    layout: { rows: Math.ceil(count / cols), cols },
+    assignments: NAMES.slice(0, count).map((name, index) => ({
+        seatKey: `${Math.floor(index / cols)},${index % cols}`,
         studentName: name,
         studentId: `s${index}`
     }))
-}
+})
+
+const SEAT_PAYLOAD = seatPayloadOf(24, 6)
 
 const ROLE_PAYLOAD = {
     roleGroups: [
@@ -57,6 +59,18 @@ const SCENARIOS = [
         label: '역할 배치',
         config: { heading: '오늘의 역할', kind: 'role' },
         result: { id: 'p2', kind: 'role', title: '9월 역할', payload: ROLE_PAYLOAD, createdAt: '2026-09-02T00:00:00Z' }
+    },
+    {
+        id: 'seat-small',
+        label: '자리 배치 (8명)',
+        config: { heading: '오늘의 자리', kind: 'seat' },
+        result: { id: 'p3', kind: 'seat', title: '작은 반', payload: seatPayloadOf(8, 4), createdAt: '2026-09-01T00:00:00Z' }
+    },
+    {
+        id: 'seat-big',
+        label: '자리 배치 (30명·6열)',
+        config: { heading: '오늘의 자리', kind: 'seat' },
+        result: { id: 'p4', kind: 'seat', title: '큰 반', payload: seatPayloadOf(NAMES.length, 6), createdAt: '2026-09-01T00:00:00Z' }
     },
     {
         id: 'empty',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import HistoryResultBoard from '../../../classroom-arrangement/HistoryResultBoard';
 import { arrangementBoardApi } from './arrangementBoardApi';
+import useFittedArrangement from './useFittedArrangement';
 import '../../../classroom-arrangement/classroomArrangement.css';
 import './arrangementBoard.css';
 
@@ -55,6 +56,11 @@ export default function ArrangementBoardWidget({ config = {}, classId, dragHandl
    */
   const state = loaded?.key === wanted ? loaded : { status: 'loading', result: null };
   const savedAt = formatSavedAt(state.result?.createdAt);
+  /*
+   * 내용이 바뀌거나 상자 크기가 바뀔 때 다시 맞춘다.
+   * ⚠️ 사람 수가 곧 높이다 — 24명과 6명을 같은 크기로 그리면 한쪽은 잘리고 한쪽은 작다.
+   */
+  const fitRef = useFittedArrangement(`${state.status}:${state.result?.id || ''}`);
 
   return (
     <div className="class-board-arrangement">
@@ -77,7 +83,7 @@ export default function ArrangementBoardWidget({ config = {}, classId, dragHandl
         <p className="class-board-arrangement__note">배치 결과를 불러오지 못했어요. 화면을 다시 열어 주세요.</p>
       )}
       {state.status === 'ready' && (
-        <div className="class-board-arrangement__body">
+        <div className="class-board-arrangement__body" ref={fitRef}>
           <HistoryResultBoard kind={state.result.kind || kind} payload={state.result.payload} />
         </div>
       )}

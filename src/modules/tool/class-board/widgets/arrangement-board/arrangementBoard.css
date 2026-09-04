@@ -78,50 +78,72 @@
     background: none;
 }
 
-/* 칠판·역할표 제목 */
+/*
+ * 아래는 모두 **한 값**(`--arrange-fit-unit`)에서 나온다.
+ * `useFittedArrangement` 가 실제로 그려 보며 넘치지 않는 가장 큰 값을 찾아 넣어 준다.
+ *
+ * ⚠️ 예전에는 `cqmin`(상자 크기)에만 비례했다. 그 방식은 **사람이 몇 명인지 모른다** —
+ *    24명이면 아래가 잘려 다 안 보였고, 6명이면 쓸데없이 작았다(교사 제보 2026-09-03).
+ */
+.class-board-arrangement__body {
+    --arrange-fit-unit: 20px;
+}
+
+/* 넘치면 스크롤이 아니라 **줄여서 다 보이게** 한다. 교실 화면은 스크롤할 수 없다. */
+.class-board-arrangement__body { overflow: hidden; }
+
 .class-board-arrangement__body .arrange-seat-lottery-blackboard,
 .class-board-arrangement__body .arrange-role-lottery-title {
-    margin-bottom: max(6px, 2cqmin);
-    padding: max(4px, 1.2cqmin);
-    font-size: max(0.8rem, 3.6cqmin);
+    margin-bottom: calc(var(--arrange-fit-unit) * 0.4);
+    padding: calc(var(--arrange-fit-unit) * 0.22);
+    font-size: calc(var(--arrange-fit-unit) * 0.8);
 }
 
 .class-board-arrangement__body .arrange-history-seat-grid {
-    gap: max(3px, 1cqmin);
+    gap: calc(var(--arrange-fit-unit) * 0.22);
 }
 
 /* 교실 뒤에서 읽는 것은 결국 **이름**이다. 자리 칸과 이름을 가장 크게 잡는다. */
 .class-board-arrangement__body .arrange-seat-lottery-seat {
-    min-height: max(38px, 11cqmin);
-    border-radius: max(6px, 1.6cqmin);
+    min-height: calc(var(--arrange-fit-unit) * 2.1);
+    border-radius: calc(var(--arrange-fit-unit) * 0.34);
 }
 
 .class-board-arrangement__body .arrange-seat-lottery-seat small {
-    font-size: max(0.62rem, 2.2cqmin);
+    font-size: calc(var(--arrange-fit-unit) * 0.5);
 }
 
 .class-board-arrangement__body .arrange-seat-lottery-seat strong,
 .class-board-arrangement__body .arrange-seat-lottery-seat.is-filled strong {
-    margin-top: max(1px, 0.5cqmin);
-    font-size: max(0.85rem, 4.2cqmin);
+    margin-top: calc(var(--arrange-fit-unit) * 0.1);
+    font-size: var(--arrange-fit-unit);
 }
 
 .class-board-arrangement__body .arrange-history-role-cards,
 .class-board-arrangement__body .arrange-role-lottery-cards {
-    grid-template-columns: repeat(auto-fit, minmax(max(120px, 26cqmin), 1fr));
-    gap: max(6px, 2cqmin);
+    grid-template-columns: repeat(auto-fit, minmax(calc(var(--arrange-fit-unit) * 6), 1fr));
+    gap: calc(var(--arrange-fit-unit) * 0.44);
 }
 
 .class-board-arrangement__body .arrange-role-lottery-card header strong {
-    font-size: max(0.85rem, 4cqmin);
+    font-size: calc(var(--arrange-fit-unit) * 0.95);
+    /*
+     * ⚠️ 도구 화면은 역할 이름을 한 줄로 자르지만(`…`), 교실 화면에서 잘리면 무슨 역할인지 모른다.
+     *    실측에서 `책상 줄 맞추기` 가 `책상 줄 …` 로 잘렸다. 줄을 바꿔서라도 다 보여 준다.
+     */
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.2;
 }
 
 .class-board-arrangement__body .arrange-role-lottery-slot strong {
-    font-size: max(0.85rem, 3.8cqmin);
+    font-size: calc(var(--arrange-fit-unit) * 0.9);
 }
 
 .class-board-arrangement__body .arrange-role-lottery-slot small {
-    font-size: max(0.62rem, 2.2cqmin);
+    font-size: calc(var(--arrange-fit-unit) * 0.5);
 }
 
 /*
@@ -130,15 +152,3 @@
  */
 .class-board-arrangement__body .arrange-history-board { width: 100%; }
 .class-board-arrangement__body .arrange-history-seat-grid { width: 100%; }
-
-/*
- * ⚠️ 도구 화면은 역할 이름을 한 줄로 자르지만(`…`), 교실 화면에서 이름이 잘리면 무슨 역할인지 모른다.
- *    실측에서 `책상 줄 맞추기` 가 `책상 줄 …` 로 잘렸다. 줄을 바꿔서라도 다 보여 준다.
- */
-.class-board-arrangement__body .arrange-role-lottery-card header strong {
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-overflow: clip;
-    white-space: normal;
-    line-height: 1.2;
-}

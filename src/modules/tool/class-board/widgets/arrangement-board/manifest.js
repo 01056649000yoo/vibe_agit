@@ -7,7 +7,8 @@ export const arrangementBoardWidgetManifest = Object.freeze({
   // 결과는 배치 도구가 이미 저장해 둔 것이다. 열 때 **가장 최근 한 건만** 읽고 그 뒤로는 읽지 않는다.
   type: 'live-once',
   projectorSafe: true,
-  maxInstances: 1,
+  // 자리표와 역할표를 나란히 띄우고 싶다는 요청(2026-09-03). 종류가 둘이라 둘까지만 둔다.
+  maxInstances: 2,
   requestBudget: { initial: 1, refreshMs: null, realtime: false, maxRows: 1 },
   defaultPlacement: {
     zone: 'content',
