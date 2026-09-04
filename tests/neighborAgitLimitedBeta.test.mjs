@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, reconciliation, foundationSmoke, panel, adminApi, teacherEntry, teacherApi, studentEntry, studentApi, security, performance] = await Promise.all([
+const [migration, reconciliation, adminOwnerMigration, foundationSmoke, panel, adminApi, teacherEntry, teacherApi, studentEntry, studentApi, security, performance] = await Promise.all([
     readFile('supabase/migrations/20261201_neighbor_limited_beta.sql', 'utf8'),
     readFile('supabase/migrations/20261235_neighbor_limited_beta_checksum_reconciliation.sql', 'utf8'),
+    readFile('supabase/migrations/20261236_neighbor_admin_owned_limited_classes.sql', 'utf8'),
     readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
     readFile('src/components/admin/AdminNeighborAgitPanel.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/adminApi.js', 'utf8'),
@@ -16,11 +17,13 @@ const [migration, reconciliation, foundationSmoke, panel, adminApi, teacherEntry
     readFile('PERFORMANCE_HARNESS.md', 'utf8')
 ]);
 
+const effectiveMigration = `${migration}\n${adminOwnerMigration}`;
+
 const functionSource = (name) => {
-    const start = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
+    const start = effectiveMigration.lastIndexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
     assert.ok(start >= 0, `${name} 함수가 없습니다.`);
-    const next = migration.indexOf('\nCREATE OR REPLACE FUNCTION public.', start + 1);
-    return migration.slice(start, next < 0 ? migration.length : next);
+    const next = effectiveMigration.indexOf('\nCREATE OR REPLACE FUNCTION public.', start + 1);
+    return effectiveMigration.slice(start, next < 0 ? effectiveMigration.length : next);
 };
 
 test('제한 공개 원장과 변경 이력은 직접 접근 없이 관리자 RPC로만 다룬다', () => {
@@ -46,6 +49,16 @@ test('제한 공개는 두 허용 학급이 있어야 열리고 전체 공개의
     assert.match(panel, /role="switch"/);
     assert.match(panel, /제한 공개[\s\S]*정상 공개/);
     assert.match(adminApi, /set_neighbor_limited_class_v1/);
+});
+
+test('제한 공개 후보는 승인 교사 학급과 현재 관리자가 직접 소유한 실제 학급으로 한정한다', () => {
+    const setter = functionSource('set_neighbor_limited_class_v1');
+    const dashboard = functionSource('get_neighbor_admin_dashboard_v1');
+    for (const source of [setter, dashboard]) {
+        assert.match(source, /profile\.role = 'TEACHER'[\s\S]*profile\.is_approved IS TRUE[\s\S]*profile\.approval_revoked_at IS NULL/);
+        assert.match(source, /profile\.role = 'ADMIN'[\s\S]*profile\.id = v_user_id/);
+        assert.match(source, /neighbor_internal_test_classes/);
+    }
 });
 
 test('서버는 제한 공개 학급만 교사·학생 권한과 홈 카드 신호를 허용한다', () => {

@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, smoke, api, entry, manifest, performance, security] = await Promise.all([
+const [baseMigration, activityMigration, smoke, api, entry, manifest, performance, security] = await Promise.all([
     readFile('supabase/migrations/20261199_neighbor_agit_data_foundation.sql', 'utf8'),
+    readFile('supabase/migrations/20261237_neighbor_activity_spaces.sql', 'utf8'),
     readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/api.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
@@ -11,9 +12,10 @@ const [migration, smoke, api, entry, manifest, performance, security] = await Pr
     readFile('PERFORMANCE_HARNESS.md', 'utf8'),
     readFile('SECURITY_HARNESS.md', 'utf8')
 ]);
+const migration = `${baseMigration}\n${activityMigration}`;
 
 const functionSource = (name) => {
-    const start = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
+    const start = migration.lastIndexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
     assert.ok(start >= 0, `${name} 함수가 없습니다.`);
     const next = migration.indexOf('\nCREATE OR REPLACE FUNCTION public.', start + 1);
     return migration.slice(start, next < 0 ? migration.length : next);
@@ -45,7 +47,7 @@ test('공감과 간직하기는 학생·공개 글을 다시 확인하는 한 �
     assert.doesNotMatch(`${commentSafe(reaction)}\n${commentSafe(saved)}`, /point_engine|point_logs|increment_student_points/);
 });
 
-test('상세는 보이는 댓글 최대 100개와 현재 합계·내 상태만 안전한 공개 이름으로 반환한다', () => {
+test('상세는 보이는 댓글 최대 100개와 현재 합계·내 상태만 등록 이름으로 반환한다', () => {
     const detail = functionSource('get_neighbor_shared_post_v1');
     assert.match(detail, /comment\.status = 'visible'/);
     assert.match(detail, /LIMIT 100/);
@@ -53,12 +55,13 @@ test('상세는 보이는 댓글 최대 100개와 현재 합계·내 상태만 �
     assert.match(detail, /'reaction_count'/);
     assert.match(detail, /'my_reaction'/);
     assert.match(detail, /'my_saved'/);
-    assert.match(detail, /neighbor_public_author_name_v1\(p_space_id, comment\.student_id\)/);
-    assert.doesNotMatch(detail, /student\.name|comment\.student_id'|comment\.class_id'/);
+    assert.match(detail, /JOIN public\.students comment_student/);
+    assert.match(detail, /left\(btrim\(comment_student\.name\), 30\)/);
+    assert.doesNotMatch(detail, /comment\.student_id'|comment\.class_id'/);
 });
 
 test('학생 화면은 쓰기 RPC 응답으로 댓글·공감·간직하기를 갱신하고 추가 목록 재조회하지 않는다', () => {
-    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 8);
+    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 10);
     assert.match(api, /save_neighbor_comment_v1/);
     assert.match(api, /toggle_neighbor_reaction_v1/);
     assert.match(api, /toggle_neighbor_save_v1/);

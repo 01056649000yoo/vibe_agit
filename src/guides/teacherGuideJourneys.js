@@ -80,7 +80,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('class-notice', '알림장 남기기', '날짜마다 우리 반 알림을 적고 지난 알림을 다시 찾아봅니다. 스크린에 올려 두면 교실 화면에도 함께 나옵니다.', 'class-notice'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
             step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat'),
-            step('neighbor-agit', '이웃 학급과 글 나누기', '공간을 만들거나 초대받아 연결하고 학생 공개와 글 검토를 관리합니다.', 'neighbor-agit')
+            step('neighbor-agit', '이웃 학급과 글 나누기', '공간을 연결하고 전시·공동 주제·글짝 교환과 학생 글 검토를 관리합니다.', 'neighbor-agit')
         ]
     },
     {

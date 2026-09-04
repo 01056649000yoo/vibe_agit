@@ -3,8 +3,9 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { NEIGHBOR_AGIT_LIMITS } from '../src/modules/community/neighbor-agit/policy.js';
 
-const [migration, smoke, manifest, dashboard, app, api, entry] = await Promise.all([
+const [baseMigration, activityMigration, smoke, manifest, dashboard, app, api, entry] = await Promise.all([
     readFile('supabase/migrations/20261199_neighbor_agit_data_foundation.sql', 'utf8'),
+    readFile('supabase/migrations/20261237_neighbor_activity_spaces.sql', 'utf8'),
     readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/manifest.js', 'utf8'),
     readFile('src/components/student/DashboardMenu.jsx', 'utf8'),
@@ -12,9 +13,10 @@ const [migration, smoke, manifest, dashboard, app, api, entry] = await Promise.a
     readFile('src/modules/community/neighbor-agit/api.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8')
 ]);
+const migration = `${baseMigration}\n${activityMigration}`;
 
 const functionSource = (name) => {
-    const start = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
+    const start = migration.lastIndexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
     assert.ok(start >= 0, `${name} 함수가 없습니다.`);
     const next = migration.indexOf('\nCREATE OR REPLACE FUNCTION public.', start + 1);
     return migration.slice(start, next < 0 ? migration.length : next);
@@ -65,18 +67,18 @@ test('피드는 요약만, 전문은 글을 누를 때 전용 RPC 한 번으로 
     assert.doesNotMatch(serialized, /'content'|'student_id'|'class_id'|'post_id'/);
     assert.match(detailJson, /'content'/);
     assert.doesNotMatch(detailJson, /'student_id'|'class_id'|'post_id'/);
-    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 8);
+    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 10);
     assert.match(api, /get_neighbor_space_feed_v1/);
     assert.match(api, /get_neighbor_shared_post_v1/);
     assert.match(entry, /onClick=\{\(\) => openDetail\(item\.shared_post_id\)\}/);
 });
 
-test('공개 이름은 실제 학생 이름·내부 ID 대신 공간별 안전 필명과 공개용 학급명만 쓴다', () => {
-    assert.match(migration, /'이웃 작가 ' \|\| substring/);
+test('공개 이름은 폐쇄 공간에서 등록 학생 이름과 공개용 학급명을 쓰고 내부 ID는 숨긴다', () => {
+    assert.match(activityMigration, /left\(btrim\(student\.name\), 30\)/);
     assert.match(migration, /shared\.public_author_name/);
     assert.match(migration, /membership\.public_class_name/);
-    assert.doesNotMatch(functionSource('get_neighbor_space_feed_v1'), /student\.name/);
-    assert.doesNotMatch(functionSource('get_neighbor_shared_post_v1'), /student\.name/);
+    assert.doesNotMatch(functionSource('get_neighbor_space_feed_v1'), /'student_id'|'class_id'|'post_id'/);
+    assert.doesNotMatch(functionSource('get_neighbor_shared_post_v1'), /'student_id'|'class_id'|'post_id'/);
 });
 
 test('학생 화면은 열 때만 읽고 폴링·Realtime·직접 테이블 조회를 만들지 않는다', () => {

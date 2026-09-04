@@ -78,6 +78,8 @@ SELECT
     set_config('test.limited_student_auth_1', COALESCE(max(student_auth_id::TEXT) FILTER (WHERE position = 1), ''), TRUE),
     set_config('test.limited_teacher_2', COALESCE(max(teacher_id::TEXT) FILTER (WHERE position = 2), ''), TRUE),
     set_config('test.limited_class_2', COALESCE(max(class_id::TEXT) FILTER (WHERE position = 2), ''), TRUE),
+    set_config('test.limited_student_2', COALESCE(max(student_id::TEXT) FILTER (WHERE position = 2), ''), TRUE),
+    set_config('test.limited_student_auth_2', COALESCE(max(student_auth_id::TEXT) FILTER (WHERE position = 2), ''), TRUE),
     set_config('test.limited_teacher_3', COALESCE(max(teacher_id::TEXT) FILTER (WHERE position = 3), ''), TRUE),
     set_config('test.limited_class_3', COALESCE(max(class_id::TEXT) FILTER (WHERE position = 3), ''), TRUE)
 FROM ranked;
@@ -90,11 +92,20 @@ SELECT set_config('test.limited_admin', COALESCE((
     LIMIT 1
 ), ''), TRUE);
 
+SELECT set_config('test.limited_admin_class', gen_random_uuid()::TEXT, TRUE);
+INSERT INTO public.classes (id, teacher_id, name)
+VALUES (
+    current_setting('test.limited_admin_class')::UUID,
+    current_setting('test.limited_admin')::UUID,
+    '관리자 본인 제한 공개 스모크'
+);
+
 DO $$
 BEGIN
     IF current_setting('test.limited_admin') = ''
        OR current_setting('test.limited_teacher_3') = ''
-       OR current_setting('test.limited_student_auth_1') = '' THEN
+       OR current_setting('test.limited_student_auth_1') = ''
+       OR current_setting('test.limited_student_auth_2') = '' THEN
         RAISE EXCEPTION 'limited beta smoke requires one admin and three approved teacher classes with active students';
     END IF;
 END;
@@ -122,6 +133,37 @@ BEGIN
     IF NOT v_blocked THEN
         RAISE EXCEPTION 'forged admin selected a limited beta class';
     END IF;
+END;
+$$;
+RESET ROLE;
+
+-- 현재 실제 관리자가 직접 소유한 학급은 후보에 보이고 선택할 수 있다.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_admin'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_admin'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_result JSONB;
+    v_dashboard JSONB;
+BEGIN
+    v_result := public.set_neighbor_limited_class_v1(
+        current_setting('test.limited_admin_class')::UUID, TRUE
+    );
+    v_dashboard := public.get_neighbor_admin_dashboard_v1(NULL);
+    IF v_result->>'selected' <> 'true'
+       OR NOT EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(v_dashboard->'limited_classes') candidate
+            WHERE candidate->>'class_id' = current_setting('test.limited_admin_class')
+              AND candidate->>'selected' = 'true'
+       ) THEN
+        RAISE EXCEPTION 'admin-owned class was not selectable: %, %', v_result, v_dashboard;
+    END IF;
+    PERFORM public.set_neighbor_limited_class_v1(
+        current_setting('test.limited_admin_class')::UUID, FALSE
+    );
 END;
 $$;
 RESET ROLE;
@@ -332,6 +374,211 @@ SELECT public.run_neighbor_teacher_action_v1(
     'set_access',
     jsonb_build_object('space_id', current_setting('test.limited_space'), 'enabled', TRUE)
 );
+RESET ROLE;
+
+-- 한 공간 안에 공동 주제와 글짝 교환을 열고, 기존 과제·제출 글을 통해 실제 학생 흐름을 확인한다.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_result JSONB;
+BEGIN
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_1')::UUID,
+        'create_activity',
+        jsonb_build_object(
+            'space_id', current_setting('test.limited_space'),
+            'type', 'topic', 'title', '같이 보는 우리 동네',
+            'prompt', '우리 동네에서 소개하고 싶은 장소를 써 봅시다.'
+        )
+    );
+    PERFORM set_config('test.neighbor_topic', v_result #>> '{action_result,activity_id}', TRUE);
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_1')::UUID,
+        'create_activity',
+        jsonb_build_object(
+            'space_id', current_setting('test.limited_space'),
+            'type', 'exchange', 'title', '나를 소개하는 편지',
+            'prompt', '글짝에게 내가 좋아하는 것을 소개해 봅시다.',
+            'exchange_class_ids', jsonb_build_array(
+                current_setting('test.limited_class_1'), current_setting('test.limited_class_2')
+            )
+        )
+    );
+    PERFORM set_config('test.neighbor_exchange', v_result #>> '{action_result,activity_id}', TRUE);
+    IF jsonb_array_length(v_result #> '{workspace,activities}') <> 2 THEN
+        RAISE EXCEPTION 'teacher activity workspace was stale: %', v_result;
+    END IF;
+END;
+$$;
+RESET ROLE;
+
+SELECT set_config('test.neighbor_topic_mission_1', (
+    SELECT link.mission_id::TEXT FROM public.neighbor_activity_classes link
+    WHERE link.activity_id = current_setting('test.neighbor_topic')::UUID
+      AND link.class_id = current_setting('test.limited_class_1')::UUID
+), TRUE);
+SELECT set_config('test.neighbor_topic_mission_2', (
+    SELECT link.mission_id::TEXT FROM public.neighbor_activity_classes link
+    WHERE link.activity_id = current_setting('test.neighbor_topic')::UUID
+      AND link.class_id = current_setting('test.limited_class_2')::UUID
+), TRUE);
+SELECT set_config('test.neighbor_exchange_mission_1', (
+    SELECT link.mission_id::TEXT FROM public.neighbor_activity_classes link
+    WHERE link.activity_id = current_setting('test.neighbor_exchange')::UUID
+      AND link.class_id = current_setting('test.limited_class_1')::UUID
+), TRUE);
+SELECT set_config('test.neighbor_exchange_mission_2', (
+    SELECT link.mission_id::TEXT FROM public.neighbor_activity_classes link
+    WHERE link.activity_id = current_setting('test.neighbor_exchange')::UUID
+      AND link.class_id = current_setting('test.limited_class_2')::UUID
+), TRUE);
+
+INSERT INTO public.student_posts (mission_id, student_id, class_id, title, content, is_submitted, first_submitted_at)
+VALUES
+    (current_setting('test.neighbor_topic_mission_1')::UUID, current_setting('test.limited_student_1')::UUID,
+        current_setting('test.limited_class_1')::UUID, '첫 학급의 장소', '첫 학급 학생이 소개하는 우리 동네 장소입니다.', TRUE, NOW()),
+    (current_setting('test.neighbor_topic_mission_2')::UUID, current_setting('test.limited_student_2')::UUID,
+        current_setting('test.limited_class_2')::UUID, '둘째 학급의 장소', '둘째 학급 학생이 소개하는 우리 동네 장소입니다.', TRUE, NOW()),
+    (current_setting('test.neighbor_exchange_mission_1')::UUID, current_setting('test.limited_student_1')::UUID,
+        current_setting('test.limited_class_1')::UUID, '첫 번째 소개 편지', '나는 책 읽기와 산책을 좋아합니다.', TRUE, NOW()),
+    (current_setting('test.neighbor_exchange_mission_2')::UUID, current_setting('test.limited_student_2')::UUID,
+        current_setting('test.limited_class_2')::UUID, '두 번째 소개 편지', '나는 그림 그리기와 운동을 좋아합니다.', TRUE, NOW());
+
+-- 공동 주제는 학생이 나눔을 요청하고, 글짝 교환은 제출 뒤 호스트가 매칭해 자동으로 검토함에 넣는다.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE v_result JSONB;
+BEGIN
+    v_result := public.request_neighbor_activity_post_v1(
+        current_setting('test.limited_space')::UUID, current_setting('test.neighbor_topic')::UUID
+    );
+    PERFORM set_config('test.neighbor_topic_shared_1', v_result->>'shared_post_id', TRUE);
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_student_auth_2'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE v_result JSONB;
+BEGIN
+    v_result := public.request_neighbor_activity_post_v1(
+        current_setting('test.limited_space')::UUID, current_setting('test.neighbor_topic')::UUID
+    );
+    PERFORM set_config('test.neighbor_topic_shared_2', v_result->>'shared_post_id', TRUE);
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_result JSONB;
+    v_shared_id UUID;
+BEGIN
+    v_shared_id := current_setting('test.neighbor_topic_shared_1')::UUID;
+    PERFORM public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_1')::UUID, 'review_post',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'shared_post_id', v_shared_id, 'decision', 'publish', 'review_note', '')
+    );
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_1')::UUID, 'match_exchange',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'activity_id', current_setting('test.neighbor_exchange'))
+    );
+    IF (v_result #>> '{action_result,pair_count}')::INTEGER <> 1 THEN
+        RAISE EXCEPTION 'exchange pair count failed: %', v_result;
+    END IF;
+    SELECT (item->>'shared_post_id')::UUID INTO v_shared_id
+    FROM jsonb_array_elements(v_result #> '{workspace,review_posts}') item
+    WHERE item->>'status' = 'pending'
+    LIMIT 1;
+    IF v_shared_id IS NULL THEN
+        RAISE EXCEPTION 'exchange review post missing: %', v_result;
+    END IF;
+    PERFORM public.run_neighbor_teacher_action_v1(
+        current_setting('test.limited_class_1')::UUID, 'review_post',
+        jsonb_build_object('space_id', current_setting('test.limited_space'),
+            'shared_post_id', v_shared_id, 'decision', 'publish', 'review_note', '')
+    );
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_shared JSONB;
+    v_workspace JSONB;
+BEGIN
+    v_workspace := public.get_neighbor_teacher_workspace_v1(current_setting('test.limited_class_2')::UUID);
+    FOR v_shared IN SELECT item FROM jsonb_array_elements(v_workspace->'review_posts') item
+    LOOP
+        PERFORM public.run_neighbor_teacher_action_v1(
+            current_setting('test.limited_class_2')::UUID, 'review_post',
+            jsonb_build_object('space_id', current_setting('test.limited_space'),
+                'shared_post_id', v_shared->>'shared_post_id', 'decision', 'publish', 'review_note', '')
+        );
+    END LOOP;
+END;
+$$;
+RESET ROLE;
+
+-- 배정된 학생은 실명으로 자기 글과 상대 글만 읽고, 상대 글에 댓글을 남길 수 있다.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_gallery JSONB;
+    v_feed JSONB;
+    v_detail JSONB;
+    v_partner_post UUID;
+    v_partner_name TEXT;
+BEGIN
+    v_gallery := public.get_neighbor_space_feed_v1(current_setting('test.limited_space')::UUID, 20, NULL, NULL);
+    v_feed := public.get_neighbor_activity_feed_v1(
+        current_setting('test.limited_space')::UUID,
+        current_setting('test.neighbor_exchange')::UUID, 20, NULL, NULL
+    );
+    SELECT (item->>'shared_post_id')::UUID, item->>'author_name'
+    INTO v_partner_post, v_partner_name
+    FROM jsonb_array_elements(v_feed->'items') item
+    WHERE (item->>'is_mine')::BOOLEAN IS FALSE
+    LIMIT 1;
+    v_detail := public.get_neighbor_shared_post_v1(current_setting('test.limited_space')::UUID, v_partner_post);
+    PERFORM public.save_neighbor_comment_v1(
+        current_setting('test.limited_space')::UUID, v_partner_post, '소개해 줘서 고마워!', 'save'
+    );
+    IF jsonb_array_length(v_gallery->'activities') <> 2
+       OR jsonb_array_length(v_feed->'items') <> 2
+       OR v_detail->>'author_name' <> v_partner_name THEN
+        RAISE EXCEPTION 'student activity feed or real name failed: %, %, %', v_gallery, v_feed, v_detail;
+    END IF;
+END;
+$$;
 RESET ROLE;
 
 -- 선택 학급 학생만 bootstrap과 지연 공개 후보 RPC를 사용할 수 있다.

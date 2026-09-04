@@ -323,9 +323,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             }) || '🎉 제출 성공! 선생님이 확인하신 후 포인트가 지급될 거예요!';
             alert(successMessage);
 
-            // 6. 대시보드로 이동
+            // 6. 활동 안에서 연 글쓰기는 제출 뒤 그 활동으로 돌아간다.
             if (onNavigate) {
-                onNavigate('main');
+                onNavigate(params?.returnTo === 'neighbor_agit' ? 'neighbor_agit' : 'main');
             } else if (onBack) {
                 onBack(); // fallback
             }

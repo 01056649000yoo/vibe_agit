@@ -4,10 +4,22 @@ import { NEIGHBOR_AGIT_LIMITS } from './policy';
 const assertFeedResponse = (data) => {
     if (Number(data?.version) !== 1
         || !data?.space?.id
+        || !Array.isArray(data?.activities)
         || !Array.isArray(data?.items)
         || data.items.length > NEIGHBOR_AGIT_LIMITS.maximumFeedRows
         || Number(data?.max_rows) !== NEIGHBOR_AGIT_LIMITS.maximumFeedRows) {
         throw new Error('지원하지 않는 이웃 글 목록 응답입니다.');
+    }
+    return data;
+};
+
+const assertActivityFeedResponse = (data, activityId) => {
+    if (Number(data?.version) !== 1
+        || data?.activity?.id !== activityId
+        || !Array.isArray(data?.items)
+        || data.items.length > NEIGHBOR_AGIT_LIMITS.maximumFeedRows
+        || Number(data?.max_rows) !== NEIGHBOR_AGIT_LIMITS.maximumFeedRows) {
+        throw new Error('지원하지 않는 이웃 활동 글 목록 응답입니다.');
     }
     return data;
 };
@@ -40,6 +52,22 @@ export const neighborAgitApi = {
         return data;
     },
 
+    async getActivityFeed({ spaceId, activityId, limit = NEIGHBOR_AGIT_LIMITS.initialFeedRows, cursor = null }) {
+        const safeLimit = Math.min(
+            Math.max(Number(limit) || NEIGHBOR_AGIT_LIMITS.initialFeedRows, 1),
+            NEIGHBOR_AGIT_LIMITS.maximumFeedRows
+        );
+        const { data, error } = await supabase.rpc('get_neighbor_activity_feed_v1', {
+            p_space_id: spaceId,
+            p_activity_id: activityId,
+            p_limit: safeLimit,
+            p_cursor_at: cursor?.at || null,
+            p_cursor_id: cursor?.id || null
+        });
+        if (error) throw error;
+        return assertActivityFeedResponse(data, activityId);
+    },
+
     async getShareCandidates({ spaceId, limit = 50 }) {
         const { data, error } = await supabase.rpc('get_neighbor_my_share_candidates_v1', {
             p_space_id: spaceId,
@@ -60,6 +88,18 @@ export const neighborAgitApi = {
         if (error) throw error;
         if (data?.success !== true || !data?.shared_post_id || !data?.status) {
             throw new Error('글 공개 요청 결과를 확인할 수 없습니다.');
+        }
+        return data;
+    },
+
+    async requestActivityPost({ spaceId, activityId }) {
+        const { data, error } = await supabase.rpc('request_neighbor_activity_post_v1', {
+            p_space_id: spaceId,
+            p_activity_id: activityId
+        });
+        if (error) throw error;
+        if (data?.success !== true || data?.activity_id !== activityId || !data?.shared_post_id) {
+            throw new Error('공동 주제 글 공개 요청 결과를 확인할 수 없습니다.');
         }
         return data;
     },

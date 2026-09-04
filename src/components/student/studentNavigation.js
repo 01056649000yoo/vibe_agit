@@ -35,6 +35,9 @@ export const getStudentActiveBottomTab = (pageName, overlay = null) => {
 };
 
 export const getStudentBackDestination = ({ name, params = {} } = STUDENT_HOME_ROUTE) => {
+    if (name === 'writing' && params?.returnTo === 'neighbor_agit') {
+        return { name: 'neighbor_agit', params: {} };
+    }
     if (name === 'writing') return { name: 'mission_list', params: {} };
     if (name === 'friends_hideout' && params?.returnTo === 'mission_list') {
         return { name: 'mission_list', params: {} };

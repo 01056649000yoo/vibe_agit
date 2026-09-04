@@ -13,7 +13,7 @@ const formatPublishedAt = (value) => {
     }).format(new Date(value));
 };
 
-const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
+const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
     const [feed, setFeed] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -29,6 +29,11 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
     const [shareLoading, setShareLoading] = useState(false);
     const [shareBusy, setShareBusy] = useState('');
     const [shareMessage, setShareMessage] = useState('');
+    const [activeSection, setActiveSection] = useState('gallery');
+    const [selectedActivity, setSelectedActivity] = useState(null);
+    const [activityFeed, setActivityFeed] = useState(null);
+    const [activityLoading, setActivityLoading] = useState(false);
+    const [activityMessage, setActivityMessage] = useState('');
 
     const loadFirstPage = useCallback(async () => {
         if (!spaceId) return;
@@ -51,19 +56,26 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
         void loadFirstPage();
     }, [loadFirstPage]);
 
+    const visibleFeed = activeSection === 'gallery' ? feed : activityFeed;
+
     const loadMore = async () => {
-        if (!feed?.has_more || loadingMore) return;
+        if (!visibleFeed?.has_more || loadingMore) return;
         setLoadingMore(true);
         try {
-            const next = await neighborAgitApi.getFeed({
-                spaceId,
+            const request = activeSection === 'gallery'
+                ? neighborAgitApi.getFeed
+                : neighborAgitApi.getActivityFeed;
+            const next = await request({
+                spaceId, activityId: selectedActivity?.id,
                 limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows,
-                cursor: { at: feed.next_cursor_at, id: feed.next_cursor_id }
+                cursor: { at: visibleFeed.next_cursor_at, id: visibleFeed.next_cursor_id }
             });
-            setFeed((current) => ({
+            const apply = (current) => ({
                 ...next,
                 items: [...(current?.items || []), ...next.items]
-            }));
+            });
+            if (activeSection === 'gallery') setFeed(apply);
+            else setActivityFeed(apply);
         } catch {
             setErrorMessage('다음 글을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
         } finally {
@@ -104,6 +116,68 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                 item.shared_post_id === sharedPostId ? { ...item, ...patch } : item
             ))
         } : current);
+        setActivityFeed((current) => current ? {
+            ...current,
+            items: current.items.map((item) => (
+                item.shared_post_id === sharedPostId ? { ...item, ...patch } : item
+            ))
+        } : current);
+    };
+
+    const selectSection = (section) => {
+        setActiveSection(section);
+        setSelectedActivity(null);
+        setActivityFeed(null);
+        setActivityMessage('');
+        setErrorMessage('');
+    };
+
+    const openActivity = async (activity) => {
+        setSelectedActivity(activity);
+        setActivityFeed(null);
+        setActivityMessage('');
+        setActivityLoading(true);
+        try {
+            setActivityFeed(await neighborAgitApi.getActivityFeed({
+                spaceId, activityId: activity.id, limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows
+            }));
+        } catch {
+            setActivityMessage('활동 글을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+        } finally {
+            setActivityLoading(false);
+        }
+    };
+
+    const startActivityWriting = (activity) => {
+        if (!activity?.mission_id || typeof onNavigate !== 'function') return;
+        onNavigate('writing', {
+            missionId: activity.mission_id,
+            returnTo: 'neighbor_agit',
+            neighborActivityId: activity.id
+        });
+    };
+
+    const requestActivityShare = async (activity) => {
+        if (shareBusy) return;
+        setShareBusy(activity.id);
+        setActivityMessage('');
+        try {
+            const result = await neighborAgitApi.requestActivityPost({ spaceId, activityId: activity.id });
+            setFeed((current) => current ? {
+                ...current,
+                activities: current.activities.map((item) => item.id === activity.id
+                    ? { ...item, shared_post_id: result.shared_post_id, share_status: result.status }
+                    : item)
+            } : current);
+            setSelectedActivity((current) => current?.id === activity.id
+                ? { ...current, shared_post_id: result.shared_post_id, share_status: result.status }
+                : current);
+            setActivityMessage('선생님께 공동 주제 글 공개 확인을 요청했어요.');
+        } catch {
+            setActivityMessage('공개를 요청하지 못했어요. 제출 상태를 확인해 주세요.');
+        } finally {
+            setShareBusy('');
+        }
     };
 
     const toggleReaction = async () => {
@@ -255,7 +329,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                 <div>
                     <span className="neighbor-student-page__eyebrow">여러 학급이 함께 읽는 공간</span>
                     <h1>🤝 {feed?.space?.name || '이웃 아지트'}</h1>
-                    <p>선생님이 확인한 글만 보여요. 글쓴이는 안전한 이웃 작가 이름으로 만나요.</p>
+                    <p>선생님이 확인한 글만 보여요. 서로의 학급 이름과 등록 이름으로 책임 있게 만나요.</p>
                 </div>
                 {feed?.space?.active_class_count > 0 && (
                     <span className="neighbor-student-page__class-count">
@@ -264,9 +338,21 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                 )}
             </header>
 
-            <section className="neighbor-share-panel">
+            <nav className="neighbor-student-activities" aria-label="이웃 아지트 활동">
+                {[
+                    ['gallery', '🖼️', '전시·나눔'],
+                    ['topic', '✍️', '같이 쓰는 주제'],
+                    ['exchange', '💌', '글짝 교환']
+                ].map(([id, icon, label]) => (
+                    <button type="button" key={id} className={activeSection === id ? 'is-active' : ''} aria-pressed={activeSection === id} onClick={() => selectSection(id)}>
+                        <span aria-hidden="true">{icon}</span><strong>{label}</strong>
+                    </button>
+                ))}
+            </nav>
+
+            {activeSection === 'gallery' && <section className="neighbor-share-panel">
                 <div>
-                    <span>내 글 나누기</span>
+                    <span>전시·나눔</span>
                     <h2>내 아지트 글을 이웃에게 소개해요</h2>
                     <p>이미 제출한 글 중 하나를 골라 선생님께 공개 확인을 요청할 수 있어요.</p>
                 </div>
@@ -296,7 +382,45 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                         ))}
                     </div>
                 )}
-            </section>
+            </section>}
+
+            {activeSection !== 'gallery' && !loading && (
+                <section className="neighbor-activity-space">
+                    <header>
+                        <span>{activeSection === 'topic' ? '같이 쓰는 주제' : '글짝 교환'}</span>
+                        <h2>{activeSection === 'topic' ? '같은 생각거리로 쓰고 함께 읽어요' : '정해진 글짝과 글로 인사해요'}</h2>
+                    </header>
+                    {(feed?.activities || []).filter((activity) => activity.type === activeSection).length === 0 ? (
+                        <div className="neighbor-student-state">
+                            <span aria-hidden="true">🌱</span>
+                            <h2>지금 진행 중인 활동이 없어요</h2>
+                            <p>호스트 선생님이 활동을 열면 이곳에 나타나요.</p>
+                        </div>
+                    ) : (
+                        <div className="neighbor-activity-list">
+                            {(feed?.activities || []).filter((activity) => activity.type === activeSection).map((activity) => (
+                                <article key={activity.id} className={selectedActivity?.id === activity.id ? 'is-selected' : ''}>
+                                    <div>
+                                        <span>{activity.status === 'closed' ? '활동 종료' : activity.status === 'matched' ? '글짝 연결 완료' : '진행 중'}</span>
+                                        <h3>{activity.title}</h3>
+                                        <p>{activity.prompt}</p>
+                                        {activity.type === 'exchange' && activity.partner_names?.length > 0 && <strong>내 글짝: {activity.partner_names.join(', ')}</strong>}
+                                        {activity.type === 'exchange' && activity.status === 'open' && activity.is_submitted && <small>선생님이 모두의 제출을 확인한 뒤 글짝을 정해요.</small>}
+                                        {activity.share_status === 'pending' && <small>담임 선생님이 공개 확인 중이에요.</small>}
+                                        {activity.share_status === 'returned' && <small>다시 확인해 주세요{activity.review_note ? ` · ${activity.review_note}` : ''}</small>}
+                                    </div>
+                                    <div className="neighbor-activity-list__actions">
+                                        {activity.status !== 'closed' && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
+                                        {activity.type === 'topic' && activity.is_submitted && !['pending', 'published'].includes(activity.share_status) && <Button type="button" loading={shareBusy === activity.id} disabled={Boolean(shareBusy)} onClick={() => requestActivityShare(activity)}>나눔 요청</Button>}
+                                        {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>활동 글 보기</Button>}
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                    {activityMessage && <p className="neighbor-student-inline-error" role="status">{activityMessage}</p>}
+                </section>
+            )}
 
             {loading ? (
                 <section className="neighbor-student-state" aria-live="polite">이웃 글을 불러오고 있어요…</section>
@@ -305,10 +429,14 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                     <p>{errorMessage}</p>
                     <Button type="button" variant="outline" onClick={loadFirstPage}>다시 불러오기</Button>
                 </section>
-            ) : feed?.items?.length ? (
+            ) : activeSection !== 'gallery' && !selectedActivity ? null
+            : activityLoading ? (
+                <section className="neighbor-student-state" aria-live="polite">활동 글을 불러오고 있어요…</section>
+            ) : visibleFeed?.items?.length ? (
                 <>
-                    <section className="neighbor-student-feed" aria-label="이웃 글 목록">
-                        {feed.items.map((item) => (
+                    {selectedActivity && <div className="neighbor-activity-feed-heading"><span>{selectedActivity.type === 'topic' ? '같이 쓴 글' : '내 글짝의 글'}</span><h2>{selectedActivity.title}</h2></div>}
+                    <section className="neighbor-student-feed" aria-label={selectedActivity ? `${selectedActivity.title} 글 목록` : '이웃 글 목록'}>
+                        {visibleFeed.items.map((item) => (
                             <button
                                 type="button"
                                 className="neighbor-post-card"
@@ -330,7 +458,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
                         ))}
                     </section>
                     {errorMessage && <p className="neighbor-student-inline-error" role="status">{errorMessage}</p>}
-                    {feed.has_more && (
+                    {visibleFeed.has_more && (
                         <div className="neighbor-student-page__more">
                             <Button type="button" variant="outline" loading={loadingMore} onClick={loadMore}>
                                 글 더 보기
@@ -341,7 +469,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack }) => {
             ) : (
                 <section className="neighbor-student-state">
                     <span aria-hidden="true">✍️</span>
-                    <h2>아직 공개된 이웃 글이 없어요</h2>
+                    <h2>{selectedActivity ? '아직 공개된 활동 글이 없어요' : '아직 공개된 이웃 글이 없어요'}</h2>
                     <p>각 학급 선생님이 글을 확인하면 이곳에서 함께 읽을 수 있어요.</p>
                 </section>
             )}

@@ -4,6 +4,7 @@ const assertWorkspace = (data) => {
     if (Number(data?.version) !== 1
         || !data?.class?.id
         || !Array.isArray(data?.memberships)
+        || !Array.isArray(data?.activities)
         || !Array.isArray(data?.review_posts)
         || !Array.isArray(data?.public_posts)) {
         throw new Error('지원하지 않는 이웃 아지트 교사 응답입니다.');
