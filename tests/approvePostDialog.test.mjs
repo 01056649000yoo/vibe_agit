@@ -31,6 +31,14 @@ const MIGRATED_FLOWS = [
     { file: 'src/hooks/useMissionManager.js', fn: 'handleBulkRequestRewrite' }
 ];
 
+/*
+ * 브라우저 기본 창을 찾는 하나의 잣대.
+ *
+ * ⚠️ 2026-09-04: 처음에는 `[^.\w]confirm\(` 로 찾았는데 **`window.confirm(` 은 점 때문에 빠져나갔다.**
+ *    그래서 옮겼다고 여긴 파일에 하나가 남아 있었다. 앞의 `window.` 를 함께 본다.
+ */
+const NATIVE_DIALOG = /(^|[^.\w])(?:window\s*\.\s*)?(?:alert|confirm)\s*\(/;
+
 const bodyOf = (source, name) => {
     const start = source.indexOf(`const ${name} = async (`);
     assert.ok(start >= 0, `${name} 을(를) 찾지 못했다`);
@@ -43,10 +51,7 @@ const bodyOf = (source, name) => {
 test('앱 안 창으로 옮긴 승인 흐름은 브라우저 기본 창을 쓰지 않는다', async () => {
     for (const { file, fn } of MIGRATED_FLOWS) {
         const body = bodyOf(await readFile(file, 'utf8'), fn);
-        assert.doesNotMatch(body, /(^|[^.\w])confirm\(/,
-            `${fn} 이(가) 브라우저 기본 확인 창을 다시 쓴다`);
-        assert.doesNotMatch(body, /(^|[^.\w])alert\(/,
-            `${fn} 이(가) 브라우저 기본 알림 창을 다시 쓴다`);
+        assert.doesNotMatch(body, NATIVE_DIALOG, `${fn} 이(가) 브라우저 기본 창을 다시 쓴다`);
         // 묻기는 앱 안 창으로, 끝났다는 말은 스스로 사라지는 띠로.
         assert.match(body, /await ask\(\{/, `${fn} 이(가) 앱 안 창으로 묻지 않는다`);
         assert.match(body, /notify\(/, `${fn} 이(가) 알림 띠를 쓰지 않는다`);
@@ -177,8 +182,7 @@ test('제출 현황 창의 회수·되돌리기도 앱 안 창으로 묻는다',
         readFile('src/hooks/useMissionManager.js', 'utf8')
     ]);
 
-    assert.doesNotMatch(modal, /(^|[^.\w])confirm\(/, '제출 현황 창이 브라우저 기본 확인 창을 다시 쓴다');
-    assert.doesNotMatch(modal, /(^|[^.\w])alert\(/, '제출 현황 창이 브라우저 기본 알림 창을 다시 쓴다');
+    assert.doesNotMatch(modal, NATIVE_DIALOG, '제출 현황 창이 브라우저 기본 창을 다시 쓴다');
     assert.match(modal, /await ask\(\{[\s\S]{0,200}걷어올까요/, '회수를 앱 안 창으로 묻지 않는다');
     assert.match(modal, /await ask\(\{[\s\S]{0,200}다시 돌려줄까요/, '되돌리기를 앱 안 창으로 묻지 않는다');
     assert.match(modal, /notify\(/, '끝났다는 말을 띠로 알리지 않는다');
@@ -207,14 +211,17 @@ const DIALOG_FREE_FILES = [
     // 2026-09-04: 학생·학급 관리 화면. 되돌릴 수 없는 일(영구 삭제)이 있어 먼저 옮겼다.
     'src/hooks/useStudentManager.js',
     'src/components/teacher/StudentManager.jsx',
-    'src/components/teacher/ClassManager.jsx'
+    'src/components/teacher/ClassManager.jsx',
+    // 2026-09-04(이어서): 보관함과 교사 대시보드. 여기도 되돌릴 수 없는 일(과제 영구 삭제·탈퇴)이 있다.
+    'src/components/teacher/ArchiveManager.jsx',
+    'src/hooks/useTeacherDashboard.js',
+    'src/components/teacher/TeacherDashboard.jsx'
 ];
 
 test('과제 화면에는 브라우저 기본 창이 하나도 없다', async () => {
     for (const file of DIALOG_FREE_FILES) {
         const source = await readFile(file, 'utf8');
-        assert.doesNotMatch(source, /(^|[^.\w])confirm\(/, `${file}: 브라우저 기본 확인 창이 남아 있다`);
-        assert.doesNotMatch(source, /(^|[^.\w])alert\(/, `${file}: 브라우저 기본 알림 창이 남아 있다`);
+        assert.doesNotMatch(source, NATIVE_DIALOG, `${file}: 브라우저 기본 창이 남아 있다`);
     }
 });
 
@@ -271,7 +278,9 @@ test('되돌릴 수 없는 일은 붉은 단추로 묻는다', async () => {
     const cases = [
         { file: 'src/hooks/useStudentManager.js', title: '학생을 영구 삭제할까요?' },
         { file: 'src/components/teacher/ClassManager.jsx', title: '학급을 삭제할까요?' },
-        { file: 'src/hooks/useMissionManager.js', title: '승인을 취소하고 포인트를 회수할까요?' }
+        { file: 'src/hooks/useMissionManager.js', title: '승인을 취소하고 포인트를 회수할까요?' },
+        { file: 'src/components/teacher/ArchiveManager.jsx', title: '과제를 영구 삭제할까요?' },
+        { file: 'src/hooks/useTeacherDashboard.js', title: '정말 탈퇴할까요?' }
     ];
     for (const { file, title } of cases) {
         const source = await readFile(file, 'utf8');

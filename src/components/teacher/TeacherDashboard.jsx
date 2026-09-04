@@ -117,6 +117,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
+        confirmDialog, notice, ask,
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editSchoolSelection, setEditSchoolSelection,
@@ -229,7 +230,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             else window.open(href, '_blank', 'noopener');
         } catch (openError) {
             if (presentationWindow && !presentationWindow.closed) presentationWindow.close();
-            window.alert(openError.message || '기본 스크린을 열지 못했습니다.');
+            await ask({
+                title: '기본 스크린을 열지 못했습니다',
+                body: `${openError.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setOpeningClassBoard(false);
         }
@@ -769,6 +775,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* 훅이 만든 앱 안 창은 여기서 그린다 — 훅에는 그릴 자리가 없다. */}
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

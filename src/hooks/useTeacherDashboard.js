@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import useConfirmDialog from '../components/common/useConfirmDialog';
+import useNotice from '../components/common/useNotice';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { dataCache } from '../lib/cache';
@@ -23,6 +25,9 @@ const parsePromptTemplates = (storedPrompt) => {
 };
 
 export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap = null) => {
+    // 앱 안 창은 여기서 만들고 화면(TeacherDashboard)이 그린다 — 훅에는 그릴 자리가 없다.
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const initialPrompts = parsePromptTemplates(teacherBootstrap?.profile?.ai_prompt_template);
     const initialTeacher = teacherBootstrap?.teacher || { name: '', school_name: '', phone: '' };
     const [classes, setClasses] = useState(() => teacherBootstrap?.classes || []);
@@ -125,7 +130,12 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             setClasses(data || []);
         } catch (err) {
             console.error('❌ Hook: 학급 불러오기 실패:', err.message);
-            alert('정보를 불러오지 못했습니다. 🔄');
+            await ask({
+                title: '정보를 불러오지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingClasses(false);
         }
@@ -154,11 +164,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const handleUpdateTeacherProfile = async () => {
         if (!editName.trim()) {
-            alert('이름(별칭)을 입력해주세요! 😊');
+            notify('이름(별칭)을 적어 주세요. 😊');
             return;
         }
         if (!editSchoolSelection) {
-            alert('학교를 검색한 뒤 목록에서 선택해 주세요! 🏫');
+            notify('학교를 검색한 뒤 목록에서 골라 주세요. 🏫');
             return;
         }
         try {
@@ -175,12 +185,17 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (error) throw error;
             setTeacherInfo({ name: editName.trim(), ...schoolColumns, phone: editPhone.trim() });
-            alert('프로필 정보가 업데이트되었습니다! ✨');
+            notify('✨ 프로필을 저장했어요.');
             setIsEditProfileOpen(false);
             if (onProfileUpdate) onProfileUpdate();
         } catch (err) {
             console.error('프로필 저장 실패:', err.message);
-            alert('저장 중 오류가 발생했습니다.');
+            await ask({
+                title: '프로필을 저장하지 못했습니다',
+                body: `적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -194,7 +209,13 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     }, [session?.user?.id]);
 
     const handleWithdrawal = async () => {
-        if (!window.confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 시 모든 학급 데이터, 미션, 학생 정보가 영구적으로 삭제되며 복구할 수 없습니다.')) {
+        // 계정 전체가 사라지는 일이라 붉은 단추로 묻는다.
+        if (!await ask({
+            title: '정말 탈퇴할까요?',
+            body: '모든 학급·과제·학생 자료가 영구히 사라지고, 되돌릴 수 없습니다.',
+            confirmLabel: '탈퇴하기 ⚠️',
+            tone: 'danger'
+        })) {
             return;
         }
 
@@ -214,16 +235,27 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 console.warn("Withdrawal signout failed:", e);
             }
 
-            alert('탈퇴가 완료되었습니다. 모든 데이터가 안전하게 삭제되었습니다.');
+            notify('탈퇴가 끝났어요. 모든 자료를 삭제했습니다.');
             window.location.href = '/';
         } catch (err) {
             console.error('탈퇴 처리 실패:', err.message);
-            alert('탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '탈퇴를 마치지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
     const handleSwitchGoogleAccount = async () => {
-        if (!confirm('현재 계정에서 로그아웃하고 다른 구글 계정으로 로그인하시겠습니까?')) return;
+        if (!await ask({
+            title: '다른 구글 계정으로 로그인할까요?',
+            body: '지금 계정에서 로그아웃한 뒤 로그인 창이 열립니다.',
+            confirmLabel: '계정 바꾸기'
+        })) return;
         try {
             await supabase.auth.signOut();
         } catch (e) {
@@ -266,10 +298,17 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 await onProfileUpdate();
             }
 
-            alert('AI 규칙이 저장되었습니다! ✨');
+            notify('✨ AI 규칙을 저장했어요.');
         } catch (err) {
             console.error('설정 저장 실패:', err.message);
-            alert('저장 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: 'AI 규칙을 저장하지 못했습니다',
+                body: `${err.message}
+
+적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setSavingKey(false);
         }
@@ -282,10 +321,20 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 prompt: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.",
                 type: 'CONNECTION_TEST'
             });
-            alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
+            await ask({
+                title: '✅ AI 연결에 성공했습니다',
+                body: `AI 응답: ${aiResponse}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } catch (err) {
             console.error('API 테스트 실패:', err.message);
-            alert(`❌ 연결 실패: ${err.message}`);
+            await ask({
+                title: 'AI에 연결하지 못했습니다',
+                body: `${err.message}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setTestingKey(false);
         }
@@ -301,10 +350,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (error) throw error;
             if (onProfileUpdate) await onProfileUpdate();
-            alert('이 학급이 주 학급(기본)으로 설정되었습니다! ⭐');
+            notify('⭐ 이 학급을 주 학급으로 정했어요.');
         } catch (err) {
             console.error('주 학급 설정 실패:', err.message);
-            alert('주 학급 설정 중 오류가 발생했습니다.');
+            await ask({
+                title: '주 학급을 정하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -318,10 +372,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (error) throw error;
             await fetchAllClasses();
-            alert('학급이 성공적으로 복구되었습니다! ♻️');
+            notify('♻️ 학급을 되살렸어요.');
         } catch (err) {
             console.error('학급 복구 실패:', err.message);
-            alert('복구 중 오류가 발생했습니다.');
+            await ask({
+                title: '학급을 되살리지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -358,6 +417,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     };
 
     return {
+        confirmDialog, notice, ask, notify,
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editSchoolSelection, setEditSchoolSelection,

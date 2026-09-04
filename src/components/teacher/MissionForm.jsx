@@ -88,7 +88,13 @@ const MissionForm = ({
                 });
                 return;
             }
-            if (window.confirm('디자인한 질문들이 모두 사라집니다. 정말 취소할까요?')) {
+            // 적어 둔 질문이 사라지는 일이라 붉은 단추로 묻는다.
+            if (await ask({
+                title: '만들어 둔 질문을 모두 지울까요?',
+                body: '지금까지 적은 핵심 질문이 사라집니다.',
+                confirmLabel: '질문 지우기 ⚠️',
+                tone: 'danger'
+            })) {
                 setFormData({ ...formData, guide_questions: [], use_ai_questions: false });
             }
         } else {

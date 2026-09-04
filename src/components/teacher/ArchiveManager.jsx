@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import useConfirmDialog from '../common/useConfirmDialog';
+import useNotice from '../common/useNotice';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -19,6 +21,8 @@ const MISSION_POST_LIMIT = 100;
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
  */
 const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const [archivedMissions, setArchivedMissions] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
@@ -86,7 +90,12 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 googleAccessToken = await authorizeGoogleExport();
             } catch (error) {
                 console.error('Google authorization failed:', error);
-                alert('구글 문서 권한을 확인하지 못했습니다: ' + (error.message || '로그인 창을 다시 열어 주세요.'));
+                await ask({
+                title: '구글 문서 권한을 확인하지 못했습니다',
+                body: `${error.message || '로그인 창을 다시 열어 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+                });
                 return;
             }
         }
@@ -115,7 +124,12 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 fileName = `일괄내보내기_${baseName}`;
             } catch (err) {
                 console.error('일괄 데이터 로드 실패:', err);
-                alert('데이터를 불러오는데 실패했습니다.');
+                await ask({
+                title: '보관한 과제를 불러오지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
                 setLoading(false);
                 return;
             }
@@ -126,7 +140,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
         }
 
         if (!data || data.length === 0) {
-            alert('제출된 글이 없습니다.');
+            notify('내보낼 글이 없어요.');
             return;
         }
 
@@ -263,7 +277,11 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
     };
 
     const handleRestoreMission = async (missionId) => {
-        if (!confirm('이 미션을 다시 활성화하시겠습니까? 학생들에게 다시 보이게 됩니다.')) return;
+        if (!await ask({
+            title: '이 과제를 다시 열까요?',
+            body: '학생 화면에 다시 보이고, 이어서 쓸 수 있게 됩니다.',
+            confirmLabel: '다시 열기 ✨'
+        })) return;
         try {
             const { error } = await supabase
                 .from('writing_missions')
@@ -274,15 +292,28 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
                 dataCache.invalidate(`missions_${activeClass.id}`);
             }
-            alert('미션이 복구되었습니다! ✨');
+            notify('✨ 과제를 다시 열었어요.');
             fetchArchivedMissions();
         } catch (err) {
-            alert('복구 실패: ' + err.message);
+            await ask({
+                title: '과제를 다시 열지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
     const handleDeleteMission = async (missionId, missionTitle) => {
-        if (!confirm(`🚨 [영구 삭제] "${missionTitle}" 미션을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 학생들의 모든 제출 글과 댓글이 함께 삭제됩니다.`)) return;
+        // 되돌릴 수 없고 학생 글까지 함께 사라진다 — 붉은 단추로 묻는다.
+        if (!await ask({
+            title: `‘${missionTitle}’ 과제를 영구 삭제할까요?`,
+            body: '학생들이 낸 글과 댓글이 함께 사라지고, 되돌릴 수 없습니다.',
+            confirmLabel: '영구 삭제하기 ⚠️',
+            tone: 'danger'
+        })) return;
 
         setLoading(true);
         try {
@@ -296,11 +327,16 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 dataCache.invalidate(`missions_${activeClass.id}`);
             }
 
-            alert('미션이 영구적으로 삭제되었습니다.');
+            notify('🗑️ 과제를 영구 삭제했어요.');
             fetchArchivedMissions();
         } catch (err) {
             console.error('미션 삭제 실패:', err.message);
-            alert('삭제에 실패했습니다. 다시 시도해주세요.');
+            await ask({
+                title: '과제를 삭제하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoading(false);
         }
@@ -736,6 +772,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 isBulk={exportTarget?.type === 'bulk_missions'}
                 pdfRenderModes={exportTarget?.pdfRenderModes || []}
             />
+            {confirmDialog}
+            {notice}
         </div>
     );
 };
