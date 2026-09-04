@@ -566,6 +566,8 @@ export const useMissionManager = (
             return data || [];
         } catch (err) {
             console.error('학생 글 불러오기 실패:', err.message);
+            // ⚠️ 창을 띄우기 전에 잠금을 푼다 — finally 는 창을 닫은 뒤에야 돈다.
+            setLoadingPosts(false);
             await ask({
                 title: '학생 글을 불러오지 못했습니다',
                 body: `잠시 뒤 다시 시도해 주세요.`,
@@ -770,6 +772,7 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('피드백 저장 실패:', err.message);
+            setIsGenerating(false);
             await ask({
                 title: '피드백을 저장하지 못했습니다',
                 body: `적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
@@ -891,6 +894,9 @@ ${postArray.map((p, idx) => {
             await fetchPostsForMission(selectedMission);
             if (failedCount > 0) {
                 // 일부만 됐다는 말은 그냥 지나가면 안 된다 — 남은 글을 다시 돌려야 한다.
+                // ⚠️ '작성 중이에요' 진행 창이 실패 안내 뒤에 남지 않도록 먼저 닫는다.
+                setIsGenerating(false);
+                setProgress({ current: 0, total: 0 });
                 await ask({
                     title: `${processedIds.size}명은 됐고 ${failedCount}명은 못 했습니다`,
                     body: '못 한 글은 제출 상태로 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.',
@@ -901,6 +907,8 @@ ${postArray.map((p, idx) => {
                 notify(`✨ ${processedIds.size}명의 글에 AI 피드백을 쓰고 돌려보냈어요`);
             }
         } catch {
+            setIsGenerating(false);
+            setProgress({ current: 0, total: 0 });
             await ask({
                 title: 'AI 피드백을 마치지 못했습니다',
                 body: '잠시 뒤 다시 시도해 주세요. 이미 처리된 글은 그대로 남아 있습니다.',
@@ -1094,6 +1102,11 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('회수 실패:', err.message);
+            /*
+             * ⚠️ 알리기 **전에** 잠금을 푼다. `finally` 는 창을 닫은 뒤에야 돌기 때문에,
+             *    먼저 창을 띄우면 그 뒤에서 목록이 계속 '불러오는 중'으로 남는다.
+             */
+            setLoadingPosts(false);
             await ask({
                 title: '승인 취소를 마치지 못했습니다',
                 body: `${err.message}
@@ -1141,6 +1154,7 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('일괄 회수 실패:', err.message);
+            setLoadingPosts(false);
             await ask({
                 title: '일괄 승인 취소를 마치지 못했습니다',
                 body: `잠시 뒤 다시 시도해 주세요.`,
@@ -1276,6 +1290,7 @@ ${postArray.map((p, idx) => {
             await fetchPostsForMission(selectedMission);
         } catch (err) {
             console.error('문장 일괄 다시 쓰기 요청 실패:', err.message);
+            setLoadingPosts(false);
             await ask({
                 title: '일괄 다시 쓰기 요청을 마치지 못했습니다',
                 body: `${err.message}

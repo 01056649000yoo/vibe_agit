@@ -119,6 +119,42 @@ test('앱 안 확인 창은 글자 바닥을 지키고 긴 이름을 자르지 �
 /*
  * 2026-09-03 배포 전 다시 읽다가 찾은 것들. 눈으로는 안 보이고 코드 순서에서만 드러난다.
  */
+/*
+ * 2026-09-04 점검에서 찾은 것: 같은 실수가 **다섯 곳 더** 있었다.
+ *
+ * 왜 나쁜가: `finally` 는 창을 **닫은 뒤에야** 돈다. 실패 창을 먼저 띄우면 그 뒤에서
+ * `AI가 작성 중이에요` 진행 창이나 `글을 불러오는 중` 표시가 계속 돌아,
+ * "실패했다는데 아직 하는 중"인 모순된 화면이 된다.
+ *
+ * ⚠️ 처음 만든 검사는 **함수 전체에서 잠금 해제를 세다가** 다른 갈래(부분 실패 쪽)의 해제까지
+ *    같이 세어 버려 변이를 못 잡았다. 그래서 **catch 블록 안**만 본다 — 규칙이 사는 자리가 거기다.
+ */
+test('실패 창을 띄우기 전에 catch 안에서 잠금을 먼저 푼다', async () => {
+    const source = await readFile('src/hooks/useMissionManager.js', 'utf8');
+    const UNLOCK = /set(?:IsGenerating|LoadingPosts|ApprovingPostId|RewritingPostId)\((?:false|null)\)/;
+    const offenders = [];
+
+    for (const match of source.matchAll(/const (handle\w+) = async/g)) {
+        const after = source.slice(match.index + 10);
+        const next = after.search(/\n {4}const handle\w+ = /);
+        const body = source.slice(match.index, match.index + 10 + (next < 0 ? 900 : next));
+        const takesLock = /set(?:IsGenerating|LoadingPosts|ApprovingPostId|RewritingPostId)\((?:true|post\.id)\)/.test(body);
+        if (!takesLock) continue;
+
+        for (const start of [...body.matchAll(/\} catch[^{]*\{/g)]) {
+            const tail = body.slice(start.index);
+            const stop = tail.search(/\n {8}\} finally \{|\n {8}\}\s*$/);
+            const block = stop < 0 ? tail : tail.slice(0, stop);
+            const askAt = block.search(/await ask\(/);
+            if (askAt < 0) continue;
+            if (!UNLOCK.test(block.slice(0, askAt))) offenders.push(match[1]);
+        }
+    }
+
+    assert.deepEqual(offenders, [],
+        `실패 창을 띄운 뒤에야 잠금을 푸는 곳이 있다(창 뒤에서 진행 표시가 계속 돈다): ${offenders.join(', ')}`);
+});
+
 test('실패를 알리기 전에 잠금을 먼저 푼다', async () => {
     const hook = await readFile('src/hooks/useMissionManager.js', 'utf8');
     for (const { fn } of BUSY_FLOWS) {
