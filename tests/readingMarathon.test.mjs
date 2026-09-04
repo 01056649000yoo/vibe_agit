@@ -528,3 +528,47 @@ test('설정 화면과 현황 창이 같은 계산을 쓴다', async () => {
         '현황 창에 경기 방식을 넘기지 않는다');
     assert.match(modal, /campaign = null/, '현황 창이 경기 방식을 받지 않는다');
 });
+
+/*
+ * 2026-09-03: 교사 화면을 방식별로 나눈 뒤 학생 화면도 확인했다.
+ * 진행률 계산은 이미 방식별로 맞았지만(개인전=내 거리, 모둠전=우리 모둠, 전체전=반 전체)
+ * **모둠에 아직 들어가지 않은 아이** 하나가 빠져 있었다 — 마라톤이 시작된 뒤 전학 온 경우다.
+ * 반 전체 합계로 흘러가 모둠 하나의 목표와 견주면, 아무것도 안 읽은 아이에게 100%가 뜬다.
+ */
+test('학생 카드는 경기 방식마다 자기에게 맞는 거리를 견준다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const card = await readFile(
+        'src/modules/writing/reading-log/marathon/ReadingMarathonDashboardCard.jsx', 'utf8');
+
+    // 개인전은 내 거리, 모둠전은 우리 모둠 거리를 목표와 견딘다. 반 전체 합계를 쓰면 안 된다.
+    assert.match(card, /getProgressPercent\(my\?\.distance_m, snapshot\.campaign\.target_distance_m\)/,
+        '개인전이 내 거리를 견주지 않는다');
+    assert.match(card, /getProgressPercent\(myTeam\.total_distance_m, snapshot\.campaign\.target_distance_m\)/,
+        '모둠전이 우리 모둠 거리를 견주지 않는다');
+
+    /*
+     * ⚠️ 모둠이 없는 아이가 `snapshot.summary`(반 전체 합계)로 흘러가면 안 된다.
+     *    `} : snapshot.summary;` 앞에 모둠전 갈래가 하나 더 있어야 한다.
+     */
+    assert.match(card, /\} : isGroup \? \{[\s\S]{0,600}progressPercent: 0[\s\S]{0,40}\} : snapshot\.summary;/,
+        '모둠에 없는 아이가 반 전체 합계를 자기 것처럼 본다');
+    assert.match(card, /const waitingForTeam = isGroup && !myTeam;/);
+    assert.match(card, /아직 모둠에 들어가지 않았어요/, '왜 0인지 아이에게 알려 주지 않는다');
+
+    // 완주 판정도 방식마다 자기 것을 본다.
+    const { isMarathonCompletedForStudent } =
+        await import('../src/modules/writing/reading-log/marathon/readingMarathon.js');
+    const campaignOf = (competition_type, status = 'active') => ({ campaign: { competition_type, status } });
+    assert.equal(isMarathonCompletedForStudent({
+        ...campaignOf('individual'), my: { completed_at: '2026-09-01' } }), true);
+    assert.equal(isMarathonCompletedForStudent({
+        ...campaignOf('individual'), my: { completed_at: null } }), false);
+    // 개인전에서 반이 완주해도 나는 아직일 수 있다.
+    assert.equal(isMarathonCompletedForStudent({
+        ...campaignOf('individual', 'completed'), my: { completed_at: null } }), false);
+    assert.equal(isMarathonCompletedForStudent({
+        ...campaignOf('group_team'), myTeam: { completed_at: '2026-09-01' } }), true);
+    assert.equal(isMarathonCompletedForStudent({ ...campaignOf('group_team') }), false);
+    assert.equal(isMarathonCompletedForStudent(campaignOf('class_team', 'completed')), true);
+    assert.equal(isMarathonCompletedForStudent(campaignOf('class_team')), false);
+});

@@ -2,11 +2,19 @@ import { lazy } from 'react'
 
 const ClassBoardPreview = lazy(() => import('./ClassBoardPreview.jsx'))
 const ApprovePostFlowPreview = lazy(() => import('./ApprovePostFlowPreview.jsx'))
+const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonStudentCardPreview.jsx'))
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'reading-marathon-student-card',
+    icon: '🏃',
+    title: '학생 마라톤 카드',
+    description: '개인전·모둠전·전체전이 각각 무엇을 목표와 견주는지, 모둠에 없는 아이는 어떻게 보이는지',
+    Component: ReadingMarathonStudentCardPreview,
+  }),
   Object.freeze({
     id: 'approve-post-flow',
     icon: '✅',

@@ -148,7 +148,21 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
         bookCount: myTeam.book_count,
         contributors: myTeam.member_count,
         progressPercent: getProgressPercent(myTeam.total_distance_m, snapshot.campaign.target_distance_m)
+    } : isGroup ? {
+        /*
+         * ⚠️ 모둠 대항전인데 아직 모둠에 들어가지 않은 아이(마라톤이 시작된 뒤 전학 온 경우).
+         *    여기서 반 전체 합계로 흘려보내면 **모둠 하나의 목표**와 견주게 되어
+         *    아무것도 안 읽은 아이에게 "100% 달성"이 뜬다. 0에서 시작한다고 솔직히 보여 준다.
+         */
+        ...snapshot.summary,
+        totalPages: 0,
+        totalDistanceM: 0,
+        bookCount: 0,
+        contributors: 0,
+        progressPercent: 0
     } : snapshot.summary;
+    // 모둠에 들어가야 함께 달릴 수 있다. 아이가 이유를 알 수 있게 한 줄 남긴다.
+    const waitingForTeam = isGroup && !myTeam;
     const completed = isMarathonCompletedForStudent(snapshot);
     const detailsId = `reading-marathon-details-${snapshot.campaign.id}`;
 
@@ -234,6 +248,11 @@ const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }
                                 <div><dt>{isIndividual ? '읽은 책' : '함께 읽은 책'}</dt><dd>{raceSummary.bookCount}권</dd></div>
                                 <div><dt>{isIndividual ? '읽은 쪽' : '함께 읽은 쪽'}</dt><dd>{raceSummary.totalPages.toLocaleString('ko-KR')}쪽</dd></div>
                             </dl>
+                            {waitingForTeam && (
+                                <p className="reading-marathon-pending">
+                                    🤝 아직 모둠에 들어가지 않았어요. 선생님께 말씀드리면 함께 달릴 수 있어요.
+                                </p>
+                            )}
                             {snapshot.summary.pendingBookCount > 0 && (
                                 <p className="reading-marathon-pending">📖 페이지 정보 확인 중인 책 {snapshot.summary.pendingBookCount}권</p>
                             )}
