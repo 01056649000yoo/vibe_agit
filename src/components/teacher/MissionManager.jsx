@@ -59,6 +59,7 @@ const MissionManager = ({
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
+        approvingPostId, confirmDialog, notice,
         tempFeedback, setTempFeedback, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
@@ -483,6 +484,7 @@ const MissionManager = ({
                 setTempFeedback={setTempFeedback}
                 isGenerating={isGenerating}
                 showCompleteToast={showCompleteToast}
+                approvingPostId={approvingPostId}
                 postComments={postComments}
                 outlineReference={postOutlineReference}
                 postDetailLoading={postDetailLoading}
@@ -496,6 +498,10 @@ const MissionManager = ({
                 handleTeacherEditPost={handleTeacherEditPost}
                 phraseStore={phraseStore}
             />
+
+            {/* 승인 확인 창과 알림 띠. 창보다 위에 떠야 해서 마지막에 그린다. */}
+            {confirmDialog}
+            {notice}
 
             {/* 보관 확인 커스텀 모달 */}
             <ArchiveConfirmModal

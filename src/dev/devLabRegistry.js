@@ -1,11 +1,19 @@
 import { lazy } from 'react'
 
 const ClassBoardPreview = lazy(() => import('./ClassBoardPreview.jsx'))
+const ApprovePostFlowPreview = lazy(() => import('./ApprovePostFlowPreview.jsx'))
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'approve-post-flow',
+    icon: '✅',
+    title: '글 승인 흐름',
+    description: '앱 안 확인 창 · 승인 중 표시 · 스스로 사라지는 알림 · 수정 모드로 잠겼을 때 안내',
+    Component: ApprovePostFlowPreview,
+  }),
   Object.freeze({
     id: 'class-board',
     icon: '🖥️',

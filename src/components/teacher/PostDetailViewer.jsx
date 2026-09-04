@@ -19,7 +19,8 @@ const PostDetailViewer = ({
     isGenerating, postComments,
     isMobile, onUpdate, isEvaluationMode, posts = [],
     addTeacherComment, deleteTeacherComment, handleTeacherEditPost,
-    outlineReference, postDetailLoading, onRefreshPostDetail, phraseStore
+    outlineReference, postDetailLoading, onRefreshPostDetail, phraseStore,
+    approvingPostId = null
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -322,9 +323,19 @@ const PostDetailViewer = ({
                                         >
                                             ♻️ 다시 쓰기 요청
                                         </Button>
+                                        {/*
+                                          * ⚠️ 잠겼다는 것을 흐린 글씨로만 알리지 않는다(2026-09-03).
+                                          *    수정 모드가 켜져 있으면 눌러도 아무 일이 없는데 이유를 알 길이 없어,
+                                          *    "버튼이 한 번에 안 눌린다"로 겪게 된다. 왜 잠겼는지 말로 적어 둔다.
+                                          */}
                                         <Button
                                             onClick={() => handleApprovePost(selectedPost)}
                                             disabled={isTeacherEditMode}
+                                            loading={approvingPostId === selectedPost.id}
+                                            loadingText="승인 중..."
+                                            title={isTeacherEditMode
+                                                ? '수정 모드를 끄면 승인할 수 있어요.'
+                                                : '승인하면 포인트가 바로 지급됩니다.'}
                                             style={{
                                                 backgroundColor: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
                                                 padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
@@ -332,7 +343,7 @@ const PostDetailViewer = ({
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
-                                            ✅ 승인 및 포인트 지급
+                                            {isTeacherEditMode ? '✅ 승인 (수정 모드 끄고)' : '✅ 승인 및 포인트 지급'}
                                         </Button>
                                     </>
                                 )}

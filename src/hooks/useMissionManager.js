@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import useConfirmDialog from '../components/common/useConfirmDialog';
+import useNotice from '../components/common/useNotice';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
@@ -37,6 +39,14 @@ export const useMissionManager = (
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [showCompleteToast, setShowCompleteToast] = useState(false);
+    /*
+     * 승인은 브라우저 기본 창 대신 앱 안 창으로 묻고, 끝났다는 말은 스스로 사라지는 띠로 한다.
+     * 기본 창은 확인을 두 번(묻기·알리기) 눌러야 했고, 크롬이 막으면 조용히 무시됐다.
+     */
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
+    // 어느 글을 승인하는 중인지. 버튼이 '승인 중...'으로 바뀌어 누른 티가 난다.
+    const [approvingPostId, setApprovingPostId] = useState(null);
     const [tempFeedback, setTempFeedback] = useState('');
     const [postReactions, setPostReactions] = useState([]);
     const [postComments, setPostComments] = useState([]);
@@ -873,16 +883,29 @@ ${postArray.map((p, idx) => {
     };
 
     const handleApprovePost = async (post) => {
-        if (!confirm(`${post.students?.name} 학생의 글을 승인하고 포인트를 지급하시겠습니까? 🎁`)) return;
+        // 같은 글을 두 번 누르면 두 번 보내지 않는다.
+        if (approvingPostId) return;
+        const studentName = post.students?.name || '학생';
+        const agreed = await ask({
+            title: `${studentName} 학생의 글을 승인할까요?`,
+            body: '승인하면 포인트가 바로 지급되고 학생에게 알림이 갑니다.',
+            confirmLabel: '승인하고 포인트 주기 🎁'
+        });
+        if (!agreed) return;
 
         try {
+            setApprovingPostId(post.id);
             setLoadingPosts(true);
             const data = await pointApi.approveAssignment(post.id, tempFeedback);
 
             const awardedPoints = Number(data?.points_awarded || 0);
-            alert(data?.status === 'already_approved'
-                ? '이미 승인된 글입니다. 포인트는 다시 지급하지 않았습니다.'
-                : `✅ 승인과 ${awardedPoints}포인트 지급이 함께 완료되었습니다!`);
+            /*
+             * 끝났다는 말은 읽기만 하면 되므로 확인을 누르게 하지 않는다.
+             * ⚠️ 다만 '이미 승인됨'은 사람이 예상한 것과 다른 결과라 창을 닫지 않고 그대로 알린다.
+             */
+            notify(data?.status === 'already_approved'
+                ? `${studentName} 학생의 글은 이미 승인되어 있어요. 포인트는 다시 주지 않았습니다.`
+                : `✅ ${studentName} 학생 승인 · ${awardedPoints}P 지급`);
             setSelectedPost(null);
             if (data?.status !== 'already_approved') {
                 setPosts((current) => current.map((item) => item.id === post.id
@@ -894,8 +917,17 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('승인 처리 실패:', err.message);
-            alert('승인 중 오류가 발생했습니다: ' + err.message);
+            // ⚠️ 실패는 띠로 알리지 않는다. 그냥 지나가면 승인이 된 줄 알고 넘어간다.
+            await ask({
+                title: `${studentName} 학생의 글을 승인하지 못했습니다`,
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요. 포인트는 지급되지 않았습니다.`,
+                confirmLabel: '알겠어요',
+                cancelLabel: '닫기'
+            });
         } finally {
+            setApprovingPostId(null);
             setLoadingPosts(false);
         }
     };
@@ -1250,6 +1282,8 @@ ${postArray.map((p, idx) => {
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
+        // 승인 확인 창과 알림 띠. 그릴 자리는 화면 쪽이 정한다.
+        approvingPostId, confirmDialog, notice,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,

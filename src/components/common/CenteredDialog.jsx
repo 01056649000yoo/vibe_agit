@@ -18,6 +18,12 @@ const CenteredDialog = ({
     maxHeight = '90dvh',
     zIndex = 26000,
     closeLabel,
+    /*
+     * 제목은 기본이 한 줄이고 넘치면 …로 잘린다. 자리 이름처럼 짧은 말에는 그게 맞다.
+     * 다만 아이 이름이 들어가는 물음("○○○ 학생의 글을 승인할까요?")은 잘리면 안 되므로
+     * 부르는 쪽이 줄 수를 늘릴 수 있게 한다(2026-09-03).
+     */
+    titleLines = 1,
     bodyPadding = 'var(--ui-space-5) var(--ui-space-6) var(--ui-space-6)'
 }) => {
     const titleId = useId();
@@ -57,7 +63,10 @@ const CenteredDialog = ({
                         <h2 id={titleId} style={{
                             margin: 0, color: 'white', background: 'none', WebkitTextFillColor: 'currentColor',
                             fontSize: 'var(--ui-font-xl)', fontWeight: 950, lineHeight: 1.2,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                            overflow: 'hidden',
+                            ...(titleLines > 1
+                                ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: titleLines, overflowWrap: 'anywhere' }
+                                : { textOverflow: 'ellipsis', whiteSpace: 'nowrap' })
                         }}>{title}</h2>
                         {description && <p style={{ margin: '5px 0 0', fontSize: 'var(--ui-font-xs)', fontWeight: 750, lineHeight: 1.45, opacity: .9 }}>{description}</p>}
                     </div>
