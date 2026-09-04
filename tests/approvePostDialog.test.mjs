@@ -18,7 +18,10 @@ import { readFile } from 'node:fs/promises';
 
 // 앱 안 창으로 옮긴 흐름. 이 안에서는 브라우저 기본 창을 쓰지 않는다.
 const MIGRATED_FLOWS = [
-    { file: 'src/hooks/useMissionManager.js', fn: 'handleApprovePost' }
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleApprovePost' },
+    // 2026-09-04: 승인 옆의 다시 쓰기 요청도 같은 창으로 옮겼다. 나란한 두 버튼이 서로 다르게 굴면
+    // 크롬이 대화상자를 막았을 때 한쪽만 조용히 먹통이 되어 "한 번에 안 눌린다"로 겪게 된다.
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleRequestRewrite' }
 ];
 
 const bodyOf = (source, name) => {
@@ -43,31 +46,41 @@ test('앱 안 창으로 옮긴 승인 흐름은 브라우저 기본 창을 쓰�
     }
 });
 
-test('승인하는 동안 버튼이 잠기고 누른 티가 난다', async () => {
+// 보내는 동안 잠기는 두 흐름. 새로 옮기면 여기 한 줄 더한다.
+const BUSY_FLOWS = [
+    { fn: 'handleApprovePost', state: 'approvingPostId', label: '승인 중...' },
+    { fn: 'handleRequestRewrite', state: 'rewritingPostId', label: '요청 중...' }
+];
+
+test('보내는 동안 버튼이 잠기고 누른 티가 난다', async () => {
     const [hook, viewer] = await Promise.all([
         readFile('src/hooks/useMissionManager.js', 'utf8'),
         readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8')
     ]);
 
-    // 같은 글을 두 번 눌러도 두 번 보내지 않는다.
-    const body = bodyOf(hook, 'handleApprovePost');
-    assert.match(body, /if \(approvingPostId\) return;/, '두 번 눌러도 막지 않는다');
-    assert.match(body, /setApprovingPostId\(post\.id\)/);
-    assert.match(body, /setApprovingPostId\(null\)/, '끝난 뒤 잠금을 풀지 않는다');
+    for (const { fn, state, label } of BUSY_FLOWS) {
+        // 같은 글을 두 번 눌러도 두 번 보내지 않는다.
+        const body = bodyOf(hook, fn);
+        assert.match(body, new RegExp(`if \\(${state}\\) return;`), `${fn}: 두 번 눌러도 막지 않는다`);
+        assert.ok(body.includes(`set${state[0].toUpperCase()}${state.slice(1)}(post.id)`), `${fn}: 잠그지 않는다`);
+        assert.ok(body.includes(`set${state[0].toUpperCase()}${state.slice(1)}(null)`), `${fn}: 끝난 뒤 잠금을 풀지 않는다`);
 
-    // 버튼이 '승인 중...'으로 바뀐다. 이게 없으면 눌렀는지 알 수 없어 또 누르게 된다.
-    assert.match(viewer, /loading=\{approvingPostId === selectedPost\.id\}/);
-    assert.match(viewer, /loadingText="승인 중\.\.\."/);
+        // 버튼 글자가 바뀐다. 이게 없으면 눌렀는지 알 수 없어 또 누르게 된다.
+        assert.ok(viewer.includes(`loading={${state} === selectedPost.id}`), `${fn}: 누른 티가 나지 않는다`);
+        assert.ok(viewer.includes(`loadingText="${label}"`), `${fn}: 보내는 중 글자가 없다`);
+    }
 });
 
 /*
  * ⚠️ 잠겼다는 것을 흐린 글씨로만 알리면, 눌러도 아무 일이 없는 이유를 알 수 없다.
  *    이것이 "한 번에 안 눌린다"로 겪게 되는 가장 유력한 경로였다.
  */
-test('수정 모드로 승인이 잠기면 왜 잠겼는지 말해 준다', async () => {
+test('수정 모드로 잠기면 두 버튼 모두 왜 잠겼는지 말해 준다', async () => {
     const viewer = await readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8');
-    assert.match(viewer, /수정 모드를 끄면 승인할 수 있어요/, '잠긴 이유를 알려 주지 않는다');
-    assert.match(viewer, /승인 \(수정 모드 끄고\)/, '버튼 글자가 잠긴 것을 드러내지 않는다');
+    assert.match(viewer, /수정 모드를 끄면 승인할 수 있어요/, '승인이 잠긴 이유를 알려 주지 않는다');
+    assert.match(viewer, /승인 \(수정 모드 끄고\)/, '승인 버튼 글자가 잠긴 것을 드러내지 않는다');
+    assert.match(viewer, /수정 모드를 끄면 다시 쓰기를 요청할 수 있어요/, '다시 쓰기가 잠긴 이유를 알려 주지 않는다');
+    assert.match(viewer, /다시 쓰기 \(수정 모드 끄고\)/, '다시 쓰기 버튼 글자가 잠긴 것을 드러내지 않는다');
 });
 
 test('앱 안 확인 창은 글자 바닥을 지키고 긴 이름을 자르지 않는다', async () => {
@@ -94,9 +107,10 @@ test('앱 안 확인 창은 글자 바닥을 지키고 긴 이름을 자르지 �
 /*
  * 2026-09-03 배포 전 다시 읽다가 찾은 것들. 눈으로는 안 보이고 코드 순서에서만 드러난다.
  */
-test('승인 실패를 알리기 전에 잠금을 먼저 푼다', async () => {
+test('실패를 알리기 전에 잠금을 먼저 푼다', async () => {
     const hook = await readFile('src/hooks/useMissionManager.js', 'utf8');
-    const body = bodyOf(hook, 'handleApprovePost');
+    for (const { fn } of BUSY_FLOWS) {
+    const body = bodyOf(hook, fn);
     const catchPart = body.slice(body.indexOf('} catch (err) {'));
 
     /*
@@ -105,8 +119,9 @@ test('승인 실패를 알리기 전에 잠금을 먼저 푼다', async () => {
      */
     const unlockAt = catchPart.indexOf('setLoadingPosts(false)');
     const askAt = catchPart.indexOf('await ask(');
-    assert.ok(unlockAt >= 0 && askAt >= 0, '실패 처리를 찾지 못했다');
-    assert.ok(unlockAt < askAt, '실패 창을 띄운 뒤에야 잠금을 푼다 — 창 뒤 목록이 멈춘다');
+    assert.ok(unlockAt >= 0 && askAt >= 0, `${fn}: 실패 처리를 찾지 못했다`);
+    assert.ok(unlockAt < askAt, `${fn}: 실패 창을 띄운 뒤에야 잠금을 푼다 — 창 뒤 목록이 멈춘다`);
+    }
 });
 
 test('알리기만 하는 창은 단추가 하나다', async () => {

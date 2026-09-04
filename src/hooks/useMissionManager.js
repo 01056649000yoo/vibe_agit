@@ -47,6 +47,7 @@ export const useMissionManager = (
     const { notify, notice } = useNotice();
     // 어느 글을 승인하는 중인지. 버튼이 '승인 중...'으로 바뀌어 누른 티가 난다.
     const [approvingPostId, setApprovingPostId] = useState(null);
+    const [rewritingPostId, setRewritingPostId] = useState(null);
     const [tempFeedback, setTempFeedback] = useState('');
     const [postReactions, setPostReactions] = useState([]);
     const [postComments, setPostComments] = useState([]);
@@ -864,13 +865,31 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    /*
+     * 다시 쓰기 요청도 승인과 같은 창을 쓴다 (2026-09-04).
+     *
+     * 승인만 앱 안 창으로 옮겨 두고 이쪽은 브라우저 창으로 남아 있었다. 같은 화면의 나란한 두 버튼이
+     * 서로 다르게 굴면, 크롬이 "추가 대화상자 표시 안 함"으로 막았을 때 **한쪽만 조용히 먹통**이 된다.
+     * 그 증상이 바로 "버튼이 한 번에 안 눌린다"로 겪게 되는 것이라 승인과 규칙을 맞춘다.
+     */
     const handleRequestRewrite = async (post) => {
-        if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
+        // 같은 글을 두 번 누르면 두 번 보내지 않는다.
+        if (rewritingPostId) return;
+        const studentName = post.students?.name || '학생';
+        const agreed = await ask({
+            title: `${studentName} 학생에게 다시 쓰기를 요청할까요?`,
+            body: '글이 학생에게 돌아가고, 피드백 칸에 적어 둔 내용이 안내로 보입니다.',
+            confirmLabel: '돌려보내기 ♻️'
+        });
+        if (!agreed) return;
 
         try {
+            setRewritingPostId(post.id);
+            setLoadingPosts(true);
             await assignmentApi.requestRewrite(post.id, tempFeedback);
 
-            alert('다시 쓰기 요청을 전달했습니다! 📤');
+            // 끝났다는 말은 읽기만 하면 되므로 확인을 누르게 하지 않는다.
+            notify(`♻️ ${studentName} 학생에게 다시 쓰기를 요청했어요`);
             setSelectedPost(null);
             setPosts((current) => current.map((item) => item.id === post.id
                 ? { ...item, is_submitted: false, is_returned: true, ai_feedback: tempFeedback }
@@ -878,7 +897,24 @@ ${postArray.map((p, idx) => {
             transitionMissionStatus(post.mission_id, 'request-rewrite', 1, [post.student_id]);
         } catch (err) {
             console.error('다시 쓰기 요청 실패:', err.message);
-            alert(`요청 중 오류 발생: ${err.message}`);
+            /*
+             * ⚠️ 알리기 **전에** 잠금을 푼다. 안 그러면 실패 창 뒤에서 목록이 계속
+             *    '글을 불러오고 있어요...'로 남는다 — finally 는 창을 닫은 뒤에야 돈다.
+             */
+            setRewritingPostId(null);
+            setLoadingPosts(false);
+            // 실패는 띠로 흘리지 않는다. 그냥 지나가면 돌려보낸 줄 알고 넘어간다.
+            await ask({
+                title: `${studentName} 학생에게 다시 쓰기를 요청하지 못했습니다`,
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요. 글은 학생에게 돌아가지 않았습니다.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+        } finally {
+            setRewritingPostId(null);
+            setLoadingPosts(false);
         }
     };
 
@@ -1286,7 +1322,7 @@ ${postArray.map((p, idx) => {
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         // 승인 확인 창과 알림 띠. 그릴 자리는 화면 쪽이 정한다.
-        approvingPostId, confirmDialog, notice,
+        approvingPostId, rewritingPostId, confirmDialog, notice,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,

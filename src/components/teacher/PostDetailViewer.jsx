@@ -20,7 +20,7 @@ const PostDetailViewer = ({
     isMobile, onUpdate, isEvaluationMode, posts = [],
     addTeacherComment, deleteTeacherComment, handleTeacherEditPost,
     outlineReference, postDetailLoading, onRefreshPostDetail, phraseStore,
-    approvingPostId = null
+    approvingPostId = null, rewritingPostId = null
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -311,9 +311,15 @@ const PostDetailViewer = ({
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {selectedPost.is_submitted && !selectedPost.is_confirmed && (
                                     <>
+                                        {/* 승인 버튼과 같은 규칙으로 둔다 — 왜 잠겼는지 말로 적고, 보내는 동안 그렇다고 알린다. */}
                                         <Button
                                             onClick={() => handleRequestRewrite(selectedPost)}
                                             disabled={isTeacherEditMode}
+                                            loading={rewritingPostId === selectedPost.id}
+                                            loadingText="요청 중..."
+                                            title={isTeacherEditMode
+                                                ? '수정 모드를 끄면 다시 쓰기를 요청할 수 있어요.'
+                                                : '피드백 칸에 적어 둔 내용이 학생에게 안내로 보입니다.'}
                                             style={{
                                                 backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
                                                 padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
@@ -321,7 +327,7 @@ const PostDetailViewer = ({
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
-                                            ♻️ 다시 쓰기 요청
+                                            {isTeacherEditMode ? '♻️ 다시 쓰기 (수정 모드 끄고)' : '♻️ 다시 쓰기 요청'}
                                         </Button>
                                         {/*
                                           * ⚠️ 잠겼다는 것을 흐린 글씨로만 알리지 않는다(2026-09-03).

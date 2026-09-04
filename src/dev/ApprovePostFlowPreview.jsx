@@ -25,6 +25,7 @@ const ApprovePostFlowPreview = () => {
   const { ask, confirmDialog } = useConfirmDialog()
   const { notify, notice } = useNotice()
   const [approving, setApproving] = useState(false)
+  const [rewriting, setRewriting] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [log, setLog] = useState([])
 
@@ -67,6 +68,35 @@ const ApprovePostFlowPreview = () => {
     notify(`✅ ${studentName} 학생 승인 · 100P 지급`)
   }
 
+  // 실제 handleRequestRewrite 와 같은 차례로 움직인다(2026-09-04에 같은 창으로 옮겼다).
+  const requestRewrite = async (outcome) => {
+    if (rewriting) return
+    const studentName = '김하늘'
+    const agreed = await ask({
+      title: `${studentName} 학생에게 다시 쓰기를 요청할까요?`,
+      body: '글이 학생에게 돌아가고, 피드백 칸에 적어 둔 내용이 안내로 보입니다.',
+      confirmLabel: '돌려보내기 ♻️'
+    })
+    if (!agreed) { add('그만두기를 눌러 돌려보내지 않음'); return }
+
+    setRewriting(true)
+    await new Promise((resolve) => setTimeout(resolve, WAIT_MS))
+    setRewriting(false)
+
+    if (outcome === 'fail') {
+      add('실패 — 창으로 멈춰 세움')
+      await ask({
+        title: `${studentName} 학생에게 다시 쓰기를 요청하지 못했습니다`,
+        body: 'network error\n\n잠시 뒤 다시 시도해 주세요. 글은 학생에게 돌아가지 않았습니다.',
+        confirmLabel: '알겠어요',
+        acknowledgeOnly: true
+      })
+      return
+    }
+    add('다시 쓰기 요청 완료 — 띠로 알림(누를 것 없음)')
+    notify(`♻️ ${studentName} 학생에게 다시 쓰기를 요청했어요`)
+  }
+
   const box = { display: 'flex', flexWrap: 'wrap', gap: 'var(--ui-space-3)', alignItems: 'center' }
 
   return (
@@ -85,6 +115,21 @@ const ApprovePostFlowPreview = () => {
         >
           {editMode ? '✅ 승인 (수정 모드 끄고)' : '✅ 승인 및 포인트 지급'}
         </Button>
+        <Button
+          onClick={() => requestRewrite('ok')}
+          disabled={editMode}
+          loading={rewriting}
+          loadingText="요청 중..."
+          title={editMode
+            ? '수정 모드를 끄면 다시 쓰기를 요청할 수 있어요.'
+            : '피드백 칸에 적어 둔 내용이 학생에게 안내로 보입니다.'}
+          style={{
+            backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
+            fontWeight: 'bold', opacity: editMode ? 0.4 : 1, cursor: editMode ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {editMode ? '♻️ 다시 쓰기 (수정 모드 끄고)' : '♻️ 다시 쓰기 요청'}
+        </Button>
         <Button variant="ghost" size="sm" onClick={() => setEditMode((v) => !v)}>
           {editMode ? '수정 모드 종료' : '수정 모드 켜 보기'}
         </Button>
@@ -92,7 +137,8 @@ const ApprovePostFlowPreview = () => {
 
       <div style={box}>
         <Button variant="outline" size="sm" onClick={() => approve('already')}>이미 승인된 글로 해 보기</Button>
-        <Button variant="outline" size="sm" onClick={() => approve('fail')}>실패하게 해 보기</Button>
+        <Button variant="outline" size="sm" onClick={() => approve('fail')}>승인 실패하게 해 보기</Button>
+        <Button variant="outline" size="sm" onClick={() => requestRewrite('fail')}>다시 쓰기 실패하게 해 보기</Button>
       </div>
 
       <div style={{

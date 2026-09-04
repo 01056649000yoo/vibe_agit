@@ -59,7 +59,7 @@ const MissionManager = ({
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
-        approvingPostId, confirmDialog, notice,
+        approvingPostId, rewritingPostId, confirmDialog, notice,
         tempFeedback, setTempFeedback, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
@@ -485,6 +485,7 @@ const MissionManager = ({
                 isGenerating={isGenerating}
                 showCompleteToast={showCompleteToast}
                 approvingPostId={approvingPostId}
+                rewritingPostId={rewritingPostId}
                 postComments={postComments}
                 outlineReference={postOutlineReference}
                 postDetailLoading={postDetailLoading}
