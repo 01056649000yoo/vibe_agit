@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import useConfirmDialog from '../components/common/useConfirmDialog';
+import useNotice from '../components/common/useNotice';
 import { supabase } from '../lib/supabaseClient';
 import { useDataExport } from './useDataExport';
 import { dataCache } from '../lib/cache';
@@ -6,6 +8,9 @@ import { generateUnambiguousCode } from '../lib/codeGenerator';
 import { pointApi } from '../modules/points/pointApi';
 
 export const useStudentManager = (classId) => {
+    // 앱 안 창은 여기서 만들고 화면(StudentManager)이 그린다 — 훅에는 그릴 자리가 없다.
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const [students, setStudents] = useState([]);
     const [studentName, setStudentName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
@@ -81,7 +86,12 @@ export const useStudentManager = (classId) => {
             setStudentName('');
         } catch (err) {
             console.error('학생 추가 실패:', err.message);
-            alert('학생을 추가하는 중 오류가 발생했습니다.');
+            await ask({
+                title: '학생을 추가하지 못했습니다',
+                body: `적어 둔 이름은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsAdding(false);
         }
@@ -89,7 +99,7 @@ export const useStudentManager = (classId) => {
 
     const handleBulkProcessPoints = async () => {
         if (selectedIds.length === 0) return;
-        if (!pointFormData.reason.trim()) return alert('활동 사유를 입력해주세요! ✍️');
+        if (!pointFormData.reason.trim()) { notify('활동 사유를 적어 주세요. ✍️'); return; }
 
         const { type, amount, reason } = pointFormData;
         const actualAmount = type === 'give' ? amount : -amount;
@@ -100,7 +110,12 @@ export const useStudentManager = (classId) => {
             const insufficientOnes = targets.filter(s => (s.total_points || 0) < amount);
             if (insufficientOnes.length > 0) {
                 const names = insufficientOnes.map(s => s.name).join(', ');
-                alert(`⚠️ 포인트 회수 실패!\n보유 포인트가 부족한 학생이 포함되어 있습니다: ${names}`);
+            await ask({
+                title: '포인트를 회수하지 못했습니다',
+                body: `보유 포인트가 모자란 학생이 있습니다: ${names}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
                 return;
             }
         }
@@ -128,11 +143,18 @@ export const useStudentManager = (classId) => {
                 reason
             );
             dataCache.invalidate(`point_manager_${classId}`);
-            alert(`${targets.length}명의 포인트 처리가 완료되었습니다! ✨`);
+            notify(`✨ ${targets.length}명의 포인트를 처리했어요`);
             setSelectedIds([]);
         } catch (error) {
             setStudents(previousStudents);
-            alert('오류 발생: ' + error.message);
+            await ask({
+                title: '포인트를 처리하지 못했습니다',
+                body: `${error.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -155,9 +177,16 @@ export const useStudentManager = (classId) => {
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
 
-            alert(`[${deleteTarget.name}] 학생이 삭제 대기 상태로 이동되었습니다. 📦\n3일 이내에 복구할 수 있으며, 이후에는 영구 삭제됩니다.`);
+            notify(`📦 ${deleteTarget.name} 학생을 삭제 대기로 옮겼어요. 3일 안에 되돌릴 수 있습니다.`);
         } catch (error) {
-            alert('삭제 실패: ' + error.message);
+            await ask({
+                title: '학생을 삭제하지 못했습니다',
+                body: `${error.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsDeleteModalOpen(false);
             setDeleteTarget(null);
@@ -166,7 +195,14 @@ export const useStudentManager = (classId) => {
 
     const handleDeleteStudentImmediately = async () => {
         if (!deleteTarget) return;
-        if (!window.confirm(`⚠️ 정말로 [${deleteTarget.name}] 학생을 즉시 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 활동 데이터가 삭제됩니다.`)) return;
+        // 되돌릴 수 없는 일이라 붉은 단추로 묻는다.
+        const agreed = await ask({
+            title: `${deleteTarget.name} 학생을 영구 삭제할까요?`,
+            body: '이 학생이 쓴 글과 활동 기록이 모두 사라지고, 되돌릴 수 없습니다.',
+            confirmLabel: '영구 삭제하기 ⚠️',
+            tone: 'danger'
+        });
+        if (!agreed) return;
 
         try {
             const { error } = await supabase.rpc('delete_student_immediately', {
@@ -183,9 +219,16 @@ export const useStudentManager = (classId) => {
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
 
-            alert(`[${deleteTarget.name}] 학생이 즉시 영구 삭제되었습니다. 🗑️`);
+            notify(`🗑️ ${deleteTarget.name} 학생을 영구 삭제했어요.`);
         } catch (error) {
-            alert('즉시 삭제 실패: ' + error.message);
+            await ask({
+                title: '학생을 영구 삭제하지 못했습니다',
+                body: `${error.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsDeleteModalOpen(false);
             setDeleteTarget(null);
@@ -232,10 +275,15 @@ export const useStudentManager = (classId) => {
             dataCache.invalidate(`students_${classId}`);
             dataCache.invalidate(`point_manager_${classId}`);
             await fetchStudents();
-            alert('학생 정보가 성공적으로 복구되었습니다! ♻️');
+            notify('♻️ 학생 정보를 되살렸어요.');
         } catch (err) {
             console.error('학생 복구 실패:', err.message);
-            alert('복구 중 오류가 발생했습니다.');
+            await ask({
+                title: '학생 정보를 되살리지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -267,13 +315,18 @@ export const useStudentManager = (classId) => {
                 googleAccessToken = await authorizeGoogleExport();
             } catch (error) {
                 console.error('Google authorization failed:', error);
-                alert('구글 문서 권한을 확인하지 못했습니다: ' + (error.message || '로그인 창을 다시 열어 주세요.'));
+                await ask({
+                title: '구글 문서 권한을 확인하지 못했습니다',
+                body: `${error.message || '로그인 창을 다시 열어 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+                });
                 return;
             }
         }
         const data = await fetchExportData(exportTarget.type, exportTarget.id);
         if (!data || data.length === 0) {
-            alert('작성된 글이 없습니다.');
+            notify('내보낼 글이 없어요.');
             return;
         }
         const fileName = `${exportTarget.title}_글모음`;
@@ -297,6 +350,7 @@ export const useStudentManager = (classId) => {
     };
 
     return {
+        confirmDialog, notice, ask, notify,
         students, studentName, setStudentName, isAdding, selectedIds, setSelectedIds,
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import useConfirmDialog from '../common/useConfirmDialog';
+import useNotice from '../common/useNotice';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -16,6 +18,8 @@ import { generateUnambiguousCode } from '../../lib/codeGenerator';
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
 const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass, onNavigate }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
@@ -49,7 +53,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
 
     const handleCreateClass = async () => {
         if (!className.trim()) {
-            alert('학급 이름을 입력해주세요! 😊');
+            notify('학급 이름을 적어 주세요. 😊');
             return;
         }
 
@@ -79,7 +83,14 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
             setClassName('');
         } catch (error) {
             console.error('❌ ClassManager: 학급 생성 실패:', error.message);
-            alert('학급 생성 중 오류가 생겼어요: ' + error.message);
+            await ask({
+                title: '학급을 만들지 못했습니다',
+                body: `${error.message}
+
+적어 둔 이름은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsSaving(false);
         }
@@ -88,10 +99,14 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     const handleDeleteClass = async (targetId, targetName) => {
         if (!targetId) return;
 
-        // 1. 사용자 확인 (window.confirm)
-        if (!window.confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n\n삭제된 학급은 3일 이내에 다시 되돌릴 수 있습니다.\n3일이 지나면 모든 데이터가 영구적으로 삭제됩니다.`)) {
-            return;
-        }
+        // 1. 사용자 확인 — 3일 뒤에는 되돌릴 수 없으므로 붉은 단추로 묻는다.
+        const agreed = await ask({
+            title: `${targetName} 학급을 삭제할까요?`,
+            body: '3일 안에는 되돌릴 수 있고, 그 뒤에는 학급의 모든 자료가 영구히 사라집니다.',
+            confirmLabel: '학급 삭제하기 ⚠️',
+            tone: 'danger'
+        });
+        if (!agreed) return;
 
         setIsSaving(true);
         try {
@@ -102,7 +117,14 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 .eq('id', targetId);
 
             if (error) {
-                alert(`삭제 권한이 없거나 오류가 발생했습니다: ${error.message}`);
+                await ask({
+                    title: '학급을 삭제하지 못했습니다',
+                    body: `${error.message}
+
+담당 학급인지 확인해 주세요.`,
+                    confirmLabel: '알겠어요',
+                    acknowledgeOnly: true
+                });
                 return;
             }
 
@@ -114,12 +136,17 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 setActiveClass(null);
             }
 
-            alert(`[${targetName}] 학급이 삭제 대기 상태로 이동되었습니다. 📦\n3일 이내에 복구할 수 있으며, 이후에는 영구 삭제됩니다.`);
+            notify(`📦 ${targetName} 학급을 삭제 대기로 옮겼어요. 3일 안에 되돌릴 수 있습니다.`);
 
             if (onClassDeleted) await onClassDeleted();
         } catch (error) {
             console.error('❌ ClassManager: 삭제 처리 실패:', error);
-            alert('삭제 중 예상치 못한 오류가 발생했습니다.');
+            await ask({
+                title: '학급을 삭제하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsSaving(false);
         }
@@ -130,7 +157,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
         const nextName = window.prompt('바꿀 학급 이름을 입력해 주세요.', activeClass.name)?.trim();
         if (!nextName || nextName === activeClass.name) return;
         if (nextName.length > 40) {
-            window.alert('학급 이름은 40자 이내로 입력해 주세요.');
+            notify('학급 이름은 40자 이내로 적어 주세요.');
             return;
         }
 
@@ -148,7 +175,12 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
             setActiveClass?.(data);
         } catch (error) {
             console.error('학급 이름 변경 실패:', error.message);
-            window.alert('학급 이름을 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            await ask({
+                title: '학급 이름을 바꾸지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsSaving(false);
         }
@@ -381,6 +413,8 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     </div>
                 )}
             </AnimatePresence>
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

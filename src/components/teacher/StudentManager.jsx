@@ -21,6 +21,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     const {
+        confirmDialog, notice,
         students, studentName, setStudentName, isAdding, selectedIds, setSelectedIds,
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
@@ -190,6 +191,9 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                 isGapiLoaded={isGapiLoaded}
                 pdfRenderModes={getAnyRegisteredPdfRenderModes()}
             />
+            {/* 훅이 만든 앱 안 창은 여기서 그린다 — 훅에는 그릴 자리가 없다. */}
+            {confirmDialog}
+            {notice}
         </div>
     );
 };

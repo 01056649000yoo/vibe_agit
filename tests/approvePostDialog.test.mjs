@@ -203,7 +203,11 @@ const DIALOG_FREE_FILES = [
     'src/components/teacher/MissionManager.jsx',
     'src/components/teacher/MissionForm.jsx',
     'src/components/teacher/PostDetailViewer.jsx',
-    'src/components/teacher/SubmissionStatusModal.jsx'
+    'src/components/teacher/SubmissionStatusModal.jsx',
+    // 2026-09-04: 학생·학급 관리 화면. 되돌릴 수 없는 일(영구 삭제)이 있어 먼저 옮겼다.
+    'src/hooks/useStudentManager.js',
+    'src/components/teacher/StudentManager.jsx',
+    'src/components/teacher/ClassManager.jsx'
 ];
 
 test('과제 화면에는 브라우저 기본 창이 하나도 없다', async () => {
@@ -257,4 +261,22 @@ test('창 머리말은 옅은 바탕에 진한 글씨다 — 대시보드보다 
     assert.doesNotMatch(dialog, /tone="onDark"/, '밝은 머리말에 어두운 배경용 닫기 단추를 쓴다');
     // 바탕과 본문이 모두 밝아 경계가 사라지므로 아래 선으로 가른다.
     assert.match(dialog, /borderBottom: '1px solid var\(--ui-primary-border\)'/);
+});
+
+test('되돌릴 수 없는 일은 붉은 단추로 묻는다', async () => {
+    /*
+     * 영구 삭제는 취소가 없다. 다른 물음과 같은 파란 단추로 두면 손이 먼저 나간다.
+     * 2026-09-04: 학생 영구 삭제·학급 삭제를 옮기며 못 박는다.
+     */
+    const cases = [
+        { file: 'src/hooks/useStudentManager.js', title: '학생을 영구 삭제할까요?' },
+        { file: 'src/components/teacher/ClassManager.jsx', title: '학급을 삭제할까요?' },
+        { file: 'src/hooks/useMissionManager.js', title: '승인을 취소하고 포인트를 회수할까요?' }
+    ];
+    for (const { file, title } of cases) {
+        const source = await readFile(file, 'utf8');
+        const at = source.indexOf(title);
+        assert.ok(at >= 0, `${file}: '${title}' 물음을 찾지 못했다`);
+        assert.match(source.slice(at, at + 300), /tone: 'danger'/, `${file}: 붉은 단추로 묻지 않는다`);
+    }
 });
