@@ -1,4 +1,4 @@
-/* eslint-disable security/detect-non-literal-fs-filename */
+/* eslint-disable security/detect-non-literal-fs-filename, security/detect-unsafe-regex, security/detect-non-literal-regexp -- 고정된 로컬 소스 계약을 검사한다. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -153,6 +153,37 @@ test('실패 창을 띄우기 전에 catch 안에서 잠금을 먼저 푼다', a
 
     assert.deepEqual(offenders, [],
         `실패 창을 띄운 뒤에야 잠금을 푸는 곳이 있다(창 뒤에서 진행 표시가 계속 돈다): ${offenders.join(', ')}`);
+});
+
+test('새로 옮긴 평어·수호룡 화면도 실패 창 전에 잠금을 풀고 실제 처리 수를 보여 준다', async () => {
+    const [activity, dragon] = await Promise.all([
+        readFile('src/components/teacher/ActivityReport.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/useDragonPet.js', 'utf8')
+    ]);
+
+    const activityCases = [
+        { marker: "console.error('데이터 수합 실패:'", unlock: 'setLoadingDetails(false)' },
+        { marker: "console.error('단일 생성 오류:'", unlock: 'setIsGenerating(prev =>' }
+    ];
+    for (const { marker, unlock } of activityCases) {
+        const start = activity.indexOf(marker);
+        const block = activity.slice(start, start + 600);
+        assert.ok(start >= 0, `${marker}: 실패 갈래를 찾지 못했다`);
+        assert.ok(block.indexOf(unlock) >= 0 && block.indexOf(unlock) < block.indexOf('await ask('),
+            `${marker}: 실패 창 뒤에서 진행 표시가 계속 돈다`);
+    }
+
+    const dragonFailures = [...dragon.matchAll(/\} catch \([^)]*\) \{([\s\S]*?)\n        \} finally \{/g)];
+    assert.equal(dragonFailures.length, 6, '수호룡 실패 갈래 수가 바뀌었다');
+    for (const [, block] of dragonFailures) {
+        assert.ok(block.indexOf('setIsBusy(false)') >= 0
+            && block.indexOf('setIsBusy(false)') < block.indexOf('await ask('),
+        '수호룡 실패 창 뒤에서 작업 중 표시가 계속 돈다');
+    }
+
+    assert.match(activity,
+        /title: `\$\{generatedThisRun\.length\}명 작성, \$\{failedStudentIds\.length\}명 실패했습니다`/,
+        '일괄 작성 일부 실패 창에 실제 처리 수 대신 ${...} 문자가 보인다');
 });
 
 test('실패를 알리기 전에 잠금을 먼저 푼다', async () => {

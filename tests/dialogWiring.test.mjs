@@ -38,6 +38,21 @@ const PAIRS = [
     { hook: 'useNotice', element: 'notice' }
 ];
 
+const returnsElement = (source, element) => (
+    [...source.matchAll(/return\s*\{([\s\S]*?)\};/g)]
+        .some((match) => (match[1].match(/\b\w+\b/g) || []).includes(element))
+);
+
+const importsModule = (source, moduleName) => (
+    [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)]
+        .some((match) => path.basename(match[1]) === moduleName)
+);
+
+const renamedElement = (source, element) => (
+    [...source.matchAll(/\b(confirmDialog|notice)\s*:\s*(\w+)/g)]
+        .find((match) => match[1] === element)?.[2] || null
+);
+
 test('앱 안 창을 부른 곳은 그 창을 반드시 화면에 그린다', async () => {
     const files = await walk(SRC);
     const sources = new Map();
@@ -52,14 +67,13 @@ test('앱 안 창을 부른 곳은 그 창을 반드시 화면에 그린다', as
             if (rendersItself) continue;
 
             // 돌려주기만 한다면, 그것을 쓰는 파일 중 하나가 반드시 그려야 한다.
-            const returnsIt = new RegExp(`return \\{[\\s\\S]{0,600}\\b${element}\\b`).test(source)
-                || new RegExp(`\\b${element}\\b[^\\n]*,\\s*$`, 'm').test(source);
+            const returnsIt = returnsElement(source, element);
             assert.ok(returnsIt,
                 `${file}: ${hook}() 을 부르고 ${element} 을(를) 그리지도 돌려주지도 않는다 — 창이 영원히 안 뜬다`);
 
             const moduleName = path.basename(file).replace(/\.(jsx?|mjs)$/, '');
             const consumers = [...sources].filter(([other, otherSource]) =>
-                other !== file && new RegExp(`from '[^']*${moduleName}'`).test(otherSource));
+                other !== file && importsModule(otherSource, moduleName));
             assert.ok(consumers.length > 0, `${file}: ${element} 을 돌려주는데 쓰는 곳이 없다`);
             /*
              * 쓰는 쪽이 이름을 바꿔 받을 수 있다 — 한 화면이 훅 둘의 창을 함께 그릴 때 그렇다
@@ -67,8 +81,8 @@ test('앱 안 창을 부른 곳은 그 창을 반드시 화면에 그린다', as
              */
             const rendersElement = ([, otherSource]) => {
                 if (otherSource.includes(`{${element}}`)) return true;
-                const renamed = new RegExp(`\\b${element}\\s*:\\s*(\\w+)`).exec(otherSource);
-                return Boolean(renamed && otherSource.includes(`{${renamed[1]}}`));
+                const renamed = renamedElement(otherSource, element);
+                return Boolean(renamed && otherSource.includes(`{${renamed}}`));
             };
             assert.ok(
                 consumers.some(rendersElement),

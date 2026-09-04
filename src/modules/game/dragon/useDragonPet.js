@@ -107,6 +107,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             };
         } catch (err) {
             console.error('드래곤 교감 기록 실패:', err.message);
+            setIsBusy(false);
             await ask({
                 title: '교감 기록을 저장하지 못했어요',
                 body: `잠시 뒤 다시 눌러 주세요.`,
@@ -144,6 +145,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (err) {
             console.error('아지트 소품 구매 실패:', err.message);
+            setIsBusy(false);
             await ask({
                 title: '사지 못했어요',
                 body: `포인트는 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
@@ -172,6 +174,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (err) {
             console.error('아지트 장식 변경 실패:', err.message);
+            setIsBusy(false);
             await ask({
                 title: '장식을 바꾸지 못했어요',
                 body: `잠시 뒤 다시 눌러 주세요.`,
@@ -196,6 +199,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (error) {
             console.error('전설 아지트 세트 개봉 실패:', error.message);
+            setIsBusy(false);
             await ask({
                 title: '전설 세트를 열지 못했어요',
                 body: `${error.message || '잠시 뒤 다시 시도해 주세요.'}`,
@@ -225,6 +229,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return true;
         } catch (error) {
             console.error('수호룡 종류 저장 실패:', error.message);
+            setIsBusy(false);
             await ask({
                 title: '수호룡 선택을 저장하지 못했어요',
                 body: `잠시 뒤 다시 눌러 주세요.`,
@@ -252,6 +257,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             };
         } catch (error) {
             console.error('수호룡 성장 확인 저장 실패:', error.message);
+            setIsBusy(false);
             await ask({
                 title: '새 모습을 기록하지 못했어요',
                 body: `잠시 뒤 다시 눌러 주세요.`,

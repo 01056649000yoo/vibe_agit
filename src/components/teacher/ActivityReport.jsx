@@ -101,23 +101,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         fetchData();
     }, [fetchData]);
 
-    // 교사 ID 가져오기 및 이력 로드
-    useEffect(() => {
-        const fetchTeacherAndHistory = async () => {
-            if (!activeClass?.id) return;
-
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error || !user) return;
-
-            // 교사 기본키는 인증 사용자 ID와 같고, 담당 학급 권한은 RLS가 다시 확인한다.
-            setTeacherId(user.id);
-            await loadGenerationHistory(activeClass.id);
-        };
-        fetchTeacherAndHistory();
-    }, [activeClass?.id]);
-
     // 생성 이력 불러오기
-    const loadGenerationHistory = async (classId) => {
+    const loadGenerationHistory = useCallback(async (classId) => {
         if (!classId) return;
         const { data, error } = await supabase
             .from('student_records')
@@ -133,7 +118,22 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         } else if (error) {
             console.error('생성 이력 로드 실패:', error);
         }
-    };
+    }, []);
+
+    // 교사 ID 가져오기 및 이력 로드
+    useEffect(() => {
+        const fetchTeacherAndHistory = async () => {
+            if (!activeClass?.id) return;
+
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) return;
+
+            // 교사 기본키는 인증 사용자 ID와 같고, 담당 학급 권한은 RLS가 다시 확인한다.
+            setTeacherId(user.id);
+            await loadGenerationHistory(activeClass.id);
+        };
+        fetchTeacherAndHistory();
+    }, [activeClass?.id, loadGenerationHistory]);
 
     // [신규] 생성 이력 삭제
     const handleDeleteHistory = async (e, recordId) => {
@@ -374,6 +374,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 setStudentPosts(activeInMissions);
             } catch (err) {
                 console.error('데이터 수합 실패:', err.message);
+                // 실패 창 뒤에서 로딩 표시가 계속 돌지 않도록 먼저 잠금을 푼다.
+                setLoadingDetails(false);
                 await ask({
                     title: '학생 자료를 불러오지 못했습니다',
                     body: `잠시 뒤 다시 시도해 주세요.`,
@@ -385,7 +387,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             }
         };
         loadAndSynthesize();
-    }, [activeClass.id, dataRefreshToken, persistenceKey, selectedMissionIds, selectedMissions]);
+    }, [activeClass.id, ask, dataRefreshToken, persistenceKey, selectedMissionIds, selectedMissions]);
 
     // 4. 저장 로직 (로컬 스토리지)
     const saveToPersistence = (studentId, synthesis) => {
@@ -477,6 +479,9 @@ ${activitiesInfo}`;
         return true;
     };
 
+    // 생성된 완료 수 계산. 일괄 작성 여부와 화면 표시는 이 한 값을 함께 쓴다.
+    const generatedCount = studentPosts.filter(s => s.ai_synthesis).length;
+
     // 5. 단일 생성
     const generateCombinedReview = async (studentData) => {
         if (!await validateGenerationReadiness(studentData.student.id)) return;
@@ -497,6 +502,8 @@ ${activitiesInfo}`;
             }
         } catch (err) {
             console.error('단일 생성 오류:', err);
+            // 실패 창을 닫기 전에도 해당 학생의 작성 중 표시가 끝나 있어야 한다.
+            setIsGenerating(prev => ({ ...prev, [studentData.student.id]: false }));
             await ask({
                 title: '덧붙임 문장을 만들지 못했습니다',
                 body: `${err.message}\n\n잠시 뒤 다시 시도해 주세요.`,
@@ -593,7 +600,7 @@ ${activitiesInfo}`;
         } else if (failedStudentIds.length > 0 || historySaveFailed) {
             const saveMessage = historySaveFailed ? ' 서버 이력 저장도 완료하지 못했습니다.' : '';
             await ask({
-                title: '${generatedThisRun.length}명 작성, ${failedStudentIds.length}명 실패했습니다',
+                title: `${generatedThisRun.length}명 작성, ${failedStudentIds.length}명 실패했습니다`,
                 body: `${saveMessage}실패한 학생만 다시 시도해 주세요.`,
                 confirmLabel: '알겠어요',
                 acknowledgeOnly: true
@@ -604,10 +611,10 @@ ${activitiesInfo}`;
     };
 
     // 생성 이력 저장 (targets 인자가 있으면 해당 리스트만, 없으면 전체 studentPosts 중 생성된 것만 저장)
-    const saveGenerationHistory = async (
+    async function saveGenerationHistory(
         targets = null,
         { includeCombined = !targets || targets.length > 1 } = {}
-    ) => {
+    ) {
         if (!teacherId || selectedMissionIds.length === 0) {
             throw new Error('생성 이력을 저장할 교사 또는 미션 정보가 없습니다.');
         }
@@ -654,7 +661,7 @@ ${activitiesInfo}`;
             console.error('생성 이력 저장 실패:', err.message);
             throw err;
         }
-    };
+    }
 
     // 7. 엑셀 내보내기
     const exportToExcel = async () => {
@@ -688,9 +695,6 @@ ${activitiesInfo}`;
     const toggleTag = (tag) => {
         setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
-
-    // 생성된 완료 수 계산
-    const generatedCount = studentPosts.filter(s => s.ai_synthesis).length;
 
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
