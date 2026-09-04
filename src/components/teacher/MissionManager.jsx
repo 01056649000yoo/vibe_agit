@@ -59,7 +59,7 @@ const MissionManager = ({
         isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
-        approvingPostId, rewritingPostId, confirmDialog, notice,
+        approvingPostId, rewritingPostId, confirmDialog, notice, ask, notify,
         tempFeedback, setTempFeedback, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
@@ -462,6 +462,8 @@ const MissionManager = ({
                 handleBulkRecovery={handleBulkRecovery}
                 handleBulkRequestRewrite={handleBulkRequestRewrite}
                 handleBulkPhraseRewrite={handleBulkPhraseRewrite}
+                ask={ask}
+                notify={notify}
                 phraseStore={phraseStore}
                 handleRecallPosts={handleRecallPosts}
                 handleUndoRecall={handleUndoRecall}

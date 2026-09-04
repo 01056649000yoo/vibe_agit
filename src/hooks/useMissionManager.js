@@ -752,11 +752,16 @@ ${postArray.map((p, idx) => {
     const handleBulkAIAction = async () => {
         const targetPosts = posts.filter(p => p.is_submitted && !p.is_confirmed);
         if (targetPosts.length === 0) {
-            alert('피드백이 필요한 새로운 미확인 글이 없습니다.');
+            notify('피드백이 필요한 새로운 미확인 글이 없어요.');
             return;
         }
 
-        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성하고, '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️`)) return;
+        const agreed = await ask({
+            title: `${targetPosts.length}명의 글에 AI 피드백을 쓰고 다시 쓰기를 요청할까요?`,
+            body: '한 명씩 차례로 처리해서 시간이 걸립니다. 끝나면 학생들에게 돌아가기 알림이 갑니다.',
+            confirmLabel: 'AI 피드백 쓰기 🤖'
+        });
+        if (!agreed) return;
 
         setIsGenerating(true);
         setProgress({ current: 0, total: targetPosts.length });
@@ -851,14 +856,25 @@ ${postArray.map((p, idx) => {
             }
 
             const failedCount = targetPosts.length - processedIds.size;
-            if (failedCount > 0) {
-                alert(`${processedIds.size}건은 저장했고, ${failedCount}건은 처리하지 못했습니다.\n미처리 글은 제출 상태로 남아 있으니 잠시 후 다시 실행해 주세요.`);
-            } else {
-                alert('모든 글에 대한 일괄 처리가 완료되었습니다! ✨');
-            }
             await fetchPostsForMission(selectedMission);
+            if (failedCount > 0) {
+                // 일부만 됐다는 말은 그냥 지나가면 안 된다 — 남은 글을 다시 돌려야 한다.
+                await ask({
+                    title: `${processedIds.size}명은 됐고 ${failedCount}명은 못 했습니다`,
+                    body: '못 한 글은 제출 상태로 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.',
+                    confirmLabel: '알겠어요',
+                    acknowledgeOnly: true
+                });
+            } else {
+                notify(`✨ ${processedIds.size}명의 글에 AI 피드백을 쓰고 돌려보냈어요`);
+            }
         } catch {
-            alert('일괄 처리 중 오류가 발생했습니다.');
+            await ask({
+                title: 'AI 피드백을 마치지 못했습니다',
+                body: '잠시 뒤 다시 시도해 주세요. 이미 처리된 글은 그대로 남아 있습니다.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsGenerating(false);
             setProgress({ current: 0, total: 0 });
@@ -974,16 +990,21 @@ ${postArray.map((p, idx) => {
     const handleBulkApprove = async () => {
         const toApprove = posts.filter(p => p.is_submitted && !p.is_confirmed);
         if (toApprove.length === 0) {
-            alert('승인 대기 중인 글이 없습니다.');
+            notify('승인을 기다리는 글이 없어요.');
             return;
         }
 
-        if (!confirm(`제출된 ${toApprove.length}개의 글을 모두 승인하고 포인트를 지급하시겠습니까? 🎁`)) return;
+        const agreed = await ask({
+            title: `${toApprove.length}명의 글을 모두 승인할까요?`,
+            body: '승인하면 포인트가 바로 지급되고 학생들에게 알림이 갑니다.',
+            confirmLabel: '모두 승인하고 포인트 주기 🎁'
+        });
+        if (!agreed) return;
 
         setLoadingPosts(true);
         try {
             const data = await pointApi.approveAssignments(toApprove.map((post) => post.id));
-            alert(`🎉 ${data?.approved_count ?? toApprove.length}건 승인, ${data?.points_awarded ?? 0}포인트 지급 완료!`);
+            notify(`🎉 ${data?.approved_count ?? toApprove.length}명 승인 · ${data?.points_awarded ?? 0}P 지급`);
             const approvedIds = new Set(toApprove.map((post) => post.id));
             setPosts((current) => current.map((post) => approvedIds.has(post.id)
                 ? { ...post, is_submitted: true, is_confirmed: true, is_returned: false }
@@ -999,7 +1020,15 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('일괄 승인 실패:', err.message);
-            alert('일괄 처리 중 오류가 발생했습니다.');
+            setLoadingPosts(false);
+            await ask({
+                title: '일괄 승인을 마치지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingPosts(false);
         }
@@ -1070,17 +1099,22 @@ ${postArray.map((p, idx) => {
     const handleBulkRequestRewrite = async () => {
         const toRewrite = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
         if (toRewrite.length === 0) {
-            alert('다시 쓰기를 요청할 미확인 제출글이 없습니다.');
+            notify('다시 쓰기를 요청할 미확인 제출글이 없어요.');
             return;
         }
 
-        if (!confirm(`제출된 ${toRewrite.length}개의 글에 대해 일괄 다시 쓰기를 요청하시겠습니까? ♻️\n학생들에게 돌아가기 알림이 전송됩니다.`)) return;
+        const agreed = await ask({
+            title: `${toRewrite.length}명에게 다시 쓰기를 요청할까요?`,
+            body: '글이 학생들에게 돌아가고 돌아가기 알림이 갑니다.',
+            confirmLabel: '모두 돌려보내기 ♻️'
+        });
+        if (!agreed) return;
 
         setLoadingPosts(true);
         try {
             const result = await assignmentApi.requestRewrites(toRewrite.map((post) => post.id));
             const requestedCount = Number(result?.requested_count ?? toRewrite.length);
-            alert(`✅ ${requestedCount}건 일괄 다시 쓰기 요청 완료!`);
+            notify(`♻️ ${requestedCount}명에게 다시 쓰기를 요청했어요`);
             const rewrittenIds = new Set(toRewrite.map((post) => post.id));
             setPosts((current) => current.map((post) => rewrittenIds.has(post.id)
                 ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false }
@@ -1093,7 +1127,15 @@ ${postArray.map((p, idx) => {
             );
         } catch (err) {
             console.error('일괄 다시 쓰기 요청 실패:', err.message);
-            alert('일괄 처리 중 오류가 발생했습니다.');
+            setLoadingPosts(false);
+            await ask({
+                title: '일괄 다시 쓰기 요청을 마치지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요. 글은 학생들에게 돌아가지 않았습니다.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingPosts(false);
         }
@@ -1322,7 +1364,7 @@ ${postArray.map((p, idx) => {
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         // 승인 확인 창과 알림 띠. 그릴 자리는 화면 쪽이 정한다.
-        approvingPostId, rewritingPostId, confirmDialog, notice,
+        approvingPostId, rewritingPostId, confirmDialog, notice, ask, notify,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,

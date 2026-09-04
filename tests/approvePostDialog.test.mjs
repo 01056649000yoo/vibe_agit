@@ -21,7 +21,14 @@ const MIGRATED_FLOWS = [
     { file: 'src/hooks/useMissionManager.js', fn: 'handleApprovePost' },
     // 2026-09-04: 승인 옆의 다시 쓰기 요청도 같은 창으로 옮겼다. 나란한 두 버튼이 서로 다르게 굴면
     // 크롬이 대화상자를 막았을 때 한쪽만 조용히 먹통이 되어 "한 번에 안 눌린다"로 겪게 된다.
-    { file: 'src/hooks/useMissionManager.js', fn: 'handleRequestRewrite' }
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleRequestRewrite' },
+    /*
+     * 2026-09-04: 제출 현황 창의 일괄 단추들도 함께 옮겼다. 한 화면에 기본 창과 앱 안 창이 섞여 있으면,
+     * 크롬이 대화상자를 막는 순간 **어떤 단추가 먹통인지 사람이 가려낼 수 없다.**
+     */
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleBulkAIAction' },
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleBulkApprove' },
+    { file: 'src/hooks/useMissionManager.js', fn: 'handleBulkRequestRewrite' }
 ];
 
 const bodyOf = (source, name) => {
@@ -157,4 +164,31 @@ test('확인 창과 알림이 교사 화면의 모든 창보다 위에 뜬다', 
 
     assert.ok(dialogLayer > teacherTop, `확인 창(${dialogLayer})이 교사 창(${teacherTop})보다 밑이다`);
     assert.ok(noticeLayer >= dialogLayer, `알림(${noticeLayer})이 확인 창(${dialogLayer})보다 밑이다`);
+});
+
+/*
+ * 회수·되돌리기는 훅이 아니라 제출 현황 창이 묻는다(결과를 받아 화면이 판단한다).
+ * 그래서 `ask`·`notify` 를 내려받아 쓴다 — 창을 하나 더 만들면 어느 것이 위에 뜰지 알 수 없다.
+ */
+test('제출 현황 창의 회수·되돌리기도 앱 안 창으로 묻는다', async () => {
+    const [modal, manager, hook] = await Promise.all([
+        readFile('src/components/teacher/SubmissionStatusModal.jsx', 'utf8'),
+        readFile('src/components/teacher/MissionManager.jsx', 'utf8'),
+        readFile('src/hooks/useMissionManager.js', 'utf8')
+    ]);
+
+    assert.doesNotMatch(modal, /(^|[^.\w])confirm\(/, '제출 현황 창이 브라우저 기본 확인 창을 다시 쓴다');
+    assert.doesNotMatch(modal, /(^|[^.\w])alert\(/, '제출 현황 창이 브라우저 기본 알림 창을 다시 쓴다');
+    assert.match(modal, /await ask\(\{[\s\S]{0,200}걷어올까요/, '회수를 앱 안 창으로 묻지 않는다');
+    assert.match(modal, /await ask\(\{[\s\S]{0,200}다시 돌려줄까요/, '되돌리기를 앱 안 창으로 묻지 않는다');
+    assert.match(modal, /notify\(/, '끝났다는 말을 띠로 알리지 않는다');
+
+    // 창을 새로 만들지 않고 화면이 이미 그리고 있는 것을 내려받는다.
+    assert.doesNotMatch(modal, /useConfirmDialog|useNotice/, '제출 현황 창이 자기 창을 따로 만든다');
+    assert.match(manager, /ask=\{ask\}/);
+    assert.match(manager, /notify=\{notify\}/);
+    assert.match(hook, /confirmDialog, notice, ask, notify,/, '훅이 ask·notify 를 내주지 않는다');
+
+    // 일부만 된 경우는 띠로 흘리지 않는다 — 남은 것을 다시 처리해야 한다.
+    assert.match(modal, /못 걷었습니다[\s\S]{0,200}acknowledgeOnly: true/);
 });

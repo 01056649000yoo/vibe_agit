@@ -15,7 +15,8 @@ const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
     handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile,
-    handleRecallPosts, handleUndoRecall, handleBulkPhraseRewrite, phraseStore
+    handleRecallPosts, handleUndoRecall, handleBulkPhraseRewrite, phraseStore,
+    ask, notify
 }) => {
     /**
      * 회수 전 교사에게 보여줄 안내문.
@@ -68,29 +69,59 @@ const SubmissionStatusModal = ({
             '되돌릴까요?',
         ].join('\n');
 
-        if (!window.confirm(notice)) return;
+        if (!await ask({
+            title: `${name} 학생에게 글을 다시 돌려줄까요?`,
+            body: notice,
+            confirmLabel: '다시 돌려주기'
+        })) return;
 
         const { ok, error } = await handleUndoRecall(post);
         if (!ok) {
-            alert(`되돌리지 못했습니다.\n${error?.message || ''}\n잠시 후 다시 시도해 주세요.`);
+            // 실패는 띠로 흘리지 않는다 — 그냥 지나가면 돌려준 줄 알고 넘어간다.
+            await ask({
+                title: `${name} 학생에게 글을 돌려주지 못했습니다`,
+                body: `${error?.message || ''}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
-        alert(`${name} 학생에게 글을 다시 돌려줬습니다.`);
+        notify(`↩️ ${name} 학생에게 글을 다시 돌려줬어요`);
     };
 
     /** 회수 실행 + 결과 보고 (부분 실패도 알린다) */
     const runRecall = async (targets) => {
-        if (!window.confirm(buildRecallNotice(targets))) return;
+        if (!await ask({
+            title: `미제출 글 ${targets.length}건을 걷어올까요?`,
+            body: buildRecallNotice(targets),
+            confirmLabel: '걷어오기 📥'
+        })) return;
+
         const { count, failed, error } = await handleRecallPosts(targets);
         if (error) {
-            alert(`회수하지 못했습니다.\n${error.message || ''}\n잠시 후 다시 시도해 주세요.`);
+            await ask({
+                title: '글을 걷어오지 못했습니다',
+                body: `${error.message || ''}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
         if (failed > 0) {
-            alert(`${count}건을 회수했습니다.\n${failed}건은 실패해 그대로 남아 있습니다. 다시 시도해 주세요.`);
-        } else {
-            alert(`${count}건을 회수했습니다.`);
+            // 일부만 걷힌 것은 그냥 지나가면 안 된다 — 남은 글을 다시 걷어야 한다.
+            await ask({
+                title: `${count}건을 걷었고 ${failed}건은 못 걷었습니다`,
+                body: '못 걷은 글은 학생에게 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+            return;
         }
+        notify(`📥 ${count}건을 걷어왔어요`);
     };
 
     const [isPhrasePanelOpen, setIsPhrasePanelOpen] = React.useState(false);
