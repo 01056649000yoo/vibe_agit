@@ -899,10 +899,7 @@ ${postArray.map((p, idx) => {
             const data = await pointApi.approveAssignment(post.id, tempFeedback);
 
             const awardedPoints = Number(data?.points_awarded || 0);
-            /*
-             * 끝났다는 말은 읽기만 하면 되므로 확인을 누르게 하지 않는다.
-             * ⚠️ 다만 '이미 승인됨'은 사람이 예상한 것과 다른 결과라 창을 닫지 않고 그대로 알린다.
-             */
+            // 끝났다는 말은 읽기만 하면 되므로 확인을 누르게 하지 않는다.
             notify(data?.status === 'already_approved'
                 ? `${studentName} 학생의 글은 이미 승인되어 있어요. 포인트는 다시 주지 않았습니다.`
                 : `✅ ${studentName} 학생 승인 · ${awardedPoints}P 지급`);
@@ -917,14 +914,20 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('승인 처리 실패:', err.message);
-            // ⚠️ 실패는 띠로 알리지 않는다. 그냥 지나가면 승인이 된 줄 알고 넘어간다.
+            /*
+             * ⚠️ 알리기 **전에** 잠금을 푼다. 안 그러면 실패 창 뒤에서 목록이 계속
+             *    '글을 불러오고 있어요...'로 남는다 — finally 는 창을 닫은 뒤에야 돈다.
+             */
+            setApprovingPostId(null);
+            setLoadingPosts(false);
+            // 실패는 띠로 흘리지 않는다. 그냥 지나가면 승인이 된 줄 알고 넘어간다.
             await ask({
                 title: `${studentName} 학생의 글을 승인하지 못했습니다`,
                 body: `${err.message}
 
 잠시 뒤 다시 시도해 주세요. 포인트는 지급되지 않았습니다.`,
                 confirmLabel: '알겠어요',
-                cancelLabel: '닫기'
+                acknowledgeOnly: true
             });
         } finally {
             setApprovingPostId(null);

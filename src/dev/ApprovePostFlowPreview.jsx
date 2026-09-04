@@ -28,7 +28,10 @@ const ApprovePostFlowPreview = () => {
   const [editMode, setEditMode] = useState(false)
   const [log, setLog] = useState([])
 
-  const add = (line) => setLog((current) => [`${new Date().toLocaleTimeString('ko-KR')} · ${line}`, ...current].slice(0, 8))
+  const add = (line) => setLog((current) => [
+    { id: `${Date.now()}-${current.length}-${line}`, text: `${new Date().toLocaleTimeString('ko-KR')} · ${line}` },
+    ...current
+  ].slice(0, 8))
 
   // 실제 handleApprovePost 와 같은 차례로 움직인다.
   const approve = async (outcome) => {
@@ -51,7 +54,7 @@ const ApprovePostFlowPreview = () => {
         title: `${studentName} 학생의 글을 승인하지 못했습니다`,
         body: 'network error\n\n잠시 뒤 다시 시도해 주세요. 포인트는 지급되지 않았습니다.',
         confirmLabel: '알겠어요',
-        cancelLabel: '닫기'
+        acknowledgeOnly: true
       })
       return
     }
@@ -102,7 +105,7 @@ const ApprovePostFlowPreview = () => {
       }}>
         <strong style={{ display: 'block', marginBottom: 'var(--ui-space-2)' }}>일어난 일</strong>
         {log.length === 0 ? <span style={{ color: 'var(--ui-ink-muted)' }}>아직 없습니다.</span>
-          : log.map((line) => <div key={line}>{line}</div>)}
+          : log.map((line) => <div key={line.id}>{line.text}</div>)}
       </div>
 
       {confirmDialog}

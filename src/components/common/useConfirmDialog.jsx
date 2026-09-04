@@ -65,9 +65,15 @@ export default function useConfirmDialog() {
                 }}>{request.body}</p>
             ) : null}
             <div style={{ display: 'flex', gap: 'var(--ui-space-3)', justifyContent: 'flex-end' }}>
-                <Button type="button" variant="ghost" onClick={() => settle(false)}>
-                    {request.cancelLabel || '그만두기'}
-                </Button>
+                {/*
+                  * 알리기만 하는 창(실패 안내 같은 것)은 단추가 하나다.
+                  * 고를 것이 없는데 둘을 두면 어느 쪽이 무엇인지 헷갈린다.
+                  */}
+                {request.acknowledgeOnly ? null : (
+                    <Button type="button" variant="ghost" onClick={() => settle(false)}>
+                        {request.cancelLabel || '그만두기'}
+                    </Button>
+                )}
                 <Button
                     type="button"
                     variant={request.tone === 'danger' ? 'danger' : 'primary'}

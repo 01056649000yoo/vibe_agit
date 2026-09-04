@@ -90,3 +90,56 @@ test('앱 안 확인 창은 글자 바닥을 지키고 긴 이름을 자르지 �
     // 답을 기다리던 쪽이 영원히 멈추지 않게, 새 물음이 오면 앞의 것을 닫고 답한다.
     assert.match(dialog, /if \(resolveRef\.current\) settle\(false\)/);
 });
+
+/*
+ * 2026-09-03 배포 전 다시 읽다가 찾은 것들. 눈으로는 안 보이고 코드 순서에서만 드러난다.
+ */
+test('승인 실패를 알리기 전에 잠금을 먼저 푼다', async () => {
+    const hook = await readFile('src/hooks/useMissionManager.js', 'utf8');
+    const body = bodyOf(hook, 'handleApprovePost');
+    const catchPart = body.slice(body.indexOf('} catch (err) {'));
+
+    /*
+     * ⚠️ `finally` 는 실패 창을 **닫은 뒤에야** 돈다. 창을 먼저 띄우면 그동안 목록이
+     *    '글을 불러오고 있어요...'로 멈춰 있어, 뒤에서 무슨 일이 났는지 알 수 없다.
+     */
+    const unlockAt = catchPart.indexOf('setLoadingPosts(false)');
+    const askAt = catchPart.indexOf('await ask(');
+    assert.ok(unlockAt >= 0 && askAt >= 0, '실패 처리를 찾지 못했다');
+    assert.ok(unlockAt < askAt, '실패 창을 띄운 뒤에야 잠금을 푼다 — 창 뒤 목록이 멈춘다');
+});
+
+test('알리기만 하는 창은 단추가 하나다', async () => {
+    const [dialog, hook] = await Promise.all([
+        readFile('src/components/common/useConfirmDialog.jsx', 'utf8'),
+        readFile('src/hooks/useMissionManager.js', 'utf8')
+    ]);
+    // 고를 것이 없는데 단추가 둘이면 어느 쪽이 무엇인지 헷갈린다.
+    assert.match(dialog, /request\.acknowledgeOnly \? null : \(/, '단추를 하나로 줄일 방법이 없다');
+    const catchPart = bodyOf(hook, 'handleApprovePost');
+    assert.match(catchPart.slice(catchPart.indexOf('} catch (err) {')), /acknowledgeOnly: true/,
+        '실패 창에 단추가 둘이다');
+});
+
+/*
+ * ⚠️ 확인 창은 교사 화면의 어떤 창보다 위에 떠야 한다. 밑에 깔리면 눌러도 안 보여
+ *    "버튼이 안 눌린다"가 그대로 되풀이된다. 교사 창들은 1000~3000 을 쓴다.
+ */
+test('확인 창과 알림이 교사 화면의 모든 창보다 위에 뜬다', async () => {
+    const [shell, notice, viewer, submission] = await Promise.all([
+        readFile('src/components/common/CenteredDialog.jsx', 'utf8'),
+        readFile('src/components/common/useNotice.jsx', 'utf8'),
+        readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8'),
+        readFile('src/components/teacher/SubmissionStatusModal.jsx', 'utf8')
+    ]);
+    const highestOf = (source) => [...source.matchAll(/zIndex: (\d+)/g)]
+        .map((match) => Number(match[1]))
+        .reduce((top, value) => Math.max(top, value), 0);
+
+    const dialogLayer = Number(shell.match(/zIndex = (\d+)/)[1]);
+    const noticeLayer = highestOf(notice);
+    const teacherTop = Math.max(highestOf(viewer), highestOf(submission));
+
+    assert.ok(dialogLayer > teacherTop, `확인 창(${dialogLayer})이 교사 창(${teacherTop})보다 밑이다`);
+    assert.ok(noticeLayer >= dialogLayer, `알림(${noticeLayer})이 확인 창(${dialogLayer})보다 밑이다`);
+});
