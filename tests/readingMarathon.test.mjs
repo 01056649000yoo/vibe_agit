@@ -407,3 +407,54 @@ test('완주하면 알림·축하 창·결승선 반짝임이 함께 움직인�
     assert.match(preview, /ReadingMarathonDashboardCard/);
     assert.doesNotMatch(preview, /supabase/, '미리보기가 운영 데이터를 부르면 안 됩니다');
 });
+
+/*
+ * 2026-09-03: 교사가 "1쪽은 1m 여야 하는데 10m 로 계산된다"고 알려 왔다.
+ * 버그가 아니라 설계값이었지만(1쪽=10m), 학급마다 책 두께가 달라 교사가 정하도록 열었다.
+ *
+ * ⚠️ 기본 비율이 **화면과 서버 두 곳에** 적혀 있다. 한쪽만 바꾸면 교사가 보는 숫자와
+ *    실제 쌓이는 거리가 어긋난다. 그래서 두 곳을 이 검사 하나가 함께 본다.
+ */
+test('쪽당 거리는 기본 1m 이고 화면과 서버가 같은 값을 쓴다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const { DEFAULT_METERS_PER_PAGE } =
+        await import('../src/modules/writing/reading-log/marathon/readingMarathon.js');
+    const [migration, screen] = await Promise.all([
+        readFile('supabase/migrations/20261232_reading_marathon_meters_per_page.sql', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8')
+    ]);
+
+    assert.equal(DEFAULT_METERS_PER_PAGE, 1, '화면의 기본 비율이 1m 가 아니다');
+    // ⚠️ `DEFAULT 1` 로 견주면 `DEFAULT 10` 에도 걸린다. 쌍반점까지 붙여 정확히 맞춘다.
+    //    화면 상수를 그대로 끼워 넣어, 한쪽만 바꾸면 여기서 걸리게 한다.
+    assert.ok(
+        migration.includes(`ALTER COLUMN meters_per_page SET DEFAULT ${DEFAULT_METERS_PER_PAGE};`),
+        '서버의 기본 비율이 화면 상수와 다르다'
+    );
+
+    // 교사가 정한 값을 실제로 서버에 넘겨야 한다. 안 넘기면 늘 기본값으로 저장된다.
+    assert.match(screen, /p_meters_per_page: Math\.round\(Number\(form\.metersPerPage\)\)/);
+    // 불러올 때도 저장된 값을 읽어야 한다. 안 읽으면 저장할 때마다 기본값으로 되돌아간다.
+    assert.match(screen, /metersPerPage: Number\(normalized\.campaign\.meters_per_page\)/);
+
+    /*
+     * ⚠️ 비율을 바꾸면 지난 기록도 같은 비율로 다시 센다. 새 기록만 새 비율로 쌓으면
+     *    한 화면에 두 비율이 섞여 누가 얼마나 왔는지 아무도 설명할 수 없다.
+     */
+    assert.match(migration, /page_count \* p_meters_per_page/, '비율을 바꿔도 지난 기록을 다시 세지 않는다');
+
+    /*
+     * ⚠️ 거리를 줄이면 완주가 취소되어 **아이 메달함에서 메달이 사라진다.**
+     *    그래서 메달이 걸려 있으면 옮기기를 멈추게 해 두었다.
+     */
+    // ⚠️ `메달` 만으로 견주면 함수 안의 "메달 최소 참여 조건" 안내에도 걸린다. 안전장치 문구를 짚는다.
+    assert.match(migration, /SELECT COUNT\(\*\) INTO v_medals[\s\S]{0,400}reading_marathon_medals/,
+        '메달이 걸려 있는지 세지 않는다');
+    assert.match(migration, /IF v_medals > 0 THEN[\s\S]{0,400}RAISE EXCEPTION/,
+        '메달이 있어도 멈추지 않고 그냥 밀어붙인다');
+    assert.match(migration, /메달함에서 메달이 사라집니다/, '왜 멈추는지 설명하지 않는다');
+
+    // 시작한 마라톤에서 비율을 건드리면 아이들이 보는 진행률이 바뀐다. 저장 전에 알려야 한다.
+    assert.match(screen, /rateChangedOnRunning/);
+    assert.match(screen, /지금까지 쌓인 거리도 새 비율로 다시 계산/);
+});

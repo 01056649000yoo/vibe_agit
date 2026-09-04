@@ -733,3 +733,16 @@
     .reading-marathon-celebrate__confetti span,
     .reading-marathon-course.is-complete .reading-marathon-course__landmarks text:last-child { animation: none; }
 }
+
+/* 시작한 마라톤에서 쪽당 거리를 바꾸면 아이들이 보는 진행률이 달라진다. 저장 전에 눈에 띄어야 한다. */
+.reading-marathon-rate-warning {
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    line-height: 1.55;
+}

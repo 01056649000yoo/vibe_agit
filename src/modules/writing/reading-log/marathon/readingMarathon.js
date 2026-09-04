@@ -1,4 +1,11 @@
-const DEFAULT_METERS_PER_PAGE = 10;
+/*
+ * 쪽수를 거리로 바꾸는 비율의 기본값.
+ * 2026-09-03: 10m 에서 1m 로 내렸다 — 교사가 "1쪽은 1m 여야 한다"고 알려 왔다.
+ * 학급마다 다르게 잡을 수 있어 설정 화면에서 1~100m 중 고른다(서버도 같은 범위를 지킨다).
+ * ⚠️ 서버의 `reading_marathon_campaigns.meters_per_page` 기본값과 **같아야 한다**
+ *    (마이그레이션 20261232). 한쪽만 바꾸면 화면과 실제 거리가 어긋난다.
+ */
+export const DEFAULT_METERS_PER_PAGE = 1;
 export const DEFAULT_TARGET_DISTANCE_M = 42195;
 
 export const getMarathonTeamAssignmentSummary = (teams = [], roster = []) => {

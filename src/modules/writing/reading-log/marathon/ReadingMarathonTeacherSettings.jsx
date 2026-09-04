@@ -5,6 +5,7 @@ import ReadingMarathonCourse from './ReadingMarathonCourse';
 import ReadingMarathonStatusModal from './ReadingMarathonStatusModal';
 import ReadingMarathonTeamAssignmentDialog from './ReadingMarathonTeamAssignmentDialog';
 import {
+    DEFAULT_METERS_PER_PAGE,
     DEFAULT_TARGET_DISTANCE_M,
     buildMarathonTeamPayload,
     distributeMarathonRosterEvenly,
@@ -71,6 +72,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [form, setForm] = useState({
         title: `${className || '우리 반'} 독서마라톤`,
         targetDistanceM: DEFAULT_TARGET_DISTANCE_M,
+        metersPerPage: DEFAULT_METERS_PER_PAGE,
         competitionType: 'class_team',
         medalRequirementType: 'books',
         medalRequirementValue: 1,
@@ -91,6 +93,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             setForm({
                 title: normalized.campaign.title,
                 targetDistanceM: Number(normalized.campaign.target_distance_m) || DEFAULT_TARGET_DISTANCE_M,
+                metersPerPage: Number(normalized.campaign.meters_per_page) || DEFAULT_METERS_PER_PAGE,
                 competitionType: normalized.campaign.competition_type || 'class_team',
                 medalRequirementType: normalized.campaign.medal_requirement_type || 'books',
                 medalRequirementValue: Number(normalized.campaign.medal_requirement_value) || 0,
@@ -101,6 +104,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             setForm({
                 title: `${className || '우리 반'} 독서마라톤`,
                 targetDistanceM: DEFAULT_TARGET_DISTANCE_M,
+                metersPerPage: DEFAULT_METERS_PER_PAGE,
                 competitionType: 'class_team',
                 medalRequirementType: 'books',
                 medalRequirementValue: 1,
@@ -169,6 +173,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             p_class_id: classId,
             p_title: form.title.trim(),
             p_target_distance_m: Math.round(Number(form.targetDistanceM)),
+            p_meters_per_page: Math.round(Number(form.metersPerPage)) || DEFAULT_METERS_PER_PAGE,
             p_competition_type: form.competitionType,
             p_medal_requirement_type: form.competitionType === 'individual' ? 'none' : form.medalRequirementType,
             p_medal_requirement_value: form.competitionType === 'individual' ? 0 : Math.round(Number(form.medalRequirementValue)),
@@ -272,6 +277,11 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const competitionType = campaign?.competition_type || 'class_team';
     const teamPodium = (snapshot?.teamLeaderboard || []).filter((team) => team.total_distance_m > 0).slice(0, 3);
     const remainingDistanceM = Math.max(0, (summary?.targetDistanceM || 0) - (summary?.totalDistanceM || 0));
+    // 비율만 보면 얼마나 읽어야 하는지 감이 안 온다. 목표를 쪽수로 바꿔 함께 보여 준다.
+    const pagesToTarget = Math.max(1, Math.ceil(Number(form.targetDistanceM) / Math.max(1, Number(form.metersPerPage) || 1)));
+    // 이미 시작한 마라톤에서 비율을 건드리면 아이들이 보는 진행률이 바뀐다. 저장 전에 알린다.
+    const rateChangedOnRunning = Boolean(campaign?.started_at)
+        && Number(campaign?.meters_per_page || DEFAULT_METERS_PER_PAGE) !== Number(form.metersPerPage);
     const modeLocked = Boolean(campaign?.started_at);
     const teamAssignmentLocked = completed || (modeLocked && Number(summary?.bookCount || 0) > 0);
     const roster = snapshot?.roster || [];
@@ -546,6 +556,37 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                         <input type="number" min="1" max="10000" step="0.001" value={form.targetDistanceM / 1000} onChange={(event) => setForm((current) => ({ ...current, targetDistanceM: Number(event.target.value) * 1000 }))} />
                         <em>km</em>
                     </label>
+                </fieldset>
+                {/*
+                  * 쪽수를 거리로 바꾸는 비율(2026-09-03). 예전에는 1쪽 = 10m 로 고정이었다.
+                  * 학년마다 책 두께가 달라 교사가 정하게 열었고, 기본은 1쪽 = 1m 다.
+                  * ⚠️ 목표가 몇 쪽인지 함께 보여 준다. 비율만 보면 얼마나 읽어야 하는지 감이 안 온다.
+                  */}
+                <fieldset>
+                    <legend>쪽당 거리</legend>
+                    <label className="reading-marathon-custom-target">
+                        <span>1쪽을 읽으면</span>
+                        <input
+                            type="number" min="1" max="100" step="1"
+                            value={form.metersPerPage}
+                            onChange={(event) => setForm((current) => ({
+                                ...current,
+                                metersPerPage: Math.min(100, Math.max(1, Math.round(Number(event.target.value)) || 1))
+                            }))}
+                        />
+                        <em>m</em>
+                    </label>
+                    <p>
+                        지금 설정이면 목표까지 <strong>{pagesToTarget.toLocaleString('ko-KR')}쪽</strong>을 읽어야 합니다
+                        {form.competitionType === 'individual' ? ' (학생 한 명당)'
+                            : form.competitionType === 'group_team' ? ' (모둠 하나당)' : ' (우리 반이 함께)'}.
+                    </p>
+                    {rateChangedOnRunning && (
+                        <p className="reading-marathon-rate-warning">
+                            ⚠️ 이미 시작한 마라톤입니다. 저장하면 <strong>지금까지 쌓인 거리도 새 비율로 다시 계산</strong>되어
+                            아이들이 보는 진행률이 달라집니다.
+                        </p>
+                    )}
                 </fieldset>
                 {form.competitionType !== 'individual' && (
                     <fieldset className="reading-marathon-requirement">
