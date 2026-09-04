@@ -251,7 +251,9 @@ const DIALOG_FREE_FILES = [
     // 2026-09-04(이어서): 보관함과 교사 대시보드. 여기도 되돌릴 수 없는 일(과제 영구 삭제·탈퇴)이 있다.
     'src/components/teacher/ArchiveManager.jsx',
     'src/hooks/useTeacherDashboard.js',
-    'src/components/teacher/TeacherDashboard.jsx'
+    'src/components/teacher/TeacherDashboard.jsx',
+    // 2026-09-04: 독서마라톤 설정. 시작 안내는 시작 뒤 경기 방식·배정을 못 바꾸므로 특히 중요하다.
+    'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx'
 ];
 
 test('과제 화면에는 브라우저 기본 창이 하나도 없다', async () => {
@@ -316,7 +318,8 @@ test('되돌릴 수 없는 일은 붉은 단추로 묻는다', async () => {
         { file: 'src/components/teacher/ClassManager.jsx', title: '학급을 삭제할까요?' },
         { file: 'src/hooks/useMissionManager.js', title: '승인을 취소하고 포인트를 회수할까요?' },
         { file: 'src/components/teacher/ArchiveManager.jsx', title: '과제를 영구 삭제할까요?' },
-        { file: 'src/hooks/useTeacherDashboard.js', title: '정말 탈퇴할까요?' }
+        { file: 'src/hooks/useTeacherDashboard.js', title: '정말 탈퇴할까요?' },
+        { file: 'src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', title: '을 지금 종료할까요?' }
     ];
     for (const { file, title } of cases) {
         const source = await readFile(file, 'utf8');

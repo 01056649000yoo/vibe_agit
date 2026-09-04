@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import useConfirmDialog from '../../../../components/common/useConfirmDialog';
+import useNotice from '../../../../components/common/useNotice';
 import { supabase } from '../../../../lib/supabaseClient';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import ReadingMarathonStatusModal from './ReadingMarathonStatusModal';
@@ -55,6 +57,8 @@ const MARATHON_TABS = Object.freeze([
 ]);
 
 const ReadingMarathonTeacherSettings = ({ classId, className }) => {
+    const { ask, confirmDialog } = useConfirmDialog();
+    const { notify, notice } = useNotice();
     const [snapshot, setSnapshot] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -166,7 +170,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
 
     const saveCampaign = async ({ startNew = false, enabledOverride, successMessage } = {}) => {
         if (!form.title.trim()) {
-            alert('독서마라톤 이름을 입력해주세요.');
+            notify('독서마라톤 이름을 적어 주세요.');
             return false;
         }
         setSaving(true);
@@ -186,7 +190,12 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         setSaving(false);
         if (error) {
             console.error('독서마라톤 설정 저장 실패:', error.message);
-            alert(error.message || '독서마라톤 설정을 저장하지 못했습니다.');
+            await ask({
+                title: '독서마라톤 설정을 저장하지 못했습니다',
+                body: `${error.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
         applySnapshot(data);
@@ -194,7 +203,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             setHistory([]);
             if (historyOpen) await loadHistory();
         }
-        alert(successMessage || (startNew ? '새 독서마라톤을 시작했습니다! 🏃' : '독서마라톤 설정을 저장했습니다.'));
+        notify(successMessage || (startNew ? '🏃 새 독서마라톤을 시작했어요!' : '독서마라톤 설정을 저장했어요.'));
         return true;
     };
 
@@ -202,11 +211,15 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         if (form.competitionType === 'group_team') {
             const assignment = getMarathonTeamAssignmentSummary(form.teams, snapshot?.roster || []);
             if (!assignment.complete) {
-                alert(`모든 학생을 한 모둠에 배정해주세요. (${assignment.assignedCount}/${assignment.totalCount}명 배정)`);
+                notify(`모든 학생을 모둠에 배정해 주세요. (${assignment.assignedCount}/${assignment.totalCount}명)`);
                 return;
             }
         }
-        if (!window.confirm('모둠과 학생 배정을 확인했나요?\n\n마라톤을 시작하면 첫 독서 기록이 반영된 뒤에는 경기 방식과 학생 배정을 바꿀 수 없습니다.')) return;
+        if (!await ask({
+            title: '독서마라톤을 시작할까요?',
+            body: '모둠과 학생 배정을 다시 한번 확인해 주세요. 첫 독서 기록이 반영된 뒤에는 경기 방식과 학생 배정을 바꿀 수 없습니다.',
+            confirmLabel: '시작하기 🏃'
+        })) return;
         await saveCampaign({
             enabledOverride: true,
             successMessage: '학생 배정을 저장하고 독서마라톤을 시작했습니다! 🏃'
@@ -216,11 +229,18 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const finishCampaign = async () => {
         if (!snapshot?.campaign || ending) return;
         const isCompletedCampaign = snapshot.campaign.status === 'completed';
-        const shouldFinish = window.confirm(
-            isCompletedCampaign
-                ? `‘${snapshot.campaign.title}’의 완주 결과를 보관하고 새 마라톤을 준비할까요?\n\n최종 거리와 학생별 순위는 지난 마라톤 결과에 그대로 남습니다.`
-                : `‘${snapshot.campaign.title}’을 지금 종료할까요?\n\n현재 거리와 학생별 순위는 지난 마라톤 결과에 그대로 보관되며, 학생 화면에서는 내려갑니다.`
-        );
+        const shouldFinish = await ask(isCompletedCampaign
+            ? {
+                title: `‘${snapshot.campaign.title}’ 결과를 보관하고 새 마라톤을 준비할까요?`,
+                body: '최종 거리와 학생별 순위는 지난 마라톤 결과에 그대로 남습니다.',
+                confirmLabel: '보관하기 📦'
+            }
+            : {
+                title: `‘${snapshot.campaign.title}’을 지금 종료할까요?`,
+                body: '현재 거리와 순위는 지난 마라톤 결과로 보관되고, 학생 화면에서는 내려갑니다.',
+                confirmLabel: '종료하기',
+                tone: 'danger'
+            });
         if (!shouldFinish) return;
 
         setEnding(true);
@@ -230,22 +250,27 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         setEnding(false);
         if (error) {
             console.error('독서마라톤 중간 종료 실패:', error.message);
-            alert(error.message || '독서마라톤을 종료하지 못했습니다.');
+            await ask({
+                title: '독서마라톤을 종료하지 못했습니다',
+                body: `${error.message || '잠시 뒤 다시 시도해 주세요.'}`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
 
         applySnapshot(data);
         setHistory([]);
         if (historyOpen) await loadHistory();
-        alert(isCompletedCampaign
-            ? '완주 결과를 보관했습니다. 아래에서 새 마라톤을 만들어주세요.'
-            : '현재 독서마라톤을 종료했습니다. 아래에서 새 마라톤을 시작할 수 있습니다.');
+        notify(isCompletedCampaign
+            ? '📦 완주 결과를 보관했어요. 아래에서 새 마라톤을 만들 수 있습니다.'
+            : '독서마라톤을 종료했어요. 아래에서 새 마라톤을 시작할 수 있습니다.');
     };
 
     const savePageCount = async (book) => {
         const pageCount = Number(pageValues[book.post_id]);
         if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > 10000) {
-            alert('페이지 수를 1~10,000쪽 사이로 입력해주세요.');
+            notify('페이지 수를 1~10,000쪽 사이로 적어 주세요.');
             return;
         }
         setPageSavingId(book.post_id);
@@ -257,7 +282,12 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         setPageSavingId(null);
         if (error) {
             console.error('책 페이지 수 저장 실패:', error.message);
-            alert('페이지 수를 저장하지 못했습니다.');
+            await ask({
+                title: '페이지 수를 저장하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return;
         }
         setPageValues((current) => {
@@ -835,6 +865,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 teams={snapshot?.teams}
             />
 
+            {confirmDialog}
+            {notice}
         </section>
     );
 };
