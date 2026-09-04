@@ -173,7 +173,12 @@ const MissionManager = ({
     const handleOpenSubmissionBoardPost = async (submission) => {
         const mission = missions.find((item) => item.id === submission?.mission_id);
         if (!mission || !submission?.post_id) {
-            alert('확인할 학생 글을 찾지 못했습니다.');
+            await ask({
+                title: '확인할 학생 글을 찾지 못했습니다',
+                body: '과제별 현황에서 다시 열어 봐 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
 
@@ -186,7 +191,12 @@ const MissionManager = ({
         const fetchedPosts = await fetchPostsForMission(mission);
         const targetPost = fetchedPosts.find((post) => post.id === submission.post_id);
         if (!targetPost) {
-            alert('해당 글을 불러오지 못했습니다. 과제별 현황에서 다시 확인해주세요.');
+            await ask({
+                title: '그 글을 불러오지 못했습니다',
+                body: '과제별 현황에서 다시 확인해 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
 
@@ -395,6 +405,8 @@ const MissionManager = ({
                     handleGenerateQuestions={handleGenerateQuestions}
                     isGeneratingQuestions={isGeneratingQuestions}
                     handleSaveDefaultRubric={handleSaveDefaultRubric}
+                    ask={ask}
+                    notify={notify}
                     frequentTags={frequentTags}
                     saveFrequentTag={saveFrequentTag}
                     removeFrequentTag={removeFrequentTag}
@@ -500,6 +512,8 @@ const MissionManager = ({
                 deleteTeacherComment={deleteTeacherComment}
                 handleTeacherEditPost={handleTeacherEditPost}
                 phraseStore={phraseStore}
+                ask={ask}
+                notify={notify}
             />
 
             {/* 승인 확인 창과 알림 띠. 창보다 위에 떠야 해서 마지막에 그린다. */}

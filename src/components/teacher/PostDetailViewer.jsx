@@ -20,7 +20,7 @@ const PostDetailViewer = ({
     isMobile, onUpdate, isEvaluationMode, posts = [],
     addTeacherComment, deleteTeacherComment, handleTeacherEditPost,
     outlineReference, postDetailLoading, onRefreshPostDetail, phraseStore,
-    approvingPostId = null, rewritingPostId = null
+    approvingPostId = null, rewritingPostId = null, ask, notify
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -94,12 +94,12 @@ const PostDetailViewer = ({
         if (!selectedPost || !handleTeacherEditPost || isSavingTeacherEdit) return;
 
         if (!editedTitle.trim()) {
-            alert('제목을 입력해주세요.');
+            notify('제목을 적어 주세요.');
             return;
         }
 
         if (!editedContent.trim()) {
-            alert('본문을 입력해주세요.');
+            notify('본문을 적어 주세요.');
             return;
         }
 
@@ -110,7 +110,7 @@ const PostDetailViewer = ({
         if (success) {
             setIsTeacherEditMode(false);
             if (onUpdate) onUpdate();
-            alert('수정본을 학생에게 보냈습니다.');
+            notify('📤 수정본을 학생에게 보냈어요.');
         }
     };
 
@@ -121,10 +121,15 @@ const PostDetailViewer = ({
             eval_comment: evalComment
         });
         if (result.success) {
-            alert('성취도 평가가 저장되었습니다! 📊');
+            notify('📊 성취도 평가를 저장했어요.');
             if (onUpdate) onUpdate();
         } else {
-            alert('평가 저장 중 오류가 발생했습니다.');
+            await ask({
+                title: '평가를 저장하지 못했습니다',
+                body: '고른 값은 화면에 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 

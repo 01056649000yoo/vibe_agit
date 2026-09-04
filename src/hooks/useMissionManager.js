@@ -191,10 +191,15 @@ export const useMissionManager = (
             if (error) throw error;
 
             setDefaultRubric(formData.evaluation_rubric.levels);
-            alert('현재 루브릭의 단계와 명칭이 계정에 저장되었습니다! 💾\n어디서든 로그인하면 이 설정이 기본으로 적용됩니다.');
+            notify('💾 루브릭 단계와 이름을 계정에 저장했어요. 어디서 로그인해도 기본으로 쓰입니다.');
         } catch (err) {
             console.error('루브릭 저장 실패:', err);
-            alert('저장 중 오류가 발생했습니다.');
+            await ask({
+                title: '루브릭을 저장하지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -228,11 +233,16 @@ export const useMissionManager = (
             }
             // 상태 업데이트하여 즉시 반영
             setMissionDefaultSettings(settingsToSave);
-            alert('분량, 포인트, 댓글 설정이 계정에 저장되었습니다! 💾\n어디서든 로그인하면 이 설정이 기본으로 적용됩니다.');
+            notify('💾 분량·포인트·댓글 설정을 계정에 저장했어요. 어디서 로그인해도 기본으로 쓰입니다.');
         } catch (err) {
             console.error('설정 저장 실패:', err);
             // DB 저장 실패해도 로컬스토리지는 성공했을 수 있으므로 안내 메시지 조절
-            alert('설정 저장에 저장되었으나 동기화 중 일부 오류가 발생했습니다.');
+            await ask({
+                title: '설정은 저장했지만 일부가 어긋났습니다',
+                body: `다시 열어 값이 맞는지 확인해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -357,7 +367,7 @@ export const useMissionManager = (
 
     const handleGenerateQuestions = async (count = 5) => {
         if (!formData.title.trim()) {
-            alert('주제를 먼저 입력해주세요! ✨');
+            notify('주제를 먼저 적어 주세요. ✨');
             return;
         }
 
@@ -390,7 +400,12 @@ export const useMissionManager = (
             }
         } catch (err) {
             console.error('질문 생성 오류:', err);
-            alert('질문을 생성하는 도중 오류가 발생했습니다.');
+            await ask({
+                title: '질문을 만들지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsGeneratingQuestions(false);
         }
@@ -399,7 +414,7 @@ export const useMissionManager = (
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.title.trim() || !formData.guide.trim()) {
-            alert('주제와 안내 내용을 입력해주세요! ✍️');
+            notify('주제와 안내 내용을 적어 주세요. ✍️');
             return;
         }
 
@@ -411,7 +426,7 @@ export const useMissionManager = (
                     .eq('id', editingMissionId);
 
                 if (error) throw error;
-                alert('글쓰기 미션이 성공적으로 수정되었습니다! ✏️');
+                notify('✏️ 글쓰기 과제를 고쳤어요.');
             } else {
                 const { data: { user } } = await supabase.auth.getUser();
                 const { error } = await supabase.from('writing_missions').insert({
@@ -421,7 +436,7 @@ export const useMissionManager = (
                     teacher_id: user?.id
                 });
                 if (error) throw error;
-                alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
+                notify('🚀 새 글쓰기 과제를 열었어요.');
             }
 
             // [추가] 캐시 무효화로 즉각 반영 보장
@@ -433,7 +448,14 @@ export const useMissionManager = (
             handleCancelEdit();
             fetchMissions();
         } catch (error) {
-            alert('글쓰기 미션 저장 실패: ' + error.message);
+            await ask({
+                title: '글쓰기 과제를 저장하지 못했습니다',
+                body: `${error.message}
+
+적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -510,7 +532,7 @@ export const useMissionManager = (
             setSelectedPost(fetchedPosts[0]);
             setIsEvaluationMode(true);
         } else {
-            alert('아직 제출한 학생이 없습니다. 🐥');
+            notify('아직 제출한 학생이 없어요. 🐥');
         }
     };
 
@@ -544,7 +566,12 @@ export const useMissionManager = (
             return data || [];
         } catch (err) {
             console.error('학생 글 불러오기 실패:', err.message);
-            alert('글을 불러오는 도중 오류가 발생했습니다.');
+            await ask({
+                title: '학생 글을 불러오지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return [];
         } finally {
             setLoadingPosts(false);
@@ -743,7 +770,12 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('피드백 저장 실패:', err.message);
-            alert('피드백을 저장하는 중 오류가 발생했습니다.');
+            await ask({
+                title: '피드백을 저장하지 못했습니다',
+                body: `적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setIsGenerating(false);
         }
@@ -1035,16 +1067,22 @@ ${postArray.map((p, idx) => {
     };
 
     const handleRecovery = async (post) => {
-        if (!confirm('승인을 취소하고 지급된 포인트를 회수하시겠습니까? ⚠️\n학생의 총점에서 해당 포인트가 차감됩니다.')) return;
+        const agreed = await ask({
+            title: '승인을 취소하고 포인트를 회수할까요?',
+            body: '학생의 총점에서 지급했던 포인트가 차감됩니다.',
+            confirmLabel: '승인 취소하기 ⚠️',
+            tone: 'danger'
+        });
+        if (!agreed) return;
 
         setLoadingPosts(true);
         try {
             const data = await pointApi.recoverAssignment(post.id, tempFeedback);
 
             const recoveredPoints = Number(data?.points_recovered || 0);
-            alert(data?.status === 'already_recovered'
-                ? '이미 승인이 취소된 글입니다. 포인트를 추가로 회수하지 않았습니다.'
-                : `✅ 승인 취소와 ${recoveredPoints}포인트 회수가 함께 완료되었습니다.`);
+            notify(data?.status === 'already_recovered'
+                ? '이미 승인이 취소된 글이에요. 포인트를 더 회수하지 않았습니다.'
+                : `⚠️ 승인 취소 · ${recoveredPoints}P 회수`);
             setSelectedPost(null);
             if (data?.status !== 'already_recovered') {
                 setPosts((current) => current.map((item) => item.id === post.id
@@ -1056,7 +1094,14 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('회수 실패:', err.message);
-            alert('회수 처리 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '승인 취소를 마치지 못했습니다',
+                body: `${err.message}
+
+포인트는 그대로입니다. 잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingPosts(false);
         }
@@ -1065,16 +1110,22 @@ ${postArray.map((p, idx) => {
     const handleBulkRecovery = async () => {
         const toRecover = posts.filter(p => p.is_confirmed);
         if (toRecover.length === 0) {
-            alert('회수 가능한(승인 완료된) 글이 없습니다.');
+            notify('승인을 취소할 글이 없어요.');
             return;
         }
 
-        if (!confirm(`${toRecover.length}개의 글에 대해 승인을 취소하고 포인트를 일괄 회수하시겠습니까? ⚠️\n지급되었던 포인트가 모두 차감됩니다.`)) return;
+        const agreed = await ask({
+            title: `${toRecover.length}명의 승인을 취소하고 포인트를 회수할까요?`,
+            body: '지급했던 포인트가 모두 차감됩니다.',
+            confirmLabel: '모두 승인 취소하기 ⚠️',
+            tone: 'danger'
+        });
+        if (!agreed) return;
 
         setLoadingPosts(true);
         try {
             const data = await pointApi.recoverAssignments(toRecover.map((post) => post.id));
-            alert(`✅ ${data?.recovered_count ?? toRecover.length}건 승인 취소, ${data?.points_recovered ?? 0}포인트 회수 완료!`);
+            notify(`⚠️ ${data?.recovered_count ?? toRecover.length}명 승인 취소 · ${data?.points_recovered ?? 0}P 회수`);
             const recoveredIds = new Set(toRecover.map((post) => post.id));
             setPosts((current) => current.map((post) => recoveredIds.has(post.id)
                 ? { ...post, is_confirmed: false }
@@ -1090,7 +1141,12 @@ ${postArray.map((p, idx) => {
             }
         } catch (err) {
             console.error('일괄 회수 실패:', err.message);
-            alert('일괄 회수 중 오류가 발생했습니다.');
+            await ask({
+                title: '일괄 승인 취소를 마치지 못했습니다',
+                body: `잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingPosts(false);
         }
@@ -1157,7 +1213,7 @@ ${postArray.map((p, idx) => {
 
         const targets = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
         if (targets.length === 0) {
-            alert('다시 쓰기를 요청할 미확인 제출글이 없습니다.');
+            notify('다시 쓰기를 요청할 미확인 제출글이 없어요.');
             return;
         }
 
@@ -1165,15 +1221,18 @@ ${postArray.map((p, idx) => {
         const toAppend = targets.filter(hasFeedback);
         const toSend = targets.filter((post) => !hasFeedback(post));
 
+        // 물음은 제목이 하고, 본문은 **무엇이 나가는지**만 보여 준다(제목과 겹쳐 적지 않는다).
         const confirmMessage = [
-            `제출된 ${targets.length}개의 글에 아래 문장으로 다시 쓰기를 요청할까요? ♻️`,
-            '',
             text,
             '',
-            toAppend.length > 0 ? `※ ${toAppend.length}건은 이미 적힌 피드백을 지우지 않고 아래에 덧붙입니다.` : null,
-            '학생들에게 돌아가기 알림이 전송됩니다.'
+            toAppend.length > 0 ? `※ ${toAppend.length}명은 이미 적힌 피드백을 지우지 않고 아래에 덧붙입니다.` : null,
+            '학생들에게 돌아가기 알림이 갑니다.'
         ].filter((line) => line !== null).join('\n');
-        if (!confirm(confirmMessage)) return;
+        if (!await ask({
+            title: `${targets.length}명에게 이 문장으로 다시 쓰기를 요청할까요?`,
+            body: confirmMessage,
+            confirmLabel: '모두 돌려보내기 ♻️'
+        })) return;
 
         setLoadingPosts(true);
         try {
@@ -1198,9 +1257,9 @@ ${postArray.map((p, idx) => {
                 }
             }
 
-            alert(requestedCount > 0
-                ? `✅ ${requestedCount}건에 문장을 담아 다시 쓰기를 요청했습니다!`
-                : '이미 다시 쓰기를 요청한 글이라 새로 보낸 것이 없습니다.');
+            notify(requestedCount > 0
+                ? `♻️ ${requestedCount}명에게 문장을 담아 다시 쓰기를 요청했어요`
+                : '이미 다시 쓰기를 요청한 글이라 새로 보낸 것이 없어요.');
 
             setPosts((current) => current.map((post) => (applied.has(post.id)
                 ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false, ai_feedback: applied.get(post.id) }
@@ -1217,7 +1276,14 @@ ${postArray.map((p, idx) => {
             await fetchPostsForMission(selectedMission);
         } catch (err) {
             console.error('문장 일괄 다시 쓰기 요청 실패:', err.message);
-            alert(`일괄 처리 중 오류가 발생했습니다: ${err.message}`);
+            await ask({
+                title: '일괄 다시 쓰기 요청을 마치지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         } finally {
             setLoadingPosts(false);
         }
@@ -1245,7 +1311,14 @@ ${postArray.map((p, idx) => {
             setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false });
             fetchMissions();
         } catch (err) {
-            alert('보관 처리 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '과제를 보관하지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
         }
     };
 
@@ -1271,7 +1344,14 @@ ${postArray.map((p, idx) => {
             return true;
         } catch (err) {
             console.error('미션 삭제 실패:', err.message);
-            alert('미션 삭제 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '과제를 지우지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         } finally {
             setLoading(false);
@@ -1301,7 +1381,14 @@ ${postArray.map((p, idx) => {
             return true;
         } catch (err) {
             console.error('교사 댓글 등록 실패:', err.message);
-            alert('댓글 등록 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '댓글을 남기지 못했습니다',
+                body: `${err.message}
+
+적은 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
     };
@@ -1320,7 +1407,14 @@ ${postArray.map((p, idx) => {
             return true;
         } catch (err) {
             console.error('교사 댓글 삭제 실패:', err.message);
-            alert('댓글 삭제 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '댓글을 지우지 못했습니다',
+                body: `${err.message}
+
+잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
     };
@@ -1347,7 +1441,14 @@ ${postArray.map((p, idx) => {
             return true;
         } catch (err) {
             console.error('교사 글 수정 실패:', err.message);
-            alert('학생 글 수정 저장 중 오류가 발생했습니다: ' + err.message);
+            await ask({
+                title: '수정본을 저장하지 못했습니다',
+                body: `${err.message}
+
+고친 내용은 화면에 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
             return false;
         }
     };

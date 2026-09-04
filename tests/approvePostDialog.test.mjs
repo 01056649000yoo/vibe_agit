@@ -192,3 +192,51 @@ test('제출 현황 창의 회수·되돌리기도 앱 안 창으로 묻는다',
     // 일부만 된 경우는 띠로 흘리지 않는다 — 남은 것을 다시 처리해야 한다.
     assert.match(modal, /못 걷었습니다[\s\S]{0,200}acknowledgeOnly: true/);
 });
+
+/*
+ * 2026-09-04: 과제 화면(글쓰기 미션)의 기본 창을 **한 화면 통째로** 옮겼다.
+ * 한 곳이라도 남으면 크롬이 대화상자를 막는 순간 그 단추만 조용히 먹통이 되므로,
+ * 이 화면은 파일 단위로 0개를 지킨다. 새 파일이 이 화면에 들어오면 아래 목록에 더한다.
+ */
+const DIALOG_FREE_FILES = [
+    'src/hooks/useMissionManager.js',
+    'src/components/teacher/MissionManager.jsx',
+    'src/components/teacher/MissionForm.jsx',
+    'src/components/teacher/PostDetailViewer.jsx',
+    'src/components/teacher/SubmissionStatusModal.jsx'
+];
+
+test('과제 화면에는 브라우저 기본 창이 하나도 없다', async () => {
+    for (const file of DIALOG_FREE_FILES) {
+        const source = await readFile(file, 'utf8');
+        assert.doesNotMatch(source, /(^|[^.\w])confirm\(/, `${file}: 브라우저 기본 확인 창이 남아 있다`);
+        assert.doesNotMatch(source, /(^|[^.\w])alert\(/, `${file}: 브라우저 기본 알림 창이 남아 있다`);
+    }
+});
+
+test('물어볼 것이 없는 안내는 창을 띄우지 않는다', async () => {
+    const hook = await readFile('src/hooks/useMissionManager.js', 'utf8');
+    /*
+     * `승인 대기 중인 글이 없어요` 같은 말은 고를 것이 없다. 창으로 띄우면 닫으려고 한 번 더 눌러야 한다.
+     * 반대로 **실패와 '일부만 됨'** 은 창으로 멈춰 세운다 — 지나가면 다 된 줄 알고 넘어간다.
+     */
+    for (const line of ['승인을 기다리는 글이 없어요', '다시 쓰기를 요청할 미확인 제출글이 없어요', '피드백이 필요한 새로운 미확인 글이 없어요']) {
+        assert.ok(hook.includes(`notify('${line}.')`) || hook.includes(`notify('${line}')`), `'${line}' 를 띠로 알리지 않는다`);
+    }
+    assert.match(hook, /명은 됐고 \$\{failedCount\}명은 못 했습니다[\s\S]{0,220}acknowledgeOnly: true/,
+        '일부만 처리된 것을 띠로 흘린다');
+
+    /*
+     * 되돌릴 수 없는 일은 붉은 단추로 묻는다.
+     * ⚠️ 낱개와 일괄의 제목이 서로를 품고 있어(`…명의 승인을 취소…`), 느슨하게 찾으면 한쪽만 고쳐도
+     *    다른 쪽에 걸려 통과한다. 그래서 **제목 줄 통째로** 못 박는다(2026-09-04 변이 검증에서 드러났다).
+     */
+    for (const title of [
+        "title: '승인을 취소하고 포인트를 회수할까요?'",
+        "title: `${toRecover.length}명의 승인을 취소하고 포인트를 회수할까요?`"
+    ]) {
+        const at = hook.indexOf(title);
+        assert.ok(at >= 0, `${title} 을(를) 찾지 못했다`);
+        assert.match(hook.slice(at, at + 260), /tone: 'danger'/, `${title}: 붉은 단추로 묻지 않는다`);
+    }
+});

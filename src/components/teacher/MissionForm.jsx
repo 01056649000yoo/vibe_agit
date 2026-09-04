@@ -22,7 +22,7 @@ const MissionForm = ({
     handleSubmit, handleCancelEdit, isMobile,
     handleGenerateQuestions, isGeneratingQuestions,
     handleSaveDefaultRubric, handleSaveDefaultSettings,
-    frequentTags, saveFrequentTag, removeFrequentTag
+    frequentTags, saveFrequentTag, removeFrequentTag, ask
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
     const [isLabQuestionsModalOpen, setIsLabQuestionsModalOpen] = React.useState(false);
@@ -77,10 +77,15 @@ const MissionForm = ({
         });
     }, [setFormData]);
 
-    const toggleAIQuestions = () => {
+    const toggleAIQuestions = async () => {
         if (useAIQuestions) {
             if (hasSubmissions) {
-                alert('이미 제출한 학생이 있어 질문을 모두 지울 수 없습니다.\n학생이 쓴 답이 질문 번호로 저장돼 있기 때문입니다. 질문을 더하는 것은 할 수 있어요. 🔒');
+                await ask({
+                    title: '🔒 이미 제출한 학생이 있어 질문을 모두 지울 수 없습니다',
+                    body: '학생이 쓴 답이 질문 번호에 맞춰 저장돼 있기 때문입니다. 질문을 더하는 것은 할 수 있어요.',
+                    confirmLabel: '알겠어요',
+                    acknowledgeOnly: true
+                });
                 return;
             }
             if (window.confirm('디자인한 질문들이 모두 사라집니다. 정말 취소할까요?')) {
@@ -592,9 +597,14 @@ const MissionForm = ({
                                                     </Button>
                                                     <Button
                                                         type="button"
-                                                        onClick={() => {
+                                                        onClick={async () => {
                                                             if (hasSubmissions) {
-                                                                alert('이미 제출한 학생이 있어 질문을 새로 만들 수 없습니다.\n아래 `질문 추가`로 질문을 더하는 것은 할 수 있어요. 🔒');
+                                                                await ask({
+                                                                    title: '🔒 이미 제출한 학생이 있어 질문을 새로 만들 수 없습니다',
+                                                                    body: '아래 `질문 추가`로 질문을 더하는 것은 할 수 있어요.',
+                                                                    confirmLabel: '알겠어요',
+                                                                    acknowledgeOnly: true
+                                                                });
                                                                 return;
                                                             }
                                                             handleGenerateQuestions(formData.question_count || 3);
