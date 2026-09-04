@@ -458,3 +458,73 @@ test('쪽당 거리는 기본 1m 이고 화면과 서버가 같은 값을 쓴다
     assert.match(screen, /rateChangedOnRunning/);
     assert.match(screen, /지금까지 쌓인 거리도 새 비율로 다시 계산/);
 });
+
+/*
+ * 2026-09-03: 교사가 "개인전인데 공동 달성 거리와 남은 거리가 보인다"고 알려 왔다.
+ * 세 방식이 같은 숫자를 쓰고 있었는데, 목표가 가리키는 대상이 서로 다르다 —
+ * 개인전은 학생 한 명당, 모둠 대항전은 모둠 하나당, 우리 반 전체전만 반 전체다.
+ * 그래서 개인전·모둠전에서 반 전체 합계를 목표와 견주면 뜻이 통하지 않는 숫자가 된다.
+ */
+test('운영 현황 숫자칸은 경기 방식에 맞는 것만 보여 준다', async () => {
+    const { getMarathonDashboardStats } =
+        await import('../src/modules/writing/reading-log/marathon/readingMarathon.js');
+    const labelsOf = (stats) => stats.map((stat) => stat.label);
+    const valueOf = (stats, key) => stats.find((stat) => stat.key === key)?.value;
+
+    // 개인전 — 목표는 학생 한 명당이다. 반 전체 합계와 남은 거리는 견줄 수 없다.
+    const individual = getMarathonDashboardStats({
+        campaign: { competition_type: 'individual' },
+        summary: { targetDistanceM: 2000, totalDistanceM: 5500, contributors: 3 },
+        leaderboard: [{ distance_m: 2500 }, { distance_m: 1000 }, { distance_m: 0 }, { distance_m: 2000 }]
+    });
+    assert.deepEqual(labelsOf(individual), ['1인당 목표 거리', '완주한 학생', '평균 달성률', '아직 첫 책 전']);
+    assert.ok(!labelsOf(individual).includes('공동 달성 거리'), '개인전에 공동 달성 거리가 남아 있다');
+    assert.ok(!labelsOf(individual).includes('남은 거리'), '개인전에 남은 거리가 남아 있다');
+    // 목표를 넘긴 학생과 딱 채운 학생 둘 다 완주로 센다.
+    assert.equal(valueOf(individual, 'finished'), '2/4명');
+    assert.equal(valueOf(individual, 'not-started'), '1명');
+    // 100%를 넘겨도 평균이 부풀지 않는다((100+50+0+100)/4 = 63).
+    assert.equal(valueOf(individual, 'average'), '63%');
+
+    // 모둠 대항전 — 목표는 모둠 하나당이다. 여기도 반 전체 합계를 견주면 안 된다.
+    const group = getMarathonDashboardStats({
+        campaign: { competition_type: 'group_team' },
+        summary: { targetDistanceM: 5000, totalDistanceM: 7700, contributors: 24 },
+        teams: [{ total_distance_m: 5200 }, { total_distance_m: 2500 }, { total_distance_m: 0 }]
+    });
+    assert.deepEqual(labelsOf(group), ['모둠별 목표 거리', '완주한 모둠', '모둠 평균 달성률', '참여 학생']);
+    assert.equal(valueOf(group, 'finished'), '1/3모둠');
+
+    // 우리 반 전체전 — 목표가 반 전체이므로 합계와 남은 거리가 그대로 뜻이 통한다.
+    const classTeam = getMarathonDashboardStats({
+        campaign: { competition_type: 'class_team' },
+        summary: { targetDistanceM: 42195, totalDistanceM: 3350, contributors: 24 }
+    });
+    assert.deepEqual(labelsOf(classTeam), ['공동 달성 거리', '목표 달성률', '남은 거리', '참여 학생']);
+    assert.equal(valueOf(classTeam, 'remaining'), '38.8km');
+
+    // 아직 아무 기록이 없어도 터지지 않는다.
+    for (const type of ['individual', 'group_team', 'class_team']) {
+        const empty = getMarathonDashboardStats({ campaign: { competition_type: type }, summary: {} });
+        assert.equal(empty.length, 4, `${type}: 빈 학급에서 칸 수가 다르다`);
+    }
+    assert.equal(getMarathonDashboardStats().length, 4, '아무것도 안 넘겨도 터지면 안 된다');
+});
+
+test('설정 화면과 현황 창이 같은 계산을 쓴다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [screen, modal] = await Promise.all([
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/marathon/ReadingMarathonStatusModal.jsx', 'utf8')
+    ]);
+    // ⚠️ 두 곳이 같은 숫자를 보여 준다. 따로 계산하면 한쪽만 고쳐져 서로 어긋난다.
+    for (const source of [screen, modal]) {
+        assert.match(source, /getMarathonDashboardStats\(/);
+    }
+    assert.doesNotMatch(screen, /<dt>공동 달성 거리<\/dt>/, '설정 화면이 아직 직접 적고 있다');
+    assert.doesNotMatch(modal, /<dt>공동 달성 거리<\/dt>/, '현황 창이 아직 직접 적고 있다');
+    // 경기 방식을 넘겨야 방식별로 갈린다 — 넘기는 쪽과 받는 쪽을 모두 본다.
+    assert.match(screen, /<ReadingMarathonStatusModal[\s\S]{0,400}campaign=\{campaign\}/,
+        '현황 창에 경기 방식을 넘기지 않는다');
+    assert.match(modal, /campaign = null/, '현황 창이 경기 방식을 받지 않는다');
+});

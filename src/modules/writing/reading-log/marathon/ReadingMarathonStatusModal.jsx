@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Modal from '../../../../components/common/Modal';
-import { formatMarathonDistance, getProgressPercent } from './readingMarathon';
+import { formatMarathonDistance, getMarathonDashboardStats, getProgressPercent } from './readingMarathon';
 import './readingMarathon.css';
 
 /*
@@ -23,7 +23,10 @@ export default function ReadingMarathonStatusModal({
     onClose,
     leaderboard = [],
     targetDistanceM = 0,
-    summary = null
+    summary = null,
+    // 위쪽 숫자칸은 경기 방식마다 다르다. 설정 화면과 **같은 계산**을 쓴다.
+    campaign = null,
+    teams = []
 }) {
     const roster = useMemo(() => (Array.isArray(leaderboard) ? leaderboard : [])
         .filter((row) => row?.name)
@@ -42,18 +45,12 @@ export default function ReadingMarathonStatusModal({
             <div className="reading-marathon-status-modal">
                 {summary ? (
                     <dl className="reading-marathon-status-modal__summary">
-                        <div>
-                            <dt>공동 달성 거리</dt>
-                            <dd>{formatMarathonDistance(summary.totalDistanceM)}</dd>
-                        </div>
-                        <div>
-                            <dt>목표 달성률</dt>
-                            <dd>{Math.round(summary.progressPercent)}%</dd>
-                        </div>
-                        <div>
-                            <dt>참여 학생</dt>
-                            <dd>{summary.contributors}명</dd>
-                        </div>
+                        {getMarathonDashboardStats({ campaign, summary, leaderboard, teams }).map((stat) => (
+                            <div key={stat.key}>
+                                <dt>{stat.label}</dt>
+                                <dd>{stat.value}</dd>
+                            </div>
+                        ))}
                     </dl>
                 ) : null}
 

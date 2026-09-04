@@ -204,3 +204,62 @@ export const isMarathonCompletedForStudent = (snapshot) => {
     if (type === 'group_team') return Boolean(snapshot.myTeam?.completed_at);
     return campaign.status === 'completed';
 };
+
+/*
+ * 운영 현황 위쪽 숫자칸을 경기 방식에 맞게 고른다(2026-09-03).
+ *
+ * 왜: 세 방식 모두 같은 숫자를 보여 주고 있었는데, 목표가 가리키는 대상이 서로 다르다.
+ *  - 개인전   : 목표는 **학생 한 명당**
+ *  - 모둠 대항전: 목표는 **모둠 하나당**
+ *  - 우리 반 전체전: 목표는 **반 전체**
+ * 그래서 개인전·모둠전에서 `공동 달성 거리`와 `남은 거리`를 반 전체 합계로 보여 주면
+ * 목표와 견줄 수 없는 숫자가 된다(교사가 "개인전인데 공동 거리가 보인다"고 알려 왔다).
+ *
+ * ⚠️ 새로 읽는 자료는 없다. 이미 받아 둔 순위표·모둠 목록을 다시 셀 뿐이다.
+ * ⚠️ 개인 이름은 넣지 않는다 — 여기는 반 전체를 한눈에 보는 자리다.
+ */
+
+const percentOf = (distanceM, targetM) => getProgressPercent(distanceM, targetM);
+
+const averagePercent = (rows, targetM) => {
+    if (!Array.isArray(rows) || rows.length === 0) return 0;
+    const sum = rows.reduce((total, row) => total + percentOf(row.distance_m ?? row.total_distance_m, targetM), 0);
+    return Math.round(sum / rows.length);
+};
+
+export const getMarathonDashboardStats = ({ campaign, summary, leaderboard = [], teams = [] } = {}) => {
+    const targetM = Number(summary?.targetDistanceM || campaign?.target_distance_m) || 0;
+    const competitionType = campaign?.competition_type;
+
+    if (competitionType === 'individual') {
+        const students = Array.isArray(leaderboard) ? leaderboard : [];
+        const finished = students.filter((row) => Number(row.distance_m) >= targetM && targetM > 0).length;
+        const notStarted = students.filter((row) => !Number(row.distance_m)).length;
+        return [
+            { key: 'target', label: '1인당 목표 거리', value: formatMarathonDistance(targetM) },
+            { key: 'finished', label: '완주한 학생', value: `${finished}/${students.length}명` },
+            { key: 'average', label: '평균 달성률', value: `${averagePercent(students, targetM)}%` },
+            { key: 'not-started', label: '아직 첫 책 전', value: `${notStarted}명` }
+        ];
+    }
+
+    if (competitionType === 'group_team') {
+        const groups = Array.isArray(teams) ? teams : [];
+        const finished = groups.filter((team) => Number(team.total_distance_m) >= targetM && targetM > 0).length;
+        return [
+            { key: 'target', label: '모둠별 목표 거리', value: formatMarathonDistance(targetM) },
+            { key: 'finished', label: '완주한 모둠', value: `${finished}/${groups.length}모둠` },
+            { key: 'average', label: '모둠 평균 달성률', value: `${averagePercent(groups, targetM)}%` },
+            { key: 'contributors', label: '참여 학생', value: `${Number(summary?.contributors) || 0}명` }
+        ];
+    }
+
+    // 우리 반 전체전 — 목표가 반 전체이므로 합계와 남은 거리가 그대로 뜻이 통한다.
+    const totalM = Number(summary?.totalDistanceM) || 0;
+    return [
+        { key: 'total', label: '공동 달성 거리', value: formatMarathonDistance(totalM) },
+        { key: 'progress', label: '목표 달성률', value: `${Math.round(percentOf(totalM, targetM))}%` },
+        { key: 'remaining', label: '남은 거리', value: formatMarathonDistance(Math.max(0, targetM - totalM)) },
+        { key: 'contributors', label: '참여 학생', value: `${Number(summary?.contributors) || 0}명` }
+    ];
+};

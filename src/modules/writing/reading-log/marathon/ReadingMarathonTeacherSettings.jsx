@@ -12,6 +12,7 @@ import {
     distributeMarathonRosterRandomly,
     formatMarathonDistance,
     getCompetitionLabel,
+    getMarathonDashboardStats,
     getMarathonTeamAssignmentSummary,
     getMedalRequirementLabel,
     normalizeMarathonSnapshot
@@ -268,6 +269,19 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         if (!refreshError) applySnapshot(refreshed);
     };
 
+    /*
+     * 위쪽 숫자칸은 경기 방식마다 다르다 — 목표가 학생 한 명당인지, 모둠 하나당인지,
+     * 반 전체인지에 따라 견줄 수 있는 숫자가 달라진다. 계산은 readingMarathon.js 한 곳에 모았다.
+     * ⚠️ 훅은 아래 이른 return 보다 **위**에 있어야 한다. 밑에 두면 불러오는 동안 건너뛰어
+     *    렌더마다 훅 순서가 달라진다(react-hooks/rules-of-hooks).
+     */
+    const dashboardStats = useMemo(() => getMarathonDashboardStats({
+        campaign: snapshot?.campaign,
+        summary: snapshot?.summary,
+        leaderboard: snapshot?.leaderboard,
+        teams: snapshot?.teams
+    }), [snapshot]);
+
     if (loading) return <div className="reading-marathon-settings__loading">독서마라톤 코스를 준비하는 중... 🏃</div>;
 
     const completed = snapshot?.campaign?.status === 'completed';
@@ -276,7 +290,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const podium = leaderboard.slice(0, 3);
     const competitionType = campaign?.competition_type || 'class_team';
     const teamPodium = (snapshot?.teamLeaderboard || []).filter((team) => team.total_distance_m > 0).slice(0, 3);
-    const remainingDistanceM = Math.max(0, (summary?.targetDistanceM || 0) - (summary?.totalDistanceM || 0));
     // 비율만 보면 얼마나 읽어야 하는지 감이 안 온다. 목표를 쪽수로 바꿔 함께 보여 준다.
     const pagesToTarget = Math.max(1, Math.ceil(Number(form.targetDistanceM) / Math.max(1, Number(form.metersPerPage) || 1)));
     // 이미 시작한 마라톤에서 비율을 건드리면 아이들이 보는 진행률이 바뀐다. 저장 전에 알린다.
@@ -387,10 +400,9 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                             </strong>
                         </div>
                         <dl className="reading-marathon-overview__stats">
-                            <div><dt>공동 달성 거리</dt><dd>{formatMarathonDistance(summary.totalDistanceM)}</dd></div>
-                            <div><dt>목표 달성률</dt><dd>{Math.round(summary.progressPercent)}%</dd></div>
-                            <div><dt>남은 거리</dt><dd>{formatMarathonDistance(remainingDistanceM)}</dd></div>
-                            <div><dt>참여 학생</dt><dd>{summary.contributors}명</dd></div>
+                            {dashboardStats.map((stat) => (
+                                <div key={stat.key}><dt>{stat.label}</dt><dd>{stat.value}</dd></div>
+                            ))}
                             <div><dt>종료일</dt><dd>{formatDate(campaign.ends_on)}</dd></div>
                         </dl>
                         <Button
@@ -819,6 +831,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 leaderboard={snapshot?.leaderboard}
                 targetDistanceM={summary?.targetDistanceM}
                 summary={summary}
+                campaign={campaign}
+                teams={snapshot?.teams}
             />
 
         </section>

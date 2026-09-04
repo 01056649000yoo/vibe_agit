@@ -614,9 +614,10 @@
 /* 우리 반 마라톤 현황 — 운영 현황 탭의 버튼으로 여는 창 (2026-09-03) */
 .reading-marathon-status-open { width: 100%; margin-top: 10px; }
 .reading-marathon-status-modal { display: grid; gap: 14px; }
+/* 경기 방식마다 숫자칸이 넷이다(2026-09-03). 셋으로 두면 마지막 하나가 혼자 다음 줄로 떨어진다. */
 .reading-marathon-status-modal__summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     margin: 0;
 }

@@ -61,6 +61,19 @@ const SCENARIOS = [
   },
 ]
 
+// 목표가 가리키는 대상이 방식마다 다르다 — 한 명당 / 모둠 하나당 / 반 전체.
+const MODES = [
+  { id: 'individual', label: '개인전' },
+  { id: 'class_team', label: '우리 반 전체전' },
+  { id: 'group_team', label: '모둠 대항전' },
+]
+
+const TEAMS = [
+  { id: 't1', total_distance_m: 5200 },
+  { id: 't2', total_distance_m: 2500 },
+  { id: 't3', total_distance_m: 0 },
+]
+
 const summaryOf = (leaderboard) => {
   const totalDistanceM = leaderboard.reduce((sum, row) => sum + row.distance_m, 0)
   return {
@@ -73,11 +86,33 @@ const summaryOf = (leaderboard) => {
 
 const ReadingMarathonStatusPreview = () => {
   const [scenarioId, setScenarioId] = useState('spread')
+  const [mode, setMode] = useState('individual')
   const [open, setOpen] = useState(false)
   const scenario = SCENARIOS.find((item) => item.id === scenarioId) || SCENARIOS[0]
 
   return (
     <div style={{ display: 'grid', gap: 'var(--ui-space-4)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--ui-space-2)' }}>
+        {MODES.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => { setMode(item.id); setOpen(true) }}
+            style={{
+              padding: '8px 14px',
+              border: '1px solid var(--ui-border)',
+              borderRadius: 'var(--ui-radius-md)',
+              background: item.id === mode ? '#ecfeff' : 'var(--ui-surface)',
+              fontSize: 'var(--ui-text-sm)',
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--ui-space-2)' }}>
         {SCENARIOS.map((item) => (
           <button
@@ -123,6 +158,8 @@ const ReadingMarathonStatusPreview = () => {
         leaderboard={scenario.leaderboard}
         targetDistanceM={TARGET_M}
         summary={summaryOf(scenario.leaderboard)}
+        campaign={{ competition_type: mode }}
+        teams={mode === 'group_team' ? TEAMS : []}
       />
     </div>
   )
