@@ -52,14 +52,6 @@
 .class-agit-management .class-agit-brand p { font-size: var(--ui-text-sm); }
 .class-agit-management .class-agit-workbench-summary { margin: var(--ui-space-4) 0 var(--ui-space-6) !important; }
 .class-agit-management .class-agit-header-actions { gap: var(--ui-space-2); }
-.class-agit-management-shell > .class-agit-live-access {
-    color: var(--ui-ink-strong);
-    font-size: var(--ui-text-sm);
-    background: var(--ui-surface);
-    border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-md);
-    padding: var(--ui-space-3) var(--ui-space-5);
-}
 .class-agit-management-shell > .class-agit-header-actions { justify-content: flex-start; }
 
 /* Tabs stay native buttons for keyboard focus management; ordinary actions use common/Button. */
@@ -115,7 +107,7 @@
 .class-agit-management .class-agit-search input { font-size: var(--ui-text-md) !important; }
 .class-agit-management :is(input, textarea)::placeholder { color: var(--ui-ink-subtle); }
 .class-agit-management textarea { resize: vertical; }
-.class-agit-management input[type='checkbox'], .class-agit-management-shell > .class-agit-live-access input { accent-color: var(--ui-primary); }
+.class-agit-management input[type='checkbox'] { accent-color: var(--ui-primary); }
 .class-agit-management :focus-visible:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-public *)) {
     outline: 2px solid var(--ui-primary);
     outline-offset: 2px;

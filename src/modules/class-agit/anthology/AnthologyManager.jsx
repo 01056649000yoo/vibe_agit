@@ -158,6 +158,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 {dirty && <p>편집 내용을 먼저 저장하면 미리보기와 확정을 할 수 있습니다.</p>}
                 {!book.items.length && <p>3단계에서 작품을 담으면 확정할 수 있습니다.</p>}
                 <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다.</p>
+                <p>학생 서가는 <strong>글 전시관 → 1 기본 설정 → 학급 학생 공개 켜기</strong>가 켜져 있어야 학생 화면에 나타납니다.</p>
                 <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
                 {!book.editions.length && <p className="class-agit-empty">아직 확정한 판이 없습니다.</p>}
                 <details className="class-agit-exhibition-management"><summary>문집 관리</summary><div className="class-agit-header-actions">

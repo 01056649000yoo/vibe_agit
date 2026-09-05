@@ -229,3 +229,20 @@ test('공개 단계 화면과 도움말이 전체 교사 공개를 함께 안내
     // 옛 제한 운영 설명이 남아 있으면 안 된다.
     assert.doesNotMatch(guide, /관리자가 지정한 학급에서 제한 운영/);
 });
+
+test('학급 학생 공개 스위치는 전시 준비 1단계 한 곳만 남는다', () => {
+    const entry = readFileSync('src/modules/class-agit/teacher/TeacherEntry.jsx', 'utf8');
+    // 전체 교사 공개로 바뀌어 '제한 운영' 띠와 중복 체크박스를 걷어냈다.
+    assert.doesNotMatch(entry, /제한 운영|class-agit-live-access/);
+    assert.doesNotMatch(entry, /학급 학생 공개 켜기/);
+    // 스위치 자체는 살아 있어야 한다 — 이게 없으면 학생 입구를 켤 방법이 사라진다.
+    assert.match(entry, /setEnabled: changeAccess/);
+    assert.match(entry, /'set_enabled'/);
+    const workbench = readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8');
+    assert.equal((workbench.match(/학급 학생 공개 켜기/g) || []).length, 1);
+    // 문집만 만드는 교사가 스위치를 못 찾지 않도록 길을 알려 준다.
+    assert.match(readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8'), /글 전시관 → 1 기본 설정 → 학급 학생 공개 켜기/);
+    for (const css of ['src/modules/class-agit/classAgit.css', 'src/modules/class-agit/management.css']) {
+        assert.doesNotMatch(readFileSync(css, 'utf8'), /class-agit-live-access/);
+    }
+});

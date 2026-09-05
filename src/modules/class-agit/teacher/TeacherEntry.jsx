@@ -62,10 +62,6 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
     };
     if (area === 'rollout') return <RolloutManager api={releaseApi} onExit={() => { setArea('exhibitions'); setLoadVersion((v) => v + 1); }} />;
     return <div className="class-agit-management-shell">
-        {!workspace?.draft && <div className="class-agit-live-access">
-            <span>{isSample ? '샘플 운영' : '우리반 아지트 · 제한 운영'}</span>
-            {workspace && <label><input type="checkbox" disabled={busy} checked={workspace.class.module_enabled} onChange={(event) => changeAccess(event.target.checked)} />학급 학생 공개 켜기</label>}
-        </div>}
         {!workspace?.draft && releasesEnabled && isAdmin && <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setArea('rollout')}>공개 단계 관리</Button></div>}
         {error && <div className="class-agit-error" role="alert">{error}{!workspace?.draft && <Button variant="outline" type="button" onClick={() => setLoadVersion((version) => version + 1)}>작업공간 다시 불러오기</Button>}</div>}
         {!workspace && !error && <p role="status">전시 작업공간을 불러오고 있습니다…</p>}
