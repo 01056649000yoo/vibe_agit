@@ -36,7 +36,7 @@ test('우리반 아지트 준비 화면은 확정된 전시·문집 업데이트
     assert.match(hub, /<PreparationRoadmap/);
     assert.deepEqual(
         CLASS_AGIT_PREPARATION_ROADMAP.items.map((item) => item.title),
-        ['여러 전시 만들기', '2.5D 글 전시관', '학급 문집 만들기', '읽기 전용으로 나누기']
+        ['여러 전시 만들기', '2.5D 글꽃 전시관', '글꽃 책방 만들기', '읽기 전용으로 나누기']
     );
     assert.match(CLASS_AGIT_PREPARATION_ROADMAP.note, /관리자 내부 확인.*시범 학급.*기능이 꺼진 상태/);
     assert.match(preparationRoadmap, /<ol className="preparation-roadmap__items">/);

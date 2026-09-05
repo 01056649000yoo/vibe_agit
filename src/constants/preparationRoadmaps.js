@@ -13,11 +13,11 @@ export const CLASS_AGIT_PREPARATION_ROADMAP = {
             description: '주제별 전시를 만들고, 학생 글을 골라 전시실별로 배치합니다.'
         },
         {
-            title: '2.5D 글 전시관',
+            title: '2.5D 글꽃 전시관',
             description: '실제 전시실처럼 둘러보며 액자를 눌러 글을 편안하게 읽습니다.'
         },
         {
-            title: '학급 문집 만들기',
+            title: '글꽃 책방 만들기',
             description: '작품 순서·표지·목차를 편집하고 A4·A5·B5 PDF로 내보내 오래 보관합니다.'
         },
         {

@@ -1,6 +1,6 @@
 export const CLASS_AGIT_TEACHER_TABS = [
-    { id: 'class-agit', label: '글 전시관', section: 'exhibitions' },
-    { id: 'class-agit-books', label: '학급 문집', section: 'books' },
+    { id: 'class-agit', label: '글꽃 전시관', section: 'exhibitions' },
+    { id: 'class-agit-books', label: '글꽃 책방', section: 'books' },
 ];
 
 /**

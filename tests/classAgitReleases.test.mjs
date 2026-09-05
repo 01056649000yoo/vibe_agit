@@ -168,10 +168,10 @@ test('학급 공개 상태는 모든 단계에서 보이고 마지막 단계가 
 test('학생 화면은 전시관과 문집 서가를 나누어 게시 방식의 차이를 알려 준다', () => {
     const source = readFileSync('src/modules/class-agit/student/StudentEntry.jsx', 'utf8');
     const gallery = source.slice(source.indexOf('class-agit-gallery-heading'), source.indexOf('class-agit-books-heading'));
-    assert.match(gallery, /글 전시관/);
+    assert.match(gallery, /글꽃 전시관/);
     assert.match(gallery, /새로 꾸미면 걸린 글도 바뀌어요/);
     const books = source.slice(source.indexOf('class-agit-books-heading'));
-    assert.match(books, /문집 서가/);
+    assert.match(books, /글꽃 책방/);
     assert.match(books, /한번 나온 판은 그대로 남아서/);
     assert.equal((source.match(/class-agit-student-shelf/g) || []).length, 2);
     assert.match(readFileSync('src/modules/class-agit/anthology/StudentBooks.jsx', 'utf8'), /확정한 판이 그대로 남아 있어요/);
@@ -241,8 +241,26 @@ test('학급 학생 공개 스위치는 전시 준비 1단계 한 곳만 남는�
     const workbench = readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8');
     assert.equal((workbench.match(/학급 학생 공개 켜기/g) || []).length, 1);
     // 문집만 만드는 교사가 스위치를 못 찾지 않도록 길을 알려 준다.
-    assert.match(readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8'), /글 전시관 → 1 기본 설정 → 학급 학생 공개 켜기/);
-    for (const css of ['src/modules/class-agit/classAgit.css', 'src/modules/class-agit/management.css']) {
-        assert.doesNotMatch(readFileSync(css, 'utf8'), /class-agit-live-access/);
+    assert.match(readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8'), /글꽃 전시관 → 1 기본 설정 → 학급 학생 공개 켜기/);
+    for (const css of [readFileSync('src/modules/class-agit/classAgit.css', 'utf8'), readFileSync('src/modules/class-agit/management.css', 'utf8')]) {
+        assert.doesNotMatch(css, /class-agit-live-access/);
     }
+});
+
+test('전시관·책방 이름은 좌측 메뉴·도움말·학생 화면이 한 이름으로 맞춰져 있다', () => {
+    // 이름을 한 곳만 바꾸고 끝내면 메뉴와 도움말이 갈라진다.
+    const nav = readFileSync('src/constants/teacherNav.js', 'utf8');
+    assert.match(nav, /label: '글꽃 전시관'/);
+    assert.match(nav, /label: '글꽃 책방'/);
+    const screens = [readFileSync('src/modules/class-agit/student/StudentEntry.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/anthology/StudentBooks.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/gallery/GalleryViewer.jsx', 'utf8')];
+    for (const source of screens) assert.doesNotMatch(source, /글 전시관|학급 문집|문집 서가/);
+    assert.equal(TEACHER_GUIDES['class-agit'].title, '우리반 아지트 · 글꽃 전시관');
+    assert.equal(TEACHER_GUIDES['class-agit-books'].title, '우리반 아지트 · 글꽃 책방');
+    assert.doesNotMatch(JSON.stringify(TEACHER_GUIDES['class-agit']), /글 전시관|학급 문집|문집 서가/);
+    assert.doesNotMatch(JSON.stringify(TEACHER_GUIDES['class-agit-books']), /글 전시관|학급 문집|문집 서가/);
+    // 샘링크에 저장된 라벨은 DB 값이라 그대로 둔다(기존 행과 어긋나면 안 된다).
+    assert.match(readFileSync('supabase/migrations/20261251_class_agit_longer_share_slug.sql', 'utf8'), /'아지트 글 전시관'/);
 });

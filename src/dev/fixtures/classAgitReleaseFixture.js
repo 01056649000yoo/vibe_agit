@@ -70,7 +70,7 @@ export async function createClassAgitReleaseFixture() {
         async getEdition(_class, id) { const book = [...books.values()].find((b) => b.editions.some((e) => e.id === id)); const ed = book?.editions.find((e) => e.id === id); if (!ed) throw new Error('확정판이 없습니다.'); const works = await visibleWorks(book, ed); if (works.length !== ed.snapshot.works.length) throw new Error('수록이 철회된 작품이 있습니다. 새 판을 만들어 주세요.'); return { version: 1, id, number: ed.number, book: { ...clone(ed.snapshot), works } }; },
         async getStudentBooks(id = null, workId = null) {
             const open = settings.mode !== 'disabled' && (await sourceApi.getWorkspace(previewClass.id)).class.module_enabled;
-            if (!open) throw new Error('지금은 문집 서가가 닫혀 있어요.');
+            if (!open) throw new Error('지금은 글꽃 책방이 닫혀 있어요.');
             const editions = [...books.values()].filter((b) => !b.archived).flatMap((b) => b.editions.filter((e) => e.student_visible).map((e) => ({ b, e })));
             if (!id) return { version: 1, books: editions.map(({ e }) => ({ id: e.id, number: e.number, title: e.title, subtitle: e.snapshot.subtitle, design: e.snapshot.print.design || 'botanical', paper: e.snapshot.print.paper, created_at: e.created_at })) };
             const found = editions.find(({ e }) => e.id === id); if (!found) throw new Error('지금은 이 문집을 읽을 수 없어요.');

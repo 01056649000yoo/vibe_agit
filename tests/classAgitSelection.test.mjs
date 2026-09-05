@@ -123,7 +123,7 @@ test('전시·문집은 공용 탐색을 사용하고 열기 전 조회·영구 
     assert.doesNotMatch(host, /getCandidates/);
     assert.match(host, /key=\{props.activeClass.id\}/);
     assert.match(workbench, /worksVisited && <SelectionWorkspace/);
-    assert.match(read('src/modules/class-agit/anthology/SourcePicker.jsx'), /SourceBrowser[\s\S]*maximum=\{limits.anthologyWorks\} scope="학급 문집"/);
+    assert.match(read('src/modules/class-agit/anthology/SourcePicker.jsx'), /SourceBrowser[\s\S]*maximum=\{limits.anthologyWorks\} scope="글꽃 책방"/);
     assert.match(browser, /api.getSources\(classId, pending.map/);
     assert.doesNotMatch(browser, /Promise.all|localStorage|setInterval|postgres_changes/);
     assert.match(api, /classKey\(classId/); assert.match(api, /dataCache.get/);

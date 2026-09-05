@@ -84,7 +84,7 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
                 {isSample && <p className="class-agit-prototype-note">샘플 저장·공개는 이 화면에서만 동작합니다. 실제 DB에는 반영하지 않습니다.</p>}
                 {!workspace.projects.length && <p className="class-agit-empty">첫 전시를 만들어 우리 반의 글을 담아 보세요.</p>}
                 <ul className="class-agit-projects">{workspace.projects.map((project) => <li key={project.id}><div><strong>{project.title}</strong><p>{project.state === 'published' ? `${project.publication_no}판 공개 중` : project.state === 'archived' ? '보관함' : '비공개 초안'}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => open(project.id)}>전시 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => remove(project)} aria-label={`${project.title} 전시 삭제`}>삭제</Button></div></li>)}</ul>
-                <p className="class-agit-canvas-caption">학생 공개를 꺼도 초안을 편집할 수 있습니다. 공개한 전시는 학생 홈의 우리반 아지트에서 읽을 수 있습니다. 학급 문집을 만들거나 저장한 전시에서 외부 읽기 전용 공유를 준비할 수 있습니다.</p>
+                <p className="class-agit-canvas-caption">학생 공개를 꺼도 초안을 편집할 수 있습니다. 공개한 전시는 학생 홈의 우리반 아지트에서 읽을 수 있습니다. 글꽃 책방에서 문집을 만들거나 저장한 전시에서 외부 읽기 전용 공유를 준비할 수 있습니다.</p>
         </section>}
         {confirmDialog}
     </div>;

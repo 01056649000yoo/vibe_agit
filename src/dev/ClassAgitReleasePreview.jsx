@@ -11,7 +11,7 @@ export default function ClassAgitReleasePreview() {
     useEffect(() => { let active = true; createClassAgitReleaseFixture().then((value) => { if (active) setFixture(value); }); return () => { active = false; }; }, []);
     if (!fixture) return <p role="status">통합 샘플을 준비합니다…</p>;
     return <div><div className="class-agit-live-toolbar" style={{ padding: 16 }} aria-label="문집과 외부 공유 개발 점검"><strong>전체 흐름 샘플 · 실제 DB 저장 없음</strong>
-        <button type="button" onClick={() => setArea('teacher')}>교사 관리</button><button type="button" onClick={() => { setArea('student'); setRoute({ mode: 'books' }); }}>학생 문집 서가</button>
+        <button type="button" onClick={() => setArea('teacher')}>교사 관리</button><button type="button" onClick={() => { setArea('student'); setRoute({ mode: 'books' }); }}>학생 글꽃 책방</button>
         <button type="button" onClick={() => { setToken(fixture.controls.token() || ''); setArea('public'); }}>현재 공유 방문자</button>
         <button type="button" onClick={async () => { await fixture.controls.sampleExhibition120(); setArea('teacher'); setVersion((v) => v + 1); setMessage('120편 전시를 만들었습니다. 전시 목록에서 열어 보세요.'); }}>120편 전시 준비</button>
         <button type="button" onClick={async () => { await fixture.controls.sampleThemedExhibition41(); setArea('teacher'); setVersion((value) => value + 1); setMessage('13편·20편·8편의 주제 전시를 준비했습니다.'); }}>41편 주제 전시 준비</button>

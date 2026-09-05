@@ -14,5 +14,5 @@ export const isClassAgitWorkId = (value) => typeof value === 'string' && value =
     && Number(value.slice('published-'.length)) <= CLASS_AGIT_LIMITS.maxWorks;
 
 export const CLASS_AGIT_SCOPES = Object.freeze({
-    class: '학급 전시', anthology: '학급 문집', external: '외부 공개본',
+    class: '학급 전시', anthology: '글꽃 책방', external: '외부 공개본',
 });

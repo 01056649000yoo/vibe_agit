@@ -36,7 +36,7 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId, embed
             <span className="class-agit-eyebrow">{exhibition.audience === 'external' ? '외부 방문자 미리보기 · 읽기 전용' : '학생 미리보기'}</span>
         </header>
         {!inGallery || !currentRoom ? <div className="class-agit-lobby">
-            <div className="class-agit-lobby__copy"><span className="class-agit-eyebrow">우리반 아지트 · 글 전시관</span>
+            <div className="class-agit-lobby__copy"><span className="class-agit-eyebrow">우리반 아지트 · 글꽃 전시관</span>
                 <h1>{exhibition.title}</h1><p>{exhibition.introduction}</p>
                 <div className="class-agit-lobby__numbers"><span><b>{rooms.reduce((sum, room) => sum + room.works.length, 0)}</b>편의 이야기</span><span><b>{rooms.length}</b>개의 전시실</span></div>
                 <ExhibitionRightsNotice /><nav className="class-agit-room-nav" aria-label="주제별 입장">{rooms.map((entry, index) => <button type="button" key={entry.id} onClick={() => { setRoomIndex(index); setInGallery(true); }}>{entry.title} · {entry.works.length}편 ↗</button>)}</nav><button type="button" className="class-agit-primary" disabled={!rooms.length} onClick={() => setInGallery(true)}>{EXHIBITION_RIGHTS.enter}</button>

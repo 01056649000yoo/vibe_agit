@@ -7,6 +7,6 @@ export const classAgitManifest = {
     teacherEntry: () => import('./teacher/TeacherEntry.jsx'),
     studentEntry: () => import('./student/StudentEntry.jsx'),
     studentRoute: 'class_agit',
-    studentDashboard: { title: '우리반 아지트', description: '우리 반 작가들의 글 전시관', tone: 'green', order: 15, visibilityKey: 'class_agit_available' },
+    studentDashboard: { title: '우리반 아지트', description: '우리 반 작가들의 글꽃 전시관', tone: 'green', order: 15, visibilityKey: 'class_agit_available' },
     performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100 },
 };

@@ -15,7 +15,7 @@ export default function StudentBooks({ route, onNavigate, onReplace, onBack, api
     const data = state.data;
     const navigate = (params) => { const next = classAgitRoute(params); onNavigate(next.name, next.params); };
     return <main className="class-agit class-agit-student"><header className="class-agit-gallery__header"><StudentBackButton onClick={onBack} /><button type="button" disabled={state.loading} onClick={() => setRefresh((v) => v + 1)}>문집 다시 확인</button></header>
-        <span className="class-agit-eyebrow">우리반 아지트 · 문집 서가</span><h1>{route.mode === 'books' ? '우리 반의 문집 서가' : data?.book?.title || '우리 반의 책'}</h1>
+        <span className="class-agit-eyebrow">우리반 아지트 · 글꽃 책방</span><h1>{route.mode === 'books' ? '우리 반의 글꽃 책방' : data?.book?.title || '우리 반의 책'}</h1>
         {route.mode === 'books' && <p>확정한 판이 그대로 남아 있어요. 표지를 누르면 그때 담긴 글을 읽을 수 있어요.</p>}
         {state.error && <p role="alert" className="class-agit-error">{state.error}</p>}{state.loading && <p role="status">문집을 불러오고 있어요…</p>}
         {route.mode === 'books' && data && <><div className="class-agit-student-exhibitions">{data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} onClick={() => navigate({ mode: 'book', editionId: book.id })}><small>{book.number}판</small><h2>{book.title}</h2><p>{book.subtitle}</p><span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong></button>)}</div>{!data.books.length && <p className="class-agit-empty">아직 서가에 문집이 없어요. 함께 쓴 책이 곧 찾아올 거예요.</p>}</>}
