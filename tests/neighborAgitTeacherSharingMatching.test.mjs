@@ -33,7 +33,7 @@ test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나�
     assert.match(functionSource('run_neighbor_teacher_action_v1'), /publish_gallery_post/);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.match(teacherEntry, /우리 학급 글 불러오기/);
-    assert.match(teacherEntry, /공유에 올리기/);
+    assert.match(teacherEntry, /전문 확인 후 공유/);
 });
 
 test('글짝 명단은 호스트에게만 활동별 불투명 키와 이름을 최대 100명 반환한다', () => {

@@ -427,7 +427,10 @@ BEGIN
         current_setting('test.limited_class_1')::UUID, 'publish_gallery_post',
         jsonb_build_object(
             'space_id', current_setting('test.limited_space'),
-            'post_id', current_setting('test.neighbor_direct_post')
+            'post_id', current_setting('test.neighbor_direct_post'),
+            'source_revision', public.get_neighbor_teacher_source_post_v1(
+                current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID,
+                current_setting('test.neighbor_direct_post')::UUID)->>'source_revision'
         )
     );
     IF v_result #>> '{action_result,status}' <> 'published' THEN
@@ -462,6 +465,210 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+
+-- 공개 보완 회귀: 합성 일기와 공개 연결만 만들며 아래 SAVEPOINT까지 되돌린다.
+SAVEPOINT neighbor_publication_regression;
+WITH inserted AS (
+    INSERT INTO public.student_posts (student_id, class_id, writing_context, self_writing_type,
+        title, content, visibility, is_submitted)
+    VALUES (current_setting('test.limited_student_1')::UUID, current_setting('test.limited_class_1')::UUID,
+        'self', 'diary', '합성 일기', '비공개 일기 회귀 검사 자료', 'private', TRUE)
+    RETURNING id
+) SELECT set_config('test.hardening_post', id::TEXT, TRUE) FROM inserted;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_result JSONB; v_blocked BOOLEAN := FALSE;
+BEGIN
+    v_result := public.get_neighbor_teacher_share_candidates_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, 100);
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_result->'items') item WHERE item->>'post_id' = current_setting('test.hardening_post')) THEN
+        RAISE EXCEPTION 'private diary leaked into teacher candidates';
+    END IF;
+    BEGIN
+        PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'publish_gallery_post',
+            jsonb_build_object('space_id', current_setting('test.limited_space')::UUID, 'post_id', current_setting('test.hardening_post')::UUID, 'source_revision', 'untrusted'));
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'teacher published private diary by direct call'; END IF;
+END;
+$$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_result JSONB; v_blocked BOOLEAN := FALSE;
+BEGIN
+    v_result := public.get_neighbor_my_share_candidates_v1(current_setting('test.limited_space')::UUID, 50);
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_result->'items') item WHERE item->>'post_id' = current_setting('test.hardening_post')) THEN
+        RAISE EXCEPTION 'private diary leaked into student candidates';
+    END IF;
+    BEGIN PERFORM public.request_neighbor_post_share_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_post')::UUID);
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'student requested private diary by direct call'; END IF;
+END;
+$$;
+RESET ROLE;
+UPDATE public.student_posts SET visibility = 'class' WHERE id = current_setting('test.hardening_post')::UUID;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated')::TEXT, TRUE);
+SELECT set_config('test.hardening_shared', public.request_neighbor_post_share_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_post')::UUID)->>'shared_post_id', TRUE);
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN PERFORM public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_2')::UUID, current_setting('test.hardening_shared')::UUID);
+    EXCEPTION WHEN invalid_parameter_value THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'other teacher read pending source'; END IF;
+END;
+$$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+SELECT set_config('test.hardening_revision', public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, current_setting('test.hardening_shared')::UUID)->>'source_revision', TRUE);
+RESET ROLE;
+UPDATE public.student_posts SET content = '전문 확인 이후 새로 수정한 합성 내용' WHERE id = current_setting('test.hardening_post')::UUID;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE; v_revision TEXT;
+BEGIN
+    BEGIN PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'review_post', jsonb_build_object(
+        'space_id', current_setting('test.limited_space')::UUID, 'shared_post_id', current_setting('test.hardening_shared'), 'decision', 'publish',
+        'source_revision', current_setting('test.hardening_revision')));
+    EXCEPTION WHEN SQLSTATE 'PT409' THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'stale source revision was published'; END IF;
+    v_blocked := FALSE;
+    BEGIN PERFORM public.review_neighbor_shared_post_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_shared')::UUID, 'publish', '');
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'legacy review bypassed source revision'; END IF;
+    v_revision := public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, current_setting('test.hardening_shared')::UUID)->>'source_revision';
+    v_blocked := FALSE;
+    BEGIN PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'review_post', jsonb_build_object(
+        'space_id', current_setting('test.limited_space')::UUID, 'shared_post_id', current_setting('test.hardening_shared'), 'decision', 'return',
+        'source_revision', v_revision, 'review_note', '   '));
+    EXCEPTION WHEN invalid_parameter_value THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'empty return reason accepted'; END IF;
+    PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'review_post', jsonb_build_object(
+        'space_id', current_setting('test.limited_space')::UUID, 'shared_post_id', current_setting('test.hardening_shared'), 'decision', 'return',
+        'source_revision', v_revision, 'review_note', '끝부분에 느낀 점을 보완해 주세요.'));
+END;
+$$;
+RESET ROLE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.neighbor_shared_posts WHERE id = current_setting('test.hardening_shared')::UUID
+        AND status = 'returned' AND review_note = '끝부분에 느낀 점을 보완해 주세요.') THEN
+        RAISE EXCEPTION 'return reason not persisted';
+    END IF;
+END; $$;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+SELECT public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'publish_gallery_post', jsonb_build_object(
+    'space_id', current_setting('test.limited_space')::UUID, 'post_id', current_setting('test.hardening_post')::UUID, 'source_revision',
+    public.get_neighbor_teacher_source_post_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, current_setting('test.hardening_post')::UUID)->>'source_revision'));
+RESET ROLE;
+UPDATE public.student_posts SET visibility = 'private' WHERE id = current_setting('test.hardening_post')::UUID;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.neighbor_shared_posts WHERE id = current_setting('test.hardening_shared')::UUID AND status = 'recalled') THEN
+        RAISE EXCEPTION 'private transition did not recall existing share';
+    END IF;
+END; $$;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_student_auth_2'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE; v_feed JSONB;
+BEGIN
+    BEGIN PERFORM public.get_neighbor_shared_post_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_shared')::UUID);
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'private transition left source readable'; END IF;
+    v_feed := public.get_neighbor_space_feed_v1(current_setting('test.limited_space')::UUID, 50, NULL, NULL);
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_feed->'items') item WHERE item->>'shared_post_id' = current_setting('test.hardening_shared')) THEN
+        RAISE EXCEPTION 'recalled private diary remains in feed';
+    END IF;
+END; $$;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT neighbor_publication_regression;
+RELEASE SAVEPOINT neighbor_publication_regression;
+
+-- 최근 공개 글 101편과 대기 101편이 있어도 가장 오래된 대기가 첫 화면에 남는다.
+SAVEPOINT neighbor_queue_regression;
+WITH sources AS (
+    INSERT INTO public.student_posts (student_id, class_id, writing_context, self_writing_type, title, content, visibility, is_submitted)
+    SELECT current_setting('test.limited_student_1')::UUID, current_setting('test.limited_class_1')::UUID, 'self', 'diary',
+        '합성 대기열 ' || seq, seq::TEXT, 'class', TRUE FROM generate_series(1, 202) seq
+    RETURNING id, content
+)
+INSERT INTO public.neighbor_shared_posts (space_id, class_id, post_id, student_id, public_author_name, status, requested_at, published_at, reviewed_at, reviewed_by)
+SELECT current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, id, current_setting('test.limited_student_1')::UUID, '합성 학생',
+    CASE WHEN content::INTEGER <= 101 THEN 'pending' ELSE 'published' END,
+    NOW() - (203 - content::INTEGER) * INTERVAL '1 day',
+    CASE WHEN content::INTEGER > 101 THEN NOW() END,
+    CASE WHEN content::INTEGER > 101 THEN NOW() END,
+    CASE WHEN content::INTEGER > 101 THEN current_setting('test.limited_teacher_1')::UUID END
+FROM sources;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_workspace JSONB;
+BEGIN
+    v_workspace := public.get_neighbor_teacher_workspace_v1(current_setting('test.limited_class_1')::UUID);
+    IF (v_workspace->>'review_total')::INTEGER <> 101
+       OR jsonb_array_length(v_workspace->'review_posts') <> 100
+       OR v_workspace #>> '{review_posts,0,title}' <> '합성 대기열 1'
+       OR EXISTS (SELECT 1 FROM jsonb_array_elements(v_workspace->'review_posts') item WHERE item->>'status' <> 'pending') THEN
+        RAISE EXCEPTION 'pending queue starved behind recent published posts';
+    END IF;
+END; $$;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT neighbor_queue_regression;
+RELEASE SAVEPOINT neighbor_queue_regression;
+
+-- 게스트 두 학급끼리 만들어 호스트 매칭 단계에서 막히는 활동을 생성 시점에 차단한다.
+SAVEPOINT neighbor_host_regression;
+INSERT INTO public.neighbor_space_classes (space_id, class_id, role, status, public_class_name, joined_at, reviewed_at, reviewed_by)
+VALUES (current_setting('test.limited_space')::UUID, current_setting('test.limited_class_3')::UUID, 'guest', 'active', '합성 세 번째 학급', NOW(), NOW(), current_setting('test.limited_teacher_1')::UUID);
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_2')::UUID, 'create_activity',
+        jsonb_build_object('space_id', current_setting('test.limited_space')::UUID, 'type', 'exchange', 'title', '호스트 없는 교환', 'prompt', '만들어지면 안 됩니다.',
+            'exchange_class_ids', jsonb_build_array(current_setting('test.limited_class_2'), current_setting('test.limited_class_3'))));
+    EXCEPTION WHEN invalid_parameter_value THEN v_blocked := SQLERRM LIKE '%호스트%'; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'hostless guest exchange was accepted'; END IF;
+END; $$;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT neighbor_host_regression;
+RELEASE SAVEPOINT neighbor_host_regression;
+
+SAVEPOINT neighbor_empty_roster_regression;
+UPDATE public.students SET is_active = FALSE WHERE class_id = current_setting('test.limited_class_2')::UUID;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN PERFORM public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'create_activity',
+        jsonb_build_object('space_id', current_setting('test.limited_space')::UUID, 'type', 'exchange', 'title', '빈 학급 교환', 'prompt', '만들어지면 안 됩니다.',
+            'exchange_class_ids', jsonb_build_array(current_setting('test.limited_class_1')::UUID, current_setting('test.limited_class_2'))));
+    EXCEPTION WHEN invalid_parameter_value THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'empty roster exchange was accepted'; END IF;
+END; $$;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT neighbor_empty_roster_regression;
+RELEASE SAVEPOINT neighbor_empty_roster_regression;
 
 -- 한 공간 안에 공동 주제와 글짝 교환을 열고, 기존 과제·제출 글을 통해 실제 학생 흐름을 확인한다.
 SET LOCAL ROLE authenticated;
@@ -503,6 +710,16 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+
+DO $$
+DECLARE v_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN UPDATE public.writing_missions SET is_archived = FALSE
+        WHERE id IN (SELECT mission_id FROM public.neighbor_activity_classes
+            WHERE activity_id = current_setting('test.neighbor_exchange')::UUID);
+    EXCEPTION WHEN object_not_in_prerequisite_state THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'ordinary mission action opened unapproved exchange'; END IF;
+END; $$;
 
 -- 제안 직후 과제는 보관 상태이고 학생에게 보이지 않는다. 상대 학급 교사가 먼저 활동안을 승인한다.
 DO $$
@@ -788,13 +1005,15 @@ BEGIN
     PERFORM public.run_neighbor_teacher_action_v1(
         current_setting('test.limited_class_1')::UUID, 'review_post',
         jsonb_build_object('space_id', current_setting('test.limited_space'),
-            'shared_post_id', v_shared_id, 'decision', 'publish', 'review_note', '')
+            'shared_post_id', v_shared_id, 'decision', 'publish', 'review_note', '',
+            'source_revision', public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, v_shared_id)->>'source_revision')
     );
     PERFORM public.run_neighbor_teacher_action_v1(
         current_setting('test.limited_class_1')::UUID, 'review_post',
         jsonb_build_object('space_id', current_setting('test.limited_space'),
             'shared_post_id', current_setting('test.neighbor_exchange_shared_1'),
-            'decision', 'publish', 'review_note', '')
+            'decision', 'publish', 'review_note', '',
+            'source_revision', public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, current_setting('test.neighbor_exchange_shared_1')::UUID)->>'source_revision')
     );
 END;
 $$;
@@ -816,7 +1035,8 @@ BEGIN
         PERFORM public.run_neighbor_teacher_action_v1(
             current_setting('test.limited_class_2')::UUID, 'review_post',
             jsonb_build_object('space_id', current_setting('test.limited_space'),
-                'shared_post_id', v_shared->>'shared_post_id', 'decision', 'publish', 'review_note', '')
+                'shared_post_id', v_shared->>'shared_post_id', 'decision', 'publish', 'review_note', '',
+                'source_revision', public.get_neighbor_teacher_post_detail_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_2')::UUID, (v_shared->>'shared_post_id')::UUID)->>'source_revision')
         );
     END LOOP;
 END;

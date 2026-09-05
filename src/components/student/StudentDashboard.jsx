@@ -333,6 +333,8 @@ const StudentDashboard = ({
         <>
             <StudentGuideModal
                 isOpen={isGuideOpen}
+                home={homeBootstrap?.home}
+                enabledModules={enabledModules}
                 onClose={() => setIsGuideOpen(false)}
                 onSelectDestination={openStudentGuideDestination}
             />

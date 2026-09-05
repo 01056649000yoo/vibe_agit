@@ -43,6 +43,12 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
                 ctaLabel: '친구 글 보기', destination: Object.freeze({ type: 'tab', tabId: 'friends_hideout' })
             }),
             Object.freeze({
+                id: 'class-agit', icon: '🏡', title: '우리반 아지트',
+                description: '우리 반의 글 전시와 문집을 읽어요. 액자나 문집 차례에서 작품을 골라 보세요.',
+                visibilityKey: 'class_agit_available', moduleId: 'class-agit',
+                ctaLabel: '전시 보러 가기', destination: Object.freeze({ type: 'route', pageName: 'class_agit' })
+            }),
+            Object.freeze({
                 id: 'playground', icon: '🎡', title: '아지트 놀이터',
                 description: '어휘의 탑과 수호룡처럼 선생님이 열어 준 활동을 골라 해요.',
                 ctaLabel: '놀이터 가기', destination: Object.freeze({ type: 'tab', tabId: 'playground' })

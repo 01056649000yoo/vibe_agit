@@ -570,9 +570,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
                             />
                         ) : visibleTab === 'class-agit' ? (
-                            <TeacherClassAgitHub activeClass={activeClass} />
+                            <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} />
                         ) : visibleTab === 'neighbor-agit' ? (
-                            <TeacherNeighborAgit activeClass={activeClass} isMobile={isMobile} />
+                            <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}

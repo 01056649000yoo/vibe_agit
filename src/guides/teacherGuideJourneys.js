@@ -114,6 +114,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         summary: '학생 기록을 내보내고 되돌릴 수 없는 학기 마감과 삭제 작업을 순서대로 처리합니다.',
         estimatedTime: '학기말',
         steps: [
+            step('class-exhibition', '우리 반 글 전시와 문집', '작품 선정부터 학생 감상·학급 문집·외부 공유와 해지까지 이어지는 흐름을 확인합니다.', 'class-agit'),
             step('export-records', '글과 기록 내보내기', '보관한 글을 필요한 형식으로 확인하고 내보냅니다.', 'archive'),
             step('close-dragon-season', '수호룡 시즌 마감', '작별 편지·시즌 종료·새 학기 시작의 차이를 확인한 뒤 진행합니다.', 'dragon'),
             step('archive-or-delete-class', '학급 보관과 삭제', '복구 가능한 보관과 되돌릴 수 없는 영구 삭제를 구분합니다.', 'settings:class')

@@ -105,3 +105,8 @@
     .neighbor-teacher__matching-list label { grid-template-columns: 1fr; }
     .neighbor-teacher__matching-list label > span { display: none; }
 }
+
+.neighbor-teacher__review-body { display: grid; gap: 16px; }
+.neighbor-teacher__review-body label { display: grid; gap: 8px; }
+.neighbor-teacher__review-body textarea { width: 100%; min-height: 100px; padding: 10px; box-sizing: border-box; font: inherit; line-height: 1.6; border: 1px solid var(--ui-border); border-radius: 10px; }
+.neighbor-teacher__review-body .neighbor-teacher__detail-content { overflow-wrap: anywhere; }

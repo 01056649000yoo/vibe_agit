@@ -13,6 +13,7 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'settings:writing-editor': { tab: 'settings', section: 'writing-editor' },
     'settings:module:spelling-learning': { tab: 'settings', section: 'module:spelling-learning' },
     'neighbor-agit': { tab: 'neighbor-agit' },
+    'class-agit': { tab: 'class-agit' },
     dashboard: { tab: 'dashboard' },
     'reading-logs': { tab: 'reading-logs' },
     'reading-events': { tab: 'reading-logs' },

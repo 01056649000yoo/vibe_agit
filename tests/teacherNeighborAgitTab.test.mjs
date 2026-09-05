@@ -20,7 +20,7 @@ test('이웃 아지트 제작 중 메뉴는 학급운영도구 오른쪽과 설�
     assert.match(teacherNav, /id: 'neighbor-agit'[\s\S]*label: '이웃 아지트\(제작 중\)'[\s\S]*defaultTab: 'neighbor-agit'/);
     assert.doesNotMatch(teacherNav.slice(neighborIndex, settingsIndex), /badge: 'BETA'/);
     assert.match(dashboard, /const TeacherNeighborAgit = lazy\(getModule\('neighbor-agit'\)\.teacherEntry\)/);
-    assert.match(dashboard, /visibleTab === 'neighbor-agit'[\s\S]*<TeacherNeighborAgit activeClass=\{activeClass\} isMobile=\{isMobile\}/);
+    assert.match(dashboard, /visibleTab === 'neighbor-agit'[\s\S]*<TeacherNeighborAgit key=\{activeClass.id\} activeClass=\{activeClass\} isMobile=\{isMobile\}/);
 });
 
 test('이웃 아지트는 설정 진입점을 남기지 않고 메인 메뉴에서만 지연 로딩한다', () => {

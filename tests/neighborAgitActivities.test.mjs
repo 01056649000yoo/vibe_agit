@@ -124,5 +124,5 @@ test('교사 활동 생성·매칭안·승인·종료는 작업공간 RPC 한 �
     assert.match(action, /run_neighbor_teacher_action_core_20261238/);
     assert.match(teacherEntry, /close_activity/);
     assert.match(action, /get_neighbor_teacher_workspace_v1/);
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 5);
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 6);
 });

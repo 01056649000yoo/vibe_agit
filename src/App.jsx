@@ -45,6 +45,7 @@ const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
 const DiaryPage = lazy(getModule('diary').studentEntry)
 const LabActivitiesPage = lazy(getModule('lab-activities').studentEntry)
 const NeighborAgitStudentEntry = lazy(getModule('neighbor-agit').studentEntry)
+const ClassAgitStudentEntry = lazy(getModule('class-agit').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const ClassBoardPresentationPage = lazy(() => import('./modules/tool/class-board/ClassBoardPresentationPage'))
 
@@ -119,6 +120,8 @@ function App() {
   const neighborAgitAvailable = enabledStudentModules.some((module) => module.id === 'neighbor-agit')
     && studentHomeBootstrap?.home?.neighbor_agit_available === true
     && Boolean(studentHomeBootstrap?.home?.neighbor_agit_space_id);
+  const classAgitAvailable = enabledStudentModules.some((module) => module.id === 'class-agit')
+    && studentHomeBootstrap?.home?.class_agit_available === true;
   // 하단 내비의 '나의 아지트'는 페이지가 아니라 홈 위에 뜨는 판이라,
   // 홈으로 보낸 뒤 일회용 신호로 열고, 실제로 열린 판을 따로 기억해 하단 메뉴 강조를 맞춘다.
   const [myAgitSignal, setMyAgitSignal] = useState(0);
@@ -231,10 +234,10 @@ function App() {
     return () => window.removeEventListener('popstate', handlePop);
   }, [studentSession, setInternalPage]);
 
-  const replaceStudentRoute = useCallback((route) => {
+  const replaceStudentRoute = useCallback((route, { preserveParent = false } = {}) => {
     const nextRoute = route || STUDENT_HOME_ROUTE;
     window.history.replaceState(
-      createStudentHistoryState(nextRoute.name, nextRoute.params),
+      createStudentHistoryState(nextRoute.name, nextRoute.params, preserveParent ? readStudentHistoryParent(window.history.state) : null),
       ''
     );
     lastStudentRouteRef.current = nextRoute;
@@ -245,12 +248,20 @@ function App() {
     setInternalPage(nextRoute.name, nextRoute.params);
   }, [setInternalPage]);
 
+  // 같은 전시의 방·보기 방식·작품 넘기기는 한 단계 안에서 바꿔 원래 부모를 유지한다.
+  const replaceStudentSubroute = useCallback((route) => replaceStudentRoute(route, { preserveParent: true }), [replaceStudentRoute]);
+
   // 홈 카드가 사라진 뒤 저장된 방문 기록이나 임의 상태로 다시 들어와도 내용은 열지 않는다.
   // 실제 RPC도 같은 공개 단계·학급 스위치·참여 조건을 다시 확인한다.
   useEffect(() => {
     if (studentPageName !== 'neighbor_agit' || studentHomeBootstrapLoading) return;
     if (!neighborAgitAvailable) replaceStudentRoute(STUDENT_HOME_ROUTE);
   }, [neighborAgitAvailable, replaceStudentRoute, studentHomeBootstrapLoading, studentPageName]);
+
+  useEffect(() => {
+    if (studentPageName !== 'class_agit' || studentHomeBootstrapLoading) return;
+    if (!classAgitAvailable) replaceStudentRoute(STUDENT_HOME_ROUTE);
+  }, [classAgitAvailable, replaceStudentRoute, studentHomeBootstrapLoading, studentPageName]);
 
   // 화면 안의 뒤로가기는 새 방문 기록을 만들지 않고 정해진 부모 화면으로 교체한다.
   // 과제 편집기는 과제 목록, 과제에서 연 친구 글은 과제 목록, 나머지 메뉴는 모두 홈이 부모다.
@@ -668,6 +679,12 @@ function App() {
                     onNavigate={setInternalPage}
                     onBack={handleCurrentStudentBack}
                 />
+              )}
+              {studentPageName === 'class_agit' && classAgitAvailable && (
+                <ErrorBoundary key={`${studentSession.id}:${studentHomeBootstrap?.student?.class_id || studentSession.classId || studentSession.class_id}`}>
+                  <ClassAgitStudentEntry params={internalPage.params} onNavigate={setInternalPage}
+                    onReplace={replaceStudentSubroute} onBack={handleCurrentStudentBack} />
+                </ErrorBoundary>
               )}
   
               {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}

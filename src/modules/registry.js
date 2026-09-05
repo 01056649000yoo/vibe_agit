@@ -23,6 +23,7 @@ import { classNoticeManifest } from './tool/class-notice/manifest';
 import { spellingLearningManifest } from './writing/spelling-learning/manifest';
 import { neighborAgitManifest } from './community/neighbor-agit/manifest';
 import { labActivitiesManifest } from './writing/lab-activities/manifest';
+import { classAgitManifest } from './class-agit/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -41,6 +42,7 @@ const manifests = [
   spellingLearningManifest, // src/modules/writing/spelling-learning/
   neighborAgitManifest, // src/modules/community/neighbor-agit/
   labActivitiesManifest, // src/modules/writing/lab-activities/
+  classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

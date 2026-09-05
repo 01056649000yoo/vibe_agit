@@ -11,7 +11,10 @@ const isClassBoardPreview = import.meta.env.DEV
 const isDevLab = import.meta.env.DEV
   && Boolean(new URLSearchParams(window.location.search).get('dev-lab'))
 
-const { default: RootComponent } = isDevLab
+const isPublicExhibition = /^\/exhibition\/?$/.test(window.location.pathname)
+const { default: RootComponent } = isPublicExhibition
+  ? await import('./modules/class-agit/public/PublicEntry.jsx')
+  : isDevLab
   ? await import('./dev/DevLab.jsx')
   : isClassBoardPreview
     ? await import('./dev/ClassBoardPreview.jsx')

@@ -13,6 +13,10 @@ export const poemMissionType = {
     studentEditorEntry: () => import('./PoemEditor'),
     reactionProfile: 'standard',
     usesStructuredContent: true,
+    exhibition: {
+        format: 'poem', label: '시',
+        getBlocks: ({ structuredContent, content }) => normalizePoemStanzas(structuredContent, content),
+    },
     pdfExport: {
         id: 'poem',
         load: () => import('./poemPdfExport.js').then((module) => module.poemPdfExport),

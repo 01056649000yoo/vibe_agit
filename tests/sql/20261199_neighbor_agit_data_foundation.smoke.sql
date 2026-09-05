@@ -110,6 +110,7 @@ WITH source_candidate AS (
      AND post.student_id = student.id
      AND post.is_submitted IS TRUE
      AND post.recalled_at IS NULL
+     AND (post.writing_context IS DISTINCT FROM 'self' OR post.visibility = 'class')
     WHERE class.deleted_at IS NULL
       AND NOT EXISTS (
           SELECT 1
@@ -289,10 +290,14 @@ SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_t
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_teacher'), 'role', 'authenticated'
 )::TEXT, TRUE);
-SELECT public.review_neighbor_shared_post_v1(
-    current_setting('test.neighbor_post_space')::UUID,
-    current_setting('test.neighbor_shared_post')::UUID,
-    'publish', ''
+SELECT public.run_neighbor_teacher_action_v1(
+    current_setting('test.neighbor_post_class')::UUID, 'review_post',
+    jsonb_build_object('space_id', current_setting('test.neighbor_post_space'),
+        'shared_post_id', current_setting('test.neighbor_shared_post'), 'decision', 'publish',
+        'source_revision', public.get_neighbor_teacher_post_detail_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_post_class')::UUID,
+            current_setting('test.neighbor_shared_post')::UUID)->>'source_revision')
 );
 
 -- Step 4: 홈 요약은 기존 bootstrap 한 번에 포함하고, 피드·상세 RPC는
@@ -325,7 +330,7 @@ BEGIN
     v_item := v_feed #> '{items,0}';
     IF jsonb_array_length(COALESCE(v_feed->'items', '[]'::JSONB)) <> 1
        OR (v_feed->>'max_rows')::INTEGER <> 50
-       OR v_item->>'author_name' !~ '^이웃 작가 [0-9A-F]{4}$'
+       OR char_length(COALESCE(v_item->>'author_name', '')) NOT BETWEEN 1 AND 30
        OR v_item->>'class_name' <> '원학급'
        OR v_item ?| ARRAY['post_id', 'student_id', 'class_id', 'content'] THEN
         RAISE EXCEPTION 'neighbor feed summary or public identity contract failed: %', v_feed;
@@ -501,7 +506,7 @@ BEGIN
        OR (v_detail->>'reaction_count')::INTEGER <> 1
        OR (v_detail->>'my_reaction')::BOOLEAN IS NOT TRUE
        OR (v_detail->>'my_saved')::BOOLEAN IS NOT TRUE
-       OR v_detail #>> '{comments,0,author_name}' !~ '^이웃 작가 [0-9A-F]{4}$'
+       OR char_length(COALESCE(v_detail #>> '{comments,0,author_name}', '')) NOT BETWEEN 1 AND 30
        OR (v_detail #> '{comments,0}') ?| ARRAY['student_id', 'class_id'] THEN
         RAISE EXCEPTION 'neighbor interaction detail contract failed: %', v_detail;
     END IF;
@@ -720,7 +725,7 @@ BEGIN
             current_setting('test.neighbor_post_space')::UUID,
             current_setting('test.neighbor_shared_post')::UUID
         );
-    EXCEPTION WHEN invalid_parameter_value THEN
+    EXCEPTION WHEN insufficient_privilege THEN
         v_detail_blocked := TRUE;
     END;
     IF NOT v_detail_blocked THEN
@@ -772,10 +777,14 @@ SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_t
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_teacher'), 'role', 'authenticated'
 )::TEXT, TRUE);
-SELECT public.review_neighbor_shared_post_v1(
-    current_setting('test.neighbor_post_space')::UUID,
-    current_setting('test.neighbor_shared_post')::UUID,
-    'publish', ''
+SELECT public.run_neighbor_teacher_action_v1(
+    current_setting('test.neighbor_post_class')::UUID, 'review_post',
+    jsonb_build_object('space_id', current_setting('test.neighbor_post_space'),
+        'shared_post_id', current_setting('test.neighbor_shared_post'), 'decision', 'publish',
+        'source_revision', public.get_neighbor_teacher_post_detail_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_post_class')::UUID,
+            current_setting('test.neighbor_shared_post')::UUID)->>'source_revision')
 );
 
 RESET ROLE;
@@ -821,7 +830,7 @@ BEGIN
             current_setting('test.neighbor_post_space')::UUID,
             current_setting('test.neighbor_shared_post')::UUID
         );
-    EXCEPTION WHEN invalid_parameter_value THEN
+    EXCEPTION WHEN insufficient_privilege THEN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
@@ -972,17 +981,12 @@ SELECT set_config('request.jwt.claims', jsonb_build_object(
 )::TEXT, TRUE);
 
 DO $$
-DECLARE
-    v_result JSONB;
+DECLARE v_blocked BOOLEAN := FALSE;
 BEGIN
-    v_result := public.create_neighbor_space_v1(
-        current_setting('test.neighbor_class_1')::UUID,
-        '관리자 내부 시험 공간', '첫 번째 학급', 'Step 2 롤백 시험'
-    );
-    IF (v_result->>'success')::BOOLEAN IS NOT TRUE OR v_result->>'status' <> 'active' THEN
-        RAISE EXCEPTION 'actual admin could not create the internal preview space: %', v_result;
-    END IF;
-    PERFORM set_config('test.neighbor_space', v_result->>'space_id', TRUE);
+    BEGIN PERFORM public.create_neighbor_space_v1(current_setting('test.neighbor_class_1')::UUID,
+        '등록 안 된 내부 공간', '첫 번째 학급', '');
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'admin used an unregistered internal class'; END IF;
 END;
 $$;
 
@@ -1001,6 +1005,10 @@ DO $$
 DECLARE
     v_result JSONB;
 BEGIN
+    v_result := public.create_neighbor_space_v1(current_setting('test.neighbor_class_1')::UUID,
+        '교사 역할 시험 공간', '첫 번째 학급', '초대·이전·종료 롤백 시험');
+    IF v_result->>'status' <> 'active' THEN RAISE EXCEPTION 'teacher could not create public beta space'; END IF;
+    PERFORM set_config('test.neighbor_space', v_result->>'space_id', TRUE);
     v_result := public.create_neighbor_invite_v1(current_setting('test.neighbor_space')::UUID);
     IF (v_result->>'success')::BOOLEAN IS NOT TRUE
        OR v_result->>'invite_key' !~ '^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}(-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}){3}$' THEN
@@ -1199,6 +1207,19 @@ BEGIN
 END;
 $$;
 
+-- 내부 시험에는 운영 학급 대신 롤백 전용 합성 학급을 등록한다.
+WITH created AS (
+    INSERT INTO public.classes (teacher_id, name)
+    VALUES (current_setting('test.neighbor_teacher_1')::UUID, '합성 내부 검사 1'),
+           (current_setting('test.neighbor_teacher_2')::UUID, '합성 내부 검사 2')
+    RETURNING id, name
+), registered AS (
+    INSERT INTO public.neighbor_internal_test_classes (class_id, created_by, note)
+    SELECT id, current_setting('test.neighbor_admin')::UUID, '롤백 검사 전용' FROM created
+    RETURNING class_id
+)
+SELECT set_config('test.neighbor_internal_classes', jsonb_agg(class_id)::TEXT, TRUE) FROM registered;
+
 -- Step 6: 실제 관리자만 내부 시험 공간·현황·점검표·공개 단계를 관리하며,
 -- 점검 여섯 항목과 확인 문구 중 하나라도 없으면 전체 교사 공개가 실패한다.
 UPDATE public.neighbor_rollout_state
@@ -1256,10 +1277,7 @@ BEGIN
 
     v_trial := public.create_neighbor_internal_trial_v1(
         'Step 6 관리자 시험 공간',
-        ARRAY[
-            current_setting('test.neighbor_class_1')::UUID,
-            current_setting('test.neighbor_class_2')::UUID
-        ]
+ARRAY(SELECT value::UUID FROM jsonb_array_elements_text(current_setting('test.neighbor_internal_classes')::JSONB))
     );
     IF (v_trial->>'success')::BOOLEAN IS NOT TRUE
        OR (v_trial->>'active_class_count')::INTEGER <> 2

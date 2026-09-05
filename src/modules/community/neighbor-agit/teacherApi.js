@@ -13,6 +13,16 @@ const assertWorkspace = (data) => {
 };
 
 export const neighborAgitTeacherApi = {
+    async getSourcePost({ spaceId, classId, postId }) {
+        const { data, error } = await supabase.rpc('get_neighbor_teacher_source_post_v1', {
+            p_space_id: spaceId, p_actor_class_id: classId, p_post_id: postId
+        });
+        if (error) throw error;
+        if (Number(data?.version) !== 1 || data?.post_id !== postId || !data?.source_revision) {
+            throw new Error('공유할 글 전문을 확인할 수 없습니다.');
+        }
+        return data;
+    },
     async getWorkspace(classId) {
         const { data, error } = await supabase.rpc('get_neighbor_teacher_workspace_v1', {
             p_class_id: classId

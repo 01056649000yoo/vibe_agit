@@ -8,14 +8,40 @@ const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
+const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
+const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
+const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
+const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({ id: 'class-agit-release', icon: '🏡', title: '우리반 아지트 문집·외부 공유', description: '문집 확정판·100편 출력·학생 서가·공유 해지/만료와 시범 학급을 한 흐름으로 점검한다', Component: ClassAgitReleasePreview }),
+  Object.freeze({
+    id: 'class-agit-student',
+    icon: '🏡',
+    title: '우리반 아지트 학생 감상',
+    description: '학생 홈→전시 목록→로비→전시실→전문과 브라우저 뒤로가기·철회·늦은 응답을 점검한다',
+    Component: ClassAgitStudentPreview,
+  }),
+  Object.freeze({
+    id: 'class-agit-persistence',
+    icon: '🏡',
+    title: '우리반 아지트 저장·공개',
+    description: '초안 저장·학급 공개·충돌·원글 재확인·철회 흐름을 DB 없는 샘플로 점검한다',
+    Component: ClassAgitPersistencePreview,
+  }),
   Object.freeze({
     id: 'neighbor-agit-teacher',
     icon: '🤝',
     title: '이웃 아지트 교사 활동',
     description: '교사 직접 글 전시와 두 학급 1:1·1:2 글짝 매칭안 화면을 DB 없이 확인한다',
     Component: NeighborAgitTeacherPreview,
+  }),
+  Object.freeze({
+    id: 'class-agit',
+    icon: '🏡',
+    title: '우리반 아지트 전시관',
+    description: '작품 선정·자동 배치·2.5D 감상·외부 가림 이름을 샘플 글 0/1/12/60편으로 확인한다',
+    Component: ClassAgitPreview,
   }),
   Object.freeze({
     id: 'arrangement-board-widget',

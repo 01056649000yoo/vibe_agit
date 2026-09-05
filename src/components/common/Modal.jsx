@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {React.ReactNode} children 모달 내용
  * @param {string} maxWidth 최대 너비 (기본값: 500px)
  */
-const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
+const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px', showFooter = true }) => {
     const titleId = useId();
 
     useEffect(() => {
@@ -87,7 +87,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                         </div>
 
                         {/* 푸터 섹션 (고정) */}
-                        <div style={{
+                        {showFooter && <div style={{
                             padding: 'var(--ui-space-5) var(--ui-space-6) var(--ui-space-6)',
                             display: 'flex',
                             justifyContent: 'center',
@@ -105,7 +105,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                             >
                                 확인
                             </Button>
-                        </div>
+                        </div>}
                     </motion.div>
                 </div>
             )}

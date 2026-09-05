@@ -81,7 +81,7 @@ test('메뉴 화면 뒤로가기는 홈이고 글쓰기·과제에서 연 친구
         getStudentBackDestination({ name: 'friends_hideout', params: { returnTo: 'mission_list' } }),
         { name: 'mission_list', params: {} }
     );
-    assert.equal((app.match(/onBack=\{handleCurrentStudentBack\}/g) || []).length, 7);
+    assert.equal((app.match(/onBack=\{handleCurrentStudentBack\}/g) || []).length, 8);
 });
 
 test('메뉴 간 이동은 현재 기록을 홈으로 교체해 기기 뒤로가기가 이전 메뉴를 재방문하지 않는다', () => {

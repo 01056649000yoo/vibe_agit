@@ -25,6 +25,14 @@
 		-Server
 	}
 
+	# 공유 토큰은 URL fragment와 POST 본문에만 둔다. 공개 문서는 저장·검색하지 않는다.
+	@publicExhibition path /exhibition /exhibition/
+	header @publicExhibition {
+		>Cache-Control "no-store"
+		>Referrer-Policy "no-referrer"
+		>X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+	}
+
 	# SPA 폴백 (클라이언트 라우팅)
 	try_files {path} /index.html
 	file_server

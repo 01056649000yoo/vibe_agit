@@ -5,7 +5,7 @@ import { STUDENT_GUIDE_SECTIONS } from './studentGuide';
 import './StudentGuideModal.css';
 
 /** 학생 홈 전체 사용법 — 설명을 읽고 실제 메뉴로 바로 이동한다. */
-const StudentGuideModal = ({ isOpen, onClose, onSelectDestination }) => (
+const StudentGuideModal = ({ isOpen, onClose, onSelectDestination, home = {}, enabledModules = [] }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="끄적끄적 아지트 사용법" maxWidth="780px">
         <div className="student-guide">
             <div className="student-guide__intro">
@@ -23,7 +23,7 @@ const StudentGuideModal = ({ isOpen, onClose, onSelectDestination }) => (
                         <p>{section.description}</p>
                     </header>
                     <div className="student-guide__grid">
-                        {section.items.map((item) => (
+                        {section.items.filter((item) => !item.visibilityKey || (home[item.visibilityKey] === true && enabledModules.some((module) => module.id === item.moduleId))).map((item) => (
                             <article className="student-guide__card" key={item.id}>
                                 <span className="student-guide__icon" aria-hidden="true">{item.icon}</span>
                                 <div className="student-guide__copy">

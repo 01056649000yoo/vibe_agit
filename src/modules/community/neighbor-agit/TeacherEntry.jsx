@@ -4,6 +4,8 @@ import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
 import { neighborAgitTeacherApi } from './teacherApi';
+import TeacherPostReview from './TeacherPostReview';
+import { getExchangeEligibility } from './exchangeEligibility';
 import './TeacherEntry.css';
 
 const STATUS_LABELS = Object.freeze({
@@ -33,6 +35,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [activeTab, setActiveTab] = useState('space');
     const [activeActivityTab, setActiveActivityTab] = useState('gallery');
     const [postDetail, setPostDetail] = useState(null);
+    const [reviewSelection, setReviewSelection] = useState(null);
     const [detailBusy, setDetailBusy] = useState(false);
     const [activityForm, setActivityForm] = useState({ type: 'topic', title: '', prompt: '', classIds: [], shareScope: 'partners' });
     const [galleryCandidates, setGalleryCandidates] = useState(null);
@@ -128,8 +131,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     const createActivity = async (event) => {
         event.preventDefault();
-        if (activityForm.type === 'exchange' && activityForm.classIds.length !== 2) {
-            setErrorMessage('글짝 교환 활동에 참여할 두 학급을 골라 주세요.');
+        const exchangeError = getExchangeEligibility({ memberships: workspace.memberships, classIds: activityForm.classIds, hostClassId: workspace.space.host_class_id, actorClassId: classId });
+        if (activityForm.type === 'exchange' && exchangeError) {
+            setErrorMessage(exchangeError);
             return;
         }
         const result = await runAction('create_activity', {
@@ -150,7 +154,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setMatchingRoster(null);
         setMatchingRows([]);
         if (tabId === 'gallery') return;
-        setActivityForm((current) => ({ ...current, type: tabId, classIds: [classId] }));
+        setActivityForm((current) => ({ ...current, type: tabId, classIds: workspace.space.host_class_id === classId ? [classId] : [classId, workspace.space.host_class_id] }));
     };
 
     const loadGalleryCandidates = async () => {
@@ -170,15 +174,26 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     };
 
-    const publishGalleryPost = async (post) => {
-        const result = await runAction('publish_gallery_post', {
-            space_id: workspace.space.id,
-            post_id: post.post_id
-        }, `${post.student_name} 학생의 글을 글 나눔 공간에 올렸습니다.`);
-        if (!result) return;
-        setGalleryCandidates((current) => current?.map((item) => item.post_id === post.post_id
-            ? { ...item, shared_post_id: result.shared_post_id, share_status: result.status, review_note: '' }
-            : item));
+    const submitReviewedPost = async (selection, detail, decision, note) => {
+        if (busy) throw new Error('이전 요청을 처리하는 중입니다.');
+        const isGallery = selection.mode === 'gallery';
+        setBusy(isGallery ? 'publish_gallery_post' : 'review_post');
+        setMessage('');
+        setErrorMessage('');
+        try {
+            const next = await api.runAction(classId, isGallery ? 'publish_gallery_post' : 'review_post', {
+                space_id: workspace.space.id,
+                ...(isGallery ? { post_id: selection.post.post_id } : {
+                    shared_post_id: selection.post.shared_post_id, decision, review_note: note
+                }),
+                source_revision: detail.source_revision
+            });
+            setWorkspace(next.workspace);
+            setMessage(decision === 'return' ? '보완할 이유와 함께 학생에게 돌려보냈습니다.' : '확인한 글을 공개했습니다.');
+            setGalleryCandidates(null);
+        } finally {
+            setBusy('');
+        }
     };
 
     const openExchangeMatching = async (activity) => {
@@ -244,7 +259,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     };
 
     const toggleExchangeClass = (targetClassId) => {
-        if (targetClassId === classId) return;
+        if (targetClassId === classId || workspace.space.host_class_id !== classId) return;
         setActivityForm((current) => {
             const selected = current.classIds.includes(targetClassId)
                 ? [classId]
@@ -283,6 +298,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         () => workspace?.review_posts?.filter((item) => item.status === 'pending') || [],
         [workspace?.review_posts]
     );
+    const pendingTotal = workspace?.review_total ?? pendingPosts.length;
+    const exchangeError = getExchangeEligibility({ memberships: activeMemberships, classIds: activityForm.classIds, hostClassId: workspace?.space?.host_class_id, actorClassId: classId });
     const activities = workspace?.activities || [];
     const selectedActivities = activeActivityTab === 'gallery'
         ? []
@@ -352,7 +369,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         <div><span>{workspace.space.my_role === 'host' ? '호스트' : '게스트'}</span><h2>{workspace.space.name}</h2><p>{workspace.space.description || '여러 학급이 글로 만나는 공간입니다.'}</p></div>
                         <div className="neighbor-teacher__metrics">
                             <span>참여 <strong>{activeMemberships.length}</strong>학급</span>
-                            <span>검토 <strong>{pendingPosts.length}</strong>편</span>
+                            <span>검토 <strong>{pendingTotal}</strong>편</span>
                             <span>공개 <strong>{workspace.public_posts.filter((item) => item.status === 'published').length}</strong>편</span>
                         </div>
                     </section>
@@ -361,7 +378,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         {[
                             ['space', '공간·초대'],
                             ['activities', '세 가지 활동'],
-                            ['review', `글 검토 ${pendingPosts.length}`],
+                            ['review', `글 검토 ${pendingTotal}`],
                             ['feed', '공개 글 관리']
                         ].map(([id, label]) => <button type="button" key={id} className={activeTab === id ? 'is-active' : ''} aria-pressed={activeTab === id} onClick={() => setActiveTab(id)}>{label}</button>)}
                     </nav>
@@ -444,9 +461,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                                 variant={post.share_status ? 'outline' : 'primary'}
                                                                 loading={busy === 'publish_gallery_post'}
                                                                 disabled={Boolean(busy) || ['published', 'hidden'].includes(post.share_status)}
-                                                                onClick={() => publishGalleryPost(post)}
+                                                                onClick={() => setReviewSelection({ post, mode: 'gallery' })}
                                                             >
-                                                                {post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공개 글 관리에서 복원' : '공유에 올리기'}
+                                                                {post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공개 글 관리에서 복원' : '전문 확인 후 공유'}
                                                             </Button>
                                                         </article>
                                                     ))}
@@ -485,15 +502,16 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         {activityForm.type === 'exchange' && (
                                             <>
                                                 <fieldset className="neighbor-teacher__class-choice">
-                                                    <legend>교환할 두 학급</legend>
+                                                    <legend>호스트와 교환할 두 학급</legend>
                                                     {activeMemberships.map((membership) => (
                                                         <label key={membership.class_id}>
-                                                            <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} disabled={membership.class_id === classId} onChange={() => toggleExchangeClass(membership.class_id)} />
-                                                            {membership.class_name}{membership.class_id === classId ? ' (우리 학급)' : ''}
+                                                            <input type="checkbox" checked={activityForm.classIds.includes(membership.class_id)} disabled={membership.class_id === classId || workspace.space.host_class_id !== classId} onChange={() => toggleExchangeClass(membership.class_id)} />
+                                                            {membership.class_name}{membership.class_id === classId ? ' (우리 학급)' : ''} · 매칭 가능 {membership.matchable_student_count ?? '—'}명
                                                         </label>
                                                     ))}
                                                     <small>상대 학급 {Math.max(activityForm.classIds.length - 1, 0)}/1 선택</small>
                                                 </fieldset>
+                                                {exchangeError && <p role="status">{exchangeError}</p>}
                                                 <fieldset className="neighbor-teacher__scope-choice">
                                                     <legend>글을 나눌 범위</legend>
                                                     <label>
@@ -583,7 +601,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     {activeTab === 'review' && (
                         <section className="neighbor-teacher-card">
                             <div><span>우리 학급 글</span><h2>공개 요청 검토</h2></div>
-                            {pendingPosts.length === 0 ? <p className="neighbor-teacher__empty">검토를 기다리는 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{pendingPosts.map((post) => <article key={post.shared_post_id}><div><span><strong>{post.student_name}</strong><small>{STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p></div><div className="neighbor-teacher__row-actions"><Button type="button" disabled={Boolean(busy)} onClick={() => runAction('review_post', { space_id: workspace.space.id, shared_post_id: post.shared_post_id, decision: 'publish', review_note: '' }, '글을 이웃 피드에 공개했습니다.')}>공개</Button><Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('review_post', { space_id: workspace.space.id, shared_post_id: post.shared_post_id, decision: 'return', review_note: '내용을 다시 확인해 주세요.' }, '글을 학생에게 돌려보냈습니다.')}>돌려보내기</Button></div></article>)}</div>}
+                            {pendingTotal > pendingPosts.length && <p>대기 {pendingTotal}편 중 먼저 신청한 {pendingPosts.length}편입니다. 검토를 마치면 다음 글이 이어집니다.</p>}
+                            {pendingPosts.length === 0 ? <p className="neighbor-teacher__empty">검토를 기다리는 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{pendingPosts.map((post) => <article key={post.shared_post_id}><div><span><strong>{post.student_name}</strong><small>{STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p></div><Button type="button" disabled={Boolean(busy)} onClick={() => setReviewSelection({ post, mode: 'review' })}>전문 검토하기</Button></article>)}</div>}
                         </section>
                     )}
 
@@ -598,6 +617,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     )}
                 </>
             )}
+            {reviewSelection && <TeacherPostReview selection={reviewSelection} spaceId={workspace.space.id}
+                classId={classId} api={api} busy={busy} onSubmit={submitReviewedPost} onClose={() => setReviewSelection(null)} />}
         </section>
     );
 };

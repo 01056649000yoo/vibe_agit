@@ -82,7 +82,7 @@ test('교사 작업 공간은 한 번 읽고 행동도 한 번의 RPC 응답으�
     assert.match(action, /review_neighbor_shared_post_v1/);
     assert.match(action, /moderate_neighbor_item_v1/);
     assert.match(action, /'workspace', public\.get_neighbor_teacher_workspace_v1/);
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 5);
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 6);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.match(teacherApi, /get_neighbor_exchange_roster_v1/);
     assert.match(teacherEntry, /setWorkspace\(next\.workspace\)/);

@@ -2,6 +2,8 @@
  * 학생 메뉴·활성 탭·뒤로가기·방문 기록의 단일 원본.
  * 새 메뉴나 하위 화면을 추가하기 전에 같은 폴더의 README.md 계약을 따른다.
  */
+import { getClassAgitBackDestination } from '../../modules/class-agit/student/navigation.js';
+
 export const STUDENT_HOME_ROUTE = Object.freeze({ name: 'main', params: Object.freeze({}) });
 
 export const STUDENT_BOTTOM_NAV_TABS = Object.freeze([
@@ -35,6 +37,7 @@ export const getStudentActiveBottomTab = (pageName, overlay = null) => {
 };
 
 export const getStudentBackDestination = ({ name, params = {} } = STUDENT_HOME_ROUTE) => {
+    if (name === 'class_agit') return getClassAgitBackDestination(params);
     if (name === 'writing' && params?.returnTo === 'neighbor_agit') {
         return { name: 'neighbor_agit', params: {} };
     }

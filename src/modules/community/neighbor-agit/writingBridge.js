@@ -7,6 +7,7 @@ export const NEIGHBOR_AGIT_WRITING_BRIDGE = Object.freeze({
     draftStrategy: 'reuse-existing-writing-draft',
     requestRpc: 'request_neighbor_post_share_v1',
     recallRpc: 'recall_my_neighbor_shared_post_v1',
-    reviewRpc: 'review_neighbor_shared_post_v1',
+    reviewRpc: 'run_neighbor_teacher_action_v1',
+    reviewAction: 'review_post',
     moderationRpc: 'moderate_neighbor_item_v1'
 });
