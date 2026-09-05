@@ -173,7 +173,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             <div role="tabpanel" id={`${stepId}-panel-share`} aria-labelledby={`${stepId}-tab-share`} hidden={step !== 'share'} className="class-agit-step-panel">
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>전시에 담은 전체 작품의 외부 미리보기를 확인하고 전시 기간과 공유 주소를 관리합니다.</p></div>
                 {persistence ? (shareRevision !== null && (persistence.renderShare ? persistence.renderShare({ key: shareRevision, onStateChange: setShareState }) : <p className="class-agit-empty">이 샘플은 저장·학급 공개까지 점검합니다. 문집·외부 공유 통합 샘플에서 주소 설정을 확인할 수 있습니다.</p>))
-                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 전시에 담은 전체 작품을 자동 작성자 표시로 미리 봅니다.</p><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
+                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 전시에 담은 전체 작품의 제목과 지은이를 미리 봅니다.</p><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
             </div>
 
             <footer className="class-agit-step-footer"><Button variant="ghost" type="button" disabled={stepIndex === 0} onClick={() => selectStep(EXHIBITION_STEPS[stepIndex - 1].id)}>← 이전 단계</Button>

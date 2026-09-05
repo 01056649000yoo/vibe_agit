@@ -125,15 +125,15 @@ test('모든 액자는 벽 안의 겹치지 않는 슬롯 하나를 사용한다
     for (const index of [-1, 20, 1.5]) assert.throws(() => getGallerySlot(index), /위치/);
 });
 
-test('외부 미리보기는 전체 작품을 자동 작성자 표시로 투영하고 내부 식별자를 제외한다', () => {
+test('외부 미리보기는 전체 작품의 지은이를 투영하고 내부 식별자를 제외한다', () => {
     const draft = makeDraft(2);
     draft.items[0].publicAlias = '등록이름 노출 금지';
     const external = createGalleryPresentation(draft, 'external');
     assert.equal(external.works.length, 2);
-    assert.deepEqual(external.works.map((work) => work.author), ['새싹 작가 01', '새싹 작가 02']);
+    assert.deepEqual(external.works.map((work) => work.author), ['등록이름1', '등록이름2']);
     assert.equal(createGalleryPresentation(draft).works[1].author, '등록이름2');
     assert.deepEqual(Object.keys(external.works[0]).sort(), ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks', 'roomId'].sort());
-    assert.doesNotMatch(JSON.stringify(external), /등록이름|student-|post-|revision-/);
+    assert.doesNotMatch(JSON.stringify(external), /등록이름 노출 금지|student-|post-|revision-/);
     draft.items[1].revoked = true;
     assert.equal(createGalleryPresentation(draft, 'external').works.length, 1);
     assert.throws(() => createGalleryPresentation(draft, 'admin'), /범위/);

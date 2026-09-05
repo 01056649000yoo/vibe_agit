@@ -1,3 +1,4 @@
+import { prepareShareWorks } from '../../modules/class-agit/public/sharingPolicy.js';
 import { createBookPrintSettings } from '../../modules/class-agit/designs.js';
 import { buildSharePeriod } from '../../modules/class-agit/public/sharePeriod.js';
 import { CLASS_AGIT_LIMITS } from '../../modules/class-agit/policy.js';
@@ -28,10 +29,11 @@ export async function createClassAgitReleaseFixture() {
     };
     const getShare = async (_class, exId) => {
         const d = (await sourceApi.getWorkspace(previewClass.id, exId)).draft; const share = shares.get(exId);
-        return { version: 1, external_enabled: settings.external_enabled, exhibition_revision: d.revision, exhibition_theme: d.theme, rooms: clone(d.rooms), layout_version: d.layoutVersion,
-            candidates: d.items.map((i) => ({ ...i, unavailable: i.unavailable || i.revoked })),
-            share: share ? { revision: share.revision, publication_no: share.publication_no, title: share.title, introduction: share.introduction, starts_at: share.starts_at, scheduled: Date.parse(share.starts_at) > Date.now(), expires_at: share.expires_at, revoked: share.revoked, expired: Date.parse(share.expires_at) < Date.now() } : null,
-            published_items: share?.works.map((w) => ({ id: w.itemId, title: w.title, author: w.author, revoked: w.revoked })) || [] };
+        return { version: 1, external_enabled: settings.external_enabled, exhibition_title: d.title, exhibition_introduction: d.introduction, exhibition_revision: d.revision, exhibition_theme: d.theme, rooms: clone(d.rooms), layout_version: d.layoutVersion,
+            share_rooms: share?.display_version === 2 && share.rooms.length === d.rooms.length ? clone(share.rooms) : null,
+            candidates: d.items.map((i) => { const edit = share?.display_version === 2 ? share.works.find((w) => w.sourceId === i.sourceId && !w.revoked) : null; return { ...i, shareTitle: edit?.title, shareAuthor: edit?.author, shareRoomId: edit?.roomId, unavailable: i.unavailable || i.revoked }; }),
+            share: share ? { short_url: share.revoked ? null : share.short_url, display_version: share.display_version, revision: share.revision, publication_no: share.publication_no, title: share.title, introduction: share.introduction, starts_at: share.starts_at, scheduled: Date.parse(share.starts_at) > Date.now(), expires_at: share.expires_at, revoked: share.revoked, expired: Date.parse(share.expires_at) < Date.now() } : null,
+            published_items: share?.works.map((w) => ({ id: w.itemId, title: w.title, author: w.author, room_no: share.rooms.findIndex((r) => r.id === w.roomId) + 1, room_title: share.rooms.find((r) => r.id === w.roomId)?.title, revoked: w.revoked })) || [] };
     };
     const api = {
         getAccess: async () => ({ allowed: settings.mode !== 'disabled', is_admin: true }),
@@ -80,6 +82,7 @@ export async function createClassAgitReleaseFixture() {
         getShare,
         async shareAction(_class, exId, action, p) {
             let share = shares.get(exId);
+            if (['publish', 'rotate'].includes(action) && share?.token === p.token && !share.revoked) return getShare(_class, exId);
             if ((share?.revision || 0) !== p.expected_revision) throw new Error('최신 공유 설정을 불러와 주세요.');
             if (['publish', 'rotate', 'extend'].includes(action) && !settings.external_enabled) throw new Error('외부 공유가 중지되어 있습니다.');
             if (['rotate', 'extend'].includes(action) && (!share || share.revoked || Date.parse(share.expires_at) <= Date.now())) throw new Error('새 공개본을 발행해 주세요.');
@@ -87,15 +90,17 @@ export async function createClassAgitReleaseFixture() {
                 const period = buildSharePeriod(p.starts_at, p.expires_at);
                 const d = (await sourceApi.getWorkspace(previewClass.id, exId)).draft;
                 if (!p.items.length || p.exhibition_revision !== d.revision) throw new Error('공개 내용을 다시 확인해 주세요.');
+                if (p.display_version === 2) { if (p.items.length !== d.items.length) throw new Error('전체 작품을 확인해 주세요.'); prepareShareWorks(p.items, p.rooms); }
                 const works = [];
-                for (const [i, input] of p.items.entries()) { const original = d.items.find((item) => item.itemId === input.itemId); const current = await source(original.sourceId); if (current.source_revision !== input.sourceRevision) throw new Error('원글을 다시 확인해 주세요.'); works.push({ id: `published-${i + 1}`, itemId: crypto.randomUUID(), sourceId: original.sourceId, roomId: original.roomId, title: original.title, author: input.publicAlias, format: original.format, kindLabel: original.kindLabel, excerpt: original.excerpt, blocks: clone(original.blocks), revoked: false }); }
-                share = { ...period, rooms: clone(d.rooms), theme: d.theme, title: p.title, introduction: p.introduction, works, token: p.token, revoked: false, publication_no: (share?.publication_no || 0) + 1, revision: share?.revision || 0 }; shares.set(exId, share);
+                for (const [i, input] of p.items.entries()) { const original = d.items.find((item) => item.itemId === input.itemId); const current = await source(original.sourceId); if (current.source_revision !== input.sourceRevision) throw new Error('원글을 다시 확인해 주세요.'); works.push({ id: `published-${i + 1}`, itemId: crypto.randomUUID(), sourceId: original.sourceId, roomId: p.display_version === 2 ? input.roomId : original.roomId, title: p.display_version === 2 ? input.title : original.title, author: p.display_version === 2 ? input.author : input.publicAlias, format: original.format, kindLabel: original.kindLabel, excerpt: original.excerpt, blocks: clone(original.blocks), revoked: false }); }
+                share = { ...period, display_version: p.display_version || 1, rooms: clone(p.display_version === 2 ? p.rooms : d.rooms), theme: d.theme, title: p.title, introduction: p.introduction, works, token: p.token, revoked: false, publication_no: (share?.publication_no || 0) + 1, revision: share?.revision || 0 }; shares.set(exId, share);
             }
             if (action === 'extend') Object.assign(share, buildSharePeriod(share.starts_at, p.expires_at));
             if (action === 'rotate') share.token = p.token;
             if (action === 'revoke') share.revoked = true;
             if (action === 'withdraw') share.works.find((w) => w.itemId === p.item_id).revoked = true;
             if (p.token) lastToken = p.token;
+            if (['publish', 'rotate'].includes(action) && p.display_version === 2) share.short_url = `https://샘링크.kr/e-${crypto.randomUUID().replaceAll('-', '').slice(0, 24)}`;
             share.revision++; return getShare(_class, exId);
         },
     };

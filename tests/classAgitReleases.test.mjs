@@ -113,14 +113,14 @@ test('전시·문집·이웃 글의 업무 충돌은 PostgREST 재시도 없이 
 import { prepareShareWorks, hasBlockedShareWorks } from '../src/modules/class-agit/public/sharingPolicy.js';
 import { EXHIBITION_RIGHTS } from '../src/modules/class-agit/gallery/rightsNotice.js';
 
-test('외부 공유는 전체 작품의 자동 이름만 전송하고 부적격 작품을 조용히 누락하지 않는다', () => {
-    const items = Array.from({ length: 120 }, (_, index) => ({ itemId: `item-${index}`, sourceRevision: `revision-${index}`, publicAlias: '실명', authorName: '등록 이름', included: false }));
+test('외부 공유는 전체 작품의 편집한 제목·지은이를 전송하고 부적격 작품을 조용히 누락하지 않는다', () => {
+    const items = Array.from({ length: 120 }, (_, index) => ({ itemId: `item-${index}`, sourceRevision: `revision-${index}`, publicAlias: '옛 별명', title: `작품 ${index}`, author: `지은이 ${index}`, authorName: '등록 이름', included: false }));
     const payload = prepareShareWorks(items);
     assert.equal(payload.length, 120);
-    assert.equal(payload[0].publicAlias, '새싹 작가 01');
-    assert.equal(payload[119].publicAlias, '새싹 작가 120');
-    assert.deepEqual(Object.keys(payload[0]).sort(), ['itemId', 'publicAlias', 'sourceRevision']);
-    assert.doesNotMatch(JSON.stringify(payload), /실명|등록 이름|included/);
+    assert.equal(payload[0].author, '지은이 0');
+    assert.equal(payload[119].author, '지은이 119');
+    assert.deepEqual(Object.keys(payload[0]).sort(), ['author', 'itemId', 'roomId', 'sourceRevision', 'title']);
+    assert.doesNotMatch(JSON.stringify(payload), /옛 별명|등록 이름|included/);
     assert.throws(() => prepareShareWorks([]));
     assert.throws(() => prepareShareWorks([...items, items[0]]));
     for (const key of ['revoked', 'unavailable', 'sourceChanged']) {

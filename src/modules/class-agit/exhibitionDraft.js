@@ -75,7 +75,7 @@ export function createGalleryPresentation(draft, audience = 'class') {
     draft = normalizeRoomDraft(draft);
     const works = orderedRoomItems(draft).filter((item) => audience === 'external' ? !item.unavailable && !item.revoked && !item.sourceChanged : item.scopes.class).map((item, index) => ({
         id: `work-${index + 1}`, roomId: item.roomId, title: item.title,
-        author: audience === 'external' ? externalAuthor(index) : item.authorName,
+        author: audience === 'external' ? externalAuthor(item) : item.authorName,
         format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: [...item.blocks],
     }));
     return { title: draft.title.trim() || '제목 없는 전시', introduction: draft.introduction, audience, rooms: draft.rooms.map((room) => ({ ...room })), theme: getGalleryTheme(draft.theme).id, works };
