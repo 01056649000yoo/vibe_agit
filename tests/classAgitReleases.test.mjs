@@ -98,7 +98,8 @@ test('서버는 문집 철회 세대와 외부 별도 확인·토큰 해시·만
 
 test('보관하거나 초안이 비어도 기존 외부 주소 관리에 진입할 수 있다', () => {
     const workbench = readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8');
-    assert.match(workbench, /disabled=\{dirty\} onClick=\{persistence.openShare\}/);
+    assert.match(workbench, /nextStep === 'share'[\s\S]*await saveDraft\(\); if \(!current\) return/);
+    assert.match(workbench, /persistence\.renderShare\(\{ key: shareRevision, onStateChange: setShareState \}\)/);
     const manager = readFileSync('src/modules/class-agit/public/ShareManager.jsx', 'utf8');
     assert.match(manager, /disabled=\{busy \|\| archived \|\| !confirmed/);
     assert.match(manager, /보관한 전시의 기존 공유 주소를 관리할 수 있습니다/);

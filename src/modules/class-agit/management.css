@@ -1,0 +1,187 @@
+/* Teacher controls use the app design system. Gallery scenes and book covers keep their exhibition styling. */
+.class-agit-management-shell {
+    display: grid;
+    gap: var(--ui-space-4);
+    color: var(--ui-ink);
+    font-family: var(--ui-font-sans);
+}
+
+.class-agit.class-agit-management {
+    --ca-ink: var(--ui-ink);
+    --ca-muted: var(--ui-ink-muted);
+    --ca-line: var(--ui-border);
+    --ca-paper: var(--ui-surface);
+    background: var(--ui-page);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    padding: var(--ui-space-6);
+    font: var(--ui-text-md) / var(--ui-line-body) var(--ui-font-sans);
+}
+
+.class-agit-management :is(h1, h2, h3):not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) {
+    font-family: var(--ui-font-sans);
+    color: var(--ui-ink-strong);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: var(--ui-line-body);
+    overflow-wrap: anywhere;
+}
+.class-agit-management h1:not(:where(.class-agit-gallery *, .class-agit-public *)) { font-size: var(--ui-text-2xl); }
+.class-agit-management h2:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) { font-size: var(--ui-text-xl); }
+.class-agit-management h3:not(:where(.class-agit-gallery *, .class-agit-public *)) { font-size: var(--ui-text-lg); }
+.class-agit-management :is(p, small):not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) {
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+}
+.class-agit-management > :is(p, h2, fieldset) { margin-block: var(--ui-space-4); }
+.class-agit-management > .class-agit-edit-body { margin: 0; }
+.class-agit-management .class-agit-eyebrow:not(:where(.class-agit-gallery *, .class-agit-public *)) {
+    color: var(--ui-primary);
+    font-size: var(--ui-text-xs);
+    letter-spacing: .03em;
+}
+.class-agit-management :is(.class-agit-tag, .class-agit-prototype-note, .class-agit-status) {
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+}
+.class-agit-management .class-agit-tag { background: var(--ui-surface-muted); border-color: var(--ui-border); border-radius: var(--ui-radius-pill); }
+.class-agit-management .class-agit-prototype-note { background: var(--ui-primary-soft); border-radius: var(--ui-radius-sm); }
+.class-agit-management .class-agit-error, .class-agit-management-shell > .class-agit-error { color: var(--ui-danger); background: var(--ui-danger-soft); border-radius: var(--ui-radius-sm); }
+.class-agit-management .class-agit-brand > span { color: var(--ui-primary); background: var(--ui-primary-soft); border-radius: var(--ui-radius-md); }
+.class-agit-management .class-agit-brand p { font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-workbench-summary { margin: var(--ui-space-4) 0 var(--ui-space-6) !important; }
+.class-agit-management .class-agit-header-actions { gap: var(--ui-space-2); }
+.class-agit-management-shell > .class-agit-live-access {
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-sm);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    padding: var(--ui-space-3) var(--ui-space-5);
+}
+.class-agit-management-shell > .class-agit-header-actions { justify-content: flex-start; }
+
+/* Tabs stay native buttons for keyboard focus management; ordinary actions use common/Button. */
+.class-agit-management .class-agit-steps { gap: var(--ui-space-2); }
+.class-agit-management .class-agit-steps > button {
+    padding: var(--ui-space-4) var(--ui-space-3);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    color: var(--ui-ink-muted);
+    transition: background-color var(--ui-motion-fast), border-color var(--ui-motion-fast);
+}
+.class-agit-management .class-agit-steps > button:hover:not(:disabled) { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
+.class-agit-management .class-agit-steps > button[aria-selected='true'] {
+    color: var(--ui-primary);
+    border-color: var(--ui-primary);
+    background: var(--ui-primary-soft);
+    box-shadow: inset 0 -2px var(--ui-primary);
+}
+.class-agit-management .class-agit-steps strong { font-size: var(--ui-text-sm); font-weight: 800; }
+.class-agit-management .class-agit-steps small { font-size: var(--ui-text-xs); }
+.class-agit-management .class-agit-step-number { background: var(--ui-surface-muted); font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-steps [aria-selected='true'] .class-agit-step-number { background: var(--ui-primary); color: var(--ui-surface); }
+.class-agit-management .class-agit-step-heading { gap: var(--ui-space-2); margin-bottom: var(--ui-space-6); }
+.class-agit-management .class-agit-step-footer { padding-top: var(--ui-space-5); border-color: var(--ui-border); }
+.class-agit-management .class-agit-preview-toolbar > .class-agit-segmented { border-color: var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); flex-wrap: wrap; }
+.class-agit-management .class-agit-step-panel > .class-agit-management { border: 0; padding: 0; border-radius: 0; }
+
+.class-agit-management :is(.class-agit-settings-card, .class-agit-candidates, .class-agit-book-settings, .class-agit-order-panel) {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-xs);
+}
+.class-agit-management :is(.class-agit-settings-card, .class-agit-book-settings, .class-agit-order-panel) { padding: var(--ui-space-5); min-width: 0; }
+.class-agit-management .class-agit-settings-card { gap: var(--ui-space-5); }
+.class-agit-management :is(.class-agit-settings-card, .class-agit-book-settings, .class-agit-book-picker, .class-agit-external-fields, .class-agit-share-link) label,
+.class-agit-management .class-agit-search {
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-sm);
+    font-weight: 700;
+}
+.class-agit-management .class-agit-book-settings legend { padding-inline: var(--ui-space-2); font-size: var(--ui-text-md); font-weight: 800; color: var(--ui-ink-strong); }
+.class-agit-management :is(input:not([type='checkbox']), textarea, select) {
+    min-height: var(--ui-control-md);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-sm);
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    padding: var(--ui-space-3);
+    font: 400 var(--ui-text-md) / var(--ui-line-body) var(--ui-font-sans);
+}
+.class-agit-management .class-agit-search input { font-size: var(--ui-text-md) !important; }
+.class-agit-management :is(input, textarea)::placeholder { color: var(--ui-ink-subtle); }
+.class-agit-management textarea { resize: vertical; }
+.class-agit-management input[type='checkbox'], .class-agit-management-shell > .class-agit-live-access input { accent-color: var(--ui-primary); }
+.class-agit-management :focus-visible:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-public *)) {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+    box-shadow: var(--ui-focus-ring);
+}
+.class-agit-management .ui-button { outline: none; }
+.class-agit-management .ui-button:disabled { opacity: .56; cursor: not-allowed; }
+
+.class-agit-management .class-agit-editor-layout { grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr); gap: var(--ui-space-5); }
+.class-agit-management .class-agit-panel-heading { flex-wrap: wrap; gap: var(--ui-space-2); }
+.class-agit-management .class-agit-panel-heading > span { font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-candidates > .ui-button { margin: 0 var(--ui-space-4) var(--ui-space-3); }
+.class-agit-management .class-agit-candidates__list > article { border-color: var(--ui-border); }
+.class-agit-management .class-agit-candidate-avatar { color: var(--ui-primary); background: var(--ui-primary-soft); font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-candidates__list strong, .class-agit-management .class-agit-order-info strong { font-size: var(--ui-text-md); color: var(--ui-ink-strong); }
+.class-agit-management .class-agit-participation { font-size: var(--ui-text-sm); background: var(--ui-surface-muted); }
+.class-agit-management .class-agit-participation summary, .class-agit-management .class-agit-exhibition-management summary { min-height: var(--ui-control-md); }
+.class-agit-management .class-agit-exhibition-management { font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-order-panel { width: 100%; }
+.class-agit-management .class-agit-order-info { flex-basis: calc(100% - 50px); }
+.class-agit-management .class-agit-order-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ui-space-2); width: 100%; }
+.class-agit-management .class-agit-order-controls .class-agit-header-actions { justify-content: flex-start; }
+.class-agit-management .class-agit-order-number { color: var(--ui-ink-subtle); font: 800 var(--ui-text-lg) / var(--ui-line-compact) var(--ui-font-sans); }
+.class-agit-management .class-agit-order-move .ui-button { width: var(--ui-control-md); padding-inline: 0 !important; }
+.class-agit-management .class-agit-canvas-caption { text-align: left; }
+.class-agit-management .class-agit-projects { display: grid; gap: var(--ui-space-3); margin: var(--ui-space-5) 0; }
+.class-agit-management .class-agit-projects li, .class-agit-management .class-agit-book-items > li {
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    padding: var(--ui-space-5);
+    gap: var(--ui-space-4);
+}
+.class-agit-management .class-agit-projects li > div { min-width: 0; overflow-wrap: anywhere; }
+.class-agit-management .class-agit-projects li > .ui-button { flex-shrink: 0; }
+.class-agit-management .class-agit-projects p { margin-top: var(--ui-space-2); }
+.class-agit-management .class-agit-book-items { gap: var(--ui-space-3); margin-block: var(--ui-space-5); }
+.class-agit-management .class-agit-book-items .class-agit-book-settings { box-shadow: none; }
+.class-agit-management .class-agit-book-picker { background: var(--ui-primary-soft); border-color: var(--ui-primary-border); border-radius: var(--ui-radius-md); }
+.class-agit-management .class-agit-book-picker > header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-3); margin-bottom: var(--ui-space-4); }
+.class-agit-management .class-agit-book-picker form { display: flex; align-items: flex-end; gap: var(--ui-space-3); }
+.class-agit-management .class-agit-book-picker form label { flex: 1; min-width: 0; }
+.class-agit-management .class-agit-book-picker > .ui-button { margin: var(--ui-space-2); }
+.class-agit-management .class-agit-share-link { background: var(--ui-primary-soft); border: 1px solid var(--ui-primary-border); border-radius: var(--ui-radius-md); }
+.class-agit-management .class-agit-share-link a { color: var(--ui-primary); }
+.class-agit-management .class-agit-confirmation { font-size: var(--ui-text-sm); }
+/* ArtworkReader uses a portal, so its teacher confirmation footer carries its own scope. */
+.class-agit-management-confirmation { flex-direction: column; align-items: stretch; color: var(--ui-ink); font-family: var(--ui-font-sans); }
+.class-agit-management-confirmation p { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.class-agit-management-confirmation input[type='checkbox'] { accent-color: var(--ui-primary); }
+
+@container (max-width: 760px) {
+    .class-agit-management .class-agit-settings-layout { gap: var(--ui-space-4); }
+    .class-agit-management .class-agit-book-layout { grid-template-columns: 1fr; gap: var(--ui-space-5); }
+    .class-agit-management :is(.class-agit-settings-card, .class-agit-order-panel, .class-agit-book-settings) { padding: var(--ui-space-4); }
+    .class-agit-management .class-agit-projects li { flex-wrap: wrap; }
+    .class-agit-management .class-agit-projects li > .ui-button { margin-left: auto; }
+}
+@container (max-width: 430px) {
+    .class-agit-management .class-agit-steps > button { padding: var(--ui-space-3) var(--ui-space-2); gap: var(--ui-space-2); }
+    .class-agit-management .class-agit-steps strong { font-size: var(--ui-text-sm); }
+    .class-agit-management .class-agit-step-footer > .class-agit-header-actions { justify-content: flex-end; }
+    .class-agit-management .class-agit-step-footer > .class-agit-header-actions > .ui-button { flex: 1 1 auto; }
+    .class-agit-management .class-agit-book-picker form { flex-wrap: wrap; }
+    .class-agit-management .class-agit-book-picker form label { flex-basis: 100%; }
+}
+@media (max-width: 600px) {
+    .class-agit.class-agit-management { padding: var(--ui-space-4); }
+}

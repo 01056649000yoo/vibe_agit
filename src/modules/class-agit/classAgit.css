@@ -52,6 +52,51 @@
 .class-agit-project-heading h2 { font-family: Georgia, 'Noto Serif KR', serif; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; margin: 8px 0; overflow-wrap: anywhere; }
 .class-agit-project-heading p { color: var(--ca-muted); font-size: 13px; }
 .class-agit-status { min-height: 36px; padding: 10px 0; color: #657260; font-size: 12px; }
+.class-agit-workbench .class-agit-brand { min-width: 0; }
+.class-agit-workbench .class-agit-brand h1 { overflow-wrap: anywhere; line-height: 1.5; }
+.class-agit-workbench-summary { margin: 14px 0 24px !important; color: var(--ca-muted); font-size: 13px; }
+.class-agit-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.class-agit-steps > button { display: flex; align-items: center; gap: 10px; text-align: left; padding: 15px 12px; min-width: 0; border: 1px solid #dce2d5; border-radius: 12px; background: #fffef9; color: #73806d; }
+.class-agit-steps > button[aria-selected='true'] { border-color: #355c46; background: #e9efdf; color: #234c37; box-shadow: inset 0 -3px #355c46; }
+.class-agit-steps strong { display: block; font-size: 14px; line-height: 1.6; }
+.class-agit-steps small { display: block; font-size: 11px; line-height: 1.6; margin-top: 3px; }
+.class-agit-step-number { display: grid; place-items: center; flex: 0 0 28px; height: 28px; border-radius: 50%; background: #f0f2e9; font-size: 13px; font-weight: 700; }
+.class-agit-steps [aria-selected='true'] .class-agit-step-number { background: #355c46; color: white; }
+.class-agit-step-panel { min-width: 0; padding: 12px 0 24px; }
+.class-agit-step-panel[hidden] { display: none !important; }
+.class-agit-step-heading { display: grid; gap: 9px; margin-bottom: 26px; }
+.class-agit-step-heading h2 { font-size: clamp(21px, 2.5cqw, 27px); line-height: 1.5; letter-spacing: -.03em; }
+.class-agit-step-heading p { color: var(--ca-muted); font-size: 14px; line-height: 1.8; }
+.class-agit-settings-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; align-items: start; }
+.class-agit-settings-card { display: grid; gap: 20px; padding: 25px; border: 1px solid var(--ca-line); border-radius: 14px; background: #fffef9; min-width: 0; }
+.class-agit-settings-card h3 { font-size: 17px; }
+.class-agit-settings-card > label { display: grid; gap: 10px; font-size: 14px; }
+.class-agit-settings-card textarea { resize: vertical; line-height: 1.8; }
+.class-agit-settings-card p { font-size: 13px; line-height: 1.8; color: var(--ca-muted); }
+.class-agit-settings-card .class-agit-access-toggle { display: flex; align-items: center; gap: 10px; font-weight: 650; }
+.class-agit-publication-actions, .class-agit-preview-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.class-agit-preview-toolbar { justify-content: space-between; margin-bottom: 24px; }
+.class-agit-exhibition-management { margin-top: 24px; font-size: 13px; color: var(--ca-muted); }
+.class-agit-exhibition-management summary { cursor: pointer; padding: 14px 0; }
+.class-agit-exhibition-management .class-agit-header-actions { justify-content: flex-start; }
+.class-agit-step-panel > .class-agit { padding: 0; border-radius: 0; }
+.class-agit-step-panel > .class-agit-gallery { min-height: 0; }
+.class-agit-step-panel > .class-agit > p { margin-bottom: 18px; line-height: 1.8; }
+.class-agit-step-panel .class-agit-order-panel > ol { max-height: 680px; overflow-y: auto; scrollbar-width: thin; }
+.class-agit-step-panel .class-agit-order-panel li { flex-wrap: wrap; gap: 12px; }
+.class-agit-step-panel .class-agit-order-panel li .class-agit-header-actions { gap: 6px; }
+.class-agit-step-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px 0 0; border-top: 1px solid var(--ca-line); }
+@container (max-width: 760px) {
+    .class-agit-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .class-agit-settings-layout { grid-template-columns: 1fr; gap: 16px; }
+    .class-agit-settings-card { padding: 20px; }
+}
+@container (max-width: 430px) {
+    .class-agit-steps > button { padding: 12px 9px; gap: 8px; }
+    .class-agit-steps small { display: none; }
+    .class-agit-steps strong { font-size: 13px; }
+    .class-agit-step-footer > .class-agit-header-actions { flex: 1 1 100%; justify-content: space-between; }
+}
 .class-agit-error { background: #ffede5; color: #99371c; padding: 12px; border-radius: 8px; }
 .class-agit-editor-tabs { display: flex; gap: 25px; border-bottom: 1px solid var(--ca-line); margin: 9px 0 25px; }
 .class-agit-editor-tabs button { border: 0; border-bottom: 3px solid transparent; padding: 14px 0; background: transparent; color: var(--ca-muted); font-size: 14px; }

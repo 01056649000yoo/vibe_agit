@@ -93,10 +93,16 @@ test('화면 충돌은 편집을 보존하고 공개판 이동·재조회에서 
     const editor = readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8');
     const host = readFileSync('src/modules/class-agit/teacher/TeacherEntry.jsx', 'utf8');
     const reader = readFileSync('src/modules/class-agit/teacher/PublishedExhibition.jsx', 'utf8');
-    assert.match(editor, /disabled=\{dirty\} onClick=\{\(\) => persistence\.openPublication\(\)\}/);
+    assert.match(editor, /disabled=\{dirty\} onClick=\{\(\) => setPreviewMode\('published'\)\}/);
     assert.match(editor, /persistence\.save\(draft, savedDraft\.revision\)/);
     assert.match(editor, /if \(!dirty \|\| await ask/);
-    assert.match(host, /!workspace\?\.draft && <button/);
+    assert.match(editor, /current = await saveDraft\(\); if \(!current\) return/);
+    assert.match(editor, /hidden=\{step !== 'share'\}/);
+    assert.match(editor, /shareState\.dirty \|\| shareState\.hasLink/);
+    for (const step of ['settings', 'works', 'preview', 'share']) assert(editor.includes(`id: '${step}'`));
+    assert.match(editor, /role="tablist" aria-label="전시 준비 단계"/);
+    assert.match(host, /renderShare:[\s\S]*embedded onStateChange=/);
+    assert.match(host, /!workspace\?\.draft && <Button/);
     assert.match(reader, /setPage\(null\); setError\(reason\.message\)/);
     assert.match(readFileSync('src/components/teacher/TeacherDashboard.jsx', 'utf8'), /TeacherClassAgitHub activeClass=\{activeClass\} allowInternal=\{isAdmin\}/);
 });

@@ -4,7 +4,7 @@ import GalleryRoom from './GalleryRoom.jsx';
 import ArtworkReader from './ArtworkReader.jsx';
 import '../classAgit.css';
 
-export default function GalleryViewer({ exhibition, onExit, initialWorkId }) {
+export default function GalleryViewer({ exhibition, onExit, initialWorkId, embedded = false }) {
     const rooms = arrangeGalleryRooms(exhibition.works);
     const [inGallery, setInGallery] = useState(Boolean(initialWorkId));
     const [roomIndex, setRoomIndex] = useState(() => Math.max(0, rooms.findIndex((room) => room.works.some((work) => work.id === initialWorkId))));
@@ -12,7 +12,7 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId }) {
     const [selectedId, setSelectedId] = useState(initialWorkId || null);
     const opener = useRef(null);
     const viewer = useRef(null);
-    useEffect(() => { viewer.current?.scrollIntoView({ block: 'start' }); }, [inGallery]);
+    useEffect(() => { if (!embedded) viewer.current?.scrollIntoView({ block: 'start' }); }, [inGallery, embedded]);
     useEffect(() => {
         if (selectedId) return;
         // dialog가 닫혀 배경의 inert 상태가 해제된 뒤 원래 액자에 초점을 돌린다.
@@ -29,7 +29,7 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId }) {
     };
     return <section ref={viewer} className="class-agit class-agit-gallery">
         <header className="class-agit-gallery__header">
-            <button type="button" className="class-agit-text-button" onClick={inGallery ? () => setInGallery(false) : onExit}>← {inGallery ? '전시 로비' : '전시 편집으로'}</button>
+            <button type="button" className="class-agit-text-button" onClick={inGallery ? () => setInGallery(false) : onExit}>← {inGallery ? '전시 로비' : embedded && exhibition.audience === 'class' ? '작품 선택·순서' : '전시 편집으로'}</button>
             <span className="class-agit-eyebrow">{exhibition.audience === 'external' ? '외부 방문자 미리보기 · 읽기 전용' : '학생 미리보기'}</span>
         </header>
         {!inGallery ? <div className="class-agit-lobby">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Button from '../../../components/common/Button.jsx';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
@@ -8,6 +9,7 @@ import { prepareAnthologyWindow } from './printWindow.js';
 import SourcePicker from './SourcePicker.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
+import '../management.css';
 
 export default function AnthologyManager({ activeClass, api = classAgitReleaseApi, sourceApi = classAgitApi, onExit }) {
     const [workspace, setWorkspace] = useState(null);
@@ -44,13 +46,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     });
     const move = (index, delta) => { const items = [...book.items]; const target = index + delta; if (target < 0 || target >= items.length) return; const item = items.splice(index, 1)[0]; items.splice(target, 0, item); edit({ ...book, grouping: 'custom', items }); };
     const selected = new Set(book?.items.map((item) => item.studentId));
-    return <section className="class-agit class-agit-books">
+    return <section className="class-agit class-agit-management class-agit-books">
         <header className="class-agit-project-heading"><div><span className="class-agit-eyebrow">우리반 아지트 · 학급 문집</span><h1>{book ? book.title : '우리 반의 책 만들기'}</h1></div>
-            <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit" variant="help" /><button type="button" disabled={busy} onClick={() => leave(() => { if (book) { setBook(null); setPicker(false); setProjects(null); } else onExit(); })}>{book ? '문집 목록' : '전시 관리로'}</button></div></header>
+            <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit" variant="help" /><Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => { if (book) { setBook(null); setPicker(false); setProjects(null); } else onExit(); })}>{book ? '문집 목록' : '전시 관리로'}</Button></div></header>
         {error && <p className="class-agit-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
         {!workspace && !error && <p role="status">문집을 불러오고 있습니다…</p>}
-        {!book && workspace && <><p>표지와 차례를 꾸미고 우리 반의 글을 한 권의 책으로 모아 보세요.</p><button type="button" className="class-agit-primary" disabled={busy || workspace.books.length >= 20} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); receive(await api.bookAction(classId, 'create', { book_id: createId.current })); createId.current = null; })}>새 문집 만들기</button>
-            <ul className="class-agit-projects">{workspace.books.map((entry) => <li key={entry.id}><strong>{entry.title}{entry.archived ? ' · 보관함' : ''}</strong><button type="button" disabled={busy} onClick={() => run(async () => receive(await api.getBooks(classId, entry.id)))}>문집 열기</button></li>)}</ul></>}
+        {!book && workspace && <><p>표지와 차례를 꾸미고 우리 반의 글을 한 권의 책으로 모아 보세요.</p><Button variant="primary" type="button" disabled={busy || workspace.books.length >= 20} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); receive(await api.bookAction(classId, 'create', { book_id: createId.current })); createId.current = null; })}>새 문집 만들기</Button>
+            <ul className="class-agit-projects">{workspace.books.map((entry) => <li key={entry.id}><strong>{entry.title}{entry.archived ? ' · 보관함' : ''}</strong><Button variant="outline" type="button" disabled={busy} onClick={() => run(async () => receive(await api.getBooks(classId, entry.id)))}>문집 열기</Button></li>)}</ul></>}
         {book && <>
             <div className="class-agit-book-layout"><div className="class-agit-book-cover" aria-label="문집 표지 미리보기"><span>{book.term || '우리 반의 이야기'}</span><h2>{book.title}</h2><p>{book.subtitle}</p><div aria-hidden="true">✦</div><p>{book.class_label}</p><small>{book.issue_date}</small></div>
                 <fieldset className="class-agit-book-settings" disabled={busy || book.archived}><legend>표지 · 여는 글</legend>
@@ -58,32 +60,32 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                     <label>발행일<input type="date" value={book.issue_date} onChange={(e) => edit({ ...book, issue_date: e.target.value })} /></label>
                     <label>여는 글<textarea value={book.introduction} maxLength={2000} rows={5} onChange={(e) => edit({ ...book, introduction: e.target.value })} /></label>
                 </fieldset></div>
-            <div className="class-agit-header-actions"><button type="button" disabled={busy || book.archived} onClick={() => setPicker(!picker)}>학생 글에서 담기</button>
-                <button type="button" disabled={busy || book.archived} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</button>
+            <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy || book.archived} onClick={() => setPicker(!picker)}>학생 글에서 담기</Button>
+                <Button variant="outline" type="button" disabled={busy || book.archived} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button>
                 <label>작품 묶기<select value={book.grouping} disabled={busy || book.archived} onChange={(e) => edit({ ...book, grouping: e.target.value, items: sortBookItems(book.items, e.target.value) })}><option value="custom">직접 정한 순서</option><option value="author">학생별</option><option value="topic">주제별</option></select></label></div>
-            {projects && <div className="class-agit-book-picker"><h2>가져올 전시</h2>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <button type="button" key={project.id} disabled={busy} onClick={() => run(async () => {
+            {projects && <div className="class-agit-book-picker"><h2>가져올 전시</h2>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <Button variant="outline" type="button" key={project.id} disabled={busy} onClick={() => run(async () => {
                 const data = await sourceApi.getWorkspace(classId, project.id);
                 const items = data.draft.items.filter((item) => !item.unavailable && !item.revoked).map((item) => ({ ...item, author: item.authorName, group: item.groupTitle || '', anthologyConfirmed: false }));
                 const next = addBookItems(book, items); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); setProjects(null); setMessage('전시 작품을 가져왔습니다. 문집 수록 의사를 별도로 확인해 주세요.');
-            })}>{project.title} 가져오기</button>)}<button type="button" onClick={() => setProjects(null)}>가져오기 닫기</button></div>}
+            })}>{project.title} 가져오기</Button>)}<Button variant="outline" type="button" onClick={() => setProjects(null)}>가져오기 닫기</Button></div>}
             {picker && <SourcePicker classId={classId} api={sourceApi} onClose={() => setPicker(false)} onAdd={(value) => { const next = addBookItems(book, [bookItemFromSource(value, classId, true)]); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); }} />}
-            <div className="class-agit-project-heading"><h2>차례 · {book.items.length}편</h2>{book.items.some((item) => !item.anthologyConfirmed) && <button type="button" disabled={busy || book.archived} onClick={async () => { if (await ask({ title: '가져온 작품의 문집 수록 의사를 모두 확인했나요?', body: '학급 전시 확인과 문집 수록 확인은 별개입니다. 각 작품의 내용을 확인한 뒤 진행해 주세요.' })) edit({ ...book, items: book.items.map((item) => ({ ...item, anthologyConfirmed: true })) }); }}>문집 수록 의사 일괄 확인</button>}</div>
+            <div className="class-agit-project-heading"><h2>차례 · {book.items.length}편</h2>{book.items.some((item) => !item.anthologyConfirmed) && <Button variant="outline" type="button" disabled={busy || book.archived} onClick={async () => { if (await ask({ title: '가져온 작품의 문집 수록 의사를 모두 확인했나요?', body: '학급 전시 확인과 문집 수록 확인은 별개입니다. 각 작품의 내용을 확인한 뒤 진행해 주세요.' })) edit({ ...book, items: book.items.map((item) => ({ ...item, anthologyConfirmed: true })) }); }}>문집 수록 의사 일괄 확인</Button>}</div>
             <ol className="class-agit-book-items">{book.items.map((item, index) => <li key={item.itemId || item.sourceId}><div><strong>{item.title}</strong><p>{item.author} · {item.group}</p>{(item.sourceChanged || item.unavailable || item.revoked) && <span className="class-agit-error">원글 재확인 필요</span>}{!item.anthologyConfirmed && <span>문집 수록 의사 확인 필요</span>}</div>
-                <div className="class-agit-header-actions"><button type="button" onClick={() => setSource({ ...item, id: item.itemId || item.sourceId })}>읽기</button>
-                    <button type="button" disabled={busy || !item.sourceId || book.archived} onClick={() => run(async () => { const current = await sourceApi.getSource(classId, item.sourceId); setSource({ ...bookItemFromSource(current, classId), id: item.sourceId, refreshing: true }); })}>원글 재확인</button>
-                    <button type="button" aria-label={`${item.title} 위로`} disabled={busy || book.archived || index === 0} onClick={() => move(index, -1)}>↑</button><button type="button" aria-label={`${item.title} 아래로`} disabled={busy || book.archived || index === book.items.length - 1} onClick={() => move(index, 1)}>↓</button>
-                    <button type="button" disabled={busy || book.archived} onClick={() => edit({ ...book, items: book.items.filter((_, i) => i !== index) })}>초안에서 빼기</button>
-                    {item.itemId && <button type="button" disabled={busy || dirty || item.revoked} onClick={() => act('withdraw', { item_id: item.itemId })}>수록 철회</button>}</div></li>)}</ol>
+                <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setSource({ ...item, id: item.itemId || item.sourceId })}>읽기</Button>
+                    <Button variant="outline" type="button" disabled={busy || !item.sourceId || book.archived} onClick={() => run(async () => { const current = await sourceApi.getSource(classId, item.sourceId); setSource({ ...bookItemFromSource(current, classId), id: item.sourceId, refreshing: true }); })}>원글 재확인</Button>
+                    <Button variant="outline" type="button" aria-label={`${item.title} 위로`} disabled={busy || book.archived || index === 0} onClick={() => move(index, -1)}>↑</Button><Button variant="outline" type="button" aria-label={`${item.title} 아래로`} disabled={busy || book.archived || index === book.items.length - 1} onClick={() => move(index, 1)}>↓</Button>
+                    <Button variant="outline" type="button" disabled={busy || book.archived} onClick={() => edit({ ...book, items: book.items.filter((_, i) => i !== index) })}>초안에서 빼기</Button>
+                    {item.itemId && <Button variant="outline" type="button" disabled={busy || dirty || item.revoked} onClick={() => act('withdraw', { item_id: item.itemId })}>수록 철회</Button>}</div></li>)}</ol>
             <p>아직 작품이 없는 학생: {workspace.students.filter((student) => !selected.has(student.id)).map((student) => student.name).join(', ') || '모두 수록했습니다.'}</p>
-            <div className="class-agit-header-actions"><button type="button" className="class-agit-primary" disabled={busy || !dirty || book.archived} onClick={() => run(async () => { receive(await api.saveBook(classId, book)); setMessage('문집 초안을 저장했습니다.'); })}>문집 초안 저장</button>
-                <button type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => printEdition()}>초안 A4 미리보기</button>
-                <button type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</button>
-                <button type="button" disabled={busy} onClick={() => leave(() => run(async () => receive(await api.getBooks(classId, book.id))))}>최신 문집 불러오기</button>
-                <button type="button" disabled={busy || dirty} onClick={() => act(book.archived ? 'restore' : 'archive')}>{book.archived ? '문집 복원' : '문집 보관'}</button></div>
+            <div className="class-agit-header-actions"><Button variant="primary" type="button" disabled={busy || !dirty || book.archived} onClick={() => run(async () => { receive(await api.saveBook(classId, book)); setMessage('문집 초안을 저장했습니다.'); })}>문집 초안 저장</Button>
+                <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => printEdition()}>초안 A4 미리보기</Button>
+                <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</Button>
+                <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => run(async () => receive(await api.getBooks(classId, book.id))))}>최신 문집 불러오기</Button>
+                <Button variant="outline" type="button" disabled={busy || dirty} onClick={() => act(book.archived ? 'restore' : 'archive')}>{book.archived ? '문집 복원' : '문집 보관'}</Button></div>
             <h2>확정판 보관함</h2><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다.</p>
-            <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><button type="button" disabled={busy} onClick={() => printEdition(edition)}>A4 미리보기 · PDF 저장</button><button type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</button></div></li>)}</ul>
+            <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>A4 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
         </>}
-        {source && <ArtworkReader work={source} onClose={() => setSource(null)} footer={source.refreshing ? <button type="button" className="class-agit-primary" onClick={() => { edit({ ...book, items: book.items.map((item) => item.sourceId === source.sourceId ? { ...source, itemId: item.itemId, anthologyConfirmed: true } : item) }); setSource(null); }}>이 내용의 문집 수록 의사를 다시 확인하고 반영</button> : <button type="button" onClick={() => setSource(null)}>읽기 닫기</button>} />}
+        {source && <ArtworkReader work={source} onClose={() => setSource(null)} footer={source.refreshing ? <Button variant="primary" type="button" onClick={() => { edit({ ...book, items: book.items.map((item) => item.sourceId === source.sourceId ? { ...source, itemId: item.itemId, anthologyConfirmed: true } : item) }); setSource(null); }}>이 내용의 문집 수록 의사를 다시 확인하고 반영</Button> : <Button variant="outline" type="button" onClick={() => setSource(null)}>읽기 닫기</Button>} />}
         {confirmDialog}
     </section>;
 }

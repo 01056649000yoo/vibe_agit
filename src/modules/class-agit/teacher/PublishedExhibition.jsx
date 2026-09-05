@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Button from '../../../components/common/Button.jsx';
 import GalleryRoom from '../gallery/GalleryRoom.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 
@@ -19,8 +20,8 @@ export default function PublishedExhibition({ classId, exhibitionId, api, onExit
     }, [api, classId, exhibitionId, room, reload]);
     const move = (next) => { setPage(null); setSelected(null); setRoom(next); };
     return <section className="class-agit">
-        <div className="class-agit-live-toolbar"><button type="button" className="class-agit-text-button" onClick={onExit}>← 전시 편집으로</button>
-            <strong>저장된 학급 공개판</strong><button type="button" className="class-agit-secondary" onClick={() => { setPage(null); setReload((n) => n + 1); }}>공개 상태 다시 확인</button></div>
+        <div className="class-agit-live-toolbar"><Button type="button" variant="ghost" onClick={onExit}>← 전시 편집으로</Button>
+            <strong>저장된 학급 공개판</strong><Button type="button" variant="outline" onClick={() => { setPage(null); setReload((n) => n + 1); }}>공개 상태 다시 확인</Button></div>
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {!page && !error && <p role="status">공개판을 확인하고 있습니다…</p>}
         {page && <><h1>{page.exhibition.title}</h1><p>{page.exhibition.introduction}</p>
