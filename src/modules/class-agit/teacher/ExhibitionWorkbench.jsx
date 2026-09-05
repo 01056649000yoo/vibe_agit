@@ -103,9 +103,11 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
         try { setDraft(editExhibition(draft, change)); setMessage(''); setError(''); }
         catch (reason) { setError(reason.message); }
     };
+    // 공개는 이 화면의 결승점이라 어느 단계에서든 상태가 보이고, 마지막 단계가 공개로 끝나야 한다.
+    const publishBlocked = dirty || draft.state === 'archived' || !draft.items.length || !persistence?.moduleEnabled || blockedWorks || unassigned;
+    const publishButton = (variant = 'primary') => <Button variant={variant} type="button" disabled={publishBlocked} onClick={() => runSavedAction('publish')}>{draft.publicationNo ? '공개판 갱신' : '학급에 공개'}</Button>;
     const publicationActions = persistence && <div className="class-agit-publication-actions">
-        <span className="class-agit-tag">{draft.state === 'published' ? `${draft.publicationNo}판 · 학급 공개 중` : draft.state === 'archived' ? '보관한 전시' : '비공개 초안'}</span>
-        <Button variant="primary" type="button" disabled={dirty || draft.state === 'archived' || !draft.items.length || !persistence.moduleEnabled || blockedWorks || unassigned} onClick={() => runSavedAction('publish')}>{draft.publicationNo ? '공개판 갱신' : '학급에 공개'}</Button>
+        {publishButton()}
         {draft.state === 'published' && <Button variant="outline" type="button" disabled={dirty} onClick={() => runSavedAction('unpublish')}>공개 중단</Button>}
     </div>;
 
@@ -116,7 +118,8 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
                 <div className="class-agit-brand"><span aria-hidden="true">✦</span><div><p>{activeClass?.name || '우리 반'} · 전시 준비</p><h1>{draft.title || '새 전시'}</h1></div></div>
                 <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit" variant="help" />{persistence && <Button variant="ghost" type="button" onClick={exit}>← 전시 목록</Button>}</div>
             </header>
-            <p className="class-agit-workbench-summary">{draft.items.length}편의 작품 · {rooms.length}개 전시실 · {selectedStudents.size}명의 작가</p>
+            <p className="class-agit-workbench-summary">{draft.items.length}편의 작품 · {rooms.length}개 전시실 · {selectedStudents.size}명의 작가
+                {persistence && <span className="class-agit-publication-state" data-open={draft.state === 'published'}>{draft.state === 'published' ? `${draft.publicationNo}판 · 학급 공개 중` : draft.state === 'archived' ? '보관한 전시' : '비공개 초안 · 학생은 아직 볼 수 없어요'}</span>}</p>
             <div className="class-agit-steps" role="tablist" aria-label="전시 준비 단계">
                 {EXHIBITION_STEPS.map((entry, index) => <button key={entry.id} ref={(node) => { tabs.current.set(index, node); }} type="button" role="tab"
                     id={`${stepId}-tab-${entry.id}`} aria-controls={`${stepId}-panel-${entry.id}`} aria-selected={step === entry.id} tabIndex={step === entry.id ? 0 : -1}
@@ -172,13 +175,20 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
 
             <div role="tabpanel" id={`${stepId}-panel-share`} aria-labelledby={`${stepId}-tab-share`} hidden={step !== 'share'} className="class-agit-step-panel">
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>전시에 담은 전체 작품의 외부 미리보기를 확인하고 전시 기간과 공유 주소를 관리합니다.</p></div>
+                {/* 외부 공유와 학급 공개는 다른 스위치다. 주소만 내고 학급에는 안 열어 둔 채 끝나는 일이 실제로 있었다. */}
+                {persistence && draft.state !== 'published' && <div className="class-agit-publish-reminder" role="status">
+                    <p><strong>아직 학급에 공개하지 않았습니다.</strong> 외부 주소를 만들어도 우리 반 학생은 이 전시를 볼 수 없어요.</p>
+                    {publishButton('primary')}
+                    {publishBlocked && <p>{!persistence.moduleEnabled ? '1단계에서 학급 학생 공개를 먼저 켜 주세요.' : !draft.items.length ? '2단계에서 작품을 담으면 공개할 수 있습니다.' : unassigned ? '2단계에서 미배정 작품을 전시실에 넣어 주세요.' : blockedWorks ? '2단계에서 상태가 바뀐 작품을 확인해 주세요.' : dirty ? '편집 내용을 먼저 저장해 주세요.' : '보관한 전시는 복원한 뒤 공개할 수 있습니다.'}</p>}
+                </div>}
                 {persistence ? (shareRevision !== null && (persistence.renderShare ? persistence.renderShare({ key: shareRevision, onStateChange: setShareState }) : <p className="class-agit-empty">이 샘플은 저장·학급 공개까지 점검합니다. 문집·외부 공유 통합 샘플에서 주소 설정을 확인할 수 있습니다.</p>))
                     : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 전시에 담은 전체 작품의 제목과 지은이를 미리 봅니다.</p><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
             </div>
 
             <footer className="class-agit-step-footer"><Button variant="ghost" type="button" disabled={stepIndex === 0} onClick={() => selectStep(EXHIBITION_STEPS[stepIndex - 1].id)}>← 이전 단계</Button>
                 <div className="class-agit-header-actions">{step !== 'share' && <Button variant="outline" type="button" disabled={!draft.title.trim()} onClick={saveDraft}>{persistence ? '초안 저장' : '시안 초안 보관'}</Button>}
-                    {stepIndex < EXHIBITION_STEPS.length - 1 ? <Button variant="primary" type="button" onClick={() => selectStep(EXHIBITION_STEPS[stepIndex + 1].id, true)}>{dirty ? '저장 후 ' : ''}{EXHIBITION_STEPS[stepIndex + 1].title} →</Button> : persistence && <Button variant="outline" type="button" onClick={exit}>전시 목록으로</Button>}
+                    {stepIndex < EXHIBITION_STEPS.length - 1 ? <Button variant="primary" type="button" onClick={() => selectStep(EXHIBITION_STEPS[stepIndex + 1].id, true)}>{dirty ? '저장 후 ' : ''}{EXHIBITION_STEPS[stepIndex + 1].title} →</Button>
+                        : persistence && (draft.state === 'published' ? <Button variant="outline" type="button" onClick={exit}>전시 목록으로</Button> : publishButton())}
                 </div>
             </footer>
         </fieldset>

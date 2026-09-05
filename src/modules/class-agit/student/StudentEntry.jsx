@@ -70,11 +70,21 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
         {current.error && <p className="class-agit-error" role="alert">{current.error}</p>}
         {current.loading && <p role="status">전시를 확인하고 있어요…</p>}
         {mode === 'list' ? <>
-            <span className="class-agit-eyebrow">우리반 아지트</span><h1 tabIndex={-1}>우리 반의 글 전시</h1><p>우리 반 작가들의 문장을 천천히 만나 보세요.</p><button type="button" className="class-agit-primary" onClick={() => navigate({ mode: 'books' })}>우리 반 문집 서가 ↗</button>
-            {list.data && <div className="class-agit-student-exhibitions">{list.data.exhibitions.map((exhibition) => <button type="button" className="class-agit-exhibition-card" key={exhibition.id} onClick={() => navigate({ exhibitionId: exhibition.id })}>
-                <span aria-hidden="true">✦</span><small>{exhibition.publication_no}판</small><h2>{exhibition.title}</h2><p>{exhibition.introduction}</p><strong>전시 둘러보기 ↗</strong>
-            </button>)}</div>}
-            {list.data?.exhibitions.length === 0 && <p className="class-agit-empty">아직 열린 전시가 없어요. 선생님이 전시를 준비하면 여기에서 만날 수 있어요.</p>}
+            <span className="class-agit-eyebrow">우리반 아지트</span><h1 tabIndex={-1}>우리 반의 글</h1><p>선생님이 열어 준 전시관과 서가에서 우리 반 작가들의 문장을 만나 보세요.</p>
+            {/* 전시관은 선생님이 다시 꾸미면 바뀌고, 문집은 확정한 판이 그대로 남는다. 학생에게도 그 차이를 말로 알려 준다. */}
+            <section className="class-agit-student-shelf" aria-labelledby="class-agit-gallery-heading">
+                <h2 id="class-agit-gallery-heading">🖼 글 전시관</h2>
+                <p>선생님이 고른 글을 전시실에 걸어 둔 곳이에요. 선생님이 새로 꾸미면 걸린 글도 바뀌어요.</p>
+                {list.data && <div className="class-agit-student-exhibitions">{list.data.exhibitions.map((exhibition) => <button type="button" className="class-agit-exhibition-card" key={exhibition.id} onClick={() => navigate({ exhibitionId: exhibition.id })}>
+                    <span aria-hidden="true">✦</span><small>{exhibition.publication_no}판</small><h3>{exhibition.title}</h3><p>{exhibition.introduction}</p><strong>전시 둘러보기 ↗</strong>
+                </button>)}</div>}
+                {list.data?.exhibitions.length === 0 && <p className="class-agit-empty">아직 열린 전시가 없어요. 선생님이 전시를 준비하면 여기에서 만날 수 있어요.</p>}
+            </section>
+            <section className="class-agit-student-shelf" aria-labelledby="class-agit-books-heading">
+                <h2 id="class-agit-books-heading">📚 문집 서가</h2>
+                <p>우리 반의 글을 한 권으로 묶어 확정한 책이에요. 한번 나온 판은 그대로 남아서 언제든 같은 내용을 다시 읽을 수 있어요.</p>
+                <button type="button" className="class-agit-primary" onClick={() => navigate({ mode: 'books' })}>서가에서 문집 고르기 ↗</button>
+            </section>
         </> : roomData && <>
             {mode === 'lobby' ? <div className="class-agit-lobby">
                 <div className="class-agit-lobby__copy"><span className="class-agit-eyebrow">우리반 아지트 · 글 전시관</span><h1 tabIndex={-1}>{roomData.title}</h1><p>{roomData.introduction}</p>

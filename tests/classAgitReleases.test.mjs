@@ -145,3 +145,32 @@ test('전시 입구와 개인정보처리방침·약관은 같은 작품 보호 
     for (const code of [readFileSync('src/components/layout/PrivacyPolicy.jsx', 'utf8'), readFileSync('src/components/layout/TermsOfService.jsx', 'utf8')]) assert.match(code, /EXHIBITION_RIGHTS.notice/);
     for (const code of [readFileSync('src/modules/class-agit/public/ShareManager.jsx', 'utf8'), readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8')]) assert.doesNotMatch(code, /외부 공개에 포함|ExternalWorkSettings|changeItem\(/);
 });
+
+test('학급 공개 상태는 모든 단계에서 보이고 마지막 단계가 공개로 끝난다', () => {
+    const source = readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8');
+    // 상태 꼬리표가 요약줄에 있어야 4단계 어디서든 비공개인지 알 수 있다.
+    const summary = source.slice(source.indexOf('class-agit-workbench-summary'), source.indexOf('class-agit-steps'));
+    assert.match(summary, /class-agit-publication-state/);
+    assert.match(summary, /비공개 초안 · 학생은 아직 볼 수 없어요/);
+    // 마지막 단계 기본 버튼은 공개 전이면 '전시 목록으로'가 아니라 공개여야 한다.
+    const footer = source.slice(source.indexOf('class-agit-step-footer'));
+    assert.match(footer, /draft.state === 'published' \? <Button[^>]*>전시 목록으로<\/Button>\s*:\s*publishButton\(\)/);
+    // 외부 공유 단계에는 학급 공개가 아직 안 됐다는 안내와 그 자리에서 누를 버튼이 있어야 한다.
+    const share = source.slice(source.indexOf("panel-share"), source.indexOf('class-agit-step-footer'));
+    assert.match(share, /class-agit-publish-reminder/);
+    assert.match(share, /아직 학급에 공개하지 않았습니다/);
+    assert.match(share, /publishButton\('primary'\)/);
+    // 공개 조건은 한 곳에서만 정한다.
+    assert.equal(source.match(/const publishBlocked =/g).length, 1);
+});
+test('학생 화면은 전시관과 문집 서가를 나누어 게시 방식의 차이를 알려 준다', () => {
+    const source = readFileSync('src/modules/class-agit/student/StudentEntry.jsx', 'utf8');
+    const gallery = source.slice(source.indexOf('class-agit-gallery-heading'), source.indexOf('class-agit-books-heading'));
+    assert.match(gallery, /글 전시관/);
+    assert.match(gallery, /새로 꾸미면 걸린 글도 바뀌어요/);
+    const books = source.slice(source.indexOf('class-agit-books-heading'));
+    assert.match(books, /문집 서가/);
+    assert.match(books, /한번 나온 판은 그대로 남아서/);
+    assert.equal((source.match(/class-agit-student-shelf/g) || []).length, 2);
+    assert.match(readFileSync('src/modules/class-agit/anthology/StudentBooks.jsx', 'utf8'), /확정한 판이 그대로 남아 있어요/);
+});

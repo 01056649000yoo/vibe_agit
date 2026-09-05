@@ -75,6 +75,12 @@
 .class-agit-settings-card p { font-size: 13px; line-height: 1.8; color: var(--ca-muted); }
 .class-agit-settings-card .class-agit-access-toggle { display: flex; align-items: center; gap: 10px; font-weight: 650; }
 .class-agit-publication-actions, .class-agit-preview-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.class-agit-publication-state { display: inline-block; margin-left: 10px; padding: 4px 11px; border-radius: 20px; font-weight: 700;
+    background: #fdf2d8; border: 1px solid #e0bf72; color: #8a5f14; }
+.class-agit-publication-state[data-open='true'] { background: #e9efdf; border-color: #9db98a; color: #234c37; }
+.class-agit-publish-reminder { display: grid; justify-items: start; gap: 10px; margin-bottom: 20px; padding: 16px 18px;
+    border: 1px solid #e0bf72; border-left: 5px solid #e0bf72; border-radius: 12px; background: #fdf8ec; }
+.class-agit-publish-reminder p { margin: 0; line-height: 1.7; color: #6f5312; }
 .class-agit-preview-toolbar { justify-content: space-between; margin-bottom: 24px; }
 .class-agit-exhibition-management { margin-top: 24px; font-size: 13px; color: var(--ca-muted); }
 .class-agit-exhibition-management summary { cursor: pointer; padding: 14px 0; }
@@ -181,6 +187,10 @@
 .class-agit-external-fields input:not([type='checkbox']) { max-width: 160px; margin-top: 4px; }
 .class-agit input[type='checkbox'], .class-agit-reader input[type='checkbox'] { accent-color: #385a46; width: 18px; height: 18px; flex-shrink: 0; }
 .class-agit-empty { padding: 40px; text-align: center; }
+.class-agit-student-shelf { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid var(--ca-line); }
+.class-agit-student-shelf > h2 { font-size: 19px; line-height: 1.5; }
+.class-agit-student-shelf > p { margin: 8px 0 16px; line-height: 1.8; color: var(--ca-muted); }
+.class-agit-student-shelf .class-agit-exhibition-card h3 { font-size: 17px; line-height: 1.5; }
 .class-agit-gallery { min-height: 650px; scroll-margin-top: 85px; }
 .class-agit-gallery__header { border-bottom: 1px solid var(--ca-line); padding-bottom: 15px; }
 .class-agit-gallery__title { margin-top: 25px; }.class-agit-gallery__title h1 { font-family: Georgia, 'Noto Serif KR', serif; font-size: 30px; margin-top: 8px; overflow-wrap: anywhere; }
