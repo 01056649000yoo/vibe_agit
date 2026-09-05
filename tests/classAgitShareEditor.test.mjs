@@ -87,6 +87,10 @@ test('공유 주소는 샘링크가 쓰는 방식 그대로 4자로 발급하고
     assert.equal(alphabet.length, 32);
     assert.ok(sql.includes(`'${alphabet}'`), '샘링크 알파벳과 다릅니다.');
     assert.ok(sql.includes(`THEN ${length} ELSE 6 END`), '샘링크 기본 길이와 다릅니다.');
+    // 61251부터 전시 주소만 길게 쓴다. 알파벳은 계속 샘링크와 같아야 한다.
+    const longer = readFileSync('supabase/migrations/20261251_class_agit_longer_share_slug.sql', 'utf8');
+    assert.ok(longer.includes(`'${alphabet}'`) === false, '알파벳은 slug 생성 함수 한 곳에만 있어야 합니다.');
+    assert.match(longer, /THEN 8 ELSE 10 END/);
     // 샘링크 저장소가 있는 곳(맥미니)에서는 원본과 갈라졌는지까지 본다.
     const source = `${homedir()}/URL/lib/slug.ts`;
     // 경로는 홈 디렉터리 + 고정 문자열뿐이고 검사에서만 읽는다(사용자 입력이 섞이지 않는다).
@@ -102,6 +106,19 @@ test('공유 주소는 샘링크가 쓰는 방식 그대로 4자로 발급하고
     assert.match(sql, /DROP FUNCTION IF EXISTS public.class_agit_samlink_slug_v1\(\);/);
     assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_samlink_slug_v1\(INTEGER\) FROM PUBLIC,anon,authenticated,service_role/);
     assert.match(sql, /'https:\/\/xn--vz0ba242ncqcba79xhwx.site\/exhibition#'\|\|p_token/);
+});
+test('전시 주소는 전체 교사 공개에 대비해 샘링크 기본보다 길게 발급한다', () => {
+    const sql = readFileSync('supabase/migrations/20261251_class_agit_longer_share_slug.sql', 'utf8');
+    // 4자(32^4)는 살아 있는 전시 주소가 수십 개가 되면 아무 주소나 찍어 닿을 수 있다. 방문 경로에는 속도 제한이 없다.
+    assert.match(sql, /THEN 8 ELSE 10 END/);
+    assert.doesNotMatch(sql, /THEN 4 ELSE/);
+    assert.equal(32 ** 8 > 1e12, true);
+    // 목적지·주인·예약어·권한 계약은 그대로다.
+    assert.match(sql, /'https:\/\/xn--vz0ba242ncqcba79xhwx.site\/exhibition#'\|\|p_token/);
+    assert.match(sql, /created_by,display_label\)/);
+    assert.match(sql, /'agit-exhibition','아지트 글 전시관'/);
+    assert.match(sql, /CONTINUE WHEN slug=ANY\(reserved\)/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_create_samlink_v1\(UUID,UUID,TEXT\) FROM PUBLIC,anon,authenticated,service_role/);
 });
 test('샘링크에 남기는 주인 표시자는 서명 기기 쿠키 형식과 겹치지 않는다', () => {
     const sql = readFileSync('supabase/migrations/20261250_class_agit_samlink_native_slug.sql', 'utf8');

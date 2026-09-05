@@ -9,6 +9,7 @@ import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js
 import { createShareToken, validShareToken, buildShareUrl, assertPublicGalleryResponse } from '../src/modules/class-agit/public/publicApi.js';
 import { previewSources, previewClass } from '../src/dev/fixtures/classAgitFixtures.js';
 import { BOOK_PAPERS, GALLERY_THEMES, bookCoverStyle, galleryCoverStyle } from '../src/modules/class-agit/designs.js';
+import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
 const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8') + readFileSync('supabase/migrations/20261242_class_agit_120_works.sql', 'utf8') + readFileSync('supabase/migrations/20261243_class_agit_frozen_public_reads.sql', 'utf8');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';
 const editionId = '11111111-1111-4111-8111-111111111111';
@@ -198,4 +199,33 @@ test('학생 첫 화면의 전시 표지와 문집 표지는 같은 종이 비�
     assert.match(source, /\{exhibition.introduction && <p>\{exhibition.introduction\}<\/p>\}/);
     const css = readFileSync('src/modules/class-agit/classAgit.css', 'utf8');
     assert.match(css, /\.class-agit-student-shelf \.class-agit-student-exhibitions \{ grid-template-columns/);
+});
+
+test('전체 교사 공개 단계는 승인 교사만 열고 학급 모듈 스위치는 그대로 둔다', () => {
+    const open = readFileSync('supabase/migrations/20261252_class_agit_open_rollout.sql', 'utf8');
+    assert.match(open, /CHECK\(mode IN\('internal','pilot','open','disabled'\)\)/);
+    // open 은 지정 목록 없이 열되 승인·담임·삭제 검사는 그대로 통과해야 한다.
+    assert.match(open, /r\.mode='open' AND p\.role IN\('ADMIN','TEACHER'\)/);
+    assert.match(open, /c\.deleted_at IS NULL AND p\.is_approved IS TRUE/);
+    assert.doesNotMatch(open, /r\.mode='open'[^)]*class_agit_pilot_classes/);
+    // 학급마다 교사가 켜는 스위치(class_agit_class_is_open_v1)는 건드리지 않는다.
+    assert.doesNotMatch(open, /CREATE OR REPLACE FUNCTION public\.class_agit_class_is_open_v1/);
+    // 관리 RPC 가 새 단계를 받아야 관리자가 되돌릴 수 있다.
+    assert.match(open, /NOT IN\('internal','pilot','open','disabled'\)/);
+    assert.match(open, /'mode'='pilot' AND jsonb_array_length\(p_payload->'class_ids'\)=0/);
+    assert.match(open, /UPDATE public\.class_agit_rollout SET mode='open'[\s\S]*?WHERE singleton AND mode='pilot'/);
+    // 관리자 전용 유지.
+    assert.match(open, /관리자만 공개 단계를 관리할 수 있습니다/);
+    assert.match(open, /GRANT EXECUTE ON FUNCTION public\.manage_class_agit_rollout_v1\(JSONB\) TO authenticated/);
+});
+test('공개 단계 화면과 도움말이 전체 교사 공개를 함께 안내한다', () => {
+    const ui = readFileSync('src/modules/class-agit/teacher/RolloutManager.jsx', 'utf8');
+    assert.match(ui, /<option value="open">전체 교사 공개<\/option>/);
+    assert.match(ui, /지정 학급 목록은 그대로 두므로/);
+    for (const mode of ['internal', 'pilot', 'open', 'disabled']) assert.ok(ui.includes(`value="${mode}"`), `${mode} 선택지가 없습니다.`);
+    const guide = JSON.stringify(TEACHER_GUIDES['class-agit']);
+    assert.match(guide, /전체 교사 공개/);
+    assert.match(guide, /학급 학생 공개 켜기/);
+    // 옛 제한 운영 설명이 남아 있으면 안 된다.
+    assert.doesNotMatch(guide, /관리자가 지정한 학급에서 제한 운영/);
 });
