@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createShareDraft, moveShareWork, prepareShareWorks, samlinkShareUrl } from '../src/modules/class-agit/public/sharingPolicy.js';
+import { createShareDraft, moveShareWork, moveShareWorkOrder, prepareShareWorks, samlinkShareUrl } from '../src/modules/class-agit/public/sharingPolicy.js';
 import { createClassAgitReleaseFixture } from '../src/dev/fixtures/classAgitReleaseFixture.js';
 const rooms = [{ id: 'first', title: '봄', introduction: '', variant: 0 }, { id: 'second', title: '여름', introduction: '', variant: 1 }];
 const data = (count = 2) => ({ rooms, candidates: Array.from({ length: count }, (_, i) => ({ itemId: `i-${i}`, title: `글 ${i}`, authorName: `학생 ${i}`, publicAlias: '옛 익명 이름', sourceRevision: 'v1', roomId: i === 0 ? 'first' : 'second' })) });
@@ -52,9 +52,25 @@ test('표 편집→발행→재접속→방문자 감상에 수정 표시와 주
     assert.equal(publicRoom.rooms[0].title, '우리의 주제');
     assert.notEqual((await sourceApi.getWorkspace('sample-class-agit', id)).draft.items[0].title, '내가 정한 제목');
 });
-test('샘링크 연결은 고정 목적지·144비트 slug·같은 트랜잭션과 비공개 도우미로 제한한다', () => {
+test('전시실 안에서만 순서를 바꾸고 공개 순번은 전시실 차례대로 다시 매긴다', () => {
+    const draft = createShareDraft(data(4));
+    const moved = moveShareWorkOrder(draft, 'i-3', 1);
+    assert.deepEqual(prepareShareWorks(moved.items, rooms).map((item) => item.itemId), ['i-0', 'i-3', 'i-1', 'i-2']);
+    assert.deepEqual(moveShareWorkOrder(draft, 'i-1', 1).items, draft.items);
+    for (const position of [0, 4, -1, NaN, Infinity]) assert.deepEqual(moveShareWorkOrder(draft, 'i-3', position).items, draft.items);
+    assert.deepEqual(prepareShareWorks(draft.items, rooms).map((item) => item.itemId), ['i-0', 'i-1', 'i-2', 'i-3']);
+});
+test('공개 작품 확인은 전시실 카드와 모달로 나눠 순서까지 조절한다', () => {
+    const source = readFileSync('src/modules/class-agit/public/ShareWorkTable.jsx', 'utf8');
+    assert.match(source, /class-agit-share-room-cards/);
+    assert.match(source, /aria-haspopup="dialog"/);
+    assert.match(source, /<Modal isOpen=\{!!open\}/);
+    assert.match(source, /moveShareWorkOrder\(draft, item.itemId, index\)/);
+    assert.match(source, /moveShareWorkOrder\(draft, item.itemId, index \+ 2\)/);
+    for (const column of ['작품 제목', '지은이', '전시 주제']) assert.ok(source.includes(column), `${column} 열이 없습니다.`);
+});
+test('샘링크 연결은 고정 목적지·비공개 도우미·기간 동기화를 지킨다', () => {
     const sql = readFileSync('supabase/migrations/20261248_class_agit_share_editor_samlink.sql', 'utf8');
-    assert.match(sql, /extensions\.gen_random_bytes\(18\)/);
     assert.match(sql, /INSERT INTO samlink\.short_links/);
     assert.match(sql, /https:\/\/xn--vz0ba242ncqcba79xhwx.site\/exhibition#/);
     assert.doesNotMatch(sql, /p_payload->>'destination'/);
@@ -62,4 +78,16 @@ test('샘링크 연결은 고정 목적지·144비트 slug·같은 트랜잭션�
     assert.match(sql, /UPDATE samlink\.short_links SET expires_at=NEW.expires_at/);
     assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_create_samlink_v1\(UUID,UUID,TEXT\) FROM PUBLIC,anon,authenticated,service_role/);
     assert.match(sql, /mode='pilot' AND external_enabled IS FALSE/);
+});
+test('공유 주소는 헷갈리는 글자를 뺀 10자 난수로 짧게 만든다', () => {
+    const sql = readFileSync('supabase/migrations/20261249_class_agit_short_samlink_slug.sql', 'utf8');
+    // 사람이 고르는 낱말을 쓰면 주소만으로 남의 반 전시를 열 수 있다.
+    assert.match(sql, /extensions\.gen_random_bytes\(10\)/);
+    assert.match(sql, /'0123456789abcdefghjkmnpqrstvwxyz'/);
+    assert.doesNotMatch(sql, /'e-'\|\|/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_samlink_slug_v1\(\) FROM PUBLIC,anon,authenticated,service_role/);
+    assert.match(sql, /'https:\/\/xn--vz0ba242ncqcba79xhwx.site\/exhibition#'\|\|p_token/);
+    const alphabet = sql.match(/'0123456789abcdefghjkmnpqrstvwxyz'/g);
+    assert.equal(new Set(alphabet[0].slice(1, -1)).size, 32);
+    for (const confusable of ['i', 'l', 'o', 'u']) assert.ok(!alphabet[0].slice(1, -1).includes(confusable), `${confusable}는 빼야 합니다.`);
 });

@@ -25,6 +25,17 @@ export function prepareShareWorks(items, rooms) {
 export function moveShareWork(draft, itemId, roomId) {
     return assertRoomDraft({ ...draft, items: draft.items.map((item) => item.itemId === itemId ? { ...item, roomId } : item) });
 }
+// 순서는 전시실 안에서만 바꾼다. 공개 순번은 전시실 차례대로 다시 매긴다.
+export function moveShareWorkOrder(draft, itemId, position) {
+    const roomId = draft.items.find((item) => item.itemId === itemId)?.roomId ?? null;
+    const inRoom = draft.items.filter((item) => (item.roomId ?? null) === roomId);
+    const index = inRoom.findIndex((item) => item.itemId === itemId), target = Math.trunc(position) - 1;
+    if (index < 0 || !Number.isInteger(target) || target < 0 || target >= inRoom.length || target === index) return draft;
+    const moved = [...inRoom];
+    moved.splice(target, 0, moved.splice(index, 1)[0]);
+    const rest = draft.items.filter((item) => (item.roomId ?? null) !== roomId);
+    return { ...draft, items: orderedRoomItems({ ...draft, items: [...rest, ...moved] }) };
+}
 export function samlinkShareUrl(value) {
     if (typeof value !== 'string') return '';
     try { const url = new URL(value); return url.protocol === 'https:' && url.hostname === 'xn--9y2br3k43n.kr' && /^\/[a-zA-Z0-9_-]{1,30}$/.test(url.pathname) && !url.search && !url.hash && !url.username && !url.password && !url.port ? `https://샘링크.kr${url.pathname}` : ''; } catch { return ''; }

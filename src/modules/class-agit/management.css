@@ -219,13 +219,31 @@
 @media(max-width:640px) { .class-agit-room-settings { grid-template-columns:1fr; } }
 
 .class-agit-share-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.class-agit-share-found { margin: 0; align-self: center; font-weight: 700; color: var(--ui-ink-soft); }
+.class-agit-share-room-cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.class-agit-share-room-card { width: 100%; height: 100%; display: grid; gap: 6px; justify-items: start; text-align: left;
+    padding: 14px 16px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); cursor: pointer; }
+.class-agit-share-room-card:hover, .class-agit-share-room-card:focus-visible { border-color: var(--ui-primary); background: var(--ui-primary-soft); }
+.class-agit-share-room-no { font-size: var(--ui-text-xs); font-weight: 700; color: var(--ui-primary); }
+.class-agit-share-room-card strong { font-size: var(--ui-text-md); overflow-wrap: anywhere; }
+.class-agit-share-room-count { font-weight: 700; }
+.class-agit-share-room-peek, .class-agit-share-room-hit { color: var(--ui-ink-soft); overflow-wrap: anywhere; }
+.class-agit-share-room-open { margin-top: 4px; font-weight: 700; color: var(--ui-primary); }
+.class-agit-share-room-editor { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+.class-agit-share-room-title { display: grid; gap: 6px; font-weight: 700; }
+.class-agit-share-room-editor table { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 620px; }
+.class-agit-share-room-editor :is(th, td) { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--ui-border); vertical-align: top; }
+.class-agit-share-room-editor th { background: var(--ui-surface); position: sticky; top: 0; z-index: 1; }
+.class-agit-share-room-editor th:first-child { width: 110px; }
+.class-agit-share-room-editor th:nth-child(3) { width: 140px; }
+.class-agit-share-room-editor th:nth-child(4) { width: 165px; }
+.class-agit-share-room-editor :is(td input, td select) { width: 100%; min-width: 0; box-sizing: border-box; }
+.class-agit-share-order { display: flex; align-items: center; gap: 2px; }
+.class-agit-share-order span { min-width: 22px; font-weight: 700; }
+.class-agit-share-order button { padding: 2px 6px; min-width: 0; }
+.class-agit-share-room-note { margin: 0; color: var(--ui-ink-soft); }
 .class-agit-share-filters label { display: grid; gap: 6px; flex: 1 1 240px; }
-.class-agit-share-work-groups { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; gap: 16px; }
 .class-agit-share-topic { min-width: 0; border: 1px solid var(--ui-border); border-radius: 12px; overflow: hidden; }
-.class-agit-share-topic-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--ui-surface); }
-.class-agit-share-topic-heading label { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 700; }
-.class-agit-share-topic-heading input { max-width: 420px; min-width: 0; }
-.class-agit-share-topic-heading > span { flex-shrink: 0; }
 .class-agit-share-table-scroll { overflow: auto; max-height: 480px; }
 .class-agit-share-topic table { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 640px; }
 .class-agit-share-topic th, .class-agit-share-topic td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--ui-border); vertical-align: top; }
