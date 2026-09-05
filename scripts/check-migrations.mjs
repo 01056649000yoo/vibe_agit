@@ -27,6 +27,7 @@ if (pending.length === 0) {
   process.exit(0);
 }
 
+const prerequisiteSources = [];
 for (const file of pending) {
   const source = readFileSync(path.join(migrationsDirectory, file), 'utf8')
     .replace(/^\s*BEGIN;\s*$/gmi, '')
@@ -35,7 +36,10 @@ for (const file of pending) {
   const smoke = existsSync(smokePath) ? readFileSync(smokePath, 'utf8') : '';
   process.stdout.write(`롤백 검증 중  ${file} ... `);
   try {
-    runPsql(null, `BEGIN;\n${source}\n${smoke}\nROLLBACK;\n`);
+    runPsql(null, `BEGIN;\n${prerequisiteSources.join('\n')}\n${source}\n${smoke}\nROLLBACK;\n`);
+    // A later migration must see the schema created by earlier pending files.
+    // Earlier smoke fixtures are excluded; each target gets an independent rollback.
+    prerequisiteSources.push(source);
     console.log('통과');
   } catch (error) {
     console.log('실패');

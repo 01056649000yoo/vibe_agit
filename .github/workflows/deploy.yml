@@ -91,6 +91,9 @@ jobs:
           cd "$HOME/agit-supabase"
           docker compose up -d --no-deps --force-recreate functions
 
+      - name: Sync class exhibition public reader
+        run: bash scripts/sync-class-agit-public-read.sh
+
       - name: Verify
         run: |
           sleep 4

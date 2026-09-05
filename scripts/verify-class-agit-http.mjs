@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID, randomBytes, createHmac } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { verifyFrozenPublicReads } from './lib/class-agit-frozen-http.mjs';
 const suffix = randomUUID().replaceAll('-', '').slice(0, 12);
 const dbName = `class_agit_verify_${suffix}`; const container = `class-agit-verify-${suffix}`;
 const dir = mkdtempSync(join(tmpdir(), 'class-agit-http-')); let created = false;
@@ -15,8 +16,8 @@ const run = (args, input) => {
     return r.stdout;
 };
 const sql = (text) => run(['exec', '-i', 'agit-db', 'psql', '-U', 'supabase_admin', '-d', dbName, '-v', 'ON_ERROR_STOP=1', '-At'], text);
-const jwt = (sub, secret) => {
-    const body = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ role: 'authenticated', sub, exp: Math.floor(Date.now() / 1000) + 300 })).toString('base64url')].join('.');
+const jwt = (sub, secret, role = 'authenticated') => {
+    const body = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ role, sub, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')].join('.');
     return `${body}.${createHmac('sha256', secret).update(body).digest('base64url')}`;
 };
 try {
@@ -24,6 +25,15 @@ try {
     run(['exec', 'agit-db', 'createdb', '-U', 'supabase_admin', '-O', 'supabase_admin', dbName]); created = true;
     console.log('Temporary database created; restoring schema without production data.');
     sql(schema);
+    // Rebuild only the module's schema in this empty temporary database so historical
+    // migration smokes remain reproducible even after a newer version is deployed.
+    sql(`DO $$ DECLARE x RECORD; BEGIN
+        FOR x IN SELECT t.tgname,c.relname FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+            JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND t.tgname LIKE 'class_agit_%' LOOP
+            EXECUTE format('DROP TRIGGER %I ON public.%I',x.tgname,x.relname); END LOOP;
+        FOR x IN SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'class_agit_%' LOOP
+            EXECUTE format('DROP TABLE IF EXISTS public.%I CASCADE',x.tablename); END LOOP;
+    END; $$;`);
     sql(readFileSync('supabase/migrations/20261240_neighbor_publication_matching_hardening.sql', 'utf8'));
     sql(readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8'));
     const smoke = readFileSync('tests/sql/20261241_class_agit_internal_publication.smoke.sql', 'utf8');
@@ -35,7 +45,7 @@ try {
     const uri = new URL(env.get('PGRST_DB_URI')); uri.pathname = `/${dbName}`;
     const secret = randomBytes(32).toString('hex');
     const envFile = join(dir, 'postgrest.env');
-    writeFileSync(envFile, `PGRST_DB_URI=${uri}\nPGRST_DB_ANON_ROLE=anon\nPGRST_DB_SCHEMAS=public\nPGRST_JWT_SECRET=${secret}\nPGRST_DB_POOL=3\nPGRST_LOG_LEVEL=crit\nPGRST_SERVER_PORT=3000\n`, { mode: 0o600 });
+    writeFileSync(envFile, `PGRST_DB_URI=${uri}\nPGRST_DB_ANON_ROLE=anon\nPGRST_DB_SCHEMAS=public\nPGRST_JWT_SECRET=${secret}\nPGRST_DB_POOL=20\nPGRST_LOG_LEVEL=crit\nPGRST_SERVER_PORT=3000\n`, { mode: 0o600 });
     const network = Object.keys(inspect.NetworkSettings.Networks)[0];
     run(['run', '-d', '--name', container, '--network', network, '--env-file', envFile, '-p', '127.0.0.1::3000', inspect.Config.Image]);
     const port = run(['port', container, '3000/tcp']).trim().split(':').at(-1); const origin = `http://127.0.0.1:${port}`;
@@ -75,6 +85,22 @@ try {
     sql("UPDATE public.class_agit_public_read_budget SET requests=1;");
     assert.equal((await rpc('run_class_agit_share_action_v1', { p_class_id: ids.class, p_exhibition_id: ex, p_action: 'revoke', p_payload: { expected_revision: 2 } }, adminToken)).status, 200);
     assert.equal((await rpc('read_public_class_agit_v1', { p_token: token })).status, 404);
+    // Capacity migration and synthetic 120-work scenario run only in this temporary database.
+    sql(readFileSync('supabase/migrations/20261242_class_agit_120_works.sql', 'utf8'));
+    sql(`BEGIN;\n${readFileSync('tests/sql/20261242_class_agit_120_works.smoke.sql', 'utf8')}\nCOMMIT;`);
+    const capacityIds = JSON.parse(sql("SELECT jsonb_build_object('exhibition',e.id,'student',s.auth_id) FROM public.classes c JOIN public.class_agit_exhibitions e ON e.class_id=c.id JOIN public.students s ON s.class_id=c.id WHERE c.name='120편 합성 학급';").trim());
+    const public120 = await rpc('read_public_class_agit_v1', { p_token: 'd'.repeat(64), p_room: 10 });
+    assert.equal(public120.status, 200); assert.equal(public120.data.total_count, 120);
+    assert.equal(public120.data.items.length, 12); assert.equal(public120.data.items.at(-1).id, 'published-120');
+    assert.equal(public120.cache, 'no-store'); assert.equal(public120.referrer, 'no-referrer');
+    const last120 = await rpc('read_public_class_agit_v1', { p_token: 'd'.repeat(64), p_room: 10, p_work_id: 'published-120', p_publication_no: 1 });
+    assert.equal(last120.status, 200); assert.equal(Array.from(last120.data.work.blocks[0]).length, 20000);
+    assert.equal((await rpc('read_public_class_agit_v1', { p_token: 'd'.repeat(64), p_room: 11 })).status, 404);
+    assert.equal((await rpc('read_public_class_agit_v1', { p_token: 'd'.repeat(64), p_room: 10, p_work_id: 'published-121', p_publication_no: 1 })).status, 404);
+    const student120 = await rpc('get_my_class_agit_work_v1', { p_exhibition_id: capacityIds.exhibition, p_publication_no: 1, p_work_id: 'published-120' }, jwt(capacityIds.student, secret));
+    assert.equal(student120.status, 200); assert.equal(student120.data.previous_id, 'published-119'); assert.equal(student120.data.next_id, null);
+    console.log('PASS: 120 long works; student and anonymous room 10 / last work 120; invalid room 11 / work 121 rejected.');
+    await verifyFrozenPublicReads({ sql, rpc, run, dir, network, postgrestContainer: container, jwt, secret, capacityIds });
     console.log('PASS: business conflicts return HTTP 409 without retry; anonymous 200/404/409/429 + no-store/no-referrer/noindex; role boundaries; token rotation/recall/revocation; durable rate limits.');
 } finally {
     spawnSync('docker', ['rm', '-f', container], { stdio: 'ignore' });

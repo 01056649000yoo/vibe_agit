@@ -10,7 +10,8 @@ export function buildShareUrl(token, origin = window.location.origin) {
 const errors = { unavailable: '공유가 끝났거나 지금 볼 수 없는 전시입니다. 안내받은 주소를 확인해 주세요.', changed: '전시가 새로 바뀌었습니다. 전시실에서 작품을 다시 골라 주세요.', rate_limited: '잠시 많은 분이 전시를 보고 있습니다. 잠시 뒤 다시 열어 주세요.' };
 export function assertPublicGalleryResponse(data, room, workId = null, publicationNo = null) {
     if (data?.error) throw new Error(Reflect.get(errors, data.error) || errors.unavailable);
-    if (data?.version !== 1 || Object.keys(data).some((key) => !['version', 'title', 'introduction', 'publication_no', 'room', 'total_count', 'rooms', 'items', 'work'].includes(key))) throw new Error('전시 응답을 확인할 수 없습니다.');
+    if (data?.version !== 1 || Object.keys(data).some((key) => !['version', 'title', 'introduction', 'publication_no', 'room', 'total_count', 'rooms', 'items', 'work', 'visibility_revision', 'starts_at', 'expires_at', 'server_now'].includes(key))) throw new Error('전시 응답을 확인할 수 없습니다.');
+    if (data.expires_at !== undefined && (!Number.isFinite(Date.parse(data.starts_at)) || !Number.isFinite(Date.parse(data.expires_at)) || !Number.isFinite(Date.parse(data.server_now)) || Date.parse(data.expires_at) <= Date.parse(data.starts_at))) throw new Error('전시 기간을 확인할 수 없습니다.');
     if (!workId) assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, publication_no: data.publication_no, room: data.room, total_count: data.total_count, rooms: data.rooms, items: data.items }, 'public', room);
     else {
         assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, publication_no: data.publication_no, room: 0, total_count: data.total_count, rooms: data.rooms, items: [] }, 'public', 0);
@@ -23,9 +24,9 @@ export const publicClassAgitApi = {
     async read(token, room = 0, workId = null, publicationNo = null) {
         if (!validShareToken(token)) throw new Error(errors.unavailable);
         let response;
-        try { response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/read_public_class_agit_v1`, {
+        try { response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-agit-public-read`, {
             method: 'POST', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer',
-            headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_ANON_KEY },
+            headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
             body: JSON.stringify({ p_token: token, p_room: room, p_work_id: workId, p_publication_no: publicationNo }), signal: AbortSignal.timeout(8000),
         }); } catch { throw new Error('네트워크 연결을 확인하고 전시를 다시 열어 주세요.'); }
         let data; try { data = await response.json(); } catch { throw new Error('전시를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.'); }

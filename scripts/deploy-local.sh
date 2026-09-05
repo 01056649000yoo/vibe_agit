@@ -135,4 +135,7 @@ else
     [ "$WEEKLY_EDGE_CODE" = "401" ] || { echo "✗ 주간 맞춤법 검수 Edge Function 이 401 을 주지 않습니다." >&2; exit 1; }
 fi
 
+# Anonymous exhibition gateway (two files, also used by Actions).
+bash scripts/sync-class-agit-public-read.sh
+
 echo "✓ 배포 완료"

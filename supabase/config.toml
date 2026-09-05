@@ -1,2 +1,5 @@
 [functions.verify-admin-mode]
 verify_jwt = false
+
+[functions.class-agit-public-read]
+verify_jwt = false

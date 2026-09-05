@@ -26,7 +26,7 @@ test('다른 학급·과대한 작업공간 응답을 화면에 섞지 않는다
     assert.equal(assertClassAgitWorkspace(workspace, 'class'), workspace);
     for (const invalid of [{ ...workspace, version: 2 }, { ...workspace, class: { id: 'other' } },
         { ...workspace, projects: Array(21) }, { ...workspace, students: Array(101) },
-        { ...workspace, draft: { ...workspace.draft, classId: 'other' } }, { ...workspace, draft: { ...workspace.draft, items: Array(61) } }]) {
+        { ...workspace, draft: { ...workspace.draft, classId: 'other' } }, { ...workspace, draft: { ...workspace.draft, items: Array(121) } }]) {
         assert.throws(() => assertClassAgitWorkspace(invalid, 'class'), /응답/);
     }
 });

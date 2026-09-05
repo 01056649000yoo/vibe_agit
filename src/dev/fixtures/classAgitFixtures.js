@@ -1,3 +1,4 @@
+import { CLASS_AGIT_LIMITS } from '../../modules/class-agit/policy.js';
 import { createExhibitionDraft, editExhibition } from '../../modules/class-agit/exhibitionDraft.js';
 
 // 실제 학생 자료가 아닌 개발 전용 창작 예문. 운영 모듈은 이 파일을 가져오지 않는다.
@@ -18,7 +19,7 @@ const stories = [
     { title: '작은 용기를 모으면', content: '발표를 하려고 손을 들었다가 내렸다. 목소리가 작으면 친구들이 못 들을 것 같았다. 옆에 앉은 친구가 고개를 끄덕여 주었다.\n\n다시 손을 들었다. 처음 한 문장은 떨렸지만 두 번째 문장은 조금 잘 나왔다. 발표를 마치니 마음이 가벼워졌다.\n\n내가 낸 용기는 아주 작았지만 친구의 응원과 만나 조금 커졌다. 다음에는 내가 누군가에게 고개를 끄덕여 주고 싶다.' },
 ];
 
-export const previewSources = Array.from({ length: 64 }, (_, index) => {
+export const previewSources = Array.from({ length: CLASS_AGIT_LIMITS.maxWorks + 4 }, (_, index) => {
     const story = stories[index % stories.length];
     const student = previewStudents[index % 12];
     const round = Math.floor(index / stories.length);

@@ -10,7 +10,7 @@ export function getGallerySlot(index) {
 }
 
 export function arrangeGalleryRooms(works) {
-    if (works.length > CLASS_AGIT_LIMITS.maxWorks) throw new Error('전시는 최대 60편입니다.');
+    if (works.length > CLASS_AGIT_LIMITS.maxWorks) throw new Error(`전시는 최대 ${CLASS_AGIT_LIMITS.maxWorks}편입니다.`);
     const rooms = [];
     for (let start = 0; start < works.length; start += CLASS_AGIT_LIMITS.worksPerRoom) {
         rooms.push({ id: `room-${rooms.length + 1}`, number: rooms.length + 1, works: works.slice(start, start + CLASS_AGIT_LIMITS.worksPerRoom) });

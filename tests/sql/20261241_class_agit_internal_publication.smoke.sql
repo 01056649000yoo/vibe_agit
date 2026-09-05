@@ -97,8 +97,8 @@ BEGIN
     v_payload:=jsonb_build_object('exhibition_id',v_ex,'expected_revision',1,'title','C1 전시','introduction','확인한 글','items',v_items);
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',v_items||jsonb_build_array(v_items->0))); EXCEPTION WHEN check_violation THEN v_denied:=TRUE; END;
     IF NOT v_denied THEN RAISE EXCEPTION 'duplicate work accepted'; END IF;
-    v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',(SELECT jsonb_agg(jsonb_build_object('sourceId',gen_random_uuid())) FROM generate_series(1,61)))); EXCEPTION WHEN check_violation THEN v_denied:=TRUE; END;
-    IF NOT v_denied THEN RAISE EXCEPTION '61 works accepted'; END IF;
+    v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',(SELECT jsonb_agg(jsonb_build_object('sourceId',gen_random_uuid())) FROM generate_series(1,121)))); EXCEPTION WHEN check_violation THEN v_denied:=TRUE; END;
+    IF NOT v_denied THEN RAISE EXCEPTION 'over-capacity works accepted'; END IF;
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items,0,sourceId}',to_jsonb(current_setting('test.ca_other_post')))); EXCEPTION WHEN insufficient_privilege THEN v_denied:=TRUE; END;
     IF NOT v_denied THEN RAISE EXCEPTION 'cross-class source save accepted'; END IF;
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items,0,classAcknowledged}','false')); EXCEPTION WHEN invalid_parameter_value THEN v_denied:=TRUE; END;
@@ -165,7 +165,7 @@ BEGIN
     IF NOT denied THEN RAISE EXCEPTION 'student stale publication accepted'; END IF;
     denied:=FALSE; BEGIN PERFORM public.get_my_class_agit_work_v1(v_ex,1,'published-60'); EXCEPTION WHEN insufficient_privilege THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION 'unpublished work ordinal guessed'; END IF;
-    denied:=FALSE; BEGIN PERFORM public.get_my_class_agit_room_v1(v_ex,6); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
+    denied:=FALSE; BEGIN PERFORM public.get_my_class_agit_room_v1(v_ex,11); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION 'student room cap ignored'; END IF;
     v_home:=public.get_student_home_bootstrap_v1();
     IF v_home->'home'->>'class_agit_available'<>'true' OR NOT (v_home->'home' ?& ARRAY['neighbor_agit_available','neighbor_agit_space_id','neighbor_agit_new_count'])

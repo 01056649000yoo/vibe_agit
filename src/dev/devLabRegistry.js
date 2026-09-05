@@ -40,7 +40,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     id: 'class-agit',
     icon: '🏡',
     title: '우리반 아지트 전시관',
-    description: '작품 선정·자동 배치·2.5D 감상·외부 가림 이름을 샘플 글 0/1/12/60편으로 확인한다',
+    description: '작품 선정·자동 배치·2.5D 감상·외부 가림 이름을 샘플 글 0/1/12/60/120편으로 확인한다',
     Component: ClassAgitPreview,
   }),
   Object.freeze({

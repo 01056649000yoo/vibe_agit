@@ -72,13 +72,13 @@ test('학급 수록 확인은 필수이고 같은 글은 중복 선정할 수 �
     assert.deepEqual(selected.items[0].scopes, { class: true, anthology: false, external: false });
 });
 
-test('학급 전시 60편 상한은 61번째 추가를 막고 삭제 뒤 재선정은 허용한다', () => {
-    const draft = makeDraft(60);
+test('학급 전시 120편 상한은 121번째 추가를 막고 삭제 뒤 재선정은 허용한다', () => {
+    const draft = makeDraft(CLASS_AGIT_LIMITS.maxWorks);
     assert.equal(draft.items.length, CLASS_AGIT_LIMITS.maxWorks);
-    assert.throws(() => add(draft, source(61)), /60편/);
+    assert.throws(() => add(draft, source(121)), /120편/);
     const removed = editExhibition(draft, { type: 'remove', sourceId: 'post-1' });
-    assert.equal(add(removed, source(61)).items.length, 60);
-    assert.equal(draft.items.length, 60);
+    assert.equal(add(removed, source(121)).items.length, 120);
+    assert.equal(draft.items.length, 120);
 });
 
 test('오래된 revision 편집은 거절하고 제목·소개 길이를 제한한다', () => {
@@ -102,14 +102,14 @@ test('순서를 옮기면 12·13번째 글이 방 경계를 넘어가고 원래 
     assert.equal(editExhibition(original, { type: 'move', sourceId: 'post-13', direction: 1 }), original);
 });
 
-test('0·1·12·60편은 각각 0·1·1·5개 방으로 나누고 작품을 중복하지 않는다', () => {
-    for (const [count, lengths] of [[0, []], [1, [1]], [12, [12]], [60, [12, 12, 12, 12, 12]]]) {
+test('0·1·12·60·120편은 각각 0·1·1·5·10개 방으로 나누고 작품을 중복하지 않는다', () => {
+    for (const [count, lengths] of [[0, []], [1, [1]], [12, [12]], [60, [12, 12, 12, 12, 12]], [120, Array(10).fill(12)]]) {
         const works = makeDraft(count).items;
         const rooms = arrangeGalleryRooms(works);
         assert.deepEqual(rooms.map((room) => room.works.length), lengths);
         assert.deepEqual(rooms.flatMap((room) => room.works), works);
     }
-    assert.throws(() => arrangeGalleryRooms(Array(61)), /60편/);
+    assert.throws(() => arrangeGalleryRooms(Array(121)), /120편/);
 });
 
 test('모든 액자는 벽 안의 겹치지 않는 슬롯 하나를 사용한다', () => {

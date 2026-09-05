@@ -1,6 +1,7 @@
 import { supabase } from '../../../lib/supabaseClient.js';
 import { dataCache, classScope } from '../../../lib/cache.js';
 import { assertBookEdition, assertBookWorkspace, buildBookSavePayload } from '../anthology/contract.js';
+import { assertClassAgitShareWorkspace } from './contract.js';
 const call = async (name, args) => {
     const { data, error } = await supabase.rpc(name, args);
     if (error) throw error;
@@ -21,8 +22,7 @@ export const classAgitReleaseApi = {
     async getEdition(classId, editionId) { return assertBookEdition(await call('get_class_agit_book_edition_v1', { p_class_id: classId, p_edition_id: editionId })); },
     async getShare(classId, exhibitionId) {
         const data = await call('get_class_agit_share_workspace_v1', { p_class_id: classId, p_exhibition_id: exhibitionId });
-        if (data?.version !== 1 || !Array.isArray(data.candidates) || data.candidates.length > 60 || !Array.isArray(data.published_items) || data.published_items.length > 60) throw new Error('공유 설정을 확인할 수 없습니다.');
-        return data;
+        return assertClassAgitShareWorkspace(data);
     },
     shareAction: (classId, exhibitionId, action, payload) => call('run_class_agit_share_action_v1', { p_class_id: classId, p_exhibition_id: exhibitionId, p_action: action, p_payload: payload }),
     getStudentBooks: (editionId = null, workId = null) => call('get_my_class_agit_books_v1', { p_edition_id: editionId, p_work_id: workId }),

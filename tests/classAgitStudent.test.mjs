@@ -8,8 +8,8 @@ import { getStudentBackDestination, createStudentHistoryState, readStudentHistor
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- 저장소의 고정 경로와 manifest 목록만 읽는다.
 const read = (file) => readFileSync(file, 'utf8');
-const sql = read('supabase/migrations/20261241_class_agit_internal_publication.sql');
-const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?.split('$$;')[0] || '';
+const sql = read('supabase/migrations/20261241_class_agit_internal_publication.sql') + read('supabase/migrations/20261242_class_agit_120_works.sql') + read('supabase/migrations/20261243_class_agit_frozen_public_reads.sql');
+const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';
 
 test('작품 → 같은 방/보기 → 로비 → 전시 목록 → 홈의 부모가 일정하다', () => {
     const work = classAgitRoute({ exhibitionId: id, mode: 'work', room: 5, view: 'list', workId: 'published-60', publicationNo: 9 });
@@ -28,14 +28,14 @@ test('작품 → 같은 방/보기 → 로비 → 전시 목록 → 홈의 부�
 test('기록은 전문·학급·학생 필드를 버리고 유효한 작은 주소만 남긴다', () => {
     assert.deepEqual(normalizeClassAgitParams(null), {});
     assert.deepEqual(normalizeClassAgitParams({ exhibitionId: '-'.repeat(36) }), {});
-    assert.deepEqual(normalizeClassAgitParams({ exhibitionId: id, mode: 'work', workId: 'published-61', room: 6,
+    assert.deepEqual(normalizeClassAgitParams({ exhibitionId: id, mode: 'work', workId: 'published-121', room: 11,
         publicationNo: 1, blocks: ['secret'], studentId: 'secret', classId: 'secret' }),
     { exhibitionId: id, mode: 'room', room: 1, view: 'room' });
     assert.equal(normalizeClassAgitParams({ exhibitionId: id, mode: 'work', workId: 'published-1', publicationNo: 0 }).mode, 'room');
 });
 
-test('0/1/12/60편은 방당 12편 요약과 선택한 전문 1편으로 읽는다', async () => {
-    for (const count of [0, 1, 12, 60]) {
+test('0/1/12/60/120편은 방당 12편 요약과 선택한 전문 1편으로 읽는다', async () => {
+    for (const count of [0, 1, 12, 60, 120]) {
         const { api } = createClassAgitStudentFixture(count);
         const list = await api.getExhibitions();
         assert.equal(list.exhibitions.length, count ? 1 : 0);
@@ -114,11 +114,14 @@ test('학생 RPC는 현재 실제 학생 학급·공개 상태·판을 재검증
     assert.match(fn('class_agit_class_is_allowed_v1'), /p\.is_approved IS TRUE/);
     assert.match(fn('get_my_class_agit_exhibitions_v1'), /e\.class_id=v_class AND e\.state='published'.*LIMIT 20/);
     const room = fn('get_my_class_agit_room_v1');
-    assert.match(room, /class_id=v_class AND id=p_exhibition_id AND state='published' FOR SHARE/);
+    assert.match(room, /c.class_id=v_class AND c.exhibition_id=p_exhibition_id AND c.scope='class' AND e.state='published'/);
+    assert.match(room, /STABLE SECURITY DEFINER/);
     assert.doesNotMatch(room, /'blocks'|'studentId'|'sourceId'/);
-    assert.match(room, /sort_position BETWEEN \(p_room-1\)\*12\+1 AND p_room\*12/);
-    assert.match(fn('get_my_class_agit_work_v1'), /p_publication_no IS DISTINCT FROM v_ex\.publication_no/);
-    assert.match(fn('class_agit_visible_works_v1'), /i\.revoked_at IS NULL AND i\.consent_id=\(w\.value->>'consentId'\)::UUID/);
+    assert.match(room, /s.room_no=p_room/);
+    assert.match(room, /LIMIT 12/);
+    assert.match(fn('get_my_class_agit_work_v1'), /p_publication_no IS DISTINCT FROM v_catalog\.publication_no/);
+    assert.match(sql, /DROP FUNCTION IF EXISTS public.class_agit_visible_works_v1/);
+    assert.match(fn('class_agit_sync_published_consent_v1'), /n.consent_id IS DISTINCT FROM p.consent_id/);
     const api = read('src/modules/class-agit/api/studentApi.js');
     assert.equal((api.match(/call\('get_my_class_agit_/g) || []).length, 3);
     assert.doesNotMatch(api, /p_class_id|p_student_id|\.from\(|dataCache|setInterval|\.channel\(/);

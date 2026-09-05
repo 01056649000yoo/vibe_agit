@@ -8,8 +8,8 @@ import { normalizeClassAgitParams, getClassAgitBackDestination } from '../src/mo
 import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js';
 import { createShareToken, validShareToken, buildShareUrl, assertPublicGalleryResponse } from '../src/modules/class-agit/public/publicApi.js';
 import { previewSources, previewClass } from '../src/dev/fixtures/classAgitFixtures.js';
-const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8');
-const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?.split('$$;')[0] || '';
+const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8') + readFileSync('supabase/migrations/20261242_class_agit_120_works.sql', 'utf8') + readFileSync('supabase/migrations/20261243_class_agit_frozen_public_reads.sql', 'utf8');
+const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';
 const editionId = '11111111-1111-4111-8111-111111111111';
 const work = { id: 'chapter-1', title: '봄', author: '글쓴이', format: 'poem', kindLabel: '시', group: '계절', excerpt: '안녕 봄', blocks: ['안녕\n봄', '또 만나'] };
 const book = { title: '우리 책', subtitle: '', introduction: '', class_label: '', term: '', issue_date: '2026-09-05', grouping: 'custom' };
@@ -89,7 +89,7 @@ test('서버는 문집 철회 세대와 외부 별도 확인·토큰 해시·만
     assert.match(fn('run_class_agit_share_action_v1'), /externalConfirmed/);
     assert.match(fn('run_class_agit_share_action_v1'), /extensions\.digest\(v_token,'sha256'\)/);
     assert.match(fn('run_class_agit_share_action_v1'), /v_external_item,'external','confirmed'/);
-    const read = fn('read_public_class_agit_v1'); assert.match(read, /expires_at>now\(\)/); assert.match(read, /class_agit_class_is_allowed_v1/); assert.match(read, /'global',3000/); assert.match(read, /'share:'\|\|v_share.id,600/);
+    const read = fn('read_public_class_agit_v1'); assert.match(read, /expires_at>statement_timestamp\(\)/); assert.match(read, /class_agit_class_is_allowed_v1/); const budget = fn('take_class_agit_public_read_budget_v1'); assert.match(budget, /'global',3000/); assert.match(budget, /'share:'\|\|v_id,600/);
     assert.doesNotMatch(read, /RAISE EXCEPTION/); assert.match(read, /statement_timeout='3s'/);
     assert.match(fn('manage_class_agit_rollout_v1'), /jsonb_array_length\(p_payload->'class_ids'\)>2/);
     assert.match(fn('manage_class_agit_rollout_v1'), /role='ADMIN' AND is_approved IS TRUE/);

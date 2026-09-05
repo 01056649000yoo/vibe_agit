@@ -1,5 +1,7 @@
+import { CLASS_AGIT_LIMITS, isClassAgitWorkId } from '../policy.js';
+
 const exhibitionId = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : null;
-const workId = (value) => typeof value === 'string' && /^published-([1-9]|[1-5][0-9]|60)$/.test(value) ? value : null;
+const workId = (value) => isClassAgitWorkId(value) ? value : null;
 
 // 방문 기록에는 작은 주소만 둔다. 전문·학생 식별자·DOM·함수는 넣지 않는다.
 export function normalizeClassAgitParams(params = {}) {
@@ -14,7 +16,7 @@ export function normalizeClassAgitParams(params = {}) {
     const id = exhibitionId(params.exhibitionId);
     if (!id) return {};
     if (!['room', 'work'].includes(params.mode)) return { exhibitionId: id, mode: 'lobby' };
-    const room = Number.isInteger(params.room) && params.room >= 1 && params.room <= 5 ? params.room : 1;
+    const room = Number.isInteger(params.room) && params.room >= 1 && params.room <= CLASS_AGIT_LIMITS.maxRooms ? params.room : 1;
     const base = { exhibitionId: id, mode: 'room', room, view: params.view === 'list' ? 'list' : 'room' };
     const selected = workId(params.workId);
     if (params.mode !== 'work' || !selected || !Number.isSafeInteger(params.publicationNo) || params.publicationNo < 1) return base;

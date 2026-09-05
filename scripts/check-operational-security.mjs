@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { spawnSync } from 'node:child_process';
 import { readFile, readdir, stat } from 'node:fs/promises';
 
 const stackRoot = '/Users/seunghyeonmaegmini/agit-supabase';
@@ -16,6 +17,8 @@ const expectedFunctions = new Set([
     'send-feedback', 'verify-admin-mode', 'vibe-ai', 'neis-meal', 'spelling-weekly-review'
 ]);
 
+// Allowed while staged locally; mandatory once its database migration is applied.
+const stagedFunctions = new Set(['class-agit-public-read']);
 const failures = [];
 const mode = async (path) => (await stat(path)).mode & 0o777;
 const hasAgitApiHsts = (caddyfile) => {
@@ -69,10 +72,14 @@ try {
     }
     const entries = await readdir(functionsRoot, { withFileTypes: true });
     const deployed = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
-    const unexpected = deployed.filter((name) => !expectedFunctions.has(name));
+    const unexpected = deployed.filter((name) => !expectedFunctions.has(name) && !stagedFunctions.has(name));
     const missing = [...expectedFunctions].filter((name) => !deployed.includes(name));
     if (unexpected.length) failures.push(`허용 목록 밖 Edge 함수: ${unexpected.join(', ')}`);
     if (missing.length) failures.push(`필수 Edge 함수 누락: ${missing.join(', ')}`);
+    const publicReaderMigration = spawnSync('docker', ['exec', 'agit-db', 'psql', '-U', 'supabase_admin', '-d', 'postgres', '-Atc',
+        "SELECT EXISTS(SELECT 1 FROM public.applied_migrations WHERE filename='20261243_class_agit_frozen_public_reads.sql');"], { encoding: 'utf8', timeout: 10000 });
+    if (publicReaderMigration.status !== 0) failures.push('외부 전시 조회 마이그레이션 적용 여부 확인 실패');
+    else if (publicReaderMigration.stdout.trim() === 't' && !deployed.includes('class-agit-public-read')) failures.push('필수 Edge 함수 누락: class-agit-public-read');
 
     const [hostCaddy, repoCaddy] = await Promise.all([
         readFile(hostCaddyPath, 'utf8'),

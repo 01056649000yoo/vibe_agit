@@ -69,8 +69,8 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
     const selectedStudents = new Set(draft.items.map((item) => item.studentId));
     const unselectedStudents = students.filter((student) => !selectedStudents.has(student.id));
     const selectedSources = new Set(draft.items.map((item) => item.sourceId));
-    const candidates = sources.slice(0, limits.maxCandidates).map((source) => ({ source, reason: persistence ? '' : getSourceExclusion(source, activeClass?.id) }));
-    const visibleCandidates = persistence ? candidates : candidates.filter(({ source }) => `${source.title} ${source.student_name}`.toLocaleLowerCase('ko-KR').includes(query.trim().toLocaleLowerCase('ko-KR')));
+    const candidateSources = persistence ? sources : sources.filter((source) => `${source.title} ${source.student_name}`.toLocaleLowerCase('ko-KR').includes(query.trim().toLocaleLowerCase('ko-KR')));
+    const candidates = candidateSources.slice(0, limits.maxCandidates).map((source) => ({ source, reason: persistence ? '' : getSourceExclusion(source, activeClass?.id) }));
     const externalCount = draft.items.filter((item) => item.scopes.external).length;
     const dirty = savedDraft?.revision !== draft.revision;
     const locked = busy || persistence?.busy || shareState.busy;
@@ -173,7 +173,7 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
                     <aside className="class-agit-candidates"><div className="class-agit-panel-heading"><h3>우리 반의 글</h3><span>{candidates.filter((item) => !item.reason).length}편 선택 가능</span></div>
                         <label className="class-agit-search">작품 찾기<input value={query} maxLength={80} placeholder="제목 또는 학생 이름" onChange={(event) => setQuery(event.target.value)} /></label>
                         {persistence && <Button variant="outline" type="button" onClick={() => perform(() => persistence.search(query))}>검색</Button>}
-                        <div className="class-agit-candidates__list">{visibleCandidates.map(({ source, reason }) => <article key={source.id}><span className="class-agit-candidate-avatar" aria-hidden="true">{source.student_name.slice(0, 1)}</span><div><strong>{source.title}</strong><small>{source.student_name} · {source.group_title || '글쓰기'}</small><Button variant="outline" type="button" disabled={Boolean(reason) || selectedSources.has(source.id) || draft.items.length >= limits.maxWorks} onClick={() => readSource(source)}>{reason || (selectedSources.has(source.id) ? '✓ 전시에 담음' : '전문 보고 담기 +')}</Button></div></article>)}{!visibleCandidates.length && <p>찾는 작품이 없습니다.</p>}</div>
+                        <div className="class-agit-candidates__list">{candidates.map(({ source, reason }) => <article key={source.id}><span className="class-agit-candidate-avatar" aria-hidden="true">{source.student_name.slice(0, 1)}</span><div><strong>{source.title}</strong><small>{source.student_name} · {source.group_title || '글쓰기'}</small><Button variant="outline" type="button" disabled={Boolean(reason) || selectedSources.has(source.id) || draft.items.length >= limits.maxWorks} onClick={() => readSource(source)}>{reason || (selectedSources.has(source.id) ? '✓ 전시에 담음' : '전문 보고 담기 +')}</Button></div></article>)}{!candidates.length && <p>찾는 작품이 없습니다.</p>}</div>
                         {persistence?.hasMore && <Button variant="outline" type="button" onClick={() => perform(() => persistence.more())}>다음 후보 보기</Button>}
                         <details className="class-agit-participation"><summary>아직 선정하지 않은 작가 {unselectedStudents.length}명</summary><p>{unselectedStudents.map((student) => student.name).join(' · ') || '모든 작가의 작품을 담았습니다.'}</p></details>
                     </aside>
