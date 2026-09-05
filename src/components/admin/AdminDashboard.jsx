@@ -22,6 +22,8 @@ const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel')
 // 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
 const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingPromotionPanel'));
 const AdminNeighborAgitPanel = React.lazy(() => import('./AdminNeighborAgitPanel'));
+// 우리반 아지트 공개 단계는 관리자만 쓰므로 교사 화면이 아니라 여기(기능 공개)에 둔다.
+const ClassAgitRolloutManager = React.lazy(() => import('../../modules/class-agit/teacher/RolloutManager.jsx'));
 
 /*
  * 관리자 화면을 성격별로 묶는다.
@@ -903,6 +905,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     >
                         <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>기능 공개 화면을 불러오는 중입니다...</div>}>
                             <AdminNeighborAgitPanel />
+                            <ClassAgitRolloutManager />
                         </React.Suspense>
                     </KeepAlivePanel>
 

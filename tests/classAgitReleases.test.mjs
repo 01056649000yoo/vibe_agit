@@ -264,3 +264,18 @@ test('전시관·책방 이름은 좌측 메뉴·도움말·학생 화면이 한
     // 샘링크에 저장된 라벨은 DB 값이라 그대로 둔다(기존 행과 어긋나면 안 된다).
     assert.match(readFileSync('supabase/migrations/20261251_class_agit_longer_share_slug.sql', 'utf8'), /'아지트 글 전시관'/);
 });
+
+test('공개 단계 관리는 교사 화면이 아니라 관리자 대시보드 `기능 공개` 탭에 있다', () => {
+    const entry = readFileSync('src/modules/class-agit/teacher/TeacherEntry.jsx', 'utf8');
+    // 관리자만 쓰는 화면이 교사 메뉴에 섞여 있지 않아야 한다.
+    assert.doesNotMatch(entry, /공개 단계 관리|RolloutManager/);
+    const dashboard = readFileSync('src/components/admin/AdminDashboard.jsx', 'utf8');
+    assert.match(dashboard, /const ClassAgitRolloutManager = React\.lazy\(\(\) => import\('\.\.\/\.\.\/modules\/class-agit\/teacher\/RolloutManager\.jsx'\)\)/);
+    // 이웃 아지트 공개 관리와 같은 `기능 공개` 탭 안에 나란히 둔다.
+    const tab = dashboard.slice(dashboard.indexOf("currentTab === 'rollout'"), dashboard.indexOf("currentTab === 'settings'"));
+    assert.match(tab, /<AdminNeighborAgitPanel \/>/);
+    assert.match(tab, /<ClassAgitRolloutManager \/>/);
+    assert.match(dashboard, /\{ id: 'rollout', label: '기능 공개' \}/);
+    // 돌아갈 곳이 없는 대시보드에서는 나가기 버튼을 숨긴다.
+    assert.match(readFileSync('src/modules/class-agit/teacher/RolloutManager.jsx', 'utf8'), /\{onExit && <Button variant="outline" type="button" disabled=\{busy\} onClick=\{onExit\}>관리 화면으로<\/Button>\}/);
+});

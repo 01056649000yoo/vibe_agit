@@ -8,17 +8,15 @@ import { classAgitApi } from '../api/classAgitApi.js';
 import ExhibitionWorkbench from './ExhibitionWorkbench.jsx';
 import AnthologyManager from '../anthology/AnthologyManager.jsx';
 import ShareManager from '../public/ShareManager.jsx';
-import RolloutManager from './RolloutManager.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
 import PublishedExhibition from './PublishedExhibition.jsx';
 import '../classAgit.css';
 import '../management.css';
 
-function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, releaseApi = classAgitReleaseApi, isAdmin = false, onOpenPublic }) {
+function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, releaseApi = classAgitReleaseApi, onOpenPublic }) {
     const classId = activeClass.id;
     const { ask, confirmDialog } = useConfirmDialog();
     const releasesEnabled = !isSample || releaseApi !== classAgitReleaseApi;
-    const [area, setArea] = useState('exhibitions');
     const [workspace, setWorkspace] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -60,9 +58,7 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
             initial_vocab_tower_enabled: workspace.class.vocab_tower_enabled ?? null, exhibition_id: workspace.draft?.id || null,
         }))); } catch (reason) { setError(reason.message); }
     };
-    if (area === 'rollout') return <RolloutManager api={releaseApi} onExit={() => { setArea('exhibitions'); setLoadVersion((v) => v + 1); }} />;
     return <div className="class-agit-management-shell">
-        {!workspace?.draft && releasesEnabled && isAdmin && <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setArea('rollout')}>공개 단계 관리</Button></div>}
         {error && <div className="class-agit-error" role="alert">{error}{!workspace?.draft && <Button variant="outline" type="button" onClick={() => setLoadVersion((version) => version + 1)}>작업공간 다시 불러오기</Button>}</div>}
         {!workspace && !error && <p role="status">전시 작업공간을 불러오고 있습니다…</p>}
         {workspace?.draft ? <ExhibitionWorkbench key={`${classId}:${workspace.draft.id}`} activeClass={activeClass} initialDraft={workspace.draft}

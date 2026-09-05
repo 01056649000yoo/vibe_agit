@@ -17,7 +17,7 @@ function AccessGate({ activeClass, allowInternal, section }) {
     if (error && !allowInternal) return <p role="alert">{error} <button type="button" onClick={() => setRefresh((v) => v + 1)}>다시 확인</button></p>;
     if (!access && !allowInternal) return <p role="status">우리반 아지트를 준비하고 있습니다…</p>;
     return access?.allowed || access?.is_admin || allowInternal
-    ? <ErrorBoundary key={activeClass.id}><Suspense fallback={<p role="status">우리반 아지트를 준비하고 있습니다…</p>}><InternalClassAgit activeClass={activeClass} section={section} isAdmin={access?.is_admin || allowInternal} /></Suspense></ErrorBoundary>
+    ? <ErrorBoundary key={activeClass.id}><Suspense fallback={<p role="status">우리반 아지트를 준비하고 있습니다…</p>}><InternalClassAgit activeClass={activeClass} section={section} /></Suspense></ErrorBoundary>
     : (
     <section className="teacher-class-agit" aria-labelledby="teacher-class-agit-title">
         <div className="teacher-class-agit__hero">

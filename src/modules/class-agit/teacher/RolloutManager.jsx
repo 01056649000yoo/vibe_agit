@@ -16,7 +16,7 @@ export default function RolloutManager({ api = classAgitReleaseApi, onExit }) {
         try { receive(await api.manageRollout({ mode: draft.mode, external_enabled: draft.external_enabled, class_ids: draft.class_ids, expected_revision: data.settings.revision })); }
         catch (e) { setError(e.message); } finally { lock.current = false; setBusy(false); }
     };
-    return <section className="class-agit class-agit-management"><header className="class-agit-project-heading"><h1>우리반 아지트 공개 단계</h1><Button variant="outline" type="button" disabled={busy} onClick={onExit}>관리 화면으로</Button></header>
+    return <section className="class-agit class-agit-management"><header className="class-agit-project-heading"><h1>우리반 아지트 공개 단계</h1>{onExit && <Button variant="outline" type="button" disabled={busy} onClick={onExit}>관리 화면으로</Button>}</header>
         <p>관리자 내부 검증 → 최대 두 학급 시범 운영 → 전체 교사 공개 순서로 넓힙니다. 각 학급의 학생 공개와 외부 공유 허용은 별도로 관리합니다.</p>
         {error && <p role="alert" className="class-agit-error">{error}</p>}
         {!draft ? <p role="status">공개 설정을 확인하고 있습니다…</p> : <fieldset className="class-agit-book-settings" disabled={busy}><legend>공개 범위</legend>
