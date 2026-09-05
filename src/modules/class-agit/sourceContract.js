@@ -39,3 +39,9 @@ export function presentSource(source) {
         excerpt: Array.from(blocks.join(' ').replace(/\s+/g, ' ').trim()).slice(0, 96).join(''),
     };
 }
+// Saving metadata must not silently reselect a withdrawn or unavailable work.
+export function assertDraftSources(items) {
+    if (items.some((item) => item.revoked || item.unavailable)) {
+        throw new Error('철회되었거나 사용할 수 없는 작품이 있습니다. 해당 작품을 빼거나 원글을 다시 불러와 반영해 주세요.');
+    }
+}

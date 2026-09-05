@@ -1,13 +1,13 @@
 import { CLASS_AGIT_LIMITS } from '../policy.js';
-import { getSourceExclusion, presentSource } from '../sourceContract.js';
+import { assertDraftSources, getSourceExclusion, presentSource } from '../sourceContract.js';
 
 export const ANTHOLOGY_PRINT_SETTINGS = Object.freeze({ paper: 'A4', body_pt: 12, poem_pt: 14, version: 1 });
 
-export function bookItemFromSource(source, classId, confirmed = false) {
+export function bookItemFromSource(source, classId) {
     const reason = getSourceExclusion(source, classId);
     if (reason) throw new Error(reason);
     return { ...presentSource(source), sourceId: source.id, studentId: source.student_id, missionId: source.mission_id, sourceRevision: source.source_revision,
-        author: source.student_name, group: source.group_title || '', anthologyConfirmed: confirmed };
+        author: source.student_name, group: source.group_title || '' };
 }
 export function addBookItems(book, items) {
     const ids = new Set(book.items.map((item) => item.sourceId));
@@ -16,9 +16,10 @@ export function addBookItems(book, items) {
     return { ...book, items: [...book.items, ...next] };
 }
 export function buildBookSavePayload(book) {
+    assertDraftSources(book.items);
     return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
         introduction: book.introduction, class_label: book.class_label, term: book.term, issue_date: book.issue_date, grouping: book.grouping,
-        items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision, anthologyConfirmed: item.anthologyConfirmed === true })) };
+        items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision })) };
 }
 export function sortBookItems(items, grouping) {
     if (!['author', 'topic'].includes(grouping)) return items;

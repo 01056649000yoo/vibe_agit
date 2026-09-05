@@ -42,5 +42,5 @@ previewSources.push(
 );
 
 export function createPreviewDraft(count = 12) {
-    return previewSources.slice(0, count).reduce((draft, source) => editExhibition(draft, { type: 'add', source, classAcknowledged: true }), createExhibitionDraft(previewClass.id));
+    return previewSources.slice(0, count).reduce((draft, source) => editExhibition(draft, { type: 'add', source }), createExhibitionDraft(previewClass.id));
 }

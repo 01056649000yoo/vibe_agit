@@ -55,7 +55,7 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
                 for (const item of payload.items) {
                     const source = readSource(item.sourceId);
                     if (source.source_revision !== item.sourceRevision) throw new Error('원글 내용이 바뀌었습니다. 전문을 다시 확인해 주세요.');
-                    next = editExhibition(next, { type: 'add', source, classAcknowledged: item.classAcknowledged });
+                    next = editExhibition(next, { type: 'add', source });
                     const previous = project.history.get(item.sourceId);
                     const saved = { ...next.items.at(-1), itemId: previous?.itemId || crypto.randomUUID(),
                         consentId: previous && !previous.revoked ? previous.consentId : crypto.randomUUID(), publicAlias: item.publicAlias, revoked: false };
@@ -100,7 +100,7 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
     };
     return { api, controls: {
         conflict() { for (const { draft } of projects.values()) { draft.title = '다른 화면에서 저장한 제목'; draft.revision += 1; } },
-        changeSource() { const source = sources.get('sample-post-1'); source.content = '원글을 새로 고쳤습니다. 다시 읽고 수록 의사를 확인해 주세요.'; source.source_revision += '-changed'; },
+        changeSource() { const source = sources.get('sample-post-1'); source.content = '원글을 새로 고쳤습니다. 원글을 다시 불러와 주세요.'; source.source_revision += '-changed'; },
         recallSource() { sources.get('sample-post-1').is_submitted = false; for (const project of projects.values()) { const item = project.history.get('sample-post-1'); if (item) { item.revoked = true; item.scopes.class = false; } } },
         failRead() { readFailure = true; },
     } };

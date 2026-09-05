@@ -12,16 +12,13 @@ import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
 import '../management.css';
 
-function CandidateConfirmation({ onAdd }) {
-    const [acknowledged, setAcknowledged] = useState(false);
+function CandidateApply({ onAdd, refreshing }) {
     const [error, setError] = useState('');
     return <div className="class-agit-confirmation class-agit-management-confirmation">
-        <label><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} />이 작품의 학급 전시 수록 의사를 확인했습니다.</label>
-        <p>문집 수록과 외부 공개는 별도로 확인합니다.</p>
         {error && <p role="alert">{error}</p>}
-        <Button variant="primary" type="button" disabled={!acknowledged} onClick={() => {
-            try { onAdd(acknowledged); } catch (reason) { setError(reason.message); }
-        }}>전시에 담기</Button>
+        <Button variant="primary" type="button" onClick={() => {
+            try { onAdd(); } catch (reason) { setError(reason.message); }
+        }}>{refreshing ? '이 내용으로 반영' : '전시에 담기'}</Button>
     </div>;
 }
 
@@ -35,7 +32,7 @@ function ExternalWorkSettings({ item, onChange }) {
         } catch (reason) { setAlias(item.publicAlias); setError(reason.message); }
     };
     return <div className="class-agit-external-fields">
-        <label><input type="checkbox" checked={item.scopes.external} onChange={(event) => commit(event.target.checked)} />외부 수록 확인</label>
+        <label><input type="checkbox" checked={item.scopes.external} onChange={(event) => commit(event.target.checked)} />외부 공개에 포함</label>
         <label>가림 이름<input aria-label={`${item.title} 가림 이름`} value={alias} maxLength={limits.authorLength} onChange={(event) => setAlias(event.target.value)} onBlur={() => commit(item.scopes.external)} /></label>
         {error && <span role="alert">{error}</span>}
     </div>;
@@ -111,7 +108,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     const readSource = (source) => perform(async () => setCandidate(await sourceApi.getSource(activeClass.id, source.id || source.sourceId)));
     const runSavedAction = async (action, item) => {
         const titles = { publish: '저장한 전시를 학급에 공개할까요?', unpublish: '학급 공개를 중단할까요?', archive: '전시를 보관할까요?', restore: '전시를 초안으로 돌릴까요?', withdraw: '이 작품의 수록을 철회할까요?' };
-        if (!await ask({ title: Reflect.get(titles, action), body: action === 'withdraw' ? '공개판에서도 이 작품의 열람이 중단됩니다. 다시 공개하려면 전문과 수록 의사를 재확인해야 합니다.' : '저장된 전시를 기준으로 처리합니다.', confirmLabel: '진행하기' })) return;
+        if (!await ask({ title: Reflect.get(titles, action), body: action === 'withdraw' ? '공개판에서도 이 작품의 열람이 중단됩니다. 다시 공개하려면 원글을 다시 담고 발행해야 합니다.' : '저장된 전시를 기준으로 처리합니다.', confirmLabel: '진행하기' })) return;
         await perform(async () => { receiveDraft(await persistence.action(action, savedDraft.revision, item)); setMessage('전시 상태를 반영했습니다.'); });
     };
     const changeDraft = (change) => {
@@ -185,7 +182,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             <div role="tabpanel" id={`${stepId}-panel-share`} aria-labelledby={`${stepId}-tab-share`} hidden={step !== 'share'} className="class-agit-step-panel">
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>외부 공개할 작품과 표시 이름을 확인하고 공유 주소를 관리합니다.</p></div>
                 {persistence ? (shareRevision !== null && (persistence.renderShare ? persistence.renderShare({ key: shareRevision, onStateChange: setShareState }) : <p className="class-agit-empty">이 샘플은 저장·학급 공개까지 점검합니다. 문집·외부 공유 통합 샘플에서 주소 설정을 확인할 수 있습니다.</p>))
-                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 작품별 외부 수록 확인과 가림 이름을 정해 보세요.</p><ul className="class-agit-book-items">{draft.items.map((item) => <li key={item.sourceId}><strong>{item.title}</strong><ExternalWorkSettings item={item} onChange={changeDraft} /></li>)}</ul><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
+                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 외부에 공개할 작품과 가림 이름을 정해 보세요.</p><ul className="class-agit-book-items">{draft.items.map((item) => <li key={item.sourceId}><strong>{item.title}</strong><ExternalWorkSettings item={item} onChange={changeDraft} /></li>)}</ul><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
             </div>
 
             <footer className="class-agit-step-footer"><Button variant="ghost" type="button" disabled={stepIndex === 0} onClick={() => selectStep(EXHIBITION_STEPS[stepIndex - 1].id)}>← 이전 단계</Button>
@@ -194,8 +191,8 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
                 </div>
             </footer>
         </fieldset>
-        {candidate && <ArtworkReader work={{ id: candidate.id, author: candidate.student_name, ...presentSource(candidate) }} onClose={() => setCandidate(null)} footer={<CandidateConfirmation onAdd={(acknowledged) => {
-            setDraft(editExhibition(draft, { type: selectedSources.has(candidate.id) ? 'refresh' : 'add', source: candidate, classAcknowledged: acknowledged }));
+        {candidate && <ArtworkReader work={{ id: candidate.id, author: candidate.student_name, ...presentSource(candidate) }} onClose={() => setCandidate(null)} footer={<CandidateApply refreshing={selectedSources.has(candidate.id)} onAdd={() => {
+            setDraft(editExhibition(draft, { type: selectedSources.has(candidate.id) ? 'refresh' : 'add', source: candidate }));
             setCandidate(null); setMessage('작품을 전시에 담았습니다. 방과 액자는 자동으로 배치됩니다.');
         }} />} />}
     </section>;

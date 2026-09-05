@@ -14,7 +14,7 @@ const source = (index = 1, overrides = {}) => ({
     source_revision: `revision-${index}`, writing_context: 'assignment', is_submitted: true, is_confirmed: true,
     title: `작품 ${index}`, content: '첫 문단입니다.\n\n둘째 문단입니다.', ...overrides,
 });
-const add = (draft, item) => editExhibition(draft, { type: 'add', source: item, classAcknowledged: true });
+const add = (draft, item) => editExhibition(draft, { type: 'add', source: item });
 const makeDraft = (count) => Array.from({ length: count }, (_, i) => source(i + 1)).reduce(add, createExhibitionDraft('our-class'));
 
 test('class-agit은 기본 OFF이며 홈 요약 신호로 학생 카드를 제한한다', () => {
@@ -63,9 +63,8 @@ test('시는 기존 장르 계약으로 연·행을 보존하고 평문 호환�
     assert.deepEqual(presentSource(source(2, { input_template: 'poem', content: '첫 행\n둘째 행\n\n다음 연' })).blocks, ['첫 행\n둘째 행', '다음 연']);
 });
 
-test('학급 수록 확인은 필수이고 같은 글은 중복 선정할 수 없다', () => {
+test('별도 확인 없이 담을 수 있고 같은 글은 중복 선정할 수 없다', () => {
     const draft = makeDraft(0);
-    assert.throws(() => editExhibition(draft, { type: 'add', source: source() }), /수록 의사/);
     const selected = add(draft, source());
     assert.throws(() => add(selected, source()), /이미/);
     assert.equal(draft.items.length, 0);

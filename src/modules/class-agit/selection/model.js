@@ -10,7 +10,7 @@ export function toggleSelection(selected, row, capacity) {
 export function addExhibitionSources(draft, sources) {
     if (!sources.length || sources.length > limits.selectionBatch) throw new Error('담을 작품을 1~50편 선택해 주세요.');
     // Reduce only into a new value: a failed source never leaves a partially edited draft.
-    return sources.reduce((next, source) => editExhibition(next, { type: 'add', source, classAcknowledged: true }), draft);
+    return sources.reduce((next, source) => editExhibition(next, { type: 'add', source }), draft);
 }
 export function moveSelected(items, selectedIds, position) {
     const ids = new Set(selectedIds);

@@ -13,14 +13,14 @@ const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(
 const editionId = '11111111-1111-4111-8111-111111111111';
 const work = { id: 'chapter-1', title: '봄', author: '글쓴이', format: 'poem', kindLabel: '시', group: '계절', excerpt: '안녕 봄', blocks: ['안녕\n봄', '또 만나'] };
 const book = { title: '우리 책', subtitle: '', introduction: '', class_label: '', term: '', issue_date: '2026-09-05', grouping: 'custom' };
-test('문집은 범위별 확인·중복 제거·100편 상한을 지키고 서버에 본문을 보내지 않는다', () => {
+test('문집은 별도 확인 없이 중복 제거·100편 상한을 지키고 서버에 본문을 보내지 않는다', () => {
     const item = bookItemFromSource(previewSources[0], previewClass.id);
-    assert.equal(item.anthologyConfirmed, false);
+    assert.equal('anthologyConfirmed' in item, false);
     const next = addBookItems({ items: [] }, [item, item]); assert.equal(next.items.length, 1);
     const full = { items: Array.from({ length: 100 }, (_, i) => ({ sourceId: String(i) })) };
     assert.throws(() => addBookItems(full, [item]), /100편/);
     const payload = buildBookSavePayload({ ...book, id: editionId, revision: 2, items: [item] });
-    assert.deepEqual(Object.keys(payload.items[0]).sort(), ['anthologyConfirmed', 'sourceId', 'sourceRevision']);
+    assert.deepEqual(Object.keys(payload.items[0]).sort(), ['sourceId', 'sourceRevision']);
     assert.equal(payload.expected_revision, 2);
     assert.deepEqual(sortBookItems([{ author: '하늘' }, { author: '가람' }], 'author').map((i) => i.author), ['가람', '하늘']);
     assert.throws(() => bookItemFromSource({ ...previewSources[0], class_id: 'other' }, previewClass.id));
@@ -101,7 +101,7 @@ test('보관하거나 초안이 비어도 기존 외부 주소 관리에 진입�
     assert.match(workbench, /nextStep === 'share'[\s\S]*await saveDraft\(\); if \(!current\) return/);
     assert.match(workbench, /persistence\.renderShare\(\{ key: shareRevision, onStateChange: setShareState \}\)/);
     const manager = readFileSync('src/modules/class-agit/public/ShareManager.jsx', 'utf8');
-    assert.match(manager, /disabled=\{busy \|\| archived \|\| !confirmed/);
+    assert.match(manager, /disabled=\{busy \|\| archived \|\| !selected.length/);
     assert.match(manager, /보관한 전시의 기존 공유 주소를 관리할 수 있습니다/);
 });
 

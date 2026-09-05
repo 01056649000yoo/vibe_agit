@@ -41,6 +41,13 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
         try { setSelected(toggleSelection(pending, row, capacity)); setError(''); }
         catch (reason) { setError(reason.message); }
     };
+    const addSources = (sources) => {
+        if (sources.length > capacity) throw new Error(`남은 자리는 ${capacity}편입니다. 선택을 줄여 주세요.`);
+        onAdd(sources);
+        const ids = new Set(sources.map((source) => source.id));
+        setSelected((previous) => previous.filter((item) => !ids.has(item.id)));
+        setReview(null); setMessage(`${sources.length}편을 초안에 담았습니다.`);
+    };
     const pageRows = state.page?.items || [];
     const available = pageRows.filter((item) => !added.has(item.id));
     const pageSelected = available.length > 0 && available.every((item) => pending.some((entry) => entry.id === item.id));
@@ -79,16 +86,13 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                     {onArrange && <Button variant="outline" type="button" onClick={onArrange}>담은 작품 정리</Button>}
                     <Button variant="primary" type="button" disabled={!pending.length || pending.length > capacity} onClick={() => run(async () => {
                         const results = await api.getSources(classId, pending.map((item) => item.id));
-                        if (alive.current) { setReview(results); setMessage(''); }
+                        if (!alive.current) return;
+                        if (results.some((item) => !item.source)) { setReview(results); setMessage(''); }
+                        else addSources(results.map((item) => item.source));
                     })}>{busy ? '작품 확인 중…' : '선택 작품 담기'}</Button></div></div>
             </fieldset>
         </div>
-        {review && <BulkReview results={review} selected={pending} scope={scope} onCancel={() => setReview(null)} onAdd={(sources) => {
-            if (sources.length > capacity) throw new Error(`남은 자리는 ${capacity}편입니다. 선택을 줄여 주세요.`);
-            onAdd(sources);
-            const ids = new Set(sources.map((source) => source.id));
-            setSelected((previous) => previous.filter((item) => !ids.has(item.id))); setReview(null); setMessage(`${sources.length}편을 초안에 담았습니다.`);
-        }} />}
+        {review && <BulkReview results={review} selected={pending} scope={scope} onCancel={() => setReview(null)} onAdd={addSources} />}
         {reading && <ArtworkReader work={{ ...presentSource(reading), id: reading.id, author: reading.student_name }} onClose={() => setReading(null)} footer={<Button variant="outline" type="button" onClick={() => setReading(null)}>글 목록으로</Button>} />}
     </section>;
 }

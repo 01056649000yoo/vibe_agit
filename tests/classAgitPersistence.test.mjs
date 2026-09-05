@@ -9,16 +9,16 @@ const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publi
 const smoke = readFileSync('tests/sql/20261241_class_agit_internal_publication.smoke.sql', 'utf8');
 const source = { id: 'source', class_id: 'class', student_id: 'student', student_name: '학생', title: '작품', content: '첫 문단\n\n다음 문단',
     source_revision: 'old', writing_context: 'assignment', visibility: 'class', is_submitted: true, is_confirmed: true, input_template: 'freeform' };
-const initial = () => ({ ...editExhibition(createExhibitionDraft('class'), { type: 'add', source, classAcknowledged: true }), id: 'exhibition' });
+const initial = () => ({ ...editExhibition(createExhibitionDraft('class'), { type: 'add', source }), id: 'exhibition' });
 
 test('저장 요청은 원문과 개인정보·권한 필드를 보내지 않고 서버 revision만 사용한다', () => {
     const draft = initial();
     const payload = buildClassAgitSavePayload({ ...draft, revision: 999, state: 'published' }, 7);
     assert.deepEqual(payload, { exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction,
-        items: [{ sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01', classAcknowledged: true }] });
+        items: [{ sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01' }] });
     assert.doesNotMatch(JSON.stringify(payload), /student|authorName|blocks|published|999|첫 문단/);
     draft.items[0].scopes.class = false;
-    assert.equal(buildClassAgitSavePayload(draft, 7).items[0].classAcknowledged, false);
+    assert.equal('classAcknowledged' in buildClassAgitSavePayload(draft, 7).items[0], false);
 });
 
 test('다른 학급·과대한 작업공간 응답을 화면에 섞지 않는다', () => {
@@ -37,8 +37,7 @@ test('실제 freeform 과제와 재확인은 본문·버전·철회 상태를 �
     const draft = initial();
     draft.items[0] = { ...draft.items[0], itemId: 'item', sourceChanged: true, unavailable: true, revoked: true, scopes: { class: false, anthology: false, external: false } };
     const change = { type: 'refresh', source: { ...source, source_revision: 'new', content: '새 본문' } };
-    assert.throws(() => editExhibition(draft, change), /수록 의사/);
-    const refreshed = editExhibition(draft, { ...change, classAcknowledged: true });
+    const refreshed = editExhibition(draft, change);
     assert.equal(refreshed.items[0].sourceRevision, 'new');
     assert.deepEqual(refreshed.items[0].blocks, ['새 본문']);
     assert.equal(refreshed.items[0].itemId, 'item');

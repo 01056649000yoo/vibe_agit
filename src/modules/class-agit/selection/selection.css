@@ -42,9 +42,7 @@
 .class-agit-pending-selection li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
 .class-agit-pending-selection small { display: block; }
 .class-agit-review-list > li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ui-border); }
-.class-agit-review-list label { display: flex; gap: 12px; align-items: center; }
-.class-agit-review-list label > span { display: grid; gap: 4px; }
-.class-agit-review-list input { flex-shrink: 0; }
+.class-agit-review-list > li > div { display: grid; gap: 4px; }
 .class-agit-order-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 12px 0; }
 .class-agit-order-tools label { display: grid; gap: 4px; font-size: var(--ui-text-sm); }
 .class-agit-order-tools input[type='number'] { width: 86px; }

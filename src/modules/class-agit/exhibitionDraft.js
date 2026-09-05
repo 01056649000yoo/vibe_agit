@@ -15,7 +15,6 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
     } else if (change.type === 'add') {
         const reason = getSourceExclusion(change.source, draft.classId);
         if (reason) throw new Error(reason);
-        if (!change.classAcknowledged) throw new Error('학급 전시 수록 의사를 확인해 주세요.');
         if (draft.items.some((item) => item.sourceId === change.source.id)) throw new Error('이미 전시에 담은 글입니다.');
         if (draft.items.length >= limits.maxWorks) throw new Error(`한 전시는 ${limits.maxWorks}편까지 담을 수 있습니다.`);
         const previousAuthor = draft.items.find((item) => item.studentId === change.source.student_id);
@@ -29,7 +28,6 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
     } else if (change.type === 'refresh') {
         const reason = getSourceExclusion(change.source, draft.classId);
         if (reason) throw new Error(reason);
-        if (!change.classAcknowledged) throw new Error('학급 전시 수록 의사를 다시 확인해 주세요.');
         next = { ...draft, items: draft.items.map((item) => item.sourceId === change.source.id ? {
             ...item, ...presentSource(change.source), sourceRevision: change.source.source_revision,
             authorName: change.source.student_name, groupTitle: change.source.group_title || '', missionId: change.source.mission_id, sourceChanged: false, unavailable: false, revoked: false,

@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { addExhibitionSources, toggleSelection, moveSelected, sortSelectedWorks, replaceDraftItems, workKey } from '../src/modules/class-agit/selection/model.js';
-import { createExhibitionDraft } from '../src/modules/class-agit/exhibitionDraft.js';
+import { editExhibition, createExhibitionDraft } from '../src/modules/class-agit/exhibitionDraft.js';
 import { previewClass, previewSources, createPreviewDraft } from '../src/dev/fixtures/classAgitFixtures.js';
 import { selectionMissions, selectionSources, createClassAgitSelectionFixture } from '../src/dev/fixtures/classAgitSelectionFixture.js';
+import { buildClassAgitSavePayload } from '../src/modules/class-agit/api/contract.js';
+import { bookItemFromSource, buildBookSavePayload } from '../src/modules/class-agit/anthology/contract.js';
 import { CLASS_AGIT_LIMITS as limits } from '../src/modules/class-agit/policy.js';
 
 // Test-only paths are literal callers below, never user input.
@@ -13,7 +15,7 @@ const read = (path) => readFileSync(path, 'utf8');
 const sql = read('supabase/migrations/20261244_class_agit_mission_selection.sql');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?.split('$$;')[0] || '';
 
-test('여러 미션에서 선택한 순서를 유지하며 일괄 검토·잔여 용량 상한을 지킨다', () => {
+test('여러 미션에서 선택한 순서를 유지하며 일괄 담기·잔여 용량 상한을 지킨다', () => {
     let selection = [];
     for (const source of selectionSources.slice(0, 50)) selection = toggleSelection(selection, source, 120);
     assert.equal(selection.length, limits.selectionBatch);
@@ -24,7 +26,7 @@ test('여러 미션에서 선택한 순서를 유지하며 일괄 검토·잔여
     assert.equal(selection.length, 50);
 });
 
-test('일괄 담기는 기존 순서·별도 동의를 보존하고 실패한 묶음을 부분 적용하지 않는다', () => {
+test('일괄 담기는 기존 순서·공개 범위를 보존하고 실패한 묶음을 부분 적용하지 않는다', () => {
     const initial = createPreviewDraft(12);
     const next = addExhibitionSources(initial, previewSources.slice(12, 42));
     assert.deepEqual(next.items.slice(0, 12), initial.items);
@@ -128,4 +130,41 @@ test('전시·문집은 공용 탐색을 사용하고 열기 전 조회·영구 
     assert.match(api, /if \(result.error\).*throw result.error/);
     const paging = read('src/modules/class-agit/selection/useBrowsePage.js');
     assert.match(paging, /serial.current === ticket/); assert.match(paging, /cursors.slice\(0, position.index \+ 1\)/);
+});
+
+test('확인 절차 제거는 모든 저장 경로에서 함께 적용하고 공개 범위·세대·권한은 보존한다', () => {
+    const direct = read('supabase/migrations/20261245_class_agit_direct_selection.sql');
+    const body = (name) => direct.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?.split('$$;')[0] || '';
+    for (const name of ['run_class_agit_action_v1', 'run_class_agit_book_action_v1', 'run_class_agit_share_action_v1']) {
+        const sql = body(name);
+        assert.match(sql, /assert_class_agit_manager_v1\(p_class_id\)/);
+        assert.match(sql, /sourceRevision/);
+        assert.match(sql, /expected_revision/);
+        assert.match(sql, /'selected',v_actor/);
+        assert.doesNotMatch(sql, /classAcknowledged|anthologyConfirmed|externalConfirmed|,'confirmed',v_actor/);
+        assert.match(direct.split(`REVOKE ALL ON FUNCTION public.${name}(`)[1]?.split(';')[0] || '', /FROM PUBLIC,anon,authenticated,service_role$/);
+    }
+    assert.match(body('run_class_agit_action_v1'), /consent_id=CASE WHEN v_existing.revoked_at IS NOT NULL THEN gen_random_uuid\(\)/);
+    assert.match(body('run_class_agit_book_action_v1'), /consent_id=CASE WHEN class_agit_book_items.revoked_at IS NOT NULL THEN gen_random_uuid\(\)/);
+    assert.match(body('run_class_agit_share_action_v1'), /class_agit_valid_share_period_v1/);
+    assert.doesNotMatch(body('run_class_agit_share_action_v1'), /p_payload->'confirmed'/);
+    assert.doesNotMatch(body('get_class_agit_book_workspace_v1'), /anthologyConfirmed/);
+    for (const path of ['selection/BulkReview.jsx', 'selection/SourceBrowser.jsx', 'teacher/ExhibitionWorkbench.jsx', 'anthology/AnthologyManager.jsx', 'public/ShareManager.jsx']) {
+        assert.doesNotMatch(read(`src/modules/class-agit/${path}`), /수록 의사|공개 의사|classAcknowledged|anthologyConfirmed|externalConfirmed/);
+    }
+});
+
+
+test('확인 체크 없이 저장해도 철회된 작품은 메타데이터 저장으로 재선정하지 않는다', () => {
+    const source = previewSources[0];
+    const draft = createPreviewDraft(1);
+    const book = { id: 'book', revision: 1, title: '문집', items: [bookItemFromSource(source, previewClass.id)] };
+    for (const state of [{ revoked: true }, { unavailable: true }]) {
+        const invalidDraft = { ...draft, items: [{ ...draft.items[0], ...state }] };
+        assert.throws(() => buildClassAgitSavePayload(invalidDraft, 1), /원글을 다시 불러와/);
+        assert.throws(() => buildBookSavePayload({ ...book, items: [{ ...book.items[0], ...state }] }), /원글을 다시 불러와/);
+        const refreshed = editExhibition(invalidDraft, { type: 'refresh', source });
+        assert.equal(buildClassAgitSavePayload(refreshed, 1).items.length, 1);
+    }
+    assert.equal(buildBookSavePayload(book).items.length, 1);
 });

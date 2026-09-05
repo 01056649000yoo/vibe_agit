@@ -43,7 +43,7 @@ export async function createClassAgitReleaseFixture() {
             if (action === 'save') {
                 const items = [];
                 if (p.items.length > 100 || new Set(p.items.map((i) => i.sourceId)).size !== p.items.length) throw new Error('수록 작품을 확인해 주세요.');
-                for (const input of p.items) { const s = await source(input.sourceId); if (s.source_revision !== input.sourceRevision || !input.anthologyConfirmed) throw new Error('원글과 문집 수록 의사를 다시 확인해 주세요.'); const old = book.history.get(s.id); items.push({ ...bookItemFromSource(s, previewClass.id, true), itemId: old?.itemId || crypto.randomUUID(), consentId: old && !old.revoked ? old.consentId : crypto.randomUUID(), revoked: false }); }
+                for (const input of p.items) { const s = await source(input.sourceId); if (s.source_revision !== input.sourceRevision) throw new Error('바뀐 원글을 다시 불러와 주세요.'); const old = book.history.get(s.id); items.push({ ...bookItemFromSource(s, previewClass.id), itemId: old?.itemId || crypto.randomUUID(), consentId: old && !old.revoked ? old.consentId : crypto.randomUUID(), revoked: false }); }
                 Object.assign(book, { title: p.title, subtitle: p.subtitle, introduction: p.introduction, class_label: p.class_label, term: p.term, issue_date: p.issue_date, grouping: p.grouping, items });
                 items.forEach((i) => book.history.set(i.sourceId, i));
             } else if (action === 'finalize') {
@@ -52,14 +52,14 @@ export async function createClassAgitReleaseFixture() {
                 const snapshot = { print: ANTHOLOGY_PRINT_SETTINGS, title: book.title, subtitle: book.subtitle, introduction: book.introduction, class_label: book.class_label, term: book.term, issue_date: book.issue_date, grouping: book.grouping, works: book.items.map((i, index) => ({ id: `chapter-${index + 1}`, title: i.title, author: i.author, group: i.group, format: i.format, kindLabel: i.kindLabel, excerpt: i.excerpt, blocks: i.blocks, sourceId: i.sourceId, consentId: i.consentId })) };
                 book.editions.unshift({ id: crypto.randomUUID(), number: book.editions.length + 1, title: book.title, created_at: new Date().toISOString(), student_visible: false, snapshot: clone(snapshot) });
             } else if (action === 'show' || action === 'hide') book.editions.forEach((e) => { if (action === 'show' || e.id === p.edition_id) e.student_visible = action === 'show' && e.id === p.edition_id; });
-            else if (action === 'withdraw') { const item = book.items.find((i) => i.itemId === p.item_id); item.revoked = true; item.anthologyConfirmed = false; }
+            else if (action === 'withdraw') { const item = book.items.find((i) => i.itemId === p.item_id); item.revoked = true; }
             else if (action === 'archive' || action === 'restore') { book.archived = action === 'archive'; book.editions.forEach((e) => { e.student_visible = false; }); }
             book.revision++; return workspace(book.id);
         },
         async getBookPreview(_class, id, revision) {
             const book = currentBook(id); if (book.revision !== revision) throw new Error('최신 문집을 불러와 주세요.');
             const works = [];
-            for (const item of book.items) { if (item.revoked || (await source(item.sourceId)).source_revision !== item.sourceRevision) throw new Error('원글과 수록 의사를 확인해 주세요.'); works.push({ id: `chapter-${works.length + 1}`, title: item.title, author: item.author, group: item.group, format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: item.blocks }); }
+            for (const item of book.items) { if (item.revoked || (await source(item.sourceId)).source_revision !== item.sourceRevision) throw new Error('원글 상태를 확인해 주세요.'); works.push({ id: `chapter-${works.length + 1}`, title: item.title, author: item.author, group: item.group, format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: item.blocks }); }
             return { version: 1, id, number: 0, draft: true, book: { title: book.title, subtitle: book.subtitle, introduction: book.introduction, class_label: book.class_label, term: book.term, issue_date: book.issue_date, grouping: book.grouping, print: ANTHOLOGY_PRINT_SETTINGS, works } };
         },
         async getEdition(_class, id) { const book = [...books.values()].find((b) => b.editions.some((e) => e.id === id)); const ed = book?.editions.find((e) => e.id === id); if (!ed) throw new Error('확정판이 없습니다.'); const works = await visibleWorks(book, ed); if (works.length !== ed.snapshot.works.length) throw new Error('수록이 철회된 작품이 있습니다. 새 판을 만들어 주세요.'); return { version: 1, id, number: ed.number, book: { ...clone(ed.snapshot), works } }; },
@@ -82,7 +82,7 @@ export async function createClassAgitReleaseFixture() {
             if (action === 'publish') {
                 const period = buildSharePeriod(p.starts_at, p.expires_at);
                 const d = (await sourceApi.getWorkspace(previewClass.id, exId)).draft;
-                if (!p.confirmed || !p.items.length || p.exhibition_revision !== d.revision) throw new Error('공개 내용을 다시 확인해 주세요.');
+                if (!p.items.length || p.exhibition_revision !== d.revision) throw new Error('공개 내용을 다시 확인해 주세요.');
                 const works = [];
                 for (const [i, input] of p.items.entries()) { const original = d.items.find((item) => item.itemId === input.itemId); const current = await source(original.sourceId); if (current.source_revision !== input.sourceRevision) throw new Error('원글을 다시 확인해 주세요.'); works.push({ id: `published-${i + 1}`, itemId: crypto.randomUUID(), sourceId: original.sourceId, title: original.title, author: input.publicAlias, format: original.format, kindLabel: original.kindLabel, excerpt: original.excerpt, blocks: clone(original.blocks), revoked: false }); }
                 share = { ...period, title: p.title, introduction: p.introduction, works, token: p.token, revoked: false, publication_no: (share?.publication_no || 0) + 1, revision: share?.revision || 0 }; shares.set(exId, share);
@@ -106,7 +106,7 @@ export async function createClassAgitReleaseFixture() {
         return { ...result, publication_no: s.publication_no, starts_at: s.starts_at, expires_at: s.expires_at, server_now: new Date().toISOString() };
     } };
     const initialExhibitionId = crypto.randomUUID(); await sourceApi.runAction(previewClass.id, 'create', { exhibition_id: initialExhibitionId });
-    const initialExhibitionItems = sources.slice(0, 12).map((s) => ({ sourceId: s.id, sourceRevision: s.source_revision, classAcknowledged: true, publicAlias: '새싹 작가' }));
+    const initialExhibitionItems = sources.slice(0, 12).map((s) => ({ sourceId: s.id, sourceRevision: s.source_revision, publicAlias: '새싹 작가' }));
     await sourceApi.runAction(previewClass.id, 'save', { exhibition_id: initialExhibitionId, expected_revision: 1, title: '우리들의 작은 발견', introduction: '한 학기의 문장을 만나요.', items: initialExhibitionItems });
     return { api, sourceApi, publicApi, controls: { ...base.controls, expireIn(seconds) { for (const s of shares.values()) s.expires_at = new Date(Date.now() + seconds * 1000).toISOString(); }, expire() { for (const s of shares.values()) s.expires_at = new Date(0).toISOString(); }, token: () => lastToken,
         async sampleExhibition120() {
@@ -114,7 +114,7 @@ export async function createClassAgitReleaseFixture() {
             const created = await sourceApi.runAction(previewClass.id, 'create', { exhibition_id: id });
             await sourceApi.runAction(previewClass.id, 'save', { exhibition_id: id, expected_revision: created.draft.revision,
                 title: '120편의 작은 발견', introduction: '열 개의 전시실에서 우리 반의 글을 만나요.',
-                items: sources.map((s) => ({ sourceId: s.id, sourceRevision: s.source_revision, classAcknowledged: true, publicAlias: '새싹 작가' })) });
+                items: sources.map((s) => ({ sourceId: s.id, sourceRevision: s.source_revision, publicAlias: '새싹 작가' })) });
         },
-        async sampleBook100() { const id = crypto.randomUUID(); const ws = await api.bookAction(previewClass.id, 'create', { book_id: id }); const book = { ...ws.book, title: '백 개의 작은 이야기', subtitle: '긴 글과 시가 만나는 문집', class_label: '햇살반', term: '2026년 2학기', introduction: '서로 다른 목소리가 한 권의 책에서 만납니다.\n\n한 문장씩 천천히 읽어 주세요.', items: sources.slice(0, CLASS_AGIT_LIMITS.anthologyWorks).map((s) => bookItemFromSource(s, previewClass.id, true)) }; const saved = await api.saveBook(previewClass.id, book); await api.bookAction(previewClass.id, 'finalize', { book_id: id, expected_revision: saved.book.revision, confirmed: true }); } } };
+        async sampleBook100() { const id = crypto.randomUUID(); const ws = await api.bookAction(previewClass.id, 'create', { book_id: id }); const book = { ...ws.book, title: '백 개의 작은 이야기', subtitle: '긴 글과 시가 만나는 문집', class_label: '햇살반', term: '2026년 2학기', introduction: '서로 다른 목소리가 한 권의 책에서 만납니다.\n\n한 문장씩 천천히 읽어 주세요.', items: sources.slice(0, CLASS_AGIT_LIMITS.anthologyWorks).map((s) => bookItemFromSource(s, previewClass.id)) }; const saved = await api.saveBook(previewClass.id, book); await api.bookAction(previewClass.id, 'finalize', { book_id: id, expected_revision: saved.book.revision, confirmed: true }); } } };
 }
