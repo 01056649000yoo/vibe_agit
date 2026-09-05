@@ -14,7 +14,7 @@ const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?
 
 test('화면·DB 정본이 120편/10실로 일치하고 목록·문집 상한은 독립적으로 유지된다', () => {
     assert.equal(limits.maxWorks, 120);
-    assert.equal(limits.worksPerRoom, 12);
+    assert.equal(limits.worksPerRoom, 20);
     assert.equal(limits.maxRooms, 10);
     assert.equal(limits.maxCandidates, 100);
     assert.equal(limits.anthologyWorks, 100);

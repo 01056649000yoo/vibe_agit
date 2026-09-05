@@ -12,11 +12,11 @@ async function call(name, args) {
 export const classAgitStudentApi = {
     async getExhibitions() { return assertStudentExhibitions(await call('get_my_class_agit_exhibitions_v1')); },
     async getRoom(id, room = 0) {
-        return assertStudentRoom(await call('get_my_class_agit_room_v1', { p_exhibition_id: id, p_room: room }), id, room);
+        return assertStudentRoom(await call('get_my_class_agit_room_v1', { p_exhibition_id: id, p_room: room, p_layout_version: 2 }), id, room);
     },
     async getWork(id, publicationNo, workId) {
         return assertStudentWork(await call('get_my_class_agit_work_v1', {
-            p_exhibition_id: id, p_publication_no: publicationNo, p_work_id: workId,
+            p_exhibition_id: id, p_publication_no: publicationNo, p_work_id: workId, p_layout_version: 2,
         }), workId, publicationNo);
     },
 };

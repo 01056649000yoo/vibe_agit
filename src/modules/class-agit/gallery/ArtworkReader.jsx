@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal.jsx';
 import ModalCloseButton from '../../../components/common/ModalCloseButton.jsx';
 
-export default function ArtworkReader({ work, onClose, onPrevious, onNext, footer, loading = false, error = null }) {
+export default function ArtworkReader({ work, onClose, onPrevious, onNext, footer, roomTitle, loading = false, error = null }) {
     const dialog = useRef(null);
     const text = useRef(null);
     const titleId = useId();
@@ -29,7 +29,7 @@ export default function ArtworkReader({ work, onClose, onPrevious, onNext, foote
 
     return <ModalPortal><dialog className="class-agit-reader" ref={dialog} aria-labelledby={titleId} onKeyDown={keepFocusInside} onCancel={(event) => { event.preventDefault(); onClose(); }}>
         <header className="class-agit-reader__toolbar">
-            <span>작품 읽기</span>
+            <span>{roomTitle || '작품 읽기'}</span>
             <div aria-label="본문 글자 크기" role="group">
                 <button type="button" onClick={() => setFontSize((size) => Math.max(16, size - 2))} disabled={fontSize <= 16} aria-label="글자 작게">가−</button>
                 <output aria-live="polite">{fontSize}</output>

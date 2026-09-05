@@ -1,3 +1,5 @@
+import ExhibitionRightsNotice from './ExhibitionRightsNotice.jsx';
+import { EXHIBITION_RIGHTS } from './rightsNotice.js';
 import { useEffect, useRef, useState } from 'react';
 import { arrangeGalleryRooms } from './roomLayout.js';
 import GalleryRoom from './GalleryRoom.jsx';
@@ -5,7 +7,7 @@ import ArtworkReader from './ArtworkReader.jsx';
 import '../classAgit.css';
 
 export default function GalleryViewer({ exhibition, onExit, initialWorkId, embedded = false }) {
-    const rooms = arrangeGalleryRooms(exhibition.works);
+    const rooms = arrangeGalleryRooms(exhibition.works, exhibition.rooms);
     const [inGallery, setInGallery] = useState(Boolean(initialWorkId));
     const [roomIndex, setRoomIndex] = useState(() => Math.max(0, rooms.findIndex((room) => room.works.some((work) => work.id === initialWorkId))));
     const [view, setView] = useState('room');
@@ -20,8 +22,9 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId, embed
         frame?.focus({ preventScroll: true });
     }, [selectedId, initialWorkId]);
     const currentRoom = rooms.at(roomIndex);
-    const selected = exhibition.works.find((work) => work.id === selectedId);
-    const selectedIndex = exhibition.works.findIndex((work) => work.id === selectedId);
+    const visibleWorks = rooms.flatMap((room) => room.works);
+    const selected = visibleWorks.find((work) => work.id === selectedId);
+    const selectedIndex = visibleWorks.findIndex((work) => work.id === selectedId);
     const openWork = (work, element) => { opener.current = element; setSelectedId(work.id); };
     const closeWork = () => {
         setSelectedId(null);
@@ -32,28 +35,29 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId, embed
             <button type="button" className="class-agit-text-button" onClick={inGallery ? () => setInGallery(false) : onExit}>← {inGallery ? '전시 로비' : embedded && exhibition.audience === 'class' ? '작품 선택·순서' : '전시 편집으로'}</button>
             <span className="class-agit-eyebrow">{exhibition.audience === 'external' ? '외부 방문자 미리보기 · 읽기 전용' : '학생 미리보기'}</span>
         </header>
-        {!inGallery ? <div className="class-agit-lobby">
+        {!inGallery || !currentRoom ? <div className="class-agit-lobby">
             <div className="class-agit-lobby__copy"><span className="class-agit-eyebrow">우리반 아지트 · 글 전시관</span>
                 <h1>{exhibition.title}</h1><p>{exhibition.introduction}</p>
-                <div className="class-agit-lobby__numbers"><span><b>{exhibition.works.length}</b>편의 이야기</span><span><b>{rooms.length}</b>개의 전시실</span></div>
-                <button type="button" className="class-agit-primary" disabled={!exhibition.works.length} onClick={() => setInGallery(true)}>전시관 입장하기 <span aria-hidden="true">↗</span></button>
+                <div className="class-agit-lobby__numbers"><span><b>{rooms.reduce((sum, room) => sum + room.works.length, 0)}</b>편의 이야기</span><span><b>{rooms.length}</b>개의 전시실</span></div>
+                <ExhibitionRightsNotice /><nav className="class-agit-room-nav" aria-label="주제별 입장">{rooms.map((entry, index) => <button type="button" key={entry.id} onClick={() => { setRoomIndex(index); setInGallery(true); }}>{entry.title} · {entry.works.length}편 ↗</button>)}</nav><button type="button" className="class-agit-primary" disabled={!rooms.length} onClick={() => setInGallery(true)}>{EXHIBITION_RIGHTS.enter}</button>
                 {!exhibition.works.length && <p>공개 범위에 맞게 선택한 작품이 아직 없습니다.</p>}
             </div>
-            <div className="class-agit-lobby__window"><GalleryRoom theme={exhibition.theme} works={exhibition.works.slice(0, 4)} onOpen={openWork} /><span>작은 발견이 모여, 한 권의 계절이 됩니다.</span></div>
+            <div className="class-agit-lobby__window"><GalleryRoom theme={exhibition.theme} variant={rooms[0]?.variant} works={rooms[0]?.works.slice(0, 4) || []} onOpen={openWork} /><span>작은 발견이 모여, 한 권의 계절이 됩니다.</span></div>
         </div> : <>
             <div className="class-agit-gallery__title"><div><span className="class-agit-eyebrow">OUR LITTLE GALLERY</span><h1>{exhibition.title}</h1></div>
                 <div className="class-agit-segmented" role="group" aria-label="전시 보기 방식"><button type="button" aria-pressed={view === 'room'} onClick={() => setView('room')}>전시실 보기</button><button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>목록 보기</button></div>
             </div>
             <nav className="class-agit-room-nav" aria-label="전시실 이동">
-                {rooms.map((room, index) => <button key={room.id} type="button" aria-current={roomIndex === index ? 'page' : undefined} onClick={() => setRoomIndex(index)}>{String(room.number).padStart(2, '0')} 전시실 <small>{room.works.length}편</small></button>)}
+                {rooms.map((room, index) => <button key={room.id} type="button" aria-current={roomIndex === index ? 'page' : undefined} onClick={() => setRoomIndex(index)}>{String(room.number).padStart(2, '0')} · {room.title} <small>{room.works.length}편</small></button>)}
             </nav>
-            {view === 'room' ? <GalleryRoom theme={exhibition.theme} key={currentRoom.id} works={currentRoom.works} onOpen={openWork} roomNumber={currentRoom.number} /> : (
+            <h2>{currentRoom?.title}</h2><p>{currentRoom?.introduction}</p>
+            {view === 'room' ? <GalleryRoom theme={exhibition.theme} variant={currentRoom.variant} roomTitle={currentRoom.title} key={currentRoom.id} works={currentRoom.works} onOpen={openWork} roomNumber={currentRoom.number} /> : (
                 <ol className="class-agit-work-list">{currentRoom.works.map((work, index) => <li key={work.id}><button type="button" onClick={(event) => openWork(work, event.currentTarget)}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{work.title}</strong><p>{work.excerpt}</p><small>{work.kindLabel} · {work.author}</small></div><b aria-hidden="true">↗</b></button></li>)}</ol>
             )}
             <footer className="class-agit-gallery__footer"><button type="button" disabled={roomIndex === 0} onClick={() => setRoomIndex((index) => index - 1)}>← 이전 방</button><span>{roomIndex + 1} / {rooms.length} 전시실 · 액자를 눌러 글을 읽어 보세요.</span><button type="button" disabled={roomIndex >= rooms.length - 1} onClick={() => setRoomIndex((index) => index + 1)}>다음 방 →</button></footer>
         </>}
-        {selected && <ArtworkReader work={selected} onClose={closeWork}
-            onPrevious={selectedIndex > 0 ? () => setSelectedId(exhibition.works[selectedIndex - 1].id) : undefined}
-            onNext={selectedIndex < exhibition.works.length - 1 ? () => setSelectedId(exhibition.works[selectedIndex + 1].id) : undefined} />}
+        {selected && <ArtworkReader work={selected} roomTitle={rooms.find((entry) => entry.works.some((work) => work.id === selected.id))?.title} onClose={closeWork}
+            onPrevious={selectedIndex > 0 ? () => setSelectedId(visibleWorks[selectedIndex - 1].id) : undefined}
+            onNext={selectedIndex < visibleWorks.length - 1 ? () => setSelectedId(visibleWorks[selectedIndex + 1].id) : undefined} />}
     </section>;
 }

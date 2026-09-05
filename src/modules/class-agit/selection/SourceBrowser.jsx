@@ -9,7 +9,7 @@ import BulkReview from './BulkReview.jsx';
 import { toggleSelection } from './model.js';
 import './selection.css';
 
-export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', onAdd, onArrange, onBusyChange }) {
+export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, onCreateRoom, onAdd, onArrange, onBusyChange }) {
     const [mission, setMission] = useState(null);
     const [input, setInput] = useState('');
     const [query, setQuery] = useState('');
@@ -27,7 +27,7 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
     useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
     const added = new Set(items.map((item) => item.sourceId));
     const pending = selected.filter((item) => !added.has(item.id));
-    const capacity = Math.max(0, maximum - items.length);
+    const capacity = Math.max(0, Math.min(maximum - items.length, remaining ?? maximum));
     const filteredMission = searchAll ? null : mission;
     const state = useBrowsePage(api, 'getCandidates', classId, { mission_id: filteredMission?.id || null, query,
         sort: filteredMission ? 'student' : 'recent', excluded_students: unrepresented ? [...new Set(items.map((item) => item.studentId).filter(Boolean))].sort() : [] });
@@ -67,6 +67,7 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                     <MissionList api={api} classId={classId} items={items} selected={mission} onSelect={(next) => { setMission(next); setSearchAll(false); }} />
                     <div className="class-agit-selection-results">
                         <div className="class-agit-selection-heading"><div><h3>{filteredMission?.title || '전체 미션의 글'}</h3><p>{filteredMission ? '학생 이름순' : '최근 수정순'} · 학급에 공개하고 제출·확인한 글</p></div></div>
+                        {onCreateRoom && filteredMission && <Button variant="outline" type="button" onClick={() => { try { onCreateRoom(filteredMission.title); } catch (reason) { setError(reason.message); } }}>이 미션 제목으로 전시실 만들기</Button>}
                         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
                             <label>글 제목·학생 이름<input value={input} maxLength={80} placeholder="학급 전체에서 검색할 수 있어요" onChange={(event) => setInput(event.target.value)} /></label><Button variant="outline" type="submit">글 검색</Button>
                         </form>
@@ -82,14 +83,14 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                     </div>
                 </div>
                 {pending.length > 0 && <details className="class-agit-pending-selection"><summary>선택 내역 {pending.length}편 · 미션을 바꿔도 유지됩니다</summary><ul>{pending.map((row) => <li key={row.id}><span>{row.student_name} · {row.title}<small>{row.group_title}</small></span><Button variant="ghost" type="button" onClick={() => toggle(row)}>선택 해제</Button></li>)}</ul><Button variant="outline" type="button" onClick={() => setSelected([])}>선택 모두 해제</Button></details>}
-                <div className="class-agit-selection-summary"><span>선택 <strong>{pending.length}</strong>편 · 담음 <strong>{items.length}/{maximum}</strong>편</span><div className="class-agit-header-actions">
+                <div className="class-agit-selection-summary"><span>선택 <strong>{pending.length}</strong>편 · 담음 <strong>{items.length}/{maximum}</strong>편{destination && ` · ${destination} 남은 자리 ${capacity}편`}</span><div className="class-agit-header-actions">
                     {onArrange && <Button variant="outline" type="button" onClick={onArrange}>담은 작품 정리</Button>}
                     <Button variant="primary" type="button" disabled={!pending.length || pending.length > capacity} onClick={() => run(async () => {
                         const results = await api.getSources(classId, pending.map((item) => item.id));
                         if (!alive.current) return;
                         if (results.some((item) => !item.source)) { setReview(results); setMessage(''); }
                         else addSources(results.map((item) => item.source));
-                    })}>{busy ? '작품 확인 중…' : '선택 작품 담기'}</Button></div></div>
+                    })}>{busy ? '작품 확인 중…' : destination ? `${destination}에 ${pending.length}편 담기` : '선택 작품 담기'}</Button></div></div>
             </fieldset>
         </div>
         {review && <BulkReview results={review} selected={pending} scope={scope} onCancel={() => setReview(null)} onAdd={addSources} />}

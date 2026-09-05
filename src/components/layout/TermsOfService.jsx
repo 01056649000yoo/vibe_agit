@@ -1,4 +1,5 @@
 import React from 'react';
+import { EXHIBITION_RIGHTS } from '../../modules/class-agit/gallery/rightsNotice.js';
 
 /**
  * 끄적끄적 아지트 서비스 이용약관 ✨
@@ -8,6 +9,7 @@ const TermsOfService = () => {
         <div style={{ textAlign: 'left' }}>
             <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>
                 최초 시행일: 2026년 1월 16일 · 개정일: 2026년 8월 29일 · 개정 시행일: 2026년 9월 5일
+                <br />작품 저작권 안내 보완: 2026년 9월 5일
             </p>
 
             <section style={{ marginBottom: '20px' }}>
@@ -45,7 +47,8 @@ const TermsOfService = () => {
 
             <section style={{ marginBottom: '20px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>6. 지적 재산권</h4>
-                <p>서비스 및 관련 콘텐츠에 대한 모든 지적 재산권은 '끄적끄적 아지트' 또는 그 라이센서에게 있습니다. 귀하는 개인적, 비상업적 목적으로만 서비스를 사용할 수 있으며, '끄적끄적 아지트'의 명시적 허가 없이 서비스의 어떤 부분도 수정, 배포, 전송, 복제할 수 없습니다.</p>
+                <p>서비스의 소프트웨어와 운영자가 제공하는 콘텐츠에 대한 지적 재산권은 '끄적끄적 아지트' 또는 해당 권리자에게 있습니다. 학생 등 이용자가 작성한 작품의 저작권은 작성자 등 해당 저작자에게 있으며 서비스 이용이나 전시 발행으로 운영자에게 이전되지 않습니다.</p>
+                <p>{EXHIBITION_RIGHTS.notice} {EXHIBITION_RIGHTS.exception}</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>

@@ -28,7 +28,7 @@ export async function createClassAgitReleaseFixture() {
     };
     const getShare = async (_class, exId) => {
         const d = (await sourceApi.getWorkspace(previewClass.id, exId)).draft; const share = shares.get(exId);
-        return { version: 1, external_enabled: settings.external_enabled, exhibition_revision: d.revision, exhibition_theme: d.theme,
+        return { version: 1, external_enabled: settings.external_enabled, exhibition_revision: d.revision, exhibition_theme: d.theme, rooms: clone(d.rooms), layout_version: d.layoutVersion,
             candidates: d.items.map((i) => ({ ...i, unavailable: i.unavailable || i.revoked })),
             share: share ? { revision: share.revision, publication_no: share.publication_no, title: share.title, introduction: share.introduction, starts_at: share.starts_at, scheduled: Date.parse(share.starts_at) > Date.now(), expires_at: share.expires_at, revoked: share.revoked, expired: Date.parse(share.expires_at) < Date.now() } : null,
             published_items: share?.works.map((w) => ({ id: w.itemId, title: w.title, author: w.author, revoked: w.revoked })) || [] };
@@ -88,8 +88,8 @@ export async function createClassAgitReleaseFixture() {
                 const d = (await sourceApi.getWorkspace(previewClass.id, exId)).draft;
                 if (!p.items.length || p.exhibition_revision !== d.revision) throw new Error('공개 내용을 다시 확인해 주세요.');
                 const works = [];
-                for (const [i, input] of p.items.entries()) { const original = d.items.find((item) => item.itemId === input.itemId); const current = await source(original.sourceId); if (current.source_revision !== input.sourceRevision) throw new Error('원글을 다시 확인해 주세요.'); works.push({ id: `published-${i + 1}`, itemId: crypto.randomUUID(), sourceId: original.sourceId, title: original.title, author: input.publicAlias, format: original.format, kindLabel: original.kindLabel, excerpt: original.excerpt, blocks: clone(original.blocks), revoked: false }); }
-                share = { ...period, theme: d.theme, title: p.title, introduction: p.introduction, works, token: p.token, revoked: false, publication_no: (share?.publication_no || 0) + 1, revision: share?.revision || 0 }; shares.set(exId, share);
+                for (const [i, input] of p.items.entries()) { const original = d.items.find((item) => item.itemId === input.itemId); const current = await source(original.sourceId); if (current.source_revision !== input.sourceRevision) throw new Error('원글을 다시 확인해 주세요.'); works.push({ id: `published-${i + 1}`, itemId: crypto.randomUUID(), sourceId: original.sourceId, roomId: original.roomId, title: original.title, author: input.publicAlias, format: original.format, kindLabel: original.kindLabel, excerpt: original.excerpt, blocks: clone(original.blocks), revoked: false }); }
+                share = { ...period, rooms: clone(d.rooms), theme: d.theme, title: p.title, introduction: p.introduction, works, token: p.token, revoked: false, publication_no: (share?.publication_no || 0) + 1, revision: share?.revision || 0 }; shares.set(exId, share);
             }
             if (action === 'extend') Object.assign(share, buildSharePeriod(share.starts_at, p.expires_at));
             if (action === 'rotate') share.token = p.token;
@@ -105,7 +105,7 @@ export async function createClassAgitReleaseFixture() {
         if (workId && publicationNo !== s.publication_no) throw new Error('전시가 새로 바뀌었습니다.');
         const works = [];
         for (const item of s.works) { try { await source(item.sourceId); } catch { continue; } if (!item.revoked) { const { sourceId: _s, itemId: _i, revoked: _r, ...safe } = item; works.push(safe); } }
-        const result = await createPublicPreviewApi({ theme: s.theme, title: s.title, introduction: s.introduction, works }).read(token, room, workId);
+        const result = await createPublicPreviewApi({ theme: s.theme, title: s.title, introduction: s.introduction, works, rooms: s.rooms }).read(token, room, workId);
         if (workId && !result.work) throw new Error('이 작품은 지금 읽을 수 없습니다.');
         return { ...result, publication_no: s.publication_no, starts_at: s.starts_at, expires_at: s.expires_at, server_now: new Date().toISOString() };
     } };
@@ -119,6 +119,13 @@ export async function createClassAgitReleaseFixture() {
             await sourceApi.runAction(previewClass.id, 'save', { exhibition_id: id, expected_revision: created.draft.revision,
                 title: '120편의 작은 발견', introduction: '열 개의 전시실에서 우리 반의 글을 만나요.',
                 items: sources.map((s) => ({ sourceId: s.id, sourceRevision: s.source_revision, publicAlias: '새싹 작가' })) });
+        },
+        async sampleThemedExhibition41() {
+            const id = crypto.randomUUID();
+            const created = await sourceApi.runAction(previewClass.id, 'create', { exhibition_id: id });
+            const rooms = ['봄 이야기', '여름 이야기', '가을 이야기'].map((title, index) => ({ id: `season-${index}`, title, introduction: '우리 반 작가들의 계절', variant: index }));
+            await sourceApi.runAction(previewClass.id, 'save', { exhibition_id: id, expected_revision: created.draft.revision, title: '계절별 작은 발견', introduction: '13편·20편·8편으로 나눈 주제 전시', rooms, layout_version: 2,
+                items: sources.slice(0, 41).map((source, index) => ({ sourceId: source.id, sourceRevision: source.source_revision, publicAlias: '새싹 작가', roomId: rooms.at(index < 13 ? 0 : index < 33 ? 1 : 2).id })) });
         },
         async sampleBook100() { const id = crypto.randomUUID(); const ws = await api.bookAction(previewClass.id, 'create', { book_id: id }); const book = { ...ws.book, title: '백 개의 작은 이야기', subtitle: '긴 글과 시가 만나는 문집', class_label: '햇살반', term: '2026년 2학기', introduction: '서로 다른 목소리가 한 권의 책에서 만납니다.\n\n한 문장씩 천천히 읽어 주세요.', items: sources.slice(0, CLASS_AGIT_LIMITS.anthologyWorks).map((s) => bookItemFromSource(s, previewClass.id)) }; const saved = await api.saveBook(previewClass.id, book); await api.bookAction(previewClass.id, 'finalize', { book_id: id, expected_revision: saved.book.revision, confirmed: true }); } } };
 }

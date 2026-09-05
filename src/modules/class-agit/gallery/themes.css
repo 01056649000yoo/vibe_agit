@@ -19,3 +19,12 @@
 .class-agit-room[data-theme="museum"] { background:#e8edf2; }
 .class-agit-room[data-theme="library"] { background:#765137; }
 .class-agit-room[data-theme="night"] { background:#27334d; }
+/* 전시 디자인의 형태는 유지하고 방에 저장한 색상만 변주한다. */
+.class-agit-room[data-variant] .class-agit-room__back { background:linear-gradient(125deg,var(--variant-glow),var(--variant-wall)); }
+.class-agit-room[data-variant] :is(.class-agit-room__left,.class-agit-room__right) { background-color:var(--variant-side); }
+.class-agit-room[data-variant] .class-agit-room__floor { background:repeating-linear-gradient(95deg,transparent 0 12%,#6d6c6844 12.1% 12.3%),linear-gradient(var(--variant-floor),var(--variant-side)); }
+.class-agit-room[data-theme="library"][data-variant] .class-agit-room__back { background:repeating-linear-gradient(90deg,transparent 0 19.8%,#112e2540 20% 20.3%),linear-gradient(var(--variant-glow),var(--variant-wall)); }
+.class-agit-room[data-theme="night"][data-variant] .class-agit-room__back { background:radial-gradient(circle at 13% 16%,#e3eafd 0 1px,transparent 2px),radial-gradient(circle at 82% 23%,#fff4c4 0 1px,transparent 2px),linear-gradient(var(--variant-glow),var(--variant-wall));background-size:97px 79px,131px 103px,100% 100%; }
+.class-agit-room[data-variant="1"] .class-agit-room__plant { right:auto;left:1%;transform:scaleX(-1); }
+.class-agit-room[data-variant="2"] .class-agit-room__lights { left:14%;right:30%; }
+.class-agit-room[data-variant="3"] .class-agit-room__bench { left:22%; }

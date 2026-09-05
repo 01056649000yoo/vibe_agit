@@ -32,3 +32,35 @@ export function validBookPrintSettings(settings) {
         ? settings.paper === 'A4' && settings.design === undefined
         : settings.version === 2 && BOOK_PAPERS.some((paper) => paper.id === settings.paper) && BOOK_DESIGNS.some((design) => design.id === settings.design));
 }
+
+const ROOM_VARIANTS = Object.freeze({
+    garden: [
+        { label: '햇살 정원', wall: '#eeeee3', glow: '#fffef0', side: '#d4dec8', floor: '#cfb28b' },
+        { label: '푸른 하늘 정원', wall: '#c8e3eb', glow: '#f0fbff', side: '#9dc6d1', floor: '#c6b99c' },
+        { label: '살구꽃 정원', wall: '#f1d5c4', glow: '#fff3e6', side: '#d8b79e', floor: '#c79d79' },
+        { label: '초록 잎 정원', wall: '#ccddc7', glow: '#f0f6da', side: '#a7bea0', floor: '#b2aa83' },
+    ],
+    museum: [
+        { label: '하얀 전시장', wall: '#e8edf2', glow: '#ffffff', side: '#d3d9df', floor: '#d7dce2' },
+        { label: '푸른 회랑', wall: '#cbdce7', glow: '#f5fcff', side: '#aebdce', floor: '#bdcbd5' },
+        { label: '따뜻한 회랑', wall: '#e8dacb', glow: '#fff9ee', side: '#cfc0ae', floor: '#d9c7b1' },
+        { label: '보랏빛 회랑', wall: '#dcd4e8', glow: '#fcf7ff', side: '#c0b5cf', floor: '#c9c4d4' },
+    ],
+    library: [
+        { label: '초록 서재', wall: '#2b5145', glow: '#46695c', side: '#765137', floor: '#98724e' },
+        { label: '푸른 서재', wall: '#294e66', glow: '#52758a', side: '#674a39', floor: '#a08061' },
+        { label: '호박빛 서재', wall: '#69482e', glow: '#967347', side: '#573c28', floor: '#ad8455' },
+        { label: '자줏빛 서재', wall: '#503956', glow: '#795a7f', side: '#684a49', floor: '#94745f' },
+    ],
+    night: [
+        { label: '푸른 별밤', wall: '#3e5177', glow: '#17223e', side: '#192744', floor: '#44516b' },
+        { label: '보랏빛 은하', wall: '#605185', glow: '#291e46', side: '#37294f', floor: '#696080' },
+        { label: '새벽 바다', wall: '#386b7c', glow: '#142f45', side: '#1b3d50', floor: '#4e7180' },
+        { label: '노을 별자리', wall: '#79516b', glow: '#381f3f', side: '#4b2d48', floor: '#806477' },
+    ],
+});
+export const getRoomVariants = (theme) => Reflect.get(ROOM_VARIANTS, getGalleryTheme(theme).id);
+export function roomVariantStyle(theme, index) {
+    const variant = getRoomVariants(theme).at(Number.isInteger(index) && index >= 0 && index <= 3 ? index : 0);
+    return { '--variant-wall': variant.wall, '--variant-glow': variant.glow, '--variant-side': variant.side, '--variant-floor': variant.floor };
+}

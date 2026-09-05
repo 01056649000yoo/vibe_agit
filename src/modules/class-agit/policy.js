@@ -1,7 +1,8 @@
-const worksPerRoom = 12;
+const worksPerRoom = 20;
 const maxWorks = 120;
 export const CLASS_AGIT_LIMITS = Object.freeze({
-    worksPerRoom, maxRooms: Math.ceil(maxWorks / worksPerRoom), maxWorks, maxCandidates: 100,
+    worksPerRoom, maxRooms: 10, maxWorks, maxCandidates: 100,
+    roomTitleLength: 60, roomIntroductionLength: 240,
     titleLength: 80, introductionLength: 240, authorLength: 30,
     anthologyWorks: 100, externalExpiryDays: 30,
     selectionBatch: 50, candidatePage: 30, missionPage: 50,

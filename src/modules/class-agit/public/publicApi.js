@@ -27,7 +27,7 @@ export const publicClassAgitApi = {
         try { response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-agit-public-read`, {
             method: 'POST', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer',
             headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-            body: JSON.stringify({ p_token: token, p_room: room, p_work_id: workId, p_publication_no: publicationNo }), signal: AbortSignal.timeout(8000),
+            body: JSON.stringify({ p_token: token, p_room: room, p_work_id: workId, p_publication_no: publicationNo, p_layout_version: 2 }), signal: AbortSignal.timeout(8000),
         }); } catch { throw new Error('네트워크 연결을 확인하고 전시를 다시 열어 주세요.'); }
         let data; try { data = await response.json(); } catch { throw new Error('전시를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.'); }
         if (!response.ok && !data?.error) throw new Error('전시를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.');

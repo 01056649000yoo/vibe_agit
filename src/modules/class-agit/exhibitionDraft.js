@@ -1,13 +1,17 @@
+import { normalizeRoomDraft, newExhibitionRoom, assertRoomDraft, orderedRoomItems, editRooms } from './rooms.js';
+import { externalAuthor } from './public/sharingPolicy.js';
 import { getGalleryTheme } from './designs.js';
 import { CLASS_AGIT_LIMITS as limits } from './policy.js';
 import { getSourceExclusion, presentSource } from './sourceContract.js';
 
 export function createExhibitionDraft(classId, title = '우리의 작은 발견') {
-    return { classId, title, theme: 'garden', introduction: '평범한 하루에서 발견한 특별한 순간들. 우리 반 작가들의 이야기를 만나 보세요.', revision: 1, items: [] };
+    return { classId, title, theme: 'garden', introduction: '평범한 하루에서 발견한 특별한 순간들. 우리 반 작가들의 이야기를 만나 보세요.', revision: 1, layoutVersion: 2, rooms: [newExhibitionRoom()], items: [] };
 }
 
 export function editExhibition(draft, change, expectedRevision = draft.revision) {
     if (draft.revision !== expectedRevision) throw new Error('전시가 변경되었습니다. 최신 내용을 다시 확인해 주세요.');
+    draft = normalizeRoomDraft(draft);
+    if (change.type.startsWith('room-')) return editRooms(draft, change);
     let next = draft;
     const matches = (item) => change.itemId ? item.itemId === change.itemId : item.sourceId === change.sourceId;
     if (change.type === 'metadata') {
@@ -20,10 +24,16 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
         if (reason) throw new Error(reason);
         if (draft.items.some((item) => item.sourceId === change.source.id)) throw new Error('이미 전시에 담은 글입니다.');
         if (draft.items.length >= limits.maxWorks) throw new Error(`한 전시는 ${limits.maxWorks}편까지 담을 수 있습니다.`);
+        let roomId = change.roomId;
+        if (roomId === undefined) {
+            let room = draft.rooms.find((entry) => draft.items.filter((item) => item.roomId === entry.id).length < limits.worksPerRoom);
+            if (!room) { room = newExhibitionRoom(draft.rooms.length); draft = { ...draft, rooms: [...draft.rooms, room] }; }
+            roomId = room.id;
+        }
         const previousAuthor = draft.items.find((item) => item.studentId === change.source.student_id);
         const authorNumber = previousAuthor?.authorNumber ?? Math.max(0, ...draft.items.map((item) => item.authorNumber)) + 1;
         next = { ...draft, items: [...draft.items, {
-            ...presentSource(change.source), sourceId: change.source.id, studentId: change.source.student_id, missionId: change.source.mission_id,
+            ...presentSource(change.source), roomId, sourceId: change.source.id, studentId: change.source.student_id, missionId: change.source.mission_id,
             sourceRevision: change.source.source_revision, authorName: change.source.student_name, groupTitle: change.source.group_title || '',
             authorNumber, publicAlias: previousAuthor?.publicAlias || `새싹 작가 ${String(authorNumber).padStart(2, '0')}`,
             scopes: { class: true, anthology: false, external: false },
@@ -55,16 +65,18 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
     } else {
         throw new Error('지원하지 않는 전시 편집입니다.');
     }
-    return { ...next, revision: draft.revision + 1 };
+    next = assertRoomDraft(next);
+    return { ...next, items: orderedRoomItems(next), revision: draft.revision + 1 };
 }
 
 // 표시 필드만 명시적으로 복사한다. 외부 보기는 원글/학생 ID나 등록 이름을 받지 않는다.
 export function createGalleryPresentation(draft, audience = 'class') {
     if (!['class', 'external'].includes(audience)) throw new Error('잘못된 전시 열람 범위입니다.');
-    const works = draft.items.filter((item) => audience === 'external' ? item.scopes.external : item.scopes.class).map((item, index) => ({
-        id: `work-${index + 1}`, title: item.title,
-        author: audience === 'external' ? item.publicAlias : item.authorName,
+    draft = normalizeRoomDraft(draft);
+    const works = orderedRoomItems(draft).filter((item) => audience === 'external' ? !item.unavailable && !item.revoked && !item.sourceChanged : item.scopes.class).map((item, index) => ({
+        id: `work-${index + 1}`, roomId: item.roomId, title: item.title,
+        author: audience === 'external' ? externalAuthor(index) : item.authorName,
         format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: [...item.blocks],
     }));
-    return { title: draft.title.trim() || '제목 없는 전시', introduction: draft.introduction, audience, theme: getGalleryTheme(draft.theme).id, works };
+    return { title: draft.title.trim() || '제목 없는 전시', introduction: draft.introduction, audience, rooms: draft.rooms.map((room) => ({ ...room })), theme: getGalleryTheme(draft.theme).id, works };
 }

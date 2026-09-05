@@ -7,10 +7,10 @@ export function toggleSelection(selected, row, capacity) {
     if (selected.length >= Math.min(limits.selectionBatch, capacity)) throw new Error(`한 번에 최대 ${Math.min(limits.selectionBatch, capacity)}편을 선택할 수 있습니다. 먼저 담거나 선택을 줄여 주세요.`);
     return [...selected, row];
 }
-export function addExhibitionSources(draft, sources) {
+export function addExhibitionSources(draft, sources, roomId) {
     if (!sources.length || sources.length > limits.selectionBatch) throw new Error('담을 작품을 1~50편 선택해 주세요.');
     // Reduce only into a new value: a failed source never leaves a partially edited draft.
-    return sources.reduce((next, source) => editExhibition(next, { type: 'add', source }), draft);
+    return sources.reduce((next, source) => editExhibition(next, { type: 'add', source, roomId }), draft);
 }
 export function moveSelected(items, selectedIds, position) {
     const ids = new Set(selectedIds);

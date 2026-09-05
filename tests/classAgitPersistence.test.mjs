@@ -14,8 +14,8 @@ const initial = () => ({ ...editExhibition(createExhibitionDraft('class'), { typ
 test('저장 요청은 원문과 개인정보·권한 필드를 보내지 않고 서버 revision만 사용한다', () => {
     const draft = initial();
     const payload = buildClassAgitSavePayload({ ...draft, revision: 999, state: 'published' }, 7);
-    assert.deepEqual(payload, { exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction, theme: 'garden',
-        items: [{ sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01' }] });
+    assert.deepEqual(payload, { layout_version: 2, rooms: draft.rooms, exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction, theme: 'garden',
+        items: [{ roomId: draft.rooms[0].id, sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01' }] });
     assert.doesNotMatch(JSON.stringify(payload), /student|authorName|blocks|published|999|첫 문단/);
     draft.items[0].scopes.class = false;
     assert.equal('classAcknowledged' in buildClassAgitSavePayload(draft, 7).items[0], false);
@@ -47,7 +47,8 @@ test('실제 freeform 과제와 재확인은 본문·버전·철회 상태를 �
 });
 
 test('원글이 삭제되어 sourceId가 같은 null이어도 지정 작품 하나만 옮기고 뺀다', () => {
-    const draft = { ...initial(), items: ['a', 'b', 'c'].map((itemId) => ({ ...initial().items[0], itemId, sourceId: null })) };
+    const seed = initial();
+    const draft = { ...seed, items: ['a', 'b', 'c'].map((itemId) => ({ ...seed.items[0], itemId, sourceId: null })) };
     const moved = editExhibition(draft, { type: 'move', sourceId: null, itemId: 'b', direction: 1 });
     assert.deepEqual(moved.items.map((item) => item.itemId), ['a', 'c', 'b']);
     assert.deepEqual(editExhibition(moved, { type: 'remove', sourceId: null, itemId: 'c' }).items.map((item) => item.itemId), ['a', 'b']);

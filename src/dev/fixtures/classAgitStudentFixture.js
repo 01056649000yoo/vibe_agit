@@ -1,3 +1,5 @@
+import { newExhibitionRoom } from '../../modules/class-agit/rooms.js';
+import { arrangeGalleryRooms } from '../../modules/class-agit/gallery/roomLayout.js';
 import { createPreviewDraft, previewClass } from './classAgitFixtures.js';
 import { createGalleryPresentation } from '../../modules/class-agit/exhibitionDraft.js';
 import { assertStudentExhibitions, assertStudentRoom, assertStudentWork } from '../../modules/class-agit/api/studentContract.js';
@@ -5,7 +7,10 @@ import { assertStudentExhibitions, assertStudentRoom, assertStudentWork } from '
 export const studentExhibitionId = '11111111-1111-4111-8111-111111111111';
 
 export function createClassAgitStudentFixture(count, onRead = () => {}) {
-    const works = createGalleryPresentation(createPreviewDraft(count)).works.map((item, index) => ({ ...item, id: `published-${index + 1}` }));
+    const draft = createPreviewDraft(count);
+    const definitions = count === 41 ? ['봄 이야기', '여름 이야기', '가을 이야기'].map((title, i) => newExhibitionRoom(i, title, `season-${i}`)) : null;
+    if (definitions) { draft.rooms = definitions; draft.items = draft.items.map((item, i) => ({ ...item, roomId: definitions[i < 13 ? 0 : i < 33 ? 1 : 2].id })); }
+    const works = createGalleryPresentation(draft).works.map((item, index) => ({ ...item, id: `published-${index + 1}` }));
     let publicationNo = 1;
     let open = true;
     let slowNext = false;
@@ -28,8 +33,9 @@ export function createClassAgitStudentFixture(count, onRead = () => {}) {
             async getRoom(id, room = 0) {
                 record('room'); ensureOpen(id);
                 const all = visible();
-                const rooms = Array.from({ length: Math.ceil(all.length / 12) }, (_, index) => ({ number: index + 1, count: Math.min(12, all.length - index * 12) }));
-                const items = room ? all.slice((room - 1) * 12, room * 12).map(({ id, title, author, format, kindLabel, excerpt }) => ({ id, title, author, format, kindLabel, excerpt })) : [];
+                const grouped = definitions ? arrangeGalleryRooms(all, definitions) : null;
+                const rooms = grouped ? grouped.map(({ number, title, introduction, variant, works }) => ({ number, title, introduction, variant, count: works.length })) : Array.from({ length: Math.ceil(all.length / 12) }, (_, index) => ({ number: index + 1, count: Math.min(12, all.length - index * 12) }));
+                const items = room ? (grouped ? grouped.find((entry) => entry.number === room)?.works || [] : all.slice((room - 1) * 12, room * 12)).map(({ id, title, author, format, kindLabel, excerpt }) => ({ id, title, author, format, kindLabel, excerpt })) : [];
                 return assertStudentRoom({ version: 1, exhibition_id: id, title: base().title, introduction: base().introduction,
                     publication_no: publicationNo, room, rooms, total_count: all.length, items }, id, room);
             },
@@ -40,7 +46,7 @@ export function createClassAgitStudentFixture(count, onRead = () => {}) {
                 const all = visible();
                 const index = all.findIndex((item) => item.id === workId);
                 if (index < 0) throw new Error('이 작품은 지금 읽을 수 없어요. 다른 작품을 골라 주세요.');
-                const response = assertStudentWork({ version: 1, publication_no: edition, work: structuredClone(all.at(index)),
+                const response = assertStudentWork({ version: 1, publication_no: edition, room_title: definitions?.find((r) => r.id === all.at(index).roomId)?.title || '', work: structuredClone(Object.fromEntries(Object.entries(all.at(index)).filter(([key]) => key !== 'roomId'))),
                     previous_id: index > 0 ? all.at(index - 1).id : null, next_id: all.at(index + 1)?.id || null }, workId, edition);
                 if (slowNext) { slowNext = false; await new Promise((resolve) => setTimeout(resolve, 10000)); }
                 return response;

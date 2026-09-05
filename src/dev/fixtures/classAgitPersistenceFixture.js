@@ -1,3 +1,5 @@
+import { assertRoomDraft, normalizeRoomDraft } from '../../modules/class-agit/rooms.js';
+import { arrangeGalleryRooms } from '../../modules/class-agit/gallery/roomLayout.js';
 import { createClassAgitBrowseFixture } from './classAgitBrowseFixture.js';
 import { createExhibitionDraft, editExhibition } from '../../modules/class-agit/exhibitionDraft.js';
 import { getSourceExclusion } from '../../modules/class-agit/sourceContract.js';
@@ -52,21 +54,23 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
             if (payload.expected_revision !== current.revision) throw new Error('다른 화면에서 전시가 변경되었습니다. 현재 편집은 남겨 두고 최신 전시를 다시 불러와 주세요.');
             if (action === 'delete') { if (!payload.confirmed) throw new Error('전시 삭제를 확인해 주세요.'); projects.delete(id); return workspace(); }
             if (action === 'save') {
-                let next = { ...current, title: payload.title.trim(), introduction: payload.introduction, theme: payload.theme || current.theme, items: [] };
+                let next = { ...current, title: payload.title.trim(), introduction: payload.introduction, theme: payload.theme || current.theme, rooms: payload.rooms || normalizeRoomDraft({ items: payload.items }).rooms, layoutVersion: payload.rooms ? 2 : 1, items: [] };
                 for (const item of payload.items) {
                     const source = readSource(item.sourceId);
                     if (source.source_revision !== item.sourceRevision) throw new Error('원글 내용이 바뀌었습니다. 전문을 다시 확인해 주세요.');
-                    next = editExhibition(next, { type: 'add', source });
+                    const roomId = payload.rooms ? item.roomId : next.rooms[Math.floor(payload.items.indexOf(item) / 12)].id;
+                    next = editExhibition(next, { type: 'add', source, roomId });
                     const previous = project.history.get(item.sourceId);
-                    const saved = { ...next.items.at(-1), itemId: previous?.itemId || crypto.randomUUID(),
+                    const saved = { ...next.items.find((entry) => entry.sourceId === item.sourceId), itemId: previous?.itemId || crypto.randomUUID(),
                         consentId: previous && !previous.revoked ? previous.consentId : crypto.randomUUID(), publicAlias: item.publicAlias, revoked: false };
-                    next.items[next.items.length - 1] = saved;
+                    next.items = next.items.map((entry) => entry.sourceId === item.sourceId ? saved : entry);
                 }
                 project.draft = { ...next, revision: current.revision + 1 };
                 for (const item of project.draft.items) project.history.set(item.sourceId, item);
                 return workspace(id);
             }
             if (action === 'publish') {
+                assertRoomDraft(current, true);
                 if (!enabled || !current.items.length) throw new Error('학급 공개 설정과 작품을 확인해 주세요.');
                 for (const item of current.items) {
                     if (item.revoked || readSource(item.sourceId).source_revision !== item.sourceRevision) throw new Error('원글 상태가 바뀌었습니다. 전문을 다시 확인해 주세요.');
@@ -92,10 +96,12 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
                 try { readSource(item.sourceId); } catch { return false; }
                 return !latest.revoked && latest.consentId === item.consentId;
             });
-            return { version: 1, publication_no: published.publicationNo, room, room_count: Math.max(1, Math.ceil(visible.length / 12)),
+            const grouped = arrangeGalleryRooms(visible, published.rooms);
+            const rooms = grouped.map(({ number, title, introduction, variant, works }) => ({ number, title, introduction, variant, count: works.length }));
+            return { version: 1, publication_no: published.publicationNo, room, rooms, room_count: rooms.length,
                 total_count: visible.length, blocked_count: published.items.length - visible.length,
                 exhibition: { title: published.title, introduction: published.introduction, theme: published.theme, audience: 'class',
-                    works: visible.slice((room - 1) * 12, room * 12).map((item, index) => ({ id: `published-${room}-${index}`,
+                    works: (grouped.find((entry) => entry.number === room)?.works || []).map((item, index) => ({ id: `published-${room}-${index}`,
                         title: item.title, author: item.authorName, format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: [...item.blocks] })) } };
         },
     };

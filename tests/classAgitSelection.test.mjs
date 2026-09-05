@@ -40,14 +40,14 @@ test('일괄 담기는 기존 순서·공개 범위를 보존하고 실패한 �
     assert.throws(() => addExhibitionSources(createPreviewDraft(119), previewSources.slice(119, 121)), /120편/);
 });
 
-test('120편 중 30편 이동은 선택 그룹 내부 순서·나머지 순서·열 개 방을 보존한다', () => {
+test('120편 중 30편 이동은 선택 그룹 내부 순서·나머지 순서·여섯 개 기본 방을 보존한다', () => {
     const original = createPreviewDraft(120).items;
     const selected = original.filter((_, index) => index % 4 === 0).map(workKey);
     const next = moveSelected(original, selected, 25);
     assert.equal(next.length, 120); assert.equal(new Set(next.map(workKey)).size, 120);
     assert.deepEqual(next.slice(24, 54).map(workKey), selected);
     assert.deepEqual(next.filter((item) => !selected.includes(workKey(item))), original.filter((item) => !selected.includes(workKey(item))));
-    assert.equal(Math.ceil(next.length / limits.worksPerRoom), 10);
+    assert.equal(Math.ceil(next.length / limits.worksPerRoom), 6);
     assert.deepEqual(moveSelected(original, selected, 120).slice(-30).map(workKey), selected);
     assert.deepEqual(moveSelected(original, selected, 1).slice(0, 30).map(workKey), selected);
     assert.throws(() => moveSelected(original, selected, 0));

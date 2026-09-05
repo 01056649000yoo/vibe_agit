@@ -9,11 +9,17 @@ export function getGallerySlot(index) {
         width: GALLERY_ROOM.slotWidth, height: GALLERY_ROOM.slotHeight };
 }
 
-export function arrangeGalleryRooms(works) {
+export function galleryRoomHeight(count) {
+    const rows = Math.max(3, Math.ceil(count / GALLERY_ROOM.columns));
+    return Math.max(GALLERY_ROOM.height, Math.ceil((GALLERY_ROOM.y + rows * GALLERY_ROOM.slotHeight + (rows - 1) * GALLERY_ROOM.gapY + 30) / .83));
+}
+export function arrangeGalleryRooms(works, definitions) {
     if (works.length > CLASS_AGIT_LIMITS.maxWorks) throw new Error(`전시는 최대 ${CLASS_AGIT_LIMITS.maxWorks}편입니다.`);
+    if (definitions) return definitions.map((room, index) => ({ ...room, number: index + 1, works: works.filter((work) => work.roomId === room.id) })).filter((room) => room.works.length);
+    // 명시적 구성이 없는 과거 표시본만 12편 단위로 읽는다.
     const rooms = [];
-    for (let start = 0; start < works.length; start += CLASS_AGIT_LIMITS.worksPerRoom) {
-        rooms.push({ id: `room-${rooms.length + 1}`, number: rooms.length + 1, works: works.slice(start, start + CLASS_AGIT_LIMITS.worksPerRoom) });
+    for (let start = 0; start < works.length; start += 12) {
+        rooms.push({ id: `room-${rooms.length + 1}`, title: `${rooms.length + 1} 전시실`, introduction: '', variant: 0, number: rooms.length + 1, works: works.slice(start, start + 12) });
     }
     return rooms;
 }

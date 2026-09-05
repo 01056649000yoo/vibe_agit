@@ -14,6 +14,7 @@ export default function ClassAgitReleasePreview() {
         <button type="button" onClick={() => setArea('teacher')}>교사 관리</button><button type="button" onClick={() => { setArea('student'); setRoute({ mode: 'books' }); }}>학생 문집 서가</button>
         <button type="button" onClick={() => { setToken(fixture.controls.token() || ''); setArea('public'); }}>현재 공유 방문자</button>
         <button type="button" onClick={async () => { await fixture.controls.sampleExhibition120(); setArea('teacher'); setVersion((v) => v + 1); setMessage('120편 전시를 만들었습니다. 전시 목록에서 열어 보세요.'); }}>120편 전시 준비</button>
+        <button type="button" onClick={async () => { await fixture.controls.sampleThemedExhibition41(); setArea('teacher'); setVersion((value) => value + 1); setMessage('13편·20편·8편의 주제 전시를 준비했습니다.'); }}>41편 주제 전시 준비</button>
         <button type="button" onClick={async () => { await fixture.controls.sampleBook100(); setVersion((v) => v + 1); setMessage('100편 확정판을 만들었습니다. 문집 목록에서 인쇄를 확인하세요.'); }}>100편 문집 준비</button>
         <button type="button" onClick={() => { fixture.controls.changeSource(); setMessage('첫 원글을 수정했습니다. 확정판은 그대로 보관됩니다.'); }}>첫 원글 수정</button>
         <button type="button" onClick={() => { fixture.controls.recallSource(); setMessage('첫 원글을 회수했습니다. 다음 조회와 출력에서 확인하세요.'); }}>첫 원글 회수</button>

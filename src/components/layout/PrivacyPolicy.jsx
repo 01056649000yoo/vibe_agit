@@ -1,13 +1,22 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
+import { EXHIBITION_RIGHTS } from '../../modules/class-agit/gallery/rightsNotice.js';
 
 /**
  * 끄적끄적 아지트 개인정보 처리방침 ✨
  */
 const PrivacyPolicy = () => {
+    const exhibitionSection = useRef(null);
+    useEffect(() => {
+        if (window.location.pathname === '/privacy' && window.location.hash === '#class-agit-exhibition') {
+            exhibitionSection.current?.focus({ preventScroll: true });
+            exhibitionSection.current?.scrollIntoView({ block: 'start' });
+        }
+    }, []);
     return (
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                최종 수정일: 2026년 8월 29일 · 시행일: 2026년 9월 5일
+                기존 정책 개정 이력 — 최종 수정일: 2026년 8월 29일 · 시행일: 2026년 9월 5일
+                <br />전시 공개·작품 보호 안내 보완: 2026년 9월 5일
             </p>
 
             <section style={{ marginBottom: '30px' }}>
@@ -134,6 +143,20 @@ const PrivacyPolicy = () => {
                     <p>연락처: yshgg@naver.com</p>
                     <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#7F8C8D' }}>※ 개인정보 침해에 대한 상담은 개인정보침해신고센터(국번없이 118)를 통해 받을 수 있습니다.</p>
                 </div>
+            </section>
+
+            <section id="class-agit-exhibition" ref={exhibitionSection} tabIndex={-1} style={{ marginBottom: '30px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제9조의2 (우리반 아지트 전시 공개와 작품 보호)</h4>
+                <p>담당 교사가 전시 작품을 선정하고 외부 공유 주소를 발급하면, 주소를 전달받은 사람은 로그인 없이 전시 기간 동안 작품을 읽을 수 있습니다. 외부 공유는 관리자가 허용한 학급에서만 이용할 수 있으며, 전시를 만들거나 학급에 공개하는 것만으로 외부에 공개되지는 않습니다.</p>
+                <ul style={{ paddingLeft: '20px' }}>
+                    <li><strong>공개 목적과 항목:</strong> 학생 글 감상을 위해 교사가 전시에 담은 작품 전체의 제목·본문·장르, 자동 작성자 표시, 전시 제목·소개·디자인·기간을 공개합니다. 학생의 계정 식별자나 등록 이름, 학교·학급 정보를 작성자 정보로 자동 공개하지 않습니다.</li>
+                    <li><strong>작성자 표시:</strong> 새 외부 공개본은 작품 순서에 따라 ‘새싹 작가 01’ 같은 표시를 자동으로 사용합니다. 이는 제목·본문의 개인정보를 자동으로 제거하거나 완전한 익명성을 보장한다는 뜻은 아닙니다. 교사는 제목·본문·소개에 포함된 이름·연락처 등 개인정보와 필요한 공개 권한을 발행 전에 확인해야 합니다.</li>
+                    <li><strong>공개 기간과 중단:</strong> 외부 전시는 시작부터 최대 30일이며 종료 시각부터 서비스에서 외부 열람을 차단합니다. 교사는 공유 주소 해지, 작품 수록 철회 또는 전시 삭제로 열람을 중단할 수 있습니다. 이미 방문자가 복제한 자료까지 회수하는 기능은 제공하지 않습니다.</li>
+                    <li><strong>발행본 보관:</strong> 발행 당시 내용을 별도 전시본으로 보관하므로 원글을 수정해도 공개본에 자동 반영되지 않습니다. 공개 기간 종료는 외부 접근의 중단이며 서버 자료의 즉시 삭제를 뜻하지 않습니다. 전시를 삭제하면 해당 공개본과 공유 주소를 삭제하며, 학생 원글은 별도로 유지됩니다. 학생·학급 자료의 보유 및 삭제는 제4조를 따릅니다.</li>
+                    <li><strong>권리 행사:</strong> 학생 또는 법정대리인은 담당 교사나 제9조의 개인정보 보호책임자에게 전시 공개 중단·삭제를 요청할 수 있습니다. 외부 공개에 필요한 개인정보 처리 근거나 권리자의 허락을 입장 안내 확인으로 대신하지 않습니다.</li>
+                </ul>
+                <p><strong>{EXHIBITION_RIGHTS.ownership}</strong> {EXHIBITION_RIGHTS.notice} {EXHIBITION_RIGHTS.exception}</p>
+                <p>전시 입구에서 작품 이용 안내를 보여 주며, 확인 버튼 클릭에 따른 별도의 개인정보나 동의 이력을 저장하지 않습니다. 이 안내는 캡처·복제를 기술적으로 차단하는 기능이 아닙니다.</p>
             </section>
 
             <section style={{ marginBottom: '30px' }}>

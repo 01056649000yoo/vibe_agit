@@ -25,7 +25,8 @@ export function assertStudentRoom(data, id, room) {
         || (data.visibility_revision !== undefined && (!Number.isInteger(data.visibility_revision) || data.visibility_revision < 1))
         || !Number.isInteger(data.total_count) || data.total_count < 0 || data.total_count > limits.maxWorks
         || !Array.isArray(data.rooms) || data.rooms.length > limits.maxRooms
-        || data.rooms.some((entry, index) => !keys(entry, ['number', 'count']) || entry.number !== index + 1 || !Number.isInteger(entry.count) || entry.count < 1 || entry.count > limits.worksPerRoom)
+        || data.rooms.some((entry) => !keys(entry, ['number', 'count', 'title', 'introduction', 'variant']) || !Number.isInteger(entry.number) || entry.number < 1 || entry.number > limits.maxRooms || !Number.isInteger(entry.count) || entry.count < 1 || entry.count > limits.worksPerRoom || (entry.title !== undefined && !text(entry.title, 60)) || (entry.introduction !== undefined && !text(entry.introduction, 240)) || (entry.variant !== undefined && (!Number.isInteger(entry.variant) || entry.variant < 0 || entry.variant > 3)))
+        || new Set(data.rooms.map((entry) => entry.number)).size !== data.rooms.length
         || data.rooms.reduce((sum, entry) => sum + entry.count, 0) !== data.total_count
         || !Array.isArray(data.items) || data.items.length > (room === 0 ? 0 : limits.worksPerRoom)
         || data.items.length !== (room === 0 ? 0 : (data.rooms.find((entry) => entry.number === room)?.count ?? 0))
@@ -34,7 +35,7 @@ export function assertStudentRoom(data, id, room) {
 }
 
 export function assertStudentWork(data, id, publicationNo) {
-    if (!keys(data, ['version', 'publication_no', 'previous_id', 'next_id', 'work', 'visibility_revision']) || data?.version !== 1 || data.publication_no !== publicationNo || data.work?.id !== id || !validSummary(data.work, true)
+    if (!keys(data, ['version', 'publication_no', 'previous_id', 'next_id', 'work', 'visibility_revision', 'room_title']) || data?.version !== 1 || data.publication_no !== publicationNo || data.work?.id !== id || (data.room_title !== undefined && !text(data.room_title, limits.roomTitleLength)) || !validSummary(data.work, true)
         || !Array.isArray(data.work.blocks) || data.work.blocks.length < 1 || data.work.blocks.length > 200
         || data.work.blocks.some((block) => !text(block, 20000)) || !text(data.work.blocks.join(' '), 20000)
         || (data.previous_id != null && !workId(data.previous_id)) || (data.next_id != null && !workId(data.next_id))) fail();

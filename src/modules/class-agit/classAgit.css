@@ -87,6 +87,7 @@
 .class-agit-step-panel .class-agit-order-panel li .class-agit-header-actions { gap: 6px; }
 .class-agit-step-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px 0 0; border-top: 1px solid var(--ca-line); }
 @container (max-width: 760px) {
+    .class-agit-room { aspect-ratio: auto; min-height: 425px; }
     .class-agit-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .class-agit-settings-layout { grid-template-columns: 1fr; gap: 16px; }
     .class-agit-settings-card { padding: 20px; }
@@ -225,6 +226,7 @@
 }
 /* Below 760px the room becomes a full-size, horizontally browsable wall: text never shrinks. */
 @container (max-width: 760px) {
+    .class-agit-room { aspect-ratio: auto; min-height: 425px; }
     .class-agit-room__works { display: flex; gap: 25px; padding: 70px 35px 85px; position: relative; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
     .class-agit-frame { position: relative; top: auto; left: auto; flex: 0 0 215px; height: 270px; scroll-snap-align: center; }
     .class-agit-frame > button { padding: 9px; }.class-agit-frame__paper { padding: 18px; gap: 14px; }.class-agit-frame strong { font-size: 19px; -webkit-line-clamp: 3; }.class-agit-frame__excerpt { height: auto; flex-shrink: 1; font-size: 14px; -webkit-line-clamp: 3; }.class-agit-frame__kind { font-size: 11px; }.class-agit-frame__author { font-size: 14px; padding-top: 12px; }
@@ -268,3 +270,7 @@
 .class-agit-share-link { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:20px; margin:20px 0; background:#eaf3e9; border-radius:12px; }
 .class-agit-share-link label { flex:1 1 260px; min-width:0; }.class-agit-public footer { margin-top:28px; color:#6e7a70; text-align:center; }
 @media(max-width:700px) { .class-agit-book-layout { grid-template-columns:1fr; gap:20px; }.class-agit-book-cover{min-height:300px}.class-agit-book-settings{padding:14px}.class-agit-book-items>li{padding:14px}.class-agit-book-items>li>div{flex-basis:100%}.class-agit-book-picker{padding:14px} }
+.class-agit-rights-notice { margin: 20px 0; padding: 18px; border: 1px solid #d7e0d5; border-radius: 12px; background: #f5f8f3; color: #334338; text-align: left; }
+.class-agit-rights-notice p { margin: 8px 0; font-size: 1rem; line-height: 1.65; }
+.class-agit-rights-notice small { display: block; line-height: 1.6; }
+.class-agit-rights-notice a { color: #365c40; text-decoration: underline; }

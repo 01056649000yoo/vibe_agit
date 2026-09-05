@@ -122,25 +122,21 @@ test('모든 액자는 벽 안의 겹치지 않는 슬롯 하나를 사용한다
             assert.ok(slot.x + slot.width <= other.x || other.x + other.width <= slot.x || slot.y + slot.height <= other.y || other.y + other.height <= slot.y);
         }
     }
-    for (const index of [-1, 12, 1.5]) assert.throws(() => getGallerySlot(index), /위치/);
+    for (const index of [-1, 20, 1.5]) assert.throws(() => getGallerySlot(index), /위치/);
 });
 
-test('외부 수록은 별도 확인한 작품만 가림 이름으로 투영하고 내부 식별자를 제외한다', () => {
-    const original = makeDraft(2);
-    assert.equal(createGalleryPresentation(original, 'external').works.length, 0);
-    const draft = editExhibition(original, { type: 'external', sourceId: 'post-2', enabled: true, alias: '  파란 나무  ' });
+test('외부 미리보기는 전체 작품을 자동 작성자 표시로 투영하고 내부 식별자를 제외한다', () => {
+    const draft = makeDraft(2);
+    draft.items[0].publicAlias = '등록이름 노출 금지';
     const external = createGalleryPresentation(draft, 'external');
-    assert.equal(external.works.length, 1);
-    assert.equal(external.works[0].author, '파란 나무');
+    assert.equal(external.works.length, 2);
+    assert.deepEqual(external.works.map((work) => work.author), ['새싹 작가 01', '새싹 작가 02']);
     assert.equal(createGalleryPresentation(draft).works[1].author, '등록이름2');
-    assert.deepEqual(Object.keys(external.works[0]).sort(), ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks'].sort());
+    assert.deepEqual(Object.keys(external.works[0]).sort(), ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks', 'roomId'].sort());
     assert.doesNotMatch(JSON.stringify(external), /등록이름|student-|post-|revision-/);
-    assert.equal(draft.items[1].scopes.anthology, false);
-    assert.equal(original.items[1].scopes.external, false);
-    const revoked = editExhibition(draft, { type: 'external', sourceId: 'post-2', enabled: false, alias: '파란 나무' });
-    assert.equal(createGalleryPresentation(revoked, 'external').works.length, 0);
+    draft.items[1].revoked = true;
+    assert.equal(createGalleryPresentation(draft, 'external').works.length, 1);
     assert.throws(() => createGalleryPresentation(draft, 'admin'), /범위/);
-    for (const alias of ['', '   ', '가'.repeat(31)]) assert.throws(() => editExhibition(draft, { type: 'external', sourceId: 'post-1', enabled: true, alias }), /가림 이름/);
 });
 
 test('미리보기 본문은 초안·원본과 독립적인 복사본이다', () => {

@@ -55,8 +55,8 @@ export const classAgitApi = {
     },
     save(classId, draft, revision) { return this.runAction(classId, 'save', buildClassAgitSavePayload(draft, revision)); },
     async getPublication(classId, exhibitionId, room = 1) {
-        const data = await call('get_class_agit_publication_v1', { p_class_id: classId, p_exhibition_id: exhibitionId, p_room: room });
-        if (data?.version !== 1 || data.room !== room || !Array.isArray(data.exhibition?.works) || data.exhibition.works.length > 12) throw new Error('공개 전시를 확인할 수 없습니다.');
+        const data = await call('get_class_agit_publication_v1', { p_class_id: classId, p_exhibition_id: exhibitionId, p_room: room, p_layout_version: 2 });
+        if (data?.version !== 1 || data.room !== room || !Array.isArray(data.exhibition?.works) || data.exhibition.works.length > limits.worksPerRoom) throw new Error('공개 전시를 확인할 수 없습니다.');
         return data;
     },
 };

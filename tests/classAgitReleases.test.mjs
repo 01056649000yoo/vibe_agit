@@ -101,7 +101,7 @@ test('보관하거나 초안이 비어도 기존 외부 주소 관리에 진입�
     assert.match(workbench, /nextStep === 'share'[\s\S]*await saveDraft\(\); if \(!current\) return/);
     assert.match(workbench, /persistence\.renderShare\(\{ key: shareRevision, onStateChange: setShareState \}\)/);
     const manager = readFileSync('src/modules/class-agit/public/ShareManager.jsx', 'utf8');
-    assert.match(manager, /disabled=\{busy \|\| archived \|\| !selected.length/);
+    assert.match(manager, /disabled=\{busy \|\| archived \|\| blocked \|\| !items.length/);
     assert.match(manager, /보관한 전시의 기존 공유 주소를 관리할 수 있습니다/);
 });
 
@@ -109,4 +109,39 @@ test('전시·문집·이웃 글의 업무 충돌은 PostgREST 재시도 없이 
     const neighbor = readFileSync('supabase/migrations/20261240_neighbor_publication_matching_hardening.sql', 'utf8');
     for (const migration of [sql, neighbor]) { assert.doesNotMatch(migration, /ERRCODE\s*=\s*'40001'/); assert.match(migration, /ERRCODE\s*=\s*'PT409'/); }
     assert.match(fn('get_class_agit_book_preview_v1'), /ERRCODE='PT409'/);
+});
+import { prepareShareWorks, hasBlockedShareWorks } from '../src/modules/class-agit/public/sharingPolicy.js';
+import { EXHIBITION_RIGHTS } from '../src/modules/class-agit/gallery/rightsNotice.js';
+
+test('외부 공유는 전체 작품의 자동 이름만 전송하고 부적격 작품을 조용히 누락하지 않는다', () => {
+    const items = Array.from({ length: 120 }, (_, index) => ({ itemId: `item-${index}`, sourceRevision: `revision-${index}`, publicAlias: '실명', authorName: '등록 이름', included: false }));
+    const payload = prepareShareWorks(items);
+    assert.equal(payload.length, 120);
+    assert.equal(payload[0].publicAlias, '새싹 작가 01');
+    assert.equal(payload[119].publicAlias, '새싹 작가 120');
+    assert.deepEqual(Object.keys(payload[0]).sort(), ['itemId', 'publicAlias', 'sourceRevision']);
+    assert.doesNotMatch(JSON.stringify(payload), /실명|등록 이름|included/);
+    assert.throws(() => prepareShareWorks([]));
+    assert.throws(() => prepareShareWorks([...items, items[0]]));
+    for (const key of ['revoked', 'unavailable', 'sourceChanged']) {
+        const blocked = items.map((item, index) => index === 50 ? { ...item, [key]: true } : item);
+        assert.equal(hasBlockedShareWorks(blocked), true);
+        assert.throws(() => prepareShareWorks(blocked), /공개할 수 없는 작품/);
+    }
+});
+
+test('전시 입구와 개인정보처리방침·약관은 같은 작품 보호 문구를 사용한다', () => {
+    assert.match(EXHIBITION_RIGHTS.notice, /복제·배포·재게시/);
+    assert.match(EXHIBITION_RIGHTS.notice, /도용/);
+    assert.match(EXHIBITION_RIGHTS.ownership, /저작자/);
+    for (const code of [
+        readFileSync('src/modules/class-agit/gallery/GalleryViewer.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/student/StudentEntry.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/public/PublicGallery.jsx', 'utf8'),
+    ]) {
+        assert.match(code, /<ExhibitionRightsNotice/);
+        assert.match(code, /EXHIBITION_RIGHTS.enter/);
+    }
+    for (const code of [readFileSync('src/components/layout/PrivacyPolicy.jsx', 'utf8'), readFileSync('src/components/layout/TermsOfService.jsx', 'utf8')]) assert.match(code, /EXHIBITION_RIGHTS.notice/);
+    for (const code of [readFileSync('src/modules/class-agit/public/ShareManager.jsx', 'utf8'), readFileSync('src/modules/class-agit/teacher/ExhibitionWorkbench.jsx', 'utf8')]) assert.doesNotMatch(code, /외부 공개에 포함|ExternalWorkSettings|changeItem\(/);
 });

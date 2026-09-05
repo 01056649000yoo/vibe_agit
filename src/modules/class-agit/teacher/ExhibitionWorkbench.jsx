@@ -1,3 +1,4 @@
+import { normalizeRoomDraft } from '../rooms.js';
 import { useId, useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
@@ -24,31 +25,15 @@ function CandidateApply({ onAdd, refreshing }) {
     </div>;
 }
 
-function ExternalWorkSettings({ item, onChange }) {
-    const [alias, setAlias] = useState(item.publicAlias);
-    const [error, setError] = useState('');
-    const commit = (enabled) => {
-        try {
-            onChange({ type: 'external', sourceId: item.sourceId, enabled, alias });
-            setAlias(alias.trim()); setError('');
-        } catch (reason) { setAlias(item.publicAlias); setError(reason.message); }
-    };
-    return <div className="class-agit-external-fields">
-        <label><input type="checkbox" checked={item.scopes.external} onChange={(event) => commit(event.target.checked)} />외부 공개에 포함</label>
-        <label>가림 이름<input aria-label={`${item.title} 가림 이름`} value={alias} maxLength={limits.authorLength} onChange={(event) => setAlias(event.target.value)} onBlur={() => commit(item.scopes.external)} /></label>
-        {error && <span role="alert">{error}</span>}
-    </div>;
-}
-
 const EXHIBITION_STEPS = [
     { id: 'settings', title: '기본 설정', detail: '이름 · 소개 · 학생 공개' },
-    { id: 'works', title: '작품 선택·순서', detail: '작품 담기 · 전시 순서' },
+    { id: 'works', title: '작품·전시실 구성', detail: '주제 · 작품 배정 · 순서' },
     { id: 'preview', title: '미리보기', detail: '학생의 시선으로 감상' },
-    { id: 'share', title: '외부 읽기 공유', detail: '공개 작품 · 주소 관리' },
+    { id: 'share', title: '외부 읽기 공유', detail: '전체 작품 · 주소 관리' },
 ];
 
 export default function ExhibitionWorkbench({ activeClass, sourceApi, students = [], initialDraft, persistence }) {
-    const [draft, setDraft] = useState(() => initialDraft || createExhibitionDraft(activeClass?.id));
+    const [draft, setDraft] = useState(() => normalizeRoomDraft(initialDraft || createExhibitionDraft(activeClass?.id)));
     const [savedDraft, setSavedDraft] = useState(() => initialDraft || null);
     const [worksVisited, setWorksVisited] = useState(false);
     const [selectionBusy, setSelectionBusy] = useState(false);
@@ -66,14 +51,15 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     const stepId = useId();
     const { ask, confirmDialog } = useConfirmDialog();
     const presentation = createGalleryPresentation(draft);
-    const rooms = arrangeGalleryRooms(presentation.works);
+    const rooms = arrangeGalleryRooms(presentation.works, presentation.rooms);
     const selectedStudents = new Set(draft.items.map((item) => item.studentId));
     const unselectedStudents = students.filter((student) => !selectedStudents.has(student.id));
     const selectedSources = new Set(draft.items.map((item) => item.sourceId));
-    const externalCount = draft.items.filter((item) => item.scopes.external).length;
+    const externalCount = draft.items.length;
     const dirty = savedDraft?.revision !== draft.revision;
     const locked = busy || selectionBusy || persistence?.busy || shareState.busy;
     const stepIndex = EXHIBITION_STEPS.findIndex((entry) => entry.id === step);
+    const unassigned = draft.items.some((item) => item.roomId == null);
     const blockedWorks = draft.items.some((item) => item.sourceChanged || item.unavailable || item.revoked);
     const perform = async (operation) => {
         if (busyRef.current) return null;
@@ -119,7 +105,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     };
     const publicationActions = persistence && <div className="class-agit-publication-actions">
         <span className="class-agit-tag">{draft.state === 'published' ? `${draft.publicationNo}판 · 학급 공개 중` : draft.state === 'archived' ? '보관한 전시' : '비공개 초안'}</span>
-        <Button variant="primary" type="button" disabled={dirty || draft.state === 'archived' || !draft.items.length || !persistence.moduleEnabled || blockedWorks} onClick={() => runSavedAction('publish')}>{draft.publicationNo ? '공개판 갱신' : '학급에 공개'}</Button>
+        <Button variant="primary" type="button" disabled={dirty || draft.state === 'archived' || !draft.items.length || !persistence.moduleEnabled || blockedWorks || unassigned} onClick={() => runSavedAction('publish')}>{draft.publicationNo ? '공개판 갱신' : '학급에 공개'}</Button>
         {draft.state === 'published' && <Button variant="outline" type="button" disabled={dirty} onClick={() => runSavedAction('unpublish')}>공개 중단</Button>}
     </div>;
 
@@ -145,6 +131,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             </div>
             <div className="class-agit-status" role="status">{busy ? '전시를 처리하고 있습니다…' : message || (dirty ? '저장하지 않은 변경이 있습니다.' : '저장된 초안입니다.')}</div>
             {error && <p className="class-agit-error" role="alert">{error}</p>}
+            {unassigned && <p className="class-agit-error" role="status">미배정 작품을 전시실에 넣거나 초안에서 빼면 발행할 수 있습니다.</p>}
             {blockedWorks && <p className="class-agit-error" role="status">상태가 바뀐 작품이 있습니다. 2단계에서 전문을 다시 확인하거나 초안에서 빼 주세요.</p>}
 
             <div role="tabpanel" id={`${stepId}-panel-settings`} aria-labelledby={`${stepId}-tab-settings`} hidden={step !== 'settings'} className="class-agit-step-panel">
@@ -169,7 +156,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-works`} aria-labelledby={`${stepId}-tab-works`} hidden={step !== 'works'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>이 전시에 담을 작품을 골라요</h2><p>미션별로 작품을 찾아 한 번에 담고, 담은 작품 정리에서 순서를 바꿉니다. 위에서부터 {limits.worksPerRoom}편씩 전시실에 배치됩니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>이 전시에 담을 작품을 골라요</h2><p>전시실의 주제를 정하고 미션에서 작품을 담으세요. 한 실에 최대 {limits.worksPerRoom}편이며, 다 채우지 않아도 다음 전시실을 만들 수 있습니다.</p></div>
                 {worksVisited && <SelectionWorkspace draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
                     onDraft={(next) => { setDraft(next); setMessage(''); setError(''); }} onReadSource={readSource}
                     onWithdraw={persistence ? (item) => runSavedAction('withdraw', item) : undefined} onBusyChange={setSelectionBusy} />}
@@ -184,9 +171,9 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-share`} aria-labelledby={`${stepId}-tab-share`} hidden={step !== 'share'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>외부 공개할 작품과 표시 이름을 확인하고 공유 주소를 관리합니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>전시에 담은 전체 작품의 외부 미리보기를 확인하고 전시 기간과 공유 주소를 관리합니다.</p></div>
                 {persistence ? (shareRevision !== null && (persistence.renderShare ? persistence.renderShare({ key: shareRevision, onStateChange: setShareState }) : <p className="class-agit-empty">이 샘플은 저장·학급 공개까지 점검합니다. 문집·외부 공유 통합 샘플에서 주소 설정을 확인할 수 있습니다.</p>))
-                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 외부에 공개할 작품과 가림 이름을 정해 보세요.</p><ul className="class-agit-book-items">{draft.items.map((item) => <li key={item.sourceId}><strong>{item.title}</strong><ExternalWorkSettings item={item} onChange={changeDraft} /></li>)}</ul><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
+                    : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 전시에 담은 전체 작품을 자동 작성자 표시로 미리 봅니다.</p><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
             </div>
 
             <footer className="class-agit-step-footer"><Button variant="ghost" type="button" disabled={stepIndex === 0} onClick={() => selectStep(EXHIBITION_STEPS[stepIndex - 1].id)}>← 이전 단계</Button>
@@ -197,7 +184,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
         </fieldset>
         {candidate && <ArtworkReader work={{ id: candidate.id, author: candidate.student_name, ...presentSource(candidate) }} onClose={() => setCandidate(null)} footer={<CandidateApply refreshing={selectedSources.has(candidate.id)} onAdd={() => {
             setDraft(editExhibition(draft, { type: selectedSources.has(candidate.id) ? 'refresh' : 'add', source: candidate }));
-            setCandidate(null); setMessage('작품을 전시에 담았습니다. 방과 액자는 자동으로 배치됩니다.');
+            setCandidate(null); setMessage('작품을 전시에 담았습니다. 작품·전시실 구성에서 방 배정을 확인해 주세요.');
         }} />} />}
     </section>;
 }

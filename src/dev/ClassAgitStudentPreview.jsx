@@ -67,7 +67,7 @@ export default function ClassAgitStudentPreview() {
     const [count, setCount] = useState(12);
     return <>
         <div className="class-agit-fixture-controls"><label>학생 전시 작품 수<select value={count} onChange={(event) => setCount(Number(event.target.value))}>
-            <option value={0}>0편 · 공개 전시 없음</option><option value={1}>1편 · 첫 작품</option><option value={12}>12편 · 한 전시실</option><option value={60}>60편 · 다섯 전시실</option><option value={CLASS_AGIT_LIMITS.maxWorks}>{CLASS_AGIT_LIMITS.maxWorks}편 · {CLASS_AGIT_LIMITS.maxRooms}개 전시실</option>
+            <option value={0}>0편 · 공개 전시 없음</option><option value={1}>1편 · 첫 작품</option><option value={12}>12편 · 한 전시실</option><option value={41}>41편 · 주제별 13+20+8편</option><option value={60}>60편 · 다섯 전시실</option><option value={CLASS_AGIT_LIMITS.maxWorks}>{CLASS_AGIT_LIMITS.maxWorks}편 · {CLASS_AGIT_LIMITS.maxRooms}개 전시실</option>
         </select></label></div>
         <StudentScenario key={count} count={count} />
     </>;

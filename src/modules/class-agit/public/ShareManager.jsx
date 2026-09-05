@@ -6,13 +6,14 @@ import { buildSharePeriod, localDateTime, MAX_SHARE_PERIOD_MS } from './sharePer
 import PublicGallery from './PublicGallery.jsx';
 import { createPublicPreviewApi } from './preview.js';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
+import { externalAuthor, hasBlockedShareWorks, prepareShareWorks } from './sharingPolicy.js';
 import '../classAgit.css';
 import '../management.css';
 
 function ShareEditor({ data, api, classId, exhibitionId, onClose, onReload, onOpenPublic, archived, embedded, onStateChange }) {
     const [title, setTitle] = useState(data.share?.title || '우리들의 작은 발견');
     const [introduction, setIntroduction] = useState(data.share?.introduction || '우리의 이야기에 귀 기울여 주세요.');
-    const [items, setItems] = useState(() => data.candidates.map((item) => ({ ...item, included: false })));
+    const items = data.candidates;
     const [startNow, setStartNow] = useState(true);
     const [startsAt, setStartsAt] = useState(() => localDateTime(Date.now()));
     const [expiresAt, setExpiresAt] = useState(() => localDateTime(Date.now() + MAX_SHARE_PERIOD_MS));
@@ -29,7 +30,7 @@ function ShareEditor({ data, api, classId, exhibitionId, onClose, onReload, onOp
     const { ask, confirmDialog } = useConfirmDialog();
     const hasLink = Boolean(url);
     useEffect(() => { onStateChange?.({ busy, dirty, hasLink }); }, [busy, dirty, hasLink, onStateChange]);
-    const selected = items.filter((item) => item.included);
+    const blocked = hasBlockedShareWorks(items) || (data.layout_version === 2 && items.some((item) => item.roomId == null));
     const run = async (action, extra = {}) => {
         if (busyRef.current) return;
         if (action === 'revoke' && !await ask({ title: '외부 공유 주소를 해지할까요?', body: '이 주소로 다음 내용을 조회할 수 없게 됩니다.' })) return;
@@ -38,9 +39,9 @@ function ShareEditor({ data, api, classId, exhibitionId, onClose, onReload, onOp
             const period = action === 'publish' ? buildSharePeriod(startNow ? Date.now() : startsAt, expiresAt)
                 : action === 'extend' ? buildSharePeriod(current.share.starts_at, publishedExpiresAt) : {};
             if (['publish', 'rotate'].includes(action)) retryToken.current ||= createShareToken();
-            const next = await api.shareAction(classId, exhibitionId, action, { expected_revision: current.share?.revision || 0,
+            const next = await api.shareAction(classId, exhibitionId, action, { layout_version: 2, expected_revision: current.share?.revision || 0,
                 exhibition_revision: current.exhibition_revision, title, introduction, ...period, token: retryToken.current,
-                items: selected.map((item) => ({ itemId: item.itemId, sourceRevision: item.sourceRevision, publicAlias: item.publicAlias })), ...extra });
+                ...(action === 'publish' ? { items: prepareShareWorks(items) } : {}), ...extra });
             setCurrent(next);
             if (next.share) setPublishedExpiresAt(localDateTime(next.share.expires_at));
             if (action === 'publish') setDirty(false);
@@ -48,14 +49,14 @@ function ShareEditor({ data, api, classId, exhibitionId, onClose, onReload, onOp
             else { if (action === 'revoke') setUrl(''); setMessage('공유 설정에 반영했습니다.'); }
         } catch (e) { setError(e.message); } finally { busyRef.current = false; setBusy(false); }
     };
-    const changeItem = (id, change) => { setItems((values) => values.map((item) => item.itemId === id ? { ...item, ...change } : item)); setDirty(true); retryToken.current = null; };
     const reload = async () => {
         if ((dirty || hasLink) && !await ask({ title: '공유 설정을 다시 불러올까요?', body: '입력 중인 내용이 초기화됩니다. 새 공유 주소가 있다면 먼저 복사해 주세요.', confirmLabel: '다시 불러오기' })) return;
         onReload();
     };
     if (preview) return <PublicGallery api={preview} token="preview" isPreview onExit={() => setPreview(null)} />;
     return <section className="class-agit class-agit-management">{!embedded && <header className="class-agit-project-heading"><h1>외부 읽기 전용 공유</h1><Button variant="outline" type="button" disabled={busy} onClick={onClose}>전시 편집으로</Button></header>}
-        <p>학교·학급명과 학생 이름을 자동으로 넣지 않습니다. 공개할 작품과 가림 이름을 선택하고 전시기간을 정해 주세요.</p>
+        <p>전시에 담은 전체 {items.length}편을 외부에 공유합니다. 작성자는 작품 순서에 따라 ‘새싹 작가 01’처럼 자동 표시됩니다. 전시 제목·소개와 기간을 정해 주세요.</p>
+        <p>제목과 본문 속 이름·연락처 등 개인정보는 자동으로 가려지지 않으므로 방문자 미리보기에서 확인해 주세요.</p>
         {archived && <p role="status">보관한 전시의 기존 공유 주소를 관리할 수 있습니다. 새 공개본을 발행하려면 전시를 복원해 주세요.</p>}
         {!data.external_enabled && <p role="status">현재 외부 공유가 중지되어 있습니다. 관리자의 공개 단계 설정에서 허용한 뒤 주소를 만들 수 있습니다.</p>}
         {error && <p className="class-agit-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
@@ -63,9 +64,11 @@ function ShareEditor({ data, api, classId, exhibitionId, onClose, onReload, onOp
             {!startNow && <label>전시 시작<input type="datetime-local" value={startsAt} onChange={(e) => { setStartsAt(e.target.value); setDirty(true); retryToken.current = null; }} /></label>}
             <label>전시 종료<input type="datetime-local" value={expiresAt} max={startNow || startsAt ? localDateTime(new Date(startNow ? Date.now() : startsAt).getTime() + MAX_SHARE_PERIOD_MS) : undefined} onChange={(e) => { setExpiresAt(e.target.value); setDirty(true); retryToken.current = null; }} /></label>
             <p>최대 30일 동안 전시합니다. 종료 시각부터 외부 열람이 자동으로 차단됩니다. 원글을 수정해도 발행한 전시본은 유지됩니다.</p></fieldset>
-        <h2>공개할 작품 · {selected.length}편</h2><ul className="class-agit-book-items">{items.map((item) => <li key={item.itemId}><div><strong>{item.title}</strong><p>{item.excerpt}</p>{(item.unavailable || item.sourceChanged) && <span>전시 편집에서 원글을 다시 확인하고 저장해 주세요.</span>}</div><div className="class-agit-book-settings"><label><input type="checkbox" checked={item.included} disabled={busy || item.unavailable || item.sourceChanged} onChange={(e) => changeItem(item.itemId, { included: e.target.checked })} />외부 공개에 포함</label><label>가림 이름<input aria-label={`${item.title} 외부 가림 이름`} maxLength={30} value={item.publicAlias} disabled={busy} onChange={(e) => changeItem(item.itemId, { publicAlias: e.target.value })} /></label></div></li>)}</ul>
-        <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={!selected.length || busy} onClick={() => setPreview(createPublicPreviewApi({ title, introduction, theme: current.exhibition_theme, works: selected.map((item, index) => ({ id: `published-${index + 1}`, title: item.title, author: item.publicAlias, format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: item.blocks })) }))}>외부 방문자 미리보기</Button><Button variant="outline" type="button" disabled={busy} onClick={reload}>최신 공유 설정 불러오기</Button></div>
-        <Button variant="primary" type="button" disabled={busy || archived || !selected.length || !title.trim() || !data.external_enabled} onClick={() => run('publish')}>{current.share ? '공개본 갱신 · 새 주소 발급' : '외부 공유 주소 만들기'}</Button>
+        <h2>공개할 작품 · 전체 {items.length}편</h2>
+        {blocked && <p role="alert" className="class-agit-error">공개할 수 없는 작품이 있습니다. 전시 편집에서 표시된 작품을 다시 확인하거나 빼고 저장해 주세요.</p>}
+        <details><summary>작품 목록 확인</summary><ul className="class-agit-book-items">{items.map((item, index) => <li key={item.itemId}><div><strong>{item.title}</strong><small> · {externalAuthor(index)}</small><p>{item.excerpt}</p>{hasBlockedShareWorks([item]) && <span>전시 편집에서 다시 확인해 주세요.</span>}</div></li>)}</ul></details>
+        <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={!items.length || blocked || busy} onClick={() => setPreview(createPublicPreviewApi({ title, introduction, theme: current.exhibition_theme, rooms: current.rooms, works: items.map((item, index) => ({ id: `published-${index + 1}`, roomId: item.roomId, title: item.title, author: externalAuthor(index), format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: item.blocks })) }))}>외부 방문자 미리보기</Button><Button variant="outline" type="button" disabled={busy} onClick={reload}>최신 공유 설정 불러오기</Button></div>
+        <Button variant="primary" type="button" disabled={busy || archived || blocked || !items.length || !title.trim() || !data.external_enabled} onClick={() => run('publish')}>{current.share ? '전체 작품으로 공개본 갱신 · 새 주소 발급' : '전체 작품 외부 공유 주소 만들기'}</Button>
         {url && <div className="class-agit-share-link"><label>새 공유 주소<input aria-label="새 공유 주소" readOnly value={url} /></label><Button variant="outline" type="button" onClick={async () => { try { await navigator.clipboard.writeText(url); setMessage('공유 주소를 복사했습니다.'); } catch { setMessage('주소 칸을 선택해 직접 복사해 주세요.'); } }}>주소 복사</Button><a href={url} target="_blank" rel="noopener noreferrer" onClick={onOpenPublic ? (event) => { event.preventDefault(); onOpenPublic(new URL(url).hash.slice(1)); } : undefined}>방문자로 열기 ↗</a></div>}
         {current.share && <><h2>발행한 외부 공개본</h2><p>{current.share.publication_no}판 · {current.share.revoked ? '해지됨' : current.share.expired ? '만료됨' : current.share.scheduled ? '시작 예정' : '공유 중'} · 시작 {new Date(current.share.starts_at).toLocaleString('ko-KR')} · 종료 {new Date(current.share.expires_at).toLocaleString('ko-KR')}</p>
             <p>주소를 재발급해도 전시 기간은 유지됩니다. 만료 후에는 작품을 다시 확인하고 새 공개본을 발행해 주세요. 학생 홈 공개 스위치와 외부 공유는 별개입니다. 주소는 원문으로 보관하지 않아 이 화면을 다시 열면 재발급해야 합니다.</p>

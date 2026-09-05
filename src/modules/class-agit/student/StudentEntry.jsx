@@ -1,3 +1,5 @@
+import ExhibitionRightsNotice from '../gallery/ExhibitionRightsNotice.jsx';
+import { EXHIBITION_RIGHTS } from '../gallery/rightsNotice.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import StudentBackButton from '../../../components/student/StudentBackButton.jsx';
 import GuideInfoButton from '../../../components/common/GuideInfoButton.jsx';
@@ -56,7 +58,8 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
     };
     const moveRoom = (number) => replace({ ...route, mode: 'room', room: number });
     const roomData = page.data;
-    const activeRoom = roomData?.rooms.find((item) => item.number === room);
+    const roomIndex = roomData?.rooms.findIndex((item) => item.number === room) ?? -1;
+    const activeRoom = roomIndex >= 0 ? roomData?.rooms.at(roomIndex) : null;
     if (['books', 'book', 'chapter'].includes(mode)) return <StudentBooks route={route} onNavigate={onNavigate} onReplace={onReplace} onBack={onBack} api={releaseApi} />;
     return <main className="class-agit class-agit-student" ref={root}>
         <header className="class-agit-gallery__header">
@@ -76,22 +79,23 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
             {mode === 'lobby' ? <div className="class-agit-lobby">
                 <div className="class-agit-lobby__copy"><span className="class-agit-eyebrow">우리반 아지트 · 글 전시관</span><h1 tabIndex={-1}>{roomData.title}</h1><p>{roomData.introduction}</p>
                     <div className="class-agit-lobby__numbers"><span><b>{roomData.total_count}</b>편의 이야기</span><span><b>{roomData.rooms.length}</b>개의 전시실</span></div>
-                    <button type="button" className="class-agit-primary" disabled={!roomData.total_count} onClick={() => navigate({ ...route, mode: 'room', room: 1 })}>전시관 입장하기 ↗</button>
+                    <ExhibitionRightsNotice /><nav className="class-agit-room-nav" aria-label="주제별 입장">{roomData.rooms.map((entry) => <button type="button" key={entry.number} onClick={() => navigate({ ...route, mode: 'room', room: entry.number })}>{entry.title || `${entry.number} 전시실`} · {entry.count}편 ↗</button>)}</nav><button type="button" className="class-agit-primary" disabled={!roomData.total_count} onClick={() => navigate({ ...route, mode: 'room', room: roomData.rooms[0]?.number })}>{EXHIBITION_RIGHTS.enter}</button>
                 </div>
                 <div className="class-agit-lobby-art" aria-hidden="true"><span>✦</span><p>작은 글이 모여<br />우리의 이야기가 됩니다.</p><i /></div>
             </div> : <>
                 <div className="class-agit-gallery__title"><div><span className="class-agit-eyebrow">우리반 아지트 · {roomData.publication_no}판</span><h1 tabIndex={-1}>{roomData.title}</h1></div>
                     <div className="class-agit-segmented" role="group" aria-label="전시 보기 방식"><button type="button" aria-pressed={route.view === 'room'} onClick={() => replace({ ...route, view: 'room' })}>전시실 보기</button><button type="button" aria-pressed={route.view === 'list'} onClick={() => replace({ ...route, view: 'list' })}>목록 보기</button></div>
                 </div>
-                <nav className="class-agit-room-nav" aria-label="전시실 이동">{roomData.rooms.map((entry) => <button type="button" key={entry.number} aria-current={entry.number === room ? 'page' : undefined} onClick={() => moveRoom(entry.number)}>{entry.number} 전시실 <small>{entry.count}편</small></button>)}</nav>
+                <nav className="class-agit-room-nav" aria-label="전시실 이동">{roomData.rooms.map((entry) => <button type="button" key={entry.number} aria-current={entry.number === room ? 'page' : undefined} onClick={() => moveRoom(entry.number)}>{entry.title || `${entry.number} 전시실`} <small>{entry.count}편</small></button>)}</nav>
+                {activeRoom && <><h2>{activeRoom.title || `${room} 전시실`}</h2><p>{activeRoom.introduction}</p></>}
                 {activeRoom && (route.view === 'list' ? <ol className="class-agit-work-list">{roomData.items.map((work, index) => <li key={work.id}><button type="button" data-work-id={work.id} onClick={() => openWork(work)}><span>{index + 1}</span><div><strong>{work.title}</strong><p>{work.excerpt}</p><small>{work.kindLabel} · {work.author}</small></div><b aria-hidden="true">↗</b></button></li>)}</ol>
-                    : <GalleryRoom theme={roomData.theme} key={room} works={roomData.items} roomNumber={room} onOpen={openWork} />)}
+                    : <GalleryRoom theme={roomData.theme} variant={activeRoom.variant} roomTitle={activeRoom.title} key={room} works={roomData.items} roomNumber={room} onOpen={openWork} />)}
                 {roomData.total_count > 0 && !activeRoom && <p role="status">전시실 구성이 바뀌었어요. 위에서 볼 전시실을 골라 주세요.</p>}
-                <footer className="class-agit-gallery__footer"><button type="button" disabled={room <= 1} onClick={() => moveRoom(room - 1)}>← 이전 방</button><span>{room} / {roomData.rooms.length || 1} 전시실</span><button type="button" disabled={room >= roomData.rooms.length} onClick={() => moveRoom(room + 1)}>다음 방 →</button></footer>
+                <footer className="class-agit-gallery__footer"><button type="button" disabled={roomIndex <= 0} onClick={() => moveRoom(roomData.rooms[roomIndex - 1].number)}>← 이전 방</button><span>{roomIndex + 1} / {roomData.rooms.length || 1} 전시실</span><button type="button" disabled={roomIndex < 0 || roomIndex >= roomData.rooms.length - 1} onClick={() => moveRoom(roomData.rooms[roomIndex + 1].number)}>다음 방 →</button></footer>
             </>}
             {!roomData.total_count && <p className="class-agit-empty">지금 읽을 수 있는 작품이 없어요. 다른 전시를 둘러보거나 나중에 다시 와 주세요.</p>}
         </>}
-        {mode === 'work' && <ArtworkReader work={detail.data?.work} loading={detail.loading} error={detail.error} onClose={onBack}
+        {mode === 'work' && <ArtworkReader work={detail.data?.work} roomTitle={detail.data?.room_title} loading={detail.loading} error={detail.error} onClose={onBack}
             onPrevious={detail.data?.previous_id ? () => replace({ ...route, workId: detail.data.previous_id }) : undefined}
             onNext={detail.data?.next_id ? () => replace({ ...route, workId: detail.data.next_id }) : undefined} />}
         <Modal isOpen={help} onClose={() => setHelp(false)} title="우리반 전시관 사용법" maxWidth="520px"><p>전시를 골라 들어간 뒤 액자를 누르면 글을 읽을 수 있어요. 목록 보기에서도 같은 작품을 만날 수 있어요.</p><p>작품을 닫으면 보던 전시실로 돌아와요. 글자가 작으면 ‘글자 크게’를 눌러 보세요.</p></Modal>
