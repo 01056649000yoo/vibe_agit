@@ -12,18 +12,16 @@ import PublishedExhibition from './PublishedExhibition.jsx';
 import '../classAgit.css';
 import '../management.css';
 
-export default function ClassAgitTeacherEntry({ activeClass, api = classAgitApi, isSample = false, releaseApi = classAgitReleaseApi, isAdmin = false, onOpenPublic }) {
+function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, releaseApi = classAgitReleaseApi, isAdmin = false, onOpenPublic }) {
     const classId = activeClass.id;
     const releasesEnabled = !isSample || releaseApi !== classAgitReleaseApi;
     const [area, setArea] = useState('exhibitions');
     const [workspace, setWorkspace] = useState(null);
-    const [candidates, setCandidates] = useState({ items: [], has_more: false });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [loadVersion, setLoadVersion] = useState(0);
     const busyRef = useRef(false);
     const createId = useRef(null);
-    const query = useRef('');
     useEffect(() => {
         let active = true;
         api.getWorkspace(classId).then((data) => { if (active) { setWorkspace(data); setError(''); } })
@@ -38,16 +36,14 @@ export default function ClassAgitTeacherEntry({ activeClass, api = classAgitApi,
     };
     const open = async (id) => {
         try { await operation(async () => {
-            const [data, page] = await Promise.all([api.getWorkspace(classId, id), api.getCandidates(classId)]);
-            setWorkspace(data); setCandidates(page); query.current = '';
+            setWorkspace(await api.getWorkspace(classId, id));
         }); } catch (reason) { setError(reason.message); }
     };
     const create = async () => {
         try { await operation(async () => {
             createId.current ||= crypto.randomUUID();
             const data = await api.runAction(classId, 'create', { exhibition_id: createId.current });
-            createId.current = null; setWorkspace(data); setCandidates({ items: [], has_more: false }); query.current = '';
-            setCandidates(await api.getCandidates(classId));
+            createId.current = null; setWorkspace(data);
         }); } catch (reason) { setError(reason.message); }
     };
     const changeAccess = async (enabled) => {
@@ -56,9 +52,6 @@ export default function ClassAgitTeacherEntry({ activeClass, api = classAgitApi,
             initial_modules: resolveEnabledModuleIds(workspace.class.enabled_modules, workspace.class),
             initial_vocab_tower_enabled: workspace.class.vocab_tower_enabled ?? null, exhibition_id: workspace.draft?.id || null,
         }))); } catch (reason) { setError(reason.message); }
-    };
-    const search = async (value, cursor = null) => {
-        const page = await api.getCandidates(classId, value, cursor); query.current = value; setCandidates(page);
     };
     if (area === 'books') return <AnthologyManager activeClass={activeClass} api={releaseApi} sourceApi={api} onExit={() => setArea('exhibitions')} />;
     if (area === 'rollout') return <RolloutManager api={releaseApi} onExit={() => { setArea('exhibitions'); setLoadVersion((v) => v + 1); }} />;
@@ -70,15 +63,14 @@ export default function ClassAgitTeacherEntry({ activeClass, api = classAgitApi,
         {!workspace?.draft && releasesEnabled && <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setArea('books')}>학급 문집 만들기</Button>{isAdmin && <Button variant="outline" type="button" onClick={() => setArea('rollout')}>공개 단계 관리</Button>}</div>}
         {error && <div className="class-agit-error" role="alert">{error}{!workspace?.draft && <Button variant="outline" type="button" onClick={() => setLoadVersion((version) => version + 1)}>작업공간 다시 불러오기</Button>}</div>}
         {!workspace && !error && <p role="status">전시 작업공간을 불러오고 있습니다…</p>}
-        {workspace?.draft ? <ExhibitionWorkbench key={workspace.draft.id} activeClass={activeClass} initialDraft={workspace.draft}
-            students={workspace.students} sources={candidates.items} persistence={{
+        {workspace?.draft ? <ExhibitionWorkbench key={`${classId}:${workspace.draft.id}`} activeClass={activeClass} initialDraft={workspace.draft}
+            students={workspace.students} sourceApi={api} persistence={{
                 busy, isSample, moduleEnabled: workspace.class.module_enabled, setEnabled: changeAccess,
                 save: (draft, revision) => operation(async () => { const data = await api.save(classId, draft, revision); setWorkspace(data); return data.draft; }),
                 action: (action, revision, item) => operation(async () => { const data = await api.runAction(classId, action, {
                     exhibition_id: workspace.draft.id, expected_revision: revision, confirmed: true, item_id: item?.itemId,
                 }); setWorkspace(data); return data.draft; }),
-                readSource: (postId) => api.getSource(classId, postId), search,
-                hasMore: candidates.has_more, more: () => search(query.current, candidates.next_cursor),
+                readSource: (postId) => api.getSource(classId, postId),
                 reload: async () => { const data = await api.getWorkspace(classId, workspace.draft.id); setWorkspace(data); return data.draft; },
                 exit: () => setWorkspace((data) => ({ ...data, draft: null })),
                 renderPublication: (onExit) => <PublishedExhibition classId={classId} exhibitionId={workspace.draft.id} api={api} onExit={onExit} />,
@@ -93,4 +85,8 @@ export default function ClassAgitTeacherEntry({ activeClass, api = classAgitApi,
                 <p className="class-agit-canvas-caption">학생 공개를 꺼도 초안을 편집할 수 있습니다. 공개한 전시는 학생 홈의 우리반 아지트에서 읽을 수 있습니다. 학급 문집을 만들거나 저장한 전시에서 외부 읽기 전용 공유를 준비할 수 있습니다.</p>
         </section>}
     </div>;
+}
+
+export default function ClassAgitTeacherEntry(props) {
+    return <TeacherWorkspace key={props.activeClass.id} {...props} />;
 }

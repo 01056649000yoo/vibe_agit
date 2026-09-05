@@ -4,8 +4,9 @@ import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.j
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 import { createExhibitionDraft, createGalleryPresentation, editExhibition } from '../exhibitionDraft.js';
-import { getSourceExclusion, presentSource } from '../sourceContract.js';
+import { presentSource } from '../sourceContract.js';
 import { arrangeGalleryRooms } from '../gallery/roomLayout.js';
+import SelectionWorkspace from '../selection/SelectionWorkspace.jsx';
 import GalleryViewer from '../gallery/GalleryViewer.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
@@ -47,10 +48,11 @@ const EXHIBITION_STEPS = [
     { id: 'share', title: '외부 읽기 공유', detail: '공개 작품 · 주소 관리' },
 ];
 
-export default function ExhibitionWorkbench({ activeClass, sources = [], students = [], initialDraft, persistence }) {
+export default function ExhibitionWorkbench({ activeClass, sourceApi, students = [], initialDraft, persistence }) {
     const [draft, setDraft] = useState(() => initialDraft || createExhibitionDraft(activeClass?.id));
     const [savedDraft, setSavedDraft] = useState(() => initialDraft || null);
-    const [query, setQuery] = useState('');
+    const [worksVisited, setWorksVisited] = useState(false);
+    const [selectionBusy, setSelectionBusy] = useState(false);
     const [candidate, setCandidate] = useState(null);
     const [step, setStep] = useState('settings');
     const [previewMode, setPreviewMode] = useState('draft');
@@ -69,11 +71,9 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
     const selectedStudents = new Set(draft.items.map((item) => item.studentId));
     const unselectedStudents = students.filter((student) => !selectedStudents.has(student.id));
     const selectedSources = new Set(draft.items.map((item) => item.sourceId));
-    const candidateSources = persistence ? sources : sources.filter((source) => `${source.title} ${source.student_name}`.toLocaleLowerCase('ko-KR').includes(query.trim().toLocaleLowerCase('ko-KR')));
-    const candidates = candidateSources.slice(0, limits.maxCandidates).map((source) => ({ source, reason: persistence ? '' : getSourceExclusion(source, activeClass?.id) }));
     const externalCount = draft.items.filter((item) => item.scopes.external).length;
     const dirty = savedDraft?.revision !== draft.revision;
-    const locked = busy || persistence?.busy || shareState.busy;
+    const locked = busy || selectionBusy || persistence?.busy || shareState.busy;
     const stepIndex = EXHIBITION_STEPS.findIndex((entry) => entry.id === step);
     const blockedWorks = draft.items.some((item) => item.sourceChanged || item.unavailable || item.revoked);
     const perform = async (operation) => {
@@ -98,6 +98,7 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
         if (dirty && (saveFirst || nextStep === 'share')) { current = await saveDraft(); if (!current) return; }
         if (nextStep === 'share') setShareRevision(current?.revision ?? draft.revision);
         if (nextStep === 'preview') setPreviewMode('draft');
+        if (nextStep === 'works') setWorksVisited(true);
         setStep(nextStep);
         tabs.current.get(EXHIBITION_STEPS.findIndex((entry) => entry.id === nextStep))?.focus({ preventScroll: true });
     };
@@ -107,8 +108,7 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
         }
         persistence.exit();
     };
-    const readSource = (source) => persistence
-        ? perform(async () => setCandidate(await persistence.readSource(source.id || source.sourceId))) : setCandidate(source);
+    const readSource = (source) => perform(async () => setCandidate(await sourceApi.getSource(activeClass.id, source.id || source.sourceId)));
     const runSavedAction = async (action, item) => {
         const titles = { publish: '저장한 전시를 학급에 공개할까요?', unpublish: '학급 공개를 중단할까요?', archive: '전시를 보관할까요?', restore: '전시를 초안으로 돌릴까요?', withdraw: '이 작품의 수록을 철회할까요?' };
         if (!await ask({ title: Reflect.get(titles, action), body: action === 'withdraw' ? '공개판에서도 이 작품의 열람이 중단됩니다. 다시 공개하려면 전문과 수록 의사를 재확인해야 합니다.' : '저장된 전시를 기준으로 처리합니다.', confirmLabel: '진행하기' })) return;
@@ -168,25 +168,11 @@ export default function ExhibitionWorkbench({ activeClass, sources = [], student
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-works`} aria-labelledby={`${stepId}-tab-works`} hidden={step !== 'works'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>이 전시에 담을 작품을 골라요</h2><p>전문을 읽고 수록을 확인한 작품만 담습니다. 위에서부터 {limits.worksPerRoom}편씩 전시실에 배치됩니다.</p></div>
-                <div className="class-agit-editor-layout">
-                    <aside className="class-agit-candidates"><div className="class-agit-panel-heading"><h3>우리 반의 글</h3><span>{candidates.filter((item) => !item.reason).length}편 선택 가능</span></div>
-                        <label className="class-agit-search">작품 찾기<input value={query} maxLength={80} placeholder="제목 또는 학생 이름" onChange={(event) => setQuery(event.target.value)} /></label>
-                        {persistence && <Button variant="outline" type="button" onClick={() => perform(() => persistence.search(query))}>검색</Button>}
-                        <div className="class-agit-candidates__list">{candidates.map(({ source, reason }) => <article key={source.id}><span className="class-agit-candidate-avatar" aria-hidden="true">{source.student_name.slice(0, 1)}</span><div><strong>{source.title}</strong><small>{source.student_name} · {source.group_title || '글쓰기'}</small><Button variant="outline" type="button" disabled={Boolean(reason) || selectedSources.has(source.id) || draft.items.length >= limits.maxWorks} onClick={() => readSource(source)}>{reason || (selectedSources.has(source.id) ? '✓ 전시에 담음' : '전문 보고 담기 +')}</Button></div></article>)}{!candidates.length && <p>찾는 작품이 없습니다.</p>}</div>
-                        {persistence?.hasMore && <Button variant="outline" type="button" onClick={() => perform(() => persistence.more())}>다음 후보 보기</Button>}
-                        <details className="class-agit-participation"><summary>아직 선정하지 않은 작가 {unselectedStudents.length}명</summary><p>{unselectedStudents.map((student) => student.name).join(' · ') || '모든 작가의 작품을 담았습니다.'}</p></details>
-                    </aside>
-                    <div className="class-agit-order-panel"><header><div><h3>선택한 작품 · {draft.items.length}/{limits.maxWorks}편</h3><p>화살표로 순서를 바꾸면 전시실도 함께 바뀝니다.</p></div></header>
-                        {!draft.items.length && <p className="class-agit-empty">우리 반의 글에서 첫 작품을 담아 주세요.</p>}
-                        <ol>{draft.items.map((item, index) => <li key={item.itemId || item.sourceId}><span className="class-agit-order-number">{String(index + 1).padStart(2, '0')}</span><div className="class-agit-order-info"><strong>{item.title}</strong><small>{item.authorName} · {item.kindLabel} · {Math.floor(index / limits.worksPerRoom) + 1} 전시실</small>{(item.unavailable || item.revoked || item.sourceChanged) && <small className="class-agit-error">{item.unavailable ? '원글을 수록할 수 없음' : item.revoked ? '수록 철회됨' : '원글 내용 바뀜'}</small>}</div>
-                            <div className="class-agit-order-controls"><div className="class-agit-order-move"><Button variant="outline" type="button" aria-label={`${item.title} 앞으로`} disabled={index === 0} onClick={() => changeDraft({ type: 'move', sourceId: item.sourceId, itemId: item.itemId, direction: -1 })}>↑</Button><Button variant="outline" type="button" aria-label={`${item.title} 뒤로`} disabled={index === draft.items.length - 1} onClick={() => changeDraft({ type: 'move', sourceId: item.sourceId, itemId: item.itemId, direction: 1 })}>↓</Button></div>
-                            {persistence && <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={!item.sourceId} onClick={() => readSource(item)}>전문 다시 확인</Button><Button variant="ghost" type="button" disabled={!item.itemId || item.revoked || dirty} onClick={() => runSavedAction('withdraw', item)}>수록 철회</Button></div>}
-                            <Button variant="ghost" type="button" aria-label={`${item.title} 전시에서 빼기`} onClick={() => changeDraft({ type: 'remove', sourceId: item.sourceId, itemId: item.itemId })}>빼기</Button></div>
-                        </li>)}</ol>
-                        {persistence && <p className="class-agit-canvas-caption">초안에서 빼기는 다음 공개판 갱신에 반영됩니다. 수록 철회는 현재 공개판의 열람도 중단합니다.</p>}
-                    </div>
-                </div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>이 전시에 담을 작품을 골라요</h2><p>미션별로 작품을 찾아 한 번에 담고, 담은 작품 정리에서 순서를 바꿉니다. 위에서부터 {limits.worksPerRoom}편씩 전시실에 배치됩니다.</p></div>
+                {worksVisited && <SelectionWorkspace draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
+                    onDraft={(next) => { setDraft(next); setMessage(''); setError(''); }} onReadSource={readSource}
+                    onWithdraw={persistence ? (item) => runSavedAction('withdraw', item) : undefined} onBusyChange={setSelectionBusy} />}
+                <details className="class-agit-participation"><summary>아직 선정하지 않은 작가 {unselectedStudents.length}명</summary><p>{unselectedStudents.map((student) => student.name).join(' · ') || '모든 작가의 작품을 담았습니다.'}</p></details>
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-preview`} aria-labelledby={`${stepId}-tab-preview`} hidden={step !== 'preview'} className="class-agit-step-panel">

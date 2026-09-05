@@ -4,6 +4,7 @@ export const CLASS_AGIT_LIMITS = Object.freeze({
     worksPerRoom, maxRooms: Math.ceil(maxWorks / worksPerRoom), maxWorks, maxCandidates: 100,
     titleLength: 80, introductionLength: 240, authorLength: 30,
     anthologyWorks: 100, externalExpiryDays: 30,
+    selectionBatch: 50, candidatePage: 30, missionPage: 50,
 });
 
 // Navigation, student responses and public responses share the same canonical work IDs.

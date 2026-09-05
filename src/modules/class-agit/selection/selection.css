@@ -1,0 +1,85 @@
+.class-agit-selection-workspace, .class-agit-source-browser, .class-agit-selection-order { container-type: inline-size; min-width: 0; }
+.class-agit-selection-workspace [hidden], .class-agit-source-browser [hidden] { display: none !important; }
+.class-agit-selection-modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.class-agit-selection-fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.class-agit-selection-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 20px; align-items: start; }
+.class-agit-mission-rail { border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); padding: 12px; }
+.class-agit-mission-rail > summary { padding: 6px 0 14px; cursor: pointer; font-weight: 800; overflow-wrap: anywhere; }
+.class-agit-mission-rail > label { display: grid; gap: 6px; margin-bottom: 12px; }
+.class-agit-selection-search { display: flex; align-items: end; gap: 8px; margin: 0 0 12px; }
+.class-agit-selection-search label { display: grid; flex: 1; min-width: 0; gap: 6px; }
+.class-agit-mission-rail .class-agit-selection-search { flex-wrap: wrap; }
+.class-agit-mission-rail .class-agit-selection-search label { flex-basis: 100%; }
+.class-agit-mission-list { list-style: none; padding: 0; margin: 12px 0; max-height: 490px; overflow: auto; scrollbar-gutter: stable; }
+.class-agit-mission-list li { padding: 0; margin: 0; }
+.class-agit-mission-list li > button { display: grid; gap: 4px; text-align: left; width: 100%; min-height: 76px; background: transparent; border: 1px solid transparent; border-radius: var(--ui-radius-sm); padding: 10px 8px; color: var(--ui-ink); }
+.class-agit-mission-list button[aria-pressed='true'] { background: var(--ui-primary-soft); border-color: var(--ui-primary); }
+.class-agit-mission-list button:disabled { opacity: .65; }
+.class-agit-mission-list strong { font-size: var(--ui-text-sm); overflow-wrap: anywhere; }
+.class-agit-mission-list :is(small, span) { font-size: var(--ui-text-xs); color: var(--ui-ink-muted); }
+.class-agit-selection-results { min-width: 0; }
+.class-agit-selection-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.class-agit-selection-heading :is(h3, p) { margin: 0 0 4px; }
+.class-agit-selection-filters { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.class-agit-selection-filters label, .class-agit-selection-check { display: flex; align-items: center; gap: 8px; font-size: var(--ui-text-sm); }
+.class-agit-selection-check { padding: 12px 0; }
+.class-agit-selection-workspace input[type='checkbox'], .class-agit-source-browser input[type='checkbox'] { width: 18px; height: 18px; margin: 0; flex: 0 0 18px; accent-color: var(--ui-primary); }
+.class-agit-source-rows, .class-agit-compact-order, .class-agit-review-list { padding: 0; margin: 0; list-style: none; border-top: 1px solid var(--ui-border); }
+.class-agit-source-rows > li { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--ui-border); }
+.class-agit-source-rows > li > label { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
+.class-agit-source-student { width: 62px; flex-shrink: 0; font-size: var(--ui-text-sm); }
+.class-agit-source-title { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.class-agit-source-title strong { font-size: var(--ui-text-md); overflow-wrap: anywhere; }
+.class-agit-source-title small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.class-agit-source-state { color: var(--ui-primary); font-size: var(--ui-text-xs); width: 26px; flex-shrink: 0; }
+.class-agit-source-rows [data-added='true'] { background: var(--ui-surface-muted); }
+.class-agit-selection-pages { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 12px; }
+.class-agit-selection-pages span { font-size: var(--ui-text-xs); color: var(--ui-ink-muted); }
+.class-agit-selection-summary { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid var(--ui-border); background: var(--ui-surface); padding: 12px; margin-top: 16px; border-radius: var(--ui-radius-sm); box-shadow: var(--ui-shadow-xs); }
+.class-agit-pending-selection { padding: 12px; margin-top: 12px; background: var(--ui-surface-muted); border-radius: var(--ui-radius-sm); }
+.class-agit-pending-selection summary { cursor: pointer; }
+.class-agit-pending-selection ul { max-height: 240px; overflow: auto; list-style: none; padding: 0; }
+.class-agit-pending-selection li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.class-agit-pending-selection small { display: block; }
+.class-agit-review-list > li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ui-border); }
+.class-agit-review-list label { display: flex; gap: 12px; align-items: center; }
+.class-agit-review-list label > span { display: grid; gap: 4px; }
+.class-agit-review-list input { flex-shrink: 0; }
+.class-agit-order-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 12px 0; }
+.class-agit-order-tools label { display: grid; gap: 4px; font-size: var(--ui-text-sm); }
+.class-agit-order-tools input[type='number'] { width: 86px; }
+.class-agit-selection-hint { margin: 4px 0 12px; }
+.class-agit-compact-order > li { display: grid; grid-template-columns: 58px minmax(0, 1fr) minmax(96px, 25%) 64px; gap: 12px; align-items: center; min-height: 56px; padding: 6px 0; border-bottom: 1px solid var(--ui-border); }
+.class-agit-compact-order > li[data-room-start='true'] { border-top: 2px solid var(--ui-primary-border); }
+.class-agit-compact-order label { display: flex; align-items: center; gap: 12px; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.class-agit-compact-order .class-agit-compact-title { display: grid; text-align: left; padding: 4px 0; margin: 0; min-width: 0; background: transparent; border: 0; color: var(--ui-ink); }
+.class-agit-compact-title strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--ui-text-sm); }
+.class-agit-compact-author { display: grid; font-size: var(--ui-text-sm); min-width: 0; }
+.class-agit-compact-author small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--ui-text-xs); }
+.class-agit-room-label { font-size: var(--ui-text-xs); color: var(--ui-ink-muted); }
+.class-agit-management-confirmation nav { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+@container (max-width: 740px) {
+    .class-agit-selection-layout { grid-template-columns: minmax(0, 1fr); }
+    .class-agit-mission-list { max-height: 235px; }
+    .class-agit-mission-rail .class-agit-selection-search { flex-wrap: nowrap; }
+    .class-agit-mission-rail .class-agit-selection-search label { flex-basis: auto; }
+    .class-agit-source-rows > li > label { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 6px 10px; }
+    .class-agit-source-student { width: auto; }
+    .class-agit-source-title { grid-column: 2; }
+    .class-agit-source-rows input { grid-row: 1 / 3; }
+    .class-agit-compact-order > li { grid-template-columns: 48px minmax(0, 1fr) 50px; gap: 4px 8px; }
+    .class-agit-compact-order > li > label { grid-row: 1 / 3; gap: 6px; }
+    .class-agit-compact-author { grid-column: 2; display: flex; gap: 8px; }
+    .class-agit-room-label { grid-column: 3; grid-row: 1 / 3; }
+}
+@container (max-width: 430px) {
+    .class-agit-selection-search { flex-wrap: wrap; }
+    .class-agit-selection-search label { flex-basis: 100%; }
+    .class-agit-selection-heading { align-items: start; flex-direction: column; }
+    .class-agit-source-rows > li { gap: 4px; }
+    .class-agit-source-rows > li > button { padding-inline: 8px; }
+    .class-agit-selection-summary .class-agit-header-actions { width: 100%; }
+}
+/* The two lists own their scroll position, so actions stay next to the list even with 120 works. */
+.class-agit-source-rows, .class-agit-review-list { max-height: min(52vh, 540px); overflow: auto; scrollbar-gutter: stable; }
+.class-agit-compact-order { max-height: min(60vh, 660px); overflow: auto; scrollbar-gutter: stable; }

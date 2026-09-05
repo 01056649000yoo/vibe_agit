@@ -1,10 +1,11 @@
+import { createClassAgitBrowseFixture } from './classAgitBrowseFixture.js';
 import { createExhibitionDraft, editExhibition } from '../../modules/class-agit/exhibitionDraft.js';
 import { getSourceExclusion } from '../../modules/class-agit/sourceContract.js';
 import { buildClassAgitSavePayload } from '../../modules/class-agit/api/contract.js';
 import { previewClass, previewSources, previewStudents } from './classAgitFixtures.js';
 
 // 화면 점검 전용 메모리 서버. 실제 권한 검증은 SQL 역할 스모크가 담당한다.
-export function createClassAgitPersistenceFixture(initialSources = previewSources) {
+export function createClassAgitPersistenceFixture(initialSources = previewSources, missions) {
     const sources = new Map(initialSources.map((source) => [source.id, structuredClone(source)]));
     const projects = new Map();
     let enabled = false;
@@ -32,14 +33,7 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
     };
     const api = {
         async getWorkspace(_classId, id) { return workspace(id); },
-        async getCandidates(_classId, query = '', cursor = null) {
-            const all = [...sources.values()].filter((source) => !getSourceExclusion(source, previewClass.id)
-                && `${source.title} ${source.student_name}`.includes(query.trim()));
-            const start = cursor ? all.findIndex((source) => source.id === cursor.id) + 1 : 0;
-            const items = all.slice(start, start + 20).map(({ id, title, student_name, group_title }) => ({ id, title, student_name, group_title }));
-            const hasMore = start + 20 < all.length;
-            return { version: 1, items, has_more: hasMore, next_cursor: hasMore ? { id: items.at(-1).id } : null };
-        },
+        ...createClassAgitBrowseFixture(sources, previewClass.id, missions),
         async getSource(_classId, id) { return readSource(id); },
         async save(classId, draft, revision) { return api.runAction(classId, 'save', buildClassAgitSavePayload(draft, revision)); },
         async runAction(_classId, action, payload) {

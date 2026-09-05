@@ -29,6 +29,7 @@ export const previewSources = Array.from({ length: CLASS_AGIT_LIMITS.maxWorks + 
         title: `${story.title}${round ? ` · 계절 ${round + 1}` : ''}`, content: story.content || story.stanzas.join('\n\n'),
         input_template: story.stanzas ? 'poem' : null,
         structured_content: story.stanzas ? { template: 'poem', version: 1, stanzas: [...story.stanzas] } : null,
+        mission_id: story.stanzas ? 'sample-mission-poem' : 'sample-mission-prose', updated_at: new Date(Date.UTC(2026, 8, 1, 0, index)).toISOString(),
         group_title: story.stanzas ? '마음을 담은 시' : '우리의 작은 발견',
     };
 });
@@ -37,7 +38,7 @@ previewSources.push(
     { ...previewSources[0], id: 'sample-private', title: '내 마음속 비밀 일기', writing_context: 'self', visibility: 'private' },
     { ...previewSources[0], id: 'sample-unconfirmed', title: '확인을 기다리는 글', is_confirmed: false },
     { ...previewSources[0], id: 'sample-unsubmitted', title: '아직 쓰는 중인 이야기', is_submitted: false },
-    { ...previewSources[0], id: 'sample-report', title: '사진으로 남긴 봄 관찰', input_template: 'report', has_images: true },
+    { ...previewSources[0], id: 'sample-report', mission_id: 'sample-mission-report', group_title: '봄 관찰 보고서', title: '사진으로 남긴 봄 관찰', input_template: 'report', has_images: true },
 );
 
 export function createPreviewDraft(count = 12) {

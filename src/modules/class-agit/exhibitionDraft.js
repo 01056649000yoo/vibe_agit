@@ -21,7 +21,7 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
         const previousAuthor = draft.items.find((item) => item.studentId === change.source.student_id);
         const authorNumber = previousAuthor?.authorNumber ?? Math.max(0, ...draft.items.map((item) => item.authorNumber)) + 1;
         next = { ...draft, items: [...draft.items, {
-            ...presentSource(change.source), sourceId: change.source.id, studentId: change.source.student_id,
+            ...presentSource(change.source), sourceId: change.source.id, studentId: change.source.student_id, missionId: change.source.mission_id,
             sourceRevision: change.source.source_revision, authorName: change.source.student_name, groupTitle: change.source.group_title || '',
             authorNumber, publicAlias: previousAuthor?.publicAlias || `새싹 작가 ${String(authorNumber).padStart(2, '0')}`,
             scopes: { class: true, anthology: false, external: false },
@@ -32,7 +32,7 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
         if (!change.classAcknowledged) throw new Error('학급 전시 수록 의사를 다시 확인해 주세요.');
         next = { ...draft, items: draft.items.map((item) => item.sourceId === change.source.id ? {
             ...item, ...presentSource(change.source), sourceRevision: change.source.source_revision,
-            authorName: change.source.student_name, groupTitle: change.source.group_title || '', sourceChanged: false, unavailable: false, revoked: false,
+            authorName: change.source.student_name, groupTitle: change.source.group_title || '', missionId: change.source.mission_id, sourceChanged: false, unavailable: false, revoked: false,
             scopes: { ...item.scopes, class: true },
         } : item) };
     } else if (change.type === 'remove') {

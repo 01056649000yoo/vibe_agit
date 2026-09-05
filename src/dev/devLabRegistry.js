@@ -8,12 +8,14 @@ const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
+const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({ id: 'class-agit-selection', icon: '🏡', title: '우리반 아지트 작품 찾기', description: '66개 미션·1,040편 합성 글로 검색·일괄 담기·120편 순서를 점검한다', Component: ClassAgitSelectionPreview }),
   Object.freeze({ id: 'class-agit-release', icon: '🏡', title: '우리반 아지트 문집·외부 공유', description: '문집 확정판·100편 출력·학생 서가·공유 해지/만료와 시범 학급을 한 흐름으로 점검한다', Component: ClassAgitReleasePreview }),
   Object.freeze({
     id: 'class-agit-student',

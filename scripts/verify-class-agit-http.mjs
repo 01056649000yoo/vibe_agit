@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID, randomBytes, createHmac } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { verifyClassAgitSelection } from './lib/class-agit-selection-http.mjs';
 import { verifyFrozenPublicReads } from './lib/class-agit-frozen-http.mjs';
 const suffix = randomUUID().replaceAll('-', '').slice(0, 12);
 const dbName = `class_agit_verify_${suffix}`; const container = `class-agit-verify-${suffix}`;
@@ -101,6 +102,7 @@ try {
     assert.equal(student120.status, 200); assert.equal(student120.data.previous_id, 'published-119'); assert.equal(student120.data.next_id, null);
     console.log('PASS: 120 long works; student and anonymous room 10 / last work 120; invalid room 11 / work 121 rejected.');
     await verifyFrozenPublicReads({ sql, rpc, run, dir, network, postgrestContainer: container, jwt, secret, capacityIds });
+    await verifyClassAgitSelection({ sql, rpc, jwt, secret });
     console.log('PASS: business conflicts return HTTP 409 without retry; anonymous 200/404/409/429 + no-store/no-referrer/noindex; role boundaries; token rotation/recall/revocation; durable rate limits.');
 } finally {
     spawnSync('docker', ['rm', '-f', container], { stdio: 'ignore' });

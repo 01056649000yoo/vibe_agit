@@ -6,7 +6,7 @@ export const ANTHOLOGY_PRINT_SETTINGS = Object.freeze({ paper: 'A4', body_pt: 12
 export function bookItemFromSource(source, classId, confirmed = false) {
     const reason = getSourceExclusion(source, classId);
     if (reason) throw new Error(reason);
-    return { ...presentSource(source), sourceId: source.id, studentId: source.student_id, sourceRevision: source.source_revision,
+    return { ...presentSource(source), sourceId: source.id, studentId: source.student_id, missionId: source.mission_id, sourceRevision: source.source_revision,
         author: source.student_name, group: source.group_title || '', anthologyConfirmed: confirmed };
 }
 export function addBookItems(book, items) {
