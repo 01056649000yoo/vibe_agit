@@ -4,7 +4,7 @@ import { classAgitReleaseApi } from '../api/releaseApi.js';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import '../classAgit.css';
 import '../management.css';
-export default function RolloutManager({ api = classAgitReleaseApi, onExit }) {
+export default function RolloutManager({ api = classAgitReleaseApi }) {
     const [data, setData] = useState(null); const [draft, setDraft] = useState(null);
     const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const lock = useRef(false);
     const { ask, confirmDialog } = useConfirmDialog();
@@ -16,10 +16,14 @@ export default function RolloutManager({ api = classAgitReleaseApi, onExit }) {
         try { receive(await api.manageRollout({ mode: draft.mode, external_enabled: draft.external_enabled, class_ids: draft.class_ids, expected_revision: data.settings.revision })); }
         catch (e) { setError(e.message); } finally { lock.current = false; setBusy(false); }
     };
-    return <section className="class-agit class-agit-management"><header className="class-agit-project-heading"><h1>우리반 아지트 공개 단계</h1>{onExit && <Button variant="outline" type="button" disabled={busy} onClick={onExit}>관리 화면으로</Button>}</header>
+    const stage = { internal: '관리자 본인 학급', pilot: '지정 학급 시범 운영', open: '전체 교사 공개', disabled: '전체 중지' };
+    return <section className="class-agit class-agit-management">
+        <header className="class-agit-project-heading"><div><span className="class-agit-eyebrow">🏡 우리반 아지트 · 공개 단계</span>
+            <h2>{data ? `지금 ${Reflect.get(stage, data.settings.mode) || data.settings.mode} · 외부 공유 ${data.settings.external_enabled ? '켜짐' : '꺼짐'}` : '공개 설정을 확인하고 있습니다…'}</h2></div>
+            <Button variant="outline" type="button" disabled={busy} onClick={async () => { try { receive(await api.manageRollout()); setError(''); } catch (e) { setError(e.message); } }}>새로고침</Button></header>
         <p>관리자 내부 검증 → 최대 두 학급 시범 운영 → 전체 교사 공개 순서로 넓힙니다. 각 학급의 학생 공개와 외부 공유 허용은 별도로 관리합니다.</p>
         {error && <p role="alert" className="class-agit-error">{error}</p>}
-        {!draft ? <p role="status">공개 설정을 확인하고 있습니다…</p> : <fieldset className="class-agit-book-settings" disabled={busy}><legend>공개 범위</legend>
+        {draft && <fieldset className="class-agit-book-settings" disabled={busy}><legend>공개 범위</legend>
             <label>운영 단계<select value={draft.mode} onChange={(e) => setDraft({ ...draft, mode: e.target.value })}><option value="internal">관리자 본인 학급</option><option value="pilot">지정 학급 시범 운영</option><option value="open">전체 교사 공개</option><option value="disabled">전체 중지</option></select></label>
             {draft.mode === 'open' && <p>승인된 모든 교사가 자기 학급에서 쓸 수 있습니다. 학생에게 열리는 것은 교사가 학급 모듈을 켜고 전시를 공개했을 때뿐입니다. 지정 학급 목록은 그대로 두므로 `지정 학급 시범 운영`으로 되돌릴 수 있습니다.</p>}
             {draft.mode === 'pilot' && <div><p>시범 학급 · {draft.class_ids.length}/2</p>{data.classes.map((c) => <label key={c.id}><input type="checkbox" checked={draft.class_ids.includes(c.id)} disabled={!draft.class_ids.includes(c.id) && draft.class_ids.length >= 2} onChange={(e) => setDraft({ ...draft, class_ids: e.target.checked ? [...draft.class_ids, c.id] : draft.class_ids.filter((id) => id !== c.id) })} />{c.name}{c.teacher_name ? ` · ${c.teacher_name}` : ''}{c.school_name ? ` · ${c.school_name}` : ''}</label>)}</div>}
@@ -27,6 +31,6 @@ export default function RolloutManager({ api = classAgitReleaseApi, onExit }) {
             <p>외부 공유를 켜면 허용된 교사가 전시를 인터넷 주소로 낼 수 있습니다. 학급 공개와는 별개이며, 끄면 새 주소 발급과 기간 연장이 막힙니다(이미 낸 주소는 각 전시에서 해지합니다).</p>
             <Button variant="primary" type="button" disabled={draft.mode === 'pilot' && !draft.class_ids.length} onClick={save}>공개 설정 저장</Button>
         </fieldset>}
-        <Button variant="outline" type="button" disabled={busy} onClick={async () => { try { receive(await api.manageRollout()); setError(''); } catch (e) { setError(e.message); } }}>최신 공개 설정 불러오기</Button>{confirmDialog}
+        {confirmDialog}
     </section>;
 }

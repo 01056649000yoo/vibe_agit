@@ -265,17 +265,26 @@ test('전시관·책방 이름은 좌측 메뉴·도움말·학생 화면이 한
     assert.match(readFileSync('supabase/migrations/20261251_class_agit_longer_share_slug.sql', 'utf8'), /'아지트 글 전시관'/);
 });
 
-test('공개 단계 관리는 교사 화면이 아니라 관리자 대시보드 `기능 공개` 탭에 있다', () => {
+test('공개 단계 관리는 관리자 대시보드의 우리반 아지트 전용 탭에 있다', () => {
     const entry = readFileSync('src/modules/class-agit/teacher/TeacherEntry.jsx', 'utf8');
     // 관리자만 쓰는 화면이 교사 메뉴에 섞여 있지 않아야 한다.
     assert.doesNotMatch(entry, /공개 단계 관리|RolloutManager/);
     const dashboard = readFileSync('src/components/admin/AdminDashboard.jsx', 'utf8');
     assert.match(dashboard, /const ClassAgitRolloutManager = React\.lazy\(\(\) => import\('\.\.\/\.\.\/modules\/class-agit\/teacher\/RolloutManager\.jsx'\)\)/);
-    // 이웃 아지트 공개 관리와 같은 `기능 공개` 탭 안에 나란히 둔다.
-    const tab = dashboard.slice(dashboard.indexOf("currentTab === 'rollout'"), dashboard.indexOf("currentTab === 'settings'"));
-    assert.match(tab, /<AdminNeighborAgitPanel \/>/);
-    assert.match(tab, /<ClassAgitRolloutManager \/>/);
-    assert.match(dashboard, /\{ id: 'rollout', label: '기능 공개' \}/);
-    // 돌아갈 곳이 없는 대시보드에서는 나가기 버튼을 숨긴다.
-    assert.match(readFileSync('src/modules/class-agit/teacher/RolloutManager.jsx', 'utf8'), /\{onExit && <Button variant="outline" type="button" disabled=\{busy\} onClick=\{onExit\}>관리 화면으로<\/Button>\}/);
+    assert.match(dashboard, /\{ id: 'class-agit', label: '우리반 아지트' \}/);
+    // 두 기능은 서로 다른 탭이라 한 화면에 겹쳐 보이지 않는다.
+    const mine = dashboard.slice(dashboard.indexOf("currentTab === 'class-agit'"), dashboard.indexOf("currentTab === 'neighbor-agit'"));
+    assert.match(mine, /<ClassAgitRolloutManager \/>/);
+    assert.doesNotMatch(mine, /<AdminNeighborAgitPanel \/>/);
+    const neighbor = dashboard.slice(dashboard.indexOf("currentTab === 'neighbor-agit'"), dashboard.indexOf("currentTab === 'settings'"));
+    assert.match(neighbor, /<AdminNeighborAgitPanel \/>/);
+    assert.doesNotMatch(neighbor, /<ClassAgitRolloutManager \/>/);
+    // 대시보드에는 돌아갈 곳이 없어 나가기 인자를 아예 두지 않는다.
+    const panel = readFileSync('src/modules/class-agit/teacher/RolloutManager.jsx', 'utf8');
+    assert.doesNotMatch(panel, /onExit/);
+    // 지금 상태를 제목에서 바로 읽을 수 있어야 한다.
+    assert.match(panel, /외부 공유 \$\{data.settings.external_enabled \? '켜짐' : '꺼짐'\}/);
+    // 같은 일을 하는 버튼을 둘 두지 않는다.
+    assert.doesNotMatch(panel, /최신 공개 설정 불러오기/);
+    assert.equal((panel.match(/api\.manageRollout\(\)/g) || []).length, 2);
 });

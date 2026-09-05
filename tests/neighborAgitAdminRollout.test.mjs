@@ -19,12 +19,14 @@ const functionSource = (name) => {
     return migration.slice(start, next < 0 ? migration.length : next);
 };
 
-test('관리자 운영 묶음에 기능 공개 탭을 두고 이웃 화면은 선택할 때만 지연 로딩한다', () => {
-    assert.match(dashboard, /\{ id: 'rollout', label: '기능 공개' \}/);
+test('관리자 운영 묶음에 이웃 아지트 전용 탭을 두고 선택할 때만 지연 로딩한다', () => {
+    // 2026-09-06에 `기능 공개` 한 탭을 우리반 아지트·이웃 아지트 두 탭으로 갈랐다.
+    assert.match(dashboard, /\{ id: 'neighbor-agit', label: '이웃 아지트' \}/);
     assert.match(dashboard, /const AdminNeighborAgitPanel = React\.lazy/);
-    assert.match(dashboard, /active=\{currentTab === 'rollout'\}/);
-    assert.match(dashboard, /visited=\{visitedTabs\.has\('rollout'\)\}/);
+    assert.match(dashboard, /active=\{currentTab === 'neighbor-agit'\}/);
+    assert.match(dashboard, /visited=\{visitedTabs\.has\('neighbor-agit'\)\}/);
     assert.match(dashboard, /<AdminNeighborAgitPanel \/>/);
+    assert.doesNotMatch(dashboard, /label: '기능 공개'/);
 });
 
 test('관리자 현황은 전용 RPC 한 번으로 공간·학급·상호작용과 안전한 미리보기를 읽는다', () => {

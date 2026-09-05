@@ -68,7 +68,8 @@ const TAB_GROUPS = [
             { id: 'service', label: '서버 상태' },
             { id: 'maintenance', label: '서비스 관리' },
             { id: 'backup', label: '백업 상태' },
-            { id: 'rollout', label: '기능 공개' },
+            { id: 'class-agit', label: '우리반 아지트' },
+            { id: 'neighbor-agit', label: '이웃 아지트' },
             { id: 'announcements', label: '공지사항' },
             { id: 'feedback', label: '의견 제보' },
             { id: 'settings', label: '시스템 설정' }
@@ -900,12 +901,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     </KeepAlivePanel>
 
                     <KeepAlivePanel
-                        active={currentTab === 'rollout'}
-                        visited={visitedTabs.has('rollout')}
+                        active={currentTab === 'class-agit'}
+                        visited={visitedTabs.has('class-agit')}
                     >
-                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>기능 공개 화면을 불러오는 중입니다...</div>}>
-                            <AdminNeighborAgitPanel />
+                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>우리반 아지트 공개 설정을 불러오는 중입니다...</div>}>
                             <ClassAgitRolloutManager />
+                        </React.Suspense>
+                    </KeepAlivePanel>
+
+                    <KeepAlivePanel
+                        active={currentTab === 'neighbor-agit'}
+                        visited={visitedTabs.has('neighbor-agit')}
+                    >
+                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>이웃 아지트 공개 설정을 불러오는 중입니다...</div>}>
+                            <AdminNeighborAgitPanel />
                         </React.Suspense>
                     </KeepAlivePanel>
 
