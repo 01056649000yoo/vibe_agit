@@ -15,11 +15,19 @@
 .class-agit-student { margin: 0 auto 90px; max-width: 1200px; min-height: 65vh; }
 .class-agit-student h1 { overflow-wrap: anywhere; }
 .class-agit-student-exhibitions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); gap: 22px; margin-top: 32px; }
-.class-agit-exhibition-card { text-align: left; display: grid; gap: 14px; align-content: start; padding: 28px; border: 1px solid #d8dfcd; background: #fffdf6; border-radius: 18px; color: #344c3b; min-width: 0; }
-.class-agit-exhibition-card > span { font-size: 35px; color: #8a9965; }
-.class-agit-exhibition-card h2 { margin: 0; font-size: 23px; overflow-wrap: anywhere; }
-.class-agit-exhibition-card p { margin: 0; font-size: 15px; line-height: 1.8; color: #6c7462; overflow-wrap: anywhere; }
-.class-agit-exhibition-card strong { margin-top: 16px; font-size: 14px; }
+/* 전시 카드는 문집 표지와 같은 종이 비율·같은 자리에 세워 한 서가처럼 보이게 한다. */
+.class-agit-exhibition-card { min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    padding: 26px 20px; text-align: center; overflow-wrap: anywhere;
+    background: var(--gallery-wall, #fffdf6); color: var(--gallery-ink, #344c3b);
+    border: 1px solid color-mix(in srgb, var(--gallery-floor, #d8dfcd) 60%, transparent);
+    border-bottom: 14px solid var(--gallery-floor, #d8dfcd);
+    border-radius: 4px 12px 12px 4px; box-shadow: 5px 6px 0 rgba(38, 46, 34, .10); }
+.class-agit-exhibition-card :is(h3, p, small, strong, span) { margin: 0; color: inherit; }
+.class-agit-exhibition-card h3 { font-size: clamp(16px, 1.8vw, 24px); line-height: 1.45; }
+.class-agit-exhibition-card p { font-size: 13px; line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.class-agit-exhibition-card small { font-size: 12px; opacity: .8; }
+.class-agit-exhibition-card .class-agit-cover-mark { font-size: 32px; color: var(--gallery-accent, #8a9965); }
+.class-agit-exhibition-card strong { font-size: 13px; }
 .class-agit-lobby-art { min-height: 340px; border-radius: 50% 50% 15px 15px; background: linear-gradient(160deg, #e1e6d5, #f5f2e5); border: 12px solid #e7e6d6; display: grid; align-content: center; justify-items: center; gap: 25px; text-align: center; padding: 25px; }
 .class-agit-lobby-art span { font-size: 70px; color: #7d8c57; }.class-agit-lobby-art p { font-size: 23px; color: #4e6044; line-height: 1.8; }.class-agit-lobby-art i { width: 60%; height: 12px; border-radius: 3px; background: #c4aa82; box-shadow: 0 12px 22px #89826438; }
 .class-agit-live-toolbar, .class-agit-live-access { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 15px 0; font-size: 13px; }
@@ -190,7 +198,9 @@
 .class-agit-student-shelf { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid var(--ca-line); }
 .class-agit-student-shelf > h2 { font-size: 19px; line-height: 1.5; }
 .class-agit-student-shelf > p { margin: 8px 0 16px; line-height: 1.8; color: var(--ca-muted); }
-.class-agit-student-shelf .class-agit-exhibition-card h3 { font-size: 17px; line-height: 1.5; }
+/* 전시 표지와 문집 표지가 같은 칸을 쓴다. */
+.class-agit-student-shelf .class-agit-student-exhibitions { grid-template-columns: repeat(auto-fill, minmax(min(186px, 100%), 1fr)); gap: 18px; margin-top: 0; }
+.class-agit-student-shelf .class-agit-student-exhibitions > button { max-width: 260px; min-height: 0; }
 .class-agit-gallery { min-height: 650px; scroll-margin-top: 85px; }
 .class-agit-gallery__header { border-bottom: 1px solid var(--ca-line); padding-bottom: 15px; }
 .class-agit-gallery__title { margin-top: 25px; }.class-agit-gallery__title h1 { font-family: Georgia, 'Noto Serif KR', serif; font-size: 30px; margin-top: 8px; overflow-wrap: anywhere; }

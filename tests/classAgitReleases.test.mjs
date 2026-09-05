@@ -8,6 +8,7 @@ import { normalizeClassAgitParams, getClassAgitBackDestination } from '../src/mo
 import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js';
 import { createShareToken, validShareToken, buildShareUrl, assertPublicGalleryResponse } from '../src/modules/class-agit/public/publicApi.js';
 import { previewSources, previewClass } from '../src/dev/fixtures/classAgitFixtures.js';
+import { BOOK_PAPERS, GALLERY_THEMES, bookCoverStyle, galleryCoverStyle } from '../src/modules/class-agit/designs.js';
 const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8') + readFileSync('supabase/migrations/20261242_class_agit_120_works.sql', 'utf8') + readFileSync('supabase/migrations/20261243_class_agit_frozen_public_reads.sql', 'utf8');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';
 const editionId = '11111111-1111-4111-8111-111111111111';
@@ -173,4 +174,28 @@ test('학생 화면은 전시관과 문집 서가를 나누어 게시 방식의 
     assert.match(books, /한번 나온 판은 그대로 남아서/);
     assert.equal((source.match(/class-agit-student-shelf/g) || []).length, 2);
     assert.match(readFileSync('src/modules/class-agit/anthology/StudentBooks.jsx', 'utf8'), /확정한 판이 그대로 남아 있어요/);
+    // 문집 표지는 첫 화면에 바로 놓인다 — 서가로 한 번 더 들어가게 하지 않는다.
+    assert.match(source, /readBooks/);
+    assert.match(books, /\{books\.data && <div className="class-agit-student-exhibitions">/);
+    assert.match(books, /class-agit-book-cover/);
+    assert.match(books, /bookCoverStyle\(book.design, book.paper\)/);
+    assert.match(books, /editionId: book.id/);
+    assert.doesNotMatch(books, /mode: 'books'/);
+});
+test('학생 첫 화면의 전시 표지와 문집 표지는 같은 종이 비율로 같은 칸에 선다', () => {
+    const a4 = BOOK_PAPERS[0];
+    // 전시 카드가 텅 비어 커 보이지 않도록 문집 표지와 같은 비율·자리를 쓴다.
+    for (const theme of GALLERY_THEMES) {
+        const style = galleryCoverStyle(theme.id);
+        assert.equal(style.aspectRatio, `${a4.width} / ${a4.height}`);
+        assert.equal(style['--gallery-wall'], theme.wall);
+        assert.ok(style['--gallery-ink'], `${theme.id} 테마의 글자색이 없습니다.`);
+    }
+    assert.equal(galleryCoverStyle('없는테마').aspectRatio, bookCoverStyle('botanical', 'A4').aspectRatio);
+    const source = readFileSync('src/modules/class-agit/student/StudentEntry.jsx', 'utf8');
+    assert.match(source, /className="class-agit-exhibition-card" style=\{galleryCoverStyle\(exhibition.theme\)\}/);
+    // 소개가 비면 빈 칸을 남기지 않는다.
+    assert.match(source, /\{exhibition.introduction && <p>\{exhibition.introduction\}<\/p>\}/);
+    const css = readFileSync('src/modules/class-agit/classAgit.css', 'utf8');
+    assert.match(css, /\.class-agit-student-shelf \.class-agit-student-exhibitions \{ grid-template-columns/);
 });

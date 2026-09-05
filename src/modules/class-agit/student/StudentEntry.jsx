@@ -5,6 +5,9 @@ import StudentBackButton from '../../../components/student/StudentBackButton.jsx
 import GuideInfoButton from '../../../components/common/GuideInfoButton.jsx';
 import Modal from '../../../components/common/Modal.jsx';
 import { classAgitStudentApi } from '../api/studentApi.js';
+import { classAgitReleaseApi } from '../api/releaseApi.js';
+import { assertStudentBooks } from '../anthology/studentContract.js';
+import { bookCoverStyle, galleryCoverStyle, getBookDesign } from '../designs.js';
 import { classAgitRoute, normalizeClassAgitParams } from './navigation.js';
 import useGalleryRead from './useGalleryRead.js';
 import GalleryRoom from '../gallery/GalleryRoom.jsx';
@@ -12,7 +15,7 @@ import StudentBooks from '../anthology/StudentBooks.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
 
-export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, onBack, api = classAgitStudentApi, releaseApi }) {
+export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, onBack, api = classAgitStudentApi, releaseApi = classAgitReleaseApi }) {
     const route = normalizeClassAgitParams(params);
     const mode = route.mode || 'list';
     const room = mode === 'lobby' ? 0 : Number(route.room || 1);
@@ -28,7 +31,10 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
     const readList = useCallback(() => api.getExhibitions(), [api]);
     const readRoom = useCallback(() => api.getRoom(id, room), [api, id, room]);
     const readWork = useCallback(() => api.getWork(id, publicationNo, workId), [api, id, publicationNo, workId]);
+    // 서가로 한 번 더 들어가지 않고 첫 화면에서 문집 표지를 바로 고른다.
+    const readBooks = useCallback(async () => assertStudentBooks(await releaseApi.getStudentBooks()), [releaseApi]);
     const list = useGalleryRead('exhibitions', readList, mode === 'list', refresh);
+    const books = useGalleryRead('books', readBooks, mode === 'list', refresh);
     const page = useGalleryRead(`${id}:${room}`, readRoom, mode === 'lobby' || mode === 'room', refresh, true);
     const detail = useGalleryRead(`${id}:${publicationNo}:${workId}`, readWork, mode === 'work');
     const current = mode === 'list' ? list : page;
@@ -75,15 +81,19 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
             <section className="class-agit-student-shelf" aria-labelledby="class-agit-gallery-heading">
                 <h2 id="class-agit-gallery-heading">🖼 글 전시관</h2>
                 <p>선생님이 고른 글을 전시실에 걸어 둔 곳이에요. 선생님이 새로 꾸미면 걸린 글도 바뀌어요.</p>
-                {list.data && <div className="class-agit-student-exhibitions">{list.data.exhibitions.map((exhibition) => <button type="button" className="class-agit-exhibition-card" key={exhibition.id} onClick={() => navigate({ exhibitionId: exhibition.id })}>
-                    <span aria-hidden="true">✦</span><small>{exhibition.publication_no}판</small><h3>{exhibition.title}</h3><p>{exhibition.introduction}</p><strong>전시 둘러보기 ↗</strong>
+                {list.data && <div className="class-agit-student-exhibitions">{list.data.exhibitions.map((exhibition) => <button type="button" className="class-agit-exhibition-card" style={galleryCoverStyle(exhibition.theme)} key={exhibition.id} onClick={() => navigate({ exhibitionId: exhibition.id })}>
+                    <small>{exhibition.publication_no}판</small><h3>{exhibition.title}</h3>{exhibition.introduction && <p>{exhibition.introduction}</p>}<span className="class-agit-cover-mark" aria-hidden="true">✦</span><strong>전시 둘러보기 ↗</strong>
                 </button>)}</div>}
                 {list.data?.exhibitions.length === 0 && <p className="class-agit-empty">아직 열린 전시가 없어요. 선생님이 전시를 준비하면 여기에서 만날 수 있어요.</p>}
             </section>
             <section className="class-agit-student-shelf" aria-labelledby="class-agit-books-heading">
                 <h2 id="class-agit-books-heading">📚 문집 서가</h2>
                 <p>우리 반의 글을 한 권으로 묶어 확정한 책이에요. 한번 나온 판은 그대로 남아서 언제든 같은 내용을 다시 읽을 수 있어요.</p>
-                <button type="button" className="class-agit-primary" onClick={() => navigate({ mode: 'books' })}>서가에서 문집 고르기 ↗</button>
+                {books.error && <p className="class-agit-error" role="alert">{books.error}</p>}
+                {books.data && <div className="class-agit-student-exhibitions">{books.data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} onClick={() => navigate({ mode: 'book', editionId: book.id })}>
+                    <small>{book.number}판</small><h3>{book.title}</h3>{book.subtitle && <p>{book.subtitle}</p>}<span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong>
+                </button>)}</div>}
+                {books.data?.books.length === 0 && <p className="class-agit-empty">아직 서가에 문집이 없어요. 함께 쓴 책이 곧 찾아올 거예요.</p>}
             </section>
         </> : roomData && <>
             {mode === 'lobby' ? <div className="class-agit-lobby">

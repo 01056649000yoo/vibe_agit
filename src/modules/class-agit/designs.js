@@ -24,6 +24,13 @@ export function bookCoverStyle(designId, paperId) {
     return { '--book-paper': design.paper, '--book-ink': design.ink, '--book-accent': design.accent,
         '--book-border': design.border, aspectRatio: `${paper.width} / ${paper.height}` };
 }
+// 전시관 표지도 문집 표지와 같은 자리·같은 종이 비율로 세운다. 어두운 벽 테마는 글자를 밝게 쓴다.
+const GALLERY_COVER_INK = Object.freeze({ garden: '#2f4133', museum: '#334155', library: '#f5efe2', night: '#eef2ff' });
+export function galleryCoverStyle(themeId) {
+    const theme = getGalleryTheme(themeId);
+    return { '--gallery-wall': theme.wall, '--gallery-floor': theme.floor, '--gallery-accent': theme.accent,
+        '--gallery-ink': Reflect.get(GALLERY_COVER_INK, theme.id), aspectRatio: `${BOOK_PAPERS[0].width} / ${BOOK_PAPERS[0].height}` };
+}
 export function createBookPrintSettings(book = {}) {
     return { paper: getBookPaper(book.paper_format).id, design: getBookDesign(book.design_id).id, body_pt: 12, poem_pt: 14, version: 2 };
 }

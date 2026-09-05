@@ -1,6 +1,6 @@
 .class-agit .class-agit-book-cover[data-design] { min-height:0;width:100%;padding:24px;gap:12px;background:var(--book-paper);color:var(--book-ink);border:5px var(--book-border) var(--book-accent);display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-wrap:anywhere; }
-.class-agit .class-agit-book-cover[data-design] :is(h2,p,small,span) { color:inherit;margin:0; }
-.class-agit .class-agit-book-cover[data-design] h2 { font-size:clamp(18px,2vw,28px);line-height:1.45; }
+.class-agit .class-agit-book-cover[data-design] :is(h2,h3,p,small,span,strong) { color:inherit;margin:0; }
+.class-agit .class-agit-book-cover[data-design] :is(h2,h3) { font-size:clamp(16px,1.8vw,24px);line-height:1.45; }
 .class-agit .class-agit-book-cover[data-design] p { font-size:13px; }
 .class-agit .class-agit-book-cover[data-design] .class-agit-cover-mark { font-size:32px;color:var(--book-accent); }
 .class-agit .class-agit-book-cover[data-design="editorial"] { border:0;border-top:24px solid var(--book-accent);border-bottom:7px solid var(--book-accent);text-align:left;align-items:stretch; }
