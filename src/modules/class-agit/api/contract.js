@@ -1,3 +1,4 @@
+import { getGalleryTheme } from '../designs.js';
 import { CLASS_AGIT_LIMITS } from '../policy.js';
 import { assertDraftSources } from '../sourceContract.js';
 
@@ -12,7 +13,7 @@ export function assertClassAgitWorkspace(data, classId) {
 export function buildClassAgitSavePayload(draft, expectedRevision) {
     assertDraftSources(draft.items);
     return {
-        exhibition_id: draft.id, expected_revision: expectedRevision, title: draft.title, introduction: draft.introduction,
+        exhibition_id: draft.id, expected_revision: expectedRevision, title: draft.title, introduction: draft.introduction, theme: getGalleryTheme(draft.theme).id,
         // 본문/이름/장르/공개 상태는 보내지 않는다. 서버가 최신 원본에서 다시 만든다.
         items: draft.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision,
             publicAlias: item.publicAlias })),

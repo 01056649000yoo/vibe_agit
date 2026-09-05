@@ -9,7 +9,7 @@ import ErrorBoundary from '../common/ErrorBoundary.jsx';
 
 const InternalClassAgit = lazy(classAgitManifest.teacherEntry);
 
-function AccessGate({ activeClass, allowInternal }) {
+function AccessGate({ activeClass, allowInternal, section }) {
     const [access, setAccess] = useState(null);
     const [error, setError] = useState('');
     const [refresh, setRefresh] = useState(0);
@@ -17,7 +17,7 @@ function AccessGate({ activeClass, allowInternal }) {
     if (error && !allowInternal) return <p role="alert">{error} <button type="button" onClick={() => setRefresh((v) => v + 1)}>다시 확인</button></p>;
     if (!access && !allowInternal) return <p role="status">우리반 아지트를 준비하고 있습니다…</p>;
     return access?.allowed || access?.is_admin || allowInternal
-    ? <ErrorBoundary key={activeClass.id}><Suspense fallback={<p role="status">우리반 아지트를 준비하고 있습니다…</p>}><InternalClassAgit activeClass={activeClass} isAdmin={access?.is_admin || allowInternal} /></Suspense></ErrorBoundary>
+    ? <ErrorBoundary key={activeClass.id}><Suspense fallback={<p role="status">우리반 아지트를 준비하고 있습니다…</p>}><InternalClassAgit activeClass={activeClass} section={section} isAdmin={access?.is_admin || allowInternal} /></Suspense></ErrorBoundary>
     : (
     <section className="teacher-class-agit" aria-labelledby="teacher-class-agit-title">
         <div className="teacher-class-agit__hero">
@@ -39,5 +39,5 @@ function AccessGate({ activeClass, allowInternal }) {
 );
 
 }
-const TeacherClassAgitHub = ({ activeClass, allowInternal = false }) => activeClass?.id ? <AccessGate key={activeClass.id} activeClass={activeClass} allowInternal={allowInternal} /> : <p>학급을 먼저 선택해 주세요.</p>;
+const TeacherClassAgitHub = ({ activeClass, allowInternal = false, section = 'exhibitions' }) => activeClass?.id ? <AccessGate key={activeClass.id} activeClass={activeClass} allowInternal={allowInternal} section={section} /> : <p>학급을 먼저 선택해 주세요.</p>;
 export default TeacherClassAgitHub;

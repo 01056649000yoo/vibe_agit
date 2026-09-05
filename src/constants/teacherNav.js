@@ -1,3 +1,8 @@
+export const CLASS_AGIT_TEACHER_TABS = [
+    { id: 'class-agit', label: '글 전시관', section: 'exhibitions' },
+    { id: 'class-agit-books', label: '학급 문집', section: 'books' },
+];
+
 /**
  * 교사 대시보드 상단 업무 영역.
  *
@@ -36,7 +41,8 @@ export const TEACHER_NAV_GROUPS = [
         badge: 'BETA',
         navSection: 'writing',
         defaultTab: 'class-agit',
-        tabs: [{ id: 'class-agit', label: '우리반 아지트' }]
+        secondaryShape: 'sidebar',
+        tabs: CLASS_AGIT_TEACHER_TABS
     },
     {
         id: 'operations',

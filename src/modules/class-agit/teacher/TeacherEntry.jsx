@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { CLASS_AGIT_TEACHER_TABS } from '../../../constants/teacherNav.js';
+import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import Button from '../../../components/common/Button.jsx';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import { resolveEnabledModuleIds } from '../../registry.js';
@@ -14,6 +16,7 @@ import '../management.css';
 
 function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, releaseApi = classAgitReleaseApi, isAdmin = false, onOpenPublic }) {
     const classId = activeClass.id;
+    const { ask, confirmDialog } = useConfirmDialog();
     const releasesEnabled = !isSample || releaseApi !== classAgitReleaseApi;
     const [area, setArea] = useState('exhibitions');
     const [workspace, setWorkspace] = useState(null);
@@ -39,6 +42,10 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
             setWorkspace(await api.getWorkspace(classId, id));
         }); } catch (reason) { setError(reason.message); }
     };
+    const remove = async (project) => {
+        if (!await ask({ title: `“${project.title}” 전시를 삭제할까요?`, body: '전시 초안과 공개판, 외부 공유 주소가 삭제됩니다. 학생 원글과 문집은 남습니다. 삭제한 전시는 복구할 수 없습니다.', confirmLabel: '전시 삭제' })) return;
+        try { await operation(async () => setWorkspace(await api.runAction(classId, 'delete', { exhibition_id: project.id, expected_revision: project.revision, confirmed: true }))); } catch (reason) { setError(reason.message); }
+    };
     const create = async () => {
         try { await operation(async () => {
             createId.current ||= crypto.randomUUID();
@@ -53,14 +60,13 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
             initial_vocab_tower_enabled: workspace.class.vocab_tower_enabled ?? null, exhibition_id: workspace.draft?.id || null,
         }))); } catch (reason) { setError(reason.message); }
     };
-    if (area === 'books') return <AnthologyManager activeClass={activeClass} api={releaseApi} sourceApi={api} onExit={() => setArea('exhibitions')} />;
     if (area === 'rollout') return <RolloutManager api={releaseApi} onExit={() => { setArea('exhibitions'); setLoadVersion((v) => v + 1); }} />;
     return <div className="class-agit-management-shell">
         {!workspace?.draft && <div className="class-agit-live-access">
             <span>{isSample ? '샘플 운영' : '우리반 아지트 · 제한 운영'}</span>
             {workspace && <label><input type="checkbox" disabled={busy} checked={workspace.class.module_enabled} onChange={(event) => changeAccess(event.target.checked)} />학급 학생 공개 켜기</label>}
         </div>}
-        {!workspace?.draft && releasesEnabled && <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setArea('books')}>학급 문집 만들기</Button>{isAdmin && <Button variant="outline" type="button" onClick={() => setArea('rollout')}>공개 단계 관리</Button>}</div>}
+        {!workspace?.draft && releasesEnabled && isAdmin && <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setArea('rollout')}>공개 단계 관리</Button></div>}
         {error && <div className="class-agit-error" role="alert">{error}{!workspace?.draft && <Button variant="outline" type="button" onClick={() => setLoadVersion((version) => version + 1)}>작업공간 다시 불러오기</Button>}</div>}
         {!workspace && !error && <p role="status">전시 작업공간을 불러오고 있습니다…</p>}
         {workspace?.draft ? <ExhibitionWorkbench key={`${classId}:${workspace.draft.id}`} activeClass={activeClass} initialDraft={workspace.draft}
@@ -81,12 +87,29 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
                     <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit" variant="help" /><Button variant="primary" type="button" disabled={busy || workspace.projects.length >= 20} onClick={create}>새 전시 만들기</Button></div></div>
                 {isSample && <p className="class-agit-prototype-note">샘플 저장·공개는 이 화면에서만 동작합니다. 실제 DB에는 반영하지 않습니다.</p>}
                 {!workspace.projects.length && <p className="class-agit-empty">첫 전시를 만들어 우리 반의 글을 담아 보세요.</p>}
-                <ul className="class-agit-projects">{workspace.projects.map((project) => <li key={project.id}><div><strong>{project.title}</strong><p>{project.state === 'published' ? `${project.publication_no}판 공개 중` : project.state === 'archived' ? '보관함' : '비공개 초안'}</p></div><Button variant="outline" type="button" disabled={busy} onClick={() => open(project.id)}>전시 열기</Button></li>)}</ul>
+                <ul className="class-agit-projects">{workspace.projects.map((project) => <li key={project.id}><div><strong>{project.title}</strong><p>{project.state === 'published' ? `${project.publication_no}판 공개 중` : project.state === 'archived' ? '보관함' : '비공개 초안'}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => open(project.id)}>전시 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => remove(project)} aria-label={`${project.title} 전시 삭제`}>삭제</Button></div></li>)}</ul>
                 <p className="class-agit-canvas-caption">학생 공개를 꺼도 초안을 편집할 수 있습니다. 공개한 전시는 학생 홈의 우리반 아지트에서 읽을 수 있습니다. 학급 문집을 만들거나 저장한 전시에서 외부 읽기 전용 공유를 준비할 수 있습니다.</p>
         </section>}
+        {confirmDialog}
     </div>;
 }
 
+function ClassAgitSections({ section, ...props }) {
+    const [localSection, setLocalSection] = useState('exhibitions');
+    const current = section || localSection;
+    const releasesEnabled = !props.isSample || (props.releaseApi && props.releaseApi !== classAgitReleaseApi);
+    const [visited, setVisited] = useState([current]);
+    if (!visited.includes(current)) setVisited([...visited, current]);
+    return <div className={section ? undefined : 'class-agit-sections'}>
+        {!section && <nav className="class-agit-section-nav" role="tablist" aria-label="우리반 아지트 세부 메뉴">
+            {CLASS_AGIT_TEACHER_TABS.map(({ section: id, label }) => <button key={id} type="button" role="tab" aria-selected={current === id} disabled={id === 'books' && !releasesEnabled} onClick={() => setLocalSection(id)}>{label}</button>)}
+        </nav>}
+        <div className="class-agit-section-content">
+            {visited.includes('exhibitions') && <div hidden={current !== 'exhibitions'}><TeacherWorkspace {...props} /></div>}
+            {releasesEnabled && visited.includes('books') && <div hidden={current !== 'books'}><AnthologyManager activeClass={props.activeClass} api={props.releaseApi} sourceApi={props.api} /></div>}
+        </div>
+    </div>;
+}
 export default function ClassAgitTeacherEntry(props) {
-    return <TeacherWorkspace key={props.activeClass.id} {...props} />;
+    return <ClassAgitSections key={props.activeClass.id} {...props} />;
 }

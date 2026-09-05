@@ -14,7 +14,7 @@ const [teacherNav, dashboard, hub, uiPreview, preparationRoadmap, preparationRoa
 
 test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교사 탭이다', () => {
     const labIndex = teacherNav.indexOf("id: 'writing-lab'");
-    const classAgitIndex = teacherNav.indexOf("id: 'class-agit'");
+    const classAgitIndex = teacherNav.indexOf("id: 'class-agit'", labIndex);
     const operationsIndex = teacherNav.indexOf("id: 'operations'");
 
     assert.ok(labIndex > -1 && labIndex < classAgitIndex && classAgitIndex < operationsIndex);
@@ -25,7 +25,7 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
     const classAgitGroup = teacherNav.slice(classAgitIndex, operationsIndex);
     assert.doesNotMatch(classAgitGroup, /launchHref/);
     assert.match(dashboard, /lazy\(\(\) => import\('\.\/TeacherClassAgitHub'\)\)/);
-    assert.match(dashboard, /visibleTab === 'class-agit'[\s\S]*<TeacherClassAgitHub activeClass=\{activeClass\}/);
+    assert.match(dashboard, /\['class-agit', 'class-agit-books'\]\.includes\(visibleTab\)[\s\S]*<TeacherClassAgitHub activeClass=\{activeClass\}/);
     assert.match(uiPreview, /group\.id === 'class-agit'[\s\S]*<TeacherClassAgitHub activeClass=/);
 });
 

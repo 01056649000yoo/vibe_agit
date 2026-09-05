@@ -85,7 +85,7 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
                 </div>
                 <nav className="class-agit-room-nav" aria-label="전시실 이동">{roomData.rooms.map((entry) => <button type="button" key={entry.number} aria-current={entry.number === room ? 'page' : undefined} onClick={() => moveRoom(entry.number)}>{entry.number} 전시실 <small>{entry.count}편</small></button>)}</nav>
                 {activeRoom && (route.view === 'list' ? <ol className="class-agit-work-list">{roomData.items.map((work, index) => <li key={work.id}><button type="button" data-work-id={work.id} onClick={() => openWork(work)}><span>{index + 1}</span><div><strong>{work.title}</strong><p>{work.excerpt}</p><small>{work.kindLabel} · {work.author}</small></div><b aria-hidden="true">↗</b></button></li>)}</ol>
-                    : <GalleryRoom key={room} works={roomData.items} roomNumber={room} onOpen={openWork} />)}
+                    : <GalleryRoom theme={roomData.theme} key={room} works={roomData.items} roomNumber={room} onOpen={openWork} />)}
                 {roomData.total_count > 0 && !activeRoom && <p role="status">전시실 구성이 바뀌었어요. 위에서 볼 전시실을 골라 주세요.</p>}
                 <footer className="class-agit-gallery__footer"><button type="button" disabled={room <= 1} onClick={() => moveRoom(room - 1)}>← 이전 방</button><span>{room} / {roomData.rooms.length || 1} 전시실</span><button type="button" disabled={room >= roomData.rooms.length} onClick={() => moveRoom(room + 1)}>다음 방 →</button></footer>
             </>}

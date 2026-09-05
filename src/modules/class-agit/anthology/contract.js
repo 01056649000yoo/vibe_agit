@@ -1,3 +1,4 @@
+import { getBookPaper, getBookDesign, validBookPrintSettings } from '../designs.js';
 import { CLASS_AGIT_LIMITS } from '../policy.js';
 import { assertDraftSources, getSourceExclusion, presentSource } from '../sourceContract.js';
 
@@ -19,6 +20,7 @@ export function buildBookSavePayload(book) {
     assertDraftSources(book.items);
     return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
         introduction: book.introduction, class_label: book.class_label, term: book.term, issue_date: book.issue_date, grouping: book.grouping,
+        paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,
         items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision })) };
 }
 export function sortBookItems(items, grouping) {
@@ -35,7 +37,7 @@ export function assertBookWorkspace(data, classId) {
 }
 export function assertBookEdition(data) {
     if (data?.version !== 1 || !data.id || !Number.isInteger(data.number) || !data.book?.title
-        || Object.entries(ANTHOLOGY_PRINT_SETTINGS).some(([key, value]) => Reflect.get(data.book.print || {}, key) !== value)
+        || !validBookPrintSettings(data.book.print)
         || !Array.isArray(data.book.works) || data.book.works.length < 1 || data.book.works.length > 100
         || data.book.works.some((work) => !Array.isArray(work.blocks) || work.blocks.length > 200 || Array.from(work.blocks.join(' ')).length > 20000)) throw new Error('확정판을 확인할 수 없습니다.');
     return data;

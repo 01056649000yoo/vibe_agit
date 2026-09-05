@@ -1,8 +1,9 @@
+import { getGalleryTheme } from './designs.js';
 import { CLASS_AGIT_LIMITS as limits } from './policy.js';
 import { getSourceExclusion, presentSource } from './sourceContract.js';
 
 export function createExhibitionDraft(classId, title = '우리의 작은 발견') {
-    return { classId, title, introduction: '평범한 하루에서 발견한 특별한 순간들. 우리 반 작가들의 이야기를 만나 보세요.', revision: 1, items: [] };
+    return { classId, title, theme: 'garden', introduction: '평범한 하루에서 발견한 특별한 순간들. 우리 반 작가들의 이야기를 만나 보세요.', revision: 1, items: [] };
 }
 
 export function editExhibition(draft, change, expectedRevision = draft.revision) {
@@ -12,6 +13,8 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
     if (change.type === 'metadata') {
         if (change.title.length > limits.titleLength || change.introduction.length > limits.introductionLength) throw new Error('전시 제목이나 소개가 너무 깁니다.');
         next = { ...draft, title: change.title, introduction: change.introduction };
+    } else if (change.type === 'theme') {
+        next = { ...draft, theme: getGalleryTheme(change.theme).id };
     } else if (change.type === 'add') {
         const reason = getSourceExclusion(change.source, draft.classId);
         if (reason) throw new Error(reason);
@@ -63,5 +66,5 @@ export function createGalleryPresentation(draft, audience = 'class') {
         author: audience === 'external' ? item.publicAlias : item.authorName,
         format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: [...item.blocks],
     }));
-    return { title: draft.title.trim() || '제목 없는 전시', introduction: draft.introduction, audience, works };
+    return { title: draft.title.trim() || '제목 없는 전시', introduction: draft.introduction, audience, theme: getGalleryTheme(draft.theme).id, works };
 }

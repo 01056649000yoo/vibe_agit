@@ -45,7 +45,7 @@ test('문집 방문 기록에는 판·작품 주소만 남고 뒤로가기는 �
 test('확정판 A4 출력은 공용 장르 렌더러·고정 설정·HTML 이스케이프를 사용한다', async () => {
     const html = await buildAnthologyHtml({ version: 1, id: editionId, number: 1, book: { ...book, print: ANTHOLOGY_PRINT_SETTINGS, works: [{ ...work, title: '<img onerror=alert(1)>', blocks: ['첫 행\n둘째 행', '</script> <script>alert(1)</script>'] }] } });
     assert.match(html, /poem-sheet__stanza/); assert.match(html, /&lt;script&gt;/); assert.doesNotMatch(html, /<script>|<img onerror/);
-    assert.match(html, /data-toc-row="0"/); assert.match(html, /@page \{ size:A4 portrait; margin:0; \}/);
+    assert.match(html, /data-toc-row="0"/); assert.match(html, /@page \{ size:210mm 297mm; margin:0; \}/);
     assert(sql.includes(`'print','${JSON.stringify(ANTHOLOGY_PRINT_SETTINGS)}'::JSONB`));
     await assert.rejects(buildAnthologyHtml({ version: 1, id: editionId, number: 1, book: { ...book, print: { ...ANTHOLOGY_PRINT_SETTINGS, version: 2 }, works: [work] } }));
 });

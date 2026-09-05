@@ -1,3 +1,5 @@
+import { BOOK_DESIGNS, BOOK_PAPERS } from '../designs.js';
+const validDesign = (v) => (v.design === undefined || BOOK_DESIGNS.some((d) => d.id === v.design)) && (v.paper === undefined || BOOK_PAPERS.some((p) => p.id === v.paper));
 const text = (v, max) => typeof v === 'string' && Array.from(v).length <= max;
 const keys = (v, allowed) => v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).every((key) => allowed.includes(key));
 const id = (v) => typeof v === 'string' && /^chapter-([1-9]|[1-9][0-9]|100)$/.test(v);
@@ -5,10 +7,10 @@ const fail = () => { throw new Error('문집 응답을 확인하지 못했어요
 export function assertStudentBooks(data, editionId = null, workId = null) {
     if (data?.version !== 1) fail();
     if (!editionId) {
-        if (!keys(data, ['version', 'books']) || !Array.isArray(data.books) || data.books.length > 20 || data.books.some((b) => !keys(b, ['id', 'number', 'created_at', 'title', 'subtitle']) || !text(b.id, 36) || !Number.isInteger(b.number) || b.number < 1 || !text(b.title, 80) || !text(b.subtitle, 120))) fail();
+        if (!keys(data, ['version', 'books']) || !Array.isArray(data.books) || data.books.length > 20 || data.books.some((b) => !keys(b, ['id', 'number', 'created_at', 'title', 'subtitle', 'design', 'paper']) || !validDesign(b) || !text(b.id, 36) || !Number.isInteger(b.number) || b.number < 1 || !text(b.title, 80) || !text(b.subtitle, 120))) fail();
     } else {
         if (!keys(data, ['version', 'id', 'number', 'book', 'works', 'work']) || data.id !== editionId || !Number.isInteger(data.number) || data.number < 1
-            || !keys(data.book, ['title', 'subtitle', 'introduction', 'class_label', 'term', 'issue_date', 'grouping']) || !text(data.book.title, 80) || !text(data.book.introduction, 2000)) fail();
+            || !keys(data.book, ['title', 'subtitle', 'introduction', 'class_label', 'term', 'issue_date', 'grouping', 'design', 'paper']) || !validDesign(data.book) || !text(data.book.title, 80) || !text(data.book.introduction, 2000)) fail();
         if (workId) {
             const work = data.work;
             if (data.works !== null || !keys(work, ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks', 'group']) || work?.id !== workId || !id(work.id) || !text(work.title, 200) || !text(work.author, 30)

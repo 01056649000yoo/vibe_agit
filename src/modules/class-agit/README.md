@@ -196,3 +196,19 @@ pdfplumber를 설치한 Python(`CLASS_AGIT_PYTHON`)이 필요하다. 생성 파�
 DB 없는 브라우저에서 30편 즉시 담기·회수 작품 제외·문집 12편 가져오기/저장·외부 주소 발급을 확인했다.
 
 `npm run smoke:class-agit`에 61245 역할/기간/철회 롤백 검사를 연결했다. 배포 마감 전체 876개와 빌드·보안 검사를 통과했다.
+
+### 독립 편집 화면·디자인·삭제
+
+- 교사의 `글 전시관` / `학급 문집`은 `teacherNav.js`의 같은 sidebar 계약을 쓴다. 선택한 화면만 처음 로드하고,
+  한 번 연 화면은 두 메뉴 사이를 이동할 때 숨겨 편집 내용을 유지한다. 다른 학급으로 전환하면 모두 초기화한다.
+- `designs.js`가 전시 디자인 4종, 문집 디자인 4종, A4/A5/B5 JIS 실제 mm 크기와 여백을 소유한다.
+  새 저장값은 `20261246`이 허용한 ID만 받는다. 전시 디자인은 공개 목차에, 문집 디자인·판형은 확정판 `print` v2에 동결한다.
+  기존 `print` v1 확정판은 A4로 읽는다. 학생/외부 전시 DTO에는 안전한 `theme` ID만 추가한다.
+- 문집은 같은 DOM 측정·쪽 나눔 결과를 미리보기와 PDF에 사용한다. 작은 판형에서 긴 제목이 첫 쪽을 채우면
+  본문을 다음 쪽부터 시작한다. 본문 12pt·시 14pt 아래로 줄이지 않는다.
+- 삭제는 기존 관리 RPC의 `delete` 동작으로만 수행한다. 담당 교사·학급·최신 revision·삭제 동작을 검증한 뒤
+  FK cascade로 해당 전시의 공개본/외부 주소 또는 해당 문집의 확정판을 제거한다. 학생 원글이나 다른 문집/전시는 삭제하지 않는다.
+- `tests/classAgitDesigns.test.mjs`는 모든 저장/읽기 경로·허용 ID·출력 크기를 함께 검사하고,
+  `tests/sql/20261246_class_agit_designs_and_deletion.smoke.sql`은 역할·동시 수정·원글 보존·공개본 정리를 롤백 검증한다.
+- `CLASS_AGIT_PAPER=A5 CLASS_AGIT_DESIGN=editorial npm run smoke:class-agit:pdf`로 선택한 판형/디자인의
+  100편 합성 문집을 실제 PDF로 검사한다. 필요하면 `CLASS_AGIT_PYTHON`에 pdfplumber가 있는 Python 경로를 지정한다.

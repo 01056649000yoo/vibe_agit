@@ -1,0 +1,21 @@
+.class-agit-room[data-theme="museum"] .class-agit-room__back { background:linear-gradient(115deg,#fff,#e8edf2); }
+.class-agit-room[data-theme="museum"] :is(.class-agit-room__left,.class-agit-room__right) { background:#d3d9df; }
+.class-agit-room[data-theme="museum"] .class-agit-room__floor { background:repeating-linear-gradient(90deg,transparent 0 15%,#adb8c4 15.1% 15.3%),repeating-linear-gradient(0deg,#e1e5e9 0 28px,#bbc4ce 29px 30px); }
+.class-agit-room[data-theme="museum"] .class-agit-frame > button { background:#414e5b;border-color:#677786;box-shadow:3px 8px 12px #26334a30; }
+.class-agit-room[data-theme="museum"] .class-agit-room__bench { background:linear-gradient(#fafafa 0 65%,#83909e 66%); }
+.class-agit-room[data-theme="library"] .class-agit-room__back { background:repeating-linear-gradient(90deg,transparent 0 19.8%,#1d3e3545 20% 20.3%),linear-gradient(#46695c,#2b5145); }
+.class-agit-room[data-theme="library"] :is(.class-agit-room__left,.class-agit-room__right) { background:repeating-linear-gradient(0deg,#765137 0 22px,#e4bc85 23px 26px,#b77555 27px 31px,#49695c 32px 36px,#c6ac79 37px 43px,#503e31 44px 48px); }
+.class-agit-room[data-theme="library"] .class-agit-room__floor { filter:brightness(.8); }
+.class-agit-room[data-theme="library"] .class-agit-frame > button { background:#b28b56;border-color:#7e5c38; }
+.class-agit-room[data-theme="library"] .class-agit-room__sign { color:#f3ddb9; }
+.class-agit-room[data-theme="night"] .class-agit-room__back { background:radial-gradient(circle at 13% 16%,#e3eafd 0 1px,transparent 2px),radial-gradient(circle at 82% 23%,#fff4c4 0 1px,transparent 2px),radial-gradient(circle at 53% 10%,#fff 0 1px,transparent 2px),linear-gradient(#17223e,#3e5177);background-size:97px 79px,131px 103px,179px 139px,100% 100%; }
+.class-agit-room[data-theme="night"] :is(.class-agit-room__left,.class-agit-room__right) { background:#192744; }
+.class-agit-room[data-theme="night"] .class-agit-room__floor { background:repeating-linear-gradient(95deg,transparent 0 12%,#7890ad44 12.1% 12.3%),linear-gradient(#344361,#627592); }
+.class-agit-room[data-theme="night"] .class-agit-frame > button { background:#aebbd3;border-color:#7485a5;box-shadow:0 0 14px #e8efff40,3px 10px 12px #101b36aa; }
+.class-agit-room[data-theme="night"] .class-agit-room__sign { color:#e1e9ff; }
+.class-agit-room[data-theme="night"] .class-agit-room__bench { background:linear-gradient(#8799b8 0 70%,#52647e 71%); }
+.class-agit-room[data-theme="night"] .class-agit-room__plant { filter:grayscale(.7) brightness(1.4); }
+:is(.class-agit-room[data-theme="night"],.class-agit-room[data-theme="library"]) .class-agit-room__empty :is(h3,p,span) { color:#f1eee0; }
+.class-agit-room[data-theme="museum"] { background:#e8edf2; }
+.class-agit-room[data-theme="library"] { background:#765137; }
+.class-agit-room[data-theme="night"] { background:#27334d; }

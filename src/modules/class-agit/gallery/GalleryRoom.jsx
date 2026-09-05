@@ -1,8 +1,10 @@
+import { getGalleryTheme } from '../designs.js';
+import './themes.css';
 import { GALLERY_ROOM, getGallerySlot } from './roomLayout.js';
 
-export default function GalleryRoom({ works, onOpen, roomNumber = 1 }) {
+export default function GalleryRoom({ works, onOpen, roomNumber = 1, theme }) {
     return (
-        <div className="class-agit-room" aria-label={`${roomNumber} 전시실`} style={{ '--room-aspect': `${GALLERY_ROOM.width} / ${GALLERY_ROOM.height}` }}>
+        <div className="class-agit-room" data-theme={getGalleryTheme(theme).id} aria-label={`${roomNumber} 전시실`} style={{ '--room-aspect': `${GALLERY_ROOM.width} / ${GALLERY_ROOM.height}` }}>
             <div className="class-agit-room__architecture" aria-hidden="true">
                 <div className="class-agit-room__back" /><div className="class-agit-room__left" /><div className="class-agit-room__right" />
                 <div className="class-agit-room__floor" /><div className="class-agit-room__lights"><i /><i /><i /></div>

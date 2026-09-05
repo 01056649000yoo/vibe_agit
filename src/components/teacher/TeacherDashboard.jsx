@@ -501,7 +501,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     </div>
                 )}
                 <div style={{ minWidth: 0 }}>
-                {secondaryTabs.length > 0 && !['writing', 'operations', 'records'].includes(activeNavGroup.id) && (
+                {secondaryTabs.length > 0 && !['writing', 'operations', 'records', 'class-agit'].includes(activeNavGroup.id) && (
                     <div className="teacher-tab-heading">
                         <h2>{activeTab.label}</h2>
                         <TeacherGuideButton tabId={visibleTab} variant="help" />
@@ -569,8 +569,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
                             />
-                        ) : visibleTab === 'class-agit' ? (
-                            <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} />
+                        ) : ['class-agit', 'class-agit-books'].includes(visibleTab) ? (
+                            <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />
                         ) : visibleTab === 'neighbor-agit' ? (
                             <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (

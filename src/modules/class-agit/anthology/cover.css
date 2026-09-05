@@ -1,0 +1,10 @@
+.class-agit .class-agit-book-cover[data-design] { min-height:0;width:100%;padding:24px;gap:12px;background:var(--book-paper);color:var(--book-ink);border:5px var(--book-border) var(--book-accent);display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-wrap:anywhere; }
+.class-agit .class-agit-book-cover[data-design] :is(h2,p,small,span) { color:inherit;margin:0; }
+.class-agit .class-agit-book-cover[data-design] h2 { font-size:clamp(18px,2vw,28px);line-height:1.45; }
+.class-agit .class-agit-book-cover[data-design] p { font-size:13px; }
+.class-agit .class-agit-book-cover[data-design] .class-agit-cover-mark { font-size:32px;color:var(--book-accent); }
+.class-agit .class-agit-book-cover[data-design="editorial"] { border:0;border-top:24px solid var(--book-accent);border-bottom:7px solid var(--book-accent);text-align:left;align-items:stretch; }
+.class-agit .class-agit-book-cover[data-design="notebook"] { border:1px solid #adc3d4;border-left:12px solid var(--book-accent);background-image:repeating-linear-gradient(0deg,transparent 0 23px,#32648118 24px 25px); }
+.class-agit .class-agit-book-cover[data-design="constellation"] { border:1px solid var(--book-accent);background-image:radial-gradient(circle at 15% 20%,#d6b577 0 1px,transparent 2px),radial-gradient(circle at 90% 70%,#d6b577 0 1px,transparent 2px);background-size:53px 67px,79px 97px; }
+.class-agit-student-exhibitions:has(> .class-agit-book-cover) { grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); }
+.class-agit-student-exhibitions > .class-agit-book-cover[data-design] { max-width:280px; }

@@ -26,7 +26,7 @@ export default function PublishedExhibition({ classId, exhibitionId, api, onExit
         {!page && !error && <p role="status">공개판을 확인하고 있습니다…</p>}
         {page && <><h1>{page.exhibition.title}</h1><p>{page.exhibition.introduction}</p>
             <div className="class-agit-status">{page.publication_no}판 · {page.total_count}편 공개 중{page.blocked_count ? ` · 열람 중단 ${page.blocked_count}편` : ''}</div>
-            {page.total_count ? <GalleryRoom works={page.exhibition.works} roomNumber={room} onOpen={setSelected} />
+            {page.total_count ? <GalleryRoom theme={page.exhibition.theme} works={page.exhibition.works} roomNumber={room} onOpen={setSelected} />
                 : <p className="class-agit-empty">지금 볼 수 있는 작품이 없습니다. 작품의 공개 상태를 확인하고 있습니다.</p>}
             <nav className="class-agit-gallery__footer" aria-label="공개판 전시실 이동"><button type="button" disabled={room <= 1} onClick={() => move(room - 1)}>← 이전 전시실</button><span>{room} / {page.room_count} 전시실</span><button type="button" disabled={room >= page.room_count} onClick={() => move(room + 1)}>다음 전시실 →</button></nav>
         </>}

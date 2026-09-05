@@ -39,7 +39,7 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId, embed
                 <button type="button" className="class-agit-primary" disabled={!exhibition.works.length} onClick={() => setInGallery(true)}>전시관 입장하기 <span aria-hidden="true">↗</span></button>
                 {!exhibition.works.length && <p>공개 범위에 맞게 선택한 작품이 아직 없습니다.</p>}
             </div>
-            <div className="class-agit-lobby__window"><GalleryRoom works={exhibition.works.slice(0, 4)} onOpen={openWork} /><span>작은 발견이 모여, 한 권의 계절이 됩니다.</span></div>
+            <div className="class-agit-lobby__window"><GalleryRoom theme={exhibition.theme} works={exhibition.works.slice(0, 4)} onOpen={openWork} /><span>작은 발견이 모여, 한 권의 계절이 됩니다.</span></div>
         </div> : <>
             <div className="class-agit-gallery__title"><div><span className="class-agit-eyebrow">OUR LITTLE GALLERY</span><h1>{exhibition.title}</h1></div>
                 <div className="class-agit-segmented" role="group" aria-label="전시 보기 방식"><button type="button" aria-pressed={view === 'room'} onClick={() => setView('room')}>전시실 보기</button><button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>목록 보기</button></div>
@@ -47,7 +47,7 @@ export default function GalleryViewer({ exhibition, onExit, initialWorkId, embed
             <nav className="class-agit-room-nav" aria-label="전시실 이동">
                 {rooms.map((room, index) => <button key={room.id} type="button" aria-current={roomIndex === index ? 'page' : undefined} onClick={() => setRoomIndex(index)}>{String(room.number).padStart(2, '0')} 전시실 <small>{room.works.length}편</small></button>)}
             </nav>
-            {view === 'room' ? <GalleryRoom key={currentRoom.id} works={currentRoom.works} onOpen={openWork} roomNumber={currentRoom.number} /> : (
+            {view === 'room' ? <GalleryRoom theme={exhibition.theme} key={currentRoom.id} works={currentRoom.works} onOpen={openWork} roomNumber={currentRoom.number} /> : (
                 <ol className="class-agit-work-list">{currentRoom.works.map((work, index) => <li key={work.id}><button type="button" onClick={(event) => openWork(work, event.currentTarget)}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{work.title}</strong><p>{work.excerpt}</p><small>{work.kindLabel} · {work.author}</small></div><b aria-hidden="true">↗</b></button></li>)}</ol>
             )}
             <footer className="class-agit-gallery__footer"><button type="button" disabled={roomIndex === 0} onClick={() => setRoomIndex((index) => index - 1)}>← 이전 방</button><span>{roomIndex + 1} / {rooms.length} 전시실 · 액자를 눌러 글을 읽어 보세요.</span><button type="button" disabled={roomIndex >= rooms.length - 1} onClick={() => setRoomIndex((index) => index + 1)}>다음 방 →</button></footer>

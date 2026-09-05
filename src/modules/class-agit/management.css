@@ -185,3 +185,30 @@
 @media (max-width: 600px) {
     .class-agit.class-agit-management { padding: var(--ui-space-4); }
 }
+
+/* 글쓰기 탭과 같은 좌측 메뉴. 실제 대시보드에서는 공용 sidebar가 렌더링한다. */
+.class-agit-sections { display:grid;grid-template-columns:clamp(180px,10vw,240px) minmax(0,1fr);gap:20px;align-items:start; }
+.class-agit-section-nav { display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:16px;background:#e2e8f0;position:sticky;top:84px; }
+.class-agit-section-nav button { border:0;border-radius:12px;background:transparent;padding:13px 14px;text-align:left;color:#475569;font-family:inherit;font-weight:600;font-size:.9rem;cursor:pointer; }
+.class-agit-section-nav button[aria-selected="true"] { background:white;color:#1e293b;box-shadow:0 1px 4px #0f172a12; }
+.class-agit-section-content { min-width:0; }
+.class-agit-design-picker { border:0;min-width:0;margin:24px 0;padding:0; }
+.class-agit-design-picker legend { font-size:1rem;font-weight:700;color:#334155;margin-bottom:12px; }
+.class-agit-design-options { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px; }
+.class-agit-design-option,.class-agit-paper-option { position:relative;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:white;color:#334155;cursor:pointer;min-width:0; }
+.class-agit-design-option.is-selected,.class-agit-paper-option.is-selected { border:2px solid #6366f1;padding:11px;background:#f5f5ff; }
+.class-agit-design-option:focus-within,.class-agit-paper-option:focus-within { outline:3px solid #a5b4fc;outline-offset:2px; }
+.class-agit-design-option input { position:absolute;top:20px;right:20px;z-index:1;accent-color:#6366f1; }
+.class-agit-design-option small,.class-agit-paper-option small { font-size:.8rem;line-height:1.5;color:#64748b; }
+.class-agit-design-picker:disabled label { cursor:default;opacity:.7; }
+.class-agit-theme-swatch { height:96px;border-radius:6px;background:linear-gradient(var(--swatch-wall) 0 78%,var(--swatch-floor) 78%);box-shadow:inset 8px 0 #0001,inset -8px 0 #0001;display:flex;gap:9px;align-items:center;justify-content:center; }
+.class-agit-theme-swatch i { width:24%;height:40%;background:#fffcf2;border:4px solid var(--swatch-accent);box-shadow:2px 3px 3px #0003; }
+.class-agit-theme-swatch[data-theme="night"] { background:radial-gradient(circle,#fff 0 1px,transparent 2px) 0 0/29px 23px,linear-gradient(var(--swatch-wall) 0 78%,var(--swatch-floor) 78%); }
+.class-agit-book-swatch { align-self:center;width:66px;height:88px;display:grid;place-items:center;font-size:32px;box-shadow:3px 3px 0 #0002;border-left:5px solid var(--book-accent); }
+.class-agit-book-swatch[data-design="notebook"] { background-image:repeating-linear-gradient(0deg,transparent 0 12px,#32648125 13px 14px)!important; }
+.class-agit-paper-options { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.class-agit-paper-option input { position:absolute;right:14px;top:14px;accent-color:#6366f1; }
+.class-agit-book-preview { margin:0;max-width:300px;width:100%;justify-self:center; }
+.class-agit-book-preview figcaption { text-align:center;font-size:.85rem;color:#64748b;margin-top:12px; }
+@media(max-width:1000px) { .class-agit-design-options{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:700px) { .class-agit-sections{display:block;}.class-agit-section-nav{position:static;flex-direction:row;margin-bottom:16px;}.class-agit-section-nav button{flex:1;text-align:center;}.class-agit-paper-options{grid-template-columns:1fr;}.class-agit-paper-option{padding-right:40px;}.class-agit-book-preview{max-width:230px;} }

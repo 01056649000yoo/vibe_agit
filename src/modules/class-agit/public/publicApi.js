@@ -10,11 +10,11 @@ export function buildShareUrl(token, origin = window.location.origin) {
 const errors = { unavailable: '공유가 끝났거나 지금 볼 수 없는 전시입니다. 안내받은 주소를 확인해 주세요.', changed: '전시가 새로 바뀌었습니다. 전시실에서 작품을 다시 골라 주세요.', rate_limited: '잠시 많은 분이 전시를 보고 있습니다. 잠시 뒤 다시 열어 주세요.' };
 export function assertPublicGalleryResponse(data, room, workId = null, publicationNo = null) {
     if (data?.error) throw new Error(Reflect.get(errors, data.error) || errors.unavailable);
-    if (data?.version !== 1 || Object.keys(data).some((key) => !['version', 'title', 'introduction', 'publication_no', 'room', 'total_count', 'rooms', 'items', 'work', 'visibility_revision', 'starts_at', 'expires_at', 'server_now'].includes(key))) throw new Error('전시 응답을 확인할 수 없습니다.');
+    if (data?.version !== 1 || Object.keys(data).some((key) => !['version', 'title', 'introduction', 'publication_no', 'room', 'total_count', 'rooms', 'items', 'work', 'visibility_revision', 'starts_at', 'expires_at', 'server_now', 'theme'].includes(key))) throw new Error('전시 응답을 확인할 수 없습니다.');
     if (data.expires_at !== undefined && (!Number.isFinite(Date.parse(data.starts_at)) || !Number.isFinite(Date.parse(data.expires_at)) || !Number.isFinite(Date.parse(data.server_now)) || Date.parse(data.expires_at) <= Date.parse(data.starts_at))) throw new Error('전시 기간을 확인할 수 없습니다.');
-    if (!workId) assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, publication_no: data.publication_no, room: data.room, total_count: data.total_count, rooms: data.rooms, items: data.items }, 'public', room);
+    if (!workId) assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, theme: data.theme, publication_no: data.publication_no, room: data.room, total_count: data.total_count, rooms: data.rooms, items: data.items }, 'public', room);
     else {
-        assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, publication_no: data.publication_no, room: 0, total_count: data.total_count, rooms: data.rooms, items: [] }, 'public', 0);
+        assertStudentRoom({ version: data.version, exhibition_id: 'public', title: data.title, introduction: data.introduction, theme: data.theme, publication_no: data.publication_no, room: 0, total_count: data.total_count, rooms: data.rooms, items: [] }, 'public', 0);
         assertStudentWork({ version: data.version, publication_no: data.publication_no, work: data.work, previous_id: null, next_id: null }, workId, publicationNo);
     }
     return data;

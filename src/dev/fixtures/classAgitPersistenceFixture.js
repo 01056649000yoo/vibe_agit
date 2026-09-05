@@ -50,8 +50,9 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
             const project = requireProject(id);
             const current = project.draft;
             if (payload.expected_revision !== current.revision) throw new Error('다른 화면에서 전시가 변경되었습니다. 현재 편집은 남겨 두고 최신 전시를 다시 불러와 주세요.');
+            if (action === 'delete') { if (!payload.confirmed) throw new Error('전시 삭제를 확인해 주세요.'); projects.delete(id); return workspace(); }
             if (action === 'save') {
-                let next = { ...current, title: payload.title.trim(), introduction: payload.introduction, items: [] };
+                let next = { ...current, title: payload.title.trim(), introduction: payload.introduction, theme: payload.theme || current.theme, items: [] };
                 for (const item of payload.items) {
                     const source = readSource(item.sourceId);
                     if (source.source_revision !== item.sourceRevision) throw new Error('원글 내용이 바뀌었습니다. 전문을 다시 확인해 주세요.');
@@ -93,7 +94,7 @@ export function createClassAgitPersistenceFixture(initialSources = previewSource
             });
             return { version: 1, publication_no: published.publicationNo, room, room_count: Math.max(1, Math.ceil(visible.length / 12)),
                 total_count: visible.length, blocked_count: published.items.length - visible.length,
-                exhibition: { title: published.title, introduction: published.introduction, audience: 'class',
+                exhibition: { title: published.title, introduction: published.introduction, theme: published.theme, audience: 'class',
                     works: visible.slice((room - 1) * 12, room * 12).map((item, index) => ({ id: `published-${room}-${index}`,
                         title: item.title, author: item.authorName, format: item.format, kindLabel: item.kindLabel, excerpt: item.excerpt, blocks: [...item.blocks] })) } };
         },

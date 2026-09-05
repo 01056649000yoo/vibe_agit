@@ -14,7 +14,7 @@ const initial = () => ({ ...editExhibition(createExhibitionDraft('class'), { typ
 test('저장 요청은 원문과 개인정보·권한 필드를 보내지 않고 서버 revision만 사용한다', () => {
     const draft = initial();
     const payload = buildClassAgitSavePayload({ ...draft, revision: 999, state: 'published' }, 7);
-    assert.deepEqual(payload, { exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction,
+    assert.deepEqual(payload, { exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction, theme: 'garden',
         items: [{ sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01' }] });
     assert.doesNotMatch(JSON.stringify(payload), /student|authorName|blocks|published|999|첫 문단/);
     draft.items[0].scopes.class = false;

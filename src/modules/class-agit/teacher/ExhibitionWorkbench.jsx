@@ -5,6 +5,8 @@ import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 import { createExhibitionDraft, createGalleryPresentation, editExhibition } from '../exhibitionDraft.js';
 import { presentSource } from '../sourceContract.js';
+import DesignPicker from './DesignPicker.jsx';
+import { GALLERY_THEMES, getGalleryTheme } from '../designs.js';
 import { arrangeGalleryRooms } from '../gallery/roomLayout.js';
 import SelectionWorkspace from '../selection/SelectionWorkspace.jsx';
 import GalleryViewer from '../gallery/GalleryViewer.jsx';
@@ -107,9 +109,9 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     };
     const readSource = (source) => perform(async () => setCandidate(await sourceApi.getSource(activeClass.id, source.id || source.sourceId)));
     const runSavedAction = async (action, item) => {
-        const titles = { publish: '저장한 전시를 학급에 공개할까요?', unpublish: '학급 공개를 중단할까요?', archive: '전시를 보관할까요?', restore: '전시를 초안으로 돌릴까요?', withdraw: '이 작품의 수록을 철회할까요?' };
-        if (!await ask({ title: Reflect.get(titles, action), body: action === 'withdraw' ? '공개판에서도 이 작품의 열람이 중단됩니다. 다시 공개하려면 원글을 다시 담고 발행해야 합니다.' : '저장된 전시를 기준으로 처리합니다.', confirmLabel: '진행하기' })) return;
-        await perform(async () => { receiveDraft(await persistence.action(action, savedDraft.revision, item)); setMessage('전시 상태를 반영했습니다.'); });
+        const titles = { delete: '이 전시를 삭제할까요?', publish: '저장한 전시를 학급에 공개할까요?', unpublish: '학급 공개를 중단할까요?', archive: '전시를 보관할까요?', restore: '전시를 초안으로 돌릴까요?', withdraw: '이 작품의 수록을 철회할까요?' };
+        if (!await ask({ title: Reflect.get(titles, action), body: action === 'delete' ? '전시 초안과 공개판, 외부 공유 주소가 삭제됩니다. 학생이 쓴 원글과 이미 만든 문집은 남습니다. 삭제한 전시는 복구할 수 없습니다.' : action === 'withdraw' ? '공개판에서도 이 작품의 열람이 중단됩니다. 다시 공개하려면 원글을 다시 담고 발행해야 합니다.' : '저장된 전시를 기준으로 처리합니다.', confirmLabel: '진행하기' })) return;
+        await perform(async () => { const next = await persistence.action(action, savedDraft.revision, item); if (next) { receiveDraft(next); setMessage('전시 상태를 반영했습니다.'); } });
     };
     const changeDraft = (change) => {
         try { setDraft(editExhibition(draft, change)); setMessage(''); setError(''); }
@@ -158,9 +160,11 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
                         <p>외부 방문자의 읽기 공유는 4단계에서 별도로 설정합니다.</p>
                     </div>
                 </div>
+                <DesignPicker label="전시관 디자인" options={GALLERY_THEMES} value={getGalleryTheme(draft.theme).id} onChange={(theme) => changeDraft({ type: 'theme', theme })} disabled={draft.state === 'archived'} />
                 {persistence && <details className="class-agit-exhibition-management"><summary>전시 관리</summary><div className="class-agit-header-actions">
                     <Button variant="outline" type="button" onClick={async () => { if (!dirty || await ask({ title: '편집 중인 내용을 버리고 최신 초안을 불러올까요?', confirmLabel: '최신 초안 불러오기' })) perform(async () => { receiveDraft(await persistence.reload()); setMessage('최신 초안을 불러왔습니다.'); }); }}>최신 초안 불러오기</Button>
                     <Button variant="ghost" type="button" disabled={dirty} onClick={() => runSavedAction(draft.state === 'archived' ? 'restore' : 'archive')}>{draft.state === 'archived' ? '초안으로 복원' : '전시 보관'}</Button>
+                    <Button variant="ghost" type="button" onClick={() => runSavedAction('delete')}>전시 삭제</Button>
                 </div></details>}
             </div>
 

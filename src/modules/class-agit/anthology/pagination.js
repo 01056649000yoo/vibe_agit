@@ -1,4 +1,4 @@
-// The same measured DOM pages are used on screen and by the browser's A4 printer.
+// The same measured DOM pages are used on screen and by the browser's selected paper size.
 // No font shrinking; oversized paragraphs split at Unicode code point boundaries.
 export function paginateAnthology(doc) {
     const source = doc.querySelector('#anthology-source');
@@ -30,6 +30,12 @@ export function paginateAnthology(doc) {
                     const mid = Math.ceil((lo + hi) / 2); block.textContent = chars.slice(0, mid).join('');
                     if (fits(current.content)) lo = mid; else hi = mid - 1;
                 }
+                if (!lo && current.allowHeaderOnly) {
+                    // 작은 판형의 긴 제목은 첫 쪽을 사용할 수 있다. 본문은 다음 쪽에서 시작한다.
+                    block.remove();
+                    if (!fits(current.content)) throw new Error('작품 제목이 한 페이지를 넘습니다. 제목을 확인해 주세요.');
+                    block = original.cloneNode(true); current = continuation(); continue;
+                }
                 if (!lo) throw new Error('표시할 수 없는 문집 내용이 있습니다. 제목과 본문을 확인해 주세요.');
                 let cut = lo;
                 for (let index = lo - 1; index >= lo * .75; index--) { if (/\s/u.test(Reflect.get(chars, index))) { cut = index + 1; break; } }
@@ -41,7 +47,7 @@ export function paginateAnthology(doc) {
             }
         }
     };
-    const cover = page('anthology-cover'); cover.content.append(source.querySelector('[data-cover]').cloneNode(true));
+    const cover = page('anthology-cover'); cover.sheet.dataset.design = source.querySelector('[data-cover]').dataset.design; cover.content.append(source.querySelector('[data-cover]').cloneNode(true));
     if (!fits(cover.content)) throw new Error('표지의 제목과 부제가 한 페이지를 넘습니다. 내용을 줄여 주세요.');
     const intro = source.querySelector('[data-introduction]');
     if (intro) flow([...intro.children], () => ({ ...page(), fixed: 0 }), () => ({ ...page(), fixed: 0 }));
@@ -66,7 +72,7 @@ export function paginateAnthology(doc) {
             p.content.classList.add('anthology-work'); p.content.dataset.format = article.className;
             const parts = [...wrapper.children]; wrapper.remove(); p.content.append(...parts);
             const header = [...p.content.children].filter((item) => item !== body); body.remove();
-            p.content.classList.add(...main.classList); return { ...p, fixed: header.length };
+            p.content.classList.add(...main.classList); return { ...p, fixed: header.length, allowHeaderOnly: true };
         };
         const continuation = () => {
             const p = page(); p.content.classList.add('anthology-work', ...main.classList);
