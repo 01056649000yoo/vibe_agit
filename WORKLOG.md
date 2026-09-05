@@ -21,6 +21,34 @@
 
 
 
+## 2026-09-06 — 공개 단계 저장 실패(`DELETE requires a WHERE clause`) 수정 (Claude)
+
+- **증상**: 관리자 `공개 단계 관리`에서 `공개 설정 저장`을 누르면 `DELETE requires a WHERE clause` 오류.
+  Kong 로그에서 `POST /rest/v1/rpc/manage_class_agit_rollout_v1` 이 **400(본문 86바이트)** 로 떨어진 것을 확인했다.
+- **원인**: `authenticator` 역할에 **`session_preload_libraries=safeupdate`** 가 걸려 있다(Supabase 기본,
+  `pg_db_role_setting`). PostgREST 로 들어오는 모든 요청은 **WHERE 없는 DELETE/UPDATE 를 거부**한다.
+  `manage_class_agit_rollout_v1` 의 `DELETE FROM public.class_agit_pilot_classes;` 가 여기 걸렸다.
+  **`61241`에서 함수가 처음 만들어질 때부터 있던 버그**이고 `61252`에 그대로 복사됐다. 시범 학급은 지금까지
+  SQL 로 직접 넣어 와서 드러나지 않았다 — 이 화면으로 저장에 성공한 적이 한 번도 없었다.
+- **왜 손으로는 멀쩡해 보였나**: psql 은 `postgres` 역할이라 safeupdate 가 preload 되지 않는다. 같은 호출이
+  psql 에서는 통과하고 앱에서만 실패한다. `authenticator` 로 직접 붙어 재현했다 —
+  맨 DELETE 는 `DELETE requires a WHERE clause`, 고친 함수는 정상 저장.
+- **고침(`61253`)**: 지울 대상을 조건으로 밝힌다 — 이번에 고르지 않은 학급만 지우고(`WHERE NOT EXISTS`)
+  새로 고른 학급만 넣는다(`ON CONFLICT(class_id) DO NOTHING`). 되풀이 저장해도 결과가 같다.
+  권한·검증·되돌리기 계약은 그대로다.
+- **되풀이 방지**: `tests/sqlSafeUpdate.test.mjs` 를 새로 만들어 **마이그레이션의 함수 본문 전체**에서
+  WHERE 없는 DELETE/UPDATE 를 찾는다(`ON CONFLICT DO UPDATE SET`·`FOR UPDATE` 잠금 절·주석은 걸러낸다).
+  `test:security:static` 에 넣었다. 훑어 보니 함수 안의 위반은 이 한 문장뿐이었다.
+  옛 마이그레이션은 이력이라 검사 대상에서 빼고 `20261253` 이후만 본다.
+- **검증**: 전체 914/914, 보안 정적 293/293 통과. lint 오류 0·경고 39건(늘지 않음).
+  새 검사가 진짜 잡는지 확인했다 — `61253`에 WHERE 없는 DELETE 를 되돌려 넣으면 검사 1·2가 실패한다.
+  검사 자체의 거짓 양성(upsert·잠금 절·주석·함수 밖 문장)도 단위 사례로 못박았다.
+- **git 밖 운영**: `61253` 을 운영 DB에 적용했다(296/296, 대기 0). `authenticator` 세션에서 저장 성공을 확인했다.
+- **⚠ 비밀 값 노출**: 원인을 찾는 과정에서 `pg_db_role_setting` 조회와 `docker inspect agit-rest` 출력에
+  **`app.settings.jwt_secret` 과 `authenticator` 비밀번호가 터미널에 찍혔다**. 외부로 나간 것은 없고 값은
+  어디에도 기록하지 않았다. 회전 여부는 사용자 판단에 맡긴다.
+- **남은 것 / 다음**: main 푸시로 자동 배포한다. 관리자 화면에서 실제로 저장이 되는지 한 번 눌러 확인한다.
+
 ## 2026-09-06 — `글꽃 전시관`·`글꽃 책방`으로 이름 바꾸기 (Claude)
 
 - **왜**: `글 전시관`·`학급 문집` 은 앱의 다른 이름들(`어휘의 탑`·`작가 수호룡`·`글쓰기 발자국`·`얘들아, 밥 먹자!`)에

@@ -69,3 +69,8 @@
 - **2026-09-05: 업무용 원글/편집 버전 충돌에 SQLSTATE `40001`을 쓰지 않는다.** PostgREST 14.12에서 같은 요청을 계속 재시도해 HTTP 응답이 끝나지 않는 것을 격리 검사로 재현했다. 새 입력/새로고침이 필요한 충돌은 `PT409`를 쓰고 실제 HTTP 409까지 검사한다. `61240/61241`에 반영. [PostgREST 원인 기록](https://github.com/PostgREST/postgrest/issues/3673).
 
 - **전시 발행의 잠금은 원글 회수와 함께 시험한다.** 부모·전시를 잠근 뒤 원글을 기다리면 회수 트리거와 교착할 수 있다. 발행 잠금은 NOWAIT/짧은 상한과 `PT409`로 끝내고 동시 HTTP 검사로 확인한다. (2026-09-05, `61243`)
+
+- **`authenticator` 역할에는 `safeupdate` 가 preload 돼 있다.** 함수 안에 WHERE 없는 DELETE/UPDATE 를 두면
+  psql(`postgres` 역할)에서는 통과하고 **앱에서만** `DELETE requires a WHERE clause` 로 400이 난다.
+  2026-09-06에 `manage_class_agit_rollout_v1` 이 이 때문에 처음부터 저장이 안 됐다(`61241`→`61253`).
+  `tests/sqlSafeUpdate.test.mjs` 가 이제 막는다. RPC 를 손으로 확인할 때는 `authenticator` 로 붙어 본다.

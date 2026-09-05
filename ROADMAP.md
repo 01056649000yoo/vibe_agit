@@ -36,6 +36,12 @@
 
 ## 🧭 현재 위치
 
+> **2026-09-06 공개 단계 저장 버그 수정**: `공개 설정 저장`이 앱에서 늘 400(`DELETE requires a WHERE clause`)
+> 이었다. `authenticator` 역할의 `safeupdate` preload 때문이며 `61241` 이래의 버그다. `61253`으로 고치고
+> 함수 안의 WHERE 없는 DELETE/UPDATE 를 훑는 검사를 `test:security:static` 에 넣었다.
+
+- [x] 공개 단계 저장 실패 수정과 safeupdate 위반 정적 검사 추가.
+
 > **2026-09-06 이름 바꾸기**: 좌측 메뉴 `글 전시관`·`학급 문집` 을 **`글꽃 전시관`·`글꽃 책방`** 으로 바꿨다.
 > 메뉴·도움말·학생 화면을 한 검사로 함께 지킨다. 샘링크 `display_label` 은 DB 값이라 그대로 둔다.
 
