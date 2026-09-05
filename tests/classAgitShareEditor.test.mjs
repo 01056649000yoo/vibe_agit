@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { createShareDraft, moveShareWork, moveShareWorkOrder, prepareShareWorks, samlinkShareUrl } from '../src/modules/class-agit/public/sharingPolicy.js';
 import { createClassAgitReleaseFixture } from '../src/dev/fixtures/classAgitReleaseFixture.js';
 const rooms = [{ id: 'first', title: '봄', introduction: '', variant: 0 }, { id: 'second', title: '여름', introduction: '', variant: 1 }];
@@ -79,15 +80,34 @@ test('샘링크 연결은 고정 목적지·비공개 도우미·기간 동기�
     assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_create_samlink_v1\(UUID,UUID,TEXT\) FROM PUBLIC,anon,authenticated,service_role/);
     assert.match(sql, /mode='pilot' AND external_enabled IS FALSE/);
 });
-test('공유 주소는 헷갈리는 글자를 뺀 10자 난수로 짧게 만든다', () => {
-    const sql = readFileSync('supabase/migrations/20261249_class_agit_short_samlink_slug.sql', 'utf8');
-    // 사람이 고르는 낱말을 쓰면 주소만으로 남의 반 전시를 열 수 있다.
-    assert.match(sql, /extensions\.gen_random_bytes\(10\)/);
-    assert.match(sql, /'0123456789abcdefghjkmnpqrstvwxyz'/);
-    assert.doesNotMatch(sql, /'e-'\|\|/);
-    assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_samlink_slug_v1\(\) FROM PUBLIC,anon,authenticated,service_role/);
+test('공유 주소는 샘링크가 쓰는 방식 그대로 4자로 발급하고 샘링크에 주인까지 남긴다', () => {
+    const sql = readFileSync('supabase/migrations/20261250_class_agit_samlink_native_slug.sql', 'utf8');
+    // 샘링크 원본(~/URL/lib/slug.ts)의 값을 여기 적어 둔다. 맥미니 밖 배포 관문에는 그 저장소가 없다.
+    const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789', length = 4;
+    assert.equal(alphabet.length, 32);
+    assert.ok(sql.includes(`'${alphabet}'`), '샘링크 알파벳과 다릅니다.');
+    assert.ok(sql.includes(`THEN ${length} ELSE 6 END`), '샘링크 기본 길이와 다릅니다.');
+    // 샘링크 저장소가 있는 곳(맥미니)에서는 원본과 갈라졌는지까지 본다.
+    const source = `${homedir()}/URL/lib/slug.ts`;
+    // 경로는 홈 디렉터리 + 고정 문자열뿐이고 검사에서만 읽는다(사용자 입력이 섞이지 않는다).
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    if (existsSync(source)) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        const samlink = readFileSync(source, 'utf8');
+        assert.equal(samlink.match(/const ALPHABET = "([^"]+)"/)[1], alphabet);
+        assert.equal(Number(samlink.match(/const DEFAULT_SLUG_LENGTH = (\d+)/)[1]), length);
+    }
+    for (const reserved of ['admin', 'api', 'present', 'expired', 'assets', 'public']) assert.ok(sql.includes(`'${reserved}'`), `${reserved} 예약어를 걸러야 합니다.`);
+    // 옛 0인자 함수를 남기면 호출이 모호해진다.
+    assert.match(sql, /DROP FUNCTION IF EXISTS public.class_agit_samlink_slug_v1\(\);/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public.class_agit_samlink_slug_v1\(INTEGER\) FROM PUBLIC,anon,authenticated,service_role/);
     assert.match(sql, /'https:\/\/xn--vz0ba242ncqcba79xhwx.site\/exhibition#'\|\|p_token/);
-    const alphabet = sql.match(/'0123456789abcdefghjkmnpqrstvwxyz'/g);
-    assert.equal(new Set(alphabet[0].slice(1, -1)).size, 32);
-    for (const confusable of ['i', 'l', 'o', 'u']) assert.ok(!alphabet[0].slice(1, -1).includes(confusable), `${confusable}는 빼야 합니다.`);
+});
+test('샘링크에 남기는 주인 표시자는 서명 기기 쿠키 형식과 겹치지 않는다', () => {
+    const sql = readFileSync('supabase/migrations/20261250_class_agit_samlink_native_slug.sql', 'utf8');
+    const marker = sql.match(/created_by='([^']+)'/)[1];
+    // device_<uuid> 형식이면 브라우저가 쿠키로 주인 행세를 해 목적지(토큰)를 읽을 수 있다.
+    assert.doesNotMatch(marker, /^device_[0-9a-f-]{36}$/);
+    assert.match(sql, /INSERT INTO samlink\.short_link_device_access\(link_id,device_id\)/);
+    assert.match(sql, /display_label='아지트 글 전시관'/);
 });
