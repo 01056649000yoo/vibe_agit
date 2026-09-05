@@ -53,10 +53,10 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 .anthology-page-number{border-top:.2mm solid #cbd5e1;padding-top:2mm;color:#475569}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
-    const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label, book.term].join('').length > 180}"><p>${e(book.term)}</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div><p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
+    const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>우리 반의 이야기</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div><p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
 ${book.introduction ? `<section data-introduction><h1>여는 글</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
 ${book.works.map((w, i) => `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`).join('')}`;
-    const back = `<div data-colophon><h1>${e(book.title)}</h1><p>${e(book.class_label)} · ${e(book.term)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>우리 반의 글을 모아 엮었습니다.\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 학급 문집</p></div>`;
+    const back = `<div data-colophon><h1>${e(book.title)}</h1><p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>우리 반의 글을 모아 엮었습니다.\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 학급 문집</p></div>`;
     return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
 }
 export async function renderAnthologyWindow(target, edition) {

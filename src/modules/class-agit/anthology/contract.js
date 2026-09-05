@@ -19,7 +19,7 @@ export function addBookItems(book, items) {
 export function buildBookSavePayload(book) {
     assertDraftSources(book.items);
     return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
-        introduction: book.introduction, class_label: book.class_label, term: book.term, issue_date: book.issue_date, grouping: book.grouping,
+        introduction: book.introduction, class_label: book.class_label, issue_date: book.issue_date, grouping: book.grouping,
         paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,
         items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision })) };
 }

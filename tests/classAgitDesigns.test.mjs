@@ -8,6 +8,7 @@ import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js
 import { createClassAgitReleaseFixture } from '../src/dev/fixtures/classAgitReleaseFixture.js';
 import { previewClass } from '../src/dev/fixtures/classAgitFixtures.js';
 import { TEACHER_NAV_GROUPS, CLASS_AGIT_TEACHER_TABS } from '../src/constants/teacherNav.js';
+import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
 import { assertStudentRoom } from '../src/modules/class-agit/api/studentContract.js';
 import { assertPublicGalleryResponse } from '../src/modules/class-agit/public/publicApi.js';
 import { createPublicPreviewApi } from '../src/modules/class-agit/public/preview.js';
@@ -102,4 +103,29 @@ test('삭제는 담당 교사·최신 revision·명시한 삭제 동작을 요�
     for (const name of ['get_my_class_agit_exhibitions_v1', 'get_my_class_agit_room_v1', 'get_class_agit_publication_v1', 'read_public_class_agit_v1']) {
         assert.ok(body(name)); assert.doesNotMatch(body(name), /class_agit_current_source_v1|student_posts/);
     }
+});
+
+test('학기는 표지·판권·학생 화면과 저장 payload 어디에도 남기지 않는다', async () => {
+    const print = createBookPrintSettings();
+    const book = { title: '우리 책', subtitle: '부제', introduction: '', class_label: '햇살반', term: '2026년 2학기', issue_date: '2026-09-05', print, works: [{ title: '글', author: '작가', format: 'prose', blocks: ['본문'] }] };
+    const html = await buildAnthologyHtml({ version: 1, id: 'edition', number: 1, book });
+    // 이미 확정한 판에 학기가 남아 있어도 다시 출력할 때는 보이지 않아야 한다.
+    assert.ok(!html.includes('2026년 2학기'), '인쇄본에 학기가 남았습니다.');
+    assert.ok(html.includes('우리 반의 이야기'), '표지 문구가 미리보기와 다릅니다.');
+    const anthology = [readFileSync('src/modules/class-agit/anthology/BookCover.jsx', 'utf8'), readFileSync('src/modules/class-agit/anthology/StudentBooks.jsx', 'utf8'),
+        readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8'), readFileSync('src/modules/class-agit/anthology/contract.js', 'utf8')];
+    for (const source of anthology) assert.doesNotMatch(source, /\bterm\b|학기/);
+    assert.doesNotMatch(JSON.stringify(TEACHER_GUIDES['class-agit-books']), /학기/);
+});
+test('문집 제작은 전시 준비처럼 네 단계 탭으로 나뉜다', () => {
+    const source = readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
+    const steps = [...source.matchAll(/\{ id: '([a-z]+)', title: '([^']+)'/g)].map((m) => m[1]);
+    assert.deepEqual(steps, ['cover', 'design', 'works', 'publish']);
+    assert.match(source, /role="tablist"/);
+    for (const id of steps) assert.ok(source.includes(`role: 'tabpanel'`) && source.includes(`panel('${id}')`), `${id} 패널이 없습니다.`);
+    // 작품을 담는 3단계가 따로 있어야 차례가 길어져도 다른 단계가 밀리지 않는다.
+    const works = source.slice(source.indexOf("panel('works')"), source.indexOf("panel('publish')"));
+    for (const label of ['학생 글에서 담기', '전시 작품 가져오기', '차례 · ']) assert.ok(works.includes(label), `3단계에 ${label}이 없습니다.`);
+    assert.ok(source.slice(source.indexOf("panel('publish')")).includes('새 판 확정'));
+    assert.match(source, /이전 단계/); assert.match(source, /BOOK_STEPS\[stepIndex \+ 1\].title/);
 });
