@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, teacherEntry, studentEntry, teacherApi, readme, security, performance, packageJson] = await Promise.all([
+const [migration, removal, teacherEntry, studentEntry, teacherApi, readme, security, performance, packageJson] = await Promise.all([
     readFile('supabase/migrations/20261239_neighbor_teacher_sharing_exchange_matching.sql', 'utf8'),
+    readFile('supabase/migrations/20261254_neighbor_drop_exchange_activity.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/teacherApi.js', 'utf8'),
@@ -36,47 +37,18 @@ test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나�
     assert.match(teacherEntry, /전문 확인 후 공유/);
 });
 
-test('글짝 명단은 호스트에게만 활동별 불투명 키와 이름을 최대 100명 반환한다', () => {
-    const roster = functionSource('get_neighbor_exchange_roster_v1');
-    assert.match(roster, /space\.host_class_id = p_actor_class_id/);
-    assert.match(roster, /encode\(extensions\.digest/);
-    assert.match(roster, /'sha256'/);
-    assert.match(roster, /'student_key'/);
-    assert.match(roster, /> 100/);
-    assert.doesNotMatch(roster, /'student_id'/);
-    assert.match(teacherApi, /get_neighbor_exchange_roster_v1/);
-    assert.match(teacherApi, /\^\[a-f0-9\]\{64\}\$/);
-});
-
-test('호스트 매칭안은 학생마다 1~2명을 보장하고 상대 학급 교사 승인 뒤에만 미션을 연다', () => {
-    const propose = functionSource('propose_neighbor_exchange_matches_v1');
-    const review = functionSource('review_neighbor_exchange_matches_v1');
-    assert.match(propose, /GREATEST\(v_first_count, v_second_count\) > LEAST\(v_first_count, v_second_count\) \* 2/);
-    assert.match(propose, /partner_count, 0\) NOT BETWEEN 1 AND 2/);
-    assert.match(propose, /status = 'matching_review'/);
-    assert.match(review, /match_review_class_id <> p_actor_class_id/);
-    assert.match(review, /SET status = 'matched'/);
-    assert.match(review, /SET is_archived = FALSE/);
-    assert.match(migration, /DROP FUNCTION IF EXISTS public\.match_neighbor_exchange_v1/);
-    assert.match(teacherEntry, /학생 불러와 매칭하기/);
-    assert.match(teacherEntry, /매칭 승인/);
-});
-
-test('글짝 전용과 두 학급 전체 공개 범위를 목록·상세·화면에서 같은 값으로 사용한다', () => {
-    const summary = functionSource('get_neighbor_student_activities_v1');
-    const access = functionSource('assert_neighbor_student_post_access_v1');
-    const feed = functionSource('get_neighbor_activity_feed_v1');
-    for (const source of [summary, access, feed]) {
-        assert.match(source, /exchange_share_scope/);
+// 2026-09-06: 글짝 교환 활동을 제품에서 뺐다(SQL 61254). 매칭 계약 검사 세 개는 아래 제거 확인으로 대체한다.
+test('글짝 교환의 서버 표면이 사라지고 주제 활동 경로는 살아 있다', () => {
+    for (const rpc of ['get_neighbor_exchange_roster_v1', 'propose_neighbor_exchange_matches_v1', 'review_neighbor_exchange_matches_v1']) {
+        assert.ok(removal.includes(`DROP FUNCTION IF EXISTS public.${rpc}(`), `${rpc} 를 지우지 않았습니다.`);
     }
-    assert.match(access, /neighbor_activity_classes/);
-    assert.match(feed, /v_activity\.matched_at IS NULL/);
-    assert.match(teacherEntry, /글짝끼리만 나누기/);
-    assert.match(teacherEntry, /교환 뒤 전체 글 공개/);
-    assert.match(studentEntry, /두 학급이 함께 보는 글/);
-    assert.match(readme, /활동별 불투명 식별값/);
-    assert.match(security, /1:1·1:2 매칭안/);
-    assert.match(performance, /매칭 학생 불러오기/);
+    assert.match(removal, /DELETE FROM public\.neighbor_activities WHERE activity_type='exchange'/);
+    assert.match(removal, /CHECK \(activity_type = 'topic'\)/);
+    assert.match(removal, /p_activity_type <> 'topic'/);
+    // 운영 중인 주제 활동 읽기 경로는 건드리지 않는다.
+    assert.doesNotMatch(removal, /DROP TABLE/);
+    assert.doesNotMatch(teacherApi, /getExchangeRoster/);
+    assert.doesNotMatch(teacherEntry, /매칭/);
 });
 
 test('새 글 공유·매칭 계약 검사는 보안과 구조 검사에 함께 포함된다', () => {
@@ -84,4 +56,5 @@ test('새 글 공유·매칭 계약 검사는 보안과 구조 검사에 함께 
     assert.ok(scripts['test:security:static'].includes('neighborAgitTeacherSharingMatching.test.mjs'));
     assert.ok(scripts['test:architecture'].includes('neighborAgitTeacherSharingMatching.test.mjs'));
     assert.ok(scripts['smoke:neighbor-agit'].includes('20261239_neighbor_teacher_sharing_exchange_matching.sql'));
+    assert.ok(scripts['smoke:neighbor-agit'].includes('20261254_neighbor_drop_exchange_activity.smoke.sql'), '제거 스모크를 등록해야 합니다.');
 });

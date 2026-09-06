@@ -1,25 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { getExchangeEligibility } from '../src/modules/community/neighbor-agit/exchangeEligibility.js';
+import { existsSync, readFileSync } from 'node:fs';
 
-const memberships = [
-    { class_id: 'host', status: 'active', matchable_student_count: 4 },
-    { class_id: 'guest', status: 'active', matchable_student_count: 2 },
-    { class_id: 'other', status: 'active', matchable_student_count: 3 }
-];
-const check = (changes = {}) => getExchangeEligibility({ memberships, classIds: ['host', 'guest'], hostClassId: 'host', actorClassId: 'host', ...changes });
-test('호스트 제안과 게스트 제안 모두 호스트 포함 1:2 인원을 허용한다', () => {
-    assert.equal(check(), '');
-    assert.equal(check({ actorClassId: 'guest' }), '');
-    assert.match(check({ actorClassId: 'guest', classIds: ['guest', 'other'] }), /호스트/);
-    assert.match(check({ classIds: ['host', 'host'] }), /서로 다른/);
-});
-test('학생 수 경계와 미확인 인원은 활동을 제안하기 전에 안내한다', () => {
-    const withCounts = (a, b) => check({ memberships: memberships.map((item, index) => ({ ...item, matchable_student_count: index === 0 ? a : b })) });
-    for (const counts of [[0, 1], [101, 100], [3, 1], [undefined, 2]]) assert.notEqual(withCounts(...counts), '');
-    for (const counts of [[1, 1], [2, 1], [100, 50]]) assert.equal(withCounts(...counts), '');
-    assert.notEqual(check({ memberships: memberships.map((item) => ({ ...item, status: 'left' })) }), '');
+// 2026-09-06: 글짝 교환 활동을 제품에서 뺐다(SQL 61254). 인원 적격 검사와 매칭 계약 검사는 함께 사라졌다.
+test('글짝 교환 활동의 흔적은 화면과 모듈에 남지 않는다', () => {
+    for (const source of [readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
+        readFileSync('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
+        readFileSync('src/modules/community/neighbor-agit/teacherApi.js', 'utf8')]) {
+        assert.doesNotMatch(source, /exchange|글짝/);
+    }
+    const types = readFileSync('src/modules/community/neighbor-agit/activityTypes.js', 'utf8');
+    assert.match(types, /id: 'gallery'/);
+    assert.match(types, /id: 'topic'/);
+    assert.doesNotMatch(types, /id: 'exchange'/);
+    assert.ok(!existsSync('src/modules/community/neighbor-agit/exchangeEligibility.js'), '적격 검사 모듈이 남아 있습니다.');
 });
 test('모든 현재 공개 조회와 공유 진입점이 같은 원글 공개 조건을 사용한다', () => {
     const sql = readFileSync('supabase/migrations/20261240_neighbor_publication_matching_hardening.sql', 'utf8');

@@ -25,15 +25,12 @@ const initialWorkspace = {
   ],
   activities: [{
     id: activityId,
-    type: 'exchange',
+    type: 'topic',
     title: '내가 좋아하는 장소를 소개하는 편지',
     prompt: '장소의 모습과 그곳에서 느낀 마음이 잘 드러나게 써 봅시다.',
     status: 'open',
-    exchange_share_scope: 'partners',
     can_manage: true,
     can_review: false,
-    can_propose_match: true,
-    can_review_match: false,
     approvals: [
       { class_id: classOne, class_name: '햇살반', status: 'approved', is_proposer: true },
       { class_id: classTwo, class_name: '바다반', status: 'approved', is_proposer: false },
@@ -50,11 +47,6 @@ const initialWorkspace = {
   ],
   public_posts: [],
 }
-
-const students = (prefix, names) => names.map((name, index) => ({
-  student_key: `${prefix}${String(index).padStart(63, '0')}`.slice(0, 64),
-  name,
-}))
 
 function createPreviewApi() {
   let workspace = structuredClone(initialWorkspace)
@@ -82,20 +74,6 @@ function createPreviewApi() {
       { post_id: 'post-2', student_name: '이서윤', title: '할머니의 손편지', excerpt: '할머니가 보내 주신 편지를 읽으며 떠올린 마음을 썼습니다.', share_status: 'pending' },
       { post_id: 'post-3', student_name: '박하준', title: '비 오는 운동장', excerpt: '창문 너머 운동장을 바라보며 소리와 냄새를 기록했습니다.', share_status: 'published' },
     ]
-  },
-  async getExchangeRoster() {
-    return {
-      version: 1,
-      activity_id: activityId,
-      status: 'open',
-      exchange_share_scope: 'partners',
-      max_students_per_class: 100,
-      max_partners_per_student: 2,
-      classes: [
-        { class_id: classOne, class_name: '햇살반', is_host: true, students: students('a', ['김도윤', '이서윤', '박하준', '최지아']) },
-        { class_id: classTwo, class_name: '바다반', is_host: false, students: students('b', ['정현우', '강수아', '조지호']) },
-      ],
-    }
   },
   async getSourcePost({ postId }) {
     const detail = await this.getPostDetail()

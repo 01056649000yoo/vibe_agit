@@ -75,31 +75,5 @@ export const neighborAgitTeacherApi = {
             throw new Error('우리 학급 글 목록 응답을 확인할 수 없습니다.');
         }
         return data.items;
-    },
-
-    async getExchangeRoster({ spaceId, classId, activityId }) {
-        const { data, error } = await supabase.rpc('get_neighbor_exchange_roster_v1', {
-            p_space_id: spaceId,
-            p_actor_class_id: classId,
-            p_activity_id: activityId
-        });
-        if (error) throw error;
-        const validClasses = Array.isArray(data?.classes)
-            && data.classes.length === 2
-            && data.classes.every((item) => Array.isArray(item?.students)
-                && item.students.length <= 100
-                && item.students.every((student) => (
-                    typeof student?.student_key === 'string'
-                    && /^[a-f0-9]{64}$/.test(student.student_key)
-                    && typeof student?.name === 'string'
-                )));
-        if (Number(data?.version) !== 1
-            || data?.activity_id !== activityId
-            || Number(data?.max_students_per_class) !== 100
-            || Number(data?.max_partners_per_student) !== 2
-            || !validClasses) {
-            throw new Error('글짝 매칭 학생 명단 응답을 확인할 수 없습니다.');
-        }
-        return data;
     }
 };
