@@ -85,7 +85,9 @@ const AdminTrafficTrend = ({ trend = [], alerts = [], days = 30 }) => {
             const rx = row?.rx_bytes == null ? null : Number(row.rx_bytes);
             const tx = row?.tx_bytes == null ? null : Number(row.tx_bytes);
             // Number(null)은 0이라서, 명시적으로 비운 과거 오측정치가 0B 기록으로 둔갑하지 않게 한다.
-            const hasRecord = row != null && Number.isFinite(rx) && Number.isFinite(tx);
+            // traffic_complete 가 false 면 컨테이너 재생성·짧은 구간 탓에 하루치가 아니다.
+            // 그대로 그리면 막대 하나가 축을 독점해 나머지가 전부 바닥에 붙는다(2026-09-04 의 2.5TB).
+            const hasRecord = row != null && Number.isFinite(rx) && Number.isFinite(tx) && row.traffic_complete !== false;
             filled.push({
                 dayKey,
                 weekday: date.getDay(),

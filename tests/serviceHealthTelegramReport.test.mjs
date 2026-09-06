@@ -101,3 +101,22 @@ test('오픈클로 일정은 낮 8시부터 18시까지 2시간 간격이고 모
     assert.match(installScript, /--output-max-bytes 512/);
     assert.doesNotMatch(installScript, /--message|--prompt|--model/);
 });
+
+test('트래픽은 바깥 경계 컨테이너만 재고 못 믿을 날은 그래프에서 뺀다', () => {
+    const script = readFileSync('scripts/record-system-metrics.sh', 'utf8');
+    // docker stats 의 NET I/O 는 도커 내부 대화까지 포함한다. 전부 더하면 내부 트래픽이 바깥의 수십만 배다.
+    assert.match(script, /EDGE_CONTAINERS="\$\{EDGE_CONTAINERS:-jarvis-caddy\}"/);
+    assert.ok(script.includes('grep -E "^($(printf \'%s\' "$EDGE_CONTAINERS" | tr \' \' \'|\'))'), '경계 컨테이너로 거르지 않습니다.');
+    // 하루에서 크게 벗어난 구간은 하루치로 적지 않는다(3초 구간이 0B 로 기록돼 톱니가 생겼다).
+    assert.match(script, /WINDOW_SECONDS/);
+    assert.match(script, /-gt 129600/);
+    assert.match(script, /TRAFFIC_COMPLETE=false/);
+    // 화면은 traffic_complete 가 false 인 날을 기록 없음으로 본다.
+    const trend = readFileSync('src/components/admin/AdminTrafficTrend.jsx', 'utf8');
+    assert.match(trend, /row\.traffic_complete !== false/);
+    // 뜻이 바뀐 옛 값은 비운다.
+    const reset = readFileSync('supabase/migrations/20261255_reset_traffic_metrics_to_edge_only.sql', 'utf8');
+    assert.match(reset, /SET rx_bytes = NULL/);
+    assert.match(reset, /traffic_complete = NULL/);
+    assert.doesNotMatch(reset, /disk_free_gb|db_size_mb|container_total/);
+});

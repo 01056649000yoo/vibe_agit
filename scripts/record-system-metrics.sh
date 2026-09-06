@@ -37,17 +37,24 @@ CONTAINER_HEALTHY="$("$DOCKER" ps --format '{{.Status}}' 2>/dev/null | grep -cv 
 [ -n "${CONTAINER_TOTAL:-}" ] || CONTAINER_TOTAL="NULL"
 [ -n "${CONTAINER_HEALTHY:-}" ] || CONTAINER_HEALTHY="NULL"
 
-# --- 트래픽: 컨테이너마다 누적값을 재고, 컨테이너마다 하루치를 낸다 ---
+# --- 트래픽: 바깥 경계(리버스 프록시) 컨테이너만 잰다 ---
 #
-# docker stats 는 컨테이너별 누적 NET I/O 를 준다. 배포할 때마다 agit-app 은 지우고 새로 만들기
-# 때문에 그 컨테이너의 누적값은 0부터 다시 쌓인다. 예전에는 전체 합계 하나만 비교해서,
-# 배포가 있던 날은 값이 조용히 모자라거나 통째로 빠졌다(8/21~23 기록이 그렇게 망가졌다).
-# 그래서 컨테이너 이름별로 지난 값을 기억하고, 줄어든 컨테이너는 "다시 0부터 쌓인 것" 으로 보고
-# 지금 값을 그대로 그날치에 더한다. 새로 생긴 컨테이너도 같은 규칙이다.
+# 2026-09-06 이전에는 **모든 컨테이너**의 NET I/O 를 더했다. 그런데 docker stats 의 NET I/O 는
+# 도커 내부 네트워크까지 포함해서, PostgREST(`agit-rest`)와 DB(`agit-db`) 가 서로 주고받는 대화가
+# 반나절에 1.39TB 씩 잡혔다. 실제 바깥 트래픽(`jarvis-caddy` 4.4MB)의 **약 30만 배**라
+# 그래프에서 사람이 쓴 양은 한 픽셀도 보이지 않았고, 컨테이너를 다시 만든 날은 2.5TB 로 튀었다.
+#
+# 그래서 인터넷과 맞닿은 리버스 프록시만 센다. 이것이 "우리 서비스가 바깥과 주고받은 양"이다.
+# 프록시를 새로 세우면 아래 목록에 이름을 더한다. 목록에 없는 이름만 있으면 트래픽을 기록하지 않는다
+# (0 을 적으면 그래프가 거짓으로 바닥을 그린다).
+EDGE_CONTAINERS="${EDGE_CONTAINERS:-jarvis-caddy}"
+#
+# 컨테이너별 누적값을 이름으로 기억한다. 배포할 때마다 컨테이너를 지우고 새로 만들면 누적값이
+# 0부터 다시 쌓이므로, 줄어든 컨테이너는 "다시 0부터" 로 보고 지금 값을 그날치에 더한다.
 #
 # docker stats 가 값을 못 주면(도커가 물렸거나 응답이 없을 때) 0 을 기록하지 않는다.
 # 예전에는 0 을 상태 파일에 적어 두어, 다음 날 하루치가 통째로 잘못 들어갔다.
-CURRENT_STATS="$("$DOCKER" stats --no-stream --format '{{.Name}} {{.NetIO}}' 2>/dev/null | awk '
+CURRENT_STATS="$("$DOCKER" stats --no-stream --format '{{.Name}} {{.NetIO}}' 2>/dev/null | grep -E "^($(printf '%s' "$EDGE_CONTAINERS" | tr ' ' '|')) " | awk '
 function to_bytes(v) {
     unit = v; sub(/^[0-9.]+/, "", unit);
     num = v; sub(/[A-Za-z]+$/, "", num);
@@ -122,6 +129,17 @@ EOF
     fi
     if [[ "$PREVIOUS_MEASURED_AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
         TRAFFIC_STARTED_SQL="'${PREVIOUS_MEASURED_AT}'"
+        # 잰 구간이 하루에서 크게 벗어나면 하루치라고 부를 수 없다. 손으로 한 번 더 돌린 날이
+        # 3초짜리 구간을 0B 로 적어 그래프에 톱니를 만든 적이 있다(9/2·9/3·9/5·9/6).
+        PREVIOUS_EPOCH_UTC="$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$PREVIOUS_MEASURED_AT" '+%s' 2>/dev/null)"
+        NOW_EPOCH="$(date -u '+%s')"
+        if [ -n "${PREVIOUS_EPOCH_UTC:-}" ]; then
+            WINDOW_SECONDS=$(( NOW_EPOCH - PREVIOUS_EPOCH_UTC ))
+            if [ "$WINDOW_SECONDS" -lt 43200 ] || [ "$WINDOW_SECONDS" -gt 129600 ]; then
+                echo "측정 구간이 ${WINDOW_SECONDS}초라 하루치로 보지 않습니다 ($DAY)" >&2
+                TRAFFIC_COMPLETE=false
+            fi
+        fi
     fi
     UPDATE_STATE=true
 fi

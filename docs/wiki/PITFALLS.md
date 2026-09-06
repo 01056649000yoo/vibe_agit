@@ -74,3 +74,6 @@
   psql(`postgres` 역할)에서는 통과하고 **앱에서만** `DELETE requires a WHERE clause` 로 400이 난다.
   2026-09-06에 `manage_class_agit_rollout_v1` 이 이 때문에 처음부터 저장이 안 됐다(`61241`→`61253`).
   `tests/sqlSafeUpdate.test.mjs` 가 이제 막는다. RPC 를 손으로 확인할 때는 `authenticator` 로 붙어 본다.
+
+- **`docker stats` 의 NET I/O 는 트래픽이 아니다.** 도커 내부 네트워크까지 포함해서 `agit-rest`↔`agit-db`
+  대화가 실제 바깥 트래픽의 30만 배로 잡힌다(2026-09-06). 바깥 사용량은 리버스 프록시(`jarvis-caddy`) 하나만 센다.
