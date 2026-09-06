@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { CLASS_AGIT_LIMITS as limits, isClassAgitWorkId } from '../src/modules/class-agit/policy.js';
+import { CLASS_AGIT_LIMITS, CLASS_AGIT_LIMITS as limits, isClassAgitChapterId, isClassAgitWorkId } from '../src/modules/class-agit/policy.js';
 import { assertClassAgitWorkspace, assertClassAgitShareWorkspace, buildClassAgitSavePayload } from '../src/modules/class-agit/api/contract.js';
 import { assertStudentRoom, assertStudentWork } from '../src/modules/class-agit/api/studentContract.js';
 import { assertPublicGalleryResponse } from '../src/modules/class-agit/public/publicApi.js';
@@ -90,4 +90,37 @@ test('학생·외부 방문자는 10실의 12편 요약과 120번째 전문을 �
     assert.throws(() => assertStudentRoom({ ...room, items: [...room.items, room.items[0]] }, id, 10));
     assert.throws(() => assertStudentWork({ ...work, next_id: 'published-121' }, 'published-120', 1));
     assert.throws(() => assertPublicGalleryResponse({ ...external, total_count: 121 }, 10));
+});
+
+test('상한 숫자는 policy.js 한 곳에서만 나온다', () => {
+    // 2026-09-07 코드 점검: 문집 100편이 정규식 두 개를 포함해 다섯 곳에 흩어져 있었다.
+    // policy.js 만 올리면 101번째부터 학생 화면이 조용히 되돌아가고 원인이 어디에도 남지 않았다.
+    const files = [
+        ['anthology/studentContract.js', readFileSync('src/modules/class-agit/anthology/studentContract.js', 'utf8')],
+        ['anthology/contract.js', readFileSync('src/modules/class-agit/anthology/contract.js', 'utf8')],
+        ['api/contract.js', readFileSync('src/modules/class-agit/api/contract.js', 'utf8')],
+        ['student/navigation.js', readFileSync('src/modules/class-agit/student/navigation.js', 'utf8')],
+        ['selection/OrderList.jsx', readFileSync('src/modules/class-agit/selection/OrderList.jsx', 'utf8')],
+    ];
+    for (const [name, source] of files) {
+        const stripped = source.replace(/\/\/[^\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ');
+        // policy.js 에 정본이 있는 상한(문집 100편·전시 120편)만 본다.
+        // 문집 권수·판 수의 20 처럼 정본이 따로 없는 값은 대상이 아니다.
+        assert.doesNotMatch(stripped, /length\s*>\s*(100|120)\b/, `${name} 에 상한 숫자가 박혀 있습니다.`);
+        assert.doesNotMatch(stripped, /chapter-\(\[1-9\]/, `${name} 에 문집 차례 정규식이 박혀 있습니다.`);
+        assert.doesNotMatch(stripped, /\/20편|\/100편|\/120편/, `${name} 에 정원 문구가 박혀 있습니다.`);
+    }
+    // 정본이 실제로 상한을 따르는지 본다.
+    assert.equal(isClassAgitChapterId(`chapter-${CLASS_AGIT_LIMITS.anthologyWorks}`), true);
+    assert.equal(isClassAgitChapterId(`chapter-${CLASS_AGIT_LIMITS.anthologyWorks + 1}`), false);
+    assert.equal(isClassAgitChapterId('chapter-0'), false);
+    assert.equal(isClassAgitChapterId('chapter-01'), false);
+    assert.equal(isClassAgitChapterId(' chapter-1'), false);
+});
+test('외부 공유 30일 상한은 화면 상수와 SQL 이 같은 값에서 나온다', () => {
+    // 전에는 검사가 화면 쪽 자기참조와 SQL 의 '720 hours' 를 따로 봐서, 상수만 올리면
+    // 둘 다 통과한 채 화면이 허락한 날짜를 서버가 거절했다.
+    const sql = readFileSync('supabase/migrations/20261243_class_agit_frozen_public_reads.sql', 'utf8');
+    assert.ok(sql.includes(`INTERVAL '${CLASS_AGIT_LIMITS.externalExpiryDays * 24} hours'`),
+        `SQL 의 기간 상한이 externalExpiryDays(${CLASS_AGIT_LIMITS.externalExpiryDays}일)와 다릅니다.`);
 });

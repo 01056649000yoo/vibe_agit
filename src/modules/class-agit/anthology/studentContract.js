@@ -1,8 +1,9 @@
 import { BOOK_DESIGNS, BOOK_PAPERS } from '../designs.js';
+import { CLASS_AGIT_LIMITS, isClassAgitChapterId } from '../policy.js';
 const validDesign = (v) => (v.design === undefined || BOOK_DESIGNS.some((d) => d.id === v.design)) && (v.paper === undefined || BOOK_PAPERS.some((p) => p.id === v.paper));
 const text = (v, max) => typeof v === 'string' && Array.from(v).length <= max;
 const keys = (v, allowed) => v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).every((key) => allowed.includes(key));
-const id = (v) => typeof v === 'string' && /^chapter-([1-9]|[1-9][0-9]|100)$/.test(v);
+const id = isClassAgitChapterId;
 const fail = () => { throw new Error('문집 응답을 확인하지 못했어요. 다시 열어 주세요.'); };
 export function assertStudentBooks(data, editionId = null, workId = null) {
     if (data?.version !== 1) fail();
@@ -15,7 +16,7 @@ export function assertStudentBooks(data, editionId = null, workId = null) {
             const work = data.work;
             if (data.works !== null || !keys(work, ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks', 'group']) || work?.id !== workId || !id(work.id) || !text(work.title, 200) || !text(work.author, 30)
                 || !['prose', 'poem'].includes(work.format) || !Array.isArray(work.blocks) || !work.blocks.length || work.blocks.length > 200 || work.blocks.some((b) => !text(b, 20000)) || !text(work.blocks.join(' '), 20000)) fail();
-        } else if (data.work !== null || !Array.isArray(data.works) || data.works.length > 100 || data.works.some((w) => !keys(w, ['id', 'title', 'author', 'group']) || !id(w.id) || !text(w.title, 200) || !text(w.author, 30) || !text(w.group, 200))) fail();
+        } else if (data.work !== null || !Array.isArray(data.works) || data.works.length > CLASS_AGIT_LIMITS.anthologyWorks || data.works.some((w) => !keys(w, ['id', 'title', 'author', 'group']) || !id(w.id) || !text(w.title, 200) || !text(w.author, 30) || !text(w.group, 200))) fail();
     }
     return data;
 }

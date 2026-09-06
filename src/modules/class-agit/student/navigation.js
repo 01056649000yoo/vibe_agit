@@ -1,4 +1,4 @@
-import { CLASS_AGIT_LIMITS, isClassAgitWorkId } from '../policy.js';
+import { CLASS_AGIT_LIMITS, isClassAgitChapterId, isClassAgitWorkId } from '../policy.js';
 
 const exhibitionId = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : null;
 const workId = (value) => isClassAgitWorkId(value) ? value : null;
@@ -11,7 +11,7 @@ export function normalizeClassAgitParams(params = {}) {
         const editionId = exhibitionId(params.editionId);
         if (!editionId) return { mode: 'books' };
         const base = { mode: 'book', editionId };
-        return params.mode === 'chapter' && typeof params.workId === 'string' && /^chapter-([1-9]|[1-9][0-9]|100)$/.test(params.workId || '') ? { ...base, mode: 'chapter', workId: params.workId } : base;
+        return params.mode === 'chapter' && typeof params.workId === 'string' && isClassAgitChapterId(params.workId || '') ? { ...base, mode: 'chapter', workId: params.workId } : base;
     }
     const id = exhibitionId(params.exhibitionId);
     if (!id) return {};

@@ -8,6 +8,7 @@ import { selectionMissions, selectionSources, createClassAgitSelectionFixture } 
 import { buildClassAgitSavePayload } from '../src/modules/class-agit/api/contract.js';
 import { bookItemFromSource, buildBookSavePayload } from '../src/modules/class-agit/anthology/contract.js';
 import { CLASS_AGIT_LIMITS as limits } from '../src/modules/class-agit/policy.js';
+import { NARROW_LAYOUT_PX } from '../src/modules/class-agit/selection/selectionLayout.js';
 
 // Test-only paths are literal callers below, never user input.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -167,4 +168,13 @@ test('확인 체크 없이 저장해도 철회된 작품은 메타데이터 저�
         assert.equal(buildClassAgitSavePayload(refreshed, 1).items.length, 1);
     }
     assert.equal(buildBookSavePayload(book).items.length, 1);
+});
+
+test('1열로 접히는 폭은 화면 코드와 CSS 가 같은 값을 쓴다', () => {
+    // 2026-09-07 코드 점검: 740 이 MissionList.jsx 와 selection.css 에 따로 있었다.
+    // 어긋나면 좁은 화면인데 레일이 안 닫히거나, 넓은 화면인데 미션 목록이 사라진다.
+    assert.equal(NARROW_LAYOUT_PX, 740);
+    assert.match(read('src/modules/class-agit/selection/MissionList.jsx'), /clientWidth <= NARROW_LAYOUT_PX/);
+    assert.ok(read('src/modules/class-agit/selection/selection.css').includes(`@container (max-width: ${NARROW_LAYOUT_PX}px)`),
+        'selection.css 의 접힘 폭이 NARROW_LAYOUT_PX 와 다릅니다.');
 });

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import useBrowsePage from './useBrowsePage.js';
+import { NARROW_LAYOUT_PX } from './selectionLayout.js';
 
 export function PageControls({ state, label }) {
     return <nav className="class-agit-selection-pages" aria-label={label}>
@@ -13,7 +14,9 @@ export function BrowseStatus({ state }) {
 }
 export default function MissionList({ api, classId, selected, onSelect, items }) {
     const rail = useRef(null);
-    const choose = (mission) => { onSelect(mission); if (rail.current?.parentElement.clientWidth <= 740) rail.current.open = false; };
+    // 이 740 은 selection.css 의 `@container (max-width: 740px)` 와 같은 값이어야 한다.
+    // 어긋나면 1열로 접힌 좁은 화면인데 레일이 안 닫히거나, 2열인데 미션 목록이 사라진다.
+    const choose = (mission) => { onSelect(mission); if (rail.current?.parentElement.clientWidth <= NARROW_LAYOUT_PX) rail.current.open = false; };
     const [input, setInput] = useState('');
     const [query, setQuery] = useState('');
     const [scope, setScope] = useState('all');

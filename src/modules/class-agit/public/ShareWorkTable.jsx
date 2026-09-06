@@ -49,20 +49,25 @@ export default function ShareWorkTable({ draft, onChange, disabled, onError }) {
                 <div className="class-agit-share-table-scroll"><table>
                     <caption className="sr-only">{open.title} 작품 목록</caption>
                     <thead><tr><th scope="col">순서</th><th scope="col">작품 제목</th><th scope="col">지은이</th><th scope="col">전시 주제</th></tr></thead>
-                    <tbody>{open.works.map((item, index) => <tr key={item.itemId}>
-                        <td className="class-agit-share-order"><span>{index + 1}</span>
-                            <Button variant="ghost" type="button" aria-label={`${item.title || '작품'} 앞으로`} disabled={index === 0} onClick={() => apply(moveShareWorkOrder(draft, item.itemId, index))}>▲</Button>
-                            <Button variant="ghost" type="button" aria-label={`${item.title || '작품'} 뒤로`} disabled={index === open.works.length - 1} onClick={() => apply(moveShareWorkOrder(draft, item.itemId, index + 2))}>▼</Button></td>
+                    {/* 표는 찾은 작품만 보여 준다. 순번·순서 버튼은 방 안 실제 위치(order)를 쓰고,
+                        찾는 중에는 화면에 안 보이는 이웃과 자리를 바꾸게 되므로 순서 버튼을 잠근다. */}
+                    <tbody>{open.matched.map((item) => { const order = open.works.findIndex((entry) => entry.itemId === item.itemId); return <tr key={item.itemId}>
+                        <td className="class-agit-share-order"><span>{order + 1}</span>
+                            <Button variant="ghost" type="button" aria-label={`${item.title || '작품'} 앞으로`} disabled={Boolean(search) || order === 0} onClick={() => apply(moveShareWorkOrder(draft, item.itemId, order))}>▲</Button>
+                            <Button variant="ghost" type="button" aria-label={`${item.title || '작품'} 뒤로`} disabled={Boolean(search) || order === open.works.length - 1} onClick={() => apply(moveShareWorkOrder(draft, item.itemId, order + 2))}>▼</Button></td>
                         <td><input aria-label={`${item.title || '작품'} 제목`} value={item.title} maxLength={limits.titleLength} onChange={(event) => updateItem(item.itemId, { title: event.target.value })} />
                             {hasBlockedShareWorks([item]) && <small className="class-agit-error">원글을 다시 확인해 주세요.</small>}</td>
                         <td><input aria-label={`${item.title || '작품'} 지은이`} value={item.author} maxLength={limits.authorLength} onChange={(event) => updateItem(item.itemId, { author: event.target.value })} /></td>
                         <td><select aria-label={`${item.title || '작품'} 전시 주제`} value={item.roomId || ''} onChange={(event) => attempt(() => moveShareWork(draft, item.itemId, event.target.value))}>
                             {!item.roomId && <option value="">미배정</option>}
                             {draft.rooms.map((room) => <option key={room.id} value={room.id}>{room.title}</option>)}</select></td>
-                    </tr>)}</tbody>
+                    </tr>; })}</tbody>
                 </table></div>
                 {!open.works.length && <p>이 전시실에는 담은 작품이 없습니다.</p>}
-                <p className="class-agit-share-room-note">순서는 이 전시실 안에서만 바뀝니다. 공개 순번은 전시실 차례대로 다시 매깁니다.</p>
+                {Boolean(open.works.length) && !open.matched.length && <p>찾는 말과 맞는 작품이 이 전시실에 없습니다.</p>}
+                <p className="class-agit-share-room-note">{search
+                    ? `찾은 작품만 보이는 중입니다(${open.matched.length}/${open.works.length}편). 순서를 바꾸려면 작품 찾기를 비워 주세요.`
+                    : '순서는 이 전시실 안에서만 바뀝니다. 공개 순번은 전시실 차례대로 다시 매깁니다.'}</p>
             </fieldset>}
         </Modal>
     </section>;

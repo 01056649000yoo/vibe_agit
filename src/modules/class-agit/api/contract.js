@@ -5,7 +5,7 @@ import { assertDraftSources } from '../sourceContract.js';
 
 export function assertClassAgitWorkspace(data, classId) {
     if (data?.version !== 1 || data?.class?.id !== classId || !Array.isArray(data.projects) || data.projects.length > 20
-        || !Array.isArray(data.students) || data.students.length > 100 || (data.draft && (data.draft.classId !== classId || !Array.isArray(data.draft.items) || data.draft.items.length > CLASS_AGIT_LIMITS.maxWorks))) {
+        || !Array.isArray(data.students) || data.students.length > CLASS_AGIT_LIMITS.maxCandidates || (data.draft && (data.draft.classId !== classId || !Array.isArray(data.draft.items) || data.draft.items.length > CLASS_AGIT_LIMITS.maxWorks))) {
         throw new Error('전시 작업공간 응답을 확인할 수 없습니다.');
     }
     if (data.draft && !Array.isArray(data.draft.rooms)) data = { ...data, draft: normalizeRoomDraft(data.draft) };

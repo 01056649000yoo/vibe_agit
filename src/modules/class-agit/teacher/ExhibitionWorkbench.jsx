@@ -1,5 +1,5 @@
 import { normalizeRoomDraft } from '../rooms.js';
-import { useId, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
@@ -50,8 +50,10 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     const tabs = useRef(new Map());
     const stepId = useId();
     const { ask, confirmDialog } = useConfirmDialog();
-    const presentation = createGalleryPresentation(draft);
-    const rooms = arrangeGalleryRooms(presentation.works, presentation.rooms);
+    // 전시본 만들기는 방×작품(최대 10×120)을 훑고 작품마다 blocks 를 복사한다.
+    // 감싸지 않으면 제목 한 글자 칠 때마다 120편을 통째로 다시 만든다. 실제로 쓰는 곳은 3단계뿐이다.
+    const presentation = useMemo(() => createGalleryPresentation(draft), [draft]);
+    const rooms = useMemo(() => arrangeGalleryRooms(presentation.works, presentation.rooms), [presentation]);
     const selectedStudents = new Set(draft.items.map((item) => item.studentId));
     const unselectedStudents = students.filter((student) => !selectedStudents.has(student.id));
     const selectedSources = new Set(draft.items.map((item) => item.sourceId));

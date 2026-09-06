@@ -53,7 +53,6 @@
 .class-agit-brand > span { color: #7d8c5a; background: #eaedde; border-radius: 14px; padding: 9px 16px; font-size: 32px; }
 .class-agit-brand p { color: var(--ca-muted); font-size: 12px; margin-bottom: 4px; }
 .class-agit-brand h1 { font-size: 21px; letter-spacing: -.04em; }
-.class-agit-tag { font-size: 12px; padding: 6px 10px; border: 1px solid #ccd5bc; border-radius: 20px; white-space: nowrap; }
 .class-agit-prototype-note { margin: 22px 0; padding: 11px 15px; font-size: 12px; line-height: 1.7; border-radius: 8px; background: #edf0e4; color: #50604b; }
 .class-agit-project-heading h2 { font-family: Georgia, 'Noto Serif KR', serif; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; margin: 8px 0; overflow-wrap: anywhere; }
 .class-agit-project-heading p { color: var(--ca-muted); font-size: 13px; }
@@ -111,21 +110,10 @@
     .class-agit-step-footer > .class-agit-header-actions { flex: 1 1 100%; justify-content: space-between; }
 }
 .class-agit-error { background: #ffede5; color: #99371c; padding: 12px; border-radius: 8px; }
-.class-agit-editor-tabs { display: flex; gap: 25px; border-bottom: 1px solid var(--ca-line); margin: 9px 0 25px; }
-.class-agit-editor-tabs button { border: 0; border-bottom: 3px solid transparent; padding: 14px 0; background: transparent; color: var(--ca-muted); font-size: 14px; }
-.class-agit-editor-tabs button[aria-pressed='true'] { color: #294e3e; font-weight: 750; border-bottom-color: #294e3e; }
-.class-agit-editor-layout { display: grid; grid-template-columns: 265px minmax(0, 1fr); gap: 26px; align-items: start; }
-.class-agit-candidates { border: 1px solid var(--ca-line); border-radius: 13px; background: #fffefa; overflow: hidden; }
-.class-agit-panel-heading { padding: 18px 16px 13px; }
-.class-agit-panel-heading h3 { font-size: 16px; }
-.class-agit-panel-heading > span { color: var(--ca-muted); font-size: 11px; }
-.class-agit-search { display: block; margin: 0 16px 12px; font-size: 12px; font-weight: 600; }
 .class-agit input:not([type='checkbox']), .class-agit textarea { display: block; min-width: 0; width: 100%; border: 1px solid #d9ded1; background: #fffefa; color: #263d35; border-radius: 7px; padding: 10px 12px; font: inherit; font-weight: 400; min-height: 42px; }
-.class-agit-search input { margin-top: 7px; font-size: 13px !important; }
 .class-agit-candidates__list { max-height: 580px; overflow: auto; padding: 0 15px; scrollbar-width: thin; }
 .class-agit-candidates__list > article { display: flex; align-items: flex-start; gap: 10px; padding: 15px 0; border-top: 1px solid #eeeee4; }
 .class-agit-candidates__list article > div { min-width: 0; flex: 1; }
-.class-agit-candidate-avatar { background: #eef1e4; border-radius: 50%; padding: 8px; font-size: 12px; line-height: 16px; }
 .class-agit-candidates__list strong { font-size: 14px; display: block; overflow-wrap: anywhere; line-height: 1.5; }
 .class-agit-candidates__list small { display: block; color: var(--ca-muted); margin: 4px 0; font-size: 11px; }
 .class-agit-candidates__list button { color: #37624b; font-size: 12px; background: transparent; border: 0; padding: 0; text-align: left; }
@@ -133,14 +121,6 @@
 .class-agit-participation { background: #f1f3e9; padding: 15px; font-size: 12px; }
 .class-agit-participation summary { cursor: pointer; min-height: 28px; }
 .class-agit-participation p { margin-top: 6px; line-height: 1.9; color: #69725e; }
-.class-agit-canvas-panel { min-width: 0; }
-.class-agit-exhibition-fields { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; }
-.class-agit-exhibition-fields label { font-size: 12px; font-weight: 650; }
-.class-agit-exhibition-fields input, .class-agit-exhibition-fields textarea { margin-top: 7px; font-size: 13px !important; }
-.class-agit-exhibition-fields textarea { resize: vertical; height: 68px; }
-.class-agit-canvas-heading { margin: 21px 0 12px; }
-.class-agit-canvas-heading h3 { margin-top: 5px; font-size: 19px; }
-.class-agit-canvas-heading > span { font-size: 11px; color: var(--ca-muted); }
 .class-agit-canvas-caption { text-align: center; font-size: 12px; color: #747665; line-height: 1.8; margin-top: 14px !important; }
 
 /* Scene coordinates come only from roomLayout.js. The architecture uses the same plane. */
@@ -184,13 +164,6 @@
 .class-agit-order-panel h3 { font-size: 18px; }.class-agit-order-panel p { color: #737966; font-size: 13px; margin-top: 9px; line-height: 1.8; }
 .class-agit-order-panel > ol { padding: 0; list-style: none; margin: 0; border-top: 1px solid var(--ca-line); }
 .class-agit-order-panel li { display: flex; gap: 18px; align-items: center; padding: 19px 0; border-bottom: 1px solid var(--ca-line); }
-.class-agit-order-number { color: #969b83; font-family: Georgia, serif; font-size: 24px; }
-.class-agit-order-info { flex: 1; min-width: 0; }.class-agit-order-info strong { font-size: 15px; overflow-wrap: anywhere; }
-.class-agit-order-info small { display: block; font-size: 12px; color: #7b816e; margin-top: 6px; }
-.class-agit-order-move { display: flex; gap: 4px; }.class-agit-order-move button { width: 44px; border: 1px solid var(--ca-line); background: #fffef7; border-radius: 6px; color: #3d614b; }
-.class-agit-external-fields { display: flex; gap: 15px; align-items: center; font-size: 12px; }
-.class-agit-external-fields > label:first-child { display: flex; align-items: center; white-space: nowrap; gap: 5px; min-height: 44px; }
-.class-agit-external-fields input:not([type='checkbox']) { max-width: 160px; margin-top: 4px; }
 .class-agit input[type='checkbox'], .class-agit-reader input[type='checkbox'] { accent-color: #385a46; width: 18px; height: 18px; flex-shrink: 0; }
 .class-agit-empty { padding: 40px; text-align: center; }
 .class-agit-student-shelf { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid var(--ca-line); }
@@ -238,9 +211,8 @@
 .class-agit-fixture-controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 20px; background: #e8eddf; color: #536449; font-size: 12px; }.class-agit-fixture-controls label { display: flex; align-items: center; gap: 10px; }.class-agit-fixture-controls select { min-height: 40px; border: 1px solid #cbd5bc; border-radius: 6px; padding: 6px 10px; background: #fafbf4; color: #3f5236; }
 
 @container (max-width: 1000px) {
-    .class-agit-editor-layout { grid-template-columns: 230px minmax(0, 1fr); gap: 18px; }
     .class-agit-project-heading { align-items: flex-start; }.class-agit-project-heading > .class-agit-header-actions { max-width: 240px; }
-    .class-agit-order-panel li { flex-wrap: wrap; }.class-agit-external-fields { margin-left: 45px; }
+    .class-agit-order-panel li { flex-wrap: wrap; }
 }
 /* Below 760px the room becomes a full-size, horizontally browsable wall: text never shrinks. */
 @container (max-width: 760px) {
@@ -250,20 +222,15 @@
     .class-agit-frame > button { padding: 9px; }.class-agit-frame__paper { padding: 18px; gap: 14px; }.class-agit-frame strong { font-size: 19px; -webkit-line-clamp: 3; }.class-agit-frame__excerpt { height: auto; flex-shrink: 1; font-size: 14px; -webkit-line-clamp: 3; }.class-agit-frame__kind { font-size: 11px; }.class-agit-frame__author { font-size: 14px; padding-top: 12px; }
     .class-agit-room__sign { font-size: 10px; }.class-agit-room__bench { display: none; }
     .class-agit-workbench__header, .class-agit-project-heading, .class-agit-gallery__title { flex-wrap: wrap; }
-    .class-agit-project-heading > .class-agit-header-actions { max-width: none; justify-content: flex-start; }
-    .class-agit-editor-layout { display: flex; flex-direction: column; }.class-agit-candidates { width: 100%; }.class-agit-candidates__list { max-height: 270px; }.class-agit-canvas-panel { width: 100%; }
-    .class-agit-exhibition-fields { grid-template-columns: 1fr; }
+    .class-agit-project-heading > .class-agit-header-actions { max-width: none; justify-content: flex-start; }.class-agit-candidates__list { max-height: 270px; }
     .class-agit-order-panel > header { align-items: flex-start; flex-direction: column; }
     .class-agit-lobby { grid-template-columns: 1fr; padding: 36px 0; gap: 35px; }.class-agit-lobby__window { border-radius: 12px; }.class-agit-lobby__window .class-agit-room { border-radius: 9px; }
     .class-agit-work-list { grid-template-columns: 1fr; }
-    .class-agit-editor-tabs { gap: 18px; }.class-agit-editor-tabs button { font-size: 12px; }
-    .class-agit-canvas-heading > span { max-width: 110px; text-align: right; line-height: 1.7; }
 }
 @media (max-width: 600px) {
     .class-agit { padding: 16px; }.class-agit-reader__toolbar { padding: 10px 12px; gap: 10px; }.class-agit-reader__footer { padding: 12px; }
 }
-@container (max-width: 460px) {
-    .class-agit-order-info { flex-basis: calc(100% - 55px); }.class-agit-external-fields { margin-left: 0; flex: 1; flex-wrap: wrap; }.class-agit-order-panel li { gap: 12px; }
+@container (max-width: 460px) {.class-agit-order-panel li { gap: 12px; }
     .class-agit-gallery__footer { flex-wrap: wrap; }.class-agit-gallery__footer > span { order: 3; width: 100%; }
     .class-agit-gallery__header > .class-agit-eyebrow { max-width: 140px; font-size: 10px; text-align: right; line-height: 1.8; }
 }

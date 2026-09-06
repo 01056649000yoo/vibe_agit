@@ -13,7 +13,7 @@ export function bookItemFromSource(source, classId) {
 export function addBookItems(book, items) {
     const ids = new Set(book.items.map((item) => item.sourceId));
     const next = items.filter((item) => { if (ids.has(item.sourceId)) return false; ids.add(item.sourceId); return true; });
-    if (book.items.length + next.length > CLASS_AGIT_LIMITS.anthologyWorks) throw new Error('한 문집에 100편까지 담을 수 있습니다. 여러 권으로 나눠 주세요.');
+    if (book.items.length + next.length > CLASS_AGIT_LIMITS.anthologyWorks) throw new Error(`한 문집에 ${CLASS_AGIT_LIMITS.anthologyWorks}편까지 담을 수 있습니다. 여러 권으로 나눠 주세요.`);
     return { ...book, items: [...book.items, ...next] };
 }
 export function buildBookSavePayload(book) {
@@ -30,15 +30,15 @@ export function sortBookItems(items, grouping) {
 }
 export function assertBookWorkspace(data, classId) {
     if (data?.version !== 1 || data.class_id !== classId || !Array.isArray(data.books) || data.books.length > 20
-        || !Array.isArray(data.students) || data.students.length > 100
-        || (data.book && (data.book.class_id !== classId || !Array.isArray(data.book.items) || data.book.items.length > 100
+        || !Array.isArray(data.students) || data.students.length > CLASS_AGIT_LIMITS.maxCandidates
+        || (data.book && (data.book.class_id !== classId || !Array.isArray(data.book.items) || data.book.items.length > CLASS_AGIT_LIMITS.anthologyWorks
             || !Array.isArray(data.book.editions) || data.book.editions.length > 20))) throw new Error('문집 응답을 확인할 수 없습니다.');
     return data;
 }
 export function assertBookEdition(data) {
     if (data?.version !== 1 || !data.id || !Number.isInteger(data.number) || !data.book?.title
         || !validBookPrintSettings(data.book.print)
-        || !Array.isArray(data.book.works) || data.book.works.length < 1 || data.book.works.length > 100
+        || !Array.isArray(data.book.works) || data.book.works.length < 1 || data.book.works.length > CLASS_AGIT_LIMITS.anthologyWorks
         || data.book.works.some((work) => !Array.isArray(work.blocks) || work.blocks.length > 200 || Array.from(work.blocks.join(' ')).length > 20000)) throw new Error('확정판을 확인할 수 없습니다.');
     return data;
 }
