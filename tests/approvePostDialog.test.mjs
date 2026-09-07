@@ -44,7 +44,7 @@ const bodyOf = (source, name) => {
     assert.ok(start >= 0, `${name} 을(를) 찾지 못했다`);
     // 다음 함수 선언 앞까지를 그 함수의 몸으로 본다.
     const rest = source.slice(start + 10);
-    const next = rest.search(/\n    const handle\w+ = /);
+    const next = rest.search(/\n    const \w+ = /);
     return next < 0 ? rest : rest.slice(0, next);
 };
 
@@ -134,10 +134,8 @@ test('실패 창을 띄우기 전에 catch 안에서 잠금을 먼저 푼다', a
     const UNLOCK = /set(?:IsGenerating|LoadingPosts|ApprovingPostId|RewritingPostId)\((?:false|null)\)/;
     const offenders = [];
 
-    for (const match of source.matchAll(/const (handle\w+) = async/g)) {
-        const after = source.slice(match.index + 10);
-        const next = after.search(/\n {4}const handle\w+ = /);
-        const body = source.slice(match.index, match.index + 10 + (next < 0 ? 900 : next));
+    for (const match of source.matchAll(/const (\w+) = async/g)) {
+        const body = bodyOf(source, match[1]);
         const takesLock = /set(?:IsGenerating|LoadingPosts|ApprovingPostId|RewritingPostId)\((?:true|post\.id)\)/.test(body);
         if (!takesLock) continue;
 

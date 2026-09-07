@@ -558,6 +558,7 @@ test('게임 모듈은 도움말을 따로 그리지 않는다 — 공통 셸이
         'src/modules/game/vocab-tower/TeacherManager.jsx',
         'src/modules/game/dragon/TeacherManager.jsx'
     ]) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- 바로 위 고정 목록의 교사 모듈 파일 두 개만 읽는다.
         const source = await readFile(path, 'utf8');
         assert.ok(!source.includes('TeacherGuideButton'), `${path}: 셸이 그리는 도움말을 또 그린다`);
     }
@@ -659,6 +660,7 @@ test('학생 게임 화면에 읽을 수 없이 작은 글자가 없다', async 
         'src/modules/game/dragon/DragonGrowthCelebrationModal.css',
         'src/modules/game/dragon/DragonSpeciesPicker.css'
     ];
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- 바로 위 고정 목록의 게임 CSS 여섯 개만 읽는다.
     const sources = await Promise.all(files.map((path) => readFile(path, 'utf8')));
 
     // 고정값으로 0.62rem(9.9px) 밑을 쓰지 않는다. 되돌리면 여기서 걸린다.
@@ -666,7 +668,7 @@ test('학생 게임 화면에 읽을 수 없이 작은 글자가 없다', async 
         const tooSmall = [...source.matchAll(/font-size:\s*(0?\.[0-9]+)rem/g)]
             .map((match) => Number(match[1]))
             .filter((size) => size < 0.62);
-        assert.deepEqual(tooSmall, [], `${files[index]}: 읽기 어려운 글자 ${tooSmall.join(', ')}rem`);
+        assert.deepEqual(tooSmall, [], `${files.at(index)}: 읽기 어려운 글자 ${tooSmall.join(', ')}rem`);
     }
 
     const css = sources[0];

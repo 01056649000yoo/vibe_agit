@@ -161,6 +161,14 @@ const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) =
     );
 };
 
+const navStyle = (active, isMobile) => ({
+    width: isMobile ? 'auto' : '100%', minWidth: isMobile ? '155px' : 0, padding: '9px 10px',
+    border: active ? '1px solid #C7D2FE' : '1px solid transparent', borderRadius: '12px',
+    background: active ? 'white' : 'transparent', color: active ? '#4338CA' : '#475569',
+    display: 'flex', alignItems: 'center', gap: '9px', cursor: 'pointer',
+    boxShadow: active ? '0 6px 18px rgba(15,23,42,.06)' : 'none'
+});
+
 const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
     const classId = activeClass?.id;
     const [selectedId, setSelectedId] = useState('overview');
@@ -311,12 +319,5 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
     );
 };
 
-const navStyle = (active, isMobile) => ({
-    width: isMobile ? 'auto' : '100%', minWidth: isMobile ? '155px' : 0, padding: '9px 10px',
-    border: active ? '1px solid #C7D2FE' : '1px solid transparent', borderRadius: '12px',
-    background: active ? 'white' : 'transparent', color: active ? '#4338CA' : '#475569',
-    display: 'flex', alignItems: 'center', gap: '9px', cursor: 'pointer',
-    boxShadow: active ? '0 6px 18px rgba(15,23,42,.06)' : 'none'
-});
 
 export default RegisteredGameModuleCards;

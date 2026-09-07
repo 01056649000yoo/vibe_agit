@@ -180,7 +180,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
             timerId = window.setTimeout(runPoll, delay);
         };
 
-        const runPoll = async () => {
+        async function runPoll() {
             timerId = null;
             if (stopped || inFlight || document.visibilityState !== 'visible') return;
             inFlight = true;
@@ -211,7 +211,7 @@ export const useTeacherSubmissionBoard = (classId, { enabled = false } = {}) => 
                     }));
                 }
             }
-        };
+        }
 
         const pollOnReturn = () => {
             if (document.visibilityState !== 'visible') {

@@ -24,8 +24,8 @@ import test from 'node:test';
 const MIGRATIONS_DIR = 'supabase/migrations';
 const ALLOWLIST_PATH = 'ops/rpc-surface-allowlist.json';
 
-const CREATE_FUNCTION = /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?([a-z0-9_]+)\s*\(/gi;
-const DROP_FUNCTION = /DROP\s+FUNCTION\s+(?:IF\s+EXISTS\s+)?(?:public\.)?([a-z0-9_]+)\s*\(/gi;
+const CREATE_FUNCTION = /CREATE\s+FUNCTION\s+(?:public\.)?([a-z0-9_]+)\s*\(/gi;
+const DROP_FUNCTION = /DROP\s+FUNCTION\s+(?:public\.)?([a-z0-9_]+)\s*\(/gi;
 
 /*
  * 판 번호가 없는 이름도 **0판**으로 본다.
@@ -46,7 +46,10 @@ const created = new Set();
 const dropped = new Set();
 
 for (const file of files) {
-    const sql = await readFile(`${MIGRATIONS_DIR}/${file}`, 'utf8');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- 저장소 마이그레이션 디렉터리에서 readdir로 받은 SQL 파일명만 읽는다.
+    const sql = (await readFile(`${MIGRATIONS_DIR}/${file}`, 'utf8'))
+        .replace(/CREATE\s+OR\s+REPLACE\s+FUNCTION/gi, 'CREATE FUNCTION')
+        .replace(/DROP\s+FUNCTION\s+IF\s+EXISTS/gi, 'DROP FUNCTION');
     for (const match of sql.matchAll(CREATE_FUNCTION)) created.add(match[1]);
     for (const match of sql.matchAll(DROP_FUNCTION)) dropped.add(match[1]);
 }

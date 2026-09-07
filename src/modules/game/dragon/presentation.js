@@ -167,17 +167,6 @@ const READER_SCENE_THEMES = new Map([
 ]);
 
 /** 저장 ID는 예전 배경과 호환하지만, 화면에서는 모서리 프레임 테마로 사용한다. */
-export const getReaderSceneTheme = (backgroundId) => {
-    const background = Reflect.get(HIDEOUT_BACKGROUNDS, backgroundId) || HIDEOUT_BACKGROUNDS.default;
-    const theme = READER_SCENE_THEMES.get(background.readerTone) || READER_SCENE_THEMES.get('light');
-    return {
-        '--dragon-reader-stage': theme.stage,
-        '--dragon-reader-stage-edge': theme.stageEdge,
-        '--dragon-reader-contrast-edge': theme.contrastEdge,
-        '--dragon-reader-particle-core': theme.particleCore
-    };
-};
-
 export const HIDEOUT_BACKGROUNDS = {
     default: { id: 'default', name: '기본 나무 프레임', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#A97848', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(169, 120, 72, 0.28)', readerTone: 'light' },
     'sunny-garden': { id: 'sunny-garden', name: '햇살 정원 프레임', color: 'linear-gradient(135deg,#fff7c7,#dff4b5)', border: '#a7c96a', textColor: '#42562f', subColor: '#78934f', price: 800, requiredWriterLevel: 1, theme: 'sunny-garden', glow: 'rgba(195,220,105,.42)', readerTone: 'light' },
@@ -193,6 +182,18 @@ export const HIDEOUT_BACKGROUNDS = {
     galaxy: { id: 'galaxy', name: '🌌 별자리 프레임', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#6679D9', textColor: 'white', subColor: '#E3F2FD', rarity: 'hero', theme: 'celestial', glow: 'rgba(102, 121, 217, 0.4)', readerTone: 'dark' },
     legend: { id: 'legend', name: '✨ 전설의 황금 프레임', color: 'linear-gradient(135deg, #1A1A1A 0%, #4D342C 50%, #1A1A1A 100%)', border: '#D5A51E', textColor: '#FFD700', subColor: '#B8860B', rarity: 'legendary', theme: 'legend', glow: 'rgba(213, 165, 30, 0.55)', readerTone: 'dark' }
 };
+
+export const getReaderSceneTheme = (backgroundId) => {
+    const background = Reflect.get(HIDEOUT_BACKGROUNDS, backgroundId) || HIDEOUT_BACKGROUNDS.default;
+    const theme = READER_SCENE_THEMES.get(background.readerTone) || READER_SCENE_THEMES.get('light');
+    return {
+        '--dragon-reader-stage': theme.stage,
+        '--dragon-reader-stage-edge': theme.stageEdge,
+        '--dragon-reader-contrast-edge': theme.contrastEdge,
+        '--dragon-reader-particle-core': theme.particleCore
+    };
+};
+
 
 export const getHideoutBackground = (backgroundId) => (
     Reflect.get(HIDEOUT_BACKGROUNDS, backgroundId) || HIDEOUT_BACKGROUNDS.default

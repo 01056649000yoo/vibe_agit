@@ -398,17 +398,6 @@ export const getDragonLegendaryRewardItems = () => (
     getDragonDecorCollectionItems(DRAGON_LEGENDARY_REWARD.id)
 );
 
-export const hasDragonLegendaryReward = (petData = {}) => {
-    const { owned } = normalizeDragonDecor(petData);
-    return getDragonLegendaryRewardItems().every((item) => owned.has(item.id));
-};
-
-export const getDragonDecorItemsForSlot = (slotId) => (
-    DRAGON_DECOR_ITEMS
-        .filter((item) => item.slot === slotId)
-        .sort((left, right) => left.sortOrder - right.sortOrder)
-);
-
 export const normalizeDragonDecor = (petData = {}) => {
     const storedEquipped = petData?.equippedDecor && typeof petData.equippedDecor === 'object'
         ? petData.equippedDecor
@@ -432,3 +421,14 @@ export const normalizeDragonDecor = (petData = {}) => {
 
     return { equipped, owned };
 };
+
+export const hasDragonLegendaryReward = (petData = {}) => {
+    const { owned } = normalizeDragonDecor(petData);
+    return getDragonLegendaryRewardItems().every((item) => owned.has(item.id));
+};
+
+export const getDragonDecorItemsForSlot = (slotId) => (
+    DRAGON_DECOR_ITEMS
+        .filter((item) => item.slot === slotId)
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+);

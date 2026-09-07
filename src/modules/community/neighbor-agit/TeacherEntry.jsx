@@ -16,6 +16,12 @@ import { neighborAgitTeacherApi } from './teacherApi';
 import TeacherPostReview from './TeacherPostReview';
 import './TeacherEntry.css';
 
+const createActivityForm = () => ({
+    type: 'topic', title: '', prompt: '', genre: '', guide_questions: [],
+    min_chars: 50, min_paragraphs: 1, mission_type_id: '',
+    base_reward: 10, bonus_threshold: 0, bonus_reward: 0
+});
+
 const STATUS_LABELS = Object.freeze({
     pending: '검토 대기',
     published: '공개 중',
@@ -46,11 +52,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [reviewSelection, setReviewSelection] = useState(null);
     const [detailBusy, setDetailBusy] = useState(false);
     // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
-    const [activityForm, setActivityForm] = useState({
-        type: 'topic', title: '', prompt: '', genre: '', guide_questions: [],
-        min_chars: 50, min_paragraphs: 1, mission_type_id: '',
-        base_reward: 10, bonus_threshold: 0, bonus_reward: 0
-    });
+    const [activityForm, setActivityForm] = useState(createActivityForm);
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
     // 함께 쓰는 주제 안의 두 갈래: 새 주제를 내는 곳과 낸 주제가 어떻게 되고 있는지 보는 곳.
     const [topicView, setTopicView] = useState('create');
@@ -82,7 +84,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setSpaceForm({ name: '', publicClassName: activeClass?.name || '', description: '' });
         setJoinForm({ inviteKey: '', publicClassName: activeClass?.name || '' });
         setActiveActivityTab('gallery');
-        setActivityForm({ type: 'topic', title: '', prompt: '' });
+        setActivityForm(createActivityForm());
+        setPresetNotice('');
+        setGenrePickerOpen(false);
         void loadWorkspace();
     }, [activeClass?.name, classId, loadWorkspace]);
 
@@ -145,7 +149,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const selectGenre = (genreId, missionTypeId = '') => {
         setGenrePickerOpen(false);
         const result = applyGenrePreset(
-            { ...activityForm, guide: activityForm.prompt },
+            {
+                ...activityForm, guide: activityForm.prompt,
+                min_chars: !activityForm.genre && activityForm.min_chars === 50 ? null : activityForm.min_chars,
+                min_paragraphs: !activityForm.genre && activityForm.min_paragraphs === 1 ? null : activityForm.min_paragraphs
+            },
             genreId,
             { previousGenre: activityForm.genre || null }
         );
@@ -179,11 +187,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             bonus_reward: activityForm.bonus_reward
         }, '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.');
         if (result) {
-            setActivityForm((current) => ({
-                ...current, title: '', prompt: '', genre: '', guide_questions: [],
-                min_chars: 50, min_paragraphs: 1, mission_type_id: '',
-                base_reward: 10, bonus_threshold: 0, bonus_reward: 0
-            }));
+            setActivityForm(createActivityForm());
             setPresetNotice('');
         }
     };
@@ -551,7 +555,39 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             titlePlaceholder="글쓰기 주제 (예: 우리 동네의 숨은 보물)"
                                             guidePlaceholder="안내 가이드 (무엇을 떠올리고 어떻게 써 볼지 알려 주세요)"
                                         />
-                                        <div className="neighbor-teacher__form-step"><span>3단계</span><h3>포인트를 정해 주세요</h3></div>
+                                        <div className="neighbor-teacher__form-step"><span>3단계</span><h3>길잡이 질문과 분량을 설정해 주세요</h3></div>
+                                        <p>프리셋으로 채워진 설정을 확인하고 우리 활동에 맞게 고쳐 주세요.</p>
+                                        <div className="neighbor-teacher__questions">
+                                            {activityForm.guide_questions.map((question, index) => (
+                                                <div className="neighbor-teacher__question" key={index}>
+                                                    <label>길잡이 질문 {index + 1}
+                                                        <textarea value={question} required maxLength={200}
+                                                            onChange={(event) => setActivityForm((current) => ({
+                                                                ...current, guide_questions: current.guide_questions.map((value, i) => i === index ? event.target.value : value)
+                                                            }))} />
+                                                    </label>
+                                                    <Button type="button" variant="secondary" aria-label={`길잡이 질문 ${index + 1} 삭제`}
+                                                        onClick={() => setActivityForm((current) => ({
+                                                            ...current, guide_questions: current.guide_questions.filter((_, i) => i !== index)
+                                                        }))}>삭제</Button>
+                                                </div>
+                                            ))}
+                                            <Button type="button" variant="secondary" disabled={activityForm.guide_questions.length >= 10}
+                                                onClick={() => setActivityForm((current) => ({ ...current, guide_questions: [...current.guide_questions, ''] }))}>
+                                                + 길잡이 질문 추가
+                                            </Button>
+                                        </div>
+                                        <div className="neighbor-teacher__reward-grid">
+                                            <label>최소 글자 수
+                                                <input type="number" required min="1" max="5000" value={activityForm.min_chars}
+                                                    onChange={(event) => setActivityForm((current) => ({ ...current, min_chars: event.target.value === '' ? '' : Number(event.target.value) }))} />
+                                            </label>
+                                            <label>최소 문단 수
+                                                <input type="number" required min="1" max="20" value={activityForm.min_paragraphs}
+                                                    onChange={(event) => setActivityForm((current) => ({ ...current, min_paragraphs: event.target.value === '' ? '' : Number(event.target.value) }))} />
+                                            </label>
+                                        </div>
+                                        <div className="neighbor-teacher__form-step"><span>4단계</span><h3>포인트를 정해 주세요</h3></div>
                                         <p>학급 과제와 같은 방식으로 지급됩니다. 이웃 주제로 쓴 글도 우리 반 글처럼 포인트를 받습니다.</p>
                                         <div className="neighbor-teacher__reward-grid">
                                             <label>기본 포인트

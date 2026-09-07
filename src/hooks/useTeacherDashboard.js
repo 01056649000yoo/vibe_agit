@@ -139,7 +139,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         } finally {
             setLoadingClasses(false);
         }
-    }, [session?.user?.id]);
+    }, [session?.user?.id, ask]);
 
     useEffect(() => {
         if (teacherBootstrap) return;

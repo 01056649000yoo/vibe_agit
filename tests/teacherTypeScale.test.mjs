@@ -127,7 +127,7 @@ test('글자 계단은 일곱 단계뿐이고 바닥이 0.8rem이다', async () 
     ], '계단 값이 달라졌다 — 연구소(writing-helper)의 @theme 도 함께 고쳐야 한다');
     // 계단은 항상 커지는 순서여야 한다 — 뒤집히면 화면이 뒤죽박죽이 된다.
     for (let i = 1; i < steps.length; i += 1) {
-        assert.ok(steps[i][1] > steps[i - 1][1], `${steps[i][0]}가 ${steps[i - 1][0]}보다 크지 않다`);
+        assert.ok(steps.at(i)[1] > steps.at(i - 1)[1], `${steps.at(i)[0]}가 ${steps.at(i - 1)[0]}보다 크지 않다`);
     }
 });
 
@@ -152,7 +152,9 @@ test('디자인 가이드가 실제 계단·읽는 자리와 어긋나지 않는
         assert.ok(guide.includes(`--ui-text-${step}`), `가이드에 ${step} 단계가 없다`);
         assert.ok(guide.includes(`${size}rem`), `가이드의 ${step} 크기(${size}rem)가 빠졌다`);
         // 코드 쪽은 0 을 떼고 적으므로(0.8rem) 숫자만 견준다.
-        assert.match(tokens, new RegExp(`--ui-text-${step}:\\s*${Number(size)}rem`),
+        const tokenValues = new Map([...tokens.matchAll(/--ui-text-([a-z0-9]+):\s*([\d.]+)rem/g)]
+            .map((match) => [match[1], Number(match[2])]));
+        assert.equal(tokenValues.get(step), Number(size),
             `코드의 ${step} 값이 가이드(${size}rem)와 다르다`);
     }
 

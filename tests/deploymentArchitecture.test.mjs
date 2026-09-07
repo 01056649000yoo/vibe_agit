@@ -9,6 +9,7 @@ import test from 'node:test';
  * 걸친 모양을 `\n` 으로 견주므로, 그대로 두면 **윈도우에서 작업하는 사람은 푸시 자체가 막힌다**
  * (2026-08-25에 실제로 막혔다). 검사가 보려는 것은 줄바꿈 방식이 아니라 배포 절차의 모양이다.
  */
+// eslint-disable-next-line security/detect-non-literal-fs-filename -- 호출부는 이 파일의 고정된 배포 파일 경로 8개뿐이다.
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
 const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist] = await Promise.all([

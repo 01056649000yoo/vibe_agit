@@ -86,38 +86,6 @@ export const useMissionManager = (
         fetchProfileData();
     }, [bootstrapProfile]);
 
-    // defaultRubric이 로드되면 폼 데이터에도 반영 (새 글 작성 시에만 초기값으로 세팅)
-    useEffect(() => {
-        if (defaultRubric && !isEditing) {
-            setFormData(prev => ({
-                ...prev,
-                evaluation_rubric: {
-                    ...prev.evaluation_rubric,
-                    levels: defaultRubric
-                }
-            }));
-        }
-    }, [defaultRubric, isEditing]);
-
-    // DB에서 불러온 미션 기본 설정을 폼에 적용 (새 글 작성 시에만)
-    useEffect(() => {
-        if (missionDefaultSettings && !isEditing) {
-            setFormData(prev => ({
-                ...prev,
-                min_chars: missionDefaultSettings.min_chars ?? prev.min_chars,
-                min_paragraphs: missionDefaultSettings.min_paragraphs ?? prev.min_paragraphs,
-                base_reward: missionDefaultSettings.base_reward ?? prev.base_reward,
-                bonus_threshold: missionDefaultSettings.bonus_threshold ?? prev.bonus_threshold,
-                bonus_reward: missionDefaultSettings.bonus_reward ?? prev.bonus_reward,
-                repeat_bonus_enabled: missionDefaultSettings.repeat_bonus_enabled ?? prev.repeat_bonus_enabled,
-                repeat_bonus_threshold: missionDefaultSettings.repeat_bonus_threshold ?? prev.repeat_bonus_threshold,
-                repeat_bonus_reward: missionDefaultSettings.repeat_bonus_reward ?? prev.repeat_bonus_reward,
-                repeat_bonus_max_count: missionDefaultSettings.repeat_bonus_max_count ?? prev.repeat_bonus_max_count,
-                allow_comments: missionDefaultSettings.allow_comments ?? prev.allow_comments
-            }));
-        }
-    }, [missionDefaultSettings, isEditing]);
-
     const saveFrequentTag = async (tag) => {
         if (!tag || frequentTags.includes(tag)) return;
         const newTags = [...frequentTags, tag];
@@ -175,6 +143,39 @@ export const useMissionManager = (
     }, []);
 
     const [formData, setFormData] = useState(getResetFormData);
+
+    // defaultRubric이 로드되면 폼 데이터에도 반영 (새 글 작성 시에만 초기값으로 세팅)
+    useEffect(() => {
+        if (defaultRubric && !isEditing) {
+            setFormData(prev => ({
+                ...prev,
+                evaluation_rubric: {
+                    ...prev.evaluation_rubric,
+                    levels: defaultRubric
+                }
+            }));
+        }
+    }, [defaultRubric, isEditing]);
+
+    // DB에서 불러온 미션 기본 설정을 폼에 적용 (새 글 작성 시에만)
+    useEffect(() => {
+        if (missionDefaultSettings && !isEditing) {
+            setFormData(prev => ({
+                ...prev,
+                min_chars: missionDefaultSettings.min_chars ?? prev.min_chars,
+                min_paragraphs: missionDefaultSettings.min_paragraphs ?? prev.min_paragraphs,
+                base_reward: missionDefaultSettings.base_reward ?? prev.base_reward,
+                bonus_threshold: missionDefaultSettings.bonus_threshold ?? prev.bonus_threshold,
+                bonus_reward: missionDefaultSettings.bonus_reward ?? prev.bonus_reward,
+                repeat_bonus_enabled: missionDefaultSettings.repeat_bonus_enabled ?? prev.repeat_bonus_enabled,
+                repeat_bonus_threshold: missionDefaultSettings.repeat_bonus_threshold ?? prev.repeat_bonus_threshold,
+                repeat_bonus_reward: missionDefaultSettings.repeat_bonus_reward ?? prev.repeat_bonus_reward,
+                repeat_bonus_max_count: missionDefaultSettings.repeat_bonus_max_count ?? prev.repeat_bonus_max_count,
+                allow_comments: missionDefaultSettings.allow_comments ?? prev.allow_comments
+            }));
+        }
+    }, [missionDefaultSettings, isEditing]);
+
 
     const handleSaveDefaultRubric = async () => {
         if (!formData.evaluation_rubric?.levels) return;
@@ -379,14 +380,14 @@ export const useMissionManager = (
             주제: "${formData.title}"
             글의 종류: "${formData.genre}"
             가이드: "${formData.guide}"
-            
+
             학생들이 이 주제로 글을 쓸 때, 글의 구조를 잡고 내용을 풍성하게 만들 수 있도록 돕는 '핵심 질문'을 ${count}개 만들어줘.
-            
+
             [규칙]
             1. 질문은 초등학생이 이해하기 쉬운 친절한 말투여야 해.
             2. 질문이 너무 추상적이지 않고, 구체적인 기억이나 생각을 끌어낼 수 있어야 해.
             3. 보기에 좋은 JSON 배열 형식으로만 답해줘. (다른 설명 없이)
-            
+
             [응답 형식 예시]
             ["질문1", "질문2", "질문3"]
             `;
@@ -526,16 +527,6 @@ export const useMissionManager = (
         return fetchReactionsAndComments(selectedPostId);
     }, [fetchReactionsAndComments, selectedPostId]);
 
-    const handleEvaluationMode = async (mission) => {
-        const fetchedPosts = await fetchPostsForMission(mission);
-        if (fetchedPosts && fetchedPosts.length > 0) {
-            setSelectedPost(fetchedPosts[0]);
-            setIsEvaluationMode(true);
-        } else {
-            notify('아직 제출한 학생이 없어요. 🐥');
-        }
-    };
-
     const fetchPostsForMission = async (mission) => {
         setLoadingPosts(true);
         try {
@@ -579,6 +570,17 @@ export const useMissionManager = (
             setLoadingPosts(false);
         }
     };
+
+    const handleEvaluationMode = async (mission) => {
+        const fetchedPosts = await fetchPostsForMission(mission);
+        if (fetchedPosts && fetchedPosts.length > 0) {
+            setSelectedPost(fetchedPosts[0]);
+            setIsEvaluationMode(true);
+        } else {
+            notify('아직 제출한 학생이 없어요. 🐥');
+        }
+    };
+
 
     const fetchAIFeedback = async (postArray) => {
         // postArray는 [{id, title, content}, ...] 형식
@@ -874,7 +876,7 @@ ${postArray.map((p, idx) => {
                         const retryFeedback = retryResults.find(res => String(res.id) === String(post.id))?.feedback;
                         await saveFeedback(post, retryFeedback);
                     }
-                    
+
                     setProgress(prev => ({ 
                         ...prev, 
                         current: Math.min(i + chunk.length, targetPosts.length) 
@@ -1316,7 +1318,7 @@ ${postArray.map((p, idx) => {
                 .eq('id', archiveModal.mission.id);
 
             if (error) throw error;
-            
+
             // [추가] 캐시 무효화
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);

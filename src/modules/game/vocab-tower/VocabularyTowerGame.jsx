@@ -418,25 +418,6 @@ const VocabularyTowerGame = ({
         setPhase('master');
     };
 
-    const submitMasterAnswer = async (questionId, answer) => {
-        if (submitting || !masterSession) return;
-        setSubmitting(true);
-        const { error } = await supabase.rpc('submit_my_vocab_tower_master_answer_v1', {
-            p_question_id: questionId,
-            p_answer: answer ?? ''
-        });
-        if (error) {
-            setSubmitting(false);
-            console.error('덱마스터 답안 제출 실패:', error.message);
-            setNotice('답을 보내지 못했어요. 다시 눌러 주세요.');
-            return;
-        }
-        const next = await loadMasterQuestion(masterSession.attempt_id);
-        setSubmitting(false);
-        // 남은 문항이 없으면 서버가 채점하고 결과를 준다.
-        if (!next) await finishDeckMaster(true);
-    };
-
     const finishDeckMaster = async (completed) => {
         if (!masterSession) return;
         setSubmitting(true);
@@ -465,6 +446,27 @@ const VocabularyTowerGame = ({
         });
         setPhase('master-summary');
     };
+
+    const submitMasterAnswer = async (questionId, answer) => {
+        if (submitting || !masterSession) return;
+        setSubmitting(true);
+        const { error } = await supabase.rpc('submit_my_vocab_tower_master_answer_v1', {
+            p_question_id: questionId,
+            p_answer: answer ?? ''
+        });
+        if (error) {
+            setSubmitting(false);
+            console.error('덱마스터 답안 제출 실패:', error.message);
+            setNotice('답을 보내지 못했어요. 다시 눌러 주세요.');
+            return;
+        }
+        const next = await loadMasterQuestion(masterSession.attempt_id);
+        setSubmitting(false);
+        // 남은 문항이 없으면 서버가 채점하고 결과를 준다.
+        if (!next) await finishDeckMaster(true);
+    };
+
+
 
     if (wordsLoading || phase === 'loading') {
         return <div className="vocab-journey vocab-journey--center"><div className="vocab-journey__loader">🏰</div><p>탑의 방을 준비하고 있어요...</p></div>;

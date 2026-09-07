@@ -146,6 +146,33 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
     }, [invalidateHomeCache]);
 
+
+
+    // 미확인 알림만 원장에서 읽는다. 확인한 것은 서버가 이미 걸러 주므로 클라이언트가
+    // 다시 거를 필요가 없고, 부분 인덱스 덕에 지난 이력이 쌓여도 비용이 늘지 않는다.
+    const fetchFeedbacks = useCallback(async () => {
+        setLoadingFeedback(true);
+        try {
+            const result = await notificationApi.listUnread({
+                limit: 50,
+                moduleIds: FEEDBACK_MODULE_IDS
+            });
+            setFeedbacks(result.items || []);
+        } catch (err) {
+            console.error('소식 로드 실패:', err.message);
+            setFeedbacks([]);
+        } finally {
+            setLoadingFeedback(false);
+        }
+    }, []);
+
+    const openFeedback = useCallback(async (tabIndex = 0) => {
+        setFeedbackInitialTab(tabIndex);
+        setLoadingFeedback(true);
+        setShowFeedback(true);
+        await fetchFeedbacks();
+    }, [fetchFeedbacks]);
+
     const handleDirectRewriteGo = async () => {
         try {
             const data = await studentHomeApi.getLatestRewrite();
@@ -173,31 +200,6 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
             openFeedback();
         }
     };
-
-    // 미확인 알림만 원장에서 읽는다. 확인한 것은 서버가 이미 걸러 주므로 클라이언트가
-    // 다시 거를 필요가 없고, 부분 인덱스 덕에 지난 이력이 쌓여도 비용이 늘지 않는다.
-    const fetchFeedbacks = useCallback(async () => {
-        setLoadingFeedback(true);
-        try {
-            const result = await notificationApi.listUnread({
-                limit: 50,
-                moduleIds: FEEDBACK_MODULE_IDS
-            });
-            setFeedbacks(result.items || []);
-        } catch (err) {
-            console.error('소식 로드 실패:', err.message);
-            setFeedbacks([]);
-        } finally {
-            setLoadingFeedback(false);
-        }
-    }, []);
-
-    const openFeedback = useCallback(async (tabIndex = 0) => {
-        setFeedbackInitialTab(tabIndex);
-        setLoadingFeedback(true);
-        setShowFeedback(true);
-        await fetchFeedbacks();
-    }, [fetchFeedbacks]);
 
     useEffect(() => {
         if (studentSession?.id) {

@@ -239,7 +239,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         } finally {
             setOpeningClassBoard(false);
         }
-    }, [activeClass?.id, openingClassBoard]);
+    }, [activeClass?.id, openingClassBoard, ask]);
 
     const handleConfirmAdminPassword = useCallback(async () => {
         if (!adminPassword.trim()) {
@@ -291,7 +291,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             setIsVerifyingAdminPassword(false);
         }
     }, [adminPassword, onSwitchToAdminMode]);
-
 
     const hasZeroClasses = classes.length === 0;
     const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'dashboard';

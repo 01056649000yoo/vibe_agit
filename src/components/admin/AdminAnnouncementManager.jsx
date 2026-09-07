@@ -192,10 +192,6 @@ const AdminAnnouncementManager = () => {
     const [newContent, setNewContent] = useState('');
     const [isPopup, setIsPopup] = useState(false);
 
-    useEffect(() => {
-        fetchAnnouncements();
-    }, []);
-
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
@@ -211,6 +207,11 @@ const AdminAnnouncementManager = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchAnnouncements();
+    }, []);
+
 
     const handleAddAnnouncement = async () => {
         if (!newTitle || !newContent) {

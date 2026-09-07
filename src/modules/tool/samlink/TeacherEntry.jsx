@@ -3,6 +3,12 @@ import React, { useState } from 'react';
 const SAMLINK_URL = 'https://샘링크.kr';
 const SAMLINK_EMBED_URL = `${SAMLINK_URL}/?embed=agit`;
 
+const floatingControlStyle = {
+    width: '34px', height: '34px', padding: 0, borderRadius: '10px', border: '1px solid #D7E0EA',
+    background: 'rgba(255,255,255,.94)', color: '#475569', fontSize: '1rem', fontWeight: '900', cursor: 'pointer',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box'
+};
+
 const SamlinkTeacherEntry = ({ isMobile }) => {
     const [frameKey, setFrameKey] = useState(0);
     const [loaded, setLoaded] = useState(false);
@@ -39,10 +45,5 @@ const SamlinkTeacherEntry = ({ isMobile }) => {
     );
 };
 
-const floatingControlStyle = {
-    width: '34px', height: '34px', padding: 0, borderRadius: '10px', border: '1px solid #D7E0EA',
-    background: 'rgba(255,255,255,.94)', color: '#475569', fontSize: '1rem', fontWeight: '900', cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box'
-};
 
 export default SamlinkTeacherEntry;

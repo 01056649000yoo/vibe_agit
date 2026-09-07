@@ -17,6 +17,11 @@ import { generateUnambiguousCode } from '../../lib/codeGenerator';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
+const badgeStyle = {
+    display: 'inline-flex', alignItems: 'center', padding: '4px 7px', borderRadius: '999px',
+    background: '#FEF3C7', color: '#92400E', fontSize: 'var(--ui-text-xs)', fontWeight: '900'
+};
+
 const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass, onNavigate }) => {
     const { ask, confirmDialog } = useConfirmDialog();
     const { notify, notice } = useNotice();
@@ -419,10 +424,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     );
 };
 
-const badgeStyle = {
-    display: 'inline-flex', alignItems: 'center', padding: '4px 7px', borderRadius: '999px',
-    background: '#FEF3C7', color: '#92400E', fontSize: 'var(--ui-text-xs)', fontWeight: '900'
-};
+
 
 const ClassActionButton = ({ icon, label, description, onClick, disabled = false, danger = false }) => (
     <button type="button" onClick={onClick} disabled={disabled} style={{

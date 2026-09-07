@@ -137,8 +137,8 @@ test('엣지 함수와 되돌림 스크립트는 같은 지시문·같은 상한
     }
     // 완료 요약의 칸 이름이 어긋나면 관리자 화면의 수가 조용히 0 이 된다.
     for (const key of ['collected_count', 'known_filtered_count', 'cache_hit_count', 'ai_reviewed_count']) {
-        assert.match(runner, new RegExp(key));
-        assert.match(edgeFunction, new RegExp(key));
+        assert.ok(runner.includes(key));
+        assert.ok(edgeFunction.includes(key));
     }
 });
 

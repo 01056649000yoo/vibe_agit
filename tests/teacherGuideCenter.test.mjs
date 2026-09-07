@@ -71,7 +71,7 @@ test('교사 도움말 26개는 빠짐없이 활용 안내서의 큰 흐름과 �
     assert.equal(Object.keys(TEACHER_GUIDES).length, 26);
     for (const guideId of Object.keys(TEACHER_GUIDES)) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);
-        assert.ok(TEACHER_GUIDE_TARGETS[guideId], `${guideId}: 실제 화면 이동 대상이 없다`);
+        assert.ok(Reflect.get(TEACHER_GUIDE_TARGETS, guideId), `${guideId}: 실제 화면 이동 대상이 없다`);
     }
 });
 
@@ -81,13 +81,13 @@ test('도움말 화면 이동 대상은 실제 교사 탭과 등록 모듈만 �
         assert.ok(teacherTabs.has(target.tab), `${guideId}: 존재하지 않는 교사 탭 ${target.tab}`);
         if (target.section?.startsWith('module:')) {
             const moduleId = target.section.slice('module:'.length);
-            assert.match(registrySource, new RegExp(`/${moduleId}/manifest`), `${guideId}: 설정 모듈이 등록되지 않았다`);
+            assert.ok(registrySource.includes(`/${moduleId}/manifest`), `${guideId}: 설정 모듈이 등록되지 않았다`);
         }
         if (target.tool) {
-            assert.match(registrySource, new RegExp(`/${target.tool}/manifest`), `${guideId}: 수업 도구가 등록되지 않았다`);
+            assert.ok(registrySource.includes(`/${target.tool}/manifest`), `${guideId}: 수업 도구가 등록되지 않았다`);
         }
         if (target.module) {
-            assert.match(registrySource, new RegExp(`/${target.module}/manifest`), `${guideId}: 놀이 모듈이 등록되지 않았다`);
+            assert.ok(registrySource.includes(`/${target.module}/manifest`), `${guideId}: 놀이 모듈이 등록되지 않았다`);
         }
     }
 });

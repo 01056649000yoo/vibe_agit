@@ -7,13 +7,13 @@ const migrationPath = 'supabase/migrations/20261230_writing_repeat_bonus.sql';
 test('반복 보너스 설정과 제출 스냅샷은 같은 마이그레이션에서 함께 추가된다', async () => {
     const migration = await readFile(migrationPath, 'utf8');
     for (const table of ['writing_missions', 'class_writing_policies', 'student_posts']) {
-        assert.match(migration, new RegExp(`ALTER TABLE public\\.${table}`));
+        assert.ok(migration.includes(`ALTER TABLE public.${table}`));
     }
     for (const field of [
         'repeat_bonus_enabled', 'repeat_bonus_threshold',
         'repeat_bonus_reward', 'repeat_bonus_max_count'
     ]) {
-        assert.match(migration, new RegExp(field));
+        assert.ok(migration.includes(field));
     }
     assert.match(migration, /snapshot_student_post_repeat_bonus_v1/);
     assert.match(migration, /guard_student_post_server_columns[\s\S]*awarded_repeat_bonus_max_count/);
