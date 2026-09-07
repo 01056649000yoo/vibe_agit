@@ -29,7 +29,8 @@ BEGIN
     r := public.run_neighbor_teacher_action_v1(hc,'create_activity', jsonb_build_object(
         'space_id',sp,'type','topic','title','가을 풍경','prompt','보고 느낀 것을 자세히 씁니다.',
         'genre','생활문','guide_questions',jsonb_build_array('무엇을 보았나요?','어떤 느낌이 들었나요?'),
-        'min_chars',300,'min_paragraphs',3));
+        'min_chars',300,'min_paragraphs',3,
+        'base_reward',30,'bonus_threshold',500,'bonus_reward',10));
 
     SELECT count(*) INTO n FROM public.writing_missions m
      WHERE m.class_id IN (hc,gc) AND m.title='가을 풍경';
@@ -41,6 +42,18 @@ BEGIN
       FROM public.writing_missions m WHERE m.class_id IN (hc,gc) AND m.title='가을 풍경';
     IF got <> '생활문/생활문/freeform/300자/3문단/질문2'
     THEN RAISE EXCEPTION '고른 양식이 과제에 안 들어갔습니다: %', got; END IF;
+
+    -- 포인트는 학급 과제와 같게, 우리 반 댓글도 열려야 한다(2026-09-07 선생님 결정).
+    SELECT string_agg(DISTINCT m.base_reward||'P/'||m.bonus_threshold||'자+'||m.bonus_reward||'P/댓글'
+                      ||CASE WHEN m.allow_comments THEN '켬' ELSE '끔' END, ' ') INTO got
+      FROM public.writing_missions m WHERE m.class_id IN (hc,gc) AND m.title='가을 풍경';
+    IF got <> '30P/500자+10P/댓글켬'
+    THEN RAISE EXCEPTION '포인트·댓글 설정이 안 들어갔습니다: %', got; END IF;
+
+    -- 승인 전에는 학생이 미리 쓰지 못하도록 보관 상태로 만들어진다(실수가 아니라 장치다).
+    IF NOT EXISTS (SELECT 1 FROM public.writing_missions m
+                    WHERE m.class_id IN (hc,gc) AND m.title='가을 풍경' AND m.is_archived IS TRUE)
+    THEN RAISE EXCEPTION '승인 전 과제가 열려 있습니다'; END IF;
 
     -- 같은 종류 활동은 한 번에 하나만 열 수 있다(기존 규칙). 다음 시험 전에 닫는다.
     UPDATE public.neighbor_activities SET status='closed', closed_at=now() WHERE space_id=sp;

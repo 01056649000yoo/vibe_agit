@@ -48,7 +48,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
     const [activityForm, setActivityForm] = useState({
         type: 'topic', title: '', prompt: '', genre: '', guide_questions: [],
-        min_chars: 50, min_paragraphs: 1, mission_type_id: ''
+        min_chars: 50, min_paragraphs: 1, mission_type_id: '',
+        base_reward: 10, bonus_threshold: 0, bonus_reward: 0
     });
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
     // 함께 쓰는 주제 안의 두 갈래: 새 주제를 내는 곳과 낸 주제가 어떻게 되고 있는지 보는 곳.
@@ -172,12 +173,16 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             guide_questions: activityForm.guide_questions,
             min_chars: activityForm.min_chars,
             min_paragraphs: activityForm.min_paragraphs,
-            mission_type_id: activityForm.mission_type_id || null
+            mission_type_id: activityForm.mission_type_id || null,
+            base_reward: activityForm.base_reward,
+            bonus_threshold: activityForm.bonus_threshold,
+            bonus_reward: activityForm.bonus_reward
         }, '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.');
         if (result) {
             setActivityForm((current) => ({
                 ...current, title: '', prompt: '', genre: '', guide_questions: [],
-                min_chars: 50, min_paragraphs: 1, mission_type_id: ''
+                min_chars: 50, min_paragraphs: 1, mission_type_id: '',
+                base_reward: 10, bonus_threshold: 0, bonus_reward: 0
             }));
             setPresetNotice('');
         }
@@ -546,6 +551,22 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             titlePlaceholder="글쓰기 주제 (예: 우리 동네의 숨은 보물)"
                                             guidePlaceholder="안내 가이드 (무엇을 떠올리고 어떻게 써 볼지 알려 주세요)"
                                         />
+                                        <div className="neighbor-teacher__form-step"><span>3단계</span><h3>포인트를 정해 주세요</h3></div>
+                                        <p>학급 과제와 같은 방식으로 지급됩니다. 이웃 주제로 쓴 글도 우리 반 글처럼 포인트를 받습니다.</p>
+                                        <div className="neighbor-teacher__reward-grid">
+                                            <label>기본 포인트
+                                                <input type="number" min="0" max="1000" value={activityForm.base_reward}
+                                                    onChange={(event) => setActivityForm((current) => ({ ...current, base_reward: Number(event.target.value) }))} />
+                                            </label>
+                                            <label>추가 분량 기준(자)
+                                                <input type="number" min="0" max="5000" step="50" value={activityForm.bonus_threshold}
+                                                    onChange={(event) => setActivityForm((current) => ({ ...current, bonus_threshold: Number(event.target.value) }))} />
+                                            </label>
+                                            <label>추가 포인트
+                                                <input type="number" min="0" max="1000" value={activityForm.bonus_reward}
+                                                    onChange={(event) => setActivityForm((current) => ({ ...current, bonus_reward: Number(event.target.value) }))} />
+                                            </label>
+                                        </div>
                                         <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                     </form>
                                     )}

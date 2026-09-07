@@ -60,6 +60,17 @@ test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () =
     // 전용 틀은 운영 자료와 같은 모양으로 저장한다(genre=시, mission_type=poem, input_template=poem).
     assert.match(sql, /COALESCE\(v_type_id, v_genre, '글쓰기'\)/);
     assert.match(sql, /COALESCE\(v_type_id, 'freeform'\)/);
+
+    // 포인트는 학급 과제와 같게, 우리 반 댓글도 연다(2026-09-07 결정).
+    // 예전에는 `0, 0, 0, FALSE` 로 박혀 있어 이웃 주제만 포인트가 없고 같은 반 댓글도 못 달았다.
+    const rewards = readFileSync('supabase/migrations/20261267_neighbor_topic_rewards_and_comments.sql', 'utf8');
+    assert.match(rewards, /v_base_reward, v_bonus_threshold, v_bonus_reward/);
+    assert.doesNotMatch(rewards, /v_min_paragraphs, 0, 0, 0, FALSE/, '포인트·댓글이 다시 박혔습니다.');
+    const rewardWrapper = rewards.slice(rewards.indexOf('FUNCTION public.run_neighbor_teacher_action_v1'));
+    assert.match(rewardWrapper, /p_payload->>'base_reward'/, '래퍼가 포인트를 안 넘깁니다.');
+    assert.match(teacher, /base_reward: activityForm\.base_reward/);
+    assert.match(readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8'),
+        /neighbor-teacher__reward-grid/);
 });
 
 test('교사 화면은 세 단계를 따라가는 길로 보여 주고 활동은 두 탭으로 나뉜다', () => {

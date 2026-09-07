@@ -102,6 +102,9 @@
 .neighbor-teacher__genre-body li { padding: 4px 9px; border-radius: 999px; background: #fff; color: #0f766e;
     font-size: var(--ui-text-xs); font-weight: 800; }
 
+/* 포인트 세 칸. 학급 과제 설정과 같은 뜻이라 나란히 둔다. */
+.neighbor-teacher__reward-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
 .neighbor-teacher__preset-notice { margin: 0; padding: 10px 13px; border-radius: 10px; background: #ecfeff;
     color: #0e7490; font-size: var(--ui-text-sm); font-weight: 800; }
 .neighbor-teacher__activity-panel { min-height: 135px; background: linear-gradient(145deg, #fff, #f8fafc); }
@@ -159,6 +162,7 @@
     .neighbor-teacher__activity-tabs button { justify-content: flex-start; min-height: 50px; }
     .neighbor-teacher__genre { flex-wrap: wrap; }
     .neighbor-teacher__genre-body { flex-basis: 100%; }
+    .neighbor-teacher__reward-grid { grid-template-columns: 1fr; }
     .neighbor-teacher__header-actions button, .neighbor-teacher__post-list article > button:last-child { width: 100%; }
     .neighbor-teacher__matching-list label { grid-template-columns: 1fr; }
     .neighbor-teacher__matching-list label > span { display: none; }
