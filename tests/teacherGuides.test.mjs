@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
 import { getGenreEntries } from '../src/modules/writing/mission-types/genreCatalog.js';
 import { LETTER_PAPERS } from '../src/modules/writing/mission-types/letter/letterPapers.js';
+import { MARATHON_MAX_PAGES } from '../src/modules/writing/reading-log/marathon/readingMarathon.js';
 
 const guideText = (guide) => [
     guide.summary,
@@ -109,6 +110,7 @@ test('독서록 도움말은 교사 확인 보상과 학생별 책장 내보내�
     assert.match(text, /엑셀·PDF 또는 구글 문서/);
     assert.match(text, /확인 독서록 전체 내보내기/);
     assert.match(text, /독서록 완료조건\/포인트/);
+    assert.match(text, /확인을 되돌리면 지급했던 포인트도 함께 회수/);
     assert.doesNotMatch(text, /독서마라톤|모둠 대항전|마라톤 거리|쪽수 미확인/);
     assert.doesNotMatch(text, /학생 완료 시점에 지급/);
 });
@@ -119,8 +121,18 @@ test('독서록 이벤트 안내는 독서마라톤 운영 내용을 별도로 �
     assert.match(text, /개인전·우리 반 전체전·모둠 대항전/);
     assert.match(text, /교사가 확인 완료한 독서록만 마라톤 거리에 반영/);
     assert.match(text, /쪽수 정보가 없어도 독서록 저장·교사 확인·포인트 지급은 정상적으로 진행/);
-    assert.match(text, /페이지 정보 확인이 필요한 책/);
+    assert.match(text, /📖 쪽수 확인이 필요한 책/);
     assert.match(text, /쪽수 미확인 책은 0쪽으로 계산하지 않으며/);
+    // 전집·세트 한 권이 목표를 넘겨 버린 일(2026-09-07)을 겪고 넣은 안내다.
+    assert.ok(text.includes(`한 권이 ${MARATHON_MAX_PAGES.toLocaleString()}쪽을 넘으면`),
+        `도움말의 쪽수 상한이 MARATHON_MAX_PAGES(${MARATHON_MAX_PAGES})와 다릅니다.`);
+    // 위 검사만으로는 부족하다 — 숫자를 손으로 적어 두면 상한을 바꿔도 도움말만 옛 값으로 남는다.
+    // 그래서 도움말이 정본 상수를 **읽고 있는지**를 원문에서 직접 본다.
+    const guideSource = readFileSync('src/constants/teacherGuides.js', 'utf8');
+    assert.match(guideSource, /MARATHON_MAX_PAGES\.toLocaleString\(\) \+ '쪽을 넘으면/,
+        '쪽수 상한을 도움말에 직접 적으면 화면·SQL 과 갈라집니다. MARATHON_MAX_PAGES 를 쓰세요.');
+    assert.match(text, /전집·세트로 보입니다/);
+    assert.match(text, /확인을 되돌리면 마라톤 거리에서 빠지고|되돌리면 함께 사라집니다/);
     assert.match(text, /모둠을 추가하거나 삭제하면.*자동으로 균등 배정/);
     assert.match(text, /랜덤 배정.*인원 차이를 최대 1명/);
     assert.match(text, /선택 상자로 학생을 직접 옮길/);
@@ -157,6 +169,7 @@ test('일기 도움말은 교사 확인 보상과 학생별 책장 내보내기�
     assert.match(text, /친구 공개.*교사 확인 후에도 친구들이.*일기 책장/);
     assert.match(text, /나만 보기.*작성 학생과 교사만 볼 수/);
     assert.doesNotMatch(text, /교사 확인 전에 이미 처리/);
+    assert.match(text, /확인을 되돌리면 지급했던 포인트도 함께 회수/);
 });
 
 test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을 함께 안내한다', () => {
