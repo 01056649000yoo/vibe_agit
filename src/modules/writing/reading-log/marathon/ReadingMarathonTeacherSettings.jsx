@@ -6,19 +6,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import ReadingMarathonStatusModal from './ReadingMarathonStatusModal';
 import ReadingMarathonTeamAssignmentDialog from './ReadingMarathonTeamAssignmentDialog';
-import {
-    DEFAULT_METERS_PER_PAGE,
-    DEFAULT_TARGET_DISTANCE_M,
-    buildMarathonTeamPayload,
-    distributeMarathonRosterEvenly,
-    distributeMarathonRosterRandomly,
-    formatMarathonDistance,
-    getCompetitionLabel,
-    getMarathonDashboardStats,
-    getMarathonTeamAssignmentSummary,
-    getMedalRequirementLabel,
-    normalizeMarathonSnapshot
-} from './readingMarathon';
+import { DEFAULT_METERS_PER_PAGE, DEFAULT_TARGET_DISTANCE_M, MARATHON_MAX_PAGES, buildMarathonTeamPayload, distributeMarathonRosterEvenly, distributeMarathonRosterRandomly, formatMarathonDistance, getCompetitionLabel, getMarathonDashboardStats, getMarathonTeamAssignmentSummary, getMedalRequirementLabel, normalizeMarathonSnapshot } from './readingMarathon';
 import './readingMarathon.css';
 
 const TARGET_PRESETS = [10000, 42195, 100000];
@@ -519,19 +507,22 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                             ) : <p>아직 페이지가 반영된 학생이 없습니다.</p>}
                         </section>
                         <section>
-                            <h4>📖 페이지 정보 확인이 필요한 책</h4>
-                            <p>확인 완료했어도 페이지 수가 없으면 거리를 계산할 수 없습니다. 자동으로 찾지 못한 책만 직접 입력해주세요.</p>
+                            <h4>📖 쪽수 확인이 필요한 책</h4>
+                            <p>쪽수를 모르거나 너무 큰 책은 달린 거리에 넣지 않습니다. 전집·세트로 잡힌 책은 실제로 읽은 한 권의 쪽수로 고쳐 주세요.</p>
                             {snapshot.pendingBooks.length > 0 ? (
                                 <div className="reading-marathon-pending-list">
                                     {snapshot.pendingBooks.map((book) => (
                                         <div key={book.post_id}>
-                                            <span><strong>{book.book_title}</strong><small>{book.student_name} · {book.isbn13 || book.isbn10 || 'ISBN 없음'}</small></span>
-                                            <label><input type="number" min="1" max="10000" aria-label={`${book.book_title} 페이지 수`} placeholder="쪽수" value={pageValues[book.post_id] || ''} onChange={(event) => setPageValues((current) => ({ ...current, [book.post_id]: event.target.value }))} /><em>쪽</em></label>
+                                            <span><strong>{book.book_title}</strong>
+                                                <small>{book.student_name} · {book.reason === 'too_long'
+                                                    ? `현재 ${Number(book.page_count).toLocaleString()}쪽 — 전집·세트로 보입니다`
+                                                    : '쪽수를 찾지 못했습니다'} · {book.isbn13 || book.isbn10 || 'ISBN 없음'}</small></span>
+                                            <label><input type="number" min="1" max={MARATHON_MAX_PAGES} aria-label={`${book.book_title} 쪽수`} placeholder="쪽수" value={pageValues[book.post_id] || ''} onChange={(event) => setPageValues((current) => ({ ...current, [book.post_id]: event.target.value }))} /><em>쪽</em></label>
                                             <Button type="button" size="sm" variant="outline" onClick={() => savePageCount(book)} disabled={pageSavingId === book.post_id}>{pageSavingId === book.post_id ? '저장 중' : '반영'}</Button>
                                         </div>
                                     ))}
                                 </div>
-                            ) : <p className="reading-marathon-settings__done">페이지 정보가 필요한 새 책이 없습니다. ✅</p>}
+                            ) : <p className="reading-marathon-settings__done">쪽수를 확인할 책이 없습니다. ✅</p>}
                         </section>
                     </div>
                 </>

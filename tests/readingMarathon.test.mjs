@@ -1,18 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    buildMarathonTeamPayload,
-    clampProgress,
-    distributeMarathonRosterEvenly,
-    distributeMarathonRosterRandomly,
-    formatMarathonDistance,
-    getCompetitionLabel,
-    getCoursePosition,
-    getMarathonTeamAssignmentSummary,
-    getMedalRequirementLabel,
-    getProgressPercent,
-    normalizeMarathonSnapshot
-} from '../src/modules/writing/reading-log/marathon/readingMarathon.js';
+import { readFileSync } from 'node:fs';
+import { MARATHON_MAX_PAGES, buildMarathonTeamPayload, clampProgress, distributeMarathonRosterEvenly, distributeMarathonRosterRandomly, formatMarathonDistance, getCompetitionLabel, getCoursePosition, getMarathonTeamAssignmentSummary, getMedalRequirementLabel, getProgressPercent, normalizeMarathonSnapshot } from '../src/modules/writing/reading-log/marathon/readingMarathon.js';
 
 test('모둠 수가 바뀌면 전체 학생을 모둠별로 균등하게 다시 배정한다', () => {
     const teams = [
@@ -571,4 +560,25 @@ test('학생 카드는 경기 방식마다 자기에게 맞는 거리를 견준�
     assert.equal(isMarathonCompletedForStudent({ ...campaignOf('group_team') }), false);
     assert.equal(isMarathonCompletedForStudent(campaignOf('class_team', 'completed')), true);
     assert.equal(isMarathonCompletedForStudent(campaignOf('class_team')), false);
+});
+
+test('한 권의 쪽수 상한은 화면과 SQL 이 같은 값을 쓰고, 넘으면 거리에서 뺀다', () => {
+    // 2026-09-07 운영 문제: 4,040쪽 전집 한 권이 곧바로 4.04km 로 잡혔다.
+    const sql = readFileSync('supabase/migrations/20261259_reading_marathon_page_cap_and_point_recovery.sql', 'utf8');
+    assert.ok(sql.includes(`RETURNS INTEGER LANGUAGE sql IMMUTABLE SET search_path=public AS $$ SELECT ${MARATHON_MAX_PAGES} $$`),
+        `SQL 의 쪽수 상한이 MARATHON_MAX_PAGES(${MARATHON_MAX_PAGES})와 다릅니다.`);
+    // 집계와 교사 확인 목록이 같은 정본을 본다.
+    assert.match(sql, /NOT BETWEEN 1 AND public\.reading_marathon_max_pages_v1\(\)/);
+    assert.equal((sql.match(/page_count > public\.reading_marathon_max_pages_v1\(\)/g) || []).length, 3);
+    // 확인 취소는 포인트를 회수하고, 다시 확인하면 열쇠가 달라져 재지급된다.
+    assert.match(sql, /recover_self_writing_review_points_v1/);
+    assert.match(sql, /확인 취소로 인한 포인트 회수/);
+    assert.match(sql, /format\('self-writing-review:%s:%s', v_post\.id, v_recover_cycle\)/);
+    // 교사 화면이 이유를 보여 주고 상한을 넘겨 입력할 수 없다.
+    const ui = readFileSync('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8');
+    assert.match(ui, /book\.reason === 'too_long'/);
+    // 쪽수 칸만 본다(아래 목표 거리·인원 칸은 뜻이 다른 상한을 쓴다).
+    const pageInput = ui.split('\n').find((line) => line.includes('쪽수`}') && line.includes('type="number"')) || '';
+    assert.match(pageInput, /max=\{MARATHON_MAX_PAGES\}/, '쪽수 칸이 정본 상한을 쓰지 않습니다.');
+    assert.doesNotMatch(pageInput, /max="\d+"/, '쪽수 칸에 숫자를 직접 적으면 SQL 과 갈라집니다.');
 });
