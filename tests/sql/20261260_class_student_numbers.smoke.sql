@@ -6,6 +6,7 @@ DECLARE
     a1 UUID:=gen_random_uuid(); a2 UUID:=gen_random_uuid(); a3 UUID:=gen_random_uuid();
     s1 UUID:=gen_random_uuid(); s2 UUID:=gen_random_uuid(); s3 UUID:=gen_random_uuid();
     sp UUID:=gen_random_uuid(); post1 UUID:=gen_random_uuid(); bk UUID:=gen_random_uuid();
+    ex UUID:=gen_random_uuid(); s_twin UUID:=gen_random_uuid();
     s_new UUID; r JSONB; got TEXT; denied BOOLEAN;
 BEGIN
     PERFORM set_config('app.bypass_profile_protection','true',TRUE);
@@ -87,6 +88,13 @@ BEGIN
     INSERT INTO public.class_agit_books(id,class_id,title) VALUES(bk,c,'합성 문집');
     INSERT INTO public.class_agit_book_items(class_id,book_id,post_id,student_id,position,source_revision,snapshot)
         VALUES(c,bk,post1,s1,1,repeat('a',64),jsonb_build_object('title','합성 글','author','최윤','blocks','[]'::JSONB));
+    -- 글꽃 전시관 작품 지은이와 알림 문구에도 실명이 박힌다(2026-09-07 뒤늦게 찾음).
+    INSERT INTO public.class_agit_exhibitions(id,class_id,title,layout_version)
+        VALUES(ex,c,'합성 전시',2);
+    INSERT INTO public.class_agit_items(class_id,exhibition_id,post_id,student_id,position,source_revision,snapshot,public_alias)
+        VALUES(c,ex,post1,s1,1,repeat('b',64),jsonb_build_object('title','합성 글','authorName','최윤','blocks','[]'::JSONB),'새싹 작가 01');
+    INSERT INTO public.student_notification_events(class_id,student_id,module_id,event_type,payload,event_key)
+        VALUES(c,s2,'writing','reaction',jsonb_build_object('actor_name','최윤','post_title','합성 글'),'nt-'||gen_random_uuid());
     PERFORM set_config('app.bypass_profile_protection','false',TRUE);
 
     r := public.rename_class_student_v1(s1,'최윤슬');
@@ -99,11 +107,37 @@ BEGIN
     IF got <> '최윤슬' THEN RAISE EXCEPTION '이웃 아지트 공유글에 옛 이름이 남았습니다: %', got; END IF;
     SELECT snapshot->>'author' INTO got FROM public.class_agit_book_items WHERE student_id=s1;
     IF got <> '최윤슬' THEN RAISE EXCEPTION '글꽃 책방 작품에 옛 이름이 남았습니다: %', got; END IF;
+    SELECT snapshot->>'authorName' INTO got FROM public.class_agit_items WHERE student_id=s1;
+    IF got <> '최윤슬' THEN RAISE EXCEPTION '글꽃 전시관 작품에 옛 이름이 남았습니다: %', got; END IF;
+    SELECT payload->>'actor_name' INTO got FROM public.student_notification_events WHERE class_id=c AND student_id=s2;
+    IF got <> '최윤슬' THEN RAISE EXCEPTION '알림 문구에 옛 이름이 남았습니다: %', got; END IF;
     -- 번호는 그대로여야 한다(이름을 고쳤다고 자리가 바뀌면 안 된다).
     SELECT student_no INTO got FROM public.students WHERE id=s1;
     IF got <> '1' THEN RAISE EXCEPTION '이름을 고쳤더니 번호가 %번으로 바뀌었습니다', got; END IF;
 
-    -- 6) 빈 이름·너무 긴 이름은 막는다.
+    -- 6) 동명이인이 있으면 알림 문구는 건드리지 않는다.
+    --    이 표에는 행동한 학생의 id 가 없어 이름으로만 찾을 수 있다. 같은 이름이 둘이면
+    --    남의 알림까지 바꾸게 되므로, 고치지 않고 그대로 두는 쪽이 옳다.
+    PERFORM set_config('app.bypass_profile_protection','true',TRUE);
+    INSERT INTO public.students(id,class_id,name,student_code)
+        VALUES(s_twin,c,'박별하',left(s_twin::TEXT,8)||'N05');
+    INSERT INTO public.student_notification_events(class_id,student_id,module_id,event_type,payload,event_key)
+        VALUES(c,s1,'writing','reaction',jsonb_build_object('actor_name','박별하','post_title','합성 글'),'nt-'||gen_random_uuid());
+    PERFORM set_config('app.bypass_profile_protection','false',TRUE);
+
+    r := public.rename_class_student_v1(s2,'박별하나');
+    IF (r->'synced'->>'notification')::INTEGER <> 0
+    THEN RAISE EXCEPTION '동명이인인데 알림 문구를 고쳤습니다: %', r->'synced'; END IF;
+    SELECT payload->>'actor_name' INTO got FROM public.student_notification_events
+     WHERE class_id=c AND student_id=s1;
+    IF got <> '박별하' THEN RAISE EXCEPTION '동명이인의 알림이 바뀌었습니다: %', got; END IF;
+    -- 그래도 학생 id 로 이어진 사본은 정확히 그 학생 것만 바뀐다.
+    SELECT name INTO got FROM public.students WHERE id=s2;
+    IF got <> '박별하나' THEN RAISE EXCEPTION '이름이 바뀌지 않았습니다: %', got; END IF;
+    SELECT name INTO got FROM public.students WHERE id=s_twin;
+    IF got <> '박별하' THEN RAISE EXCEPTION '동명이인의 이름까지 바뀌었습니다: %', got; END IF;
+
+    -- 7) 빈 이름·너무 긴 이름은 막는다.
     denied := FALSE;
     BEGIN PERFORM public.rename_class_student_v1(s1,'   ');
     EXCEPTION WHEN OTHERS THEN denied := TRUE; END;

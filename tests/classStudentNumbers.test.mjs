@@ -52,6 +52,20 @@ test('이름을 고치면 실명을 복사해 둔 곳도 함께 고친다', () =
     assert.match(rename, /char_length\(v_name\) NOT BETWEEN 1 AND 30/);
 });
 
+test('이름 사본 동기화는 화면에 보이는 곳만 고치고 동명이인을 지킨다', () => {
+    // 2026-09-07 뒤늦게 찾은 두 곳. 컬럼 이름 훑기로는 JSONB 안이라 안 잡혀 실제 값을 대조해 찾았다.
+    const follow = readFileSync('supabase/migrations/20261261_rename_student_syncs_display_copies.sql', 'utf8');
+    assert.match(follow, /UPDATE public\.class_agit_items/, '글꽃 전시관 작품 지은이를 고치지 않습니다.');
+    assert.match(follow, /UPDATE public\.student_notification_events/, '알림 문구의 이름을 고치지 않습니다.');
+
+    // 알림 표에는 행동한 학생의 id 가 없어 이름으로만 찾는다. 동명이인이면 남의 알림까지 바뀌므로 건너뛴다.
+    assert.match(follow, /other\.id <> p_student_id AND other\.name = v_old_name/,
+        '동명이인 보호가 사라지면 남의 알림까지 바뀝니다.');
+
+    // 아이가 자기 글에 쓴 이름은 고치지 않는다.
+    assert.doesNotMatch(follow, /UPDATE public\.student_posts/, '학생 글은 고치지 않습니다.');
+});
+
 test('교사 명단 조회는 번호를 함께 내려 주고 번호순으로 준다', () => {
     // 화면이 번호를 그리려면 조회 결과에 번호가 있어야 한다. 둘 중 하나만 고치면 번호가 빈칸이 된다.
     const snapshot = migration.slice(migration.indexOf('FUNCTION public.get_teacher_point_manager_snapshot'));
