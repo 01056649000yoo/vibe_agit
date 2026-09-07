@@ -17,7 +17,14 @@ const entryIcon = (entry) => (
     entry.missionTypeId ? (getGenreMissionType(entry.missionTypeId)?.icon || '🧩') : '📝'
 );
 
-const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose }) => {
+/**
+ * 글 종류 고르기.
+ *
+ * 기본은 **그 자리에 펼쳐지는 판**이다(과제 만들기 화면이 이렇게 쓴다).
+ * `embedded` 를 주면 자기 머리말·테두리를 그리지 않는다 — 창 안에 넣을 때 제목과 닫기 단추가
+ * 두 번 나오는 것을 막는다(이웃 아지트의 `함께 쓰는 주제`가 이렇게 쓴다).
+ */
+const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose, embedded = false }) => {
     const choices = getGenreCategories().flatMap((category) => (
         category.entries.map((entry) => ({ ...entry, categoryLabel: category.label }))
     ));
@@ -67,17 +74,21 @@ const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose 
     );
 
     return (
-        <div style={{
+        <div style={embedded ? { display: 'grid', gap: '12px' } : {
             marginBottom: '14px', padding: isMobile ? '12px' : '16px', borderRadius: '18px',
             background: '#F8FAFC', border: '1px solid #E2E8F0'
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                <div>
-                    <h4 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>어떤 글을 쓰게 할까요?</h4>
-                    <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.78rem' }}>글 종류를 고르면 알맞은 안내·질문 또는 전용 틀로 바로 이어집니다.</p>
+            {embedded ? (
+                <p style={{ margin: 0, color: '#64748B', fontSize: '0.82rem' }}>글 종류를 고르면 알맞은 안내·질문 또는 전용 틀로 바로 이어집니다.</p>
+            ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                    <div>
+                        <h4 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>어떤 글을 쓰게 할까요?</h4>
+                        <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.78rem' }}>글 종류를 고르면 알맞은 안내·질문 또는 전용 틀로 바로 이어집니다.</p>
+                    </div>
+                    <ModalCloseButton onClick={onClose} label="글 종류 선택 닫기" />
                 </div>
-                <ModalCloseButton onClick={onClose} label="글 종류 선택 닫기" />
-            </div>
+            )}
 
             <div style={{ display: 'grid', gap: isMobile ? '12px' : '14px' }}>
                 <section aria-labelledby="template-writing-types-heading">

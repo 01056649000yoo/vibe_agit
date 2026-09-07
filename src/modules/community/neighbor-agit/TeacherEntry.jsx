@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
+import Modal from '../../../components/common/Modal';
+import ModalPortal from '../../../components/common/ModalPortal';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
@@ -548,16 +550,29 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </form>
                                     )}
 
-                                    {genrePickerOpen && (
-                                        <MissionTypePicker
-                                            isMobile={isMobile}
-                                            onSelectGenre={(missionTypeId) => selectGenre(
-                                                genreIdForMissionType(missionTypeId), missionTypeId
-                                            )}
-                                            onSelectFreeform={(genreId) => selectGenre(genreId)}
+                                    {/* `MissionTypePicker` 는 그 자리에 펼쳐지는 판이라 폼 아래로 밀려났었다.
+                                        고르는 동안에는 다른 것을 볼 일이 없으므로 창으로 띄우고, 고르면 바로 닫는다
+                                        (`selectGenre` 첫 줄에서 닫는다). 창은 `ModalPortal` 로 body 에 붙인다 —
+                                        이 화면은 카드 안에 있어 그 자리에 그리면 조상 기준으로 잘릴 수 있다. */}
+                                    <ModalPortal>
+                                        <Modal
+                                            isOpen={genrePickerOpen}
                                             onClose={() => setGenrePickerOpen(false)}
-                                        />
-                                    )}
+                                            title="📄 어떤 글을 쓰게 할까요?"
+                                            maxWidth="760px"
+                                            showFooter={false}
+                                        >
+                                            <MissionTypePicker
+                                                embedded
+                                                isMobile={isMobile}
+                                                onSelectGenre={(missionTypeId) => selectGenre(
+                                                    genreIdForMissionType(missionTypeId), missionTypeId
+                                                )}
+                                                onSelectFreeform={(genreId) => selectGenre(genreId)}
+                                                onClose={() => setGenrePickerOpen(false)}
+                                            />
+                                        </Modal>
+                                    </ModalPortal>
 
                                     {topicView === 'result' && (
                                     <section className="neighbor-teacher-card neighbor-teacher__activity-list" role="tabpanel">

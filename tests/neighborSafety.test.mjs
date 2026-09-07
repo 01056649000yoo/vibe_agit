@@ -97,6 +97,19 @@ test('함께 쓰는 주제는 만들기·결과 두 갈래이고 글 종류 칸�
     assert.match(teacher, /neighbor-teacher__genre is-picked/);
     assert.match(teacher, /neighbor-teacher__genre is-empty/);
 
+    // 글 종류 고르기는 **창으로** 뜬다. 그 자리에 펼치면 주제 입력 아래로 밀려난다(2026-09-07).
+    const portal = teacher.slice(teacher.indexOf('<ModalPortal>'), teacher.indexOf('</ModalPortal>'));
+    assert.ok(portal.includes('<Modal'), '글 종류 고르기가 창 안에 없습니다.');
+    assert.ok(portal.includes('<MissionTypePicker'), '고르기 판이 창 밖에 있습니다.');
+    // 창 안에서는 자기 머리말을 그리지 않는다 — 제목·닫기 단추가 두 번 나오면 안 된다.
+    assert.match(teacher, /<MissionTypePicker\s+embedded/);
+    // 고르면 바로 닫힌다.
+    assert.match(teacher, /const selectGenre = \(genreId, missionTypeId = ''\) => \{\s*setGenrePickerOpen\(false\);/);
+
+    // 과제 만들기 화면은 예전처럼 그 자리에 펼치는 판을 그대로 쓴다(기본값을 바꾸지 않았다).
+    const picker = readFileSync('src/components/teacher/MissionTypePicker.jsx', 'utf8');
+    assert.match(picker, /embedded = false/);
+
     // 화면에 쓰는 class 는 모두 스타일이 있어야 한다 — 없으면 맨 요소가 그대로 나온다.
     for (const name of ['__subtabs', '__genre', '__genre-mark', '__genre-body', '__genre-go',
         '__preset-notice', '__form-step']) {
