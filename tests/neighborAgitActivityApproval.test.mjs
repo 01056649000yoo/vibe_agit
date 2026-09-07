@@ -81,8 +81,10 @@ test('승인 대기 활동은 학생 요약과 직접 활동 피드 양쪽에서
 });
 
 test('교사 화면은 호스트·게스트 모두 제안하고 상대 교사가 승인 또는 거절한다', () => {
-    assert.match(teacherEntry, /새 \{getNeighborActivityLabel\(activeActivityTab\)\} 제안하기/);
+    // 2026-09-07: 폼 머리말을 `어떤 글을 쓰게 할까요?` 로 바꿨다(만들기·결과 두 갈래로 나누면서).
+    // 여기서 지키려는 것은 문구가 아니라 **누구나 제안할 수 있다**는 것이므로 제안 단추로 확인한다.
     assert.match(teacherEntry, /\{getNeighborActivityLabel\(activeActivityTab\)\} 제안하기<\/Button>/);
+    assert.match(teacherEntry, /onSubmit=\{createActivity\}/);
     assert.ok(teacherEntry.includes('활동 승인'));
     assert.ok(teacherEntry.includes('활동 제안을 거절했습니다.'));
     assert.match(teacherEntry, /activity\.can_review/);

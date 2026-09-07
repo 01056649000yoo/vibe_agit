@@ -79,3 +79,27 @@ test('교사 화면은 세 단계를 따라가는 길로 보여 주고 활동은
     // 좁은 화면에서도 단계는 세 칸을 지킨다 — 세로로 쌓으면 순서가 흐름으로 안 읽힌다.
     assert.match(css, /단계는 순서가 뜻이라 좁아져도 세 칸을 유지/);
 });
+
+test('함께 쓰는 주제는 만들기·결과 두 갈래이고 글 종류 칸이 화면에 녹아 있다', () => {
+    // 선생님 지적(2026-09-07): 글 종류 고르기를 모듈만 가져다 놓아 성의 없어 보였다.
+    // 실제로 `.neighbor-teacher__genre` 에 스타일이 하나도 없어 맨 요소가 그대로 나오고 있었다.
+    const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
+
+    // 주제를 내는 일과 지켜보는 일은 하는 때가 달라 갈래를 나눈다.
+    assert.match(teacher, /neighbor-teacher__subtabs/);
+    assert.match(teacher, /주제 만들기/);
+    assert.match(teacher, /활동 결과 확인/);
+    assert.match(teacher, /topicView === 'create'/);
+    assert.match(teacher, /topicView === 'result'/);
+
+    // 고르기 전·후 모양이 달라야 지금 무엇이 정해졌는지 보인다.
+    assert.match(teacher, /neighbor-teacher__genre is-picked/);
+    assert.match(teacher, /neighbor-teacher__genre is-empty/);
+
+    // 화면에 쓰는 class 는 모두 스타일이 있어야 한다 — 없으면 맨 요소가 그대로 나온다.
+    for (const name of ['__subtabs', '__genre', '__genre-mark', '__genre-body', '__genre-go',
+        '__preset-notice', '__form-step']) {
+        assert.ok(css.includes(`.neighbor-teacher${name}`), `neighbor-teacher${name} 스타일이 없습니다.`);
+    }
+});

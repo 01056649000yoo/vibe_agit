@@ -49,6 +49,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         min_chars: 50, min_paragraphs: 1, mission_type_id: ''
     });
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
+    // 함께 쓰는 주제 안의 두 갈래: 새 주제를 내는 곳과 낸 주제가 어떻게 되고 있는지 보는 곳.
+    const [topicView, setTopicView] = useState('create');
     const [presetNotice, setPresetNotice] = useState('');
     const [galleryCandidates, setGalleryCandidates] = useState(null);
     const [galleryLoading, setGalleryLoading] = useState(false);
@@ -488,22 +490,48 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 </section>
                             ) : (
                                 <>
+                                    {/* 주제를 내는 일과 낸 주제를 지켜보는 일은 하는 때가 달라 갈래를 나눈다. */}
+                                    <nav className="neighbor-teacher__subtabs" aria-label="함께 쓰는 주제 보기" role="tablist">
+                                        <button type="button" role="tab" aria-selected={topicView === 'create'}
+                                            className={topicView === 'create' ? 'is-active' : ''} onClick={() => setTopicView('create')}>
+                                            ✏️ 주제 만들기
+                                        </button>
+                                        <button type="button" role="tab" aria-selected={topicView === 'result'}
+                                            className={topicView === 'result' ? 'is-active' : ''} onClick={() => setTopicView('result')}>
+                                            📊 활동 결과 확인{selectedActivities.length > 0 ? ` (${selectedActivities.length})` : ''}
+                                        </button>
+                                    </nav>
+
+                                    {topicView === 'create' && (
                                     <form className="neighbor-teacher-card neighbor-teacher__activity-form" role="tabpanel" onSubmit={createActivity}>
-                                        {/* 소개를 따로 카드로 두지 않고 만들기 폼 머리말로 합쳤다(카드 셋 → 둘). */}
-                                        <div><span>참여 교사</span><h2>새 {getNeighborActivityLabel(activeActivityTab)} 제안하기</h2></div>
-                                        <p>모든 참여 학급에 같은 주제의 글쓰기 과제를 만들고, 제출한 글을 한 공간에서 나눕니다.
-                                            한 학급이 제안하고 다른 참여 학급 교사가 모두 승인하면 양쪽 학생에게 동시에 열립니다.</p>
-                                        <div className="neighbor-teacher__genre">
-                                            <span>글 종류</span>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setGenrePickerOpen(true)}>
-                                                {activityForm.genre ? `📄 ${activityForm.genre}` : '📄 글 종류 고르기'}
-                                            </Button>
-                                            {activityForm.genre && (
-                                                <small>최소 {activityForm.min_chars}자 · {activityForm.min_paragraphs}문단
-                                                    {activityForm.guide_questions.length > 0 && ` · 길잡이 질문 ${activityForm.guide_questions.length}개`}</small>
-                                            )}
-                                        </div>
+                                        <div><span>1단계</span><h2>어떤 글을 쓰게 할까요?</h2></div>
+                                        <p>글 종류를 고르면 안내문·길잡이 질문·분량이 학급 과제와 똑같이 채워집니다. 고른 뒤 언제든 고칠 수 있어요.</p>
+
+                                        {/* 고르기 전과 고른 뒤의 모양을 다르게 해서, 지금 무엇이 정해졌는지 바로 보이게 한다. */}
+                                        {activityForm.genre ? (
+                                            <div className="neighbor-teacher__genre is-picked">
+                                                <div className="neighbor-teacher__genre-mark" aria-hidden="true">📄</div>
+                                                <div className="neighbor-teacher__genre-body">
+                                                    <strong>{activityForm.genre}</strong>
+                                                    <ul>
+                                                        <li>최소 {activityForm.min_chars}자</li>
+                                                        <li>{activityForm.min_paragraphs}문단 이상</li>
+                                                        {activityForm.guide_questions.length > 0 && <li>길잡이 질문 {activityForm.guide_questions.length}개</li>}
+                                                        {activityForm.mission_type_id && <li>전용 원고지</li>}
+                                                    </ul>
+                                                </div>
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => setGenrePickerOpen(true)}>다시 고르기</Button>
+                                            </div>
+                                        ) : (
+                                            <button type="button" className="neighbor-teacher__genre is-empty" onClick={() => setGenrePickerOpen(true)}>
+                                                <span aria-hidden="true">📄</span>
+                                                <span><strong>글 종류 고르기</strong><small>시·편지·생활문처럼 쓸 글을 먼저 정합니다</small></span>
+                                                <span className="neighbor-teacher__genre-go" aria-hidden="true">→</span>
+                                            </button>
+                                        )}
                                         {presetNotice && <p className="neighbor-teacher__preset-notice" role="status">{presetNotice}</p>}
+
+                                        <div className="neighbor-teacher__form-step"><span>2단계</span><h3>주제와 안내를 적어 주세요</h3></div>
                                         <MissionPromptFields
                                             title={activityForm.title}
                                             guide={activityForm.prompt}
@@ -518,6 +546,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         />
                                         <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                     </form>
+                                    )}
 
                                     {genrePickerOpen && (
                                         <MissionTypePicker
@@ -530,9 +559,10 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         />
                                     )}
 
-                                    <section className="neighbor-teacher-card neighbor-teacher__activity-list">
-                                        <div><span>진행 현황</span><h2>{getNeighborActivityLabel(activeActivityTab)}</h2></div>
-                                        {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 활동이 없습니다.</p> : selectedActivities.map((activity) => (
+                                    {topicView === 'result' && (
+                                    <section className="neighbor-teacher-card neighbor-teacher__activity-list" role="tabpanel">
+                                        <div><span>활동 결과</span><h2>낸 주제가 어떻게 되고 있나요?</h2></div>
+                                        {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 주제가 없습니다. `주제 만들기` 에서 첫 주제를 내 보세요.</p> : selectedActivities.map((activity) => (
                                     <article key={activity.id}>
                                         <div>
                                             <span>{getNeighborActivityLabel(activity.type)} · {activity.status === 'pending_approval' ? '활동 승인 대기' : activity.status === 'closed' ? '종료' : '글 쓰는 중'}</span>
@@ -555,7 +585,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </article>
                                         ))}
                                     </section>
-
+                                    )}
                                 </>
                             )}
                         </div>

@@ -70,6 +70,40 @@
 .neighbor-teacher__activity-tabs button.is-active { border-color: #0f766e; background: #ccfbf1; color: #115e59; box-shadow: 0 3px 10px rgba(15, 118, 110, .12); }
 .neighbor-teacher__activity-tabs button.is-active small { color: #0f766e; }
 .neighbor-teacher__activity-panel, .neighbor-teacher__activity-form, .neighbor-teacher__activity-list { grid-column: 1 / -1; }
+
+/* 함께 쓰는 주제 안의 두 갈래(주제 만들기 · 활동 결과). 활동 탭보다 한 단 작게 두어 층이 구분되게 한다. */
+.neighbor-teacher__subtabs { display: flex; grid-column: 1 / -1; gap: 6px; padding: 5px; border-radius: 12px; background: #f1f5f9; }
+.neighbor-teacher__subtabs button { flex: 1; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 9px;
+    background: transparent; color: #627d98; font: inherit; font-weight: 850; cursor: pointer; }
+.neighbor-teacher__subtabs button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .1); }
+
+/* 폼 안의 작은 단계 머리말. 1단계(글 종류) → 2단계(주제·안내) 순서를 눈으로 잇는다. */
+.neighbor-teacher__form-step { margin-top: 4px; padding-top: 14px; border-top: 1px dashed #d9e2ec; }
+.neighbor-teacher__form-step span { color: #0f766e; font-size: var(--ui-text-xs); font-weight: 900; }
+.neighbor-teacher__form-step h3 { margin: 4px 0 0; color: #243b53; }
+
+/* 글 종류 고르기. 고르기 전에는 눌러야 할 자리로, 고른 뒤에는 정해진 내용을 보여 주는 카드로 바뀐다. */
+.neighbor-teacher__genre { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box;
+    padding: 14px 16px; border-radius: 13px; font: inherit; text-align: left; }
+.neighbor-teacher__genre.is-empty { border: 1px dashed #94a3b8; background: #f8fafc; color: #486581; cursor: pointer; }
+.neighbor-teacher__genre.is-empty:hover { border-color: #0f766e; background: #f0fdfa; color: #115e59; }
+.neighbor-teacher__genre.is-empty > span:first-child { font-size: var(--ui-text-2xl); }
+.neighbor-teacher__genre.is-empty > span:nth-child(2) { display: grid; gap: 3px; flex: 1; }
+.neighbor-teacher__genre.is-empty strong { font-weight: 900; }
+.neighbor-teacher__genre.is-empty small { color: #829ab1; font-size: var(--ui-text-xs); }
+.neighbor-teacher__genre-go { color: #0f766e; font-size: var(--ui-text-lg); font-weight: 900; }
+
+.neighbor-teacher__genre.is-picked { border: 1px solid #99f6e4; background: #f0fdfa; }
+.neighbor-teacher__genre-mark { display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px;
+    border-radius: 12px; background: #ccfbf1; font-size: var(--ui-text-lg); }
+.neighbor-teacher__genre-body { display: grid; gap: 6px; flex: 1; min-width: 0; }
+.neighbor-teacher__genre-body strong { color: #115e59; font-size: var(--ui-text-lg); font-weight: 900; }
+.neighbor-teacher__genre-body ul { display: flex; gap: 6px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.neighbor-teacher__genre-body li { padding: 4px 9px; border-radius: 999px; background: #fff; color: #0f766e;
+    font-size: var(--ui-text-xs); font-weight: 800; }
+
+.neighbor-teacher__preset-notice { margin: 0; padding: 10px 13px; border-radius: 10px; background: #ecfeff;
+    color: #0e7490; font-size: var(--ui-text-sm); font-weight: 800; }
 .neighbor-teacher__activity-panel { min-height: 135px; background: linear-gradient(145deg, #fff, #f8fafc); }
 .neighbor-teacher__class-choice { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0; padding: 14px; border: 1px solid #d9e2ec; border-radius: 12px; }
 .neighbor-teacher__class-choice legend { padding: 0 6px; color: #486581; font-weight: 850; }
@@ -123,6 +157,8 @@
     .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout { grid-template-columns: 1fr; }
     .neighbor-teacher__activity-list > article { align-items: stretch; flex-direction: column; }
     .neighbor-teacher__activity-tabs button { justify-content: flex-start; min-height: 50px; }
+    .neighbor-teacher__genre { flex-wrap: wrap; }
+    .neighbor-teacher__genre-body { flex-basis: 100%; }
     .neighbor-teacher__header-actions button, .neighbor-teacher__post-list article > button:last-child { width: 100%; }
     .neighbor-teacher__matching-list label { grid-template-columns: 1fr; }
     .neighbor-teacher__matching-list label > span { display: none; }
