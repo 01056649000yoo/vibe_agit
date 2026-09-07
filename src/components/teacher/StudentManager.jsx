@@ -31,7 +31,8 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded,
-        fetchDeletedStudents, handleRestoreStudent
+        fetchDeletedStudents, handleRestoreStudent,
+        handleSetStudentNumber, handleRenumberStudents, handleRenameStudent
     } = useStudentManager(classId);
 
     const [recordStudent, setRecordStudent] = useState(null);
@@ -54,7 +55,9 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
         if (sortMode === 'name') return filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
         if (sortMode === 'points') return filtered.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
         if (sortMode === 'recent') return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        return filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        // 번호순은 저장된 학급 번호를 본다. 아직 번호가 없는 학생만 뒤로 보낸다.
+        return filtered.sort((a, b) => (a.student_no ?? 999) - (b.student_no ?? 999)
+            || new Date(a.created_at) - new Date(b.created_at));
     }, [students, isDashboardMode, searchTerm, sortMode]);
 
     // [rerender-functional-setstate] useCallback으로 핸들러 안정화
@@ -101,6 +104,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                 setSearchTerm={setSearchTerm}
                 sortMode={sortMode}
                 setSortMode={setSortMode}
+                onRenumber={handleRenumberStudents}
             />
 
             {/* 메인 리스트 섹션 */}
@@ -135,6 +139,8 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                     onOpenRecordAssistant={(s) => setRecordStudent(s)}
                     onOpenPointModal={handleOpenPointModal}
                     onOpenStudentAgit={onOpenStudentAgit}
+                    onChangeNumber={handleSetStudentNumber}
+                    onRename={handleRenameStudent}
                 />
             )}
 

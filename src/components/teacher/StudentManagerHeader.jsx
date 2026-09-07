@@ -6,7 +6,7 @@ const StudentManagerHeader = ({
     isDashboardMode, isMobile, toggleSelectAll, setIsPointModalOpen,
     selectedIds, students, studentName, setStudentName, handleAddStudent,
     isAdding, setIsAllCodesModalOpen, onOpenTrash, setIsRankingModalOpen,
-    searchTerm, setSearchTerm, sortMode, setSortMode
+    searchTerm, setSearchTerm, sortMode, setSortMode, onRenumber
 }) => {
     const [showRankingInfo, setShowRankingInfo] = React.useState(false);
 
@@ -169,6 +169,15 @@ const StudentManagerHeader = ({
                     />
                     <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
                 </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRenumber?.('name')}
+                    title="이름 가나다순으로 번호를 1번부터 다시 붙입니다. 번호나 이름은 명단에서 눌러 바로 고칠 수도 있습니다."
+                    style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: 'bold' }}
+                >
+                    🔢 번호 다시 매기기
+                </Button>
                 <Button
                     variant="ghost"
                     size="sm"

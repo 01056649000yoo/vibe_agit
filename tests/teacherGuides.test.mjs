@@ -184,6 +184,18 @@ test('일기 도움말은 교사 확인 보상과 학생별 책장 내보내기�
     assert.match(text, /확인을 되돌리면 지급했던 포인트도 함께 회수/);
 });
 
+test('학생 명단 도움말은 번호·이름 고치기와 그 영향을 안내한다', () => {
+    // 번호가 저장되는 값이 된 날(2026-09-07) 넣은 안내다. 이름을 고치면 실명 사본 세 곳도
+    // 함께 바뀌는데, 이건 화면만 봐서는 알 수 없어 도움말이 반드시 말해 줘야 한다.
+    const text = guideText(TEACHER_GUIDES.students);
+
+    assert.match(text, /번호 다시 매기기/);
+    assert.match(text, /번호와 이름은 명단에서 눌러 바로 고칩니다/);
+    assert.match(text, /번호는 학급 안에서 겹칠 수 없습니다/);
+    assert.match(text, /지웠다가 되살리면 비어 있는 번호/);
+    assert.match(text, /독서마라톤 명단.*이웃 아지트.*글꽃 책방/);
+});
+
 test('오늘 바뀐 교사 메뉴 도움말은 현재 화면의 사용 흐름을 함께 안내한다', () => {
     const dashboard = guideText(TEACHER_GUIDES.dashboard);
     const comments = guideText(TEACHER_GUIDES.comments);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const DESKTOP_GRID_COLUMNS = '42px minmax(82px, 0.75fr) minmax(104px, 124px) minmax(70px, 86px) minmax(260px, 2.5fr)';
@@ -24,8 +24,36 @@ const actionButtonToneStyle = (tone = 'neutral') => {
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
     openHistoryModal, handleExportClick, copyCode, copiedId,
-    setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal, onOpenStudentAgit
+    setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal, onOpenStudentAgit,
+    onChangeNumber, onRename
 }) => {
+    // 지금 고치고 있는 칸 하나만 기억한다. 무엇을 고치는 중인지 화면에서 늘 보이게 하려는 것이다.
+    const [editing, setEditing] = useState(null);
+    const [draft, setDraft] = useState('');
+
+    const startEdit = (student, field) => {
+        setEditing({ id: student.id, field });
+        setDraft(field === 'no' ? String(student.student_no ?? '') : student.name);
+    };
+    const cancelEdit = () => { setEditing(null); setDraft(''); };
+    const commitEdit = async (student) => {
+        const value = draft.trim();
+        const field = editing?.field;
+        cancelEdit();
+        if (!value) return;
+        if (field === 'no') {
+            if (Number(value) !== student.student_no) await onChangeNumber?.(student.id, value);
+            return;
+        }
+        if (value !== student.name) await onRename?.(student.id, value);
+    };
+    const editKeys = (student) => ({
+        onKeyDown: (event) => {
+            if (event.key === 'Enter') commitEdit(student);
+            if (event.key === 'Escape') cancelEdit();
+        }
+    });
+
     return (
         <div
             className="ranking-scroll"
@@ -44,7 +72,10 @@ const StudentManagementList = ({
                 </div>
             )}
             {displayStudents.map((s, idx) => {
-                const studentNo = idx + 1;
+                // 번호는 저장된 학급 번호다. 아직 못 받은 학생만 자리 번호로 대신 보여 준다.
+                const studentNo = s.student_no ?? idx + 1;
+                const isEditingNo = editing?.id === s.id && editing.field === 'no';
+                const isEditingName = editing?.id === s.id && editing.field === 'name';
                 const studentActions = [
                     { id: 'copy', icon: copiedId === s.id ? '✅' : '📋', label: copiedId === s.id ? '복사됨' : '코드 복사', action: () => copyCode(s.id, s.student_code) },
                     { id: 'point', icon: '⚡', label: '포인트 조정', action: () => onOpenPointModal(s), tone: 'point' },
@@ -77,9 +108,47 @@ const StudentManagementList = ({
                                 fontWeight: '900', color: '#ADB5BD',
                                 fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '32px'
                             }}>
-                                {studentNo}
+                                {isEditingNo ? (
+                                    <input
+                                        type="number" min="1" max="300" autoFocus
+                                        aria-label={`${s.name} 번호`}
+                                        value={draft}
+                                        onChange={(event) => setDraft(event.target.value)}
+                                        onBlur={() => commitEdit(s)}
+                                        {...editKeys(s)}
+                                        style={{ width: '38px', padding: '2px', textAlign: 'center', borderRadius: '6px', border: '1px solid #3498DB', fontWeight: '900' }}
+                                    />
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => startEdit(s, 'no')}
+                                        aria-label={`${s.name} 번호 ${studentNo} 고치기`}
+                                        style={{ border: 'none', background: 'none', cursor: 'pointer', fontWeight: '900', color: '#ADB5BD', fontSize: '0.9rem', padding: '2px 4px' }}
+                                    >
+                                        {studentNo}
+                                    </button>
+                                )}
                             </div>
-                            <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', minHeight: '32px' }}>{s.name}</span>
+                            {isEditingName ? (
+                                <input
+                                    type="text" maxLength={30} autoFocus
+                                    aria-label={`${s.name} 이름`}
+                                    value={draft}
+                                    onChange={(event) => setDraft(event.target.value)}
+                                    onBlur={() => commitEdit(s)}
+                                    {...editKeys(s)}
+                                    style={{ padding: '4px 6px', borderRadius: '6px', border: '1px solid #3498DB', fontWeight: '800', fontSize: '1rem', minWidth: 0 }}
+                                />
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => startEdit(s, 'name')}
+                                    aria-label={`${s.name} 이름 고치기`}
+                                    style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', minHeight: '32px', border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
+                                >
+                                    {s.name}
+                                </button>
+                            )}
                         </div>
 
                         <div style={{

@@ -97,6 +97,60 @@ export const useStudentManager = (classId) => {
         }
     };
 
+    /**
+     * 명단 고치기 세 가지 — 번호 직접 입력 · 번호 다시 매기기 · 이름 고치기.
+     *
+     * 셋 다 서버 함수 하나씩을 부른다. 번호는 학급 안에서 겹치면 안 되고, 자리를 맞바꿀 때는
+     * 잠깐 겹치는 순간이 생기므로 **한 줄씩 고치지 않고 한꺼번에 보낸다**.
+     */
+    const runRosterAction = async (rpcName, params, successMessage) => {
+        try {
+            const { error } = await supabase.rpc(rpcName, params);
+            if (error) throw error;
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
+            await fetchStudents();
+            notify(successMessage);
+            return true;
+        } catch (err) {
+            await ask({
+                title: '명단을 고치지 못했습니다',
+                body: err.message,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+            return false;
+        }
+    };
+
+    const handleSetStudentNumber = (studentId, studentNo) => runRosterAction(
+        'set_class_student_numbers_v1',
+        { p_class_id: classId, p_assignments: [{ id: studentId, no: Number(studentNo) }] },
+        `🔢 ${studentNo}번으로 바꿨어요.`
+    );
+
+    const handleRenumberStudents = async (mode = 'name') => {
+        const agreed = await ask({
+            title: mode === 'name' ? '가나다순으로 번호를 다시 매길까요?' : '빈 번호를 메워 다시 매길까요?',
+            body: mode === 'name'
+                ? '모든 학생의 번호가 이름 가나다순으로 1번부터 다시 붙습니다.'
+                : '지금 순서는 그대로 두고 중간에 빈 번호만 메웁니다.',
+            confirmLabel: '다시 매기기'
+        });
+        if (!agreed) return false;
+        return runRosterAction(
+            'renumber_class_students_v1',
+            { p_class_id: classId, p_mode: mode },
+            '🔢 번호를 다시 매겼어요.'
+        );
+    };
+
+    const handleRenameStudent = (studentId, name) => runRosterAction(
+        'rename_class_student_v1',
+        { p_student_id: studentId, p_name: name },
+        `✏️ 이름을 ${name}(으)로 바꿨어요.`
+    );
+
     const handleBulkProcessPoints = async () => {
         if (selectedIds.length === 0) return;
         if (!pointFormData.reason.trim()) { notify('활동 사유를 적어 주세요. ✍️'); return; }
@@ -360,6 +414,7 @@ export const useStudentManager = (classId) => {
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded,
-        fetchDeletedStudents, handleRestoreStudent
+        fetchDeletedStudents, handleRestoreStudent,
+        handleSetStudentNumber, handleRenumberStudents, handleRenameStudent
     };
 };
