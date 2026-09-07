@@ -58,9 +58,12 @@ test('이름 사본 동기화는 화면에 보이는 곳만 고치고 동명이�
     assert.match(follow, /UPDATE public\.class_agit_items/, '글꽃 전시관 작품 지은이를 고치지 않습니다.');
     assert.match(follow, /UPDATE public\.student_notification_events/, '알림 문구의 이름을 고치지 않습니다.');
 
-    // 알림 표에는 행동한 학생의 id 가 없어 이름으로만 찾는다. 동명이인이면 남의 알림까지 바뀌므로 건너뛴다.
-    assert.match(follow, /other\.id <> p_student_id AND other\.name = v_old_name/,
-        '동명이인 보호가 사라지면 남의 알림까지 바뀝니다.');
+    // 알림은 `61262` 부터 행동한 학생 id 를 남겨, 이름 글자가 아니라 id 로 정확히 찾는다.
+    const actor = readFileSync('supabase/migrations/20261262_notification_actor_student_id.sql', 'utf8');
+    assert.match(actor, /ADD COLUMN IF NOT EXISTS actor_student_id UUID/);
+    assert.match(actor, /WHERE actor_student_id = p_student_id/,
+        '알림을 이름 글자로 찾으면 동명이인의 알림까지 바뀝니다.');
+    assert.doesNotMatch(actor, /other\.name = v_old_name/, '이름 글자로 더듬는 방식이 되살아났습니다.');
 
     // 아이가 자기 글에 쓴 이름은 고치지 않는다.
     assert.doesNotMatch(follow, /UPDATE public\.student_posts/, '학생 글은 고치지 않습니다.');
