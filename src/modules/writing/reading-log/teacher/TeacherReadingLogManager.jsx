@@ -596,7 +596,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <TeacherGuideButton tabId="reading-logs" variant="help" />
-                    <TeacherGuideButton tabId="reading-events" />
                     {section === 'reviews' && (
                         <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
                     )}

@@ -19,6 +19,13 @@ const guideText = (guide) => [
     ])
 ].join('\n');
 
+// 한 도움말 안의 세부 탭 하나만 읽는다. 탭이 합쳐진 뒤에도 "이 탭에는 이 내용이 없어야 한다"를 지킬 수 있다.
+const sectionText = (guide, sectionId) => {
+    const section = (guide.sections || []).find((entry) => entry.id === sectionId);
+    assert.ok(section, `${sectionId} 탭이 없습니다.`);
+    return [section.label, section.summary, ...section.steps, ...section.notes].join('\n');
+};
+
 test('모든 도움말은 화면이 그릴 수 있는 모양을 갖춘다', () => {
     // `TeacherGuideButton`은 `activeSection.steps.map`을 그냥 부른다.
     // 섹션에 steps 나 notes 가 없으면 도움말 창이 열리다 멈춘다.
@@ -101,8 +108,14 @@ test('선생님 과제 도움말은 핵심 기능을 네 탭으로 나눠 현재
     assert.doesNotMatch(guideButton, /최근 업데이트|guide\.updates/);
 });
 
-test('독서록 도움말은 교사 확인 보상과 학생별 책장 내보내기를 안내한다', () => {
-    const text = guideText(TEACHER_GUIDES['reading-logs']);
+test('독서록 도움말은 확인과 이벤트를 한 창의 두 탭으로 안내한다', () => {
+    // 화면이 하나라 도움말도 하나다(2026-09-07 합침). 제목 옆에 두 아이콘이 나란히 있어
+    // 어느 쪽을 눌러야 할지 알 수 없었다.
+    const guide = TEACHER_GUIDES['reading-logs'];
+    assert.deepEqual((guide.sections || []).map((section) => section.id), ['review', 'events']);
+    assert.ok(!TEACHER_GUIDES['reading-events'], '독서록 이벤트는 별도 도움말이 아니라 `reading-logs` 의 탭이어야 합니다.');
+
+    const text = sectionText(guide, 'review');
 
     assert.match(text, /포인트는 교사가 확인한 글에만 지급/);
     assert.match(text, /학생별 책장/);
@@ -115,8 +128,8 @@ test('독서록 도움말은 교사 확인 보상과 학생별 책장 내보내�
     assert.doesNotMatch(text, /학생 완료 시점에 지급/);
 });
 
-test('독서록 이벤트 안내는 독서마라톤 운영 내용을 별도로 모아 안내한다', () => {
-    const text = guideText(TEACHER_GUIDES['reading-events']);
+test('독서록 이벤트 탭은 독서마라톤 운영 내용을 모아 안내한다', () => {
+    const text = sectionText(TEACHER_GUIDES['reading-logs'], 'events');
 
     assert.match(text, /개인전·우리 반 전체전·모둠 대항전/);
     assert.match(text, /교사가 확인 완료한 독서록만 마라톤 거리에 반영/);
@@ -145,16 +158,15 @@ test('독서록 이벤트 안내는 독서마라톤 운영 내용을 별도로 �
     assert.match(text, /개인전 메달과 단체전 메달은 서로 다른 디자인/);
 });
 
-test('학생 독서록 화면은 일반 도움말 오른쪽에 이벤트 안내 아이콘을 둔다', () => {
+test('학생 독서록 화면의 도움말 버튼은 하나뿐이다', () => {
     const source = readFileSync(
         'src/modules/writing/reading-log/teacher/TeacherReadingLogManager.jsx',
         'utf8'
     );
 
-    assert.match(
-        source,
-        /TeacherGuideButton tabId="reading-logs" variant="help"\s*\/>\s*<TeacherGuideButton tabId="reading-events"\s*\/>/
-    );
+    assert.match(source, /TeacherGuideButton tabId="reading-logs" variant="help"\s*\/>/);
+    assert.equal((source.match(/<TeacherGuideButton/g) || []).length, 1,
+        '독서록 화면에는 도움말 버튼을 하나만 둡니다. 이벤트 안내는 그 안의 탭입니다.');
 });
 
 test('일기 도움말은 교사 확인 보상과 학생별 책장 내보내기를 안내한다', () => {

@@ -17,7 +17,6 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'class-agit-books': { tab: 'class-agit-books' },
     dashboard: { tab: 'dashboard' },
     'reading-logs': { tab: 'reading-logs' },
-    'reading-events': { tab: 'reading-logs' },
     diaries: { tab: 'diaries' },
     archive: { tab: 'archive' },
     comments: { tab: 'comments' },

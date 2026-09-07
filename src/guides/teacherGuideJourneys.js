@@ -47,7 +47,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         estimatedTime: '주 1~2회',
         steps: [
             step('reading-logs', '독서록 확인', '학생 독서록을 확인하고 보상과 학생별 책장을 관리합니다.', 'reading-logs'),
-            step('reading-events', '독서 활동 운영', '독서마라톤의 경기 방식과 거리·모둠·메달 조건을 운영합니다.', 'reading-events'),
+            step('reading-events', '독서 활동 운영', '독서마라톤의 경기 방식과 거리·모둠·메달 조건을 운영합니다.', 'reading-logs', 'events'),
             step('diaries', '일기 확인', '공개 범위를 존중하며 학생 일기를 확인하고 책장으로 이어 줍니다.', 'diaries'),
             step('archive-writing', '완성 글 보관과 내보내기', '확인한 글을 다시 찾고 필요한 형식으로 안전하게 내보냅니다.', 'archive')
         ]
