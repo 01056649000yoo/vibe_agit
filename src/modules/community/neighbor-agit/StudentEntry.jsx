@@ -25,6 +25,8 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
     const [interactionBusy, setInteractionBusy] = useState('');
     const [interactionError, setInteractionError] = useState('');
     const [commentDraft, setCommentDraft] = useState('');
+    // 댓글이 검사를 기다리는 중인지. 아이가 “댓글이 사라졌다”고 여기지 않도록 알려 준다.
+    const [commentPending, setCommentPending] = useState(false);
     const [sharePanelOpen, setSharePanelOpen] = useState(false);
     const [shareCandidates, setShareCandidates] = useState(null);
     const [shareLoading, setShareLoading] = useState(false);
@@ -199,22 +201,6 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
         }
     };
 
-    const toggleSave = async () => {
-        if (!detail || detail.is_mine || interactionBusy) return;
-        setInteractionBusy('save');
-        setInteractionError('');
-        try {
-            const result = await neighborAgitApi.toggleSave({
-                spaceId, sharedPostId: detail.shared_post_id
-            });
-            setDetail((current) => ({ ...current, my_saved: result.saved }));
-            updateFeedItem(detail.shared_post_id, { my_saved: result.saved });
-        } catch {
-            setInteractionError('간직하기를 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
-        } finally {
-            setInteractionBusy('');
-        }
-    };
 
     const saveComment = async (event) => {
         event.preventDefault();
@@ -226,21 +212,26 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
         }
         setInteractionBusy('comment');
         setInteractionError('');
+        setCommentPending(false);
         try {
             const result = await neighborAgitApi.saveComment({
                 spaceId, sharedPostId: detail.shared_post_id, content, action: 'save'
             });
+            // 검사를 기다리는 동안에는 목록에 넣지 않는다. 아직 아무에게도 보이지 않는 상태다.
             setDetail((current) => {
                 const withoutMine = (current.comments || []).filter((comment) => !comment.is_mine);
                 return {
                     ...current,
                     comment_count: result.comment_count,
-                    comments: [...withoutMine, result.comment].sort((left, right) => (
-                        new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
-                    ))
+                    comments: result.comment
+                        ? [...withoutMine, result.comment].sort((left, right) => (
+                            new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+                        ))
+                        : withoutMine
                 };
             });
-            setCommentDraft(result.comment.content);
+            setCommentDraft(result.comment ? result.comment.content : content);
+            setCommentPending(Boolean(result.pending_review));
             updateFeedItem(detail.shared_post_id, { comment_count: result.comment_count });
         } catch {
             setInteractionError('댓글을 저장하지 못했어요. 숨김 상태이거나 공개가 끝났을 수 있어요.');
@@ -498,17 +489,6 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                             >
                                 💛 공감 {Number(detail.reaction_count) || 0}
                             </Button>
-                            {!detail.is_mine && (
-                                <Button
-                                    type="button"
-                                    variant={detail.my_saved ? 'primary' : 'outline'}
-                                    loading={interactionBusy === 'save'}
-                                    disabled={Boolean(interactionBusy) && interactionBusy !== 'save'}
-                                    onClick={toggleSave}
-                                >
-                                    {detail.my_saved ? '🔖 간직했어요' : '🔖 간직하기'}
-                                </Button>
-                            )}
                         </div>
 
                         <section className="neighbor-comments" aria-labelledby="neighbor-comments-title">
@@ -537,6 +517,11 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                 <span>{commentDraft.length}/300 · 한 글에 댓글 하나만 남길 수 있어요.</span>
                             </form>
 
+                            {commentPending && !interactionError && (
+                                <p className="neighbor-student-inline-notice" role="status">
+                                    🕐 댓글을 확인하는 중이에요. 확인이 끝나면 이웃 학급에 보여요.
+                                </p>
+                            )}
                             {interactionError && <p className="neighbor-student-inline-error" role="status">{interactionError}</p>}
 
                             <div className="neighbor-comment-list">

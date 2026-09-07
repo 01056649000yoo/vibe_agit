@@ -113,6 +113,8 @@
 .neighbor-student-state--error, .neighbor-detail-state--error, .neighbor-student-inline-error { color: var(--ui-danger); }
 .neighbor-student-page__more { display: flex; justify-content: center; padding-top: 20px; }
 .neighbor-student-inline-error { margin: 14px 0 0; text-align: center; font-weight: 750; }
+/* 댓글이 검사를 기다리는 중임을 알린다. 오류가 아니라 안내라 색을 달리한다. */
+.neighbor-student-inline-notice { margin: 14px 0 0; text-align: center; font-weight: 750; color: var(--ui-text-muted, #64748B); }
 .neighbor-detail-state { padding: 36px 10px; color: var(--ui-ink-muted); text-align: center; }
 .neighbor-post-detail__meta { padding-bottom: 16px; border-bottom: 1px solid var(--ui-border); }
 .neighbor-post-detail__content { padding-top: 20px; color: var(--ui-ink-strong); font-size: var(--ui-text-md); line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -124,7 +124,9 @@ export const neighborAgitApi = {
             p_action: action
         });
         if (error) throw error;
-        if (data?.success !== true || !data?.comment_id || !['visible', 'deleted'].includes(data?.status)) {
+        // `pending` 은 검사를 기다리는 상태다. 이웃 댓글도 우리 반 댓글과 같은 검사를 지나므로
+        // 저장 직후에는 아직 상대 학급에 보이지 않는다(2026-09-07).
+        if (data?.success !== true || !data?.comment_id || !['pending', 'visible', 'deleted'].includes(data?.status)) {
             throw new Error('지원하지 않는 이웃 댓글 응답입니다.');
         }
         return data;
@@ -138,18 +140,6 @@ export const neighborAgitApi = {
         if (error) throw error;
         if (data?.success !== true || typeof data?.active !== 'boolean') {
             throw new Error('지원하지 않는 이웃 공감 응답입니다.');
-        }
-        return data;
-    },
-
-    async toggleSave({ spaceId, sharedPostId }) {
-        const { data, error } = await supabase.rpc('toggle_neighbor_save_v1', {
-            p_space_id: spaceId,
-            p_shared_post_id: sharedPostId
-        });
-        if (error) throw error;
-        if (data?.success !== true || typeof data?.saved !== 'boolean') {
-            throw new Error('지원하지 않는 이웃 간직하기 응답입니다.');
         }
         return data;
     }
