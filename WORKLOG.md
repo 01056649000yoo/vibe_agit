@@ -21,6 +21,28 @@
 
 
 
+## 2026-09-07 — 번호·이름 고치기 점검(앱 역할로 재확인)과 두 곳 수정 (Claude)
+
+- **왜**: “새로 넣은 아이디·번호 수정에 문제 없는지 점검”. psql(관리 역할)이 아니라 **앱이 실제로 쓰는
+  `authenticator` 연결**로 다시 돌렸다. 예전에 `DELETE requires a WHERE clause` 가 psql 에서는 안 나오고
+  앱에서만 났던 일이 있어서다.
+- **정상 확인**: `authenticator` 세션에 `safeupdate` 가 살아 있고 내가 쓴 `DELETE … WHERE TRUE` 는 통과한다
+  (WHERE 없는 DELETE 는 그대로 거절되는 것까지 대조군으로 확인). 합성 학급을 만들어 세 RPC 를
+  앱 역할로 돌려 가나다순 재부여·번호 직접 입력·한 트랜잭션 두 번 호출·번호 맞바꾸기·중복 거절·
+  범위 밖 거절·빈 이름/31자 거절을 모두 확인하고 합성 자료는 지웠다(찌꺼기 0건).
+- **고친 것 1 — 화면마다 번호가 달랐다**: 활동 보고서가 `번호` 라고 띄우면서 **이름순 줄 번호**(`idx + 1`)를
+  쓰고 있었다. 같은 학생이 명단 화면과 보고서에서 다른 번호로 보인다. 조회에 `student_no` 를 싣고
+  화면이 그 값을 쓰게 했다(`61263`). 정렬도 번호순으로 맞췄다.
+- **고친 것 2 — 번호가 이름으로 저장될 수 있었다**: 명단에서 Enter 로 번호를 확정하면 창이 닫히며
+  `blur` 이 뒤따를 수 있는데, 그때 무엇을 고치던 중인지 모르면 번호로 적은 값이 이름 고치기로 흘러간다.
+  `editing?.id !== student.id` 면 아무것도 하지 않도록 막았다.
+- **변경**: `supabase/migrations/20261263_activity_report_uses_class_number.sql`,
+  `ActivityReport.jsx`, `StudentManagementList.jsx`, `tests/classStudentNumbers.test.mjs`
+- **결과/검증**: `npm run test:all` 923건 통과, lint 0 errors, 빌드 통과. 두 곳을 옛 방식으로
+  되돌려 검사가 잡는 것까지 확인했다. 운영 적용 306/306.
+- **되풀이하지 말 것**: 쓰기 RPC 는 **psql 로만 확인하고 끝내지 않는다.** `authenticator` 로 붙어
+  같은 관문(safeupdate·statement_timeout)을 지나는지 본다.
+
 ## 2026-09-07 — 이름 고치기가 놓친 실명 사본 두 곳(전시관·알림)과 동명이인 보호 (Claude)
 
 - **왜**: 선생님이 “이름을 수정하면 과거 댓글·글·내역도 같이 수정되느냐”고 물어, 전체 표와

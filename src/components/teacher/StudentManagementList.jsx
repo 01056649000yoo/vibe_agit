@@ -37,8 +37,11 @@ const StudentManagementList = ({
     };
     const cancelEdit = () => { setEditing(null); setDraft(''); };
     const commitEdit = async (student) => {
+        // Enter 를 누르면 창이 닫히면서 blur 도 뒤따를 수 있다. 무엇을 고치던 중인지 모르면
+        // 번호로 적은 값이 이름으로 저장될 수 있으므로, 고치던 칸이 없으면 아무것도 하지 않는다.
+        if (editing?.id !== student.id) return;
         const value = draft.trim();
-        const field = editing?.field;
+        const field = editing.field;
         cancelEdit();
         if (!value) return;
         if (field === 'no') {

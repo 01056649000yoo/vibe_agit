@@ -69,6 +69,20 @@ test('이름 사본 동기화는 화면에 보이는 곳만 고치고 동명이�
     assert.doesNotMatch(follow, /UPDATE public\.student_posts/, '학생 글은 고치지 않습니다.');
 });
 
+test('번호를 띄우는 화면은 모두 저장된 학급 번호를 쓴다', () => {
+    // 2026-09-07 점검에서 찾음: 활동 보고서가 `번호` 라고 띄우면서 이름순 줄 번호(`idx + 1`)를 썼다.
+    // 같은 학생이 명단 화면과 보고서에서 다른 번호로 보였다.
+    const report = readFileSync('src/components/teacher/ActivityReport.jsx', 'utf8');
+    assert.match(report, /data\.student\.student_no \?\? idx \+ 1/,
+        '활동 보고서의 번호 칸이 저장된 학급 번호를 쓰지 않습니다.');
+    const reportSql = readFileSync('supabase/migrations/20261263_activity_report_uses_class_number.sql', 'utf8');
+    assert.match(reportSql, /'student_no',s\.student_no/, '보고서 조회가 번호를 안 내려 주면 화면이 빈칸이 됩니다.');
+
+    // 고치던 칸을 모르면 번호로 적은 값이 이름으로 저장될 수 있다.
+    assert.match(list, /if \(editing\?\.id !== student\.id\) return;/,
+        '고치던 칸 확인이 사라지면 번호가 이름으로 저장될 수 있습니다.');
+});
+
 test('교사 명단 조회는 번호를 함께 내려 주고 번호순으로 준다', () => {
     // 화면이 번호를 그리려면 조회 결과에 번호가 있어야 한다. 둘 중 하나만 고치면 번호가 빈칸이 된다.
     const snapshot = migration.slice(migration.indexOf('FUNCTION public.get_teacher_point_manager_snapshot'));

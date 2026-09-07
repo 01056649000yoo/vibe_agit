@@ -1039,7 +1039,8 @@ ${activitiesInfo}`;
                                                 background: expandedStudentId === data.student.id ? '#F8F9FF' : 'white'
                                             }}
                                         >
-                                            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', fontWeight: '600' }}>{idx + 1}</div>
+                                            {/* 학급 번호를 그대로 쓴다. 줄 번호(`idx + 1`)를 쓰면 명단 화면과 번호가 어긋난다. */}
+                                            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', fontWeight: '600' }}>{data.student.student_no ?? idx + 1}</div>
                                             <div style={{ fontWeight: '900', color: '#1E293B', fontSize: 'var(--ui-text-lg)' }}>{data.student.name}</div>
                                             <div style={{ textAlign: 'center' }}>
                                                 <span style={{ fontSize: 'var(--ui-text-md)', color: '#334155', fontWeight: '700', background: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{data.posts.length}건</span>
