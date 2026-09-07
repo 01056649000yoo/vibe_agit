@@ -19,6 +19,7 @@ export function buildClassAgitSavePayload(draft, expectedRevision) {
         layout_version: 2, rooms: draft.rooms, exhibition_id: draft.id, expected_revision: expectedRevision, title: draft.title, introduction: draft.introduction, theme: getGalleryTheme(draft.theme).id,
         // 본문/이름/장르/공개 상태는 보내지 않는다. 서버가 최신 원본에서 다시 만든다.
         items: orderedRoomItems(draft).map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision,
+            // publicAlias 는 옛 판만 읽는 묵은 칸이다(exhibitionDraft.js 설명 참고). 서버가 NOT NULL 이라 계속 보낸다.
             publicAlias: item.publicAlias, roomId: item.roomId ?? null })),
     };
 }

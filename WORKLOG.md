@@ -21,6 +21,26 @@
 
 
 
+## 2026-09-07 — 글꽃 전시관 공개 지은이: 묵은 `publicAlias` 칸에 표시 남기기 (Claude)
+
+- **왜**: 선생님이 “전시를 만들면 학생 이름이 그대로 들어가는데 가명이 맞느냐”고 물었다. 확인해 보니
+  **선생님 관찰이 맞고 내 답이 틀렸다.** 공개되는 지은이는 학급 공개도 외부 공개도 실명이다
+  (학급 공개 13건 전부 `summary->>'author'` 가 실명, 외부 공개는 교사가 고친 `author` 로 기본값이 실명).
+  내가 “공개본은 가명”이라고 두 번 말한 근거는 `class_agit_items.public_alias` 의 `새싹 작가 NN` 이었는데,
+  이 칸은 옛 판(`layout_version`·`display_version` 이 1)만 읽는다. 지금 앱은 저장하는 순간 2판이 되므로
+  운영에서 이 칸을 읽는 경로가 없다(1판 전시는 작품 0편짜리 빈 초안 하나뿐).
+- **한 일**: 기능은 그대로 두고 **오해의 원인만 없앴다** — `exhibitionDraft.js`·`api/contract.js`·모듈 README 에
+  “이 칸은 묵은 칸이고 진짜 공개 이름은 `authorName` 이다”를 적었다. `classAgitPublicAuthor.test.mjs` 로 못 박았다.
+- **하다가 되돌린 것**: 처음에는 `publicAlias` 기본값을 실명으로 바꿨는데
+  `classAgitPersistence.test.mjs`(저장 요청에 개인정보를 싣지 않는다)가 잡았다. 그 규칙이 옳아 되돌리고,
+  “여기에 실명을 넣지 않는다”는 이유까지 주석·README·검사에 남겼다.
+- **변경**: `exhibitionDraft.js`, `api/contract.js`, `class-agit/README.md`, `tests/classAgitPublicAuthor.test.mjs`(새 검사)
+- **결과/검증**: `npm run test:all` 921건 통과, lint 0 errors, 빌드 통과.
+  묵은 칸에 실명을 넣어 검사 두 개가 함께 막는 것까지 확인했다. 운영 자료·동작은 바뀌지 않았다.
+- **남은 것 / 다음**: `public_alias` 컬럼 자체를 없애려면 서버 함수 네 곳(`run_class_agit_action_v1`,
+  `get_class_agit_workspace_v1`, `get_class_agit_share_workspace_v1`, `run_class_agit_share_action_v1`)을
+  함께 고쳐야 한다. NOT NULL 이라 지금은 두었다.
+
 ## 2026-09-07 — 학급 번호를 진짜 값으로, 이름 고치기 열기 (Claude)
 
 - **운영 문제**: 명단의 `번호` 는 저장된 값이 아니라 **등록 순서(created_at)로 줄 세운 자리**였다

@@ -35,6 +35,11 @@ export function editExhibition(draft, change, expectedRevision = draft.revision)
         next = { ...draft, items: [...draft.items, {
             ...presentSource(change.source), roomId, sourceId: change.source.id, studentId: change.source.student_id, missionId: change.source.mission_id,
             sourceRevision: change.source.source_revision, authorName: change.source.student_name, groupTitle: change.source.group_title || '',
+            // `publicAlias` 는 옛 판(`layout_version`·`display_version` 이 1)만 읽는 **묵은 칸**이다.
+            // 지금 공개되는 지은이는 학급 공개도 외부 공개도 `authorName`(학생 실명)이고, 교사가 공개 편집에서 고친다.
+            // 기본값이 `새싹 작가 01` 이라 DB 만 보면 공개본에 가명이 나가는 것처럼 보이지만 그렇지 않다(2026-09-07 두 번 오독).
+            // **여기에 실명을 넣지 않는다** — 저장 요청은 개인정보를 싣지 않는다는 규칙이 있고
+            // (`classAgitPersistence.test.mjs`), 서버가 1~30자를 요구해 비울 수도 없어 뜻 없는 값을 그대로 둔다.
             authorNumber, publicAlias: previousAuthor?.publicAlias || `새싹 작가 ${String(authorNumber).padStart(2, '0')}`,
             scopes: { class: true, anthology: false, external: false },
         }] };
