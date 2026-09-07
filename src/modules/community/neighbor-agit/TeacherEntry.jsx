@@ -256,6 +256,37 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     );
     const pendingTotal = workspace?.review_total ?? pendingPosts.length;
     const activities = workspace?.activities || [];
+    /**
+     * 세 단계의 진행 상태. `done` 은 “이 단계에서 할 일을 마쳤다”는 뜻이고, 화면에 ✓ 로 보인다.
+     * 다음에 할 일을 `hint` 로 적어 선생님이 순서대로만 따라가면 되게 한다.
+     */
+    const steps = useMemo(() => {
+        const joined = activeMemberships.length;
+        const hasPartner = joined >= 2;
+        return [
+            {
+                id: 'space',
+                label: '이웃 아지트 만들기',
+                done: true,
+                hint: `참여 학급 ${joined}곳`
+            },
+            {
+                id: 'invite',
+                label: '아지트 초대하기',
+                done: hasPartner,
+                hint: hasPartner ? '이웃 학급과 연결됨' : '초대키를 만들어 전해 주세요'
+            },
+            {
+                id: 'activities',
+                label: '활동하기',
+                done: hasPartner && activities.length > 0,
+                hint: !hasPartner ? '이웃 학급이 들어오면 열려요'
+                    : pendingTotal > 0 ? `검토할 글 ${pendingTotal}편`
+                    : activities.length > 0 ? '진행 중인 활동이 있어요' : '첫 활동을 시작해 보세요'
+            }
+        ];
+    }, [activeMemberships.length, activities.length, pendingTotal]);
+
     const selectedActivities = activeActivityTab === 'gallery'
         ? []
         : activities.filter((activity) => activity.type === activeActivityTab);
@@ -329,13 +360,25 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         </div>
                     </section>
 
-                    {/* 만들기 → 초대하기 → 활동하기 세 단계. 글 검토·공개 글 관리는 활동의 뒷일이라 3단계 안에 둔다. */}
-                    <nav className="neighbor-teacher__tabs" aria-label="이웃 아지트 준비 단계">
-                        {[
-                            ['space', '1 이웃 아지트 만들기'],
-                            ['invite', '2 아지트 초대하기'],
-                            ['activities', `3 활동하기${pendingTotal > 0 ? ` · 검토 ${pendingTotal}` : ''}`]
-                        ].map(([id, label]) => <button type="button" key={id} className={activeTab === id ? 'is-active' : ''} aria-pressed={activeTab === id} onClick={() => setActiveTab(id)}>{label}</button>)}
+                    {/* 만들기 → 초대하기 → 활동하기 세 단계를 **차례로 따라가는 길**로 보여 준다.
+                        끝난 단계에는 ✓ 를 달아 지금 어디까지 왔는지 한눈에 보이게 한다.
+                        글 검토·공개 글 관리는 활동의 뒷일이라 3단계 안에 둔다. */}
+                    <nav className="neighbor-teacher__steps" aria-label="이웃 아지트 준비 단계">
+                        {steps.map((step, index) => (
+                            <button
+                                type="button"
+                                key={step.id}
+                                className={`neighbor-teacher__step${activeTab === step.id ? ' is-active' : ''}${step.done ? ' is-done' : ''}`}
+                                aria-current={activeTab === step.id ? 'step' : undefined}
+                                onClick={() => setActiveTab(step.id)}
+                            >
+                                <span className="neighbor-teacher__step-no" aria-hidden="true">{step.done ? '✓' : index + 1}</span>
+                                <span className="neighbor-teacher__step-text">
+                                    <strong>{step.label}</strong>
+                                    <small>{step.hint}</small>
+                                </span>
+                            </button>
+                        ))}
                     </nav>
 
                     {activeTab === 'space' && (
@@ -405,7 +448,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
                             {activeActivityTab === 'gallery' ? (
                                 <section className="neighbor-teacher-card neighbor-teacher__activity-panel" role="tabpanel">
-                                    <div><span>활동 1</span><h2>🖼️ {getNeighborActivityLabel('gallery')}</h2></div>
+                                    {/* 위 탭이 이미 활동 이름을 말한다. 안쪽에서 되풀이하지 않아 한 화면에 더 담긴다. */}
                                     <p>학생이 공개를 요청한 글을 승인하거나, 교사가 우리 학급의 제출 글을 직접 골라 모든 참여 학급에 소개할 수 있습니다.</p>
                                     <div className="neighbor-teacher__row-actions">
                                         <Button type="button" variant="outline" loading={galleryLoading} disabled={Boolean(busy)} onClick={loadGalleryCandidates}>우리 학급 글 불러오기</Button>
@@ -445,14 +488,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 </section>
                             ) : (
                                 <>
-                                    <section className="neighbor-teacher-card neighbor-teacher__activity-panel" role="tabpanel">
-                                        <div><span>활동 2</span><h2>✍️ {getNeighborActivityLabel('topic')}</h2></div>
-                                        <p>모든 참여 학급에 같은 주제의 글쓰기 과제를 만들고, 제출한 글을 한 공간에서 나눕니다.</p>
-                                    </section>
-
-                                    <form className="neighbor-teacher-card neighbor-teacher__activity-form" onSubmit={createActivity}>
+                                    <form className="neighbor-teacher-card neighbor-teacher__activity-form" role="tabpanel" onSubmit={createActivity}>
+                                        {/* 소개를 따로 카드로 두지 않고 만들기 폼 머리말로 합쳤다(카드 셋 → 둘). */}
                                         <div><span>참여 교사</span><h2>새 {getNeighborActivityLabel(activeActivityTab)} 제안하기</h2></div>
-                                        <p>한 학급이 제안하고 다른 참여 학급 교사가 모두 승인하면 양쪽 학생에게 동시에 열립니다.</p>
+                                        <p>모든 참여 학급에 같은 주제의 글쓰기 과제를 만들고, 제출한 글을 한 공간에서 나눕니다.
+                                            한 학급이 제안하고 다른 참여 학급 교사가 모두 승인하면 양쪽 학생에게 동시에 열립니다.</p>
                                         <div className="neighbor-teacher__genre">
                                             <span>글 종류</span>
                                             <Button type="button" variant="outline" size="sm" onClick={() => setGenrePickerOpen(true)}>

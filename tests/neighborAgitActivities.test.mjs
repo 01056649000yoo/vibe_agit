@@ -36,10 +36,21 @@ test('이웃 아지트는 글 나눔 공간·함께 쓰는 주제 두 활동만 
     assert.match(teacherEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
     assert.match(studentEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
     // 교사 화면은 만들기 → 초대하기 → 활동하기 세 단계다.
+    // 2026-09-07: 번호를 글자에 붙여 적던 것을 `steps` 목록과 번호 칸으로 나눴다(따라가는 길로 보이게).
     assert.match(teacherEntry, /aria-label="이웃 아지트 준비 단계"/);
-    for (const step of ['1 이웃 아지트 만들기', '2 아지트 초대하기', '3 활동하기']) {
-        assert.ok(teacherEntry.includes(step), `${step} 단계가 없습니다.`);
+    const stepBlock = teacherEntry.slice(teacherEntry.indexOf('const steps = useMemo'));
+    for (const [index, step] of ['이웃 아지트 만들기', '아지트 초대하기', '활동하기'].entries()) {
+        assert.ok(stepBlock.includes(`label: '${step}'`), `${step} 단계가 없습니다.`);
+        assert.ok(stepBlock.indexOf(`label: '${step}'`) > -1);
+        // 순서가 뜻이므로 앞 단계가 뒤 단계보다 먼저 나와야 한다.
+        if (index > 0) {
+            const previous = ['이웃 아지트 만들기', '아지트 초대하기', '활동하기'][index - 1];
+            assert.ok(stepBlock.indexOf(`label: '${previous}'`) < stepBlock.indexOf(`label: '${step}'`),
+                `${previous} 가 ${step} 보다 뒤에 있습니다.`);
+        }
     }
+    // 끝난 단계에 ✓ 를 달아 지금 어디까지 왔는지 보인다.
+    assert.match(teacherEntry, /step\.done \? '✓' : index \+ 1/);
     // 검토·공개 글 관리는 3단계 안에 있어 별도 탭이 아니다.
     assert.equal((teacherEntry.match(/activeTab === 'activities'/g) || []).length, 3);
     assert.doesNotMatch(teacherEntry, /activeTab === 'review'|activeTab === 'feed'/);
