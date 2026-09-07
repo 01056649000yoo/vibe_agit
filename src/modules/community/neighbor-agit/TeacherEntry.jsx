@@ -2,6 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
+import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
+import { applyGenrePreset, describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
+
+/** 전용 틀 id(`poem` 등)로 카탈로그의 글 종류 이름(`시`)을 찾는다. 목록의 정본은 카탈로그 하나다. */
+const genreIdForMissionType = (missionTypeId) => (
+    getGenreEntries().find((entry) => entry.missionTypeId === missionTypeId)?.id || '기타'
+);
 import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
 import { neighborAgitTeacherApi } from './teacherApi';
 import TeacherPostReview from './TeacherPostReview';
@@ -36,7 +43,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [postDetail, setPostDetail] = useState(null);
     const [reviewSelection, setReviewSelection] = useState(null);
     const [detailBusy, setDetailBusy] = useState(false);
-    const [activityForm, setActivityForm] = useState({ type: 'topic', title: '', prompt: '' });
+    // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
+    const [activityForm, setActivityForm] = useState({
+        type: 'topic', title: '', prompt: '', genre: '', guide_questions: [],
+        min_chars: 50, min_paragraphs: 1, mission_type_id: ''
+    });
+    const [genrePickerOpen, setGenrePickerOpen] = useState(false);
+    const [presetNotice, setPresetNotice] = useState('');
     const [galleryCandidates, setGalleryCandidates] = useState(null);
     const [galleryLoading, setGalleryLoading] = useState(false);
     const [galleryQuery, setGalleryQuery] = useState('');
@@ -123,15 +136,47 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (result?.invite_key) setInvite(result);
     };
 
+    /** 글 종류를 고르면 안내문·길잡이 질문·분량을 채운다. 학급 과제 만들기와 같은 규칙을 그대로 쓴다. */
+    const selectGenre = (genreId, missionTypeId = '') => {
+        setGenrePickerOpen(false);
+        const result = applyGenrePreset(
+            { ...activityForm, guide: activityForm.prompt },
+            genreId,
+            { previousGenre: activityForm.genre || null }
+        );
+        const next = result.formData;
+        setActivityForm((current) => ({
+            ...current,
+            genre: next.genre,
+            prompt: next.guide ?? current.prompt,
+            guide_questions: Array.isArray(next.guide_questions) ? next.guide_questions : [],
+            min_chars: Number(next.min_chars) || current.min_chars,
+            min_paragraphs: Number(next.min_paragraphs) || current.min_paragraphs,
+            mission_type_id: missionTypeId
+        }));
+        setPresetNotice(describePresetResult(genreId, result));
+    };
+
     const createActivity = async (event) => {
         event.preventDefault();
         const result = await runAction('create_activity', {
             space_id: workspace.space.id,
             type: activityForm.type,
             title: activityForm.title.trim(),
-            prompt: activityForm.prompt.trim()
+            prompt: activityForm.prompt.trim(),
+            genre: activityForm.genre || null,
+            guide_questions: activityForm.guide_questions,
+            min_chars: activityForm.min_chars,
+            min_paragraphs: activityForm.min_paragraphs,
+            mission_type_id: activityForm.mission_type_id || null
         }, '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.');
-        if (result) setActivityForm((current) => ({ ...current, title: '', prompt: '' }));
+        if (result) {
+            setActivityForm((current) => ({
+                ...current, title: '', prompt: '', genre: '', guide_questions: [],
+                min_chars: 50, min_paragraphs: 1, mission_type_id: ''
+            }));
+            setPresetNotice('');
+        }
     };
 
     const selectActivityTab = (tabId) => {
@@ -408,6 +453,17 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     <form className="neighbor-teacher-card neighbor-teacher__activity-form" onSubmit={createActivity}>
                                         <div><span>참여 교사</span><h2>새 {getNeighborActivityLabel(activeActivityTab)} 제안하기</h2></div>
                                         <p>한 학급이 제안하고 다른 참여 학급 교사가 모두 승인하면 양쪽 학생에게 동시에 열립니다.</p>
+                                        <div className="neighbor-teacher__genre">
+                                            <span>글 종류</span>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setGenrePickerOpen(true)}>
+                                                {activityForm.genre ? `📄 ${activityForm.genre}` : '📄 글 종류 고르기'}
+                                            </Button>
+                                            {activityForm.genre && (
+                                                <small>최소 {activityForm.min_chars}자 · {activityForm.min_paragraphs}문단
+                                                    {activityForm.guide_questions.length > 0 && ` · 길잡이 질문 ${activityForm.guide_questions.length}개`}</small>
+                                            )}
+                                        </div>
+                                        {presetNotice && <p className="neighbor-teacher__preset-notice" role="status">{presetNotice}</p>}
                                         <MissionPromptFields
                                             title={activityForm.title}
                                             guide={activityForm.prompt}
@@ -422,6 +478,17 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         />
                                         <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                     </form>
+
+                                    {genrePickerOpen && (
+                                        <MissionTypePicker
+                                            isMobile={isMobile}
+                                            onSelectGenre={(missionTypeId) => selectGenre(
+                                                genreIdForMissionType(missionTypeId), missionTypeId
+                                            )}
+                                            onSelectFreeform={(genreId) => selectGenre(genreId)}
+                                            onClose={() => setGenrePickerOpen(false)}
+                                        />
+                                    )}
 
                                     <section className="neighbor-teacher-card neighbor-teacher__activity-list">
                                         <div><span>진행 현황</span><h2>{getNeighborActivityLabel(activeActivityTab)}</h2></div>

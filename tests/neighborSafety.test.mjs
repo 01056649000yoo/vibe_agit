@@ -42,3 +42,22 @@ test('이웃 아지트는 실명 기준이며 옛 필명 기준을 되살리지 
     // 학생 화면은 서버가 준 이름을 그대로 쓴다(가명으로 바꾸지 않는다).
     assert.match(student, /author_name/);
 });
+
+test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () => {
+    // 선생님 요청(2026-09-07): 글쓰기 양식을 불러와 미션을 만드는 방식으로 맞춘다.
+    // 화면은 새 목록을 만들지 않고 `genreCatalog`·`MissionTypePicker` 를 그대로 쓴다 — 목록을 두 곳에
+    // 두면 새 글 종류를 넣을 때 한쪽만 고쳐 갈라진다.
+    const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    assert.match(teacher, /import MissionTypePicker from/);
+    assert.match(teacher, /applyGenrePreset, describePresetResult, getGenreEntries/);
+    assert.doesNotMatch(teacher, /const GENRES = \[|const 글종류 = \[/, '글 종류 목록을 따로 만들면 안 됩니다.');
+
+    const sql = readFileSync('supabase/migrations/20261266_neighbor_topic_uses_mission_form.sql', 'utf8');
+    // 실제로 쓰이는 길은 래퍼다. 여기서 안 넘기면 core 를 고쳐도 값이 전달되지 않는다(처음에 그렇게 틀렸다).
+    const wrapper = sql.slice(sql.indexOf('FUNCTION public.run_neighbor_teacher_action_v1'));
+    assert.match(wrapper, /p_payload->>'genre'/, '래퍼가 글 종류를 안 넘기면 과제에 반영되지 않습니다.');
+    assert.match(wrapper, /p_payload->>'mission_type_id'/);
+    // 전용 틀은 운영 자료와 같은 모양으로 저장한다(genre=시, mission_type=poem, input_template=poem).
+    assert.match(sql, /COALESCE\(v_type_id, v_genre, '글쓰기'\)/);
+    assert.match(sql, /COALESCE\(v_type_id, 'freeform'\)/);
+});
