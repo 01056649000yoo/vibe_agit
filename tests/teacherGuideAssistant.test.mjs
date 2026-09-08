@@ -38,6 +38,17 @@ test('위치가 분명한 질문은 AI 호출 없이 안내 이동 답변을 만
     assert.match(assistant, /setAnswer\(localAnswer\)/);
 });
 
+test('영문 핵심어에 조사가 붙은 문장도 단어 검색과 같은 안내를 찾는다', () => {
+    const keywordResults = searchTeacherGuides('PDF');
+    const sentenceResults = searchTeacherGuides('PDF는 어디서 만드니');
+    assert.ok(keywordResults.length > 0);
+    assert.deepEqual(
+        sentenceResults.map(({ guideRef, sectionRef }) => [guideRef, sectionRef]),
+        keywordResults.map(({ guideRef, sectionRef }) => [guideRef, sectionRef])
+    );
+    assert.equal(searchTeacherGuides('포인트는 어디서 확인하니')[0]?.guideRef, searchTeacherGuides('포인트')[0]?.guideRef);
+});
+
 test('관리자에게만 AI 길잡이를 표시하고 검증된 안내 이동만 연결한다', () => {
     assert.match(dashboard, /showAiAssistant=\{guideAiAvailability\?\.enabled === true\}/);
     assert.match(center, /showAiAssistant &&/);
