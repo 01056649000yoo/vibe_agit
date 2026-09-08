@@ -74,8 +74,12 @@ const MissionItem = memo(({
                             mission: mission,
                             hasIncomplete: hasIncomplete
                         });
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3498DB', fontSize: '1rem', padding: '4px' }} title="보관">
-                        📂
+                    }} style={{
+                        background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '9px',
+                        cursor: 'pointer', color: '#1D4ED8', fontSize: '0.76rem', fontWeight: '900',
+                        padding: '4px 7px', minHeight: '30px', whiteSpace: 'nowrap'
+                    }} title="과제를 보관함으로 이동" aria-label={`${mission.title} 과제를 보관함으로 이동`}>
+                        📂 보관
                     </button>
                     <button onClick={async (e) => {
                         e.stopPropagation();

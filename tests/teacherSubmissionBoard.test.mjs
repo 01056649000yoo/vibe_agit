@@ -46,6 +46,18 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
+test('과제 카드의 보관 동작은 아이콘만이 아니라 글자로도 바로 드러난다', async () => {
+    const [missionList, guides] = await Promise.all([
+        read('src/components/teacher/MissionList.jsx'),
+        read('src/constants/teacherGuides.js')
+    ]);
+
+    assert.match(missionList, />\s*📂 보관\s*<\/button>/);
+    assert.match(missionList, /title="과제를 보관함으로 이동"/);
+    assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제를 보관함으로 이동`\}/);
+    assert.match(guides, /과제 카드 오른쪽 위의 `📂 보관`을 눌러 보관함으로 옮깁니다/);
+});
+
 test('전광판은 좁은 최근 제출 목록과 넓은 학생별 상태표를 표시한다', async () => {
     const [board, styles, hook, missionList, manager, ideaMarket] = await Promise.all([
         read('src/components/teacher/TeacherSubmissionBoard.jsx'),
