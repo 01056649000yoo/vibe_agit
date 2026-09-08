@@ -114,6 +114,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
     const [guideCenterRequest, setGuideCenterRequest] = useState(null);
     const [openingClassBoard, setOpeningClassBoard] = useState(false);
+    const [guideAiAvailability, setGuideAiAvailability] = useState(null);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -145,6 +146,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         window.addEventListener(TEACHER_GUIDE_CENTER_OPEN_EVENT, handleOpenGuideCenter);
         return () => window.removeEventListener(TEACHER_GUIDE_CENTER_OPEN_EVENT, handleOpenGuideCenter);
     }, []);
+
+    useEffect(() => {
+        if (!guideCenterRequest) return;
+        let cancelled = false;
+        void supabase.rpc('get_teacher_guide_ai_availability_v1').then(({ data, error }) => {
+            if (!cancelled && !error) setGuideAiAvailability(data);
+        });
+        return () => { cancelled = true; };
+    }, [guideCenterRequest]);
 
     /*
      * 못 본 답장 개수를 읽는다. 대시보드가 뜰 때 한 번만 부르고 주기 조회는 하지 않는다
@@ -643,6 +653,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     initialRequest={guideCenterRequest || {}}
                     onClose={() => setGuideCenterRequest(null)}
                     onNavigate={handleWorkspaceNavigate}
+                    showAiAssistant={guideAiAvailability?.enabled === true}
+                    guideAiRemaining={guideAiAvailability?.remaining_today}
                 />
             </Suspense>
 

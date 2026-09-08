@@ -23,6 +23,12 @@ jobs:
       - name: Show deployed commit
         run: git rev-parse --short HEAD
 
+      # 새 DB 계약이 필요한 화면이 먼저 배포되지 않도록 롤백 검증과 적용을 앱 빌드 앞에서 끝낸다.
+      - name: Validate and apply pending migrations
+        run: |
+          npm run migrate:check
+          npm run migrate
+
       # 공간이 없는 채로 빌드하면 도커 데몬이 물려 앱이 내려간 채 복구가 안 된다(2026-08-18).
       # 옛 컨테이너를 지운 뒤 새 것을 못 띄우는 사이가 가장 위험하므로 그 앞에서 막는다.
       - name: Preflight disk check

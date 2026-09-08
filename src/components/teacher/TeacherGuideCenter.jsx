@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import TeacherGuideContent from './TeacherGuideContent';
+import TeacherGuideAssistant from './TeacherGuideAssistant';
 import { TEACHER_GUIDE_JOURNEYS, getJourneysForGuide } from '../../guides/teacherGuideJourneys';
 import { getTeacherGuide } from '../../guides/teacherGuideRegistry';
 import './TeacherGuideCenter.css';
@@ -20,13 +21,14 @@ const findInitialLocation = ({ guideId, journeyId, stepId }) => {
     return { journeyId: TEACHER_GUIDE_JOURNEYS[0].id, stepId: null };
 };
 
-const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate }) => {
+const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, showAiAssistant = false, guideAiRemaining = 5 }) => {
     const titleId = useId();
     const dialogRef = useRef(null);
     const closeRef = useRef(null);
     const initialLocation = useMemo(() => findInitialLocation(initialRequest), [initialRequest]);
     const [selectedJourneyId, setSelectedJourneyId] = useState(initialLocation.journeyId);
     const [expandedStepId, setExpandedStepId] = useState(initialLocation.stepId);
+    const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -61,10 +63,10 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate }
 
     const keepFocusInside = (event) => {
         if (event.key !== 'Tab') return;
-        const focusable = dialogRef.current?.querySelectorAll(
+        const focusable = [...(dialogRef.current?.querySelectorAll(
             'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (!focusable?.length) return;
+        ) || [])].filter((element) => element.offsetParent !== null);
+        if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (event.shiftKey && document.activeElement === first) {
@@ -85,6 +87,15 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate }
         if (!target) return;
         onNavigate(target);
         onClose();
+    };
+
+    const handleOpenGuide = (guideId, sectionId = null) => {
+        const related = getJourneysForGuide(guideId)
+            .find(({ step: journeyStep }) => !sectionId || journeyStep.sectionRef === sectionId)
+            || getJourneysForGuide(guideId)[0];
+        if (!related) return;
+        setSelectedJourneyId(related.journey.id);
+        setExpandedStepId(related.step.id);
     };
 
     return (
@@ -110,10 +121,22 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate }
                             <h2 id={titleId}>끄적끄적 아지트 활용 안내서</h2>
                             <p>전체 수업 흐름을 먼저 보고, 필요한 단계에서 현재 기능의 상세 도움말을 펼쳐 보세요.</p>
                         </div>
-                        <ModalCloseButton ref={closeRef} onClick={onClose} label="활용 안내서 닫기" />
+                        <div className="teacher-guide-center__header-actions">
+                            {showAiAssistant && (
+                                <button
+                                    type="button"
+                                    className="teacher-guide-center__ai-toggle"
+                                    aria-pressed={isAssistantOpen}
+                                    onClick={() => setIsAssistantOpen((open) => !open)}
+                                >
+                                    {isAssistantOpen ? '안내서 보기' : 'AI에게 묻기'}
+                                </button>
+                            )}
+                            <ModalCloseButton ref={closeRef} onClick={onClose} label="활용 안내서 닫기" />
+                        </div>
                     </header>
 
-                    <div className="teacher-guide-center__body">
+                    <div className={`teacher-guide-center__body${showAiAssistant ? ' has-ai-assistant' : ''}${isAssistantOpen ? ' is-ai-open' : ''}`}>
                         <nav className="teacher-guide-center__nav" aria-label="활용 안내서 목차">
                             <div className="teacher-guide-center__nav-heading">
                                 <strong>목적별 안내</strong>
@@ -203,6 +226,13 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate }
                                 })}
                             </ol>
                         </main>
+                        {showAiAssistant && (
+                            <TeacherGuideAssistant
+                                onOpenGuide={handleOpenGuide}
+                                onOpenScreen={handleOpenScreen}
+                                initialRemaining={guideAiRemaining}
+                            />
+                        )}
                     </div>
                 </section>
             </div>
