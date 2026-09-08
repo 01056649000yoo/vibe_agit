@@ -76,7 +76,7 @@ test('DB는 한국 시간 하루 5회·분당 3회와 관리자 공개 전환을
 
 test('배포는 마이그레이션 롤백 검증과 적용을 앱 빌드보다 먼저 끝낸다', () => {
     const checkAt = deployWorkflow.indexOf('npm run migrate:check');
-    const migrateAt = deployWorkflow.indexOf('npm run migrate\n');
+    const migrateAt = deployWorkflow.indexOf('npm run migrate', checkAt + 'npm run migrate:check'.length);
     const buildAt = deployWorkflow.indexOf('docker build');
     assert.ok(checkAt >= 0 && migrateAt > checkAt && buildAt > migrateAt);
 });
