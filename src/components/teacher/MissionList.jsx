@@ -22,6 +22,15 @@ const VIEWER_BUTTON_STYLE = {
     alignItems: 'center',
     gap: '4px'
 };
+const CARD_ACTION_BUTTON_STYLE = {
+    borderRadius: '9px',
+    cursor: 'pointer',
+    fontSize: '0.76rem',
+    fontWeight: '900',
+    padding: '4px 7px',
+    minHeight: '30px',
+    whiteSpace: 'nowrap'
+};
 
 // 개별 미션 아이템 컴포넌트 분리 및 memo 적용
 const MissionItem = memo(({
@@ -53,7 +62,7 @@ const MissionItem = memo(({
                 <span style={isMeetingMission ? { ...GENRE_TAG_STYLE, background: '#F5F3FF', color: '#6D28D9' } : GENRE_TAG_STYLE}>
                     {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
                 </span>
-                <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '4px' }}>
                     <button onClick={(e) => {
                         e.stopPropagation();
                         onConnectLabSources(mission);
@@ -63,8 +72,11 @@ const MissionItem = memo(({
                     <button onClick={(e) => {
                         e.stopPropagation();
                         handleEditClick(mission);
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F39C12', fontSize: '1rem', padding: '4px' }} title="수정">
-                        ✏️
+                    }} style={{
+                        ...CARD_ACTION_BUTTON_STYLE,
+                        background: '#FFF7ED', border: '1px solid #FED7AA', color: '#C2410C'
+                    }} title="과제 내용 수정" aria-label={`${mission.title} 과제 내용 수정`}>
+                        ✏️ 수정
                     </button>
                     <button onClick={(e) => {
                         e.stopPropagation();
@@ -75,9 +87,8 @@ const MissionItem = memo(({
                             hasIncomplete: hasIncomplete
                         });
                     }} style={{
-                        background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '9px',
-                        cursor: 'pointer', color: '#1D4ED8', fontSize: '0.76rem', fontWeight: '900',
-                        padding: '4px 7px', minHeight: '30px', whiteSpace: 'nowrap'
+                        ...CARD_ACTION_BUTTON_STYLE,
+                        background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8'
                     }} title="과제를 보관함으로 이동" aria-label={`${mission.title} 과제를 보관함으로 이동`}>
                         📂 보관
                     </button>
@@ -87,8 +98,11 @@ const MissionItem = memo(({
                             // [수정] 인라인 삭제 대신 훅의 전용 함수 사용 (캐시 무효화 포함)
                             await handleDeleteMission(mission.id);
                         }
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1rem', padding: '4px' }} title="삭제">
-                        🗑️
+                    }} style={{
+                        ...CARD_ACTION_BUTTON_STYLE,
+                        background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626'
+                    }} title="과제 삭제" aria-label={`${mission.title} 과제 삭제`}>
+                        🗑️ 삭제
                     </button>
                 </div>
             </div>

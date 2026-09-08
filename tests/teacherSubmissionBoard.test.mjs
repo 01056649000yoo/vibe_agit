@@ -46,16 +46,24 @@ test('과제 만들기·관리와 실시간 제출 현황은 한 화면 안의 �
     assert.match(manager, /!isSubmissionBoardView[\s\S]*미션 만들기/);
 });
 
-test('과제 카드의 보관 동작은 아이콘만이 아니라 글자로도 바로 드러난다', async () => {
+test('과제 카드의 수정·보관·삭제 동작은 아이콘만이 아니라 글자로도 바로 드러난다', async () => {
     const [missionList, guides] = await Promise.all([
         read('src/components/teacher/MissionList.jsx'),
         read('src/constants/teacherGuides.js')
     ]);
 
+    assert.match(missionList, />\s*✏️ 수정\s*<\/button>/);
     assert.match(missionList, />\s*📂 보관\s*<\/button>/);
+    assert.match(missionList, />\s*🗑️ 삭제\s*<\/button>/);
+    assert.match(missionList, /const CARD_ACTION_BUTTON_STYLE/);
+    assert.match(missionList, /flexWrap: 'wrap'/);
+    assert.match(missionList, /title="과제 내용 수정"/);
     assert.match(missionList, /title="과제를 보관함으로 이동"/);
+    assert.match(missionList, /title="과제 삭제"/);
+    assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제 내용 수정`\}/);
     assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제를 보관함으로 이동`\}/);
-    assert.match(guides, /과제 카드 오른쪽 위의 `📂 보관`을 눌러 보관함으로 옮깁니다/);
+    assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제 삭제`\}/);
+    assert.match(guides, /`✏️ 수정`[\s\S]*`📂 보관`[\s\S]*`🗑️ 삭제`/);
 });
 
 test('전광판은 좁은 최근 제출 목록과 넓은 학생별 상태표를 표시한다', async () => {
