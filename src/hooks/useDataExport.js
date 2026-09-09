@@ -7,8 +7,9 @@ import {
 } from '../modules/writing/export/writingExportProfiles';
 import { exportObjectsToExcel, exportObjectsToExcelWithImages } from '../lib/excelExport';
 import { WRITING_EXPORT_MAX_ENTRIES } from '../modules/writing/export/writingExportLimits.js';
+// Docs API 호출부는 공용 모듈 하나만 쓴다(문집 내보내기와 같은 자리).
+import { requestGoogleDocs } from '../modules/writing/export/googleDocsApi.js';
 
-const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
 
 const formatApprovalDate = (approvedAt, isConfirmed) => {
     if (!isConfirmed) return '미승인';
@@ -24,23 +25,6 @@ const formatApprovalDate = (approvedAt, isConfirmed) => {
     return `${dateParts.get('year')}-${dateParts.get('month')}-${dateParts.get('day')}`;
 };
 
-const requestGoogleDocs = async (path, accessToken, options = {}) => {
-    const response = await fetch(`${GOOGLE_DOCS_API_ROOT}${path}`, {
-        method: options.method || 'GET',
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            Accept: 'application/json',
-            ...(options.body ? { 'Content-Type': 'application/json' } : {})
-        },
-        body: options.body ? JSON.stringify(options.body) : undefined
-    });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(payload?.error?.message || `Google Docs API 요청 실패 (${response.status})`);
-    }
-    return payload;
-};
 
 /**
  * 엑셀 데이터 추출 및 구글 문서 내보내기를 위한 커스텀 훅

@@ -19,6 +19,18 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-09 — 글꽃 책방 문집을 구글 문서로 내보내기 (Claude)
+- **한 일**: 문집을 PDF 말고 구글 문서로도 보낼 수 있게 했다. 표지 · 여는 글 · 목차 · 본문 · 판권지를 한 문서로 만든다. 초안 단계와 확정판 보관함 두 곳에서 보낼 수 있다. hwpx 직접 생성 가능성도 함께 조사했다.
+- **변경**:
+  - `src/modules/writing/export/googleDocsApi.js` 신설 — Docs API 를 부르는 단 하나의 자리. `useDataExport.js` 안에만 있던 `requestGoogleDocs` 를 여기로 옮겨 문집 쪽과 함께 쓴다(주소·오류 문구·batchUpdate 나눠 보내기를 두 벌로 만들지 않는다).
+  - `src/modules/class-agit/anthology/googleDocExport.js` 신설 — `buildAnthologyDocRequests(edition)` 은 화면·네트워크를 모르는 **순수 함수**라 검사가 만들어지는 문서를 그대로 본다. 전송은 `exportAnthologyToGoogleDoc` 한 곳뿐이다.
+  - `AnthologyManager.jsx` 에 `초안 구글 문서로 보내기`·확정판별 `구글 문서로 보내기` 버튼, `teacherGuides.js` 도움말, `export/README.md` 계약 추가.
+  - `tests/classAgitGoogleDocExport.test.mjs`(7건)를 `test:security:static`·`test:architecture`·`test:class-agit` 에 등록.
+- **쪽수를 지어내지 않기로 했다**: PDF 는 브라우저가 mm 단위로 실제 조판해 쪽수를 세지만, 구글 문서는 여는 기기·글꼴에 따라 쪽이 다시 나뉘어 그 숫자를 옮기면 **틀린 쪽수**가 된다. 게다가 **Docs API 에는 목차 삽입 요청도 자동 쪽번호 요청도 없다**(구글 공식 문서로 확인). 그래서 작품 제목만 `HEADING_1` 으로 넣어 교사가 `삽입 → 목차` 를 누르면 쪽수·링크가 붙은 진짜 목차가 생기게 하고, 문서 안 안내 문단과 도움말에 그 두 단계를 적었다. `목차`·`판권지` 머리말은 HEADING 으로 만들지 않는다 — 자동 목차가 목차 자신을 담기 때문이다.
+- **hwpx 는 만들지 않는다**: 브라우저에서 hwpx(OWPML)를 **생성**할 수 있는 자바스크립트 라이브러리가 없다. 공개된 것(`@ssabrojs/hwpxjs`)은 읽기 전용이고 한컴 공식 모델(`hancom-io/hwpx-owpml-model`)은 C++/.NET 이다. 대신 구글 문서에서 `파일 → 다운로드 → Microsoft Word(.docx)` 로 내려받아 한글에서 열도록 도움말에 적었다(한글이 docx 를 그대로 읽는다).
+- **결과/검증**: `npm run test:all` 952/952, `npm run lint` 깨끗, `npm run build` 성공. `?dev-lab=class-agit-release` 로 실제 화면을 띄워 100편 문집 표본에서 두 버튼이 모두 나오는 것과 안내 문구를 눈으로 확인했고, 태블릿(900px)·모바일(390px)에서 가로 넘침 0px 을 확인했다. 만들어지는 문서 구조(표지 → 여는 글 → 안내+목차 → 작품별 쪽 → 판권지)도 요청 목록을 풀어 직접 확인했다. CSP `connect-src` 에 `docs.googleapis.com` 이 이미 있어 추가 변경은 없다. DB·마이그레이션 변경 없음.
+- **남은 것 / 다음**: 교사 실계정에서 구글 권한 동의와 실제 문서 생성을 한 번 확인한다(권한 창은 브라우저에서만 뜨므로 자동 검사로 대신할 수 없다).
+
 ## 2026-09-09 — 보안 점검 마무리: 되돌림 지점·anon 정책 관문·로컬 빌드 정합 (Claude)
 - **한 일**: 남은 후속 항목을 처리했다. ①공개 이력의 Google API 키 삭제(사용자가 Google Cloud 에서 직접) ②되돌릴 지점이 실제로 만들어지도록 빌드 순서 수정 ③anon 표 GRANT 판단과 대체 관문 ④로컬 빌드가 도커와 같은 번들을 굽도록 정합.
 - **변경**:

@@ -110,3 +110,33 @@ export const examplePdfExport = {
     styles,
 };
 ```
+
+## 문집(글꽃 책방) 구글 문서 내보내기
+
+문집은 학생별 글 내보내기와 성격이 다르다. 표지·여는 글·목차·본문·판권지를 **한 권**으로 엮는다.
+그래서 `src/modules/class-agit/anthology/googleDocExport.js` 가 따로 있고, 이 폴더는
+Docs API 호출부(`googleDocsApi.js`)만 공유한다.
+
+- `googleDocsApi.js` 가 **Docs API 를 부르는 유일한 자리**다. `useDataExport.js` 와 문집 내보내기가
+  같은 함수를 쓴다. API 주소·오류 문구·batchUpdate 나눠 보내기를 두 벌로 만들지 않는다.
+- `buildAnthologyDocRequests(edition)` 은 **순수 함수**다. 화면도 네트워크도 모르므로
+  `tests/classAgitGoogleDocExport.test.mjs` 가 만들어지는 문서를 그대로 검사한다.
+- 삽입 요청은 앞에서부터 이어 붙인다. 순서가 곧 문서 내용이라 뒤에서부터 넣는 방식으로 바꾸지 않는다.
+
+### 쪽수를 지어내지 않는다
+
+PDF(`anthology/print.js`)는 브라우저가 mm 단위로 실제 조판해 **쪽수를 세어** 목차에 채운다.
+구글 문서는 여는 기기·글꼴·여백에 따라 쪽이 다시 나뉘므로 그 숫자를 옮기면 **틀린 쪽수**가 된다.
+게다가 Docs API 에는 목차 삽입 요청도 자동 쪽번호 요청도 없다(2026-09-09 공식 문서 확인).
+
+그래서 숫자를 흉내 내지 않고 구글 문서가 스스로 세게 한다.
+
+- 작품 제목만 `HEADING_1` 로 넣는다 → 교사가 `삽입 → 목차` 를 누르면 쪽수·링크가 붙은 진짜 목차가 생긴다.
+- `목차`·`판권지` 머리말은 `HEADING` 으로 만들지 않는다. 그러면 자동 목차가 목차 자신을 담는다.
+- 쪽번호는 `삽입 → 페이지 번호` 한 번이면 된다. 두 가지를 문서 안 안내 문단(`ANTHOLOGY_DOC_GUIDE`)에 적는다.
+
+### hwpx
+
+브라우저에서 hwpx(OWPML)를 **만들 수 있는 자바스크립트 라이브러리가 없다**(2026-09-09 확인).
+공개된 것은 읽기 전용이고 한컴 공식 모델은 C++/.NET 이다. 대신 구글 문서에서
+`파일 → 다운로드 → Microsoft Word(.docx)` 로 내려받아 한글에서 열도록 안내한다.

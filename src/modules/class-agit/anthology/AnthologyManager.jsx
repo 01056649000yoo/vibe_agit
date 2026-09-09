@@ -6,6 +6,7 @@ import { classAgitReleaseApi } from '../api/releaseApi.js';
 import { classAgitApi } from '../api/classAgitApi.js';
 import { addBookItems, bookItemFromSource, sortBookItems } from './contract.js';
 import { prepareAnthologyWindow } from './printWindow.js';
+import { useDataExport } from '../../../hooks/useDataExport.js';
 import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign } from '../designs.js';
 import DesignPicker from '../teacher/DesignPicker.jsx';
 import BookCover from './BookCover.jsx';
@@ -23,6 +24,7 @@ const BOOK_STEPS = [
 ];
 
 export default function AnthologyManager({ activeClass, api = classAgitReleaseApi, sourceApi = classAgitApi, onExit }) {
+    const { authorizeGoogleExport, isGapiLoaded } = useDataExport(activeClass?.id);
     const [workspace, setWorkspace] = useState(null);
     const [book, setBook] = useState(null);
     const [step, setStep] = useState('cover');
@@ -77,6 +79,18 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         const target = prepareAnthologyWindow();
         try { const [{ renderAnthologyWindow }, snapshot] = await Promise.all([import('./print.js'), edition ? api.getEdition(classId, edition.id) : api.getBookPreview(classId, book.id, book.revision)]); await renderAnthologyWindow(target, snapshot); setMessage('인쇄용 문집을 열었습니다. 인쇄 창에서 PDF로 저장할 수 있습니다.'); }
         catch (e) { target.close(); throw e; }
+    });
+    // 구글 문서는 표지·여는 글·목차·본문·판권지를 한 문서로 옮긴다. 쪽수와 목차 쪽번호는
+    // Docs API 가 넣어 줄 수 없어(요청 자체가 없다) 문서 첫머리 안내로 대신한다 — googleDocExport.js 참고.
+    const exportEditionToGoogleDoc = (edition = null) => run(async () => {
+        const accessToken = await authorizeGoogleExport();
+        const [{ exportAnthologyToGoogleDoc }, snapshot] = await Promise.all([
+            import('./googleDocExport.js'),
+            edition ? api.getEdition(classId, edition.id) : api.getBookPreview(classId, book.id, book.revision)
+        ]);
+        const created = await exportAnthologyToGoogleDoc(snapshot, accessToken);
+        window.open(created.url, '_blank', 'noopener');
+        setMessage('구글 문서를 만들었습니다. 문서에서 `삽입 → 목차`와 `삽입 → 페이지 번호`를 누르면 쪽수가 채워집니다.');
     });
     const move = (index, delta) => { const items = [...book.items]; const target = index + delta; if (target < 0 || target >= items.length) return; const item = items.splice(index, 1)[0]; items.splice(target, 0, item); edit({ ...book, grouping: 'custom', items }); };
     const selected = new Set(book?.items.map((item) => item.studentId));
@@ -154,12 +168,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>인쇄하고 한 판으로 확정해요</h2><p>초안을 미리 출력해 보고 새 판을 확정합니다. 확정판은 이후 편집과 원글 수정으로 바뀌지 않습니다.</p></div>
                 <div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => printEdition()}>초안 {getBookPaper(book.paper_format).label} 미리보기</Button>
+                    <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived || !isGapiLoaded} onClick={() => exportEditionToGoogleDoc()}>초안 구글 문서로 보내기</Button>
                     <Button variant="primary" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</Button></div>
                 {dirty && <p>편집 내용을 먼저 저장하면 미리보기와 확정을 할 수 있습니다.</p>}
                 {!book.items.length && <p>3단계에서 작품을 담으면 확정할 수 있습니다.</p>}
-                <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다.</p>
+                <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다. 구글 문서로 보내면 표지 · 여는 글 · 목차 · 본문 · 판권지가 한 문서로 만들어지며, 문서에서 <strong>삽입 → 목차</strong>와 <strong>삽입 → 페이지 번호</strong>를 누르면 쪽수가 채워집니다. 한글(hwp)로 옮기려면 구글 문서에서 <strong>파일 → 다운로드 → Microsoft Word(.docx)</strong>로 내려받아 한글에서 열면 됩니다.</p>
                 <p>학생 서가는 <strong>글꽃 전시관 → 1 기본 설정 → 학급 학생 공개 켜기</strong>가 켜져 있어야 학생 화면에 나타납니다.</p>
-                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
+                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || !isGapiLoaded} onClick={() => exportEditionToGoogleDoc(edition)}>구글 문서로 보내기</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
                 {!book.editions.length && <p className="class-agit-empty">아직 확정한 판이 없습니다.</p>}
                 <details className="class-agit-exhibition-management"><summary>문집 관리</summary><div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => run(async () => receive(await api.getBooks(classId, book.id))))}>최신 문집 불러오기</Button>
