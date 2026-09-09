@@ -203,7 +203,12 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
   assert.match(noticeApi, /get_teacher_class_board_notices_v1/);
   assert.match(noticeApi, /save_teacher_class_board_notice_v1/);
   assert.match(noticeApi, /Number\(data\?\.version\) !== 1/);
-  assert.match(noticeComposer, /noticeBoardApi\.saveNotice\(classId, state\.date, body\)/);
+  /*
+   * 통로는 밖에서 넣을 수 있게 바뀌었다(운영은 기본값 `noticeBoardApi`, `src/dev/` 미리보기는 샘플).
+   * 저장은 여전히 전용 RPC 한 곳만 거친다.
+   */
+  assert.match(noticeComposer, /api = noticeBoardApi/);
+  assert.match(noticeComposer, /await api\.saveNotice\(classId, state\.date, body\)/);
   assert.match(noticeComposer, /publishClassBoardNotice/);
   assert.match(noticeComposer, /maxLength=\{NOTICE_LIMIT\}/);
   assert.match(noticeComposer, /지난 알림/);
@@ -588,7 +593,8 @@ test('스크린은 별도 교사 전용 경로이며 저장한 위젯만 전체�
   assert.match(presentation, /화면을 한 번 눌러 전체화면 시작/);
   assert.match(styles, /\.class-board-presentation-fullscreen-prompt/);
   assert.match(presentation, /<BoardCanvas[\s\S]*presentation/);
-  assert.match(entry, />스크린 열기 ↗<\/button>/);
+  // 라벨은 저장 안 된 변경이 있으면 `저장하고 …` 로 바뀐다(아래 전용 검사가 자세히 본다).
+  assert.match(entry, /스크린 열기 ↗/);
   assert.doesNotMatch(entry, /발표 화면 열기/);
   assert.match(presentation, /<h1 className="class-board-presentation-class-name">\{data\.class\?\.name \|\| '우리 반'\}<\/h1>/);
   assert.doesNotMatch(presentation, /<h1>\{data\.board\.title\}<\/h1>/);
@@ -1235,4 +1241,29 @@ test('자리·역할 배치표는 상자에 들어가는 가장 큰 크기를 �
 
     assert.match(widget, /useFittedArrangement\(/);
     assert.match(widget, /className="class-board-arrangement__body" ref=\{fitRef\}/);
+});
+
+test('스크린 열기는 저장까지 한 번에 하고, 새 탭을 누른 순간 먼저 연다', () => {
+    /*
+     * 왜 이 검사가 있나 (2026-09-09 제보):
+     *   저장 안 된 변경이 있으면 `스크린 열기` 가 잠겨 있어, 교사가 `저장` 을 누르고 다시
+     *   이 버튼을 눌러야 했다. 수업 직전에 두 번 누르게 하지 않는다.
+     *
+     *   그리고 새 탭은 **누른 그 순간** 열어야 한다. 저장을 기다린 뒤 `window.open` 을 부르면
+     *   사용자 조작 문맥이 끊겨 브라우저가 팝업으로 보고 막는다(문집 인쇄 창이 겪은 것과 같다).
+     */
+    // 저장 안 됐다고 잠그지 않는다.
+    assert.doesNotMatch(entry, /disabled=\{!board\?\.id \|\| dirty \|\| saving/);
+    assert.match(entry, /\{dirty \? '저장하고 스크린 열기 ↗' : '스크린 열기 ↗'\}/);
+
+    const openScreen = entry.split('const openScreen = async () => {')[1].split('\n  };')[0];
+    // 열기가 먼저, 저장이 나중이어야 팝업 차단에 걸리지 않는다.
+    const openAt = openScreen.indexOf('window.open');
+    const saveAt = openScreen.indexOf('await save()');
+    assert.ok(openAt > -1 && saveAt > -1, '새 탭 열기와 저장이 모두 있어야 합니다.');
+    assert.ok(openAt < saveAt, '저장을 기다린 뒤 새 탭을 열면 브라우저가 막습니다.');
+
+    // 저장이 실패하면 옛 화면을 교실에 띄우지 않고 닫는다.
+    assert.match(openScreen, /target\.close\(\)/);
+    assert.match(openScreen, /target\.location\.replace\(`\/class-board\/\$\{boardId\}`\)/);
 });

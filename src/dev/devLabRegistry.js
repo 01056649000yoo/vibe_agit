@@ -10,6 +10,7 @@ const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCele
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
 const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
+const NoticeComposerPreview = lazy(() => import('./NoticeComposerPreview.jsx'))
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
@@ -65,6 +66,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '글 승인 흐름',
     description: '앱 안 확인 창 · 승인 중 표시 · 스스로 사라지는 알림 · 수정 모드로 잠겼을 때 안내',
     Component: ApprovePostFlowPreview,
+  }),
+  Object.freeze({
+    id: 'notice-composer',
+    icon: '📋',
+    title: '알림장 쓰기 · 서식',
+    description: '설정창·머리말·도구 세 폭에서 서식 1·2·3 불러오기와 저장이 넘치지 않는지 본다',
+    Component: NoticeComposerPreview,
   }),
   Object.freeze({
     id: 'class-board',

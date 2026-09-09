@@ -20,6 +20,11 @@ export function WidgetHost({ instance, classId, assetUrl, presentation = false, 
       <Suspense fallback={<div className="class-board-widget-loading">위젯을 불러오는 중…</div>}>
         <View
           config={instance.config}
+          /*
+           * 위젯이 자기 것을 알아볼 수 있게 넘긴다. 타이머·스톱워치는 이 값으로 진행 상태를
+           * 브라우저에 적어 두고, 화면을 옮기거나 전체 화면 탭에서 다시 그려도 이어 간다.
+           */
+          instanceId={instance.instanceId}
           classId={classId}
           assetUrl={assetUrl}
           presentation={presentation}

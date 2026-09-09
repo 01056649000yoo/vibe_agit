@@ -53,3 +53,33 @@
 .class-board-notice-composer__recent button:disabled { border-color:#c9a227; background:#fffbe6; opacity:1; cursor:default; }
 .class-board-notice-composer__recent strong { font-size:.74rem; }
 .class-board-notice-composer__recent small { overflow:hidden; color:#8a7a4a; font-size:.68rem; text-overflow:ellipsis; white-space:nowrap; }
+
+/*
+ * 알림장 서식 1·2·3.
+ *
+ * 접어 두는 이유: 이 부품은 좁은 설정창에도 들어간다. 서식을 늘 펼쳐 두면 정작 알림을
+ * 쓰는 입력칸이 밀린다. 펼친 뒤에야 서버에서 읽는 것과 짝을 이룬다.
+ */
+.class-board-notice-composer__templates { display:grid; gap:6px; }
+.class-board-notice-composer__templates-toggle {
+  justify-self:start; border:0; background:none; padding:0; color:#64748b;
+  font:inherit; font-size:.72rem; font-weight:900; cursor:pointer;
+}
+.class-board-notice-composer__templates-toggle:hover { color:var(--ui-primary); }
+.class-board-notice-composer__templates-body { display:grid; gap:6px; }
+.class-board-notice-composer__templates-body ul { display:grid; gap:5px; margin:0; padding:0; list-style:none; }
+/* 좁은 설정창에서는 줄바꿈해 세 버튼이 서로 밀지 않게 한다. */
+.class-board-notice-composer__templates-body li { display:flex; flex-wrap:wrap; align-items:stretch; gap:5px; min-width:0; }
+.class-board-notice-composer__templates-body li>button {
+  border:1px solid #cbd7e7; border-radius:var(--ui-radius-sm); background:#fff;
+  padding:6px 9px; color:#334155; font:inherit; font-size:var(--ui-text-xs); font-weight:800; cursor:pointer;
+}
+.class-board-notice-composer__templates-body li>button:disabled { opacity:.45; cursor:default; }
+.class-board-notice-composer__templates-body li>button:not(:disabled):hover { border-color:var(--ui-primary); color:var(--ui-primary); }
+/* 불러오기 칸이 남는 자리를 차지한다 — 가장 자주 누르는 버튼이다. */
+.class-board-notice-composer__template-load { flex:1; min-width:0; display:grid; gap:1px; text-align:left; }
+.class-board-notice-composer__template-load>strong { font-size:var(--ui-text-xs); }
+.class-board-notice-composer__template-load>small {
+  color:#94a3b8; font-size:var(--ui-text-xs); font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
