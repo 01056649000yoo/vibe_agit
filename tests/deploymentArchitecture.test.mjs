@@ -12,7 +12,7 @@ import test from 'node:test';
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- 호출부는 이 파일의 고정된 배포 파일 경로 8개뿐이다.
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
-const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp] = await Promise.all([
+const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp, buildApp] = await Promise.all([
     readText('.github/workflows/deploy.yml'),
     readText('Dockerfile'),
     readText('.dockerignore'),
@@ -21,7 +21,8 @@ const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCa
     readText('scripts/preflight-disk.sh'),
     readText('scripts/trim-docker-cache.sh'),
     readText('ops/launchd/com.agit.docker-cache-trim.plist'),
-    readText('scripts/run-agit-app.sh')
+    readText('scripts/run-agit-app.sh'),
+    readText('scripts/build-agit-app.sh')
 ]);
 
 test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
@@ -58,7 +59,9 @@ test('main 푸시는 맥미니 self-hosted 러너의 단일 배포 작업을 시
 });
 
 test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬 응답을 확인한다', () => {
-    assert.match(workflow, /docker build[\s\S]*-t agit-app:prod \./);
+    // 만드는 방법 자체는 scripts/build-agit-app.sh 에 모았다.
+    assert.match(workflow, /bash scripts\/build-agit-app\.sh/);
+    assert.match(buildApp, /docker build[\s\S]*-t agit-app:prod \./);
     // 띄우는 방법 자체는 scripts/run-agit-app.sh 에 모았다(굳히기 옵션은 아래 전용 검사가 지킨다).
     assert.match(workflow, /bash scripts\/run-agit-app\.sh/);
     assert.match(runApp, /--name "\$NAME"[\s\S]*--restart unless-stopped/);
@@ -146,4 +149,27 @@ test('앱 컨테이너를 띄우는 자리는 하나뿐이고, 굳히기가 빠�
     assert.match(caddy, /^:8080 \{/m, '컨테이너 Caddy 가 8080 을 듣지 않는다');
     assert.match(dockerfile, /^EXPOSE 8080$/m, 'Dockerfile 의 EXPOSE 가 8080 이 아니다');
     assert.match(runApp, /127\.0\.0\.1:\$\{HOST_PORT\}:8080/, '컨테이너 안쪽 연결 포트가 8080 이 아니다');
+});
+
+test('되돌릴 지점은 덮어쓰기 전에 남긴다', () => {
+    // 왜 이 검사가 있나 (2026-09-09):
+    //   전에는 빌드가 끝난 뒤 `docker tag agit-app:prod agit-app:$(date)` 를 했다. 그 시점의
+    //   `prod` 는 방금 만든 **새 이미지**라, 주석이 말하는 "되돌릴 지점"이 되지 못했다.
+    //   게다가 자동 배포에는 그 태그마저 없었다 — 주 배포 경로에 되돌릴 표가 아예 없었다.
+    for (const [name, text] of [['자동 배포', workflow], ['로컬 배포', localDeploy]]) {
+        assert.match(text, /bash scripts\/build-agit-app\.sh/, `${name}가 공용 빌드 스크립트를 쓰지 않는다`);
+        assert.doesNotMatch(text, /docker build[^\n]*-t agit-app/, `${name}에 직접 docker build 가 남아 있다`);
+        assert.doesNotMatch(text, /docker tag agit-app/, `${name}에 직접 태그가 남아 있다`);
+    }
+
+    // 태그가 `docker build` 보다 **앞**에 있어야 덮어쓰기 전 이미지를 가리킨다.
+    // 주석에도 `docker build` 라는 글자가 나오므로, 줄 맨 앞에서 시작하는 **명령**만 본다.
+    const tagAt = buildApp.search(/^\s*docker tag agit-app:prod/m);
+    const buildAt = buildApp.search(/^\s*docker build\b/m);
+    assert.ok(tagAt > -1, '되돌림 태그를 남기지 않는다');
+    assert.ok(buildAt > -1, '이미지를 만들지 않는다');
+    assert.ok(tagAt < buildAt, '되돌림 태그가 빌드 뒤에 있으면 새 이미지를 가리켜 쓸모가 없다');
+
+    // 첫 빌드에는 이전 이미지가 없다. 없다고 배포가 멈추면 안 된다.
+    assert.match(buildApp, /docker image inspect agit-app:prod/);
 });

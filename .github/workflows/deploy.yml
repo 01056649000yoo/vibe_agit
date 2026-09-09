@@ -41,15 +41,9 @@ jobs:
 
       - name: Build agit-app image (Supabase·Google public client config)
         run: |
-          ANON=$(grep '^ANON_KEY=' "$HOME/agit-supabase/.env" | cut -d= -f2)
-          GOOGLE_CLIENT_ID=$(grep -m1 '^GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=' "$HOME/agit-supabase/secrets.agit.env" | cut -d= -f2-)
-          test -n "$ANON" || { echo "anon key not found"; exit 1; }
-          test -n "$GOOGLE_CLIENT_ID" || { echo "Google client ID not found"; exit 1; }
-          docker build \
-            --build-arg VITE_SUPABASE_URL=https://api.xn--vz0ba242ncqcba79xhwx.site \
-            --build-arg VITE_SUPABASE_ANON_KEY="$ANON" \
-            --build-arg VITE_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
-            -t agit-app:prod .
+          # 만드는 방법은 scripts/build-agit-app.sh 한 곳에만 둔다 — 로컬 배포도 같은 것을 부른다.
+          # 되돌릴 지점도 그 안에서 빌드 앞에 남긴다.
+          bash scripts/build-agit-app.sh
 
       - name: Restart container
         run: |

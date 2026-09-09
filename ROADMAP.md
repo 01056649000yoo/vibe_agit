@@ -297,11 +297,13 @@
 - [x] 급식 한 가지를 `이름 한 줄 + 그 아래 알레르기 한 줄`로 세우고 열량을 급식 종류 줄에 붙여 전체화면 급식판과 같은 모양으로 통일(낱말 가운데 자르기 없음, 한 줄 안 이름 높이 맞춤)
 - [x] `4a2b60c` 운영 자동 배포 성공 (`33700826801`) — DB 변경 없음, 내부 HTTP 200·Caddy 로컬 해석 HTTPS 200
 - [x] **보안 P1**: `notification_emit_v1` 의 PUBLIC·anon·authenticated EXECUTE 회수 — `20261272` 운영 적용(316/316·대기 0). 같은 공격 호출이 401 `permission denied` 로 막히고, 내부 알림 발행은 정상인 것을 확인 ([감사 문서](docs/SECURITY_AUDIT_20260909.md))
-- [ ] **보안 P2**: 공개 git 이력(`c548220a`)에 남은 Google API 키를 Google Cloud 에서 폐기하거나 리퍼러·API 제한. 저장소가 PUBLIC 이다
+- [x] **보안 P2**: 공개 git 이력(`c548220a`)의 Google API 키 — 사용자가 Google Cloud 에서 **삭제**(2026-09-09). 이력 문자열은 남지만 더는 쓸 수 없다
 - [x] **보안 P2**: `learning_engine_retry_gate_v1`·`vocab_tower_v2_summit_status_v1`(+`vocab_tower_v2_retry_breakdown_v1`) — 앱이 부르지 않는 내부 전용이라 소유 검사 대신 클라이언트 EXECUTE 를 회수(`20261273`, 적용 대기)
 - [x] **보안 P2**: `agit-app` 컨테이너 굳히기 — `scripts/run-agit-app.sh` 로 실행 자리를 하나로 모으고 비root·read-only·cap drop·NNP·256MB 적용. 포트 80→8080(비root). **다음 배포부터 반영**
 - [x] **보안 P3**: `student_title_test_overrides` RLS 켜기 + `check-rpc-surface.mjs` 에 "anon 에 열린 SECURITY DEFINER" 검사 추가(`anonExecute` 허용 목록)
-- [ ] **보안 P3**: anon 표 GRANT 17개 회수 — RLS 에 anon 정책이 없어 지금도 0행이지만, 정책 하나 잘못 추가하면 열린다. 로그인 전 경로 영향 확인 후 진행
+- [x] **보안 P3**: anon 표 GRANT 17개 — 회수하지 않고 **관문으로 대체**. 지금은 무해하고(17개 전부 `[]`), 회수하면 세션 전 호출이 401 을 받아 오류가 뜰 수 있다(호출 지점 206곳). "앞으로 anon 에 통하는 정책이 생기면 실패"하는 검사를 넣었다
+- [x] **배포**: 되돌릴 지점이 실제로 만들어지도록 `scripts/build-agit-app.sh` 로 빌드 자리를 모으고 태그를 빌드 앞으로 옮김 — 전에는 새 이미지를 가리켰고 자동 배포에는 아예 없었다
+- [ ] anon 표 GRANT 회수 — 세션 생기기 전 supabase 호출 206곳 전수 확인 뒤에 진행
 - [ ] `20261229` 적용 기록의 체크섬 한 줄 맞추기 — 윈도우에서 보낸 CRLF 파일로 적용해 `migrate:status`가 "내용이 바뀐 파일"로 표시한다(내용은 같음을 해시로 확인). 사용자 승인 대기
 - [ ] `20261227_class_board_meal_columns.sql` 운영 적용
 - [x] 알림장 위젯에 `◀`·`▶`·`오늘` 버튼 — 열 때 받은 최근 날짜 목록 안에서 넘기고 처음 펼치는 날짜만 한 번 더 읽음 (전체화면 동일, DB 변경 없음)

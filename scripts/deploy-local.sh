@@ -13,20 +13,9 @@ cd "$(dirname "$0")/.."
 bash scripts/preflight-disk.sh 10
 npm run check:title-levels
 
-ANON=$(grep '^ANON_KEY=' "$HOME/agit-supabase/.env" | cut -d= -f2)
-GOOGLE_CLIENT_ID=$(grep -m1 '^GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=' "$HOME/agit-supabase/secrets.agit.env" | cut -d= -f2-)
-test -n "$ANON" || { echo "anon key not found" >&2; exit 1; }
-test -n "$GOOGLE_CLIENT_ID" || { echo "Google client ID not found" >&2; exit 1; }
-
-echo "▶ 이미지 빌드 (아키텍처·보안·배포 검사가 이 안에서 돈다)"
-docker build \
-  --build-arg VITE_SUPABASE_URL=https://api.xn--vz0ba242ncqcba79xhwx.site \
-  --build-arg VITE_SUPABASE_ANON_KEY="$ANON" \
-  --build-arg VITE_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
-  -t agit-app:prod .
-
-# 되돌릴 지점을 날짜 태그로 남긴다. `prod` 는 계속 덮어써지므로 그것만으로는 못 되돌린다.
-docker tag agit-app:prod "agit-app:$(date +%Y%m%d)"
+# 만드는 방법은 scripts/build-agit-app.sh 한 곳에만 둔다 — 자동 배포도 같은 것을 부른다.
+# 되돌릴 지점도 그 안에서 **빌드 앞에** 남긴다.
+bash scripts/build-agit-app.sh
 
 echo "▶ 컨테이너 교체"
 # 띄우는 방법은 scripts/run-agit-app.sh 한 곳에만 둔다 — 자동 배포도 같은 것을 부른다.

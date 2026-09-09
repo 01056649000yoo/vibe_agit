@@ -76,10 +76,10 @@ DB 안 다른 SECURITY DEFINER 함수만 부르므로, 회수해도 기능은 �
 - 함께 있던 Supabase anon 키는 **이미 교체됐다**(해시 대조로 확인).
 - 남은 위험: **그 Google 키가 Google Cloud 에서 아직 살아 있으면** 제3자가 쓸 수 있다(요금 발생).
 
-**고칠 방법**: Google Cloud 콘솔에서 해당 키를 폐기하거나, 최소한 HTTP 리퍼러·API 제한을 건다.
-이력 자체를 지우려면 강제 푸시가 필요해 별도 판단이 필요하다.
+**조치 완료 (2026-09-09)**: 사용자가 Google Cloud 에서 해당 키를 **삭제했다.**
+공개 이력에는 문자열이 남지만 더는 쓸 수 없다. 이력 자체를 지우려면 강제 푸시가 필요해 남겨 둔다.
 
-### P2 — `agit-app` 컨테이너가 격리되지 않았다 (직전 감사에서 이월)
+### P2 — `agit-app` 컨테이너가 격리되지 않았다 (직전 감사에서 이월) — 조치 완료
 
 ```
 User=(root)  ReadonlyRootfs=false  CapDrop=[]  SecurityOpt=[]  Memory=무제한
@@ -92,8 +92,12 @@ User=(root)  ReadonlyRootfs=false  CapDrop=[]  SecurityOpt=[]  Memory=무제한
 
 - **`profile_secrets` 에 교사 API 키가 평문으로 있다.** (`gemini_api_key`, `personal_openai_api_key`)
   RLS는 `id = uid()` 로 올바르게 걸려 있어 남의 것은 못 본다. 다만 DB 덤프·백업이 유출되면 그대로 노출된다.
-- **anon 에게 불필요한 표 GRANT 17개가 남아 있다.** RLS에 anon 정책이 없어 실제로는 막히지만,
-  정책을 하나만 잘못 추가해도 바로 열린다. 회수해 두는 편이 안전하다.
+- **anon 에게 불필요한 표 GRANT 17개가 남아 있다.** 17개 전부 anon 으로 읽어 `[]` 인 것을 확인했다.
+  **회수하지 않기로 했다(2026-09-09)** — 세션이 생기기 전 호출이 `[]` 대신 401 을 받아 화면에 오류가
+  뜰 수 있는데, 호출 지점이 206곳이라 전수 확인 전에는 단정할 수 없다. 얻는 것은 방어 심화뿐이라
+  바꾸는 위험이 더 크다. 대신 **진짜 위험만 막았다** — "앞으로 anon 에 통하는 정책이 생기면 실패"하는
+  검사를 `20261273` 스모크에 넣었다(일부러 뚫은 정책으로 실제로 잡히는 것까지 확인). 전수 확인을
+  마치면 그때 회수한다.
 - **`student_title_test_overrides` 만 RLS 가 꺼져 있다.** anon/authenticated GRANT 가 없어 지금은 노출되지 않지만
   public 스키마에서 유일한 예외다. 켜 두는 편이 낫다.
 - **`search_path` 를 고정하지 않은 SECURITY DEFINER 함수 3개**
