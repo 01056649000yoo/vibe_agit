@@ -1,5 +1,5 @@
 # 컨테이너 내부 Caddy — 정적 SPA 서빙 (외부 TLS는 호스트 Caddy가 담당)
-:80 {
+:8080 {
 	root * /srv
 	encode zstd gzip
 

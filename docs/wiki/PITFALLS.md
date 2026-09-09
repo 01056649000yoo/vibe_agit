@@ -65,15 +65,13 @@
 - **native dialog도 Tab 끝·Shift+Tab 시작을 직접 검사한다.** 내장 브라우저에서 끝 버튼 다음에
   초점이 문서 밖으로 빠졌다. 명시적으로 처음/마지막 컨트롤을 순환시키고, 액자 초점 복귀는
   dialog가 닫혀 배경의 inert 상태가 풀린 뒤 수행한다. (2026-09-05)
-
 - **2026-09-05: 업무용 원글/편집 버전 충돌에 SQLSTATE `40001`을 쓰지 않는다.** PostgREST 14.12에서 같은 요청을 계속 재시도해 HTTP 응답이 끝나지 않는 것을 격리 검사로 재현했다. 새 입력/새로고침이 필요한 충돌은 `PT409`를 쓰고 실제 HTTP 409까지 검사한다. `61240/61241`에 반영. [PostgREST 원인 기록](https://github.com/PostgREST/postgrest/issues/3673).
-
 - **전시 발행의 잠금은 원글 회수와 함께 시험한다.** 부모·전시를 잠근 뒤 원글을 기다리면 회수 트리거와 교착할 수 있다. 발행 잠금은 NOWAIT/짧은 상한과 `PT409`로 끝내고 동시 HTTP 검사로 확인한다. (2026-09-05, `61243`)
-
 - **`authenticator` 역할에는 `safeupdate` 가 preload 돼 있다.** 함수 안에 WHERE 없는 DELETE/UPDATE 를 두면
   psql(`postgres` 역할)에서는 통과하고 **앱에서만** `DELETE requires a WHERE clause` 로 400이 난다.
   2026-09-06에 `manage_class_agit_rollout_v1` 이 이 때문에 처음부터 저장이 안 됐다(`61241`→`61253`).
   `tests/sqlSafeUpdate.test.mjs` 가 이제 막는다. RPC 를 손으로 확인할 때는 `authenticator` 로 붙어 본다.
-
 - **`docker stats` 의 NET I/O 는 트래픽이 아니다.** 도커 내부 네트워크까지 포함해서 `agit-rest`↔`agit-db`
   대화가 실제 바깥 트래픽의 30만 배로 잡힌다(2026-09-06). 바깥 사용량은 리버스 프록시(`jarvis-caddy`) 하나만 센다.
+- **`SECURITY DEFINER` 를 anon 에 열지 않는다** — RLS 를 우회한다. "내부 전용"이라 적힌
+  `notification_emit_v1` 이 PUBLIC 에 열려 있었다(2026-09-09). 이제 `check:rpc-surface` 가 막는다.

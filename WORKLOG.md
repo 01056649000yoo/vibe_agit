@@ -19,6 +19,38 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-09 — 보안 점검 후속: 내부 전용 RPC 3개 회수·RLS 예외 정리·앱 컨테이너 굳히기 (Claude)
+- **한 일**: 같은 날 보안 점검의 P2·P3 를 처리했다. ①앱이 부르지 않는데 클라이언트에 열려 있던 내부 전용 함수 3개 회수 ②마지막 RLS 예외 정리 ③같은 사고를 자동으로 잡는 검사 추가 ④`agit-app` 컨테이너 굳히기 ⑤흩어져 있던 배포 실행 자리 통합.
+- **변경**:
+  - `20261273_internal_only_learning_helpers.sql` — `learning_engine_retry_gate_v1`·`vocab_tower_v2_summit_status_v1`·`vocab_tower_v2_retry_breakdown_v1` 의 PUBLIC·anon·authenticated EXECUTE 회수, 교사 전용 `save_teacher_reading_marathon_v2` 의 불필요한 anon 회수, `student_title_test_overrides` RLS 켜기. 스모크를 `smoke:security-boundary` 에 등록.
+  - `scripts/check-rpc-surface.mjs` — 세 번째 검사 추가: **anon 이 부를 수 있는 SECURITY DEFINER 함수**는 `ops/rpc-surface-allowlist.json` 의 새 `anonExecute` 에 이유를 적지 않으면 막는다. 기존 2번 검사는 이름이 `supabase/*.sql` 에 나오면 "쓰는 중"으로 봐서 오늘의 P1 을 못 잡았다.
+  - `scripts/run-agit-app.sh` 신설 — 컨테이너를 띄우는 단 하나의 자리. `docker run` 이 `scripts/deploy-local.sh` 와 `.github/workflows/deploy.yml` 두 곳에 흩어져 있어 한쪽만 굳히면 어긋난다. 굳히기는 `--user 1000:1000`·`--read-only`·`--cap-drop ALL`·`--cap-add NET_BIND_SERVICE`·`--security-opt no-new-privileges`·`--memory 256m`·`/data`·`/config` tmpfs.
+  - 비root 로 돌리려 컨테이너 안 포트를 80→8080 으로 내렸다(`Caddyfile.container`·`Dockerfile`). 바깥(호스트 Caddy → 127.0.0.1:8300)은 그대로다.
+  - `tests/deploymentArchitecture.test.mjs` — 두 배포 경로가 공용 스크립트를 쓰는지, 굳히기 옵션과 세 곳의 포트가 함께 움직이는지 지킨다.
+- **결과/검증**: 살아 있는 앱은 건드리지 않고 임시 컨테이너(`agit-app-hardening-test`, 8399)로 먼저 시험했다 — 응답 본문 해시가 운영과 **동일**하고 보안 헤더 7종·정적 자산·SPA 폴백 모두 정상. 시험 중 `caddy` 실행 파일의 setcap 때문에 `no-new-privileges` 와 겹치면 컨테이너가 실행조차 못 하고 죽는 것(`exec /usr/bin/caddy: operation not permitted`)을 재현해, 필요한 `NET_BIND_SERVICE` 를 찾아 스크립트 주석과 검사에 남겼다. `npm run test:all` 943/943 통과, `npm run lint` 깨끗. 임시 컨테이너는 지웠고 운영 앱은 HTTP 200 그대로다.
+- **PITFALLS**: 80줄 상한에 차 있어 파일 자체 규칙대로 오늘 교훈 중 더 일반적인 보안 항목 하나만 남기고, 아래쪽 항목 사이 빈 줄을 위쪽과 같은 조밀한 형식으로 맞췄다. 기존 항목은 지우지 않았다(26→27개).
+- **남은 것 / 다음**: `20261273` 운영 적용(자동 승인 정책이 막아 이 세션에서는 못 한다). 컨테이너 굳히기는 포트가 바뀌어 **재빌드가 필요하므로 다음 배포부터** 적용된다. 공개 git 이력의 Google API 키 폐기는 Google Cloud 콘솔 작업이라 사용자 몫이다.
+
+## 2026-09-09 — 내부 전용 알림 함수의 클라이언트 실행 권한 회수 (Claude)
+- **한 일**: 같은 날 보안 점검에서 찾은 P1(`notification_emit_v1` 이 PUBLIC 에 열려 있고 호출자 검사가 없음)을 닫는 마이그레이션과 스모크 검사를 만들었다.
+- **변경**: `supabase/migrations/20261272_internal_only_notification_emit.sql`(PUBLIC·anon·authenticated EXECUTE 회수, service_role 유지), `tests/sql/20261272_internal_only_notification_emit.smoke.sql`, `package.json` 의 `smoke:security-boundary` 에 등록(= `test:security` 에 자동 포함). **운영 DB 적용은 아직 하지 않았다.**
+- **결과/검증**: 회수해도 기능이 안 깨지는 것을 먼저 확인했다 — `src/`·Edge 함수·스크립트에 직접 호출이 0건이고, DB 안에서 부르는 함수 7개가 모두 이 함수와 같은 소유자(`supabase_admin`)의 SECURITY DEFINER 라 소유자 권한으로 그대로 돈다. 스모크는 이 두 가지를 함께 지킨다(클라이언트 권한이 남아 있거나, 호출부가 소유자 권한이 아니게 되면 실패). `npm run smoke:security-boundary` 통과, 변경은 모두 롤백됐다.
+- **운영 적용**: 사용자가 `npm run migrate` 를 직접 실행해 적용했다(316/316·대기 0). 자동 승인 정책이 운영 DB 쓰기를 막아 이 세션에서는 실행하지 못했고, 우회하지 않았다.
+- **적용 후 확인**: 조치 전 취약했던 호출을 그대로 재시도해 **HTTP 401 `permission denied for function`** 을 받았다(조치 전에는 500으로 함수 본문까지 실행됐다). 권한은 `anon: false / authenticated: false / service_role: true`. 기능도 무사하다 — 내부 경로로 실제 알림 발행이 성공하는 것을 `BEGIN…ROLLBACK` 으로 확인했고 시험 행은 0건이며, 알림을 부르는 기능 함수 7개가 그대로다. `npm run test:security` 301/301 통과.
+- **남은 것 / 다음**: 공개 git 이력(`c548220a`)의 Google API 키 폐기·제한은 Google Cloud 콘솔 작업이라 사용자 몫이다. 이어서 감사 문서의 P2(IDOR 조회 함수 2개, `agit-app` 컨테이너 격리)와 P3 위생 항목.
+
+## 2026-09-09 — 보안 점검: 외부 접근·내부 권한 대대적 점검 (Claude)
+- **한 일**: 이웃 아지트를 뺀 전체에 대해 DB 권한 계층(RLS 315표·SECURITY DEFINER 437개), 외부 노출 경계(포트·컨테이너 바인딩·SSH·Edge 함수·Storage), 비밀 관리(git 이력 포함), 의존성을 읽기 전용으로 점검했다. 결과는 [docs/SECURITY_AUDIT_20260909.md](docs/SECURITY_AUDIT_20260909.md).
+- **변경**: 점검 문서 추가만. 운영 DB에 쓰기 없음, 코드 변경 없음.
+- **결과/검증**: 뼈대는 튼튼하다 — 공개 anon 키로 `students`·`teachers`·`profiles`·`profile_secrets`·`student_posts`·`point_logs` 를 실제로 호출해 모두 `[]` 임을 확인했고, 컨테이너 포트는 전부 loopback, Storage 버킷 2개 비공개, Edge 함수 8개 자체 인증 보유, `npm audit --omit=dev` 0건, `npm run test:security` 통과다. 직전 감사 P0였던 **SSH 비밀번호 로그인이 공개키 전용으로 해소**된 것도 확인했다. **P1 한 건을 찾았다**: 내부 전용이라고 문서에 적힌 `notification_emit_v1` 이 PUBLIC(anon 포함)에 EXECUTE 가 열려 있고 호출자 권한 검사가 없다. 공개 anon 키 호출이 함수 본문까지 도달(HTTP 500)하는 것을 대조군(`bulk_approve_posts` → 401 permission denied)과 함께 확인했다. 그 밖에 공개 git 이력의 Google API 키, `agit-app` 컨테이너 미격리(이월), IDOR 성격 조회 함수 2개, 위생 항목들을 정리했다.
+- **남은 것 / 다음**: 문서 4장의 우선순위대로 처리한다. 오늘 안에 ①`notification_emit_v1` EXECUTE 회수(기능 영향 없음) ②공개 이력의 Google API 키 폐기·제한. 공유기 WAN 도달 여부와 이웃 아지트는 이번 범위 밖이다.
+
+## 2026-09-09 — `/migrate` 슬래시 명령이 옛 기록 표를 보던 것 수정 (Claude)
+- **한 일**: 맥미니 저장소를 `origin/main`으로 fast-forward(5개, `bb9803a4`→`ac85de96`)한 뒤 새 마이그레이션 2건 적용 여부를 확인했다. 이 과정에서 `~/.claude/commands/migrate.md` 슬래시 명령이 저장소의 `npm run migrate`를 쓰지 않고 psql 명령을 따로 조립하며, **버려진 옛 표** `writing_helper_internal.applied_migrations`(20260719에서 끊긴 32행)를 보고 있는 것을 발견해 다시 썼다.
+- **변경**: git 밖 변경 — `~/.claude/commands/migrate.md`를 `npm run migrate:status` → `npm run migrate` 위임 방식으로 교체했다. 컨테이너 `agit-db`(≠ `supabase-db`), 역할 `supabase_admin`(≠ `postgres`), 진짜 기록 표 `public.applied_migrations`를 명시했고, 대기 목록이 예상보다 많으면 멈추고 사용자에게 확인받도록 넣었다. 저장소 코드·DB 변경은 없다.
+- **결과/검증**: 고친 명령대로 `npm run migrate:status`가 315개/적용됨 315개/남은 것 0개로 나온다. `20261270`(`teacher_guide_ai_stage = "public"`)과 `20261271`(`get_neighbor_teacher_share_candidates_v1`에 `neighbor_activity_classes` 필터 포함)이 이미 운영 `agit-db`에 들어가 있는 것을 직접 확인했다. 옛 표를 그대로 믿었다면 283개를 미적용으로 보고 운영 DB에 재실행할 뻔했다. DB에는 아무것도 쓰지 않았다.
+- **남은 것 / 다음**: 기존 `20261229` CRLF 체크섬 경고는 그대로 남아 있다(ROADMAP 미결 항목, 사용자 승인 대기). 버려진 `writing_helper_internal.applied_migrations` 표 정리는 손대지 않았다.
+
 ## 2026-09-09 — 반복 보너스 기본값의 브라우저 숫자 검증 수정 (Codex)
 - **한 일**: 글자 수 구간별 반복 보너스를 켠 뒤 미션을 만들 때, 값을 바꾸지 않아도 브라우저가 반복 글자 수에 유효한 값을 입력하라고 막던 문제를 고쳤다.
 - **변경**: `min=1`에서 50자·10P 단위 `step`을 사용해 기본값 100자·10P가 각각 허용값에서 벗어나던 입력 계약을 양의 정수 단위로 맞췄다. 일반 미션 폼과 공용 글쓰기 정책 폼을 함께 수정했으며 DB·인프라 변경은 없다.

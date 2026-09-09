@@ -53,8 +53,8 @@ jobs:
 
       - name: Restart container
         run: |
-          docker rm -f agit-app 2>/dev/null || true
-          docker run -d --name agit-app --restart unless-stopped -p 127.0.0.1:8300:80 agit-app:prod
+          # 띄우는 방법은 scripts/run-agit-app.sh 한 곳에만 둔다 — 로컬 배포도 같은 것을 부른다.
+          bash scripts/run-agit-app.sh
 
       - name: Sync AI edge function
         run: |

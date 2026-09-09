@@ -29,8 +29,8 @@ docker build \
 docker tag agit-app:prod "agit-app:$(date +%Y%m%d)"
 
 echo "▶ 컨테이너 교체"
-docker rm -f agit-app >/dev/null 2>&1 || true
-docker run -d --name agit-app --restart unless-stopped -p 127.0.0.1:8300:80 agit-app:prod >/dev/null
+# 띄우는 방법은 scripts/run-agit-app.sh 한 곳에만 둔다 — 자동 배포도 같은 것을 부른다.
+bash scripts/run-agit-app.sh
 
 sleep 5
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 http://127.0.0.1:8300/)

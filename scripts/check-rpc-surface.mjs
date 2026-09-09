@@ -14,9 +14,16 @@
  *   없어서 죽은 줄 알았는데, **같은 DB를 쓰는 연구소 앱**이 아직 부르고 있었다. 지웠으면
  *   오류도 없이 학급 맞춤법 항목이 빈 목록이 됐을 것이다.
  *
- * 그래서 두 가지를 한꺼번에 본다.
+ * 그래서 세 가지를 한꺼번에 본다.
  *   1. 새 판이 있는데 옛 판이 아직 클라이언트에 열려 있나
  *   2. 클라이언트에 열려 있는데 이 저장소에도, 함께 쓰는 다른 앱에도 참조가 없나
+ *   3. **비로그인(anon) 이 부를 수 있는 SECURITY DEFINER 함수가 새로 생겼나**
+ *
+ *   3번을 넣은 이유 (2026-09-09 보안 점검에서 실제로 나온 일):
+ *     `notification_emit_v1` 은 문서에 "내부 전용"이라고 적혀 있는데 실행 권한이 PUBLIC 에
+ *     열려 있었고 호출자 검사도 없었다. 공개 anon 키로 부르면 남의 아이 알림함에 글이 들어갔다.
+ *     2번 검사로는 못 잡는다 — 이름이 `supabase/migrations/*.sql` 에 나오므로 "참조 있음"이 된다.
+ *     SECURITY DEFINER 는 RLS 를 우회하므로, anon 에게 여는 것은 언제나 의식적인 결정이어야 한다.
  *
  * 둘 중 하나에 걸리면 **지우거나, 남기는 이유를 허용 목록에 적어야** 통과한다.
  * 이유를 적게 하는 것이 핵심이다 — 다음 사람이 오늘처럼 처음부터 다시 캐지 않아도 된다.
@@ -59,6 +66,19 @@ WHERE n.nspname = 'public'
   AND p.prorettype <> 'trigger'::regtype
   AND (has_function_privilege('authenticated', p.oid, 'EXECUTE')
        OR has_function_privilege('anon', p.oid, 'EXECUTE'))
+ORDER BY 1;`;
+
+/**
+ * 비로그인(anon) 이 부를 수 있는 SECURITY DEFINER 함수.
+ * SECURITY DEFINER 는 RLS 를 우회하므로 여기 오르는 것은 전부 의식적으로 연 것이어야 한다.
+ */
+const ANON_DEFINER_SQL = `
+SELECT DISTINCT p.proname
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+  AND p.prosecdef
+  AND p.prorettype <> 'trigger'::regtype
+  AND has_function_privilege('anon', p.oid, 'EXECUTE')
 ORDER BY 1;`;
 
 /** DB 에 있는 모든 함수 이름. 허용 목록이 이미 없는 이름을 가리키는지 볼 때 쓴다. */
@@ -112,6 +132,7 @@ const main = async () => {
     }
 
     const allowed = new Map((allowlist.keep || []).map((item) => [item.name, item]));
+    const anonAllowed = new Map((allowlist.anonExecute || []).map((item) => [item.name, item]));
     const consumers = allowlist.externalConsumers || [];
 
     // 이유는 썩는다. 부르던 쪽이 새 판으로 옮겨 가면 이유는 조용히 거짓이 되는데,
@@ -122,7 +143,7 @@ const main = async () => {
     const today = new Date();
     const unchecked = [];
     const staleReasons = [];
-    for (const item of allowed.values()) {
+    for (const item of [...allowed.values(), ...anonAllowed.values()]) {
         if (!item.reasonCheckedAt) {
             unchecked.push(item.name);
             continue;
@@ -160,6 +181,18 @@ const main = async () => {
         problems.push({
             name,
             why: '더 새로운 판이 있는데 옛 판이 아직 클라이언트에 열려 있습니다.'
+        });
+    }
+
+    // anon 에 열린 SECURITY DEFINER 는 이유를 적지 않으면 막는다.
+    // 여기서만은 "참조가 있으니 괜찮다"로 넘어가지 않는다 — 쓰이는 함수라도 anon 에게까지
+    // 열어 둘 이유는 따로 있어야 하기 때문이다.
+    for (const name of parseNames(psql(ANON_DEFINER_SQL))) {
+        if (anonAllowed.has(name)) continue;
+        problems.push({
+            name,
+            why: '비로그인(anon) 이 부를 수 있는 SECURITY DEFINER 함수입니다. RLS 를 우회하므로 '
+                + `권한을 회수하거나, 열어 둬야 한다면 ${ALLOWLIST_PATH} 의 anonExecute 에 이유를 적으세요.`
         });
     }
 
@@ -203,7 +236,7 @@ const main = async () => {
 
     console.log(
         `${GREEN}✔ RPC 표면 정상 — 클라이언트 공개 ${callable.length}개, `
-        + `이유를 적어 남긴 것 ${allowed.size}개.${OFF}`
+        + `이유를 적어 남긴 것 ${allowed.size}개, anon 에 연 SECURITY DEFINER ${anonAllowed.size}개.${OFF}`
     );
 };
 

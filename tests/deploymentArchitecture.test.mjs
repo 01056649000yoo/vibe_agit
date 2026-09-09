@@ -12,7 +12,7 @@ import test from 'node:test';
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- 호출부는 이 파일의 고정된 배포 파일 경로 8개뿐이다.
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
-const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist] = await Promise.all([
+const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp] = await Promise.all([
     readText('.github/workflows/deploy.yml'),
     readText('Dockerfile'),
     readText('.dockerignore'),
@@ -20,7 +20,8 @@ const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCa
     readText('scripts/deploy-local.sh'),
     readText('scripts/preflight-disk.sh'),
     readText('scripts/trim-docker-cache.sh'),
-    readText('ops/launchd/com.agit.docker-cache-trim.plist')
+    readText('ops/launchd/com.agit.docker-cache-trim.plist'),
+    readText('scripts/run-agit-app.sh')
 ]);
 
 test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
@@ -58,7 +59,10 @@ test('main 푸시는 맥미니 self-hosted 러너의 단일 배포 작업을 시
 
 test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬 응답을 확인한다', () => {
     assert.match(workflow, /docker build[\s\S]*-t agit-app:prod \./);
-    assert.match(workflow, /docker run -d --name agit-app --restart unless-stopped -p 127\.0\.0\.1:8300:80 agit-app:prod/);
+    // 띄우는 방법 자체는 scripts/run-agit-app.sh 에 모았다(굳히기 옵션은 아래 전용 검사가 지킨다).
+    assert.match(workflow, /bash scripts\/run-agit-app\.sh/);
+    assert.match(runApp, /--name "\$NAME"[\s\S]*--restart unless-stopped/);
+    assert.match(runApp, /HOST_PORT="\$\{2:-8300\}"/);
     assert.match(workflow, /curl[\s\S]*http:\/\/127\.0\.0\.1:8300\//);
     assert.match(workflow, /docker compose up -d --no-deps --force-recreate functions/);
     assert.match(workflow, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
@@ -110,4 +114,36 @@ test('배포 관문은 맥 디스크뿐 아니라 도커 안쪽 공간도 본다
     assert.match(trimPlist, /com\.agit\.docker-cache-trim/);
     assert.match(trimPlist, /scripts\/trim-docker-cache\.sh/);
     assert.match(trimPlist, /StartCalendarInterval/);
+});
+
+test('앱 컨테이너를 띄우는 자리는 하나뿐이고, 굳히기가 빠지지 않는다', () => {
+    // 왜 이 검사가 있나 (2026-09-09 보안 점검 P2):
+    //   `docker run ... agit-app` 이 로컬 배포와 자동 배포 두 곳에 따로 있었다. 한쪽에만 굳히기를
+    //   넣으면 어느 경로로 배포했느냐에 따라 root 로 돌기도 하고 아니기도 하는데, 둘 다 "배포 성공"이라
+    //   말하므로 눈으로는 절대 알 수 없다. 그래서 자리를 하나로 모으고 여기서 지킨다.
+    for (const [name, text] of [['자동 배포', workflow], ['로컬 배포', localDeploy]]) {
+        assert.match(text, /bash scripts\/run-agit-app\.sh/, `${name}가 공용 실행 스크립트를 쓰지 않는다`);
+        assert.doesNotMatch(text, /docker run[^\n]*--name agit-app/, `${name}에 직접 docker run 이 남아 있다`);
+    }
+
+    // 굳히기 옵션이 하나라도 빠지면 막는다. 샘링크·자비스와 같은 수준을 유지한다.
+    for (const flag of [
+        '--user 1000:1000',
+        '--read-only',
+        '--cap-drop ALL',
+        '--security-opt no-new-privileges',
+        '--memory 256m'
+    ]) {
+        assert.ok(runApp.includes(flag), `run-agit-app.sh 에 ${flag} 가 없다`);
+    }
+
+    // caddy 실행 파일에 setcap 이 박혀 있어, 이 권한이 없으면 no-new-privileges 와 겹쳐
+    // 컨테이너가 실행조차 못 하고 죽는다. 굳히려다 앱을 내리는 일을 막는다.
+    assert.ok(runApp.includes('--cap-add NET_BIND_SERVICE'),
+        'NET_BIND_SERVICE 가 없으면 caddy 가 실행되지 않는다');
+
+    // 비root 로 돌리려면 1024 미만 포트를 열 수 없다. 세 곳의 포트가 함께 움직여야 한다.
+    assert.match(caddy, /^:8080 \{/m, '컨테이너 Caddy 가 8080 을 듣지 않는다');
+    assert.match(dockerfile, /^EXPOSE 8080$/m, 'Dockerfile 의 EXPOSE 가 8080 이 아니다');
+    assert.match(runApp, /127\.0\.0\.1:\$\{HOST_PORT\}:8080/, '컨테이너 안쪽 연결 포트가 8080 이 아니다');
 });
