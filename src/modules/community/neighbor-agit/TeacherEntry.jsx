@@ -5,7 +5,9 @@ import ModalPortal from '../../../components/common/ModalPortal';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
-import { applyGenrePreset, describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
+import { describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
+import { applyGenreToMissionDraft } from '../../writing/mission-form/missionDraft';
+import { createNeighborTopicDraft, toNeighborTopicProposal } from './topicProposalAdapter';
 
 /** 전용 틀 id(`poem` 등)로 카탈로그의 글 종류 이름(`시`)을 찾는다. 목록의 정본은 카탈로그 하나다. */
 const genreIdForMissionType = (missionTypeId) => (
@@ -15,12 +17,6 @@ import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityType
 import { neighborAgitTeacherApi } from './teacherApi';
 import TeacherPostReview from './TeacherPostReview';
 import './TeacherEntry.css';
-
-const createActivityForm = () => ({
-    type: 'topic', title: '', prompt: '', genre: '', guide_questions: [],
-    min_chars: 50, min_paragraphs: 1, mission_type_id: '',
-    base_reward: 10, bonus_threshold: 0, bonus_reward: 0
-});
 
 const STATUS_LABELS = Object.freeze({
     pending: '검토 대기',
@@ -52,7 +48,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [reviewSelection, setReviewSelection] = useState(null);
     const [detailBusy, setDetailBusy] = useState(false);
     // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
-    const [activityForm, setActivityForm] = useState(createActivityForm);
+    const [activityForm, setActivityForm] = useState(createNeighborTopicDraft);
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
     // 함께 쓰는 주제 안의 두 갈래: 새 주제를 내는 곳과 낸 주제가 어떻게 되고 있는지 보는 곳.
     const [topicView, setTopicView] = useState('create');
@@ -84,7 +80,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setSpaceForm({ name: '', publicClassName: activeClass?.name || '', description: '' });
         setJoinForm({ inviteKey: '', publicClassName: activeClass?.name || '' });
         setActiveActivityTab('gallery');
-        setActivityForm(createActivityForm());
+        setActivityForm(createNeighborTopicDraft());
         setPresetNotice('');
         setGenrePickerOpen(false);
         void loadWorkspace();
@@ -148,46 +144,37 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     /** 글 종류를 고르면 안내문·길잡이 질문·분량을 채운다. 학급 과제 만들기와 같은 규칙을 그대로 쓴다. */
     const selectGenre = (genreId, missionTypeId = '') => {
         setGenrePickerOpen(false);
-        const result = applyGenrePreset(
+        const result = applyGenreToMissionDraft(
             {
-                ...activityForm, guide: activityForm.prompt,
+                ...activityForm,
                 min_chars: !activityForm.genre && activityForm.min_chars === 50 ? null : activityForm.min_chars,
                 min_paragraphs: !activityForm.genre && activityForm.min_paragraphs === 1 ? null : activityForm.min_paragraphs
             },
             genreId,
-            { previousGenre: activityForm.genre || null }
+            { previousGenre: activityForm.genre || null, missionType: missionTypeId }
         );
         const next = result.formData;
         setActivityForm((current) => ({
             ...current,
             genre: next.genre,
-            prompt: next.guide ?? current.prompt,
+            guide: next.guide ?? current.guide,
             guide_questions: Array.isArray(next.guide_questions) ? next.guide_questions : [],
             min_chars: Number(next.min_chars) || current.min_chars,
             min_paragraphs: Number(next.min_paragraphs) || current.min_paragraphs,
-            mission_type_id: missionTypeId
+            mission_type: next.mission_type
         }));
         setPresetNotice(describePresetResult(genreId, result));
     };
 
     const createActivity = async (event) => {
         event.preventDefault();
-        const result = await runAction('create_activity', {
-            space_id: workspace.space.id,
-            type: activityForm.type,
-            title: activityForm.title.trim(),
-            prompt: activityForm.prompt.trim(),
-            genre: activityForm.genre || null,
-            guide_questions: activityForm.guide_questions,
-            min_chars: activityForm.min_chars,
-            min_paragraphs: activityForm.min_paragraphs,
-            mission_type_id: activityForm.mission_type_id || null,
-            base_reward: activityForm.base_reward,
-            bonus_threshold: activityForm.bonus_threshold,
-            bonus_reward: activityForm.bonus_reward
-        }, '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.');
+        const result = await runAction(
+            'create_activity',
+            toNeighborTopicProposal({ spaceId: workspace.space.id, draft: activityForm }),
+            '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
+        );
         if (result) {
-            setActivityForm(createActivityForm());
+            setActivityForm(createNeighborTopicDraft());
             setPresetNotice('');
         }
     };
@@ -195,7 +182,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const selectActivityTab = (tabId) => {
         setActiveActivityTab(tabId);
         if (tabId === 'gallery') return;
-        setActivityForm((current) => ({ ...current, type: tabId }));
     };
 
     const loadGalleryCandidates = async () => {
@@ -528,7 +514,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                         <li>최소 {activityForm.min_chars}자</li>
                                                         <li>{activityForm.min_paragraphs}문단 이상</li>
                                                         {activityForm.guide_questions.length > 0 && <li>길잡이 질문 {activityForm.guide_questions.length}개</li>}
-                                                        {activityForm.mission_type_id && <li>전용 원고지</li>}
+                                                        {activityForm.mission_type && <li>전용 원고지</li>}
                                                     </ul>
                                                 </div>
                                                 <Button type="button" variant="ghost" size="sm" onClick={() => setGenrePickerOpen(true)}>다시 고르기</Button>
@@ -545,9 +531,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         <div className="neighbor-teacher__form-step"><span>2단계</span><h3>주제와 안내를 적어 주세요</h3></div>
                                         <MissionPromptFields
                                             title={activityForm.title}
-                                            guide={activityForm.prompt}
+                                            guide={activityForm.guide}
                                             onTitleChange={(title) => setActivityForm((current) => ({ ...current, title }))}
-                                            onGuideChange={(prompt) => setActivityForm((current) => ({ ...current, prompt }))}
+                                            onGuideChange={(guide) => setActivityForm((current) => ({ ...current, guide }))}
                                             isMobile={isMobile}
                                             titleMaxLength={80}
                                             guideMaxLength={1000}

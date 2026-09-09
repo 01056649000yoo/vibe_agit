@@ -49,7 +49,8 @@ test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () =
     // 두면 새 글 종류를 넣을 때 한쪽만 고쳐 갈라진다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     assert.match(teacher, /import MissionTypePicker from/);
-    assert.match(teacher, /applyGenrePreset, describePresetResult, getGenreEntries/);
+    assert.match(teacher, /applyGenreToMissionDraft/);
+    assert.match(teacher, /createNeighborTopicDraft, toNeighborTopicProposal/);
     assert.doesNotMatch(teacher, /const GENRES = \[|const 글종류 = \[/, '글 종류 목록을 따로 만들면 안 됩니다.');
 
     const sql = readFileSync('supabase/migrations/20261266_neighbor_topic_uses_mission_form.sql', 'utf8');
@@ -68,7 +69,8 @@ test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () =
     assert.doesNotMatch(rewards, /v_min_paragraphs, 0, 0, 0, FALSE/, '포인트·댓글이 다시 박혔습니다.');
     const rewardWrapper = rewards.slice(rewards.indexOf('FUNCTION public.run_neighbor_teacher_action_v1'));
     assert.match(rewardWrapper, /p_payload->>'base_reward'/, '래퍼가 포인트를 안 넘깁니다.');
-    assert.match(teacher, /base_reward: activityForm\.base_reward/);
+    const proposalAdapter = readFileSync('src/modules/community/neighbor-agit/topicProposalAdapter.js', 'utf8');
+    assert.match(proposalAdapter, /base_reward: mission\.base_reward/);
     assert.match(readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8'),
         /neighbor-teacher__reward-grid/);
 });

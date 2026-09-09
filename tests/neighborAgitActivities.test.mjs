@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [activityMigration, approvalMigration, matchingMigration, teacherEntry, studentEntry, activityTypes, teacherApi, studentApi, app, navigation, missionSubmit, readme, security, performance] = await Promise.all([
+const [activityMigration, approvalMigration, matchingMigration, teacherEntry, studentEntry, activityTypes, teacherApi, studentApi, app, navigation, missionSubmit, readme, security, performance, topicAdapter, missionDraft, missionForm, missionManager] = await Promise.all([
     readFile('supabase/migrations/20261237_neighbor_activity_spaces.sql', 'utf8'),
     readFile('supabase/migrations/20261238_neighbor_activity_teacher_approval.sql', 'utf8'),
     readFile('supabase/migrations/20261239_neighbor_teacher_sharing_exchange_matching.sql', 'utf8'),
@@ -16,7 +16,11 @@ const [activityMigration, approvalMigration, matchingMigration, teacherEntry, st
     readFile('src/hooks/useMissionSubmit.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/README.md', 'utf8'),
     readFile('SECURITY_HARNESS.md', 'utf8'),
-    readFile('PERFORMANCE_HARNESS.md', 'utf8')
+    readFile('PERFORMANCE_HARNESS.md', 'utf8'),
+    readFile('src/modules/community/neighbor-agit/topicProposalAdapter.js', 'utf8'),
+    readFile('src/modules/writing/mission-form/missionDraft.js', 'utf8'),
+    readFile('src/components/teacher/MissionForm.jsx', 'utf8'),
+    readFile('src/hooks/useMissionManager.js', 'utf8')
 ]);
 const migration = `${activityMigration}\n${approvalMigration}\n${matchingMigration}`;
 
@@ -73,6 +77,19 @@ test('공동 주제와 글짝 글쓰기는 학급별 기존 과제를 만들어 
     assert.match(app, /NeighborAgitStudentEntry[\s\S]*onNavigate=\{setInternalPage\}/);
     assert.match(navigation, /params\?\.returnTo === 'neighbor_agit'/);
     assert.match(missionSubmit, /params\?\.returnTo === 'neighbor_agit'/);
+});
+
+test('함께 쓰는 주제는 공용 미션 초안을 이웃 제안 어댑터로만 변환한다', () => {
+    assert.match(missionDraft, /createMissionDraft/);
+    assert.match(missionDraft, /applyGenreToMissionDraft/);
+    assert.match(missionForm, /applyGenreToMissionDraft/);
+    assert.match(missionManager, /createMissionDraft/);
+    assert.match(teacherEntry, /createNeighborTopicDraft/);
+    assert.match(teacherEntry, /toNeighborTopicProposal/);
+    assert.match(topicAdapter, /prompt: mission\.guide/);
+    assert.match(topicAdapter, /mission_type_id: mission\.mission_type/);
+    assert.doesNotMatch(teacherEntry, /activityForm\.(prompt|mission_type_id)/);
+    assert.doesNotMatch(teacherEntry, /const createActivityForm/);
 });
 
 test('학생 글과 댓글은 폐쇄 공간에서 등록 이름으로 보이고 내부 학생 ID는 응답하지 않는다', () => {

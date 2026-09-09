@@ -9,11 +9,11 @@ import { readLocalStorageJson } from '../../lib/browserStorage';
 import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
 import MissionLabQuestionsModal from './MissionLabQuestionsModal';
 import {
-    applyGenrePreset,
     describePresetResult,
     getGenrePreset
 } from '../../modules/writing/mission-types/genreCatalog';
 import MissionPromptFields from '../../modules/writing/mission-form/MissionPromptFields';
+import { applyGenreToMissionDraft } from '../../modules/writing/mission-form/missionDraft';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
@@ -40,7 +40,7 @@ const MissionForm = ({
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
 
     const runGenrePreset = React.useCallback((genreId, { force = false } = {}) => {
-        const result = applyGenrePreset(formData, genreId, {
+        const result = applyGenreToMissionDraft(formData, genreId, {
             previousGenre: presetGenre,
             force,
             keepQuestions: hasSubmissions

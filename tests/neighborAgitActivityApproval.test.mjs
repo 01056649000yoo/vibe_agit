@@ -95,7 +95,7 @@ test('일반 미션과 이웃 공동 활동은 같은 주제·안내 제시틀�
     assert.match(missionForm, /import MissionPromptFields from '..\/..\/modules\/writing\/mission-form\/MissionPromptFields'/);
     assert.match(teacherEntry, /import MissionPromptFields from '..\/..\/writing\/mission-form\/MissionPromptFields'/);
     assert.match(missionForm, /<MissionPromptFields[\s\S]*title=\{formData\.title\}[\s\S]*guide=\{formData\.guide\}/);
-    assert.match(teacherEntry, /<MissionPromptFields[\s\S]*title=\{activityForm\.title\}[\s\S]*guide=\{activityForm\.prompt\}/);
+    assert.match(teacherEntry, /<MissionPromptFields[\s\S]*title=\{activityForm\.title\}[\s\S]*guide=\{activityForm\.guide\}/);
     assert.match(promptFields, /저장 방식은 소유하지 않고/);
     assert.match(promptFields, /aria-label="글쓰기 주제"/);
     assert.match(promptFields, /aria-label="학생 글쓰기 안내"/);

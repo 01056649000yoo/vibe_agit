@@ -12,6 +12,7 @@ import { appendFeedbackMessage } from '../constants/feedbackPhrases';
 import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 import { getLatestSubmissionBoardMission } from '../modules/writing/submission-board/boardMissionScope';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
+import { createMissionDraft } from '../modules/writing/mission-form/missionDraft';
 
 export const useMissionManager = (
     activeClass,
@@ -117,7 +118,7 @@ export const useMissionManager = (
         // 로컬 스토리지에서 기본 설정 불러오기
         const defaults = readLocalStorageJson('mission_default_settings', {});
 
-        return {
+        return createMissionDraft({
             title: '',
             guide: '',
             genre: '일기',
@@ -139,7 +140,7 @@ export const useMissionManager = (
                 use_rubric: false,
                 levels: defaultLevels
             }
-        };
+        });
     }, []);
 
     const [formData, setFormData] = useState(getResetFormData);
