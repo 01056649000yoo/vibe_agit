@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, learningStateGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, learningStateGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration, conflictMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -44,8 +44,22 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('src/modules/game/vocab-tower/rewardPolicy.js', 'utf8'),
     readFile('supabase/migrations/20261156_vocab_tower_reward_points_no_cap.sql', 'utf8'),
     readFile('supabase/migrations/20261119_common_learning_engine.sql', 'utf8'),
-    readFile('supabase/migrations/20261162_vocab_tower_sequential_unlocks.sql', 'utf8')
+    readFile('supabase/migrations/20261162_vocab_tower_sequential_unlocks.sql', 'utf8'),
+    readFile('supabase/migrations/20261276_vocab_review_conflicts_http_409.sql', 'utf8')
 ]);
+
+test('어휘 관리자 검수의 업무 충돌 세 곳은 PostgREST 재시도 없이 HTTP 409로 끝난다', () => {
+    for (const functionName of [
+        'admin_seed_vocab_tower_v2_review_deck_v1',
+        'admin_save_vocab_tower_v2_review_item_v1',
+        'admin_set_vocab_tower_v2_review_status_v1'
+    ]) {
+        assert.ok(conflictMigration.includes(`public.${functionName}(`), `${functionName}이 교체 대상에서 빠졌다`);
+    }
+    assert.match(conflictMigration, /replace\(v_definition, '40001', 'PT409'\)/);
+    assert.match(conflictMigration, /v_changed NOT IN \(0, 3\)/);
+    assert.match(conflictMigration, /function\.prosrc LIKE '%40001%' OR function\.prosrc NOT LIKE '%PT409%'/);
+});
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
     assert.equal(getRoomType(2, 0), 'meaning');
