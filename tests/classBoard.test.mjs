@@ -147,7 +147,7 @@ const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, not
 ]);
 
 const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine,
-  designSystem, mealFitHook, mealColumnsMigration, mealColumnsSmoke] = await Promise.all([
+  designSystem, mealFitHook, mealColumnsMigration, mealColumnsSmoke, mealColumnsChecksumReconciliation] = await Promise.all([
     read('src/modules/tool/class-board/widgets/notice-board/NoticeComposer.jsx'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeBoardApi.js'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeStore.js'),
@@ -159,7 +159,17 @@ const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seo
     read('src/modules/tool/class-board/widgets/meal-board/useFittedMealDishes.js'),
     read('supabase/migrations/20261229_class_board_meal_columns.sql'),
     read('tests/sql/20261229_class_board_meal_columns.smoke.sql'),
+    read('supabase/migrations/20261277_class_board_meal_columns_checksum_reconciliation.sql'),
   ]);
+
+test('급식 열 마이그레이션의 CRLF 적용 기록은 검증된 LF checksum으로만 보정한다', () => {
+  assert.match(mealColumnsChecksumReconciliation, /101bf0524634834e0252051e74a1e9ecc4bef1e91164d99c6d1824657a215d0d/);
+  assert.match(mealColumnsChecksumReconciliation, /9e13b3421ba6ba365e3569198473c47f4cfe9991ab0c6061e057cb119bef0f9b/);
+  assert.match(mealColumnsChecksumReconciliation, /v_recorded_checksum NOT IN/);
+  assert.match(mealColumnsChecksumReconciliation, /예상하지 못한 20261229 checksum/);
+  assert.match(mealColumnsChecksumReconciliation, /UPDATE public\.applied_migrations/);
+  assert.doesNotMatch(mealColumnsChecksumReconciliation, /CREATE OR REPLACE FUNCTION/);
+});
 
 test('우리 반 스크린은 교사 도구로 지연 등록되고 셸과 위젯 레지스트리를 분리한다', () => {
   assert.match(manifest, /id: 'class-board'/);

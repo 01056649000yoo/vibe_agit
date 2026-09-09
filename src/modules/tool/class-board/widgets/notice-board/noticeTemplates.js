@@ -50,7 +50,7 @@ const trimmedString = (value, limit) => String(value ?? '').replace(/\r\n/gu, '\
 export function normalizeNoticeTemplates(raw) {
     const list = Array.isArray(raw) ? raw : [];
     return Array.from({ length: NOTICE_TEMPLATE_SLOTS }, (_, index) => {
-        const item = list[index];
+        const item = list.at(index);
         if (!item || typeof item !== 'object' || Array.isArray(item)) return { name: '', body: '' };
         return {
             name: trimmedString(item.name, MAX_NOTICE_TEMPLATE_NAME).trim(),

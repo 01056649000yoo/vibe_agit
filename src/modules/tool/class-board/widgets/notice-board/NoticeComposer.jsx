@@ -172,7 +172,7 @@ export default function NoticeComposer({
 
   const storeTemplate = (index) => {
     const name = window.prompt(`서식 ${index + 1}의 이름 (비워 두면 "서식 ${index + 1}")`,
-      templates?.[index]?.name || '')?.slice(0, MAX_NOTICE_TEMPLATE_NAME);
+      templates?.at(index)?.name || '')?.slice(0, MAX_NOTICE_TEMPLATE_NAME);
     if (name === undefined || name === null) return;
     const candidate = { name, body: state.body };
     const invalid = validateNoticeTemplate(candidate);
@@ -182,7 +182,7 @@ export default function NoticeComposer({
   };
 
   const clearTemplate = (index) => {
-    if (!window.confirm(`${noticeTemplateLabel(templates?.[index], index)}을(를) 비울까요?`)) return;
+    if (!window.confirm(`${noticeTemplateLabel(templates?.at(index), index)}을(를) 비울까요?`)) return;
     void persistTemplates(withNoticeTemplateAt(templates, index, { name: '', body: '' }), '서식을 비웠습니다.');
   };
 

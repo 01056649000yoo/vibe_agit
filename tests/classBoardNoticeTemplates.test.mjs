@@ -78,7 +78,7 @@ test('기본 서식은 백지를 면하게 하고 칸 수 안에 들어간다', 
 
 test('칸 수 한도는 화면 코드와 DB CHECK 가 같은 값을 쓴다', () => {
     // 두 곳이 어긋나면 화면은 3칸을 보내는데 DB 가 거절하거나, 그 반대가 된다.
-    assert.match(migration, new RegExp(`jsonb_array_length\\(notice_templates\\) <= ${NOTICE_TEMPLATE_SLOTS}`));
+    assert.ok(migration.includes(`jsonb_array_length(notice_templates) <= ${NOTICE_TEMPLATE_SLOTS}`));
     assert.match(migration, /jsonb_typeof\(notice_templates\) = 'array'/);
     // 옛 문자열 배열이 섞이지 않도록 객체·문자열 형태까지 DB 가 지킨다.
     assert.match(migration, /\$\[\*\] \? \(@\.type\(\) != "object"\)/);

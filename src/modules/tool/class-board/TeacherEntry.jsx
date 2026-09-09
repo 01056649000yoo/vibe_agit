@@ -176,29 +176,6 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setNotice('');
   };
 
-  /*
-   * `스크린 열기` 는 저장 안 된 변경이 있으면 **잠겨 있었다.** 스크린은 서버에서 읽으므로
-   * 저장 전에 열면 옛 화면이 뜨기 때문인데, 교사는 `저장` 을 누르고 다시 이 버튼을 눌러야 했다.
-   * 수업 직전에 두 번 누르게 하지 말고 **한 번에 저장하고 연다.**
-   *
-   * 새 탭은 **누른 그 순간 먼저 연다.** 저장을 기다린 뒤에 열면 사용자 조작 문맥이 끊겨
-   * 브라우저가 팝업으로 보고 막는다(문집 인쇄 창이 같은 이유로 이 방식을 쓴다).
-   * 저장에 실패하면 열어 둔 탭을 닫고 오류만 남긴다 — 옛 화면이 교실에 뜨는 편이 더 나쁘다.
-   */
-  const openScreen = async () => {
-    if (saving || pastingImage) return;
-    const target = window.open('', '_blank', 'noopener');
-    if (!target) { setError('새 탭이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.'); return; }
-    try {
-      const boardId = dirty || !board?.id ? (await save())?.id : board.id;
-      if (!boardId) { target.close(); return; }
-      target.location.replace(`/class-board/${boardId}`);
-    } catch (openError) {
-      target.close();
-      setError(openError.message || '스크린을 열지 못했습니다.');
-    }
-  };
-
   const save = async () => {
     if (!board || !activeClass?.id) return null;
     setSaving(true);
@@ -230,6 +207,29 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       return null;
     } finally {
       setSaving(false);
+    }
+  };
+
+  /*
+   * `스크린 열기` 는 저장 안 된 변경이 있으면 **잠겨 있었다.** 스크린은 서버에서 읽으므로
+   * 저장 전에 열면 옛 화면이 뜨기 때문인데, 교사는 `저장` 을 누르고 다시 이 버튼을 눌러야 했다.
+   * 수업 직전에 두 번 누르게 하지 말고 **한 번에 저장하고 연다.**
+   *
+   * 새 탭은 **누른 그 순간 먼저 연다.** 저장을 기다린 뒤에 열면 사용자 조작 문맥이 끊겨
+   * 브라우저가 팝업으로 보고 막는다(문집 인쇄 창이 같은 이유로 이 방식을 쓴다).
+   * 저장에 실패하면 열어 둔 탭을 닫고 오류만 남긴다 — 옛 화면이 교실에 뜨는 편이 더 나쁘다.
+   */
+  const openScreen = async () => {
+    if (saving || pastingImage) return;
+    const target = window.open('', '_blank', 'noopener');
+    if (!target) { setError('새 탭이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.'); return; }
+    try {
+      const boardId = dirty || !board?.id ? (await save())?.id : board.id;
+      if (!boardId) { target.close(); return; }
+      target.location.replace(`/class-board/${boardId}`);
+    } catch (openError) {
+      target.close();
+      setError(openError.message || '스크린을 열지 못했습니다.');
     }
   };
 
