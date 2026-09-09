@@ -85,9 +85,10 @@ test('교사 화면은 세 단계를 따라가는 길로 보여 주고 활동은
     assert.match(teacher, /step\.done \? '✓' : index \+ 1/);
     assert.match(teacher, /hint: hasPartner \? '이웃 학급과 연결됨'/);
 
-    // 활동은 둘뿐이다. 3칸으로 두면 한 칸이 빈 채로 남는다(61254 로 글짝 교환을 뺀 뒤의 잔재였다).
+    // 활동은 둘뿐이라 큰 카드 두 장 대신 내용 폭만 쓰는 얇은 전환 바로 둔다.
     const activityTabRule = css.slice(css.indexOf('.neighbor-teacher__activity-tabs {'));
-    assert.match(activityTabRule.slice(0, 200), /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(activityTabRule.slice(0, 260), /width: fit-content/);
+    assert.match(css, /activity-tabs button[^}]*min-height: 36px/);
 
     // 좁은 화면에서도 단계는 세 칸을 지킨다 — 세로로 쌓으면 순서가 흐름으로 안 읽힌다.
     assert.match(css, /단계는 순서가 뜻이라 좁아져도 세 칸을 유지/);
@@ -106,18 +107,37 @@ test('주제 만들기는 넓은 화면에서 두 열로 모으고 질문만 내
     assert.match(css, /@media \(max-width: 720px\)[\s\S]*\.neighbor-teacher__composer-settings \.neighbor-teacher__questions\s*\{\s*grid-template-columns: 1fr/);
 });
 
-test('함께 쓰는 주제는 만들기·결과 두 갈래이고 글 종류 칸이 화면에 녹아 있다', () => {
+test('활동 화면은 중복 머리말을 없애고 얇은 메뉴와 한 줄 도구막대를 쓴다', () => {
+    const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
+
+    assert.doesNotMatch(teacher, /<small>활동 \{index \+ 1\}<\/small>/);
+    assert.doesNotMatch(teacher, /한 화면에서 과제를 준비하세요/);
+    assert.match(teacher, /neighbor-teacher__gallery-intro/);
+    assert.match(css, /neighbor-teacher__activity-panel[^}]*padding: 13px/);
+});
+
+test('두 활동은 데스크톱에서 주 작업과 관리·결과를 좌우로 함께 보여 준다', () => {
+    const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
+
+    assert.match(teacher, /neighbor-teacher__activity-workspace/);
+    assert.match(teacher, /neighbor-teacher__management-column/);
+    assert.match(css, /activity-workspace[^}]*grid-template-columns: minmax\(0, 1\.2fr\) minmax\(340px, \.8fr\)/);
+    assert.match(css, /@media \(max-width: 1050px\)[\s\S]*activity-workspace\s*\{\s*grid-template-columns: 1fr/);
+    assert.doesNotMatch(teacher, /topicView|setTopicView|neighbor-teacher__subtabs/);
+    assert.ok(teacher.indexOf('새 주제 제안') < teacher.indexOf('진행 현황'), '주제 만들기와 활동 결과 순서가 잘못됐습니다.');
+});
+
+test('함께 쓰는 주제는 만들기·결과를 함께 보이고 글 종류 칸이 화면에 녹아 있다', () => {
     // 선생님 지적(2026-09-07): 글 종류 고르기를 모듈만 가져다 놓아 성의 없어 보였다.
     // 실제로 `.neighbor-teacher__genre` 에 스타일이 하나도 없어 맨 요소가 그대로 나오고 있었다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
 
-    // 주제를 내는 일과 지켜보는 일은 하는 때가 달라 갈래를 나눈다.
-    assert.match(teacher, /neighbor-teacher__subtabs/);
+    // 주제를 내는 일과 결과 확인을 좌우에서 동시에 본다.
     assert.match(teacher, /주제 만들기/);
-    assert.match(teacher, /활동 결과 확인/);
-    assert.match(teacher, /topicView === 'create'/);
-    assert.match(teacher, /topicView === 'result'/);
+    assert.match(teacher, /진행 현황/);
 
     // 고르기 전·후 모양이 달라야 지금 무엇이 정해졌는지 보인다.
     assert.match(teacher, /neighbor-teacher__genre is-picked/);
@@ -137,7 +157,7 @@ test('함께 쓰는 주제는 만들기·결과 두 갈래이고 글 종류 칸�
     assert.match(picker, /embedded = false/);
 
     // 화면에 쓰는 class 는 모두 스타일이 있어야 한다 — 없으면 맨 요소가 그대로 나온다.
-    for (const name of ['__subtabs', '__genre', '__genre-mark', '__genre-body', '__genre-go',
+    for (const name of ['__genre', '__genre-mark', '__genre-body', '__genre-go',
         '__preset-notice', '__form-step']) {
         assert.ok(css.includes(`.neighbor-teacher${name}`), `neighbor-teacher${name} 스타일이 없습니다.`);
     }

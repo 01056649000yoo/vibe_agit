@@ -55,8 +55,9 @@ test('이웃 아지트는 글 나눔 공간·함께 쓰는 주제 두 활동만 
     }
     // 끝난 단계에 ✓ 를 달아 지금 어디까지 왔는지 보인다.
     assert.match(teacherEntry, /step\.done \? '✓' : index \+ 1/);
-    // 검토·공개 글 관리는 3단계 안에 있어 별도 탭이 아니다.
-    assert.equal((teacherEntry.match(/activeTab === 'activities'/g) || []).length, 3);
+    // 검토·공개 글 관리는 활동 화면의 글 나눔 오른쪽 열에 함께 있어 별도 탭이나 하단 화면이 아니다.
+    assert.equal((teacherEntry.match(/activeTab === 'activities'/g) || []).length, 1);
+    assert.match(teacherEntry, /neighbor-teacher__management-column/);
     assert.doesNotMatch(teacherEntry, /activeTab === 'review'|activeTab === 'feed'/);
 });
 

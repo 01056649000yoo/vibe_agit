@@ -50,8 +50,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
     const [activityForm, setActivityForm] = useState(createNeighborTopicDraft);
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
-    // 함께 쓰는 주제 안의 두 갈래: 새 주제를 내는 곳과 낸 주제가 어떻게 되고 있는지 보는 곳.
-    const [topicView, setTopicView] = useState('create');
     const [presetNotice, setPresetNotice] = useState('');
     const [galleryCandidates, setGalleryCandidates] = useState(null);
     const [galleryLoading, setGalleryLoading] = useState(false);
@@ -449,9 +447,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     {activeTab === 'activities' && (
                         <div className="neighbor-teacher__activity-layout">
                             <nav className="neighbor-teacher__activity-tabs" aria-label="활동 전환" role="tablist">
-                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }, index) => (
+                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => (
                                     <button type="button" role="tab" key={id} className={activeActivityTab === id ? 'is-active' : ''} aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
-                                        <small>활동 {index + 1}</small>
                                         <span aria-hidden="true">{icon}</span>
                                         <strong>{label}</strong>
                                     </button>
@@ -459,10 +456,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             </nav>
 
                             {activeActivityTab === 'gallery' ? (
+                                <div className="neighbor-teacher__activity-workspace">
                                 <section className="neighbor-teacher-card neighbor-teacher__activity-panel" role="tabpanel">
                                     {/* 위 탭이 이미 활동 이름을 말한다. 안쪽에서 되풀이하지 않아 한 화면에 더 담긴다. */}
-                                    <p>학생이 공개를 요청한 글을 승인하거나, 교사가 우리 학급의 제출 글을 직접 골라 모든 참여 학급에 소개할 수 있습니다.</p>
-                                    <div className="neighbor-teacher__row-actions">
+                                    <div className="neighbor-teacher__gallery-intro">
+                                        <p>우리 학급의 제출 글을 골라 참여 학급에 소개합니다.</p>
                                         <Button type="button" variant="outline" loading={galleryLoading} disabled={Boolean(busy)} onClick={loadGalleryCandidates}>우리 학급 글 불러오기</Button>
                                     </div>
                                     {galleryCandidates && (
@@ -515,26 +513,23 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         </div>
                                     )}
                                 </section>
+                                <aside className="neighbor-teacher__management-column" aria-label="공개 요청과 공개 글 관리">
+                                    <section className="neighbor-teacher-card">
+                                        <div><span>우리 학급 글</span><h2>공개 요청 검토</h2></div>
+                                        {pendingTotal > pendingPosts.length && <p>대기 {pendingTotal}편 중 먼저 신청한 {pendingPosts.length}편입니다. 검토를 마치면 다음 글이 이어집니다.</p>}
+                                        {pendingPosts.length === 0 ? <p className="neighbor-teacher__empty">검토를 기다리는 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{pendingPosts.map((post) => <article key={post.shared_post_id}><div><span><strong>{post.student_name}</strong><small>{STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p></div><Button type="button" disabled={Boolean(busy)} onClick={() => setReviewSelection({ post, mode: 'review' })}>전문 검토하기</Button></article>)}</div>}
+                                    </section>
+                                    <section className="neighbor-teacher-card">
+                                        <div><span>공간 피드</span><h2>공개 글 관리</h2></div>
+                                        {workspace.public_posts.length === 0 ? <p className="neighbor-teacher__empty">공개된 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{workspace.public_posts.map((post) => <article key={post.shared_post_id}><button type="button" className="neighbor-teacher__post-open" onClick={() => openPostDetail(post.shared_post_id)}><span><strong>{post.author_name}</strong><small>{post.class_name} · {STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p><small>💛 {post.reaction_count || 0} · 💬 {post.comment_count || 0}</small></button>{post.status === 'published' && <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글을 공간에서 숨겼습니다.')}>숨기기</Button>}{post.status === 'hidden' && post.is_own_class && <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.')}>복원</Button>}</article>)}</div>}
+                                    </section>
+                                    {(detailBusy || postDetail) && <section className="neighbor-teacher-card neighbor-teacher__detail">{detailBusy ? <p>글을 불러오는 중입니다…</p> : <><div><span>{postDetail.class_name}</span><h2>{postDetail.title}</h2></div><p className="neighbor-teacher__detail-content">{postDetail.content}</p><h3>댓글 {postDetail.comments.length}개</h3>{postDetail.comments.length === 0 ? <p>댓글이 없습니다.</p> : <ul>{postDetail.comments.map((comment) => <li key={comment.comment_id}><span><strong>{comment.author_name}</strong><small>{comment.class_name}</small></span><p>{comment.status === 'hidden' ? '숨긴 댓글' : comment.content}</p>{comment.status === 'visible' ? <Button type="button" variant="outline" onClick={() => runAction('hide_comment', { space_id: workspace.space.id, item_id: comment.comment_id, reason: '교사 확인' }, '댓글을 숨겼습니다.')}>숨기기</Button> : comment.is_own_class ? <Button type="button" variant="outline" onClick={() => runAction('restore_comment', { space_id: workspace.space.id, item_id: comment.comment_id, reason: '' }, '댓글을 복원했습니다.')}>복원</Button> : null}</li>)}</ul>}</>}</section>}
+                                </aside>
+                                </div>
                             ) : (
                                 <>
-                                    {/* 주제를 내는 일과 낸 주제를 지켜보는 일은 하는 때가 달라 갈래를 나눈다. */}
-                                    <nav className="neighbor-teacher__subtabs" aria-label="함께 쓰는 주제 보기" role="tablist">
-                                        <button type="button" role="tab" aria-selected={topicView === 'create'}
-                                            className={topicView === 'create' ? 'is-active' : ''} onClick={() => setTopicView('create')}>
-                                            ✏️ 주제 만들기
-                                        </button>
-                                        <button type="button" role="tab" aria-selected={topicView === 'result'}
-                                            className={topicView === 'result' ? 'is-active' : ''} onClick={() => setTopicView('result')}>
-                                            📊 활동 결과 확인{selectedActivities.length > 0 ? ` (${selectedActivities.length})` : ''}
-                                        </button>
-                                    </nav>
-
-                                    {topicView === 'create' && (
                                     <form className="neighbor-teacher-card neighbor-teacher__activity-form" role="tabpanel" onSubmit={createActivity}>
-                                        <header className="neighbor-teacher__composer-heading">
-                                            <div><span>주제 만들기</span><h2>한 화면에서 과제를 준비하세요</h2></div>
-                                            <p>글 종류를 고른 뒤 필요한 내용만 확인하고 바로 제안할 수 있어요.</p>
-                                        </header>
+                                        <div className="neighbor-teacher__column-heading"><span>주제 만들기</span><strong>✏️ 새 주제 제안</strong></div>
                                         <div className="neighbor-teacher__composer-grid">
                                             <section className="neighbor-teacher__composer-main" aria-labelledby="neighbor-topic-main-heading">
                                                 <div className="neighbor-teacher__compact-heading">
@@ -622,7 +617,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             </section>
                                         </div>
                                     </form>
-                                    )}
 
                                     {/* `MissionTypePicker` 는 그 자리에 펼쳐지는 판이라 폼 아래로 밀려났었다.
                                         고르는 동안에는 다른 것을 볼 일이 없으므로 창으로 띄우고, 고르면 바로 닫는다
@@ -648,9 +642,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         </Modal>
                                     </ModalPortal>
 
-                                    {topicView === 'result' && (
                                     <section className="neighbor-teacher-card neighbor-teacher__activity-list" role="tabpanel">
-                                        <div><span>활동 결과</span><h2>낸 주제가 어떻게 되고 있나요?</h2></div>
+                                        <div className="neighbor-teacher__column-heading"><span>활동 결과</span><strong>📊 진행 현황 {selectedActivities.length > 0 ? `(${selectedActivities.length})` : ''}</strong></div>
                                         {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 주제가 없습니다. `주제 만들기` 에서 첫 주제를 내 보세요.</p> : selectedActivities.map((activity) => (
                                     <article key={activity.id}>
                                         <div>
@@ -674,27 +667,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </article>
                                         ))}
                                     </section>
-                                    )}
                                 </>
                             )}
-                        </div>
-                    )}
-
-                    {activeTab === 'activities' && (
-                        <section className="neighbor-teacher-card">
-                            <div><span>우리 학급 글</span><h2>공개 요청 검토</h2></div>
-                            {pendingTotal > pendingPosts.length && <p>대기 {pendingTotal}편 중 먼저 신청한 {pendingPosts.length}편입니다. 검토를 마치면 다음 글이 이어집니다.</p>}
-                            {pendingPosts.length === 0 ? <p className="neighbor-teacher__empty">검토를 기다리는 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{pendingPosts.map((post) => <article key={post.shared_post_id}><div><span><strong>{post.student_name}</strong><small>{STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p></div><Button type="button" disabled={Boolean(busy)} onClick={() => setReviewSelection({ post, mode: 'review' })}>전문 검토하기</Button></article>)}</div>}
-                        </section>
-                    )}
-
-                    {activeTab === 'activities' && (
-                        <div className="neighbor-teacher__feed-layout">
-                            <section className="neighbor-teacher-card">
-                                <div><span>공간 피드</span><h2>공개 글 관리</h2></div>
-                                {workspace.public_posts.length === 0 ? <p className="neighbor-teacher__empty">공개된 글이 없습니다.</p> : <div className="neighbor-teacher__post-list">{workspace.public_posts.map((post) => <article key={post.shared_post_id}><button type="button" className="neighbor-teacher__post-open" onClick={() => openPostDetail(post.shared_post_id)}><span><strong>{post.author_name}</strong><small>{post.class_name} · {STATUS_LABELS[post.status]}</small></span><h3>{post.title}</h3><p>{post.excerpt}</p><small>💛 {post.reaction_count || 0} · 💬 {post.comment_count || 0}</small></button>{post.status === 'published' && <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글을 공간에서 숨겼습니다.')}>숨기기</Button>}{post.status === 'hidden' && post.is_own_class && <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.')}>복원</Button>}</article>)}</div>}
-                            </section>
-                            {(detailBusy || postDetail) && <section className="neighbor-teacher-card neighbor-teacher__detail">{detailBusy ? <p>글을 불러오는 중입니다…</p> : <><div><span>{postDetail.class_name}</span><h2>{postDetail.title}</h2></div><p className="neighbor-teacher__detail-content">{postDetail.content}</p><h3>댓글 {postDetail.comments.length}개</h3>{postDetail.comments.length === 0 ? <p>댓글이 없습니다.</p> : <ul>{postDetail.comments.map((comment) => <li key={comment.comment_id}><span><strong>{comment.author_name}</strong><small>{comment.class_name}</small></span><p>{comment.status === 'hidden' ? '숨긴 댓글' : comment.content}</p>{comment.status === 'visible' ? <Button type="button" variant="outline" onClick={() => runAction('hide_comment', { space_id: workspace.space.id, item_id: comment.comment_id, reason: '교사 확인' }, '댓글을 숨겼습니다.')}>숨기기</Button> : comment.is_own_class ? <Button type="button" variant="outline" onClick={() => runAction('restore_comment', { space_id: workspace.space.id, item_id: comment.comment_id, reason: '' }, '댓글을 복원했습니다.')}>복원</Button> : null}</li>)}</ul>}</>}</section>}
                         </div>
                     )}
                 </>

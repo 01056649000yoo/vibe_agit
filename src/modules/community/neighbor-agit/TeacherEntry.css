@@ -11,6 +11,7 @@
 .neighbor-teacher-state h1, .neighbor-teacher-state h2, .neighbor-teacher-state p { margin: 0; }
 .neighbor-teacher-state--closed { background: #f8fafc; color: #486581; }
 .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.neighbor-teacher__activity-layout { gap: 8px; }
 .neighbor-teacher__space-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .neighbor-teacher-card { display: grid; align-content: start; gap: 13px; padding: 20px; border: 1px solid #d9e2ec; border-radius: 17px; background: #fff; box-shadow: 0 2px 8px rgba(16, 42, 67, .05); }
 .neighbor-teacher-card h2, .neighbor-teacher-card h3 { margin: 4px 0 0; color: #243b53; }
@@ -62,23 +63,21 @@
 .neighbor-teacher__detail li { align-items: flex-start; flex-direction: column; }
 .neighbor-teacher__detail li p { color: #334e68; }
 /* 활동은 `글 나눔 공간`·`함께 쓰는 주제` 둘뿐이다(글짝 교환은 61254 에서 뺐다). 3칸으로 두면 한 칸이 빈다. */
-.neighbor-teacher__activity-tabs { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-.neighbor-teacher__activity-tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; padding: 10px 14px; border: 1px solid #d9e2ec; border-radius: 14px; background: #fff; color: #486581; font: inherit; cursor: pointer; }
-.neighbor-teacher__activity-tabs button small { color: #829ab1; font-size: var(--ui-text-xs); font-weight: 800; }
-.neighbor-teacher__activity-tabs button > span { font-size: var(--ui-text-lg); }
+.neighbor-teacher__activity-tabs { display: flex; grid-column: 1 / -1; gap: 4px; width: fit-content; padding: 4px; border: 1px solid #d9e2ec; border-radius: 11px; background: #f1f5f9; }
+.neighbor-teacher__activity-tabs button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 6px 13px; border: 0; border-radius: 8px; background: transparent; color: #486581; font: inherit; cursor: pointer; }
+.neighbor-teacher__activity-tabs button > span { font-size: var(--ui-text-md); }
 .neighbor-teacher__activity-tabs button strong { font-weight: 900; }
-.neighbor-teacher__activity-tabs button.is-active { border-color: #0f766e; background: #ccfbf1; color: #115e59; box-shadow: 0 3px 10px rgba(15, 118, 110, .12); }
-.neighbor-teacher__activity-tabs button.is-active small { color: #0f766e; }
-.neighbor-teacher__activity-panel, .neighbor-teacher__activity-form, .neighbor-teacher__activity-list { grid-column: 1 / -1; }
-
-/* 함께 쓰는 주제 안의 두 갈래(주제 만들기 · 활동 결과). 활동 탭보다 한 단 작게 두어 층이 구분되게 한다. */
-.neighbor-teacher__subtabs { display: flex; grid-column: 1 / -1; gap: 6px; padding: 5px; border-radius: 12px; background: #f1f5f9; }
-.neighbor-teacher__subtabs button { flex: 1; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 9px;
-    background: transparent; color: #627d98; font: inherit; font-weight: 850; cursor: pointer; }
-.neighbor-teacher__subtabs button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .1); }
+.neighbor-teacher__activity-tabs button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .12); }
+.neighbor-teacher__activity-workspace { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); gap: 10px; align-items: start; }
+.neighbor-teacher__management-column { display: grid; gap: 10px; min-width: 0; }
+.neighbor-teacher__management-column .neighbor-teacher-card { padding: 13px; }
+.neighbor-teacher__management-column .neighbor-teacher__post-list { max-height: 260px; overflow-y: auto; }
+.neighbor-teacher__column-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.neighbor-teacher__column-heading span { color: #0f766e; font-size: var(--ui-text-xs); font-weight: 900; }
+.neighbor-teacher__column-heading strong { color: #243b53; font-size: var(--ui-text-md); }
 
 /* 주제 작성은 넓은 화면에서 두 작업 열로 묶어 페이지 전체 스크롤을 줄인다. */
-.neighbor-teacher__activity-form { gap: 12px; padding: 16px; }
+.neighbor-teacher__activity-form { gap: 8px; padding: 12px; }
 .neighbor-teacher__composer-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .neighbor-teacher__composer-heading h2 { margin: 2px 0 0; font-size: var(--ui-text-xl); }
 .neighbor-teacher__composer-heading p { max-width: 430px; font-size: var(--ui-text-sm); text-align: right; }
@@ -110,6 +109,9 @@
 .neighbor-teacher__setting-groups label { gap: 3px; min-width: 0; font-size: var(--ui-text-xs); }
 .neighbor-teacher__setting-groups input { min-width: 0; padding: 7px 6px; text-align: center; }
 .neighbor-teacher__submit-topic { min-height: 42px; }
+.neighbor-teacher__gallery-intro { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.neighbor-teacher__gallery-intro p { font-size: var(--ui-text-sm); }
+.neighbor-teacher__activity-panel { gap: 9px; padding: 13px; }
 
 /* 폼 안의 작은 단계 머리말. 1단계(글 종류) → 2단계(주제·안내) 순서를 눈으로 잇는다. */
 .neighbor-teacher__form-step { margin-top: 4px; padding-top: 14px; border-top: 1px dashed #d9e2ec; }
@@ -203,17 +205,18 @@
     .neighbor-teacher__composer-grid { grid-template-columns: 1fr; }
     .neighbor-teacher__composer-settings .neighbor-teacher__questions { max-height: none; }
     .neighbor-teacher__candidate-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .neighbor-teacher__activity-workspace { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
     /* 단계는 순서가 뜻이라 좁아져도 세 칸을 유지하고 설명만 줄인다. 세로로 쌓으면 흐름이 끊긴다. */
     .neighbor-teacher__step { flex-direction: column; gap: 5px; padding: 9px 8px; min-height: 66px; text-align: center; }
     .neighbor-teacher__step-text small { display: none; }
-    .neighbor-teacher__activity-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .neighbor-teacher__header, .neighbor-teacher__overview, .neighbor-teacher__post-list article { align-items: stretch; flex-direction: column; }
     .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout { grid-template-columns: 1fr; }
     .neighbor-teacher__activity-list > article { align-items: stretch; flex-direction: column; }
-    .neighbor-teacher__activity-tabs button { justify-content: flex-start; min-height: 50px; }
+    .neighbor-teacher__activity-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; box-sizing: border-box; }
+    .neighbor-teacher__activity-tabs button { min-height: 36px; }
     .neighbor-teacher__genre { flex-wrap: wrap; }
     .neighbor-teacher__genre-body { flex-basis: 100%; }
     .neighbor-teacher__reward-grid { grid-template-columns: 1fr; }
@@ -227,6 +230,7 @@
     .neighbor-teacher__composer-settings .neighbor-teacher__questions { grid-template-columns: 1fr; }
     .neighbor-teacher__setting-groups { grid-template-columns: 1fr; }
     .neighbor-teacher__candidate-toolbar, .neighbor-teacher__candidate-list { grid-template-columns: 1fr; }
+    .neighbor-teacher__gallery-intro { align-items: stretch; flex-direction: column; }
 }
 
 .neighbor-teacher__review-body { display: grid; gap: 16px; }
