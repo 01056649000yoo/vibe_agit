@@ -1,0 +1,1901 @@
+{
+ "version": 1,
+ "checks": [
+  {
+   "date": "2026-09-09",
+   "dbStartedAt": "2026-08-30 03:11:10",
+   "trackFunctions": "none"
+  },
+  {
+   "date": "2026-09-09",
+   "dbStartedAt": "2026-08-30 03:11:10",
+   "trackFunctions": "none"
+  }
+ ],
+ "indexes": {
+  "agit_season_history.idx_agit_season_history_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "agit_season_history.idx_season_history_ended_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "ai_prompt_presets.idx_ai_prompt_presets_one_active": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "ai_prompt_presets.idx_ai_prompt_presets_owner": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "ai_prompt_presets.idx_ai_prompt_presets_unique_name": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "ai_request_events.idx_ai_request_events_actor_scope_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 278528,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "book_catalog.idx_book_catalog_isbn13": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09"
+  },
+  "book_catalog.idx_book_catalog_title": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09"
+  },
+  "class_agit_book_editions.class_agit_book_editions_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_book_editions.class_agit_book_one_visible_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_book_items.class_agit_book_items_book_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_book_items.class_agit_book_items_source_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_book_items.class_agit_book_items_student_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_books.class_agit_books_class_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_consent_events.class_agit_consent_class_time_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "class_agit_exhibitions.class_agit_exhibitions_class_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_exhibitions.class_agit_exhibitions_published_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_external_items.class_agit_external_items_post_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_external_items.class_agit_external_items_scope_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_external_items.class_agit_external_items_student_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_external_shares.class_agit_external_shares_class_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_items.class_agit_items_exhibition_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 114688,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_items.class_agit_items_source_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_items.class_agit_items_student_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_publication_slots.class_agit_slots_room_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 81920,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_published_items.class_agit_published_consent_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_agit_release_events.class_agit_release_events_class_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_boards.idx_class_boards_class_display_order": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_boards.idx_class_boards_class_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_boards.idx_class_boards_one_active_per_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_boards.idx_class_boards_one_default_per_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_spelling_daily_stats.idx_class_spelling_stats_class_date": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "class_spelling_student_daily.idx_class_spelling_student_entry_date": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 98304,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "classes.idx_classes_deleted_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "classes.idx_classes_invite_code": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09"
+  },
+  "classes.idx_classes_teacher_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "classes.idx_classes_teacher_live": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "classroom_arrangement_history.idx_classroom_arrangement_history_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "dragon_decor_catalog.idx_dragon_decor_catalog_slot_active_sort": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "dragon_growth_seasons.idx_dragon_growth_seasons_class_ended": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "dragon_growth_seasons.idx_dragon_growth_seasons_one_open": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "dragon_season_students.idx_dragon_season_students_class_season": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "dragon_season_students.idx_dragon_season_students_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "feedback_reports.feedback_reports_created_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "feedback_reports.feedback_reports_teacher_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "game_point_grants.idx_game_point_grants_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "game_point_grants.idx_game_point_grants_student_day": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "game_point_grants.idx_game_point_grants_student_week": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_challenge_attempts.learning_challenge_attempts_best_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_challenge_attempts.learning_challenge_attempts_class_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_challenge_attempts.learning_challenge_attempts_one_open_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_collection_progress.learning_collection_progress_student_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_content_collection_items.learning_content_collection_items_lookup_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_content_items.learning_content_items_curriculum_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_content_items.learning_content_items_grade_bands_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 24576,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_content_items.learning_content_items_published_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_content_items.learning_content_items_source_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_content_questions.learning_content_questions_published_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_item_progress.learning_item_progress_class_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 3153920,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_item_progress.learning_item_progress_collection_state_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1400832,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "learning_item_progress.learning_item_progress_due_review_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 1810432,
+   "lastSeen": "2026-09-09"
+  },
+  "learning_summit_awards.learning_summit_awards_class_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_activities.idx_neighbor_activities_one_live_type": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_activities.idx_neighbor_activities_space_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_activity_approvals.idx_neighbor_activity_approvals_class_pending": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_activity_approvals.idx_neighbor_activity_approvals_one_proposer": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_activity_classes.idx_neighbor_activity_classes_space_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_comments.idx_neighbor_comments_post_visible": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_comments.idx_neighbor_comments_space_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_comments.neighbor_comments_review_queue_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_exchange_matches.idx_neighbor_exchange_matches_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_feed_visits.idx_neighbor_feed_visits_student_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_invites.idx_neighbor_invites_active_expiry": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_invites.idx_neighbor_invites_space_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_limited_class_events.idx_neighbor_limited_class_events_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_reactions.idx_neighbor_reactions_post": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_rollout_events.idx_neighbor_rollout_events_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_saves.idx_neighbor_saves_student_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_shared_posts.idx_neighbor_shared_posts_activity_feed": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_shared_posts.idx_neighbor_shared_posts_class_review": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 90112,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_shared_posts.idx_neighbor_shared_posts_feed": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_shared_posts.idx_neighbor_shared_posts_student_history": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_shared_posts.neighbor_shared_posts_pending_queue_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_space_classes.idx_neighbor_space_classes_class_history": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_space_classes.idx_neighbor_space_classes_space_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_space_classes.uq_neighbor_space_classes_one_active_host": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_space_classes.uq_neighbor_space_classes_one_active_space": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neighbor_space_events.idx_neighbor_space_events_class_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_space_events.idx_neighbor_space_events_space_recent": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_spaces.idx_neighbor_spaces_host_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "neighbor_spaces.idx_neighbor_spaces_status_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "neis_meal_cache.idx_neis_meal_cache_expires": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_class_activity_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 2744320,
+   "lastSeen": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1589248,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 483328,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_class_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 3047424,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1024000,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_post_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 417792,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_student_activity_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2613248,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_student_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 401408,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_student_id_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1441792,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.idx_point_logs_teacher_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 450560,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "point_logs.uq_point_logs_student_event_key": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1957888,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_ai_review_queue": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_class_approved_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1097728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 319488,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_class_status_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1187840,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_class_student_approved_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1081344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_post_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 696320,
+   "lastSeen": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_post_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 327680,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_post_id_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 696320,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_student_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 303104,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_comments.idx_post_comments_teacher_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_reactions.idx_post_reactions_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 81920,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_reactions.idx_post_reactions_class_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 507904,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_reactions.idx_post_reactions_composite": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 286720,
+   "lastSeen": "2026-09-09"
+  },
+  "post_reactions.idx_post_reactions_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 229376,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_reactions.idx_reactions_post_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 147456,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "post_reactions.idx_reactions_student_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 131072,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "profiles.idx_profiles_admin_teacher_accounts": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 204800,
+   "lastSeen": "2026-09-09"
+  },
+  "profiles.idx_profiles_is_approved": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "profiles.idx_profiles_last_login_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "profiles.idx_profiles_role": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_drafts.idx_reading_log_drafts_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_drafts.reading_log_drafts_book_unique": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_drafts.reading_log_drafts_post_unique": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_entries.idx_reading_log_entries_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_entries.idx_reading_log_library_item": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09"
+  },
+  "reading_log_entries.idx_reading_log_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_entries.reading_log_entries_library_item_unique": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_teacher_reviews.idx_reading_log_reviews_class_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_teacher_reviews.idx_reading_log_reviews_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_log_teacher_reviews.idx_reading_log_reviews_student_revision": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_campaigns.idx_reading_marathon_class_archived": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "reading_marathon_campaigns.idx_reading_marathon_class_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_campaigns.idx_reading_marathon_one_current": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "reading_marathon_contributions.idx_reading_marathon_contribution_campaign": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "reading_marathon_contributions.idx_reading_marathon_contribution_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_contributions.idx_reading_marathon_contribution_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_medals.idx_reading_marathon_medals_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_participants.idx_reading_marathon_participants_campaign_rank": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_participants.idx_reading_marathon_participants_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 32768,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "reading_marathon_participants.idx_reading_marathon_participants_team": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "reading_marathon_teams.idx_reading_marathon_teams_campaign": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "self_writing_drafts.idx_self_writing_drafts_class_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "spelling_learning_entries.idx_spelling_class_approved_expression": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "spelling_learning_entries.idx_spelling_common_approved_expression": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "spelling_learning_entries.idx_spelling_entries_class_status_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "spelling_weekly_review_items.idx_spelling_weekly_items_pending": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_activity_title_notification_state.idx_student_activity_title_notification_state_student": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 376832,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_library_items.idx_student_library_book_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 81920,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_library_items.idx_student_library_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_library_items.idx_student_library_owner_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 65536,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_meal_notes.idx_student_meal_notes_class_updated": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_notification_events.idx_student_notification_events_priority_writing_poll": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 270336,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_notification_events.idx_student_notification_events_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1040384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_notification_events.idx_student_notification_events_student_unread": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 712704,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_notification_events.student_notification_events_actor_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.class_agit_posts_mission_browse_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 401408,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.class_agit_source_candidates_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 573440,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_posts_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 270336,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_posts_is_submitted": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 106496,
+   "lastSeen": "2026-09-09"
+  },
+  "student_posts.idx_posts_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 106496,
+   "lastSeen": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_completed_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1646592,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 434176,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 147456,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_mission_assignment_status": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1712128,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_pending_rewrite": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 57344,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_public_feed": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 745472,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_student_approved_day": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 630784,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 565248,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_class_student_submitted_day": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 442368,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_diary_date": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 65536,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_mission_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 147456,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_mission_submitted_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 466944,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_public_bookshelf": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_reading_log_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 49152,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_recalled": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_self_writing_list": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 98304,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_student_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 335872,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.idx_student_posts_student_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 180224,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_posts.uq_student_diary_per_day": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 65536,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_records.idx_student_records_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "student_records.idx_student_records_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "student_records.idx_student_records_student_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_records.idx_student_records_teacher_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "student_records.idx_student_records_type": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_title_reward_claims.idx_title_reward_claims_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_title_reward_claims.idx_title_reward_claims_student_season": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "student_title_test_overrides.idx_student_title_test_overrides_class": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.class_agit_student_class_reference_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 360448,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_auth_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 155648,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 131072,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_class_last_login": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 147456,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_class_live": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 131072,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_deleted_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.idx_students_last_login": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 303104,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "students.students_class_student_no_key": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 245760,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "survival_legacy_archives.idx_survival_legacy_archives_teacher_imported": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "system_alert_events.system_alert_events_open_key_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "system_alert_events.system_alert_events_recent_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "system_backup_app_results.idx_system_backup_app_results_app_checked": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "system_backup_runs.idx_system_backup_runs_job_started": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "system_service_reviews.idx_system_service_reviews_completed": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "system_service_reviews.idx_system_service_reviews_one_active": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "system_service_scan_images.idx_system_service_scan_images_attention": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "system_service_scan_runs.idx_system_service_scan_runs_finished": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_master_questions.vocab_master_questions_attempt_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_answers.idx_vocab_tower_answers_run_answered": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2220032,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_answers.idx_vocab_tower_answers_student_answered": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2654208,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_history.idx_tower_history_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_history.idx_tower_history_ended_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_rankings.idx_tower_rankings_max_floor": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_rankings.idx_vocab_tower_rankings_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_rankings.idx_vocab_tower_rankings_class_max_floor": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_runs.idx_vocab_tower_runs_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 319488,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_runs.idx_vocab_tower_runs_student_date": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 303104,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_runs.uq_vocab_tower_runs_student_active": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_v2_deck_progress.vocab_tower_v2_deck_progress_class_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_v2_deck_progress.vocab_tower_v2_deck_progress_student_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_class_updated_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_student_deck_state_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "vocab_tower_v2_review_items.vocab_tower_v2_review_items_deck_word_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 212992,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_v2_run_questions.vocab_tower_v2_run_questions_run_created_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2293760,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_v2_run_questions.vocab_tower_v2_run_questions_student_created_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2940928,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "vocab_tower_words.idx_vocab_tower_words_grade_level": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09"
+  },
+  "writing_activity_events.idx_writing_events_actor_time": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1941504,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_activity_events.idx_writing_events_class_submission_time": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 311296,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_activity_events.idx_writing_events_class_time": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2498560,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_activity_events.idx_writing_events_object_time": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 2605056,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_activity_events.idx_writing_events_student_time": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 1974272,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_assignment_outline_pin_events.writing_assignment_outline_pin_events_lookup_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_assignment_outline_pins.writing_assignment_outline_pins_result_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": false,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09"
+  },
+  "writing_mission_lab_sources.writing_mission_lab_sources_class_mission_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.class_agit_missions_browse_idx": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 81920,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.idx_missions_created_at": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.idx_missions_is_archived": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.idx_writing_missions_class_active_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 40960,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.idx_writing_missions_class_id": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_missions.idx_writing_missions_teacher": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 16384,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_reward_claims.idx_writing_reward_claims_class_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_reward_claims.idx_writing_reward_claims_class_daily_writing": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 106496,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  },
+  "writing_reward_claims.idx_writing_reward_claims_student_type_created": {
+   "firstSeen": "2026-09-09",
+   "everUsed": true,
+   "checks": 2,
+   "bytes": 73728,
+   "lastSeen": "2026-09-09",
+   "lastUsedCheck": "2026-09-09"
+  }
+ },
+ "functions": {}
+}

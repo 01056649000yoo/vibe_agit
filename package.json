@@ -63,6 +63,7 @@
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs --status",
     "migrate:check": "node scripts/check-migrations.mjs",
+    "db:usage": "node scripts/snapshot-db-usage.mjs",
     "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql",
     "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261272_internal_only_notification_emit.smoke.sql supabase/migrations/20261272_internal_only_notification_emit.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261273_internal_only_learning_helpers.smoke.sql supabase/migrations/20261273_internal_only_learning_helpers.sql",
     "smoke:writing-references": "node scripts/run-rollback-smoke.mjs tests/sql/20261104_writing_reference_sources.smoke.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261165_assignment_outline_pins.smoke.sql && node scripts/run-rollback-smoke.mjs tests/sql/20261269_student_hard_delete_cleans_writing_footprints.smoke.sql supabase/migrations/20261269_student_hard_delete_cleans_writing_footprints.sql",

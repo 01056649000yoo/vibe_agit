@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.db-usage-snapshot</string>
+    <!--
+      안 쓰이는 인덱스·함수를 매달 1일에 재서 장부에 더한다 (2026-09-09).
+
+      왜 사람이 손으로 재면 안 되나: 포스트그레스 사용 통계는 **DB 를 다시 켜면 0 으로 돌아간다.**
+      "내년에 다시 재서 0이면 지운다"만 믿으면, 그 사이 컨테이너가 한 번이라도 재시작됐을 때
+      멀쩡한 인덱스까지 0 으로 보이고 그대로 지우면 화면이 느려진다.
+      그래서 **여러 번 재서 누적**한다 — 한 번이라도 쓰인 적이 있으면 장부가 기억한다.
+      학기말·방학에만 쓰는 기능도 있으므로 한 학년도를 채운 뒤에 판단한다.
+
+      DB 나 도커가 꺼져 있으면 그냥 실패하고 다음 달에 다시 잰다. 아무것도 바꾸지 않는 읽기 작업이다.
+      결과는 docs/DB_UNUSED_OBJECTS.md 와 ops/db-usage-ledger.json 에 쌓인다(커밋은 사람이 한다).
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/node</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/snapshot-db-usage.mjs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Day</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>10</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-db-usage-snapshot.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-db-usage-snapshot.log</string>
+</dict>
+</plist>
