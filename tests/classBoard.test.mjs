@@ -113,7 +113,7 @@ const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, 
 ]);
 
 const [tabOrder, tabOrderMigration, tabOrderSmoke, teacherDashboard, teacherDashboardStyles,
-  devLab, devLabRegistry, devLabReadme] = await Promise.all([
+  devLab, devLabRegistry, devLabReadme, conflictMigration] = await Promise.all([
   read('src/modules/tool/class-board/navigation/tabOrder.js'),
   read('supabase/migrations/20261220_class_board_tab_order_and_default.sql'),
   read('tests/sql/20261220_class_board_tab_order_and_default.smoke.sql'),
@@ -122,7 +122,16 @@ const [tabOrder, tabOrderMigration, tabOrderSmoke, teacherDashboard, teacherDash
   read('src/dev/DevLab.jsx'),
   read('src/dev/devLabRegistry.js'),
   read('src/dev/README.md'),
+  read('supabase/migrations/20261275_class_board_conflict_http_409.sql'),
 ]);
+
+test('스크린 저장 revision 충돌은 PostgREST가 재시도하지 않는 HTTP 409로 끝난다', () => {
+  assert.match(conflictMigration, /CREATE OR REPLACE FUNCTION public\.save_teacher_class_board_v1/);
+  assert.match(conflictMigration, /다른 화면에서 먼저 저장했습니다[\s\S]*ERRCODE = 'PT409'/);
+  assert.doesNotMatch(conflictMigration, /ERRCODE\s*=\s*'40001'/);
+  assert.match(conflictMigration, /REVOKE ALL ON FUNCTION public\.save_teacher_class_board_v1[\s\S]*FROM PUBLIC, anon/);
+  assert.match(conflictMigration, /GRANT EXECUTE ON FUNCTION public\.save_teacher_class_board_v1[\s\S]*TO authenticated, service_role/);
+});
 
 const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, noticeManifest,
   mealNoticeMigration, mealNoticeSmoke, mealApi] = await Promise.all([

@@ -18,82 +18,494 @@
 
 | | |
 |---|---|
-| 관찰 횟수 | 2회 |
+| 관찰 횟수 | 3회 |
 | 관찰 기간 | 2026-09-09 ~ 2026-09-09 (0일) |
 | 한 번도 안 쓰인 인덱스 | **61개** (6.8MB) |
-| 한 번도 안 불린 함수 | 세지 않음 (`track_functions=none`) |
+| 한 번도 안 불린 함수 | **415개** |
 
 > ⚠️ 아직 0일치다. **365일 더** 관찰한 뒤 판단한다.
 
 ## 한 번도 쓰이지 않은 인덱스
 
-- `agit_season_history.idx_agit_season_history_class_id` — 16KB · 2회 관찰 · 2026-09-09부터
-- `agit_season_history.idx_season_history_ended_at` — 16KB · 2회 관찰 · 2026-09-09부터
-- `ai_prompt_presets.idx_ai_prompt_presets_unique_name` — 16KB · 2회 관찰 · 2026-09-09부터
-- `book_catalog.idx_book_catalog_isbn13` — 40KB · 2회 관찰 · 2026-09-09부터
-- `book_catalog.idx_book_catalog_title` — 56KB · 2회 관찰 · 2026-09-09부터
-- `class_agit_consent_events.class_agit_consent_class_time_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `classes.idx_classes_invite_code` — 40KB · 2회 관찰 · 2026-09-09부터
-- `dragon_decor_catalog.idx_dragon_decor_catalog_slot_active_sort` — 16KB · 2회 관찰 · 2026-09-09부터
-- `feedback_reports.feedback_reports_created_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `feedback_reports.feedback_reports_teacher_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `game_point_grants.idx_game_point_grants_student_day` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_challenge_attempts.learning_challenge_attempts_one_open_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_collection_items.learning_content_collection_items_lookup_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_items.learning_content_items_curriculum_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_items.learning_content_items_grade_bands_idx` — 24KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_items.learning_content_items_published_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_items.learning_content_items_source_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_content_questions.learning_content_questions_published_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `learning_item_progress.learning_item_progress_due_review_idx` — 1768KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_activities.idx_neighbor_activities_one_live_type` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_comments.neighbor_comments_review_queue_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_invites.idx_neighbor_invites_space_created` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_rollout_events.idx_neighbor_rollout_events_recent` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_shared_posts.idx_neighbor_shared_posts_class_review` — 88KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_space_events.idx_neighbor_space_events_class_recent` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_space_events.idx_neighbor_space_events_space_recent` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neighbor_spaces.idx_neighbor_spaces_host_status` — 16KB · 2회 관찰 · 2026-09-09부터
-- `neis_meal_cache.idx_neis_meal_cache_expires` — 16KB · 2회 관찰 · 2026-09-09부터
-- `point_logs.idx_point_logs_class_activity_created` — 2680KB · 2회 관찰 · 2026-09-09부터
-- `post_comments.idx_post_comments_post_created` — 680KB · 2회 관찰 · 2026-09-09부터
-- `post_reactions.idx_post_reactions_composite` — 280KB · 2회 관찰 · 2026-09-09부터
-- `profiles.idx_profiles_admin_teacher_accounts` — 200KB · 2회 관찰 · 2026-09-09부터
-- `profiles.idx_profiles_is_approved` — 16KB · 2회 관찰 · 2026-09-09부터
-- `reading_log_entries.idx_reading_log_library_item` — 56KB · 2회 관찰 · 2026-09-09부터
-- `reading_marathon_campaigns.idx_reading_marathon_class_archived` — 16KB · 2회 관찰 · 2026-09-09부터
-- `reading_marathon_campaigns.idx_reading_marathon_one_current` — 16KB · 2회 관찰 · 2026-09-09부터
-- `reading_marathon_contributions.idx_reading_marathon_contribution_campaign` — 16KB · 2회 관찰 · 2026-09-09부터
-- `reading_marathon_participants.idx_reading_marathon_participants_team` — 16KB · 2회 관찰 · 2026-09-09부터
-- `self_writing_drafts.idx_self_writing_drafts_class_updated` — 16KB · 2회 관찰 · 2026-09-09부터
-- `spelling_learning_entries.idx_spelling_class_approved_expression` — 16KB · 2회 관찰 · 2026-09-09부터
-- `spelling_learning_entries.idx_spelling_common_approved_expression` — 16KB · 2회 관찰 · 2026-09-09부터
-- `spelling_learning_entries.idx_spelling_entries_class_status_updated` — 16KB · 2회 관찰 · 2026-09-09부터
-- `student_posts.idx_posts_is_submitted` — 104KB · 2회 관찰 · 2026-09-09부터
-- `student_posts.idx_posts_status` — 104KB · 2회 관찰 · 2026-09-09부터
-- `student_posts.idx_student_posts_public_bookshelf` — 72KB · 2회 관찰 · 2026-09-09부터
-- `student_posts.idx_student_posts_recalled` — 16KB · 2회 관찰 · 2026-09-09부터
-- `student_records.idx_student_records_class_id` — 16KB · 2회 관찰 · 2026-09-09부터
-- `student_records.idx_student_records_created_at` — 16KB · 2회 관찰 · 2026-09-09부터
-- `student_records.idx_student_records_teacher_id` — 16KB · 2회 관찰 · 2026-09-09부터
-- `survival_legacy_archives.idx_survival_legacy_archives_teacher_imported` — 16KB · 2회 관찰 · 2026-09-09부터
-- `system_alert_events.system_alert_events_open_key_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `system_backup_app_results.idx_system_backup_app_results_app_checked` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_history.idx_tower_history_class_id` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_history.idx_tower_history_ended_at` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_rankings.idx_tower_rankings_max_floor` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_rankings.idx_vocab_tower_rankings_class_id` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_rankings.idx_vocab_tower_rankings_class_max_floor` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_class_updated_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_student_deck_state_idx` — 16KB · 2회 관찰 · 2026-09-09부터
-- `vocab_tower_words.idx_vocab_tower_words_grade_level` — 72KB · 2회 관찰 · 2026-09-09부터
-- `writing_assignment_outline_pins.writing_assignment_outline_pins_result_idx` — 16KB · 2회 관찰 · 2026-09-09부터
+- `agit_season_history.idx_agit_season_history_class_id` — 16KB · 3회 관찰 · 2026-09-09부터
+- `agit_season_history.idx_season_history_ended_at` — 16KB · 3회 관찰 · 2026-09-09부터
+- `ai_prompt_presets.idx_ai_prompt_presets_unique_name` — 16KB · 3회 관찰 · 2026-09-09부터
+- `book_catalog.idx_book_catalog_isbn13` — 40KB · 3회 관찰 · 2026-09-09부터
+- `book_catalog.idx_book_catalog_title` — 56KB · 3회 관찰 · 2026-09-09부터
+- `class_agit_consent_events.class_agit_consent_class_time_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `classes.idx_classes_invite_code` — 40KB · 3회 관찰 · 2026-09-09부터
+- `dragon_decor_catalog.idx_dragon_decor_catalog_slot_active_sort` — 16KB · 3회 관찰 · 2026-09-09부터
+- `feedback_reports.feedback_reports_created_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `feedback_reports.feedback_reports_teacher_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `game_point_grants.idx_game_point_grants_student_day` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_challenge_attempts.learning_challenge_attempts_one_open_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_collection_items.learning_content_collection_items_lookup_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_items.learning_content_items_curriculum_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_items.learning_content_items_grade_bands_idx` — 24KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_items.learning_content_items_published_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_items.learning_content_items_source_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_content_questions.learning_content_questions_published_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `learning_item_progress.learning_item_progress_due_review_idx` — 1768KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_activities.idx_neighbor_activities_one_live_type` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_comments.neighbor_comments_review_queue_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_invites.idx_neighbor_invites_space_created` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_rollout_events.idx_neighbor_rollout_events_recent` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_shared_posts.idx_neighbor_shared_posts_class_review` — 88KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_space_events.idx_neighbor_space_events_class_recent` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_space_events.idx_neighbor_space_events_space_recent` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neighbor_spaces.idx_neighbor_spaces_host_status` — 16KB · 3회 관찰 · 2026-09-09부터
+- `neis_meal_cache.idx_neis_meal_cache_expires` — 16KB · 3회 관찰 · 2026-09-09부터
+- `point_logs.idx_point_logs_class_activity_created` — 2680KB · 3회 관찰 · 2026-09-09부터
+- `post_comments.idx_post_comments_post_created` — 680KB · 3회 관찰 · 2026-09-09부터
+- `post_reactions.idx_post_reactions_composite` — 280KB · 3회 관찰 · 2026-09-09부터
+- `profiles.idx_profiles_admin_teacher_accounts` — 200KB · 3회 관찰 · 2026-09-09부터
+- `profiles.idx_profiles_is_approved` — 16KB · 3회 관찰 · 2026-09-09부터
+- `reading_log_entries.idx_reading_log_library_item` — 56KB · 3회 관찰 · 2026-09-09부터
+- `reading_marathon_campaigns.idx_reading_marathon_class_archived` — 16KB · 3회 관찰 · 2026-09-09부터
+- `reading_marathon_campaigns.idx_reading_marathon_one_current` — 16KB · 3회 관찰 · 2026-09-09부터
+- `reading_marathon_contributions.idx_reading_marathon_contribution_campaign` — 16KB · 3회 관찰 · 2026-09-09부터
+- `reading_marathon_participants.idx_reading_marathon_participants_team` — 16KB · 3회 관찰 · 2026-09-09부터
+- `self_writing_drafts.idx_self_writing_drafts_class_updated` — 16KB · 3회 관찰 · 2026-09-09부터
+- `spelling_learning_entries.idx_spelling_class_approved_expression` — 16KB · 3회 관찰 · 2026-09-09부터
+- `spelling_learning_entries.idx_spelling_common_approved_expression` — 16KB · 3회 관찰 · 2026-09-09부터
+- `spelling_learning_entries.idx_spelling_entries_class_status_updated` — 16KB · 3회 관찰 · 2026-09-09부터
+- `student_posts.idx_posts_is_submitted` — 104KB · 3회 관찰 · 2026-09-09부터
+- `student_posts.idx_posts_status` — 104KB · 3회 관찰 · 2026-09-09부터
+- `student_posts.idx_student_posts_public_bookshelf` — 72KB · 3회 관찰 · 2026-09-09부터
+- `student_posts.idx_student_posts_recalled` — 16KB · 3회 관찰 · 2026-09-09부터
+- `student_records.idx_student_records_class_id` — 16KB · 3회 관찰 · 2026-09-09부터
+- `student_records.idx_student_records_created_at` — 16KB · 3회 관찰 · 2026-09-09부터
+- `student_records.idx_student_records_teacher_id` — 16KB · 3회 관찰 · 2026-09-09부터
+- `survival_legacy_archives.idx_survival_legacy_archives_teacher_imported` — 16KB · 3회 관찰 · 2026-09-09부터
+- `system_alert_events.system_alert_events_open_key_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `system_backup_app_results.idx_system_backup_app_results_app_checked` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_history.idx_tower_history_class_id` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_history.idx_tower_history_ended_at` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_rankings.idx_tower_rankings_max_floor` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_rankings.idx_vocab_tower_rankings_class_id` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_rankings.idx_vocab_tower_rankings_class_max_floor` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_class_updated_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_item_progress.vocab_tower_v2_item_progress_student_deck_state_idx` — 16KB · 3회 관찰 · 2026-09-09부터
+- `vocab_tower_words.idx_vocab_tower_words_grade_level` — 72KB · 3회 관찰 · 2026-09-09부터
+- `writing_assignment_outline_pins.writing_assignment_outline_pins_result_idx` — 16KB · 3회 관찰 · 2026-09-09부터
 
 ## 한 번도 불리지 않은 함수
 
-- 호출 통계가 꺼져 있다(`track_functions = none`). 켜기 전에는 "안 불린다"를 알 수 없다.
-- 켜려면: `ALTER SYSTEM SET track_functions = 'pl'; SELECT pg_reload_conf();` (재시작 불필요)
-- 켜지 않아도 `npm run check:rpc-surface` 가 "클라이언트에 열려 있는데 아무 데서도 안 부르는 것"은 이미 막는다.
+- `acknowledge_my_dragon_growth()` — 1회 관찰 · 2026-09-09부터
+- `add_student_with_bonus(p_class_id uuid, p_name text, p_student_code text, p_initial_points integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_bulk_force_teacher_withdrawal(p_teacher_ids uuid[], p_only_empty boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_bulk_set_teacher_approval(p_teacher_ids uuid[], p_is_approved boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_complete_service_review_v1(p_review_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `admin_force_teacher_withdrawal(p_teacher_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_backup_runs_v1(p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_lab_service_summary_v1()` — 1회 관찰 · 2026-09-09부터
+- `admin_get_service_management_v1(p_scan_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_service_overview_v1(p_trend_days integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_spelling_intake_candidates_v1(p_source_kind text, p_excluded boolean, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_spelling_promotion_workspace_v3()` — 1회 관찰 · 2026-09-09부터
+- `admin_get_spelling_weekly_intake_v1()` — 1회 관찰 · 2026-09-09부터
+- `admin_get_student_activity(p_teacher_id uuid, p_activity_days integer, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_teacher_accounts_page_v1(p_status text, p_search text, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_teacher_usage(p_dormant_days integer, p_activity_days integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_usage_overview(p_dormant_days integer, p_activity_days integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_get_vocab_tower_v2_review_deck_v1(p_grade smallint, p_deck_number smallint, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `admin_publish_common_spelling_entry_v1(p_source_kind text, p_expression text, p_source_correction text, p_entry jsonb, p_entry_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `admin_publish_weekly_spelling_entry_v1(p_item_id uuid, p_entry jsonb)` — 1회 관찰 · 2026-09-09부터
+- `admin_reject_weekly_spelling_entry_v1(p_item_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `admin_reply_feedback_v1(p_feedback_id uuid, p_reply text, p_status text)` — 1회 관찰 · 2026-09-09부터
+- `admin_restart_spelling_weekly_review_v1(p_week_start date)` — 1회 관찰 · 2026-09-09부터
+- `admin_save_vocab_tower_v2_review_item_v1(p_item_key text, p_expected_version integer, p_part_of_speech text, p_meaning_number smallint, p_difficulty smallint, p_definition text, p_example text, p_accepted_answers text[], p_questions jsonb, p_review_notes text)` — 1회 관찰 · 2026-09-09부터
+- `admin_seed_vocab_tower_v2_review_deck_v1(p_grade smallint, p_deck_number smallint, p_deck_id text, p_source_fingerprint text, p_items jsonb, p_initial_status text)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_common_spelling_entry_status_v1(p_entry_id uuid, p_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_lab_teacher_access_v1(p_agit_user_id uuid, p_active boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_service_review_item_v1(p_review_id uuid, p_item_key text, p_status text, p_note text)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_spelling_candidate_excluded_v1(p_source_kind text, p_expression text, p_source_correction text, p_excluded boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_teacher_api_mode(p_teacher_id uuid, p_api_mode text)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_teacher_approval(p_teacher_id uuid, p_is_approved boolean)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_teacher_guide_ai_stage_v1(p_stage text)` — 1회 관찰 · 2026-09-09부터
+- `admin_set_vocab_tower_v2_review_status_v1(p_deck_id text, p_expected_version integer, p_review_status text)` — 1회 관찰 · 2026-09-09부터
+- `admin_start_service_review_v1()` — 1회 관찰 · 2026-09-09부터
+- `admin_withdraw_teacher_internal(p_teacher_id uuid, p_only_empty boolean)` — 1회 관찰 · 2026-09-09부터
+- `approve_assignment_post(p_post_id uuid, p_feedback text)` — 1회 관찰 · 2026-09-09부터
+- `archive_teacher_class_board_v1(p_board_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_class_agit_manager_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_class_roster_editor_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_admin_v1()` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_participating_teacher_v1(p_space_id uuid, p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_space_host_v1(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_student_access_v1(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_student_post_access_v1(p_space_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `assert_neighbor_teacher_class_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `auth_student_id()` — 1회 관찰 · 2026-09-09부터
+- `auth_user_class_id()` — 1회 관찰 · 2026-09-09부터
+- `auth_user_is_teacher_of(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `award_self_writing_review_points_v1(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `bind_student_auth(p_student_code text)` — 1회 관찰 · 2026-09-09부터
+- `bond_with_my_dragon()` — 1회 관찰 · 2026-09-09부터
+- `build_title_reward_track_state_v1(p_student_id uuid, p_season_id uuid, p_track_id text, p_current_level integer, p_policy jsonb, p_claiming_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `build_vocab_tower_v2_question_payload_v1(p_question vocab_tower_v2_run_questions, p_target_question_count smallint, p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `bulk_approve_posts(p_submissions jsonb)` — 1회 관찰 · 2026-09-09부터
+- `bulk_recover_assignment_posts(p_post_ids uuid[], p_feedback text)` — 1회 관찰 · 2026-09-09부터
+- `bulk_request_assignment_rewrite_v1(p_post_ids uuid[], p_feedback text)` — 1회 관찰 · 2026-09-09부터
+- `buy_my_dragon_decor(p_item_id text)` — 1회 관찰 · 2026-09-09부터
+- `calculate_writing_reward_total_v1(p_base_reward integer, p_min_chars integer, p_char_count integer, p_bonus_threshold integer, p_bonus_reward integer, p_repeat_enabled boolean, p_repeat_threshold integer, p_repeat_reward integer, p_repeat_max_count integer)` — 1회 관찰 · 2026-09-09부터
+- `can_access_class_board_asset_v1(p_path text, p_require_open_board boolean)` — 1회 관찰 · 2026-09-09부터
+- `cancel_teacher_dragon_season_finalize(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `change_neighbor_rollout_v1(p_mode text, p_confirmation text)` — 1회 관찰 · 2026-09-09부터
+- `check_my_api_key_exists()` — 1회 관찰 · 2026-09-09부터
+- `check_points_integrity(target_id uuid, new_points integer)` — 1회 관찰 · 2026-09-09부터
+- `claim_my_dragon_legendary_decor_reward()` — 1회 관찰 · 2026-09-09부터
+- `claim_my_title_rewards_v1(p_track_id text, p_levels smallint[])` — 1회 관찰 · 2026-09-09부터
+- `claim_next_comment_ai_review_v2()` — 1회 관찰 · 2026-09-09부터
+- `class_agit_book_draft_snapshot_v1(p_class_id uuid, p_book_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_book_visible_works_v1(p_class_id uuid, p_edition_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_class_is_allowed_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_class_is_open_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_create_samlink_v1(p_class_id uuid, p_exhibition_id uuid, p_token text)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_current_source_v1(p_class_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_legacy_rooms_v1(p_count integer)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_max_rooms_v1()` — 1회 관찰 · 2026-09-09부터
+- `class_agit_max_works_v1()` — 1회 관찰 · 2026-09-09부터
+- `class_agit_mission_format_v1(p_template text, p_type text)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_read_layout_v1(p_class_id uuid, p_exhibition_id uuid, p_scope text, p_room integer, p_layout_version integer)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_reader_class_v1()` — 1회 관찰 · 2026-09-09부터
+- `class_agit_refresh_catalog_v1(p_class_id uuid, p_exhibition_id uuid, p_scope text)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_room_capacity_v1()` — 1회 관찰 · 2026-09-09부터
+- `class_agit_samlink_slug_v1(p_length integer)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_source_data_v1(p_post student_posts, p_mission writing_missions, p_author text)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_take_public_budget_v1(p_bucket text, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_valid_rooms_v1(p_rooms jsonb)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_valid_share_period_v1(p_start timestamp with time zone, p_end timestamp with time zone)` — 1회 관찰 · 2026-09-09부터
+- `class_agit_valid_work_id_v1(p_work_id text)` — 1회 관찰 · 2026-09-09부터
+- `cleanup_expired_deletions()` — 1회 관찰 · 2026-09-09부터
+- `close_neighbor_activity_v1(p_space_id uuid, p_actor_class_id uuid, p_activity_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `close_neighbor_space_v1(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `close_teacher_dragon_growth_season(p_class_id uuid, p_season_name text)` — 1회 관찰 · 2026-09-09부터
+- `complete_comment_ai_review_v2(p_comment_id uuid, p_review_token uuid, p_is_appropriate boolean, p_reason text, p_review_source text)` — 1회 관찰 · 2026-09-09부터
+- `consume_ai_request_v1(p_actor_id uuid, p_scope text)` — 1회 관찰 · 2026-09-09부터
+- `consume_teacher_guide_ai_request_v1(p_actor_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `create_my_post_comment_v1(p_post_id uuid, p_content text)` — 1회 관찰 · 2026-09-09부터
+- `create_neighbor_activity_v1(p_space_id uuid, p_actor_class_id uuid, p_activity_type text, p_title text, p_prompt text, p_exchange_class_ids uuid[], p_exchange_share_scope text, p_genre text, p_guide_questions jsonb, p_min_chars integer, p_min_paragraphs integer, p_mission_type_id text, p_base_reward integer, p_bonus_threshold integer, p_bonus_reward integer)` — 1회 관찰 · 2026-09-09부터
+- `create_neighbor_internal_trial_v1(p_name text, p_class_ids uuid[])` — 1회 관찰 · 2026-09-09부터
+- `create_neighbor_invite_v1(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `create_neighbor_space_v1(p_class_id uuid, p_name text, p_public_class_name text, p_public_description text)` — 1회 관찰 · 2026-09-09부터
+- `create_teacher_classroom_arrangement_history_v1(p_class_id uuid, p_kind text, p_title text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `custom_access_token_hook(event jsonb)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_diary(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_library_book(p_library_item_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_post_comment_v1(p_comment_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_reading_log(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_reading_log_draft(p_post_id uuid, p_book_key text)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_self_writing_draft(p_writing_type text, p_source_key text)` — 1회 관찰 · 2026-09-09부터
+- `delete_my_self_writing_drafts(p_writing_type text, p_source_keys text[])` — 1회 관찰 · 2026-09-09부터
+- `delete_student_immediately(p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_teacher_class_comment(p_comment_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `delete_teacher_classroom_arrangement_history_v1(p_history_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `dragon_diary_level(p_days bigint)` — 1회 관찰 · 2026-09-09부터
+- `dragon_reader_level(p_score bigint, p_override integer)` — 1회 관찰 · 2026-09-09부터
+- `dragon_reading_level(p_logs bigint, p_books bigint)` — 1회 관찰 · 2026-09-09부터
+- `dragon_writer_level(p_chars bigint, p_posts bigint, p_override integer)` — 1회 관찰 · 2026-09-09부터
+- `duplicate_teacher_class_board_v1(p_board_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `ensure_lab_teacher_profile_v1()` — 1회 관찰 · 2026-09-09부터
+- `equip_my_dragon_decor(p_slot text, p_item_id text)` — 1회 관찰 · 2026-09-09부터
+- `fail_comment_ai_review_v2(p_comment_id uuid, p_review_token uuid, p_error_code text)` — 1회 관찰 · 2026-09-09부터
+- `fail_spelling_weekly_review_v1(p_week_start date, p_error_code text)` — 1회 관찰 · 2026-09-09부터
+- `finalize_teacher_dragon_season(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `finish_my_vocab_master_summit_v1(p_attempt_id uuid, p_completed boolean)` — 1회 관찰 · 2026-09-09부터
+- `finish_my_vocab_tower_master_v1(p_attempt_id uuid, p_completed boolean)` — 1회 관찰 · 2026-09-09부터
+- `finish_my_vocab_tower_run(p_run_id uuid, p_reason text)` — 1회 관찰 · 2026-09-09부터
+- `finish_my_vocab_tower_v2_practice_v1(p_run_id uuid, p_reason text)` — 1회 관찰 · 2026-09-09부터
+- `finish_spelling_weekly_review_v1(p_week_start date, p_items jsonb, p_summary jsonb)` — 1회 관찰 · 2026-09-09부터
+- `finish_teacher_reading_marathon(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `generate_neighbor_invite_key_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_class_activity_stats(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_access_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_book_edition_v1(p_class_id uuid, p_edition_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_book_preview_v1(p_class_id uuid, p_book_id uuid, p_revision integer)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_book_workspace_v1(p_class_id uuid, p_book_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_candidates_v2(p_class_id uuid, p_filters jsonb)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_missions_v1(p_class_id uuid, p_query text, p_scope text, p_cursor jsonb, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_publication_v1(p_class_id uuid, p_exhibition_id uuid, p_room integer)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_publication_v1(p_class_id uuid, p_exhibition_id uuid, p_room integer, p_layout_version integer)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_share_workspace_v1(p_class_id uuid, p_exhibition_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_source_v1(p_class_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_sources_v1(p_class_id uuid, p_post_ids uuid[])` — 1회 관찰 · 2026-09-09부터
+- `get_class_agit_workspace_v1(p_class_id uuid, p_exhibition_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_board_arrangement_result_v1(p_class_id uuid, p_kind text)` — 1회 관찰 · 2026-09-09부터
+- `get_class_operations_dashboard(p_class_id uuid, p_period text)` — 1회 관찰 · 2026-09-09부터
+- `get_class_operations_dashboard_core_v1(p_class_id uuid, p_period text)` — 1회 관찰 · 2026-09-09부터
+- `get_class_public_writing_feed_v1(p_group text, p_self_type text, p_mission_id uuid, p_limit integer, p_cursor_at timestamp with time zone, p_cursor_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_recent_activity(p_class_id uuid, p_kind text, p_limit integer, p_offset integer, p_period text)` — 1회 관찰 · 2026-09-09부터
+- `get_class_writing_footprint_dashboard(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_writing_footprint_dashboard_core_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_class_writing_title_stats_v1(p_class_id uuid, p_started_at timestamp with time zone, p_ended_at timestamp with time zone)` — 1회 관찰 · 2026-09-09부터
+- `get_classmate_learning_mastery_v1(p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_my_activity_notifications_v1(p_limit integer, p_before_created_at timestamp with time zone, p_before_id uuid, p_module_ids text[], p_exclude_module_ids text[])` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_books_v1(p_edition_id uuid, p_work_id text)` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_exhibitions_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_room_v1(p_exhibition_id uuid, p_room integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_room_v1(p_exhibition_id uuid, p_room integer, p_layout_version integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_work_v1(p_exhibition_id uuid, p_publication_no integer, p_work_id text)` — 1회 관찰 · 2026-09-09부터
+- `get_my_class_agit_work_v1(p_exhibition_id uuid, p_publication_no integer, p_work_id text, p_layout_version integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_diary_daily_status()` — 1회 관찰 · 2026-09-09부터
+- `get_my_dragon_season_farewell()` — 1회 관찰 · 2026-09-09부터
+- `get_my_feedback_reply_badge_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_feedback_reports_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_lab_activities_v1(p_limit integer, p_before_created_at timestamp with time zone, p_before_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_my_lab_results_v1(p_limit integer, p_before_completed_at timestamp with time zone, p_before_id uuid, p_result_kinds text[])` — 1회 관찰 · 2026-09-09부터
+- `get_my_latest_returned_assignment_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_latest_rewrite_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_learning_mastery_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_point_history_v1(p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_point_spending_breakdown()` — 1회 관찰 · 2026-09-09부터
+- `get_my_post_engagement(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_my_reader_title()` — 1회 관찰 · 2026-09-09부터
+- `get_my_reading_library_v1(p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_reading_log_daily_status()` — 1회 관찰 · 2026-09-09부터
+- `get_my_reading_log_draft(p_post_id uuid, p_book_key text)` — 1회 관찰 · 2026-09-09부터
+- `get_my_reading_log_draft_statuses()` — 1회 관찰 · 2026-09-09부터
+- `get_my_reading_marathon_medals_v1(p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_my_self_writing_draft(p_writing_type text, p_source_key text)` — 1회 관찰 · 2026-09-09부터
+- `get_my_title_progress_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_title_status()` — 1회 관찰 · 2026-09-09부터
+- `get_my_vocab_tower_master_question_v1(p_attempt_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_my_vocab_tower_status()` — 1회 관찰 · 2026-09-09부터
+- `get_my_vocab_tower_v2_card_box_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `get_my_vocab_tower_v2_overview_base_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_vocab_tower_v2_overview_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_writing_footprint_detail()` — 1회 관찰 · 2026-09-09부터
+- `get_my_writing_footprint_detail_core_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_my_writing_references_v1(p_mission_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_activity_feed_core_20261238(p_space_id uuid, p_activity_id uuid, p_limit integer, p_cursor_at timestamp with time zone, p_cursor_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_activity_feed_v1(p_space_id uuid, p_activity_id uuid, p_limit integer, p_cursor_at timestamp with time zone, p_cursor_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_admin_dashboard_core_20261201(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_admin_dashboard_core_20261237(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_admin_dashboard_v1(p_space_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_my_share_candidates_v1(p_space_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_shared_post_v1(p_space_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_space_feed_v1(p_space_id uuid, p_limit integer, p_cursor_at timestamp with time zone, p_cursor_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_student_activities_core_20261238(p_space_id uuid, p_student_id uuid, p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_student_activities_v1(p_space_id uuid, p_student_id uuid, p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_activities_core_20261238(p_space_id uuid, p_actor_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_activities_v1(p_space_id uuid, p_actor_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_post_detail_v1(p_space_id uuid, p_actor_class_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_post_engagement_v1(p_space_id uuid, p_actor_class_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_share_candidates_v1(p_space_id uuid, p_actor_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_source_post_v1(p_space_id uuid, p_actor_class_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_workspace_core_20261237(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_neighbor_teacher_workspace_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_next_my_vocab_tower_question_v2(p_run_id uuid, p_reduce_options boolean)` — 1회 관찰 · 2026-09-09부터
+- `get_next_my_vocab_tower_v2_practice_question_v1(p_run_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_post_interactions(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_reading_marathon_snapshot(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_reading_marathon_snapshot_v2(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_spelling_learning_workspace_v2(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_spelling_learning_workspace_v3(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_spelling_promotion_candidates_v1(p_min_classes integer, p_min_hits integer, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_student_activity_title_levels_v1(p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_student_assignment_workspace_v1(p_mission_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_student_classmates_for_hideout()` — 1회 관찰 · 2026-09-09부터
+- `get_student_dashboard_snapshot()` — 1회 관찰 · 2026-09-09부터
+- `get_student_hideout_directory()` — 1회 관찰 · 2026-09-09부터
+- `get_student_home_bootstrap_core_20261126()` — 1회 관찰 · 2026-09-09부터
+- `get_student_home_bootstrap_core_20261137()` — 1회 관찰 · 2026-09-09부터
+- `get_student_home_bootstrap_core_20261199()` — 1회 관찰 · 2026-09-09부터
+- `get_student_home_bootstrap_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_student_learning_mastery_v1(p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_student_mission_list_v1(p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_student_spelling_entries_v2()` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_activity_report_workspace_v1(p_class_id uuid, p_mission_ids uuid[], p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_app_bootstrap_v1(p_touch_login boolean)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_archived_class_boards_v1(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_archived_missions_page(p_class_id uuid, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_assignment_submission_board_v2(p_class_id uuid, p_mission_id uuid, p_recent_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_assignment_submission_history_v1(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_checked_reading_log_export_v1(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_notice_log_v1(p_class_id uuid, p_before date, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_notices_v1(p_class_id uuid, p_date date, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_presentation_v1(p_board_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_roster_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_status_v1(p_class_id uuid, p_mission_id uuid, p_sections text[])` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_board_workspace_v1(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_class_comments(p_class_id uuid, p_status text, p_query text, p_limit integer, p_offset integer, p_days integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_classroom_arrangement_v1(p_class_id uuid, p_history_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_default_class_board_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_diary_detail(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_diary_overview(p_class_id uuid, p_review_filter text, p_student_id uuid, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_diary_student_summary(p_class_id uuid, p_query text)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_dragon_growth_dashboard(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_guide_ai_availability_v1()` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_meal_board_workspace_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_mission_engagement_v1(p_mission_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_mission_evaluation_report_v1(p_mission_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_mission_lab_sources_v1(p_mission_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_mission_overview_v1(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_point_manager_snapshot(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_post_detail_v1(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_question_voting_ranking_v1(p_class_id uuid, p_room_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_question_voting_rooms_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_reading_log_overview(p_class_id uuid, p_review_filter text, p_student_id uuid, p_query text, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_reading_log_student_summary(p_class_id uuid, p_query text)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_reading_marathon_history(p_class_id uuid, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_student_point_history(p_student_id uuid, p_limit integer, p_offset integer)` — 1회 관찰 · 2026-09-09부터
+- `get_teacher_writing_content_export(p_class_id uuid, p_student_id uuid, p_content_type text, p_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `get_title_activity_test_state_v1(p_student_id uuid, p_class_id uuid, p_progress jsonb)` — 1회 관찰 · 2026-09-09부터
+- `get_title_season_context_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `get_writing_export_data(p_class_id uuid, p_type text, p_target_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `import_teacher_survival_archive_v1(p_source_fingerprint text, p_archive_version integer, p_summary jsonb, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `increment_student_points(p_student_id uuid, p_amount integer, p_reason text, p_post_id uuid, p_mission_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `is_admin()` — 1회 관찰 · 2026-09-09부터
+- `is_teacher_of_student(target_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `lab_result_hint_v1(p_room_id uuid, p_result_kind text)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_challenge_best_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_collection_key text, p_challenge_kind text)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_challenge_eligibility_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_collection_key text, p_item_count integer, p_required_mastered_ratio numeric)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_challenge_passed_v1(p_correct_count smallint, p_question_count smallint, p_input_correct_count smallint, p_input_question_count smallint, p_required_ratio numeric, p_required_input_ratio numeric)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_close_challenge_v1(p_attempt_id uuid, p_answered_count smallint, p_correct_count smallint, p_input_correct_count smallint, p_completed boolean, p_required_ratio numeric, p_required_input_ratio numeric)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_close_challenge_v1(p_attempt_id uuid, p_answered_count smallint, p_correct_count smallint, p_input_correct_count smallint, p_completed boolean, p_required_ratio numeric, p_required_input_ratio numeric, p_wrong_item_keys text[])` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_collection_milestones_v1(p_item_count integer, p_total_points integer)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_grant_summit_v1(p_student_id uuid, p_class_id uuid, p_content_type text)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_grant_summit_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_level smallint)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_mastery_summary_v1(p_student_id uuid, p_class_id uuid, p_include_progress boolean)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_next_state_v1(p_is_correct boolean, p_used_hint boolean, p_question_type text, p_prev_state text, p_prev_streak smallint, p_prev_types text[])` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_open_challenge_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_collection_key text, p_question_count smallint, p_input_question_count smallint, p_challenge_kind text)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_record_answer_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_collection_key text, p_item_key text, p_question_type text, p_is_correct boolean, p_used_hint boolean, p_run_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `learning_engine_retry_gate_v1(p_student_id uuid, p_class_id uuid, p_content_type text, p_collection_key text, p_challenge_kind text)` — 1회 관찰 · 2026-09-09부터
+- `leave_neighbor_space_v1(p_space_id uuid, p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `manage_class_agit_rollout_v1(p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `mark_feedback_as_read(p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `mark_my_activity_notifications_read_all_v1(p_module_ids text[], p_exclude_module_ids text[])` — 1회 관찰 · 2026-09-09부터
+- `mark_my_activity_notifications_read_v1(p_ids uuid[])` — 1회 관찰 · 2026-09-09부터
+- `mark_my_feedback_replies_seen_v1()` — 1회 관찰 · 2026-09-09부터
+- `moderate_neighbor_item_v1(p_space_id uuid, p_actor_class_id uuid, p_item_type text, p_item_id uuid, p_action text, p_reason text)` — 1회 관찰 · 2026-09-09부터
+- `neighbor_acceptance_ready_v1(p_checks jsonb)` — 1회 관찰 · 2026-09-09부터
+- `neighbor_class_is_released_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `neighbor_public_author_name_v1(p_space_id uuid, p_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `neighbor_source_is_shareable_v1(p_post student_posts)` — 1회 관찰 · 2026-09-09부터
+- `neighbor_source_revision_v1(p_post student_posts)` — 1회 관찰 · 2026-09-09부터
+- `next_class_student_no_v1(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `normalize_vocab_tower_v2_answer(p_answer text)` — 1회 관찰 · 2026-09-09부터
+- `notification_emit_v1(p_student_id uuid, p_module_id text, p_event_type text, p_entity_type text, p_entity_id uuid, p_payload jsonb, p_event_key text, p_event_version smallint, p_actor_student_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `open_teacher_dragon_season_closing(p_class_id uuid, p_season_name text, p_farewell_deadline date)` — 1회 관찰 · 2026-09-09부터
+- `point_engine_apply(p_student_id uuid, p_amount integer, p_reason text, p_activity_type text, p_event_key text, p_post_id uuid, p_mission_id uuid, p_metadata jsonb)` — 1회 관찰 · 2026-09-09부터
+- `publish_neighbor_class_post_v1(p_space_id uuid, p_actor_class_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `purge_expired_students(p_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `purge_read_student_notifications_v1(p_days integer)` — 1회 관찰 · 2026-09-09부터
+- `read_public_class_agit_v1(p_token text, p_room integer, p_work_id text, p_publication_no integer)` — 1회 관찰 · 2026-09-09부터
+- `read_public_class_agit_v1(p_token text, p_room integer, p_work_id text, p_publication_no integer, p_layout_version integer)` — 1회 관찰 · 2026-09-09부터
+- `reading_marathon_max_pages_v1()` — 1회 관찰 · 2026-09-09부터
+- `recall_my_neighbor_shared_post_v1(p_space_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `record_neighbor_invite_failure_v1()` — 1회 관찰 · 2026-09-09부터
+- `record_reading_marathon_contribution(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `record_service_scan_v1(p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `record_spelling_ai_findings_v1(p_class_id uuid, p_items jsonb)` — 1회 관찰 · 2026-09-09부터
+- `record_spelling_search_batch_v2(p_items jsonb)` — 1회 관찰 · 2026-09-09부터
+- `record_system_daily_metric_v1(p_day date, p_rx_bytes bigint, p_tx_bytes bigint, p_disk_free_gb numeric, p_db_size_mb numeric, p_container_total integer, p_container_healthy integer)` — 1회 관찰 · 2026-09-09부터
+- `record_system_daily_metric_v2(p_day date, p_rx_bytes bigint, p_tx_bytes bigint, p_disk_free_gb numeric, p_db_size_mb numeric, p_container_total integer, p_container_healthy integer, p_traffic_period_started_at timestamp with time zone, p_traffic_complete boolean)` — 1회 관찰 · 2026-09-09부터
+- `record_system_peak_v1(p_day date, p_mem_total_mb integer, p_mem_available_mb integer, p_swap_used_mb integer, p_gateway_cpu_pct numeric, p_gateway_mem_mb integer)` — 1회 관찰 · 2026-09-09부터
+- `recover_assignment_post_approval(p_post_id uuid, p_feedback text)` — 1회 관찰 · 2026-09-09부터
+- `recover_self_writing_review_points_v1(p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `refresh_reading_marathon_campaign_v1(p_campaign_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `release_teacher_guide_ai_request_v1(p_actor_id uuid, p_reservation_id bigint)` — 1회 관찰 · 2026-09-09부터
+- `rename_class_student_v1(p_student_id uuid, p_name text)` — 1회 관찰 · 2026-09-09부터
+- `renumber_class_students_v1(p_class_id uuid, p_mode text)` — 1회 관찰 · 2026-09-09부터
+- `reorder_teacher_class_boards_v1(p_class_id uuid, p_board_ids uuid[])` — 1회 관찰 · 2026-09-09부터
+- `request_assignment_rewrite_v1(p_post_id uuid, p_feedback text)` — 1회 관찰 · 2026-09-09부터
+- `request_neighbor_activity_post_v1(p_space_id uuid, p_activity_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `request_neighbor_join_v1(p_invite_key text, p_class_id uuid, p_public_class_name text)` — 1회 관찰 · 2026-09-09부터
+- `request_neighbor_post_share_v1(p_space_id uuid, p_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `resolve_lab_ai_teacher_v1(p_lab_user_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `restore_teacher_class_board_v1(p_board_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `review_neighbor_activity_v1(p_space_id uuid, p_actor_class_id uuid, p_activity_id uuid, p_approve boolean)` — 1회 관찰 · 2026-09-09부터
+- `review_neighbor_join_v1(p_space_id uuid, p_class_id uuid, p_approve boolean)` — 1회 관찰 · 2026-09-09부터
+- `review_neighbor_shared_post_v1(p_space_id uuid, p_shared_post_id uuid, p_decision text, p_review_note text)` — 1회 관찰 · 2026-09-09부터
+- `reward_for_idea_submission(p_mission_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `reward_for_vocab_tower(p_amount integer)` — 1회 관찰 · 2026-09-09부터
+- `run_class_agit_action_v1(p_class_id uuid, p_action text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `run_class_agit_book_action_v1(p_class_id uuid, p_action text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `run_class_agit_share_action_v1(p_class_id uuid, p_exhibition_id uuid, p_action text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `run_neighbor_teacher_action_core_20261238(p_class_id uuid, p_action text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `run_neighbor_teacher_action_v1(p_class_id uuid, p_action text, p_payload jsonb)` — 1회 관찰 · 2026-09-09부터
+- `save_my_dragon_farewell(p_content text, p_complete boolean)` — 1회 관찰 · 2026-09-09부터
+- `save_neighbor_comment_v1(p_space_id uuid, p_shared_post_id uuid, p_content text, p_action text)` — 1회 관찰 · 2026-09-09부터
+- `save_spelling_learning_entry_v1(p_class_id uuid, p_entry_id uuid, p_entry jsonb, p_approve boolean)` — 1회 관찰 · 2026-09-09부터
+- `save_spelling_weekly_ai_cache_v1(p_items jsonb)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_class_board_notice_v1(p_class_id uuid, p_date date, p_body text)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_class_board_v1(p_class_id uuid, p_board_id uuid, p_title text, p_layout jsonb, p_widgets jsonb, p_expected_revision integer, p_tab_position integer)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_classroom_arrangement_settings_v1(p_class_id uuid, p_seat_settings jsonb, p_role_settings jsonb, p_student_groups jsonb)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_meal_school_v1(p_class_id uuid, p_scope text, p_school_office_code text, p_school_code text, p_school_name text, p_school_address text)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_reading_log_review(p_post_id uuid, p_teacher_comment text)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_reading_log_reviews_bulk_v2(p_post_ids uuid[])` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_reading_marathon_v2(p_class_id uuid, p_title text, p_target_distance_m integer, p_competition_type text, p_medal_requirement_type text, p_medal_requirement_value integer, p_teams jsonb, p_ends_on date, p_enabled boolean, p_start_new boolean, p_meters_per_page integer)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_self_writing_review_v2(p_post_id uuid, p_teacher_comment text, p_decision text)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_self_writing_reviews_bulk_v1(p_post_ids uuid[], p_writing_type text)` — 1회 관찰 · 2026-09-09부터
+- `save_teacher_student_meal_note_v1(p_class_id uuid, p_student_id uuid, p_note text)` — 1회 관찰 · 2026-09-09부터
+- `set_class_student_numbers_v1(p_class_id uuid, p_assignments jsonb)` — 1회 관찰 · 2026-09-09부터
+- `set_meeting_idea_status(p_post_id uuid, p_status text)` — 1회 관찰 · 2026-09-09부터
+- `set_my_assignment_outline_pin_v1(p_mission_id uuid, p_result_id uuid, p_expected_result_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `set_my_dragon_species(p_species text, p_reselect boolean)` — 1회 관찰 · 2026-09-09부터
+- `set_neighbor_acceptance_check_v1(p_check_key text, p_checked boolean)` — 1회 관찰 · 2026-09-09부터
+- `set_neighbor_class_access_v1(p_space_id uuid, p_class_id uuid, p_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `set_neighbor_limited_class_v1(p_class_id uuid, p_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `set_teacher_comment_status(p_comment_id uuid, p_status text, p_reason text)` — 1회 관찰 · 2026-09-09부터
+- `set_teacher_default_class_board_v1(p_board_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `set_teacher_mission_lab_source_v1(p_mission_id uuid, p_result_kind text, p_room_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `set_teacher_reading_book_page_count(p_class_id uuid, p_post_id uuid, p_page_count integer)` — 1회 관찰 · 2026-09-09부터
+- `set_teacher_vocab_tower_content_version_v2(p_class_id uuid, p_content_version text)` — 1회 관찰 · 2026-09-09부터
+- `set_title_reward_rollout_class_v1(p_class_id uuid, p_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `set_title_reward_rollout_global_v1(p_enabled boolean)` — 1회 관찰 · 2026-09-09부터
+- `setup_teacher_profile(p_full_name text, p_email text, p_api_mode text)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_master_summit_v1(p_stage smallint)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_master_base_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_master_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_run()` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_v2_practice_base_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_v2_practice_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `start_my_vocab_tower_v2_run()` — 1회 관찰 · 2026-09-09부터
+- `start_spelling_weekly_review_v1(p_week_start date, p_catalog_version text, p_allow_resume boolean)` — 1회 관찰 · 2026-09-09부터
+- `start_teacher_dragon_season(p_class_id uuid, p_season_name text)` — 1회 관찰 · 2026-09-09부터
+- `submit_assignment_post_v1(p_mission_id uuid, p_title text, p_content text, p_student_answers jsonb, p_structured_content jsonb)` — 1회 관찰 · 2026-09-09부터
+- `submit_my_vocab_tower_answer(p_run_id uuid, p_question_key text, p_room_type text, p_word text, p_selected_answer text, p_used_hint boolean)` — 1회 관찰 · 2026-09-09부터
+- `submit_my_vocab_tower_master_answer_v1(p_question_id uuid, p_answer text)` — 1회 관찰 · 2026-09-09부터
+- `submit_my_vocab_tower_v2_answer(p_run_id uuid, p_question_key uuid, p_selected_answer text, p_used_hint boolean)` — 1회 관찰 · 2026-09-09부터
+- `submit_my_vocab_tower_v2_practice_answer_v1(p_run_id uuid, p_question_key uuid, p_selected_answer text, p_used_hint boolean)` — 1회 관찰 · 2026-09-09부터
+- `submit_teacher_feedback_v2(p_category text, p_title text, p_content text, p_context jsonb)` — 1회 관찰 · 2026-09-09부터
+- `sync_student_activity_title_notification_v1(p_student_id uuid, p_track_id text)` — 1회 관찰 · 2026-09-09부터
+- `take_class_agit_public_read_budget_v1(p_token text)` — 1회 관찰 · 2026-09-09부터
+- `teacher_assignment_submission_board_snapshot_v1(p_class_id uuid, p_mission_limit integer, p_recent_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `teacher_assignment_submission_board_snapshot_v2(p_class_id uuid, p_mission_id uuid, p_mission_limit integer, p_recent_limit integer)` — 1회 관찰 · 2026-09-09부터
+- `teacher_edit_student_post(p_post_id uuid, p_title text, p_content text)` — 1회 관찰 · 2026-09-09부터
+- `teacher_manage_points(target_student_id uuid, points_amount integer, reason_text text)` — 1회 관찰 · 2026-09-09부터
+- `teacher_manage_points_bulk(p_student_ids uuid[], p_amount integer, p_reason text, p_request_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `toggle_my_post_reaction_v1(p_post_id uuid, p_reaction_type text)` — 1회 관찰 · 2026-09-09부터
+- `toggle_neighbor_reaction_v1(p_space_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `toggle_neighbor_save_v1(p_space_id uuid, p_shared_post_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `transfer_neighbor_host_v1(p_space_id uuid, p_new_host_class_id uuid)` — 1회 관찰 · 2026-09-09부터
+- `unbind_student_auth()` — 1회 관찰 · 2026-09-09부터
+- `update_my_post_comment_v1(p_comment_id uuid, p_content text)` — 1회 관찰 · 2026-09-09부터
+- `update_spelling_weekly_progress_v1(p_week_start date, p_total_count integer, p_done_count integer)` — 1회 관찰 · 2026-09-09부터
+- `update_tower_max_floor(p_student_id uuid, p_class_id uuid, p_floor integer)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_diary(p_post_id uuid, p_diary_date date, p_title text, p_content text, p_visibility text)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_reading_log(p_post_id uuid, p_book jsonb, p_title text, p_content text, p_visibility text, p_reading_status text)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_reading_log_draft(p_post_id uuid, p_book_key text, p_title text, p_content text, p_book jsonb, p_visibility text, p_reading_status text)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_reading_log_rewarded(p_post_id uuid, p_book jsonb, p_title text, p_content text, p_visibility text, p_reading_status text)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_reading_log_storage(p_post_id uuid, p_book jsonb, p_title text, p_content text, p_visibility text, p_reading_status text)` — 1회 관찰 · 2026-09-09부터
+- `upsert_my_self_writing_draft(p_writing_type text, p_source_key text, p_post_id uuid, p_title text, p_content text, p_visibility text)` — 1회 관찰 · 2026-09-09부터
+- `validate_vocab_tower_v2_review_questions_v1(p_questions jsonb, p_word text)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_collection_key(p_grade smallint, p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_floor_reward_points_v1(p_configured integer)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_highest_unlocked_deck_v1(p_student_id uuid, p_class_id uuid, p_grade smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_practice_floor_policy_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_practice_input_slots_v1(p_deck_number smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_progress_milestones_v1(p_item_count integer, p_total_points integer)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_retry_breakdown_v1(p_item_keys text[], p_grade smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_summit_key(p_grade smallint, p_stage smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_summit_status_base_v1(p_student_id uuid, p_class_id uuid, p_grade smallint)` — 1회 관찰 · 2026-09-09부터
+- `vocab_tower_v2_summit_status_v1(p_student_id uuid, p_class_id uuid, p_grade smallint)` — 1회 관찰 · 2026-09-09부터
+- `withdraw_my_teacher_account()` — 1회 관찰 · 2026-09-09부터
+- `writing_content_char_count(p_content text)` — 1회 관찰 · 2026-09-09부터
+- `writing_content_paragraph_count(p_content text)` — 1회 관찰 · 2026-09-09부터
+- `writing_counts_as_completed(p_writing_context text, p_is_confirmed boolean, p_is_submitted boolean)` — 1회 관찰 · 2026-09-09부터
+- `writing_engine_submit_assignment(p_student_id uuid, p_mission_id uuid, p_title text, p_content text, p_student_answers jsonb, p_structured_content jsonb)` — 1회 관찰 · 2026-09-09부터
 
 ## 관찰 기록
 
@@ -101,5 +513,6 @@
 |---|---|---|
 | 2026-09-09 | 2026-08-30 03:11:10 | none |
 | 2026-09-09 | 2026-08-30 03:11:10 | none |
+| 2026-09-09 | 2026-08-30 03:11:10 | pl |
 
 *DB 켜진 시각이 바뀌었다면 그 사이 재시작이 있었다는 뜻이고, 그때 통계는 0부터 다시 쌓였다.*
