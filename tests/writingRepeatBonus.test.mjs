@@ -83,6 +83,18 @@ test('학생 글쓰기 창도 반복 보너스 설정을 받아 남은 글자 �
     assert.match(progress, /자 남음/);
 });
 
+test('반복 보너스 기본값은 브라우저 숫자 입력의 step 검증에 막히지 않는다', async () => {
+    const [missionForm, policyFields] = await Promise.all([
+        readFile('src/components/teacher/MissionForm.jsx', 'utf8'),
+        readFile('src/modules/writing/policy/WritingPolicyFields.jsx', 'utf8')
+    ]);
+
+    assert.doesNotMatch(missionForm, /min="1" max="20000" step="50"[^>]*repeat_bonus_threshold/);
+    assert.doesNotMatch(missionForm, /min="1" max="10000" step="10"[^>]*repeat_bonus_reward/);
+    assert.doesNotMatch(policyFields, /repeat_bonus_threshold[^\n]*min=\{1\}[^\n]*step=\{50\}/);
+    assert.doesNotMatch(policyFields, /repeat_bonus_reward[^\n]*min=\{1\}[^\n]*step=\{10\}/);
+});
+
 test('교사 도움말은 설정을 바꿨을 때 이미 낸 글이 어떻게 되는지 세 곳 모두 설명한다', async () => {
     const { TEACHER_GUIDES } = await import('../src/constants/teacherGuides.js');
     const text = (guide) => [

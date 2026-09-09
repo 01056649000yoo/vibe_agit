@@ -1051,11 +1051,11 @@ const MissionForm = ({
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
                                                             <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
                                                                 반복 글자 수
-                                                                <input type="number" min="1" max="20000" step="50" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
+                                                                <input type="number" min="1" max="20000" step="1" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
                                                             </label>
                                                             <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
                                                                 구간당 포인트
-                                                                <input type="number" min="1" max="10000" step="10" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
+                                                                <input type="number" min="1" max="10000" step="1" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
                                                             </label>
                                                             <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
                                                                 최대 반복 횟수
