@@ -10,13 +10,14 @@ import {
     searchTeacherGuides
 } from '../src/guides/teacherGuideSearch.js';
 
-const [assistant, center, dashboard, api, edge, migration, deployWorkflow] = await Promise.all([
+const [assistant, center, dashboard, api, edge, migration, rolloutMigration, deployWorkflow] = await Promise.all([
     readFile('src/components/teacher/TeacherGuideAssistant.jsx', 'utf8'),
     readFile('src/components/teacher/TeacherGuideCenter.jsx', 'utf8'),
     readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8'),
     readFile('src/lib/teacherGuideAssistantApi.js', 'utf8'),
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/migrations/20261235_teacher_guide_ai_assistant.sql', 'utf8'),
+    readFile('supabase/migrations/20261270_teacher_guide_ai_public_rollout.sql', 'utf8'),
     readFile('.github/workflows/deploy.yml', 'utf8')
 ]);
 
@@ -49,7 +50,7 @@ test('영문 핵심어에 조사가 붙은 문장도 단어 검색과 같은 안
     assert.equal(searchTeacherGuides('포인트는 어디서 확인하니')[0]?.guideRef, searchTeacherGuides('포인트')[0]?.guideRef);
 });
 
-test('관리자에게만 AI 길잡이를 표시하고 검증된 안내 이동만 연결한다', () => {
+test('공개 단계가 허용한 교사에게 AI 길잡이를 표시하고 검증된 안내 이동만 연결한다', () => {
     assert.match(dashboard, /showAiAssistant=\{guideAiAvailability\?\.enabled === true\}/);
     assert.match(center, /showAiAssistant &&/);
     assert.match(center, /getJourneysForGuide\(guideId\)/);
@@ -60,7 +61,7 @@ test('관리자에게만 AI 길잡이를 표시하고 검증된 안내 이동만
     assert.match(assistant, /오늘 사용할 수 있는 AI 안내 5회/);
 });
 
-test('서버는 관리자 선공개와 질문·후보·출력 상한을 강제한다', () => {
+test('서버는 공개 단계와 질문·후보·출력 상한을 강제한다', () => {
     assert.match(edge, /'TEACHER_GUIDE_CHAT'/);
     assert.match(edge, /teacher_guide_ai_stage/);
     assert.match(edge, /actorRole !== 'ADMIN'/);
@@ -74,7 +75,7 @@ test('서버는 관리자 선공개와 질문·후보·출력 상한을 강제�
     assert.doesNotMatch(edge, /console\.log\([^\n]*(question|answer|candidates)/i);
 });
 
-test('DB는 한국 시간 하루 5회·분당 3회와 관리자 공개 전환을 강제한다', () => {
+test('DB는 한국 시간 하루 5회·분당 3회와 승인 교사 공개 전환을 강제한다', () => {
     assert.match(migration, /teacher_guide_ai_stage[\s\S]*admin_only/);
     assert.match(migration, /AT TIME ZONE 'Asia\/Seoul'/);
     assert.match(migration, /v_minute_count >= 3/);
@@ -83,6 +84,8 @@ test('DB는 한국 시간 하루 5회·분당 3회와 관리자 공개 전환을
     assert.match(migration, /auth_user_role\(\) <> 'ADMIN'/);
     assert.match(migration, /p_stage NOT IN \('admin_only', 'public'\)/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.consume_teacher_guide_ai_request_v1/);
+    assert.match(rolloutMigration, /teacher_guide_ai_stage[\s\S]*'"public"'::JSONB/);
+    assert.match(rolloutMigration, /ON CONFLICT \(key\) DO UPDATE/);
 });
 
 test('배포는 마이그레이션 롤백 검증과 적용을 앱 빌드보다 먼저 끝낸다', () => {
