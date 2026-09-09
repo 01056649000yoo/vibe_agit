@@ -93,6 +93,19 @@ test('교사 화면은 세 단계를 따라가는 길로 보여 주고 활동은
     assert.match(css, /단계는 순서가 뜻이라 좁아져도 세 칸을 유지/);
 });
 
+test('주제 만들기는 넓은 화면에서 두 열로 모으고 질문만 내부 스크롤한다', () => {
+    const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
+
+    assert.match(teacher, /neighbor-teacher__composer-grid/);
+    assert.match(teacher, /neighbor-teacher__composer-main/);
+    assert.match(teacher, /neighbor-teacher__composer-settings/);
+    assert.match(teacher, /neighbor-teacher__setting-groups/);
+    assert.match(css, /\.neighbor-teacher__composer-grid\s*\{[^}]*grid-template-columns:/);
+    assert.match(css, /\.neighbor-teacher__composer-settings \.neighbor-teacher__questions\s*\{[^}]*max-height:[^}]*overflow-y: auto/);
+    assert.match(css, /@media \(max-width: 720px\)[\s\S]*\.neighbor-teacher__composer-settings \.neighbor-teacher__questions\s*\{\s*grid-template-columns: 1fr/);
+});
+
 test('함께 쓰는 주제는 만들기·결과 두 갈래이고 글 종류 칸이 화면에 녹아 있다', () => {
     // 선생님 지적(2026-09-07): 글 종류 고르기를 모듈만 가져다 놓아 성의 없어 보였다.
     // 실제로 `.neighbor-teacher__genre` 에 스타일이 하나도 없어 맨 요소가 그대로 나오고 있었다.

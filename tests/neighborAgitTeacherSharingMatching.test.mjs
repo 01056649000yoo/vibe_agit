@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [migration, removal, teacherEntry, studentEntry, teacherApi, readme, security, performance, packageJson] = await Promise.all([
+const [migration, removal, candidateGrouping, teacherEntry, teacherCss, studentEntry, teacherApi, readme, security, performance, packageJson] = await Promise.all([
     readFile('supabase/migrations/20261239_neighbor_teacher_sharing_exchange_matching.sql', 'utf8'),
     readFile('supabase/migrations/20261254_neighbor_drop_exchange_activity.sql', 'utf8'),
+    readFile('supabase/migrations/20261271_neighbor_share_candidates_by_mission.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8'),
+    readFile('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8'),
     readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8'),
     readFile('src/modules/community/neighbor-agit/teacherApi.js', 'utf8'),
     readFile('src/modules/community/neighbor-agit/README.md', 'utf8'),
@@ -35,6 +37,15 @@ test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나�
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.match(teacherEntry, /우리 학급 글 불러오기/);
     assert.match(teacherEntry, /전문 확인 후 공유/);
+});
+
+test('글 나눔 후보는 과제 주제를 함께 받아 필터 가능한 카드로 보여 준다', () => {
+    assert.match(candidateGrouping, /'mission_id', post\.mission_id/);
+    assert.match(candidateGrouping, /'mission_title', COALESCE\(mission\.title, '자율 글'\)/);
+    assert.match(candidateGrouping, /mission\.id = post\.mission_id AND mission\.class_id = post\.class_id/);
+    assert.match(teacherEntry, /galleryMissionFilter/);
+    assert.match(teacherEntry, /neighbor-teacher__mission-chip/);
+    assert.match(teacherCss, /candidate-list[^}]*grid-template-columns: repeat\(3/);
 });
 
 // 2026-09-06: 글짝 교환 활동을 제품에서 뺐다(SQL 61254). 매칭 계약 검사 세 개는 아래 제거 확인으로 대체한다.

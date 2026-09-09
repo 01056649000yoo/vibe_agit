@@ -56,6 +56,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [galleryCandidates, setGalleryCandidates] = useState(null);
     const [galleryLoading, setGalleryLoading] = useState(false);
     const [galleryQuery, setGalleryQuery] = useState('');
+    const [galleryMissionFilter, setGalleryMissionFilter] = useState('all');
 
     const loadWorkspace = useCallback(async () => {
         if (!classId) return;
@@ -77,6 +78,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         setPostDetail(null);
         setGalleryCandidates(null);
         setGalleryQuery('');
+        setGalleryMissionFilter('all');
         setSpaceForm({ name: '', publicClassName: activeClass?.name || '', description: '' });
         setJoinForm({ inviteKey: '', publicClassName: activeClass?.name || '' });
         setActiveActivityTab('gallery');
@@ -289,9 +291,20 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const selectedActivities = activeActivityTab === 'gallery'
         ? []
         : activities.filter((activity) => activity.type === activeActivityTab);
+    const galleryMissionOptions = useMemo(() => {
+        const options = new Map();
+        for (const post of galleryCandidates || []) {
+            const id = post.mission_id || 'self';
+            if (!options.has(id)) options.set(id, post.mission_title || '자율 글');
+        }
+        return [...options].map(([id, title]) => ({ id, title }));
+    }, [galleryCandidates]);
     const visibleGalleryCandidates = (galleryCandidates || []).filter((post) => {
         const query = galleryQuery.trim().toLocaleLowerCase('ko-KR');
-        return !query || `${post.student_name} ${post.title}`.toLocaleLowerCase('ko-KR').includes(query);
+        const missionId = post.mission_id || 'self';
+        const matchesMission = galleryMissionFilter === 'all' || galleryMissionFilter === missionId;
+        const matchesQuery = !query || `${post.student_name} ${post.title} ${post.mission_title || ''}`.toLocaleLowerCase('ko-KR').includes(query);
+        return matchesMission && matchesQuery;
     });
 
     if (loading) {
@@ -454,20 +467,37 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </div>
                                     {galleryCandidates && (
                                         <div className="neighbor-teacher__candidate-panel">
-                                            <label>
-                                                학생 이름이나 글 제목 찾기
-                                                <input value={galleryQuery} maxLength={80} placeholder="예: 김하늘, 우리 동네" onChange={(event) => setGalleryQuery(event.target.value)} />
-                                            </label>
+                                            <div className="neighbor-teacher__candidate-toolbar">
+                                                <label>과제·주제
+                                                    <select value={galleryMissionFilter} onChange={(event) => setGalleryMissionFilter(event.target.value)}>
+                                                        <option value="all">전체 주제 ({galleryCandidates.length}편)</option>
+                                                        {galleryMissionOptions.map((option) => (
+                                                            <option value={option.id} key={option.id}>{option.title}</option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+                                                <label>글 찾기
+                                                    <input value={galleryQuery} maxLength={80} placeholder="학생 이름 또는 글 제목" onChange={(event) => setGalleryQuery(event.target.value)} />
+                                                </label>
+                                            </div>
+                                            <div className="neighbor-teacher__candidate-summary">
+                                                <strong>{visibleGalleryCandidates.length}편</strong>
+                                                <span>{galleryMissionFilter === 'all' ? '전체 주제' : galleryMissionOptions.find((option) => option.id === galleryMissionFilter)?.title}</span>
+                                            </div>
                                             {visibleGalleryCandidates.length === 0 ? (
                                                 <p className="neighbor-teacher__empty">조건에 맞는 제출 글이 없습니다.</p>
                                             ) : (
                                                 <div className="neighbor-teacher__candidate-list">
                                                     {visibleGalleryCandidates.map((post) => (
                                                         <article key={post.post_id}>
-                                                            <div>
-                                                                <span><strong>{post.student_name}</strong><small>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : post.share_status === 'pending' ? '학생 요청 대기' : '공유 전'}</small></span>
+                                                            <div className="neighbor-teacher__candidate-card-body">
+                                                                <div className="neighbor-teacher__candidate-meta">
+                                                                    <span className="neighbor-teacher__mission-chip">{post.mission_title || '자율 글'}</span>
+                                                                    <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : post.share_status === 'pending' ? '학생 요청 대기' : '공유 전'}</span>
+                                                                </div>
                                                                 <h3>{post.title || '제목 없는 글'}</h3>
                                                                 <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
+                                                                <strong className="neighbor-teacher__candidate-author">{post.student_name}</strong>
                                                             </div>
                                                             <Button
                                                                 type="button"
@@ -501,95 +531,96 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
                                     {topicView === 'create' && (
                                     <form className="neighbor-teacher-card neighbor-teacher__activity-form" role="tabpanel" onSubmit={createActivity}>
-                                        <div><span>1단계</span><h2>어떤 글을 쓰게 할까요?</h2></div>
-                                        <p>글 종류를 고르면 안내문·길잡이 질문·분량이 학급 과제와 똑같이 채워집니다. 고른 뒤 언제든 고칠 수 있어요.</p>
-
-                                        {/* 고르기 전과 고른 뒤의 모양을 다르게 해서, 지금 무엇이 정해졌는지 바로 보이게 한다. */}
-                                        {activityForm.genre ? (
-                                            <div className="neighbor-teacher__genre is-picked">
-                                                <div className="neighbor-teacher__genre-mark" aria-hidden="true">📄</div>
-                                                <div className="neighbor-teacher__genre-body">
-                                                    <strong>{activityForm.genre}</strong>
-                                                    <ul>
-                                                        <li>최소 {activityForm.min_chars}자</li>
-                                                        <li>{activityForm.min_paragraphs}문단 이상</li>
-                                                        {activityForm.guide_questions.length > 0 && <li>길잡이 질문 {activityForm.guide_questions.length}개</li>}
-                                                        {activityForm.mission_type && <li>전용 원고지</li>}
-                                                    </ul>
+                                        <header className="neighbor-teacher__composer-heading">
+                                            <div><span>주제 만들기</span><h2>한 화면에서 과제를 준비하세요</h2></div>
+                                            <p>글 종류를 고른 뒤 필요한 내용만 확인하고 바로 제안할 수 있어요.</p>
+                                        </header>
+                                        <div className="neighbor-teacher__composer-grid">
+                                            <section className="neighbor-teacher__composer-main" aria-labelledby="neighbor-topic-main-heading">
+                                                <div className="neighbor-teacher__compact-heading">
+                                                    <span>1</span><h3 id="neighbor-topic-main-heading">글 종류 · 주제 · 안내</h3>
                                                 </div>
-                                                <Button type="button" variant="ghost" size="sm" onClick={() => setGenrePickerOpen(true)}>다시 고르기</Button>
-                                            </div>
-                                        ) : (
-                                            <button type="button" className="neighbor-teacher__genre is-empty" onClick={() => setGenrePickerOpen(true)}>
-                                                <span aria-hidden="true">📄</span>
-                                                <span><strong>글 종류 고르기</strong><small>시·편지·생활문처럼 쓸 글을 먼저 정합니다</small></span>
-                                                <span className="neighbor-teacher__genre-go" aria-hidden="true">→</span>
-                                            </button>
-                                        )}
-                                        {presetNotice && <p className="neighbor-teacher__preset-notice" role="status">{presetNotice}</p>}
+                                                {activityForm.genre ? (
+                                                    <div className="neighbor-teacher__genre is-picked">
+                                                        <div className="neighbor-teacher__genre-mark" aria-hidden="true">📄</div>
+                                                        <div className="neighbor-teacher__genre-body">
+                                                            <strong>{activityForm.genre}</strong>
+                                                            <ul>
+                                                                <li>최소 {activityForm.min_chars}자</li>
+                                                                <li>{activityForm.min_paragraphs}문단 이상</li>
+                                                                {activityForm.guide_questions.length > 0 && <li>질문 {activityForm.guide_questions.length}개</li>}
+                                                                {activityForm.mission_type && <li>전용 원고지</li>}
+                                                            </ul>
+                                                        </div>
+                                                        <Button type="button" variant="ghost" size="sm" onClick={() => setGenrePickerOpen(true)}>변경</Button>
+                                                    </div>
+                                                ) : (
+                                                    <button type="button" className="neighbor-teacher__genre is-empty" onClick={() => setGenrePickerOpen(true)}>
+                                                        <span aria-hidden="true">📄</span>
+                                                        <span><strong>글 종류 고르기</strong><small>시·편지·생활문 등</small></span>
+                                                        <span className="neighbor-teacher__genre-go" aria-hidden="true">→</span>
+                                                    </button>
+                                                )}
+                                                {presetNotice && <p className="neighbor-teacher__preset-notice" role="status">{presetNotice}</p>}
+                                                <MissionPromptFields
+                                                    title={activityForm.title}
+                                                    guide={activityForm.guide}
+                                                    onTitleChange={(title) => setActivityForm((current) => ({ ...current, title }))}
+                                                    onGuideChange={(guide) => setActivityForm((current) => ({ ...current, guide }))}
+                                                    isMobile={isMobile}
+                                                    titleMaxLength={80}
+                                                    guideMaxLength={1000}
+                                                    required
+                                                    titlePlaceholder="글쓰기 주제 (예: 우리 동네의 숨은 보물)"
+                                                    guidePlaceholder="무엇을 떠올리고 어떻게 써 볼지 안내해 주세요"
+                                                />
+                                            </section>
 
-                                        <div className="neighbor-teacher__form-step"><span>2단계</span><h3>주제와 안내를 적어 주세요</h3></div>
-                                        <MissionPromptFields
-                                            title={activityForm.title}
-                                            guide={activityForm.guide}
-                                            onTitleChange={(title) => setActivityForm((current) => ({ ...current, title }))}
-                                            onGuideChange={(guide) => setActivityForm((current) => ({ ...current, guide }))}
-                                            isMobile={isMobile}
-                                            titleMaxLength={80}
-                                            guideMaxLength={1000}
-                                            required
-                                            titlePlaceholder="글쓰기 주제 (예: 우리 동네의 숨은 보물)"
-                                            guidePlaceholder="안내 가이드 (무엇을 떠올리고 어떻게 써 볼지 알려 주세요)"
-                                        />
-                                        <div className="neighbor-teacher__form-step"><span>3단계</span><h3>길잡이 질문과 분량을 설정해 주세요</h3></div>
-                                        <p>프리셋으로 채워진 설정을 확인하고 우리 활동에 맞게 고쳐 주세요.</p>
-                                        <div className="neighbor-teacher__questions">
-                                            {activityForm.guide_questions.map((question, index) => (
-                                                <div className="neighbor-teacher__question" key={index}>
-                                                    <label>길잡이 질문 {index + 1}
-                                                        <textarea value={question} required maxLength={200}
-                                                            onChange={(event) => setActivityForm((current) => ({
-                                                                ...current, guide_questions: current.guide_questions.map((value, i) => i === index ? event.target.value : value)
-                                                            }))} />
-                                                    </label>
-                                                    <Button type="button" variant="secondary" aria-label={`길잡이 질문 ${index + 1} 삭제`}
-                                                        onClick={() => setActivityForm((current) => ({
-                                                            ...current, guide_questions: current.guide_questions.filter((_, i) => i !== index)
-                                                        }))}>삭제</Button>
+                                            <section className="neighbor-teacher__composer-settings" aria-labelledby="neighbor-topic-settings-heading">
+                                                <div className="neighbor-teacher__compact-heading">
+                                                    <span>2</span><h3 id="neighbor-topic-settings-heading">질문 · 분량 · 포인트</h3>
                                                 </div>
-                                            ))}
-                                            <Button type="button" variant="secondary" disabled={activityForm.guide_questions.length >= 10}
-                                                onClick={() => setActivityForm((current) => ({ ...current, guide_questions: [...current.guide_questions, ''] }))}>
-                                                + 길잡이 질문 추가
-                                            </Button>
+                                                <div className="neighbor-teacher__questions">
+                                                    {activityForm.guide_questions.map((question, index) => (
+                                                        <div className="neighbor-teacher__question" key={index}>
+                                                            <label><span>길잡이 질문 {index + 1}</span>
+                                                                <textarea value={question} required maxLength={200}
+                                                                    onChange={(event) => setActivityForm((current) => ({
+                                                                        ...current, guide_questions: current.guide_questions.map((value, i) => i === index ? event.target.value : value)
+                                                                    }))} />
+                                                            </label>
+                                                            <button type="button" className="neighbor-teacher__question-remove" aria-label={`길잡이 질문 ${index + 1} 삭제`}
+                                                                onClick={() => setActivityForm((current) => ({
+                                                                    ...current, guide_questions: current.guide_questions.filter((_, i) => i !== index)
+                                                                }))}>×</button>
+                                                        </div>
+                                                    ))}
+                                                    <Button type="button" variant="secondary" size="sm" disabled={activityForm.guide_questions.length >= 10}
+                                                        onClick={() => setActivityForm((current) => ({ ...current, guide_questions: [...current.guide_questions, ''] }))}>
+                                                        + 질문 추가
+                                                    </Button>
+                                                </div>
+                                                <div className="neighbor-teacher__setting-groups">
+                                                    <fieldset>
+                                                        <legend>완료 조건</legend>
+                                                        <label>글자 수<input type="number" required min="1" max="5000" value={activityForm.min_chars}
+                                                            onChange={(event) => setActivityForm((current) => ({ ...current, min_chars: event.target.value === '' ? '' : Number(event.target.value) }))} /></label>
+                                                        <label>문단 수<input type="number" required min="1" max="20" value={activityForm.min_paragraphs}
+                                                            onChange={(event) => setActivityForm((current) => ({ ...current, min_paragraphs: event.target.value === '' ? '' : Number(event.target.value) }))} /></label>
+                                                    </fieldset>
+                                                    <fieldset>
+                                                        <legend>포인트</legend>
+                                                        <label>기본<input type="number" min="0" max="1000" value={activityForm.base_reward}
+                                                            onChange={(event) => setActivityForm((current) => ({ ...current, base_reward: Number(event.target.value) }))} /></label>
+                                                        <label>추가 기준<input type="number" min="0" max="5000" step="50" value={activityForm.bonus_threshold}
+                                                            onChange={(event) => setActivityForm((current) => ({ ...current, bonus_threshold: Number(event.target.value) }))} /></label>
+                                                        <label>추가<input type="number" min="0" max="1000" value={activityForm.bonus_reward}
+                                                            onChange={(event) => setActivityForm((current) => ({ ...current, bonus_reward: Number(event.target.value) }))} /></label>
+                                                    </fieldset>
+                                                </div>
+                                                <Button className="neighbor-teacher__submit-topic" type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
+                                            </section>
                                         </div>
-                                        <div className="neighbor-teacher__reward-grid">
-                                            <label>최소 글자 수
-                                                <input type="number" required min="1" max="5000" value={activityForm.min_chars}
-                                                    onChange={(event) => setActivityForm((current) => ({ ...current, min_chars: event.target.value === '' ? '' : Number(event.target.value) }))} />
-                                            </label>
-                                            <label>최소 문단 수
-                                                <input type="number" required min="1" max="20" value={activityForm.min_paragraphs}
-                                                    onChange={(event) => setActivityForm((current) => ({ ...current, min_paragraphs: event.target.value === '' ? '' : Number(event.target.value) }))} />
-                                            </label>
-                                        </div>
-                                        <div className="neighbor-teacher__form-step"><span>4단계</span><h3>포인트를 정해 주세요</h3></div>
-                                        <p>학급 과제와 같은 방식으로 지급됩니다. 이웃 주제로 쓴 글도 우리 반 글처럼 포인트를 받습니다.</p>
-                                        <div className="neighbor-teacher__reward-grid">
-                                            <label>기본 포인트
-                                                <input type="number" min="0" max="1000" value={activityForm.base_reward}
-                                                    onChange={(event) => setActivityForm((current) => ({ ...current, base_reward: Number(event.target.value) }))} />
-                                            </label>
-                                            <label>추가 분량 기준(자)
-                                                <input type="number" min="0" max="5000" step="50" value={activityForm.bonus_threshold}
-                                                    onChange={(event) => setActivityForm((current) => ({ ...current, bonus_threshold: Number(event.target.value) }))} />
-                                            </label>
-                                            <label>추가 포인트
-                                                <input type="number" min="0" max="1000" value={activityForm.bonus_reward}
-                                                    onChange={(event) => setActivityForm((current) => ({ ...current, bonus_reward: Number(event.target.value) }))} />
-                                            </label>
-                                        </div>
-                                        <Button type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                     </form>
                                     )}
 
