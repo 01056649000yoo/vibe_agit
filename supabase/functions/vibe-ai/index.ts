@@ -1,5 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+// AI 모델 이름은 _shared/model.js 한 곳에서만 정한다.
+import { OPENAI_MODEL } from '../_shared/model.js'
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .split(',')
@@ -143,7 +145,7 @@ const drainCommentSafetyQueue = async (supabaseAdmin: ReturnType<typeof createCl
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
+                    model: OPENAI_MODEL,
                     messages: [{ role: 'user', content: commentSafetyPrompt(content) }],
                     max_tokens: 100,
                     temperature: 0
@@ -527,7 +529,7 @@ Deno.serve(async (req) => {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: OPENAI_MODEL,
                 messages: [{ role: 'user', content: finalPrompt }],
                 max_tokens: type === 'SPELL_CHECK' ? 900 : (type === 'TEACHER_GUIDE_CHAT' ? 120 : (isStudentRequest ? 100 : 1000)),
                 ...((isStudentRequest || type === 'TEACHER_GUIDE_CHAT') ? { temperature: 0 } : {}),

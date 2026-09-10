@@ -41,6 +41,9 @@ fi
 # 실제로 도는 것은 그 폴더의 사본이라, **복사하지 않으면 옛 코드가 계속 돈다.**
 # CI(.github/workflows/deploy.yml 의 `Sync AI edge function`)는 이미 이 일을 한다.
 # 로컬 배포에도 같은 단계를 둬서 두 경로가 어긋나지 않게 한다(2026-08-20).
+# 함수들이 함께 쓰는 파일을 **먼저** 올린다(AI 모델 이름 등). 자동 배포도 같은 것을 부른다.
+bash scripts/sync-edge-shared.sh
+
 FN_SRC="supabase/functions/vibe-ai/index.ts"
 FN_DST="$HOME/agit-supabase/volumes/functions/vibe-ai/index.ts"
 if [ ! -f "$FN_DST" ]; then

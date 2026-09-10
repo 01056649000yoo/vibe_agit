@@ -12,7 +12,7 @@ import test from 'node:test';
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- 호출부는 이 파일의 고정된 배포 파일 경로 8개뿐이다.
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
-const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp, buildApp] = await Promise.all([
+const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp, buildApp, syncShared] = await Promise.all([
     readText('.github/workflows/deploy.yml'),
     readText('Dockerfile'),
     readText('.dockerignore'),
@@ -22,7 +22,8 @@ const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCa
     readText('scripts/trim-docker-cache.sh'),
     readText('ops/launchd/com.agit.docker-cache-trim.plist'),
     readText('scripts/run-agit-app.sh'),
-    readText('scripts/build-agit-app.sh')
+    readText('scripts/build-agit-app.sh'),
+    readText('scripts/sync-edge-shared.sh')
 ]);
 
 test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
@@ -182,4 +183,25 @@ test('되돌릴 지점은 덮어쓰기 전에 남긴다', () => {
 
     // 첫 빌드에는 이전 이미지가 없다. 없다고 배포가 멈추면 안 된다.
     assert.match(buildApp, /docker image inspect agit-app:prod/);
+});
+
+test('함수들이 함께 쓰는 파일은 각 함수보다 먼저, 두 경로에서 같이 올라간다', () => {
+    /*
+     * 왜 이 검사가 있나 (2026-09-10):
+     *   AI 모델 이름을 `supabase/functions/_shared/model.js` 한 곳으로 모았다. 이 파일은 각 함수
+     *   폴더 **밖**에 있어서, 함수만 올리고 이걸 빠뜨리면 함수가 import 에서 죽는다.
+     *   로컬에는 파일이 있어 **로컬 검사로는 절대 못 잡는** 종류의 사고다.
+     */
+    for (const [name, text] of [['자동 배포', workflow], ['로컬 배포', localDeploy]]) {
+        assert.match(text, /bash scripts\/sync-edge-shared\.sh/, `${name}가 공유 파일을 올리지 않는다`);
+        // 함수 본체보다 **먼저** 올라가야 한다. 순서가 뒤집히면 한 번은 깨진 채로 뜬다.
+        assert.ok(text.indexOf('sync-edge-shared.sh') < text.indexOf('vibe-ai/index.ts'),
+            `${name}에서 공유 파일이 함수보다 나중에 올라간다`);
+    }
+
+    // 올린 뒤 실제로 읽히는지 확인한다. import 가 깨지면 함수는 400 이 아니라 500 을 준다.
+    assert.match(syncShared, /functions\/v1\/vibe-ai/);
+    assert.match(syncShared, /"\$shared_status" = "400"/);
+    // 이 폴더는 git 밖이라 사본이 유일한 복구 수단이다.
+    assert.match(syncShared, /\.bak-\$\(date/);
 });

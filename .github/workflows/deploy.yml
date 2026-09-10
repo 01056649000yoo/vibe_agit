@@ -50,6 +50,11 @@ jobs:
           # 띄우는 방법은 scripts/run-agit-app.sh 한 곳에만 둔다 — 로컬 배포도 같은 것을 부른다.
           bash scripts/run-agit-app.sh
 
+      - name: Sync shared edge files
+        run: |
+          # 함수들이 함께 쓰는 파일을 먼저 올린다(AI 모델 이름 등). 로컬 배포도 같은 것을 부른다.
+          bash scripts/sync-edge-shared.sh
+
       - name: Sync AI edge function
         run: |
           target="$HOME/agit-supabase/volumes/functions/vibe-ai/index.ts"

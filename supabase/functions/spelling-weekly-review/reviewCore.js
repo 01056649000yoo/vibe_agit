@@ -9,7 +9,8 @@
  * 비동기라 여기서 직접 쓰면 계산 전체가 비동기가 된다 — 넣어 받으면 양쪽 다 동기로 남는다.
  */
 
-export const MODEL = 'gpt-4o-mini';
+// 모델 이름은 _shared/model.js 한 곳에서만 정한다. 여기서는 옛 이름(MODEL)으로 이어 준다.
+export { OPENAI_MODEL as MODEL } from '../_shared/model.js';
 
 /**
  * 검수 기준이 바뀌면 이 값을 올린다.

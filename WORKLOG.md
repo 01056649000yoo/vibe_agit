@@ -19,6 +19,17 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-10 — AI 모델 이름을 한 곳으로 모음 (Claude)
+- **왜**: `gpt-4o-mini` 가 세 곳에 따로 박혀 있었다 — `vibe-ai/index.ts` 두 자리(댓글 안전 검사·나머지 전부)와 `spelling-weekly-review/reviewCore.js`. 모델을 바꾸려면 세 곳을 다 찾아야 했고, 한 곳을 놓치면 **오류 없이** 그 기능만 옛 모델을 계속 썼다.
+- **변경**:
+  - `supabase/functions/_shared/model.js` 신설 — `export const OPENAI_MODEL`. **이 한 줄만 고치면 세 기능이 함께 바뀐다.**
+  - `vibe-ai/index.ts` 는 import 해서 두 자리에 쓰고, `reviewCore.js` 는 `export { OPENAI_MODEL as MODEL }` 로 옛 이름을 이어 준다(되돌림 경로 `scripts/run-weekly-spelling-review.mjs` 가 그 이름을 쓴다).
+  - **`.js` 로 둔 이유**: `reviewCore.js` 를 Deno(엣지)와 **Node**(되돌림 경로)가 함께 읽는데 Node 는 `.ts` 를 못 읽는다.
+  - `scripts/sync-edge-shared.sh` 신설 — 공유 파일은 함수 폴더 **밖**이라 함수만 올리면 import 에서 죽는다. 두 배포 경로가 이 스크립트 하나를 **함수보다 먼저** 부른다. 올린 뒤 `vibe-ai` 가 400 을 주는지 확인해 import 가 풀렸는지 본다(깨지면 500 이 온다).
+- **함께 확인한 것**: `vibe-ai` 는 요청 본문의 `model` 을 **아예 읽지 않는다** — 클라이언트가 비싼 모델을 골라 요금을 태울 수 없다. 검사가 이것도 지킨다. `scripts/security-test-plan.js` 의 `model: 'gpt-4o-mini'` 는 브라우저에 붙여 넣는 시험 입력이고 서버가 무시하므로 검사에서 뺐다(이유를 파일에 적었다).
+- **결과/검증**: 실제로 맥미니 볼륨에 공유 파일과 함수 본체를 올리고 컨테이너를 다시 띄워 확인했다 — `vibe-ai` 400, `spelling-weekly-review` 401, `neis-meal` 401 로 모두 정상이고 import 오류 로그가 없다. `npm run test:all` 982/982, `npm run lint` 깨끗, `npm run build` 성공. 새 검사 두 벌을 일부러 망가뜨려(자동 배포에서 공유 동기화 제거·모델을 다시 직접 박기) 실제로 실패하는 것까지 확인했다.
+- **모델 바꾸는 법**: `supabase/functions/_shared/model.js` 의 한 줄을 고치고 배포한다. 그것뿐이다.
+
 ## 2026-09-10 — 도커 찌꺼기 점검과 묵은 빌드 캐시 자동 정리 (Claude)
 - **점검 결과**: 도커는 깨끗하다. 가상 디스크 34%(기준 60%), 빌드 캐시 1.29GB(기준 5GB), 이름 없는 이미지 0개. 매일 도는 `com.agit.docker-cache-trim` 이 제 몫을 하고 있었다(로그도 계속 "기준 안이라 그대로 둡니다").
 - **찾은 찌꺼기와 조치**: 옛 태그 방식의 `agit-app:20260909`(되돌림 태그가 `rollback-<날짜시각>` 으로 바뀌기 전 것) 하나와, 어제 내가 남긴 `.env.local.bak-secaudit` 을 지웠다. Edge 함수 사본 3개와 `scripts/*.bak-*` 2개는 남겼다 — Edge 폴더는 git 밖이라 사본이 **유일한 복구 수단**이고, 나머지도 53KB라 무해하다. npm 캐시는 외장 SSD에 2.9GB인데 도커와 무관하고 재사용되는 것이라 두었다.
