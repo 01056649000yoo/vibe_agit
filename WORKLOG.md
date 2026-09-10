@@ -19,6 +19,20 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-10 — AI 모델을 gpt-5.6-luna 로 바꾸고 매개변수까지 한 곳으로 (Claude)
+- **한 일**: 모델을 `gpt-4o-mini` → `gpt-5.6-luna`(2026-07-09 출시) 로 바꿨다. **이름만 바꾸면 AI 기능 전체가 죽는다**는 것을 배포 전에 실제 호출로 확인하고, 매개변수까지 `_shared/model.js` 한 곳으로 모았다.
+- **운영 열쇠로 직접 확인한 것** (추측하지 않고 전부 호출해 봤다):
+  - `max_tokens` **미지원** → `max_completion_tokens`. 지금 코드 형태 세 가지가 모두 실패했다.
+  - `temperature: 0` **미지원**(기본값 1만 받는다). 학생 요청·안내서 AI 가 쓰던 값이다.
+  - `reasoning_effort`: `none` ✅ · `minimal` ✗ · `low` ✅ → **`none` 이 이 모델의 최소값**이다. 초등 글쓰기·교사 피드백은 오래 생각할 일이 아니라 빨리 답할 일이라 최소로 둔다. 다섯 갈래 모두 추론 토큰 0을 확인했다.
+  - `response_format` `json_object`·`json_schema(strict)` 둘 다 ✅.
+  - 계정 사용 가능 모델 131개 목록에 `gpt-5.6-luna` 가 있는 것도 확인했다.
+- **변경**: `_shared/model.js` 에 `buildChatRequest({ messages, maxOutputTokens, deterministic, responseFormat })` 를 두고, 부르는 네 곳(`vibe-ai` 2·주간 검수 엣지·되돌림 스크립트)이 **무엇을 원하는지만** 말하게 했다. 표현(`max_completion_tokens`·`reasoning_effort`·temperature 유무)은 이 파일이 정한다. 다음 모델로 옮길 때도 여기만 고친다.
+- **잃은 것**: `temperature: 0` 을 이 모델이 안 받아 **같은 글을 두 번 검사하면 답이 조금 달라질 수 있다**. `deterministic` 이라는 뜻은 부르는 쪽에 그대로 남겨 두었고, temperature 0 을 받는 모델로 옮기면 `_shared/model.js` 의 한 줄만 되살리면 모든 자리에 함께 돌아온다.
+- **요금**: 입력 $0.15→$0.20, 출력 $0.60→$1.20 (1M 토큰당). 출력이 2배지만 월 3,600회 규모라 절대 금액은 작다.
+- **결과/검증**: 공용 함수가 만든 요청 그대로 다섯 갈래(댓글 안전 검사·학생 맞춤법·교사 AI·안내서 AI JSON·주간 검수 스키마)를 실제 OpenAI 에 보내 **전부 성공**했다(0.85~1.6초, 추론 토큰 0). 안내서 AI 는 `json_object` 모드가 문구에 `json` 을 요구하는데 실제 프롬프트에 "JSON 객체 하나만 답한다"가 있어 통과한다. `npm run test:all` 983/983, `npm run lint` 깨끗. 기존 검사 3건은 **표현이 아니라 뜻**을 보도록 고쳤다(`maxOutputTokens`·`deterministic`).
+- **남은 것 / 다음**: 배포 뒤 운영에서 다섯 갈래를 다시 확인한다. 개인 API 열쇠 10개는 사용자 판단으로 남겨 두었다.
+
 ## 2026-09-10 — AI 모델 이름을 한 곳으로 모음 (Claude)
 - **왜**: `gpt-4o-mini` 가 세 곳에 따로 박혀 있었다 — `vibe-ai/index.ts` 두 자리(댓글 안전 검사·나머지 전부)와 `spelling-weekly-review/reviewCore.js`. 모델을 바꾸려면 세 곳을 다 찾아야 했고, 한 곳을 놓치면 **오류 없이** 그 기능만 옛 모델을 계속 썼다.
 - **변경**:

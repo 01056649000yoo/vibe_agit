@@ -48,13 +48,42 @@ test('AI 모델 이름은 _shared/model.js 한 곳에서만 정한다', () => {
         `모델 이름을 직접 적은 곳이 있습니다. ${SHARED} 를 가져다 쓰세요: ${offenders.join(', ')}`);
 });
 
+test('모델이 받는 매개변수도 한 곳에서만 정한다', () => {
+    /*
+     * 왜 (2026-09-10):
+     *   `gpt-4o-mini` → `gpt-5.6-luna` 로 바꿔 보니 **이름만 바꾸면 AI 기능 전체가 죽었다.**
+     *   새 모델은 `max_tokens` 를 안 받고(`max_completion_tokens`), `temperature: 0` 도 거절한다.
+     *   매개변수가 여섯 곳에 흩어져 있어 하나만 놓쳐도 그 기능만 조용히 멈춘다.
+     *   그래서 부르는 쪽은 **무엇을 원하는지**만 말하고 표현은 공용 함수가 정한다.
+     */
+    const shared = read(SHARED);
+    assert.match(shared, /export function buildChatRequest\(/);
+    assert.match(shared, /reasoning_effort: REASONING_EFFORT/);
+    // 초등 글쓰기·교사 피드백에는 오래 생각할 일이 없다. 이 모델이 받는 최소값을 쓴다.
+    assert.match(shared, /const REASONING_EFFORT = 'none';/);
+
+    const callers = [
+        'supabase/functions/vibe-ai/index.ts',
+        'supabase/functions/spelling-weekly-review/index.ts',
+        'scripts/run-weekly-spelling-review.mjs',
+    ];
+    for (const file of callers) {
+        const source = read(file);
+        assert.match(source, /buildChatRequest\(\{/, `${file} 이 공용 요청 만들기를 쓰지 않는다`);
+        // 부르는 쪽이 모델별 매개변수를 직접 적으면 모델을 바꿀 때 또 흩어진다.
+        for (const banned of ['max_tokens', 'max_completion_tokens', 'temperature', 'reasoning_effort']) {
+            assert.doesNotMatch(source, new RegExp(`\\b${banned}\\s*:`), `${file} 에 ${banned} 가 직접 적혀 있다`);
+        }
+    }
+});
+
 test('AI 를 부르는 곳은 모두 공유 상수를 가져다 쓴다', () => {
     const vibeAi = read('supabase/functions/vibe-ai/index.ts');
     const reviewCore = read('supabase/functions/spelling-weekly-review/reviewCore.js');
 
-    assert.match(vibeAi, /import \{ OPENAI_MODEL \} from '\.\.\/_shared\/model\.js'/);
-    // vibe-ai 는 두 곳에서 AI 를 부른다(댓글 안전 검사·나머지 전부). 둘 다 상수를 써야 한다.
-    assert.equal((vibeAi.match(/model: OPENAI_MODEL,/g) || []).length, 2);
+    assert.match(vibeAi, /import \{ buildChatRequest \} from '\.\.\/_shared\/model\.js'/);
+    // vibe-ai 는 두 곳에서 AI 를 부른다(댓글 안전 검사·나머지 전부). 둘 다 공용 함수를 써야 한다.
+    assert.equal((vibeAi.match(/buildChatRequest\(\{/g) || []).length, 2);
     assert.equal((vibeAi.match(/api\.openai\.com/g) || []).length, 2);
 
     // 클라이언트가 모델을 고를 수 없어야 한다. 고를 수 있으면 비싼 모델로 요금을 태울 수 있다.

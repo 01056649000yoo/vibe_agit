@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-// AI 모델 이름은 _shared/model.js 한 곳에서만 정한다.
-import { OPENAI_MODEL } from '../_shared/model.js'
+// AI 모델과 그 모델이 받는 매개변수는 _shared/model.js 한 곳에서만 정한다.
+import { buildChatRequest } from '../_shared/model.js'
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .split(',')
@@ -144,12 +144,11 @@ const drainCommentSafetyQueue = async (supabaseAdmin: ReturnType<typeof createCl
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: OPENAI_MODEL,
+                body: JSON.stringify(buildChatRequest({
                     messages: [{ role: 'user', content: commentSafetyPrompt(content) }],
-                    max_tokens: 100,
-                    temperature: 0
-                }),
+                    maxOutputTokens: 100,
+                    deterministic: true,
+                })),
                 signal: AbortSignal.timeout(20_000)
             })
             if (!response.ok) {
@@ -528,13 +527,13 @@ Deno.serve(async (req) => {
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: OPENAI_MODEL,
+            body: JSON.stringify(buildChatRequest({
                 messages: [{ role: 'user', content: finalPrompt }],
-                max_tokens: type === 'SPELL_CHECK' ? 900 : (type === 'TEACHER_GUIDE_CHAT' ? 120 : (isStudentRequest ? 100 : 1000)),
-                ...((isStudentRequest || type === 'TEACHER_GUIDE_CHAT') ? { temperature: 0 } : {}),
-                ...(type === 'TEACHER_GUIDE_CHAT' ? { response_format: { type: 'json_object' } } : {})
-            })
+                maxOutputTokens: type === 'SPELL_CHECK' ? 900 : (type === 'TEACHER_GUIDE_CHAT' ? 120 : (isStudentRequest ? 100 : 1000)),
+                // 아이가 두 번 눌러도 같은 답이어야 하는 자리와, JSON 으로 받아야 하는 자리.
+                deterministic: isStudentRequest || type === 'TEACHER_GUIDE_CHAT',
+                responseFormat: type === 'TEACHER_GUIDE_CHAT' ? { type: 'json_object' } : null,
+            }))
         })
         if (!openaiResponse.ok) {
             const upstream = await openaiResponse.json().catch(() => ({}))

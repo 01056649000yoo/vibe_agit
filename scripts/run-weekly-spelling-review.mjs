@@ -16,6 +16,8 @@ import {
     prepareWeeklyReviewCandidates as prepareCandidatesWithHash,
     trimText
 } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
+// 모델과 매개변수는 _shared/model.js 한 곳에서만 정한다(엣지 함수와 같은 파일).
+import { buildChatRequest } from '../supabase/functions/_shared/model.js';
 
 /*
  * 거르는 계산의 **원본은 엣지 함수 폴더가 갖는다**(`supabase/functions/spelling-weekly-review/reviewCore.js`).
@@ -93,8 +95,7 @@ const reviewWithOpenAI = async (apiKey, candidates) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: MODEL,
+        body: JSON.stringify(buildChatRequest({
             messages: [
                 {
                     role: 'system',
@@ -102,13 +103,13 @@ const reviewWithOpenAI = async (apiKey, candidates) => {
                 },
                 { role: 'user', content: JSON.stringify({ candidates }) }
             ],
-            response_format: {
+            maxOutputTokens: 5000,
+            deterministic: true,
+            responseFormat: {
                 type: 'json_schema',
                 json_schema: { name: 'weekly_spelling_reviews', strict: true, schema: reviewSchema }
             },
-            max_tokens: 5000,
-            temperature: 0
-        })
+        }))
     });
     if (!response.ok) throw new Error(`openai_http_${response.status}`);
     const data = await response.json();

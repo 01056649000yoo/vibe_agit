@@ -71,7 +71,7 @@ test('AI에는 전체 카탈로그 대신 후보와 유사 항목만 보내고 �
     const requestBlock = runner.match(/const reviewWithOpenAI[\s\S]*?const main = async/)?.[0] || '';
     assert.ok(requestBlock);
     assert.match(runner, /similar_matches: candidate\.similar_matches/);
-    assert.match(runner, /response_format:[\s\S]*type: 'json_schema'/);
+    assert.match(runner, /responseFormat:[\s\S]*type: 'json_schema'/);
     assert.match(runner, /strict: true/);
     assert.match(runner, /additionalProperties: false/);
     // 상한은 두 실행 경로(엣지 함수·되돌림 스크립트)가 함께 쓰는 원본에 있다.
@@ -130,10 +130,11 @@ test('엣지 함수와 되돌림 스크립트는 같은 지시문·같은 상한
     for (const source of [runner, edgeFunction]) {
         // 지시문은 원본(reviewCore)에서 가져다 쓴다 — 여기 적혀 있으면 두 벌이 된다.
         assert.match(source, /content: REVIEW_INSTRUCTIONS/);
-        assert.match(source, /response_format:[\s\S]{0,200}type: 'json_schema'/);
+        assert.match(source, /responseFormat:[\s\S]{0,200}type: 'json_schema'/);
         assert.match(source, /strict: true/);
-        assert.match(source, /max_tokens: 5000/);
-        assert.match(source, /temperature: 0/);
+        // 매개변수 표현은 모델마다 다르므로 `_shared/model.js` 가 정한다. 여기서는 뜻만 본다.
+        assert.match(source, /maxOutputTokens: 5000/);
+        assert.match(source, /deterministic: true/);
     }
     // 완료 요약의 칸 이름이 어긋나면 관리자 화면의 수가 조용히 0 이 된다.
     for (const key of ['collected_count', 'known_filtered_count', 'cache_hit_count', 'ai_reviewed_count']) {

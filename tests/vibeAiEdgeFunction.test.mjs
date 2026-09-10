@@ -66,9 +66,16 @@ test('댓글 수정은 먼저 pending으로 되돌리고 같은 댓글 ID로 다
     assert.match(interactionSource, /checkContentSafety\('', \{ commentId \}\)/);
 });
 
-test('댓글 판정은 100토큰·온도 0, 맞춤법 검사는 900토큰, 일반 AI는 1000토큰이다', () => {
-    assert.match(edgeSource, /max_tokens: 100,[\s\S]{0,40}temperature: 0/);
-    assert.match(edgeSource, /max_tokens: type === 'SPELL_CHECK' \? 900 : \(type === 'TEACHER_GUIDE_CHAT' \? 120 : \(isStudentRequest \? 100 : 1000\)\)/);
+test('댓글 판정은 100토큰·일관된 답, 맞춤법 검사는 900토큰, 일반 AI는 1000토큰이다', () => {
+    /*
+     * 2026-09-10: 매개변수 이름은 모델마다 다르다(`max_tokens` vs `max_completion_tokens`,
+     * `temperature: 0` 을 받는 모델과 아닌 모델). 그래서 부르는 쪽은 **뜻**만 적고
+     * 표현은 `_shared/model.js` 가 정한다. 여기서는 그 **뜻**이 그대로인지 본다.
+     */
+    assert.match(edgeSource, /maxOutputTokens: 100,[\s\S]{0,60}deterministic: true/);
+    assert.match(edgeSource, /maxOutputTokens: type === 'SPELL_CHECK' \? 900 : \(type === 'TEACHER_GUIDE_CHAT' \? 120 : \(isStudentRequest \? 100 : 1000\)\)/);
+    // 아이 요청과 안내서 AI 는 같은 입력에 같은 답이 필요하다.
+    assert.match(edgeSource, /deterministic: isStudentRequest \|\| type === 'TEACHER_GUIDE_CHAT'/);
     assert.match(edgeSource, /isStudentRequest \|\| type === 'TEACHER_GUIDE_CHAT'/);
 });
 

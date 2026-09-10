@@ -24,6 +24,8 @@ import {
     missingReview,
     prepareWeeklyReviewCandidates
 } from './reviewCore.js'
+// 모델과 매개변수는 _shared/model.js 한 곳에서만 정한다.
+import { buildChatRequest } from '../_shared/model.js'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -97,19 +99,18 @@ const reviewWithOpenAI = async (candidates: unknown[]) => {
         method: 'POST',
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(20_000),
-        body: JSON.stringify({
-            model: MODEL,
+        body: JSON.stringify(buildChatRequest({
             messages: [
                 { role: 'system', content: REVIEW_INSTRUCTIONS },
                 { role: 'user', content: JSON.stringify({ candidates }) }
             ],
-            response_format: {
+            maxOutputTokens: 5000,
+            deterministic: true,
+            responseFormat: {
                 type: 'json_schema',
                 json_schema: { name: 'weekly_spelling_reviews', strict: true, schema: reviewSchema }
             },
-            max_tokens: 5000,
-            temperature: 0
-        })
+        }))
     })
     if (!response.ok) throw new Error(`openai_http_${response.status}`)
     const data = await response.json()
