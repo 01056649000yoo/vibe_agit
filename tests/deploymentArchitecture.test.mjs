@@ -108,10 +108,20 @@ test('배포 관문은 맥 디스크뿐 아니라 도커 안쪽 공간도 본다
     assert.match(trimCache, /docker builder prune -a -f/);
     assert.doesNotMatch(trimCache, /docker system prune|image prune|volume prune|-a -f --volumes/);
 
-    // 기준을 넘을 때만 비운다(사용률·캐시 크기 두 갈래)
+    // 기준을 넘을 때만 통째로 비운다(사용률·캐시 크기 두 갈래)
     assert.match(trimCache, /MAX_USE_PCT="\$\{1:-\d+\}"/);
     assert.match(trimCache, /MAX_CACHE_GB="\$\{2:-\d+\}"/);
     assert.match(trimCache, /기준 안이라 그대로 둡니다/);
+
+    /*
+     * 묵은 캐시는 기준과 상관없이 늘 지운다 (2026-09-10).
+     *   캐시는 쓰레기가 아니라 다음 빌드를 빠르게 하는 재료다. 그래서 통째로 비우지 않고
+     *   `until` 로 "이틀 넘게 아무 빌드도 손대지 않은 것"만 고른다. 최근 배포가 만든 캐시는
+     *   남으므로 배포가 느려지지 않는다. `-a`(전부)를 여기에 쓰면 그 뜻이 사라진다.
+     */
+    assert.match(trimCache, /STALE_AFTER="\$\{3:-\d+h\}"/);
+    assert.match(trimCache, /docker builder prune -f --filter "until=\$\{STALE_AFTER\}"/);
+    assert.doesNotMatch(trimCache, /prune -a[^\n]*--filter "until=/);
 
     // 배포 밖에서 빌드한 날도 훑는 그물이 있다
     assert.match(trimPlist, /com\.agit\.docker-cache-trim/);
