@@ -288,3 +288,28 @@ test('공개 단계 관리는 관리자 대시보드의 우리반 아지트 전�
     assert.doesNotMatch(panel, /최신 공개 설정 불러오기/);
     assert.equal((panel.match(/api\.manageRollout\(\)/g) || []).length, 2);
 });
+
+test('문집 확정판은 산문만 양쪽을 맞추고 시의 줄은 그대로 둔다', async () => {
+    /*
+     * 왜 이 검사가 있나 (2026-09-10 제보):
+     *   인쇄한 문집의 오른쪽 끝이 우둘투둘했다. 줄마다 6~14px 씩 모자랐다. 종이는 폭이 고정이라
+     *   화면보다 더 눈에 띈다. 산문만 양쪽을 맞춰 0px 로 만든다.
+     *
+     *   시(`poem-sheet__body`·`poem-sheet__stanza`)는 줄의 시작과 끝이 작품 그 자체라 건드리지
+     *   않는다. 아이가 넣은 줄바꿈도 `pre-wrap` 이 그대로 지킨다 — 정렬만 고치는 것이 이 변경의 전부다.
+     */
+    const html = await buildAnthologyHtml({
+        version: 1, id: editionId, number: 1,
+        book: { ...book, print: ANTHOLOGY_PRINT_SETTINGS, works: [{ ...work, format: 'prose' }] },
+    });
+
+    // 산문 문단만 양쪽 정렬. 페이지 나눔이 본문에 `anthology-work pdf-entry__content` 를 붙인다.
+    assert.match(html, /\.anthology-work\.pdf-entry__content>p\{text-align:justify\}/);
+
+    // 시와 연에는 양쪽 정렬을 걸지 않는다(주석 글자에 걸리지 않도록 선택자 모양만 본다).
+    assert.doesNotMatch(html, /\.poem-sheet__(body|stanza)[^{;]*\{[^}]*text-align:justify/);
+
+    // 줄바꿈은 그대로 지킨다.
+    assert.match(html, /\.anthology-work>p\{white-space:pre-wrap/);
+    assert.doesNotMatch(html, /\.anthology-work\.pdf-entry__content>p\{[^}]*white-space/);
+});

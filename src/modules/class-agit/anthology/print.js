@@ -33,6 +33,10 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 #anthology-source{position:absolute;left:-10000px;width:${contentWidth}mm}
 .pdf-entry,.pdf-entry__content,.pdf-poem__content{min-height:0;break-after:auto;page-break-after:auto}
 .anthology-work{white-space:normal}.anthology-work>p{white-space:pre-wrap;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;line-height:1.78}
+/* 산문은 양쪽을 맞춘다 — 오른쪽 끝이 들쭉날쭉하면 종이에서 더 눈에 띈다.
+   시(poem-sheet__body·poem-sheet__stanza)는 줄의 시작과 끝이 작품이라 건드리지 않는다.
+   아이가 넣은 줄바꿈은 위의 pre-wrap 이 그대로 지킨다(화면 읽기 창과 같은 원칙). */
+.anthology-work.pdf-entry__content>p{text-align:justify}
 .anthology-work.poem-sheet__body>p,.anthology-work .poem-sheet__stanza{font-size:${ANTHOLOGY_PRINT_SETTINGS.poem_pt}pt;line-height:2.05;white-space:pre-wrap}
 .anthology-continuation{font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;color:#64748b;white-space:normal;margin-bottom:6mm;line-height:1.4}
 .anthology-work .pdf-entry__header{white-space:normal}.anthology-work .pdf-entry__rule{margin-bottom:5mm}
