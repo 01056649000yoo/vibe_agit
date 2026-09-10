@@ -9,6 +9,11 @@ import {
 
 const MOVE_START_THRESHOLD_PX = 3;
 
+// 자리는 이 다섯 값이 전부다(boardPlacement.normalizePlacement). 값이 같으면 다시 그릴 일이 없다.
+const placementSignature = (placement) => [
+  placement?.x, placement?.y, placement?.width, placement?.height, placement?.pinned ? 1 : 0,
+].join(':');
+
 const placementStyle = (placement, zIndex) => ({
   left: `${placement.x}%`,
   top: `${placement.y}%`,
@@ -55,6 +60,21 @@ export default function InteractiveWidgetFrame({
   const gestureRef = useRef(null);
   const latestPlacementRef = useRef(normalized);
   const clearResizeFrameRef = useRef(0);
+
+  // 저장·취소처럼 바깥에서 자리가 바뀌면 여기 초안도 따라간다.
+  // 예전에는 부모가 열쇠값에 자리를 넣어 위젯을 통째로 다시 만들었는데, 그러면 옮길 때마다
+  // 사진을 다시 내려받고(만료된 주소면 깨진다) 타이머·스톱워치가 0으로 돌아갔다.
+  const placementKey = placementSignature(normalized);
+  useEffect(() => {
+    if (gestureRef.current) return;
+    setDraftPlacement((current) => {
+      if (placementSignature(current) === placementKey) return current;
+      latestPlacementRef.current = normalized;
+      return normalized;
+    });
+    // normalized 는 렌더마다 새 객체라 값만 담은 placementKey 를 의존성으로 둔다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placementKey]);
 
   useEffect(() => () => {
     if (clearResizeFrameRef.current) cancelAnimationFrame(clearResizeFrameRef.current);

@@ -1286,3 +1286,236 @@ test('스크린 열기는 저장까지 한 번에 하고, 새 탭을 누른 순�
     assert.match(openScreen, /target\.close\(\)/);
     assert.match(openScreen, /target\.location\.replace\(`\/class-board\/\$\{boardId\}`\)/);
 });
+
+/*
+ * 2026-09-10: "스크린 열기가 오래 걸린다"는 제보.
+ * 새 탭이 교사 전체 초기 데이터(학급 100개·공지 50개 + last_login_at 쓰기)를 기다린 뒤에야
+ * 화면 조각을 내려받기 시작해, 꼭 필요한 왕복이 한 줄로 길게 이어져 있었다.
+ * 화면에서 뺀 승인 검사는 반드시 서버 RPC 가 대신 해야 한다 — 둘을 한 검사에서 함께 본다.
+ */
+test('스크린 새 탭은 교사 전체 초기 데이터를 기다리지 않고 화면 조각을 먼저 내려받는다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [appSource, authStore, approvalMigration, approvalSmoke] = await Promise.all([
+        readFile('src/App.jsx', 'utf8'),
+        readFile('src/store/useAuthStore.js', 'utf8'),
+        readFile('supabase/migrations/20261278_class_board_presentation_requires_approval.sql', 'utf8'),
+        readFile('tests/sql/20261278_class_board_presentation_requires_approval.smoke.sql', 'utf8')
+    ]);
+
+    // [1] 주소를 보자마자 화면 조각 내려받기를 시작한다. 로그인 확인과 나란히 진행되어야 한다.
+    assert.match(appSource, /const loadClassBoardPresentationPage = \(\) => import\('\.\/modules\/tool\/class-board\/ClassBoardPresentationPage'\)/);
+    assert.match(appSource, /const CLASS_BOARD_PRESENTATION_ID = getClassBoardPresentationId\(\)/);
+    assert.match(appSource, /if \(CLASS_BOARD_PRESENTATION_ID\) void loadClassBoardPresentationPage\(\)/);
+    // 판정이 컴포넌트 안에서 다시 일어나면 미리 내려받기와 실제 화면이 갈라진다.
+    assert.match(appSource, /const classBoardPresentationId = CLASS_BOARD_PRESENTATION_ID;/);
+
+    // [2] 발표 화면 관문은 로그인 여부만 본다. profileLoading·profile 을 다시 기다리면 원점이다.
+    const gate = appSource.slice(appSource.indexOf('if (classBoardPresentationId) {'));
+    const gateHead = gate.slice(0, gate.indexOf('</ErrorBoundary>'));
+    assert.match(gateHead, /if \(loading\) return <Loading \/>;/);
+    assert.doesNotMatch(gateHead, /profileLoading/);
+    assert.doesNotMatch(gateHead, /profile\.is_approved/);
+
+    // [3] 무거운 초기 데이터 호출을 아예 건너뛴다 — 뒤에서 몰래 부르면 맥미니 부담은 그대로다.
+    assert.match(appSource, /await checkSessions\(\{ skipProfile: Boolean\(CLASS_BOARD_PRESENTATION_ID\) \}\)/);
+    assert.match(appSource, /if \(!CLASS_BOARD_PRESENTATION_ID\) useAuthStore\.getState\(\)\.fetchProfile\(session\.user\.id\)/);
+    assert.match(authStore, /checkSessions: async \(\{ skipProfile = false \} = \{\}\) =>/);
+    assert.match(authStore, /if \(!skipProfile\) await get\(\)\.fetchProfile\(session\.user\.id\)/);
+
+    // [4] 화면에서 뺀 승인 검사를 서버가 대신 한다. 승인 취소 계정은 담당 학급이라도 막힌다.
+    assert.match(approvalMigration, /CREATE OR REPLACE FUNCTION public\.get_teacher_class_board_presentation_v1/);
+    assert.match(approvalMigration, /v_role TEXT := public\.auth_user_role\(\);/);
+    assert.match(approvalMigration, /v_role NOT IN \('TEACHER', 'ADMIN'\)/);
+    assert.match(approvalMigration, /class\.teacher_id = auth\.uid\(\) OR v_role = 'ADMIN'/);
+    assert.match(approvalSmoke, /auth_user_role/);
+});
+
+/*
+ * 2026-09-10: "사진이 안 열린다"는 제보 두 갈래.
+ *  (1) 주소 받기가 실패하면 빈 목록으로 바꿔 위젯이 "사진을 올려 주세요"로 보였다 — 사라진 것처럼 읽힌다.
+ *  (2) 임시 주소가 6시간짜리인데 다시 받는 시계가 없어, 하루 종일 켜 두면 오후에 만료된다.
+ * 계산 규칙은 화면 밖 .js 로 꺼내 실제로 돌려 본다 (그림 문제는 눈이 아니라 값으로 검사한다).
+ */
+test('사진 주소는 만료 전에 다시 받고, 못 받아도 이미 뜬 사진을 지키며 다시 시도한다', async () => {
+    const [policy, hook, canvas, css] = await Promise.all([
+        import('../src/modules/tool/class-board/host/classBoardAssetPolicy.js'),
+        (await import('node:fs/promises')).readFile('src/modules/tool/class-board/host/useClassBoardAssetUrls.js', 'utf8'),
+        (await import('node:fs/promises')).readFile('src/modules/tool/class-board/host/BoardCanvas.jsx', 'utf8'),
+        (await import('node:fs/promises')).readFile('src/modules/tool/class-board/classBoard.css', 'utf8')
+    ]);
+
+    // [1] 만료보다 확실히 앞서 다시 받는다. 만료 시각에 걸치면 그 순간 다시 받는 사진이 깨진다.
+    const ttlMs = policy.CLASS_BOARD_ASSET_TTL_SECONDS * 1000;
+    const refresh = policy.getClassBoardAssetRefreshDelayMs();
+    assert.ok(refresh < ttlMs, '다시 받는 간격이 주소 수명보다 짧아야 한다');
+    assert.ok(ttlMs - refresh >= 60 * 60 * 1000, '만료까지 최소 한 시간은 여유가 있어야 한다');
+    // 학교 일과(8시 30분~16시, 7시간 30분) 안에 반드시 한 번은 다시 받는다.
+    assert.ok(refresh <= 7.5 * 60 * 60 * 1000, '하루 일과 안에 한 번도 다시 받지 않으면 오후에 만료된다');
+
+    // [2] 오래된 주소인지 시각으로도 판단한다 (덮어 둔 노트북은 타이머가 늦게 울린다).
+    const now = 1_000_000_000_000;
+    assert.equal(policy.isClassBoardAssetStale(now - refresh - 1, now), true);
+    assert.equal(policy.isClassBoardAssetStale(now - 1000, now), false);
+    assert.equal(policy.isClassBoardAssetStale(0, now), true, '한 번도 못 받았으면 오래된 것으로 본다');
+
+    // [3] 실패해도 이전 주소를 지킨다 — 이 계약이 깨지면 뜬 사진이 사라진다.
+    const previous = new Map([['a.webp', 'https://old/a'], ['b.webp', 'https://old/b']]);
+    const partial = new Map([['a.webp', 'https://new/a']]);
+    const merged = policy.mergeClassBoardAssetUrls(previous, partial, ['a.webp', 'b.webp']);
+    assert.equal(merged.get('a.webp'), 'https://new/a', '새로 받은 주소로 바꾼다');
+    assert.equal(merged.get('b.webp'), 'https://old/b', '못 받은 사진은 이전 주소를 지킨다');
+    const afterTotalFailure = policy.mergeClassBoardAssetUrls(previous, new Map(), ['a.webp', 'b.webp']);
+    assert.equal(afterTotalFailure.size, 2, '전부 실패해도 화면에 뜬 사진은 남는다');
+    // 보드에서 뺀 사진은 따라 남지 않는다.
+    assert.equal(policy.mergeClassBoardAssetUrls(previous, new Map(), ['a.webp']).size, 1);
+
+    // [4] 못 받은 장수를 세어 그대로 알린다.
+    assert.deepEqual(policy.getMissingClassBoardAssetPaths(partial, ['a.webp', 'b.webp']), ['b.webp']);
+    assert.match(policy.getClassBoardAssetErrorMessage(2), /사진 2장/);
+
+    // [5] 다시 시도는 점점 뜸해지고, 마지막 간격을 계속 쓴다.
+    const delays = [1, 2, 3, 4, 9].map((count) => policy.getClassBoardAssetRetryDelayMs(count));
+    assert.ok(delays[0] < delays[1] && delays[1] < delays[2] && delays[2] < delays[3]);
+    assert.equal(delays[4], delays[3], '한없이 길어지지 않고 마지막 간격을 유지한다');
+    assert.ok(delays[0] >= 1000, '실패하자마자 몰아치듯 다시 부르지 않는다');
+
+    // [6] 훅이 이 규칙들을 실제로 쓰고, 화면 복귀에도 다시 확인한다.
+    assert.match(hook, /getClassBoardAssetRefreshDelayMs\(/);
+    assert.match(hook, /getClassBoardAssetRetryDelayMs\(/);
+    assert.match(hook, /mergeClassBoardAssetUrls\(/);
+    assert.match(hook, /isClassBoardAssetStale\(/);
+    assert.match(hook, /addEventListener\('visibilitychange'/);
+
+    // [7] 화면은 실패를 삼키지 않는다. 옛 코드처럼 빈 목록으로 갈아치우면 안 된다.
+    assert.doesNotMatch(canvas, /setAssetUrls\(new Map\(\)\)/);
+    assert.doesNotMatch(canvas, /catch\(\(\) => \{ if \(active\) setAssetUrls/);
+    assert.match(canvas, /useClassBoardAssetUrls\(imagePaths, \{/);
+    assert.match(canvas, /class-board-asset-alert/);
+    assert.match(canvas, /onClick=\{retryAssets\}/);
+    // 알림은 무대 위에 떠 있어야 한다 — 자리를 차지하면 1600×900 무대가 밀린다.
+    assert.match(css, /\.class-board-asset-alert \{ position:absolute;/);
+    // 교실 뒤에서도 읽히는 바닥 글자 크기를 쓴다.
+    assert.match(css, /\.class-board-asset-alert \{[^}]*font-size:var\(--ui-text-xs\)/);
+    // 2026-09-10: 처음엔 한 줄로 자르게 만들었더니 정작 '몇 장이 안 열렸는지'가 …로 사라졌다.
+    //             브라우저로 띄워 보고서야 알았다. 좁으면 줄을 바꾸고, 자르지 않는다.
+    const alertSpanRule = css.slice(css.indexOf('.class-board-asset-alert span'));
+    const alertSpanBody = alertSpanRule.slice(0, alertSpanRule.indexOf('}'));
+    assert.doesNotMatch(alertSpanBody, /white-space:\s*nowrap/);
+    assert.doesNotMatch(alertSpanBody, /text-overflow:\s*ellipsis/);
+    assert.match(alertSpanBody, /overflow-wrap:\s*anywhere/);
+    // 서버 문구가 아무리 길어도 배너가 화면을 덮지 않도록 줄여 붙인다.
+    assert.match(hook, /String\(loadError\?\.message \|\| ''\)\.slice\(0, 60\)/);
+});
+
+/*
+ * 2026-09-10: 사진 주소는 스크린 내용을 받아온 **뒤에야** 요청할 수 있어 왕복이 한 줄로 이어졌다.
+ * DB(SQL)에서는 스토리지 임시 주소를 만들 수 없으므로 RPC 가 주소를 함께 줄 수는 없다.
+ * 대신 그 스크린의 사진 **경로**만 기억해 두고 두 요청을 나란히 시작한다.
+ * 경로는 그 자체로 아무것도 열지 못한다 — 임시 주소는 열 때마다 로그인 상태로 새로 받는다.
+ */
+test('스크린 내용과 사진 주소를 나란히 요청하고, 기억하는 것은 주소가 아니라 경로다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const policy = await import('../src/modules/tool/class-board/host/classBoardAssetPolicy.js');
+    const [page, hook, canvas] = await Promise.all([
+        readFile('src/modules/tool/class-board/ClassBoardPresentationPage.jsx', 'utf8'),
+        readFile('src/modules/tool/class-board/host/useClassBoardAssetUrls.js', 'utf8'),
+        readFile('src/modules/tool/class-board/host/BoardCanvas.jsx', 'utf8')
+    ]);
+
+    // [1] 기억은 실제로 오갔다 돌아온다.
+    const store = new Map();
+    const fakeStorage = {
+        getItem: (key) => (store.has(key) ? store.get(key) : null),
+        setItem: (key, value) => store.set(key, value),
+        removeItem: (key) => store.delete(key)
+    };
+    const boardId = '11111111-2222-3333-4444-555555555555';
+    assert.deepEqual(policy.readRememberedClassBoardAssetPaths(fakeStorage, boardId), [], '처음엔 기억이 없다');
+    policy.rememberClassBoardAssetPaths(fakeStorage, boardId, ['c/b/one.webp', 'c/b/two.webp']);
+    assert.deepEqual(
+        policy.readRememberedClassBoardAssetPaths(fakeStorage, boardId),
+        ['c/b/one.webp', 'c/b/two.webp']
+    );
+
+    // [2] 기억에 남기는 값에 임시 주소(서명)가 섞이면 안 된다.
+    const remembered = JSON.stringify([...store.values()]);
+    assert.doesNotMatch(remembered, /token=|signedURL|https?:\/\//, '주소가 아니라 경로만 기억한다');
+
+    // [3] 사진이 없어진 스크린은 기억도 지운다 — 없는 사진을 계속 미리 요청하면 낭비다.
+    policy.rememberClassBoardAssetPaths(fakeStorage, boardId, []);
+    assert.deepEqual(policy.readRememberedClassBoardAssetPaths(fakeStorage, boardId), []);
+
+    // [4] 저장이 막힌 브라우저(사생활 보호 창)에서도 화면은 그대로 돌아간다.
+    const blocked = {
+        getItem: () => { throw new Error('blocked'); },
+        setItem: () => { throw new Error('blocked'); },
+        removeItem: () => { throw new Error('blocked'); }
+    };
+    assert.deepEqual(policy.readRememberedClassBoardAssetPaths(blocked, boardId), []);
+    assert.equal(policy.rememberClassBoardAssetPaths(blocked, boardId, ['x']), false);
+    // 스크린이 없으면 아무것도 하지 않는다.
+    assert.deepEqual(policy.readRememberedClassBoardAssetPaths(fakeStorage, null), []);
+
+    // [5] 발표 화면이 스크린 내용과 사진 주소를 나란히 시작한다.
+    const effect = page.slice(page.indexOf('readRememberedClassBoardAssetPaths'), page.indexOf('.finally('));
+    assert.match(effect, /getClassBoardImageUrls\(remembered\)/);
+    assert.ok(
+        effect.indexOf('getClassBoardImageUrls') < effect.indexOf('classBoardApi.getPresentation'),
+        '사진 주소 요청이 스크린 내용 요청을 기다리면 왕복이 다시 한 줄로 이어진다'
+    );
+    // 미리 시작한 요청이 실패해도 화면 열기를 막지 않는다.
+    assert.match(effect, /\.catch\(\(\) => new Map\(\)\)/);
+    assert.match(canvas, /assetSeed/);
+    assert.match(canvas, /seed: assetSeed/);
+    assert.match(page, /assetSeed=\{assetSeedRef\.current\}/);
+
+    // [6] 미리 받아 둔 것으로 다 채워졌으면 서버에 다시 묻지 않는다.
+    assert.match(hook, /stillMissing\.length > 0 \? await getClassBoardImageUrls\(stillMissing\) : EMPTY_URLS/);
+    // 미리 받아 둔 결과는 한 번만 쓴다 — 다시 받을 때 옛 주소를 재사용하면 만료 문제가 되돌아온다.
+    assert.match(hook, /seedRef\.current = null;/);
+    assert.match(hook, /rememberClassBoardAssetPaths\(window\.localStorage, boardId, wanted\)/);
+});
+
+/*
+ * 2026-09-10: 위젯 열쇠값에 자리가 들어 있어, 조금만 옮겨도 위젯이 통째로 다시 만들어졌다.
+ * 사진은 다시 내려받고(오후에 주소가 만료돼 있으면 그대로 깨진다), 타이머·스톱워치는 0으로 돌아갔다.
+ * 열쇠값은 위젯 고유 번호만 쓰고, 바깥에서 바뀐 자리는 프레임이 스스로 따라간다.
+ */
+test('위젯은 자리를 옮겨도 다시 만들어지지 않고, 바깥에서 바뀐 자리만 따라간다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const [canvas, frame] = await Promise.all([
+        readFile('src/modules/tool/class-board/host/BoardCanvas.jsx', 'utf8'),
+        readFile('src/modules/tool/class-board/host/InteractiveWidgetFrame.jsx', 'utf8')
+    ]);
+    const { normalizePlacement } = await import('../src/modules/tool/class-board/host/boardPlacement.js');
+
+    // [1] 열쇠값에 자리가 섞이면 옮길 때마다 다시 만들어진다.
+    assert.match(canvas, /key=\{instance\.instanceId\}/);
+    assert.doesNotMatch(canvas, /key=\{`\$\{instance\.instanceId\}-\$\{JSON\.stringify\(instance\.placement\)\}`\}/);
+
+    // [2] 대신 자리를 따라가는 효과가 있어야 한다. 없으면 저장·취소가 화면에 반영되지 않는다.
+    assert.match(frame, /const placementKey = placementSignature\(normalized\);/);
+    assert.match(frame, /if \(gestureRef\.current\) return;/);
+    assert.match(frame, /\}, \[placementKey\]\);/);
+
+    // [3] 자리를 비교하는 값은 자리의 다섯 항목을 모두 담아야 한다.
+    //     하나라도 빠지면 그 항목만 바뀐 저장이 화면에 반영되지 않는다.
+    const signature = frame.slice(frame.indexOf('const placementSignature'), frame.indexOf("].join(':')"));
+    ['x', 'y', 'width', 'height', 'pinned'].forEach((field) => {
+        assert.ok(signature.includes(`placement?.${field}`), `자리 비교에 ${field} 가 빠졌다`);
+    });
+    // 자리에 실제로 그 다섯 항목만 있는지도 원본으로 확인한다 (항목이 늘면 비교도 늘어야 한다).
+    assert.deepEqual(
+        Object.keys(normalizePlacement({ x: 1, y: 2, width: 30, height: 40 })).sort(),
+        ['height', 'pinned', 'width', 'x', 'y']
+    );
+
+    // [4] 붙잡고 끄는 중에는 바깥 값이 끼어들지 않는다 — 끌던 위젯이 튀면 배치를 못 한다.
+    const syncEffect = frame.slice(frame.indexOf('const placementKey = placementSignature'), frame.indexOf('}, [placementKey]);'));
+    assert.ok(
+        syncEffect.indexOf('gestureRef.current') < syncEffect.indexOf('setDraftPlacement'),
+        '자리를 덮어쓰기 전에 끌고 있는 중인지 먼저 본다'
+    );
+    // 값이 같으면 그대로 둔다 — 렌더마다 새 객체를 넣으면 끝없이 다시 그린다.
+    assert.match(syncEffect, /if \(placementSignature\(current\) === placementKey\) return current;/);
+});

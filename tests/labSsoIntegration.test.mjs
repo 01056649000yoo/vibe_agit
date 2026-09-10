@@ -77,8 +77,10 @@ test('기존 로컬 세션은 새 쿠키 저장 성공 뒤에만 지운다', () 
     const removeIndex = supabaseClient.indexOf('window.localStorage.removeItem(legacyStorageKey)');
     assert.ok(setSessionIndex > -1 && setSessionIndex < successIndex && successIndex < removeIndex);
     assert.match(authStore, /await migrateLegacyAuthSession\(\)/);
-    assert.match(app, /await checkSessions\(\)/);
-    assert.ok(app.indexOf('await checkSessions()') < app.indexOf('onAuthStateChange'));
+    // 2026-09-10: 인자는 화면마다 다르다 — 우리 반 스크린은 교사 초기 데이터를 건너뛴다.
+    // 여기서 지키려는 계약은 "세션 확인이 끝난 뒤에 인증 구독을 건다"는 순서다.
+    assert.match(app, /await checkSessions\(/);
+    assert.ok(app.indexOf('await checkSessions(') < app.indexOf('onAuthStateChange'));
     assert.doesNotMatch(supabaseClient, /console\.(?:log|warn|error)\([^\n]*(?:access_token|refresh_token)/);
 });
 

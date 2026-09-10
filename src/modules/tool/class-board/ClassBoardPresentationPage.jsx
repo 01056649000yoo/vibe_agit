@@ -12,6 +12,8 @@ import {
   updateClassBoardWidgetConfig,
   updateClassBoardWidgetPlacement,
 } from './classBoardModel';
+import { getClassBoardImageUrls } from './classBoardImageApi';
+import { readRememberedClassBoardAssetPaths } from './host/classBoardAssetPolicy';
 import BoardCanvas from './host/BoardCanvas';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
 import { moveClassBoardWidgetLayer } from './host/widgetLayers';
@@ -41,6 +43,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const [notice, setNotice] = useState('');
   const [noticeOpen, setNoticeOpen] = useState(false);
   const canvasContentRef = useRef(null);
+  const assetSeedRef = useRef(null);
 
   const editing = Boolean(draftBoard);
   const visibleBoard = draftBoard || data?.board;
@@ -86,6 +89,12 @@ export default function ClassBoardPresentationPage({ boardId }) {
 
   useEffect(() => {
     let active = true;
+    // 이 스크린에 어떤 사진이 있었는지 기억해 두었으므로, 스크린 내용을 기다리지 않고
+    // 사진 주소 받기를 나란히 시작한다. 사진이 그대로면 왕복 한 번을 통째로 아낀다.
+    const remembered = readRememberedClassBoardAssetPaths(window.localStorage, boardId);
+    assetSeedRef.current = remembered.length > 0
+      ? getClassBoardImageUrls(remembered).catch(() => new Map())
+      : null;
     void classBoardApi.getPresentation(boardId)
       .then((result) => {
         if (!active) return;
@@ -322,6 +331,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         <BoardCanvas
           board={visibleBoard}
           classId={data.class?.id}
+          assetSeed={assetSeedRef.current}
           presentation
           editable={editing}
           contentRef={canvasContentRef}

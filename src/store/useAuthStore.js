@@ -143,7 +143,9 @@ export const useAuthStore = create((set, get) => ({
     },
 
     // 2. 초기 세션 확인 및 복구
-    checkSessions: async () => {
+    // skipProfile: 교사 전체 초기 데이터(학급·공지)가 필요 없는 화면에서 쓴다. 우리 반 스크린처럼
+    // 자기 화면 RPC 하나로 충분한 곳이 이 무거운 호출을 기다리느라 늦게 뜨던 문제를 없앤다.
+    checkSessions: async ({ skipProfile = false } = {}) => {
         const start = performance.now();
         console.log('🔍 [AuthStore] 세션 확인 중...');
 
@@ -182,7 +184,7 @@ export const useAuthStore = create((set, get) => ({
                     // 교사의 경우
                     localStorage.removeItem('student_session');
                     set({ session, studentSession: null });
-                    await get().fetchProfile(session.user.id);
+                    if (!skipProfile) await get().fetchProfile(session.user.id);
                 }
             } else {
                 localStorage.removeItem('student_session');

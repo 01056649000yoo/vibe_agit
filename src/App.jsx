@@ -47,12 +47,18 @@ const LabActivitiesPage = lazy(getModule('lab-activities').studentEntry)
 const NeighborAgitStudentEntry = lazy(getModule('neighbor-agit').studentEntry)
 const ClassAgitStudentEntry = lazy(getModule('class-agit').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
-const ClassBoardPresentationPage = lazy(() => import('./modules/tool/class-board/ClassBoardPresentationPage'))
 
 const getClassBoardPresentationId = () => {
   const match = window.location.pathname.match(/^\/class-board\/([0-9a-f-]{36})$/i);
   return match?.[1] || null;
 };
+
+// 스크린 화면 조각은 로그인 확인이 끝나기를 기다리지 않고 바로 내려받기 시작한다. 주소만 보면 어느
+// 화면인지 알 수 있어, 로그인 확인과 화면 내려받기가 한 줄로 이어지지 않고 나란히 진행된다.
+const loadClassBoardPresentationPage = () => import('./modules/tool/class-board/ClassBoardPresentationPage')
+const ClassBoardPresentationPage = lazy(loadClassBoardPresentationPage)
+const CLASS_BOARD_PRESENTATION_ID = getClassBoardPresentationId()
+if (CLASS_BOARD_PRESENTATION_ID) void loadClassBoardPresentationPage()
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -86,7 +92,7 @@ const BOOT_SKELETON_KIND = getBootSkeletonKind();
 const STUDENT_LOGIN_HISTORY_PAGE = 'student-login';
 
 function App() {
-  const classBoardPresentationId = getClassBoardPresentationId();
+  const classBoardPresentationId = CLASS_BOARD_PRESENTATION_ID;
   const {
     session, profile, teacherBootstrap, studentSession, loading, profileLoading,
     checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout
@@ -330,7 +336,7 @@ function App() {
     let cancelled = false;
 
     const initializeAuth = async () => {
-      await checkSessions();
+      await checkSessions({ skipProfile: Boolean(CLASS_BOARD_PRESENTATION_ID) });
       if (!supabase || cancelled) return;
 
       const { data } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -340,7 +346,7 @@ function App() {
 
           // 교사 로그인 시 상태 갱신
           useAuthStore.getState().setSession(session);
-          useAuthStore.getState().fetchProfile(session.user.id);
+          if (!CLASS_BOARD_PRESENTATION_ID) useAuthStore.getState().fetchProfile(session.user.id);
         } else {
           useAuthStore.getState().setSession(null);
           useAuthStore.getState().setProfile(null);
@@ -456,10 +462,11 @@ function App() {
   }
 
   // 새 탭 발표 화면은 교사 대시보드·푸터를 그리지 않는다. 데이터 권한은 발표 전용 RPC가
-  // board_id에서 학급을 다시 찾고 현재 로그인 교사의 담당 학급인지 확인한다.
+  // board_id에서 학급을 다시 찾고, 승인된 교사의 담당 학급인지까지 서버에서 확인한다.
+  // 그래서 이 화면은 교사 전체 초기 데이터(학급·공지)를 기다리지 않고 로그인 여부만 본다.
   if (classBoardPresentationId) {
-    if (loading || profileLoading) return <Loading />;
-    if (!session || !profile || (profile.role !== 'ADMIN' && !profile.is_approved)) {
+    if (loading) return <Loading />;
+    if (!session) {
       return (
         <div className="class-board-presentation-state is-error">
           <span>🔒</span><h1>교사 로그인이 필요합니다.</h1>

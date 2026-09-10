@@ -1,5 +1,5 @@
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { getClassBoardImageUrls } from '../classBoardImageApi';
+import React, { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import useClassBoardAssetUrls from './useClassBoardAssetUrls';
 import { getClassBoardWidget } from '../widgets/registry';
 import {
   calculateClassBoardStageTransform,
@@ -8,8 +8,6 @@ import {
 } from './boardStage';
 import InteractiveWidgetFrame from './InteractiveWidgetFrame';
 import { WidgetHost } from './WidgetHost';
-
-const EMPTY_URLS = new Map();
 
 const sortWidgets = (widgets, zone) => widgets
   .filter((widget) => widget.zone === zone && widget.visible !== false)
@@ -25,11 +23,11 @@ export default function BoardCanvas({
   onSelect,
   onClearSelection,
   onPlacementChange,
+  assetSeed = null,
 }) {
   const interactionEnabled = editable ?? !presentation;
   const viewportRef = useRef(null);
   const [stageTransform, setStageTransform] = useState({ scale: 0, x: 0, y: 0 });
-  const [assetUrls, setAssetUrls] = useState(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const sidebarId = useId();
   const sidebarWidgets = useMemo(
@@ -43,6 +41,12 @@ export default function BoardCanvas({
       .join('\n')
   ), [board?.widgets]);
   const imagePaths = useMemo(() => imagePathKey ? imagePathKey.split('\n') : [], [imagePathKey]);
+  const {
+    urls: assetUrls,
+    error: assetError,
+    loading: assetLoading,
+    retry: retryAssets,
+  } = useClassBoardAssetUrls(imagePaths, { boardId: board?.id || null, seed: assetSeed });
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
@@ -61,27 +65,16 @@ export default function BoardCanvas({
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    if (imagePaths.length === 0) {
-      return () => { active = false; };
-    }
-    void getClassBoardImageUrls(imagePaths)
-      .then((urls) => { if (active) setAssetUrls(urls); })
-      .catch(() => { if (active) setAssetUrls(new Map()); });
-    return () => { active = false; };
-  }, [imagePaths]);
-
   const renderContent = () => sortWidgets(board?.widgets || [], 'content').map((instance) => {
     const manifest = getClassBoardWidget(instance.widgetId);
     const selected = interactionEnabled && selectedInstanceId === instance.instanceId;
     return (
       <InteractiveWidgetFrame
-        key={`${instance.instanceId}-${JSON.stringify(instance.placement)}`}
+        key={instance.instanceId}
         instance={instance}
         manifest={manifest}
         classId={classId}
-        assetUrl={(imagePaths.length > 0 ? assetUrls : EMPTY_URLS).get(instance.config?.path) || ''}
+        assetUrl={assetUrls.get(instance.config?.path) || ''}
         selected={selected}
         presentation={presentation}
         editable={interactionEnabled}
@@ -104,7 +97,7 @@ export default function BoardCanvas({
         <WidgetHost
           instance={instance}
           classId={classId}
-          assetUrl={(imagePaths.length > 0 ? assetUrls : EMPTY_URLS).get(instance.config?.path) || ''}
+          assetUrl={assetUrls.get(instance.config?.path) || ''}
           presentation={presentation}
         />
     </div>
@@ -117,6 +110,14 @@ export default function BoardCanvas({
       data-board-stage-width={CLASS_BOARD_STAGE_WIDTH}
       data-board-stage-height={CLASS_BOARD_STAGE_HEIGHT}
     >
+      {assetError ? (
+        <div className="class-board-asset-alert" role="status">
+          <span>🖼️ {assetError}</span>
+          <button type="button" onClick={retryAssets} disabled={assetLoading}>
+            {assetLoading ? '다시 받는 중…' : '다시 시도'}
+          </button>
+        </div>
+      ) : null}
       <div
         className="class-board-viewport__surface"
         style={{

@@ -7,9 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Font Import -->
+  <!-- 글꼴 CSS 를 여기서 <link rel="stylesheet"> 로 걸면 첫 그림이 바깥 서버 응답을 기다린다.
+       학교망에서 구글이 느리면 몇 초씩 흰 화면이 됐다. 미리 연결만 해 두고 실제 요청은
+       src/main.jsx 가 화면을 그린 뒤에 건다. 그때까지는 system-ui 로 읽힌다(display=swap). -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <!-- 첫 RPC 가 DNS·TLS 부터 시작하지 않도록 데이터 서버에도 미리 연결해 둔다. -->
+  <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin>
 
   <!-- SEO & Open Graph Tags -->
   <title>끄적끄적 아지트 | 초등 학급 글쓰기 지도 플랫폼</title>

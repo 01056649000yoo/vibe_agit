@@ -80,6 +80,12 @@
 
 .class-board-viewport { position:relative; width:100%; aspect-ratio:16/9; min-width:0; min-height:0; overflow:hidden; border-radius:17px; background:#eef2f7; }
 .class-board-viewport__surface { position:absolute; top:0; left:0; width:1600px; height:900px; transform-origin:top left; }
+/* 사진 주소를 못 받았을 때 조용히 넘기지 않는다. 무대 위에 떠 있어 무대 크기를 밀지 않는다. */
+.class-board-asset-alert { position:absolute; z-index:5; top:var(--ui-space-3); left:50%; display:flex; gap:var(--ui-space-3); align-items:center; max-width:min(92%,560px); padding:var(--ui-space-2) var(--ui-space-4); transform:translateX(-50%); border:1px solid var(--ui-danger); border-radius:var(--ui-radius-pill); background:var(--ui-danger-soft); color:var(--ui-danger); font-size:var(--ui-text-xs); font-weight:800; box-shadow:0 6px 18px rgba(15,23,42,.16); }
+/* 잘라 내면 정작 몇 장이 안 열렸는지가 사라진다. 좁으면 줄을 바꾼다. */
+.class-board-asset-alert span { min-width:0; overflow-wrap:anywhere; }
+.class-board-asset-alert button { flex:0 0 auto; border:1px solid var(--ui-danger); border-radius:var(--ui-radius-pill); padding:var(--ui-space-1) var(--ui-space-3); background:#fff; color:var(--ui-danger); font-size:var(--ui-text-xs); font-weight:900; cursor:pointer; }
+.class-board-asset-alert button:disabled { opacity:.5; cursor:progress; }
 .class-board-canvas { position:relative; width:1600px; height:900px; min-height:0; padding:12px; overflow:hidden; box-sizing:border-box; border-radius:17px; background:#eef2f7; }
 .class-board-canvas__content { position:relative; z-index:1; width:100%; height:100%; min-width:0; min-height:0; overflow:hidden; border:1px solid rgba(148,163,184,.22); border-radius:14px; background-color:#f8fafc; background-image:radial-gradient(circle,#cbd5e1 1px,transparent 1px); background-size:18px 18px; }
 .class-board-canvas__sidebar { position:absolute; z-index:2; top:12px; right:12px; bottom:12px; display:flex; flex-direction:column; gap:10px; width:calc(30% - 12px); min-width:240px; padding-left:12px; box-sizing:border-box; border-left:1px solid #d4dce8; }
