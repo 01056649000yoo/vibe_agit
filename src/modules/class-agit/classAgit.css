@@ -204,6 +204,32 @@
 .class-agit-reader__author { margin: 12px 0 32px; color: #7b806b; font-size: 14px; }
 .class-agit-reader__text { font-size: var(--reading-size, 18px); line-height: 2; color: #364333; overflow-wrap: anywhere; }
 .class-agit-reader__text p { white-space: pre-wrap; margin: 0 0 1.5em; }.class-agit-reader__page[data-format='poem'] .class-agit-reader__text p { margin-bottom: 2em; line-height: 2.1; }
+/*
+ * 읽기 창의 산문은 **양쪽을 맞춘다**.
+ *
+ * 왜: 줄바꿈을 하지 않고 이어 쓴 글도 오른쪽 끝이 들쭉날쭉해서, 읽는 사람에게는 아이가
+ * 줄을 나눈 것처럼 보였다. 양쪽을 맞추면 문단 덩어리로 읽힌다.
+ *
+ * **줄바꿈은 그대로 지킨다**(`white-space: pre-wrap`). 아이가 일부러 넣은 줄바꿈은
+ * 글쓴이의 것이라 화면이 마음대로 없애지 않는다. 시(`poem`)는 정렬도 건드리지 않는다 —
+ * 시는 줄의 시작과 끝이 작품 그 자체다.
+ */
+.class-agit-reader__page[data-format='prose'] .class-agit-reader__text p { text-align: justify; }
+/*
+ * 좁은 화면에서만 낱말 쪼갬을 허용한다.
+ *
+ * 한 줄에 들어가는 글자가 적을수록 양쪽을 맞추려고 낱말 사이를 크게 벌린다. 340px 에서
+ * `내   주장은   무인   안내기는` 처럼 벌어져 오히려 읽기 나쁘다. 낱말이 줄 끝에서 갈라지는
+ * 것은 국어 교과서·신문이 쓰는 조판이라 아이도 익숙하다.
+ * (`text-justify: inter-character` 도 재 봤지만 `안 내 기 는` 처럼 낱자를 벌려 더 어색했다.)
+ *
+ * 이것은 `src/App.css` 의 전역 `word-break: keep-all`(한글 낱말을 지키는 기본 선택)에 대한
+ * **읽기 창 산문 한정 예외**다. 전역 기본은 그대로 두고 여기서만 좁을 때 푼다.
+ */
+@media (max-width: 520px) {
+    .class-agit-reader__page[data-format='prose'] .class-agit-reader__text p { word-break: break-all; }
+}
+}
 .class-agit-reader__footer { flex-shrink: 0; padding: 14px 22px; border-top: 1px solid #e5e7d8; background: #f7f8ef; }
 .class-agit-reader__footer nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.class-agit-reader__footer nav button { border: 0; border-radius: 6px; background: transparent; color: #476041; font-size: 13px; padding: 5px; }
 .class-agit-confirmation label { display: flex; align-items: center; gap: 10px; font-size: 14px; line-height: 1.6; }

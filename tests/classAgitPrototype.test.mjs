@@ -168,3 +168,29 @@ test('공통 읽기 창은 원근 장면 밖의 dialog이고 DOM 목록·동작 
     assert.match(css, /scroll-snap-type: x mandatory/);
     assert.match(css, /white-space: pre-wrap/);
 });
+
+test('전시 읽기 창은 산문만 양쪽을 맞추고 아이가 넣은 줄바꿈은 지킨다', () => {
+    /*
+     * 왜 이 검사가 있나 (2026-09-10 제보):
+     *   줄바꿈 없이 이어 쓴 글도 오른쪽 끝이 들쭉날쭉해서, 읽는 사람에게는 아이가 줄을 나눈
+     *   것처럼 보였다. 그래서 산문만 양쪽을 맞춘다.
+     *
+     *   **고칠 것은 정렬뿐이다.** 한때 `white-space` 까지 손대 아이가 일부러 넣은 줄바꿈을
+     *   없앤 적이 있다(같은 날 되돌렸다). 줄바꿈은 글쓴이의 것이라 화면이 마음대로 없애지 않는다.
+     *   시(`poem`)는 줄의 시작과 끝이 작품 그 자체라 정렬도 건드리지 않는다.
+     */
+    const css = readFileSync('src/modules/class-agit/classAgit.css', 'utf8');
+
+    // 산문만 양쪽 정렬.
+    assert.match(css, /\[data-format='prose'\] \.class-agit-reader__text p \{ text-align: justify; \}/);
+    assert.doesNotMatch(css, /\[data-format='poem'\][^\n]*text-align/);
+
+    // 줄바꿈은 그대로 지킨다. 산문 규칙이 white-space 를 건드리면 안 된다.
+    assert.match(css, /\.class-agit-reader__text p \{ white-space: pre-wrap;/);
+    assert.doesNotMatch(css, /\[data-format='prose'\][^\n]*white-space/);
+
+    // 좁은 화면에서만 낱말 쪼갬을 허용한다. 넓은 화면까지 풀면 낱말이 괜히 갈라진다.
+    const narrow = css.split('@media (max-width: 520px)')[1] || '';
+    assert.match(narrow, /\[data-format='prose'\][^\n]*word-break: break-all/);
+    assert.doesNotMatch(css.split('@media')[0], /word-break: break-all/);
+});
