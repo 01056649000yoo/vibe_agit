@@ -325,10 +325,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
      * 조회 중에는 아무것도 띄우지 않는다 — 대시보드가 잠깐 보였다가 관문으로 바뀌면 놀란다.
      */
     if (studentConsent.loading) return null;
-    if (studentConsent.pending.length > 0) {
+    if (studentConsent.pending) {
         return (
             <StudentConsentGate
-                classes={studentConsent.pending}
+                classes={studentConsent.classes}
+                needsPolicyConsent={studentConsent.needsPolicyConsent}
                 onConfirmed={studentConsent.markConfirmed}
                 onLogout={onLogout}
             />

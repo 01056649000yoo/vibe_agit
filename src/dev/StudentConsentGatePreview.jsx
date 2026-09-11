@@ -7,15 +7,17 @@ import StudentConsentGate from '../components/teacher/StudentConsentGate';
  */
 export default function StudentConsentGatePreview() {
     const [count, setCount] = useState(3);
+    const [policy, setPolicy] = useState(true);
     const [done, setDone] = useState(false);
     const classes = Array.from({ length: count }, (_, i) => ({ id: `c${i}`, name: ['3학년 1반', '4학년 2반 (작년)', '방과후 글쓰기반', '5학년 3반', '독서 동아리'][i % 5] }));
     if (done) return <p style={{ padding: 24 }}>확인 완료 → 대시보드로 넘어갑니다. <button type="button" onClick={() => setDone(false)}>다시 보기</button></p>;
     return (
         <div>
             <div style={{ display: 'flex', gap: 6, padding: 8 }}>
-                {[1, 3, 5].map((n) => <button key={n} type="button" onClick={() => setCount(n)}>학급 {n}개</button>)}
+                {[0, 1, 3, 5].map((n) => <button key={n} type="button" onClick={() => setCount(n)}>학급 {n}개</button>)}
+                <button type="button" onClick={() => setPolicy((v) => !v)}>약관 추가 동의 {policy ? '있음' : '없음'}</button>
             </div>
-            <StudentConsentGate classes={classes} onConfirmed={() => setDone(true)} onLogout={() => alert('로그아웃')} />
+            <StudentConsentGate classes={classes} needsPolicyConsent={policy} onConfirmed={() => setDone(true)} onLogout={() => alert('로그아웃')} />
         </div>
     );
 }

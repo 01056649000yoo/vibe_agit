@@ -68,7 +68,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
              *   시각은 서버가 찍는다 — 동의 기록에 브라우저 시계를 믿지 않는다.
              *   프로필이 만들어진 뒤에 불러야 기록할 행이 있다.
              */
-            const { error: consentError } = await supabase.rpc('record_policy_consent_v1', { p_version: POLICY_VERSION });
+            const { error: consentError } = await supabase.rpc('record_policy_consent_v1', { p_version: POLICY_VERSION, p_kind: 'signup' });
             if (consentError) throw new Error('약관 동의를 기록하지 못했습니다: ' + consentError.message);
 
             // 2. 선생님 상세 정보 저장
