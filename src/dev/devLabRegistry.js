@@ -11,6 +11,7 @@ const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPrevi
 const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
 const NoticeComposerPreview = lazy(() => import('./NoticeComposerPreview.jsx'))
+const StudentConsentGatePreview = lazy(() => import('./StudentConsentGatePreview.jsx'))
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
@@ -66,6 +67,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '글 승인 흐름',
     description: '앱 안 확인 창 · 승인 중 표시 · 스스로 사라지는 알림 · 수정 모드로 잠겼을 때 안내',
     Component: ApprovePostFlowPreview,
+  }),
+  Object.freeze({
+    id: 'student-consent-gate',
+    icon: '📜',
+    title: '학생 개인정보 동의서 확인',
+    description: '기존 학급 담당 교사가 다음 로그인 때 보는 관문. 학급 1·3·5개에서 문구와 배치를 본다',
+    Component: StudentConsentGatePreview,
   }),
   Object.freeze({
     id: 'notice-composer',

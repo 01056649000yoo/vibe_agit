@@ -28,6 +28,8 @@ import TeacherWritingHub from './TeacherWritingHub';
 import TeacherSettingsHub from './TeacherSettingsHub';
 import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
+import StudentConsentGate from './StudentConsentGate';
+import usePendingStudentConsent from '../../hooks/usePendingStudentConsent';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
@@ -129,6 +131,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap);
+
+    // 학생 개인정보 동의서를 확인하지 않은 학급이 있으면 대시보드 대신 관문을 띄운다.
+    const studentConsent = usePendingStudentConsent(session, profile);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -313,6 +318,22 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         const activeItem = teacherNavRef.current?.querySelector('.teacher-dashboard__nav-item.is-active');
         activeItem?.scrollIntoView({ block: 'nearest', inline: 'center' });
     }, [activeNavGroup.id]);
+
+    /*
+     * 학생 개인정보 동의서 확인 관문 (2026-09-11).
+     * 훅은 모두 위에서 불렀으므로 여기서 갈라져도 훅 순서는 그대로다.
+     * 조회 중에는 아무것도 띄우지 않는다 — 대시보드가 잠깐 보였다가 관문으로 바뀌면 놀란다.
+     */
+    if (studentConsent.loading) return null;
+    if (studentConsent.pending.length > 0) {
+        return (
+            <StudentConsentGate
+                classes={studentConsent.pending}
+                onConfirmed={studentConsent.markConfirmed}
+                onLogout={onLogout}
+            />
+        );
+    }
 
     return (
         <div className="teacher-dashboard">

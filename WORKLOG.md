@@ -19,6 +19,19 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-11 — 약관 동의 기록·학생 개인정보 동의서 확인·처리방침 정정 (Claude, 배포 전 검토 대기)
+- **왜**: ①가입 화면에 약관 동의 체크가 있지만 **기록이 어디에도 남지 않았다**. ②처리방침은 "학생 가명 사용이 원칙"이라 적혀 있는데 실제로는 학생 4,229명 중 3,658명(86%)이 실명이다. 실명을 쓰려면 학교가 학기초에 법정대리인 동의서를 받아야 하고, 서비스는 그 확인을 교사에게 받아야 한다. ③처리방침의 수집 항목이 실제(교사: 이름·학교 필수, 학생: 이름·글)와 달랐다.
+- **사용자 결정**: 기존 교사 동의 기록은 가입일로 소급 / 기존 학급 591개는 다음 로그인 때 모두 확인 / 처리방침 문구는 사용자가 확인 뒤 배포 / 시행일은 다음 월요일(9/14).
+- **변경**:
+  - `20261279_policy_consent_records.sql` — `profiles.terms_agreed_at·privacy_agreed_at·agreed_policy_version`(기존 568명은 `created_at`·`'backfill'` 로 소급), `classes.student_consent_confirmed_at·_by`, RPC `record_policy_consent_v1`·`confirm_class_student_consent_v1`(시각은 서버가 찍고 본인 학급만, 비로그인 차단). 스모크는 남의 학급 확인 시도까지 막히는지 본다.
+  - `src/constants/policyVersion.js` — 판(시행일)의 단 하나의 자리. `tests/policyConsent.test.mjs` 가 처리방침 본문의 시행일과 대조한다.
+  - `TeacherProfileSetup.jsx` 가입 때 `record_policy_consent_v1` 호출 / `StudentConsentGate.jsx` + `usePendingStudentConsent.js` 로그인 관문(미확인 학급만 가볍게 따로 조회, 관리자 제외) / `ClassManager.jsx` 학급 만들 때 체크 필수 + 기록. 확인 문구는 `STUDENT_CONSENT_STATEMENT` 한 곳.
+  - `PrivacyPolicy.jsx`·`TermsOfService.jsx` — 가명 원칙·실명 금지 문구를 **학교 동의서 근거**로 교체, 수집 항목을 사실대로(교사 이름·학교 필수, 전화 선택; 학생 이름·출석번호·글·댓글·독서록·일기), 동의 기록 항목·보유기간 추가, 개정 이력·시행일 9/14. **문구는 사용자 검토 대기.**
+  - `?dev-lab=student-consent-gate` 미리보기.
+- **결과/검증**: 롤백 스모크 통과(소급 기록·판 형식 검증·남의 학급 차단·anon 차단). `npm run test:all` 990/990, `npm run lint` 깨끗, `npm run build` 성공. 관문을 PC·태블릿·모바일에서 띄워 체크 전 잠김→체크 후 열림, 가로 넘침 0px 확인. 기존 검사 2건(지난 개정 날짜 고정)을 새 개정에 맞췄다.
+- **짚어 둔 것**: 처리방침 제12조가 "시행 7일 전 공지"인데 9/14 는 사흘 뒤다. 7일을 지키려면 9/21. 시행일은 `policyVersion.js` 한 줄이라 바꾸기 쉽다 — 사용자 판단 대기.
+- **남은 것 / 다음**: 사용자가 처리방침·약관 문구 확인 → 시행일 확정 → 마이그레이션 적용(`npm run migrate`) → 배포 → 공지.
+
 ## 2026-09-11 — 자바스크립트 전 첫 화면을 진짜 첫 화면과 같은 모양으로 (Claude)
 - **배경**: "주소를 넣으면 선정기준·개인정보·약관이 모인 페이지가 떴다가 로그인창으로 리디렉션된다"는 제보.
   확인해 보니 **리디렉션이 아니었다.** `index.html` 안에 검색 로봇·느린 연결용으로 박아 둔 정적

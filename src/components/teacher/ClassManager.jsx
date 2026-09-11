@@ -1,3 +1,4 @@
+import { STUDENT_CONSENT_STATEMENT } from './StudentConsentGate';
 import React, { useState, useEffect } from 'react';
 import useConfirmDialog from '../common/useConfirmDialog';
 import useNotice from '../common/useNotice';
@@ -26,6 +27,8 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     const { ask, confirmDialog } = useConfirmDialog();
     const { notify, notice } = useNotice();
     const [className, setClassName] = useState('');
+    // 학생 개인정보 동의서 확인. 새 학급은 만들 때 받아 로그인 관문이 다시 뜨지 않게 한다.
+    const [consentChecked, setConsentChecked] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedClasses, setDeletedClasses] = useState([]);
@@ -61,6 +64,10 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
             notify('학급 이름을 적어 주세요. 😊');
             return;
         }
+        if (!consentChecked) {
+            notify('학생 개인정보 동의서 확인에 체크해 주세요.');
+            return;
+        }
 
         setIsSaving(true);
         console.log("📡 ClassManager: Creating class...", className);
@@ -79,6 +86,11 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
 
             if (error) throw error;
 
+            // 동의서 확인을 기록한다. 시각은 서버가 찍는다. 실패해도 학급은 이미 만들어졌으므로
+            // 관문이 다음 로그인 때 다시 받는다 — 기록이 빠진 채 지나가지 않는다.
+            const { error: consentError } = await supabase.rpc('confirm_class_student_consent_v1', { p_class_ids: [data.id] });
+            if (consentError) console.warn('학급 동의서 확인 기록 실패 — 다음 로그인 때 다시 받습니다:', consentError.message);
+
             console.log("✅ ClassManager: Class created successfully!");
             // 로컬 상태 즉시 반영
             if (setClasses) setClasses(prev => [data, ...prev]);
@@ -86,6 +98,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
 
             setIsModalOpen(false);
             setClassName('');
+            setConsentChecked(false);
         } catch (error) {
             console.error('❌ ClassManager: 학급 생성 실패:', error.message);
             await ask({
@@ -336,6 +349,17 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                 boxSizing: 'border-box'
                             }}
                         />
+                        <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', cursor: 'pointer', marginBottom: '24px', marginTop: '-12px' }}>
+                            <input
+                                type="checkbox"
+                                checked={consentChecked}
+                                onChange={(e) => setConsentChecked(e.target.checked)}
+                                style={{ width: '18px', height: '18px', marginTop: '3px', flexShrink: 0 }}
+                            />
+                            <span style={{ color: '#455A64', lineHeight: 1.6, fontSize: 'var(--ui-text-sm)' }}>
+                                {STUDENT_CONSENT_STATEMENT.replace('위 학급', '이 학급')}
+                            </span>
+                        </label>
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <Button variant="ghost" style={{ flex: 1, height: '56px', borderRadius: '16px' }} onClick={() => setIsModalOpen(false)}>취소</Button>
                             <Button variant="primary" style={{ flex: 2, height: '56px', borderRadius: '16px', fontWeight: 'bold' }} onClick={handleCreateClass} disabled={isSaving}>

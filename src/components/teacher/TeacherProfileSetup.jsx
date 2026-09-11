@@ -1,3 +1,4 @@
+import { POLICY_VERSION } from '../../constants/policyVersion';
 import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -60,6 +61,15 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
             if (profileError || !profileResult?.success) {
                 throw new Error(profileError?.message || profileResult?.error || '프로필 설정 실패');
             }
+
+            /*
+             * 1-2. 약관 동의를 **기록**한다 (2026-09-11).
+             *   전에는 1단계에서 체크만 확인하고 버렸다. "언제 어느 판에 동의했나"에 답할 수 없었다.
+             *   시각은 서버가 찍는다 — 동의 기록에 브라우저 시계를 믿지 않는다.
+             *   프로필이 만들어진 뒤에 불러야 기록할 행이 있다.
+             */
+            const { error: consentError } = await supabase.rpc('record_policy_consent_v1', { p_version: POLICY_VERSION });
+            if (consentError) throw new Error('약관 동의를 기록하지 못했습니다: ' + consentError.message);
 
             // 2. 선생님 상세 정보 저장
             const { error: teacherInfoError } = await supabase

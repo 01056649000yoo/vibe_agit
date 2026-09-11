@@ -15,7 +15,8 @@ const PrivacyPolicy = () => {
     return (
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                기존 정책 개정 이력 — 최종 수정일: 2026년 8월 29일 · 시행일: 2026년 9월 5일
+                개정 이력 — 최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 14일
+                <br />학생 개인정보 처리 근거·수집 항목 정정, 동의 기록 보관 명시: 2026년 9월 14일
                 <br />전시 공개·작품 보호 안내 보완: 2026년 9월 5일
             </p>
 
@@ -26,12 +27,12 @@ const PrivacyPolicy = () => {
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제2조 (14세 미만 아동의 개인정보 보호)</h4>
-                <p>본 서비스는 14세 미만 아동의 개인정보 보호를 위해 직접 가입을 허용하지 않으며, 교사를 통한 간접 계정발급 및 가명 정보 활용을 원칙으로 합니다.</p>
+                <p>본 서비스는 14세 미만 아동의 개인정보 보호를 위해 직접 가입을 허용하지 않으며, 학교의 교육 활동 범위 안에서 담당 교사가 계정을 만들어 운영합니다.</p>
                 <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
                     <li>'끄적끄적 아지트'는 만 14세 미만 아동의 회원가입을 직접 받지 않습니다.</li>
-                    <li>서비스 이용이 필요한 만 14세 미만 아동(학생)의 경우, 법정대리인 또는 교사가 생성한 계정(접속 코드)을 통해 서비스를 이용할 수 있습니다.</li>
-                    <li>교사가 학생 계정을 생성할 때에는 학생의 실명 등 민감한 개인정보 대신 개인식별이 어려운 닉네임 등 가명 정보를 활용하는 것을 원칙으로 합니다.</li>
-                    <li>'끄적끄적 아지트'는 아동의 개인정보를 수집하지 않기 위해 학생으로부터 별도의 이메일, 전화번호 등을 요구하지 않습니다.</li>
+                    <li>서비스 이용이 필요한 만 14세 미만 아동(학생)의 경우, 담당 교사가 생성한 계정(접속 코드)을 통해 서비스를 이용할 수 있습니다.</li>
+                    <li>학생의 이름과 학생이 작성한 글은 학교가 학기초에 법정대리인(보호자)으로부터 받는 학생 개인정보 수집·이용 동의에 근거하여 처리합니다. 담당 교사는 학급을 만들 때 이 동의를 받았음을 서비스에서 확인하며, 서비스는 확인한 시각을 학급 기록에 남깁니다.</li>
+                    <li>'끄적끄적 아지트'는 학생으로부터 이메일, 전화번호, 주소 등 이름 외의 개인정보를 요구하지 않습니다.</li>
                 </ul>
             </section>
 
@@ -41,9 +42,10 @@ const PrivacyPolicy = () => {
                 <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
                     <p><strong>1. 수집 항목</strong></p>
                     <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
-                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 성명(또는 닉네임)</li>
-                        <li><strong>교사 계정 관리 항목:</strong> 가입일, 마지막 로그인 일시, 승인 및 미접속 분류 상태</li>
-                        <li><strong>학생 (이용자):</strong> 필수항목 - 닉네임, 출석 번호 (모두 가명 처리, 개인식별 어려운 가상 번호 사용 필수, 교사가 생성)</li>
+                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 이름, 재직 학교명 / 선택항목 - 전화번호, 학교 주소·학교 코드</li>
+                        <li><strong>교사 계정 관리 항목:</strong> 가입일, 마지막 로그인 일시, 승인 및 미접속 분류 상태, 이용약관·개인정보 처리방침 동의 일시와 동의한 판</li>
+                        <li><strong>학생 (이용자):</strong> 필수항목 - 이름, 출석 번호(담당 교사가 입력) / 학생이 작성한 글·댓글·독서록·일기 등 학습 활동물</li>
+                        <li><strong>학급 관리 항목:</strong> 담당 교사의 학생 개인정보 동의서 확인 일시</li>
                         <li><strong>선택 항목:</strong> 포인트 정보, 퀘스트 정보, 학급 활동 데이터 등 서비스 이용 과정에서 생성되는 정보</li>
                         <li><strong>급식 도구 선택 항목:</strong> 학생별 짧은 비고(교사가 필요한 경우에만 입력하며 민감한 건강정보 입력 금지)</li>
                     </ul>
@@ -63,7 +65,7 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제4조 (개인정보의 보유 및 이용 기간)</h4>
                 <p>이용 목적 달성 시 즉시 파기 원칙을 준수하며, 특히 교사의 학급 운영 종료 시 학생 정보는 서버에서 영구 삭제됩니다.</p>
                 <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                    <li><strong>교사 계정 정보 및 마지막 로그인 일시:</strong> 회원 탈퇴 시까지</li>
+                    <li><strong>교사 계정 정보, 마지막 로그인 일시, 약관 동의 기록:</strong> 회원 탈퇴 시까지</li>
                     <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
                     <li><strong>급식 도구 학생별 비고:</strong> 교사가 비고를 지우거나 해당 학생·학급을 삭제하면 즉시 영구 삭제</li>
                     <li><strong>서버 접속 로그:</strong> 3개월 (통신비밀보호법 등 관계 법령에 따른 기간)</li>
@@ -169,7 +171,8 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제11조 (사용자의 의무 및 책임)</h4>
                 <p style={{ fontWeight: 'bold', color: '#E74C3C', marginBottom: '8px' }}>[중요: 서비스 사용자 필독]</p>
                 <ul style={{ paddingLeft: '20px', fontSize: '0.95rem' }}>
-                    <li>교사(사용자)는 학생 계정 생성 시 실명, 주소 등 식별 가능한 개인정보를 입력하지 않아야 하며, 반드시 가명 정보를 활용해야 합니다.</li>
+                    <li>교사(사용자)는 학생의 이름과 글을 이 서비스에서 처리하기 전에 학교가 법정대리인(보호자)으로부터 학생 개인정보 수집·이용 동의를 받았는지 확인해야 하며, 학급을 만들 때 그 확인을 서비스에 기록합니다. 동의를 받지 않은 학생의 정보는 입력하지 않아야 합니다.</li>
+                    <li>교사(사용자)는 학생의 이름 외에 주소, 연락처 등 서비스 이용에 필요하지 않은 개인정보를 입력하지 않아야 합니다.</li>
                     <li>교사(사용자)는 본인이 입력한 학급 정보에 대한 관리 책임을 지며, 계정 보안 관리에 철저를 기해야 합니다.</li>
                     <li>급식 도구의 학생별 비고에는 학급 운영에 필요한 최소한의 내용만 입력하고 알레르기·질병 등 민감한 건강정보를 입력하거나 공개 화면에 전재해서는 안 됩니다.</li>
                     <li>학급 운영 종료 시 반드시 '클래스 삭제' 기능을 사용하여 불필요한 데이터가 남지 않도록 해야 합니다.</li>
@@ -178,7 +181,7 @@ const PrivacyPolicy = () => {
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제12조 (개인정보처리방침의 변경)</h4>
-                <p>이 개인정보처리방침은 2026년 9월 5일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
+                <p>이 개인정보처리방침은 2026년 9월 14일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
             </section>
 
             <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#EBF5FB', borderRadius: '8px', fontSize: '0.9rem' }}>
