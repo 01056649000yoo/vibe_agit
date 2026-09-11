@@ -1,60 +1,234 @@
+/*
+ * 자바스크립트가 오기 전 첫 화면.
+ *
+ * 이 파일이 하는 일은 **첫 화면(LandingPage)과 같은 모양을 미리 그려 두는 것**뿐이다.
+ * React 가 뜨면 같은 자리를 진짜 화면으로 갈아 끼우므로, 여기 모양이 다르면 사용자에게는
+ * "다른 페이지가 떴다가 튕겼다"로 보인다(2026-09-11 제보).
+ *
+ * 상자 구조를 진짜 화면과 **같은 순서로** 겹쳐 둔다:
+ *   .search-intro        ← Layout 의 layout-container (세로 가운데 정렬, 2rem 여백)
+ *   .search-intro__shell ← LandingPage 의 .landing-shell
+ *   .search-intro__card  ← LandingPage 의 .landing-card
+ * 카드 안도 진짜 화면의 다섯 칸을 같은 높이로 따라간다. 하나라도 빠지면 전체가 가운데 정렬이라
+ * 위아래로 밀려서, 갈아 끼울 때 화면이 통째로 튄다.
+ *
+ * 값이 두 곳에 있는 이유: 이 파일은 번들 밖 정적 파일이라 `LandingPage.css` 를 가져다 쓸 수 없다.
+ * 그래서 **어긋나지 않는지 한꺼번에 보는 검사**를 `tests/searchDiscovery.test.mjs` 에 두었다.
+ *
+ * 모든 규칙을 `.search-intro` 아래로 좁혔다. React 가 이 덩어리를 통째로 걷어내므로
+ * 이 파일이 나중에 진짜 화면의 같은 이름을 건드릴 일이 없다.
+ * (디자인 토큰은 번들 CSS 안에 있어 아직 없다. 그래서 여기서는 값을 직접 적는다.)
+ */
+
 .search-intro {
   box-sizing: border-box;
-  width: min(680px, calc(100% - 32px));
-  margin: clamp(32px, 8vh, 88px) auto;
-  padding: clamp(28px, 6vw, 52px);
-  color: #243447;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  min-height: calc(100vh - 120px);
+  margin: 0 auto;
+  padding: 2rem;
+  color: #2f2922;
   font-family: "Noto Sans KR", system-ui, sans-serif;
-  background: #fffdf8;
-  border: 1px solid #ece5d8;
-  border-radius: 28px;
-  box-shadow: 0 18px 50px rgba(73, 59, 38, 0.09);
+  background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
 }
 
-.search-intro__eyebrow {
-  margin: 0 0 10px;
-  color: #7a5b2f;
-  font-size: 0.88rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+.search-intro *,
+.search-intro *::before,
+.search-intro *::after { box-sizing: border-box; }
+
+/*
+ * 여백 초기화에 요소 이름을 섞지 않는다 — `.search-intro p` 는 `.search-intro__identity` 보다
+ * 우선순위가 높아 개별 여백을 덮어 버린다(그래서 카드가 18px 짧아졌다). 각자 적는다.
+ */
+.search-intro__promise h1,
+.search-intro__experiences h2 { margin: 0; }
+
+/* `.landing-shell` 과 같은 바깥 틀. */
+.search-intro__shell {
+  position: relative;
+  width: min(700px, 100%);
+  margin: 0 auto;
+  padding: 6px 16px 22px;
+}
+
+/* `.landing-card` 와 같은 상자. */
+.search-intro__card {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid rgba(240, 220, 194, 0.9);
+  border-radius: 30px;
+  background: rgba(255, 253, 249, 0.96);
+  box-shadow: 0 24px 58px rgba(139, 104, 65, 0.13);
+}
+
+/* [1] `.landing-hero` — 같은 그림, 같은 비율. 미리 받아 두면 진짜 화면이 곧바로 뜬다. */
+.search-intro__hero {
+  overflow: hidden;
+  border: 1px solid rgba(255, 222, 184, 0.85);
+  border-radius: 22px;
+  aspect-ratio: 1723 / 600;
+  background: #fff5e9;
+}
+
+.search-intro__hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.04);
+  transform-origin: center center;
+}
+
+/* [2] `.landing-promise` */
+.search-intro__promise {
+  padding: 12px 10px 0;
+  text-align: center;
 }
 
 .search-intro h1 {
-  margin: 0;
-  font-size: clamp(2rem, 7vw, 3.4rem);
-  line-height: 1.15;
+  color: #2f2922;
+  /* 전역 CSS 의 h1 은 그라데이션 글자다(파랗게 보인다). 진짜 첫 화면과 똑같이 꺼 준다. */
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  font-size: clamp(1.18rem, 3vw, 1.48rem);
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
 }
 
+.search-intro h1 span { color: #177667; }
+
 .search-intro__identity {
-  margin: 18px 0 0;
-  color: #4b5f73;
-  font-size: clamp(1rem, 3vw, 1.15rem);
-  line-height: 1.75;
+  margin: 7px 0 0;
+  color: #5a5148;
+  font-size: clamp(0.86rem, 2.1vw, 0.98rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
+/* [3] `.landing-entry` — 들어가기 카드 두 장이 놓일 자리를 미리 잡는다. */
+.search-intro__entry { padding: 10px 10px 0; }
+
+.search-intro__guide {
+  margin: 0 0 8px;
+  color: #766b61;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.search-intro__entry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+/*
+ * 아직 누를 수 없으므로 **누를 수 있는 것처럼 보이지 않게** 흐리게 둔다.
+ * 진짜 버튼처럼 만들면 그 1초 사이에 눌러 보고 아무 일도 안 일어나 고장으로 읽힌다.
+ */
+.search-intro__entry-card {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 78px;
+  padding: 12px 13px;
+  border: 1px solid rgba(226, 214, 198, 0.9);
+  border-radius: 18px;
+  background: rgba(247, 243, 236, 0.75);
+  color: #9b9187;
+}
+
+.search-intro__entry-card b { font-size: 1.3rem; font-weight: 400; }
+.search-intro__entry-card i { font-size: 0.85rem; font-style: normal; font-weight: 800; word-break: keep-all; }
+
+/* 진짜 화면에서 로그인 오류 문구가 차지하는 자리. 비워 두면 아래가 위로 당겨진다. */
+.search-intro__entry-spacer { min-height: 1.25em; margin: 3px 2px 0; font-size: 0.76rem; }
+
+/* [4] `.landing-experiences` — 이 서비스가 무엇을 하는 곳인지 읽히는 자리. */
+.search-intro__experiences { padding: 11px 10px 0; }
+
+.search-intro__experiences-heading { margin-bottom: 9px; }
+
+.search-intro__experiences h2 {
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
 }
 
 .search-intro__features {
-  margin: 24px 0;
-  padding-left: 1.25rem;
-  color: #425466;
-  line-height: 1.9;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(226, 214, 198, 0.9);
+  border-radius: 16px;
+  list-style: none;
 }
 
+.search-intro__features li {
+  display: flex;
+  align-items: center;
+  min-height: 78px;
+  padding: 11px 12px;
+  background: rgba(247, 243, 236, 0.6);
+  color: #7d7369;
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.search-intro__features li + li { border-left: 1px solid rgba(226, 214, 198, 0.9); }
+
+/* [5] `.landing-support-footer` */
 .search-intro__links {
+  margin: 14px 8px 0;
+  padding: 10px 0 3px;
+  border-top: 1px solid rgba(240, 220, 194, 0.9);
+}
+
+.search-intro__links nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  padding-top: 18px;
-  border-top: 1px solid #ece5d8;
+  gap: 6px 16px;
+  align-items: center;
+  justify-content: center;
+  min-height: 31px;
+  padding: 0 10px;
 }
 
 .search-intro__links a {
-  color: #315f87;
+  color: #476041;
   font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
 }
 
 .search-intro__links a:hover,
-.search-intro__links a:focus-visible {
-  text-decoration: underline;
+.search-intro__links a:focus-visible { text-decoration: underline; }
+
+/* 진짜 화면이 좁은 화면에서 줄어드는 지점(480px)에서 같이 줄인다. */
+@media (max-width: 480px) {
+  .search-intro { padding: 1rem; }
+  .search-intro__shell { padding: 4px 10px 16px; }
+  .search-intro__card { padding: 12px; border-radius: 24px; }
+  .search-intro__experiences { padding: 7px 4px 0; }
+  .search-intro__experiences h2 { font-size: 0.86rem; }
+  .search-intro__features li { min-height: 72px; padding: 8px 4px; font-size: 0.67rem; }
+  .search-intro__links { margin: 11px 3px 0; padding: 8px 0 1px; }
+  .search-intro__links nav { min-height: 30px; padding: 0 8px; }
+  .search-intro__links a { font-size: 0.74rem; }
 }

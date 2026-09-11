@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename, security/detect-non-literal-regexp */
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -13,7 +14,9 @@ const MODEL_LITERAL = /['"](gpt-[a-z0-9.-]+|o[0-9]-[a-z0-9.-]+|chatgpt-[a-z0-9.-
 const codeFiles = (dir) => {
     const out = [];
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
+        // 윈도우의 path.join 은 역슬래시로 잇는다. 그대로 두면 아래 비교(자기 자신·면제 목록)가
+        // 한 번도 맞지 않아, 리눅스(배포)에서는 통과하고 윈도우(로컬)에서만 실패했다.
+        const full = path.join(dir, entry.name).split(path.sep).join('/');
         if (entry.isDirectory()) { out.push(...codeFiles(full)); continue; }
         if (/\.(js|mjs|ts|jsx)$/.test(entry.name) && !entry.name.includes('.bak')) out.push(full);
     }

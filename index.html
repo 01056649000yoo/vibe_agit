@@ -49,22 +49,50 @@
 
 <body>
   <div id="root">
-    <!-- React가 준비되면 같은 자리를 실제 로그인 화면으로 교체한다. 검색로봇과 느린 연결에서도
-         서비스의 정체성과 공개 안내가 빈 화면 대신 먼저 읽혀야 한다. -->
+    <!-- React 가 준비되면 같은 자리를 실제 첫 화면으로 교체한다. 그래서 이 덩어리는 첫 화면과
+         **같은 모양**이어야 한다 — 다르게 생기면 교체가 "다른 페이지로 튕겼다"로 보인다.
+         상자 순서도 첫 화면(LandingPage)의 다섯 칸을 그대로 따라간다: 그림 → 제목 → 들어가기 →
+         활동 → 공개 안내. 검색 로봇과 자바스크립트 전 상태에서도 읽혀야 하므로 글은 남긴다.
+         어긋나지 않는지는 tests/searchDiscovery.test.mjs 가 첫 화면과 함께 본다. -->
     <main class="search-intro" aria-labelledby="search-intro-title">
-      <p class="search-intro__eyebrow">초등 학급 글쓰기 지도 플랫폼</p>
-      <h1 id="search-intro-title">끄적끄적 아지트</h1>
-      <p class="search-intro__identity">선생님이 지도하고 학생이 꾸준히 쓰는, 초등 학급 글쓰기 공간이에요.</p>
-      <ul class="search-intro__features">
-        <li>선생님 과제와 피드백으로 글쓰기 배우기</li>
-        <li>독서록과 일기 등 자율 글쓰기 이어가기</li>
-        <li>글쓰기 기록과 성장 활동을 학급에서 함께 운영하기</li>
-      </ul>
-      <nav class="search-intro__links" aria-label="서비스 공개 안내">
-        <a href="/learning-support-software">학습지원소프트웨어 선정기준 안내</a>
-        <a href="/privacy">개인정보 처리방침</a>
-        <a href="/terms">서비스 이용약관</a>
-      </nav>
+      <div class="search-intro__shell">
+        <div class="search-intro__card">
+          <div class="search-intro__hero">
+            <img src="/assets/landing-hero-reference.jpg"
+                 alt="끄적끄적 아지트 — 선생님이 지도하고 학생이 꾸준히 쓰는, 초등 학급 글쓰기 공간이에요."
+                 width="1723" height="913" fetchpriority="high" />
+          </div>
+          <div class="search-intro__promise">
+            <h1 id="search-intro-title">쓰고, 읽고, 키우며 <span>함께 자라는 우리 반 아지트</span></h1>
+            <p class="search-intro__identity">선생님이 지도하고 학생이 꾸준히 쓰는, 초등 학급 글쓰기 공간이에요.</p>
+          </div>
+          <div class="search-intro__entry">
+            <p class="search-intro__guide">학생은 선생님께 받은 코드로, 선생님은 Google 계정으로 들어가요.</p>
+            <div class="search-intro__entry-grid" aria-hidden="true">
+              <span class="search-intro__entry-card"><b>🎒</b><i>학생으로 들어가기</i></span>
+              <span class="search-intro__entry-card"><b>🧑‍🏫</b><i>선생님으로 들어가기</i></span>
+            </div>
+            <p class="search-intro__entry-spacer" aria-hidden="true"></p>
+          </div>
+          <section class="search-intro__experiences" aria-label="아지트에서 하는 일">
+            <div class="search-intro__experiences-heading">
+              <h2>아지트에서는 이렇게 활동해요</h2>
+            </div>
+            <ul class="search-intro__features">
+              <li>선생님 과제와 피드백으로 글쓰기 배우기</li>
+              <li>독서록과 일기 등 자율 글쓰기 이어가기</li>
+              <li>글쓰기 기록과 성장 활동을 학급에서 함께 운영하기</li>
+            </ul>
+          </section>
+          <footer class="search-intro__links">
+            <nav aria-label="서비스 공개 안내">
+              <a href="/learning-support-software">학습지원소프트웨어 선정기준 안내</a>
+              <a href="/privacy">개인정보 처리방침</a>
+              <a href="/terms">서비스 이용약관</a>
+            </nav>
+          </footer>
+        </div>
+      </div>
     </main>
   </div>
   <script type="module" src="/src/main.jsx"></script>

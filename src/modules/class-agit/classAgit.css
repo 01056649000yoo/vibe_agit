@@ -229,7 +229,6 @@
 @media (max-width: 520px) {
     .class-agit-reader__page[data-format='prose'] .class-agit-reader__text p { word-break: break-all; }
 }
-}
 .class-agit-reader__footer { flex-shrink: 0; padding: 14px 22px; border-top: 1px solid #e5e7d8; background: #f7f8ef; }
 .class-agit-reader__footer nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.class-agit-reader__footer nav button { border: 0; border-radius: 6px; background: transparent; color: #476041; font-size: 13px; padding: 5px; }
 .class-agit-confirmation label { display: flex; align-items: center; gap: 10px; font-size: 14px; line-height: 1.6; }
