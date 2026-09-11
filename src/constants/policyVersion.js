@@ -10,4 +10,4 @@
  * 형식은 시행일(YYYY-MM-DD)이다. 처리방침 제12조가 "시행 7일 전 공지"를 약속하므로
  * 공지일로부터 7일 뒤 이후여야 한다.
  */
-export const POLICY_VERSION = '2026-09-14';
+export const POLICY_VERSION = '2026-09-21';

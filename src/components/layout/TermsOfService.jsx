@@ -8,7 +8,7 @@ const TermsOfService = () => {
     return (
         <div style={{ textAlign: 'left' }}>
             <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>
-                최초 시행일: 2026년 1월 16일 · 개정일: 2026년 9월 11일 · 개정 시행일: 2026년 9월 14일
+                최초 시행일: 2026년 1월 16일 · 개정일: 2026년 9월 11일 · 개정 시행일: 2026년 9월 21일
                 <br />작품 저작권 안내 보완: 2026년 9월 5일
             </p>
 

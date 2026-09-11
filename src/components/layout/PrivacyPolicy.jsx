@@ -15,8 +15,8 @@ const PrivacyPolicy = () => {
     return (
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                개정 이력 — 최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 14일
-                <br />학생 개인정보 처리 근거·수집 항목 정정, 동의 기록 보관 명시: 2026년 9월 14일
+                개정 이력 — 최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 21일
+                <br />학생 개인정보 처리 근거·수집 항목 정정, 동의 기록 보관 명시: 2026년 9월 21일
                 <br />전시 공개·작품 보호 안내 보완: 2026년 9월 5일
             </p>
 
@@ -181,7 +181,7 @@ const PrivacyPolicy = () => {
 
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제12조 (개인정보처리방침의 변경)</h4>
-                <p>이 개인정보처리방침은 2026년 9월 14일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
+                <p>이 개인정보처리방침은 2026년 9월 21일부터 적용됩니다. 변경사항이 있는 경우 시행 7일 전부터 공지사항을 통해 고지할 것입니다.</p>
             </section>
 
             <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#EBF5FB', borderRadius: '8px', fontSize: '0.9rem' }}>
