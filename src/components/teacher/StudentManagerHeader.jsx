@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from '../common/Button';
 import TeacherGuideButton from './TeacherGuideButton';
+import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
 
 const StudentManagerHeader = ({
     isDashboardMode, isMobile, toggleSelectAll, setIsPointModalOpen,
@@ -158,7 +159,7 @@ const StudentManagerHeader = ({
                 <select value={sortMode} onChange={(e) => setSortMode(e.target.value)} aria-label="학생 정렬" style={{ padding: '6px 9px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'white', color: '#475569', fontSize: '0.82rem', fontWeight: '700' }}>
                     <option value="number">번호순</option><option value="name">이름순</option><option value="points">포인트순</option><option value="recent">최근 등록순</option>
                 </select>
-                <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ display: 'flex', gap: '4px' }} {...tourAnchor(TEACHER_TOUR_ANCHORS.STUDENT_ADD)}>
                     <input
                         type="text"
                         placeholder="이름 입력"

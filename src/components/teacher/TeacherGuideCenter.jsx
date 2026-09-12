@@ -5,6 +5,7 @@ import TeacherGuideContent from './TeacherGuideContent';
 import TeacherGuideAssistant from './TeacherGuideAssistant';
 import { TEACHER_GUIDE_JOURNEYS, getJourneysForGuide } from '../../guides/teacherGuideJourneys';
 import { getTeacherGuide } from '../../guides/teacherGuideRegistry';
+import { getTeacherTour } from '../../guides/teacherTour.js';
 import './TeacherGuideCenter.css';
 
 const findInitialLocation = ({ guideId, journeyId, stepId }) => {
@@ -21,7 +22,7 @@ const findInitialLocation = ({ guideId, journeyId, stepId }) => {
     return { journeyId: TEACHER_GUIDE_JOURNEYS[0].id, stepId: null };
 };
 
-const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, showAiAssistant = false, guideAiRemaining = 5 }) => {
+const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, onStartTour, showAiAssistant = false, guideAiRemaining = 5 }) => {
     const titleId = useId();
     const dialogRef = useRef(null);
     const closeRef = useRef(null);
@@ -166,6 +167,19 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                     <div className="teacher-guide-center__time">{selectedJourney.estimatedTime}</div>
                                     <h3>{selectedJourney.title}</h3>
                                     <p>{selectedJourney.summary}</p>
+                                    {/* 동행 모드가 있는 흐름만. 읽고 끝나지 않고 실제 화면에서 한 단계씩 따라 한다. */}
+                                    {onStartTour && getTeacherTour(selectedJourney.id) && (
+                                        <button
+                                            type="button"
+                                            className="teacher-guide-center__tour-button"
+                                            onClick={() => {
+                                                onStartTour(selectedJourney.id);
+                                                onClose();
+                                            }}
+                                        >
+                                            🧭 따라 해보기
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

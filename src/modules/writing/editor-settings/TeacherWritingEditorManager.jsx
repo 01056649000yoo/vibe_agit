@@ -16,6 +16,7 @@ import {
 } from './settings';
 import { getWritingToolManifests } from '../tools/registry';
 import './teacherWritingEditorManager.css';
+import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../../guides/teacherTour.js';
 
 const PREVIEW_WIDTHS = Object.freeze({
     desktop: { label: 'PC', width: 1120 },
@@ -181,7 +182,7 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                     <span className="writing-editor-manager__class-name">{activeClass.name}</span>
                 </div>
 
-                <div className="writing-editor-manager__feature-list">
+                <div className="writing-editor-manager__feature-list" {...tourAnchor(TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS)}>
                     {WRITING_TOOL_OPTIONS.map((tool) => {
                         const enabled = isWritingToolEnabled(draftSettings, tool.id);
                         return (

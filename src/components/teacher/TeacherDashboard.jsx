@@ -30,6 +30,10 @@ import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
 import StudentConsentGate from './StudentConsentGate';
 import usePendingStudentConsent from '../../hooks/usePendingStudentConsent';
+import useTeacherTour from '../../hooks/useTeacherTour';
+import TeacherTourCompanion from './TeacherTourCompanion';
+import TeacherFirstStepsCard from './TeacherFirstStepsCard';
+import { getTeacherGuideJourney } from '../../guides/teacherGuideJourneys';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
@@ -134,6 +138,17 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
     // 학생 개인정보 동의서를 확인하지 않은 학급이 있으면 대시보드 대신 관문을 띄운다.
     const studentConsent = usePendingStudentConsent(session, profile);
+
+    /*
+     * 동행 모드(처음 시작하기). 관문이 떠 있는 동안에는 대시보드 자체가 그려지지 않으므로
+     * 이 패널이 관문 위에 겹칠 일은 없다.
+     */
+    const tour = useTeacherTour({
+        userId: session?.user?.id,
+        classes,
+        activeClassId: activeClass?.id || null
+    });
+    const tourJourney = getTeacherGuideJourney(tour.tourId);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -578,6 +593,17 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+                            {tour.canOffer && !tour.isRunning && tourJourney && (
+                                <TeacherFirstStepsCard
+                                    title={tourJourney.title}
+                                    summary={tourJourney.summary}
+                                    estimatedTime={tourJourney.estimatedTime}
+                                    steps={tour.steps}
+                                    completedStepIds={tour.completedStepIds}
+                                    onStart={tour.start}
+                                    onDismiss={tour.stop}
+                                />
+                            )}
                             <ClassManager
                                 userId={session.user.id} classes={classes} activeClass={activeClass}
                                 setActiveClass={setActiveClass} setClasses={setClasses}
@@ -669,12 +695,19 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 onRepliesSeen={() => setFeedbackReplyCount(0)}
             />
 
+            <TeacherTourCompanion
+                tour={tour}
+                journeyTitle={tourJourney?.title || '처음 시작하기'}
+                onNavigate={handleWorkspaceNavigate}
+            />
+
             <Suspense fallback={null}>
                 <TeacherGuideCenter
                     isOpen={Boolean(guideCenterRequest)}
                     initialRequest={guideCenterRequest || {}}
                     onClose={() => setGuideCenterRequest(null)}
                     onNavigate={handleWorkspaceNavigate}
+                    onStartTour={tour.start}
                     showAiAssistant={guideAiAvailability?.enabled === true}
                     guideAiRemaining={guideAiAvailability?.remaining_today}
                 />

@@ -15,8 +15,16 @@ const StudentConsentGatePreview = lazy(() => import('./StudentConsentGatePreview
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
+const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'teacher-tour',
+    icon: '🧭',
+    title: '교사 동행 모드',
+    description: '가입 직후 첫 걸음 카드와 3단계 동행 패널을 DB 없이 눌러 본다 — 해내면 저절로 넘어가는지, 테두리가 따라오는지',
+    Component: TeacherTourPreview,
+  }),
   Object.freeze({ id: 'class-agit-selection', icon: '🏡', title: '우리반 아지트 작품 찾기', description: '66개 미션·1,040편 합성 글로 검색·일괄 담기·120편 순서를 점검한다', Component: ClassAgitSelectionPreview }),
   Object.freeze({ id: 'class-agit-release', icon: '🏡', title: '우리반 아지트 문집·외부 공유', description: '문집 확정판·100편 출력·학생 서가·공유 해지/만료와 시범 학급을 한 흐름으로 점검한다', Component: ClassAgitReleasePreview }),
   Object.freeze({

@@ -19,6 +19,18 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-13 — 교사 동행 모드(따라 하는 튜토리얼) 1차 (Claude, `feature/teacher-tour` 가지 · 배포 보류)
+
+- **왜**: 안내서(8개 흐름·35단계)는 있는데 **읽고 끝난다**. 모달이라 열면 화면을 가리고 닫으면 안내가 사라져 "보면서 따라 하기"가 안 되고, 가입 직후에는 학급 0개 화면에 `ClassManager` 만 떠서 "이제 뭘 해야 하지"에 답하는 것이 없었다.
+- **무엇**: 안내서를 **옆에 붙어 다니는 패널**로 재생한다. 덮개가 없고 테두리에 `pointer-events:none` 이라 본 화면을 그대로 쓴다. 1차는 `처음 시작하기` 3단계(학급 → 학생 → 글쓰기 설정)만. 가입한 날 35단계를 연달아 시키면 중간에 그만둔다.
+- **다음 단계 판정**: 결과가 DB 에 남는 단계는 **실제 데이터**로 저절로 넘어가고(학급 1개·학생 1명), 아무것도 바꿀 필요 없는 단계(글쓰기 설정 둘러보기)만 `확인했어요` 로 넘긴다. 모두 자동 판정으로 두면 **설정을 건드릴 생각이 없는 교사가 갇힌다**.
+- **새 콘텐츠를 쓰지 않았다**: `teacherTour.js` 는 journey 의 `stepId` 를 가리킬 뿐이고 제목·설명·이동 화면은 안내서 원본에서 읽는다. 더한 것은 `anchor`(테두리 자리)·`hint`(명령문 한 줄)·`done`(넘어갈 조건) 셋뿐.
+- **파일**: `guides/teacherTour.js`(순수 상태 기계·이름표 원본), `hooks/useTeacherTour.js`, `lib/teacherTourStore.js`, `components/teacher/TeacherTourCompanion.*`, `TeacherFirstStepsCard.*`, 이름표 3곳(`ClassManager`·`StudentManagerHeader`·`TeacherWritingEditorManager`), 안내서 `따라 해보기` 버튼, `20261281_teacher_tour_state.sql`(profiles 에 jsonb 한 열 — 학교·집 컴퓨터를 오가므로 localStorage 가 아니다), 미리보기 `?dev-lab=teacher-tour`.
+- **학생 수는 그 단계일 때만 센다**: 동행 모드를 쓰지 않는 교사에게는 조회가 한 번도 붙지 않는다. 학급을 바꾸면 앞 학급 수로 단계가 열리지 않도록 학급 이름표를 함께 들고 다닌다.
+- **검사/검증**: `tests/teacherTour.test.mjs` 9건 — 그중 **이름표가 실제 화면에 붙어 있는지**가 핵심이다(화면을 옮기면 안내는 그대로 뜨는데 가리킬 곳이 없어지고 오류도 안 난다). 이름표 떼기·ack 단계를 자동 판정으로 바꾸기·삭제된 학생까지 세기 셋을 **일부러 깨뜨려 검사가 잡는 것까지 확인**했다. `npm run test:all` 1000/1000, lint 오류 0, build 성공, `npm run checklist` 통과. 미리보기에서 3단계 자동 진행·테두리 이동·400px 가로 스크롤 없음·콘솔 오류 0 확인.
+- **배포 보류**: 9/21 약관 관문과 겹치지 않도록 `feature/teacher-tour` 가지에 둔다. 합칠 때 `npm run migrate` 로 `20261281` 을 **먼저** 적용한 뒤 배포한다.
+- **다음(2차)**: `첫 글쓰기 수업 운영하기` 4단계를 학급·학생이 준비된 교사에게 따로 권하기. 실제 교사 계정에서 가입 직후 흐름 눈 확인.
+
 ## 2026-09-11 — 약관 동의를 이력 표로: 첫 동의(소급) + 개정판 추가 동의 (Claude)
 - **왜 바로 뒤에 또**: `20261279` 를 사용자가 적용한 뒤 요구가 더해졌다 — 기존 교사는 첫 동의(가입일 소급)를 그대로 두고, 9/14 개정판에 다음 로그인 때 **추가로** 동의하며 둘 다 남긴다. 열 세 개로는 한 번밖에 못 적으므로 **이력 표**가 맞다. 적용된 마이그레이션은 고치지 않는다는 규칙대로 `20261279` 는 되돌리고(잠시 고쳤다가 체크섬 경고가 떠서 `git checkout`) 새 장 `20261280` 을 썼다.
 - **변경**: `policy_consents(user_id, policy_version, kind[signup|reconsent|backfill], terms_agreed_at, privacy_agreed_at)` + UNIQUE(user, version). `20261279` 가 열에 소급한 568명을 표로 옮기고(옮긴 수를 확인한 뒤에야) 열 세 개를 지웠다. `record_policy_consent_v1(p_version, p_kind)` 로 서명 변경(옛 서명 DROP), `get_my_policy_consent_v1()` 추가. 표는 브라우저 역할에 닫고 RPC 로만.

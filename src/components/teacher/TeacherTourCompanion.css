@@ -1,0 +1,157 @@
+/*
+ * 동행 패널은 화면을 가리지 않는다. 덮개가 없고, 테두리는 눌리지 않는다.
+ * 색·글자·간격은 design-system.css 의 --ui-* 토큰만 쓴다.
+ */
+
+.teacher-tour__ring {
+    position: fixed;
+    z-index: 1200;
+    pointer-events: none;
+    border-radius: var(--ui-radius-md);
+    box-shadow: 0 0 0 3px var(--ui-primary), 0 0 0 9px rgba(37, 99, 235, 0.18);
+    transition: top var(--ui-motion-fast), left var(--ui-motion-fast),
+        width var(--ui-motion-fast), height var(--ui-motion-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .teacher-tour__ring { transition: none; }
+}
+
+.teacher-tour__panel {
+    position: fixed;
+    z-index: 1210;
+    right: var(--ui-space-5);
+    bottom: var(--ui-space-5);
+    width: min(340px, calc(100vw - var(--ui-space-8)));
+    box-sizing: border-box;
+    padding: var(--ui-space-4);
+    background: var(--ui-surface-raised);
+    border: 1px solid var(--ui-primary-border);
+    border-radius: var(--ui-radius-lg);
+    box-shadow: var(--ui-shadow-md);
+    font-family: var(--ui-font-sans);
+    color: var(--ui-ink);
+}
+
+.teacher-tour__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-2);
+    margin-bottom: var(--ui-space-2);
+}
+
+.teacher-tour__journey {
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    color: var(--ui-primary);
+}
+
+.teacher-tour__count {
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+    color: var(--ui-ink-muted);
+}
+
+.teacher-tour__title {
+    margin: 0 0 var(--ui-space-1);
+    font-size: var(--ui-text-lg);
+    font-weight: 900;
+    color: var(--ui-ink-strong);
+}
+
+.teacher-tour__hint {
+    margin: 0;
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-muted);
+}
+
+.teacher-tour__missing {
+    margin: var(--ui-space-2) 0 0;
+    font-size: var(--ui-text-xs);
+    line-height: var(--ui-line-body);
+    color: var(--ui-accent);
+}
+
+.teacher-tour__actions {
+    display: flex;
+    gap: var(--ui-space-2);
+    margin-top: var(--ui-space-4);
+}
+
+.teacher-tour__primary,
+.teacher-tour__ghost {
+    flex: 1;
+    min-height: var(--ui-control-sm);
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border-radius: var(--ui-radius-sm);
+    font-family: inherit;
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.teacher-tour__primary {
+    background: var(--ui-primary);
+    border: 1px solid var(--ui-primary);
+    color: #ffffff;
+}
+
+.teacher-tour__waiting {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--ui-control-sm);
+    margin: 0;
+    padding: var(--ui-space-2) var(--ui-space-3);
+    background: var(--ui-primary-soft);
+    border: 1px dashed var(--ui-primary-border);
+    border-radius: var(--ui-radius-sm);
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    color: var(--ui-primary);
+}
+
+.teacher-tour__ghost {
+    flex: 0 0 auto;
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border-strong);
+    color: var(--ui-ink-muted);
+}
+
+.teacher-tour__minor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-3);
+    margin-top: var(--ui-space-3);
+    padding-top: var(--ui-space-2);
+    border-top: 1px solid var(--ui-border);
+}
+
+.teacher-tour__minor button {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+    color: var(--ui-ink-subtle);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.teacher-tour__minor button:hover {
+    color: var(--ui-ink-muted);
+}
+
+/* 좁은 화면에서는 구석 카드 대신 아래 고정 띠로. 오른쪽 구석은 손가락에 가린다. */
+@media (max-width: 640px) {
+    .teacher-tour__panel {
+        right: var(--ui-space-2);
+        left: var(--ui-space-2);
+        bottom: var(--ui-space-2);
+        width: auto;
+    }
+}

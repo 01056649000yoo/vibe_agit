@@ -9,6 +9,7 @@ import ModalCloseButton from '../common/ModalCloseButton';
 import StudentManager from './StudentManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateUnambiguousCode } from '../../lib/codeGenerator';
+import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
 
 /**
  * 역할: 선생님 - 학급 생성, 초대 코드 관리 및 학생 명단 통합 관리
@@ -216,6 +217,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             variant="primary"
                             style={{ width: '100%', height: '60px', fontSize: '1.1rem', borderRadius: '16px', fontWeight: 'bold' }}
                             onClick={() => setIsModalOpen(true)}
+                            {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}
                         >
                             ➕ 새 학급 만들기
                         </Button>
@@ -318,7 +320,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))', gap: '9px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #EEF2F7' }}>
                         {onNavigate && <ClassActionButton icon="👥" label="학생 명단" description="학생 추가·별명·코드" onClick={() => onNavigate({ tab: 'students', section: 'students' })} />}
                         <ClassActionButton icon="✏️" label="이름 바꾸기" description="학급 이름 수정" onClick={handleRenameClass} disabled={isSaving} />
-                        <ClassActionButton icon="➕" label="학급 추가" description="새 학급 만들기" onClick={() => setIsModalOpen(true)} />
+                        <ClassActionButton icon="➕" label="학급 추가" description="새 학급 만들기" onClick={() => setIsModalOpen(true)} anchorProps={tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)} />
                         <ClassActionButton icon="⭐" label="주 학급 지정" description={activeClass.id === primaryClassId ? '현재 주 학급' : '로그인 후 기본 학급'} onClick={() => onSetPrimaryClass?.(activeClass.id)} disabled={activeClass.id === primaryClassId || isSaving} />
                         <ClassActionButton icon="♻️" label="삭제 학급 복구" description="3일 안에 되돌리기" onClick={handleOpenTrash} />
                         <ClassActionButton danger icon="🗑️" label="학급 삭제" description="복구함으로 이동" onClick={() => handleDeleteClass(activeClass.id, activeClass.name)} disabled={isSaving} />
@@ -450,8 +452,8 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
 
 
 
-const ClassActionButton = ({ icon, label, description, onClick, disabled = false, danger = false }) => (
-    <button type="button" onClick={onClick} disabled={disabled} style={{
+const ClassActionButton = ({ icon, label, description, onClick, disabled = false, danger = false, anchorProps }) => (
+    <button type="button" onClick={onClick} disabled={disabled} {...anchorProps} style={{
         minWidth: 0, minHeight: '64px', padding: '10px 11px', borderRadius: '12px',
         border: `1px solid ${danger ? '#FECACA' : '#DCE6EE'}`,
         background: disabled ? '#F8FAFC' : danger ? '#FFF7F7' : '#F8FAFC',
