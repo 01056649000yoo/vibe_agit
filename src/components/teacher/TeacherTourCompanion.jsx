@@ -221,7 +221,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     className="teacher-tour__pill"
                     onClick={() => toggleCollapsed(false)}
                 >
-                    🧭 {journeyTitle} {stepIndex + 1}/{totalSteps} 펴기
+                    🧭 {journeyTitle} {stepIndex + 1}/{totalSteps} · 안내 다시 펴기
                 </button>
             </ModalPortal>
         );
@@ -300,14 +300,14 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
             >
                 <header className="teacher-tour__head">
                     <span className="teacher-tour__journey">{journeyTitle}</span>
+                    {/* 아이콘만으로는 접는 단추인지 모른다는 제보(2026-09-13). 글자로 적는다. */}
                     <button
                         type="button"
                         className="teacher-tour__collapse"
                         onClick={() => toggleCollapsed(true)}
-                        aria-label="동행 안내 접기"
-                        title="접어 두고 화면을 보기"
+                        title="가려진 화면을 보려면 접어 두세요"
                     >
-                        ⌄
+                        ⌄ 접어 두기
                     </button>
                     <span className="teacher-tour__count">
                         {tour.isReplay && <em className="teacher-tour__replay">다시 보기</em>}

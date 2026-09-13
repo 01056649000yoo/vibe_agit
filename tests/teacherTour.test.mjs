@@ -675,7 +675,7 @@ test('열렸다고 알릴 수 없는 자리에서도 갇히지 않는다', () =>
      * 표시를 달 수 없는 자리를 새로 짚게 되더라도 갇히지 않는다.
      */
     const cards = read('src/modules/game/teacher/RegisteredGameModuleCards.jsx');
-    assert.match(cards, /aria-current=\{module\.id === selectedId \? 'page' : undefined\}/);
+    assert.match(cards, /aria-current=\{selectedId === module\.id \? 'page' : undefined\}/);
 
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
     assert.match(panel, /clickedRef\.current = stepId;/);
@@ -694,22 +694,22 @@ test('새 화면으로 떠나는 단계는 눌러야 하는 것처럼 보이지 
     assert.ok(step.hint.includes('동행 모드가 끊기'), '누르면 어떻게 되는지 알려 주지 않습니다.');
 });
 
-test('놀이 단계는 보여 주기만 하는 카드가 아니라 여는 단추를 짚는다', () => {
+test('놀이 단계는 늘 보이는 좌측 메뉴를 짚는다', () => {
     /*
-     * 2026-09-13 제보: 수호룡 단계가 **학생 대시보드 미리보기 카드**를 짚었다. 그 카드는
-     * 보여 주기만 할 뿐 눌러도 열리지 않아, 다음으로 갈 수 없었다.
-     * 실제로 여는 자리는 `전체 콘텐츠 빠른 설정` 의 단추다.
+     * 2026-09-13 제보 두 번.
+     *   ① 학생 대시보드 **미리보기 카드**를 짚었다 — 보여 주기만 할 뿐 눌러도 열리지 않는다.
+     *   ② 그다음 `전체 현황` 의 목록으로 옮겼더니 **모듈을 열면 그 목록이 사라져** 불안정했다.
+     * 늘 보이는 것은 왼쪽 메뉴(`navStyle`)뿐이다. 이름표는 거기 하나만 있어야 한다.
      */
     const cards = read('src/modules/game/teacher/RegisteredGameModuleCards.jsx');
-    const previewAt = cards.indexOf('const StudentDashboardPreview');
-    const overviewAt = cards.indexOf('const Overview =');
+    const anchors = [...cards.matchAll(/tourAnchor\(moduleAnchorId\(module\.id\)\)/g)];
+    assert.equal(anchors.length, 1, '같은 이름표가 여러 곳에 있으면 어디를 짚을지 흔들립니다.');
     const anchorAt = cards.indexOf('tourAnchor(moduleAnchorId(module.id))');
-    assert.ok(anchorAt > overviewAt, '이름표가 아직 미리보기 카드에 붙어 있습니다.');
-    assert.ok(previewAt < overviewAt);
-    // 눌러 고른 것이 "열렸다" 고 알려야 동행 모드가 다음으로 넘긴다.
-    assert.match(cards, /aria-current=\{module\.id === selectedId \? 'page' : undefined\}/);
-    assert.match(cards, /selectedId=\{selectedId\}/, 'Overview 가 지금 고른 것을 모릅니다.');
+    const navAt = cards.indexOf('navStyle(selectedId === module.id, isMobile)');
+    assert.ok(navAt > 0 && Math.abs(navAt - anchorAt) < 400, '이름표가 좌측 메뉴에 붙어 있지 않습니다.');
+    assert.match(cards, /aria-current=\{selectedId === module\.id \? 'page' : undefined\}/);
 });
+
 
 test('패널을 접어 화면을 볼 수 있다', () => {
     /*
@@ -725,4 +725,11 @@ test('패널을 접어 화면을 볼 수 있다', () => {
         '접어도 화면이 어두운 채로 남습니다.');
     // 접은 상태는 그 사람 브라우저에만 남긴다.
     assert.match(panel, /window\.localStorage\.setItem\(COLLAPSED_KEY/);
+});
+
+test('접기 단추는 글자로 무엇인지 알려 준다', () => {
+    // 아이콘만으로는 접는 단추인지 모른다는 제보(2026-09-13).
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.ok(panel.includes('접어 두기'), '접기 단추에 글자가 없습니다.');
+    assert.ok(panel.includes('안내 다시 펴기'), '접힌 알약이 무엇인지 알려 주지 않습니다.');
 });

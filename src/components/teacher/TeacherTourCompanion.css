@@ -279,16 +279,15 @@
 .teacher-tour__collapse {
     margin-left: auto;
     margin-right: var(--ui-space-2);
-    width: 28px;
-    height: 28px;
-    padding: 0;
+    min-height: var(--ui-control-sm);
+    padding: var(--ui-space-1) var(--ui-space-3);
     background: var(--ui-surface-muted);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
     font-family: inherit;
-    font-size: var(--ui-text-md);
+    font-size: var(--ui-text-xs);
     font-weight: 800;
-    line-height: 1;
+    white-space: nowrap;
     color: var(--ui-ink-muted);
     cursor: pointer;
 }

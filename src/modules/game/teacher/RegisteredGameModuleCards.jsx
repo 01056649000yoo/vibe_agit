@@ -99,7 +99,7 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
     );
 };
 
-const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect, selectedId }) => {
+const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) => {
     const enabledModules = modules.filter(({ module }) => enabledIds.includes(module.id)).map(({ module }) => module);
 
     return (
@@ -131,17 +131,7 @@ const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect, sel
                                 padding: '14px', border: '1px solid #E2E8F0', borderRadius: '16px', background: 'white',
                                 display: 'flex', flexDirection: 'column', gap: '12px'
                             }}>
-                                {/*
-                                  * 동행 모드가 짚는 자리는 **여기**다. 위쪽 학생 대시보드
-                                  * 미리보기 카드는 보여 주기만 할 뿐 눌러도 열리지 않아,
-                                  * 그쪽을 짚었더니 다음으로 갈 수 없었다(2026-09-13 제보).
-                                  */}
-                                <button
-                                    type="button"
-                                    onClick={() => onSelect(module.id)}
-                                    {...tourAnchor(moduleAnchorId(module.id))}
-                                    aria-current={module.id === selectedId ? 'page' : undefined}
-                                    style={{
+                                <button type="button" onClick={() => onSelect(module.id)} style={{
                                     display: 'flex', alignItems: 'center', gap: '12px', padding: 0, border: 0,
                                     background: 'transparent', textAlign: 'left', cursor: 'pointer'
                                 }}>
@@ -253,7 +243,19 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                 {TEACHER_GAME_MODULES.map(({ module }) => {
                     const isOn = enabledIds.includes(module.id);
                     return (
-                        <button key={module.id} type="button" onClick={() => setSelectedId(module.id)} style={navStyle(selectedId === module.id, isMobile)}>
+                        /*
+                         * 동행 모드가 짚는 자리는 **이 좌측 메뉴**다. 모듈이 열려 있든
+                         * 전체 현황이든 **늘 보이기 때문**이다. 전체 현황의 `세부 설정 열기`
+                         * 는 모듈을 열면 사라져 스포트라이트가 불안정했다(2026-09-13 제보).
+                         */
+                        <button
+                            key={module.id}
+                            type="button"
+                            onClick={() => setSelectedId(module.id)}
+                            {...tourAnchor(moduleAnchorId(module.id))}
+                            aria-current={selectedId === module.id ? 'page' : undefined}
+                            style={navStyle(selectedId === module.id, isMobile)}
+                        >
                             <span style={{ fontSize: '1.3rem' }}>{module.icon || '🎮'}</span>
                             <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', fontWeight: '900' }}>{module.name}</span>
                             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOn ? '#22C55E' : '#94A3B8', flex: '0 0 auto' }} />
@@ -323,7 +325,6 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                         savingModuleId={savingModuleId}
                         onToggle={handleToggle}
                         onSelect={setSelectedId}
-                        selectedId={selectedId}
                     />
                 )}
             </section>
