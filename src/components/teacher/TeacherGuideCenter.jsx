@@ -22,7 +22,7 @@ const findInitialLocation = ({ guideId, journeyId, stepId }) => {
     return { journeyId: TEACHER_GUIDE_JOURNEYS[0].id, stepId: null };
 };
 
-const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, onStartTour, showAiAssistant = false, guideAiRemaining = 5 }) => {
+const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, onStartTour, tourStatuses = {}, showAiAssistant = false, guideAiRemaining = 5 }) => {
     const titleId = useId();
     const dialogRef = useRef(null);
     const closeRef = useRef(null);
@@ -144,19 +144,24 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                 <span>{TEACHER_GUIDE_JOURNEYS.length}개 흐름</span>
                             </div>
                             <div className="teacher-guide-center__nav-list">
-                                {TEACHER_GUIDE_JOURNEYS.map((journey, index) => (
-                                    <button
-                                        key={journey.id}
-                                        type="button"
-                                        className={`teacher-guide-center__nav-item${journey.id === selectedJourney.id ? ' is-active' : ''}`}
-                                        aria-current={journey.id === selectedJourney.id ? 'page' : undefined}
-                                        onClick={() => handleJourneyChange(journey.id)}
-                                    >
-                                        <span className="teacher-guide-center__nav-number">{index + 1}</span>
-                                        <span aria-hidden="true" className="teacher-guide-center__nav-icon">{journey.icon}</span>
-                                        <span>{journey.title}</span>
-                                    </button>
-                                ))}
+                                {TEACHER_GUIDE_JOURNEYS.map((journey, index) => {
+                                    // 따라 해본 흐름에는 표를 남긴다. 무엇을 아직 안 봤는지 목차에서 바로 보인다.
+                                    const toured = Reflect.get(tourStatuses, journey.id) === 'done';
+                                    return (
+                                        <button
+                                            key={journey.id}
+                                            type="button"
+                                            className={`teacher-guide-center__nav-item${journey.id === selectedJourney.id ? ' is-active' : ''}`}
+                                            aria-current={journey.id === selectedJourney.id ? 'page' : undefined}
+                                            onClick={() => handleJourneyChange(journey.id)}
+                                        >
+                                            <span className="teacher-guide-center__nav-number">{index + 1}</span>
+                                            <span aria-hidden="true" className="teacher-guide-center__nav-icon">{journey.icon}</span>
+                                            <span>{journey.title}</span>
+                                            {toured && <span className="teacher-guide-center__nav-done" title="따라 해봤습니다">✅</span>}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </nav>
 
@@ -177,7 +182,7 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                                 onClose();
                                             }}
                                         >
-                                            🧭 따라 해보기
+                                            {Reflect.get(tourStatuses, selectedJourney.id) === 'done' ? '🧭 다시 따라 해보기' : '🧭 따라 해보기'}
                                         </button>
                                     )}
                                 </div>

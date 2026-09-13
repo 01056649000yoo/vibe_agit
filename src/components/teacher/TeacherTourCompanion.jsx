@@ -58,7 +58,7 @@ const useAnchorRect = (anchorId, isActive) => {
     return isActive && measured?.anchorId === anchorId ? measured : null;
 };
 
-const TeacherTourCompanion = ({ tour, journeyTitle, onNavigate }) => {
+const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate }) => {
     const { isRunning, step, stepIndex, totalSteps } = tour;
     const rect = useAnchorRect(step?.anchor, isRunning);
     const navigatedStepRef = useRef(null);
@@ -70,6 +70,43 @@ const TeacherTourCompanion = ({ tour, journeyTitle, onNavigate }) => {
         navigatedStepRef.current = step.stepId;
         onNavigate?.(step.target);
     }, [isRunning, step, onNavigate]);
+
+    /*
+     * 흐름 하나를 끝냈으면 그 자리에서 다음 흐름을 권한다. 35단계를 한 줄로 세워 두고
+     * 끝까지 가라고 하면 아무도 못 간다 — 흐름 단위로 끊어서 이어 붙인다.
+     */
+    if (!isRunning && tour.justFinishedTourId) {
+        return (
+            <ModalPortal>
+                <section className="teacher-tour__panel" role="status" aria-live="polite">
+                    <header className="teacher-tour__head">
+                        <span className="teacher-tour__journey">{journeyTitle}</span>
+                        <span className="teacher-tour__count">다 보셨어요</span>
+                    </header>
+                    <h2 className="teacher-tour__title">여기까지 끝냈습니다 🎉</h2>
+                    <p className="teacher-tour__hint">
+                        {nextJourneyTitle
+                            ? `이어서 「${nextJourneyTitle}」도 같이 둘러볼까요? 나중에 활용 안내서에서 언제든 이어서 하실 수 있습니다.`
+                            : '모든 흐름을 둘러보셨습니다. 활용 안내서에서 언제든 다시 따라 하실 수 있습니다.'}
+                    </p>
+                    <div className="teacher-tour__actions">
+                        {tour.nextTourId && (
+                            <button
+                                type="button"
+                                className="teacher-tour__primary"
+                                onClick={() => tour.start(tour.nextTourId)}
+                            >
+                                이어서 둘러보기
+                            </button>
+                        )}
+                        <button type="button" className="teacher-tour__ghost" onClick={tour.dismissFinished}>
+                            나중에
+                        </button>
+                    </div>
+                </section>
+            </ModalPortal>
+        );
+    }
 
     if (!isRunning || !step) return null;
 
@@ -100,7 +137,9 @@ const TeacherTourCompanion = ({ tour, journeyTitle, onNavigate }) => {
                     <span className="teacher-tour__count">{stepIndex + 1} / {totalSteps}</span>
                 </header>
                 <h2 className="teacher-tour__title">{step.title}</h2>
-                <p className="teacher-tour__hint">{step.hint}</p>
+                {/* 설명은 안내서 원본(purpose)을 그대로 쓴다. 눌러야 할 것이 분명한 단계에만 hint 를 더 붙인다. */}
+                <p className="teacher-tour__purpose">{step.purpose}</p>
+                {step.hint && <p className="teacher-tour__hint">{step.hint}</p>}
                 {!rect && (
                     <p className="teacher-tour__missing">
                         해당 화면을 여는 중입니다. 바뀌지 않으면 아래 <strong>화면 열기</strong>를 눌러 주세요.

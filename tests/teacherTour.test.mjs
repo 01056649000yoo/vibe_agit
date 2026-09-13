@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
+    FIRST_TEACHER_TOUR_ID,
     TEACHER_TOURS,
+    getNextTourId,
     TEACHER_TOUR_ANCHORS,
     getTeacherTourSteps,
     getTourEntry,
@@ -11,7 +13,7 @@ import {
     reduceTourState,
     shouldOfferTour
 } from '../src/guides/teacherTour.js';
-import { getTeacherGuideJourney } from '../src/guides/teacherGuideJourneys.js';
+import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../src/guides/teacherGuideJourneys.js';
 
 const read = (file) => readFileSync(file, 'utf8');
 
@@ -23,7 +25,8 @@ const read = (file) => readFileSync(file, 'utf8');
 const ANCHOR_HOSTS = Object.freeze([
     'src/components/teacher/ClassManager.jsx',
     'src/components/teacher/StudentManagerHeader.jsx',
-    'src/modules/writing/editor-settings/TeacherWritingEditorManager.jsx'
+    'src/modules/writing/editor-settings/TeacherWritingEditorManager.jsx',
+    'src/components/teacher/MissionManager.jsx'
 ]);
 
 const anchorSources = ANCHOR_HOSTS.map((file) => ({ file, body: read(file) }));
@@ -32,14 +35,58 @@ test('동행 모드가 가리키는 이름표는 모두 실제 화면에 붙어 
     const anchorConstantName = (anchorId) => Object.keys(TEACHER_TOUR_ANCHORS)
         .find((key) => Reflect.get(TEACHER_TOUR_ANCHORS, key) === anchorId);
 
-    TEACHER_TOURS.forEach((tour) => {
-        getTeacherTourSteps(tour.id).forEach((step) => {
-            const constantName = anchorConstantName(step.anchor);
-            assert.ok(constantName, `${step.stepId} 의 이름표 ${step.anchor} 가 TEACHER_TOUR_ANCHORS 에 없습니다.`);
-            const used = anchorSources.some(({ body }) => body.includes(`tourAnchor(TEACHER_TOUR_ANCHORS.${constantName})`));
-            assert.ok(used, `${step.stepId} 의 이름표(${step.anchor})를 붙인 화면이 없습니다. 화면을 옮겼다면 tourAnchor 도 같이 옮기세요.`);
+    const anchored = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id)).filter((step) => step.anchor);
+    assert.ok(anchored.length > 0, '테두리를 씌우는 단계가 하나도 없습니다.');
+    anchored.forEach((step) => {
+        const constantName = anchorConstantName(step.anchor);
+        assert.ok(constantName, `${step.stepId} 의 이름표 ${step.anchor} 가 TEACHER_TOUR_ANCHORS 에 없습니다.`);
+        const used = anchorSources.some(({ body }) => body.includes(`tourAnchor(TEACHER_TOUR_ANCHORS.${constantName})`));
+        assert.ok(used, `${step.stepId} 의 이름표(${step.anchor})를 붙인 화면이 없습니다. 화면을 옮겼다면 tourAnchor 도 같이 옮기세요.`);
+    });
+});
+
+test('안내서의 모든 흐름을 빠짐없이 따라 할 수 있다', () => {
+    /*
+     * 안내서에만 흐름을 더하고 동행 모드를 잊으면, 교사는 목차에서 본 흐름을
+     * `따라 해보기` 로 열 수 없다. 둘은 자동 변환이라 어긋날 수 없어야 한다.
+     */
+    assert.equal(TEACHER_TOURS.length, TEACHER_GUIDE_JOURNEYS.length);
+    TEACHER_GUIDE_JOURNEYS.forEach((journey) => {
+        const steps = getTeacherTourSteps(journey.id);
+        assert.equal(steps.length, journey.steps.length, `${journey.id} 의 단계 수가 안내서와 다릅니다.`);
+        steps.forEach((step) => {
+            // 화면으로 옮겨 주지 못하면 "따라 하기"가 아니라 읽기다.
+            assert.ok(step.target, `${journey.id}/${step.stepId} 에 열어 줄 화면이 없습니다.`);
         });
     });
+});
+
+test('가리킬 곳이 없는 단계는 반드시 확인 버튼으로 넘긴다', () => {
+    /*
+     * 자동 판정인데 테두리도 없으면 교사는 무엇을 해야 넘어가는지 알 길이 없다.
+     * 35단계 대부분은 한 번 보고 가는 단계라 기본이 ack 여야 한다.
+     */
+    TEACHER_TOURS.forEach((tour) => {
+        getTeacherTourSteps(tour.id).forEach((step) => {
+            if (step.anchor) return;
+            assert.equal(step.done.ack, true,
+                `${tour.id}/${step.stepId} 는 테두리 없이 자동 판정이라 교사가 갇힙니다.`);
+        });
+    });
+});
+
+test('흐름을 끝내면 아직 안 본 다음 흐름을 권한다', () => {
+    let state = normalizeTourState(null);
+    // 첫 흐름을 끝내면 두 번째 흐름을 권한다.
+    assert.equal(getNextTourId(state, FIRST_TEACHER_TOUR_ID), TEACHER_TOURS[1].id);
+
+    // 이미 본 흐름은 건너뛴다.
+    state = reduceTourState(state, TEACHER_TOURS[1].id, 'start');
+    TEACHER_TOURS[1].steps.forEach(() => { state = reduceTourState(state, TEACHER_TOURS[1].id, 'complete'); });
+    assert.equal(getNextTourId(state, FIRST_TEACHER_TOUR_ID), TEACHER_TOURS[2].id);
+
+    // 마지막 흐름 뒤에는 권할 것이 없다.
+    assert.equal(getNextTourId(state, TEACHER_TOURS.at(-1).id), null);
 });
 
 test('동행 모드는 안내서 단계를 가리킬 뿐 제목을 따로 적지 않는다', () => {

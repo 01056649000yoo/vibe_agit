@@ -49,3 +49,14 @@ export async function countActiveStudents(classId) {
     if (error) throw error;
     return count || 0;
 }
+
+/** `첫 글쓰기 수업` 의 과제 만들기 단계가 보는 숫자. 그 단계일 때만 부른다. */
+export async function countClassMissions(classId) {
+    if (!classId) return 0;
+    const { count, error } = await supabase
+        .from('writing_missions')
+        .select('id', { count: 'exact', head: true })
+        .eq('class_id', classId);
+    if (error) throw error;
+    return count || 0;
+}

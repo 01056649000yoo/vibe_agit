@@ -3,26 +3,28 @@
  *
  * 안내서(`teacherGuideJourneys.js`)는 "무엇을 하는 흐름인가"를 이미 갖고 있다.
  * 동행 모드는 그 흐름을 **옆에 붙어 다니며 한 단계씩 재생**할 뿐이므로, 제목·설명을
- * 다시 적지 않고 journey 의 단계를 그대로 가리킨다(`stepId`). 여기서 더하는 것은
- * 세 가지뿐이다.
+ * 다시 적지 않고 안내서의 8개 흐름 35단계를 **그대로 변환**한다. 단계를 손으로 옮겨
+ * 적으면 안내서만 고쳐졌을 때 둘의 말이 달라진다.
  *
- *   anchor — 화면에서 테두리를 씌울 자리(`data-tour` 값)
- *   hint   — 지금 무엇을 누르면 되는지 한 줄 (안내서의 purpose 는 설명문이라 명령문이 없다)
- *   done   — 다음 단계로 넘어가는 조건
+ * 단계마다 더하는 것은 세 가지뿐이고, 셋 다 **없어도 된다**.
  *
- * `done` 이 두 갈래인 이유: 학급·학생은 만들면 DB 에 남아 자동으로 판정할 수 있지만,
- * "글쓰기 설정 둘러보기" 는 아무것도 바꾸지 않아도 정상이다. 모든 단계를 자동 판정으로
- * 만들면 **설정을 건드리지 않는 교사가 갇힌다**. 그래서 결과가 남지 않는 단계는
- * `확인했어요` 버튼(ack)으로 넘긴다.
+ *   anchor — 화면에서 테두리를 씌울 자리(`data-tour` 값). 가리킬 버튼이 분명한 단계에만.
+ *   hint   — 지금 무엇을 누르면 되는지 한 줄. 없으면 안내서의 설명만 보여 준다.
+ *   done   — 다음으로 넘어가는 조건. 기본은 `확인했어요`(ack) 다.
+ *
+ * **기본이 ack 인 이유**: 35단계 대부분은 "이런 화면이 있다"를 한 번 보고 가는 단계다.
+ * 그런 단계까지 자동 판정으로 두면 아무것도 바꿀 생각이 없는 교사가 갇힌다. 결과가 DB 에
+ * 남는 네 단계(학급·학생·과제)만 실제 데이터로 저절로 넘어간다.
  */
 
-import { getTeacherGuideJourney } from './teacherGuideJourneys.js';
+import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from './teacherGuideJourneys.js';
 
 /** 화면 요소에 붙이는 이름. 화면 코드와 이 표가 유일한 짝이다. */
 export const TEACHER_TOUR_ANCHORS = Object.freeze({
     CLASS_CREATE: 'class-create',
     STUDENT_ADD: 'student-add',
-    WRITING_EDITOR_SETTINGS: 'writing-editor-settings'
+    WRITING_EDITOR_SETTINGS: 'writing-editor-settings',
+    MISSION_CREATE: 'mission-create'
 });
 
 /** `<Button {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>` 처럼 펼쳐 쓴다. */
@@ -30,39 +32,53 @@ export const tourAnchor = (anchorId) => ({ 'data-tour': anchorId });
 
 export const TEACHER_TOUR_ANCHOR_SELECTOR = (anchorId) => `[data-tour="${anchorId}"]`;
 
-const tourStep = (stepId, anchor, hint, done) => ({ stepId, anchor, hint, done });
+const ACK = Object.freeze({ ack: true });
 
 /**
- * 1차는 `처음 시작하기` 하나만 재생한다.
- * 가입한 날 일곱 단계를 연달아 시키면 대부분 중간에 그만둔다. 과제·피드백 흐름은
- * 학급과 학생이 준비된 뒤에 따로 권하는 편이 낫다(2차).
+ * 기본(둘러보고 `확인했어요`)에서 벗어나는 단계만 적는다.
+ * 여기 없는 단계는 화면만 열어 주고 안내서 설명을 보여 준다.
  */
-export const TEACHER_TOURS = Object.freeze([
-    Object.freeze({
-        id: 'getting-started',
-        journeyId: 'getting-started',
-        steps: Object.freeze([
-            tourStep(
-                'prepare-class',
-                TEACHER_TOUR_ANCHORS.CLASS_CREATE,
-                '테두리가 씌워진 버튼을 눌러 올해 맡은 반을 만들어 주세요. 연습이 아니라 실제로 쓰실 학급입니다.',
-                Object.freeze({ signal: 'classCount', atLeast: 1 })
-            ),
-            tourStep(
-                'invite-students',
-                TEACHER_TOUR_ANCHORS.STUDENT_ADD,
-                '학생 이름을 적고 추가를 눌러 보세요. 한 명만 등록해도 다음으로 넘어갑니다.',
-                Object.freeze({ signal: 'studentCount', atLeast: 1 })
-            ),
-            tourStep(
-                'prepare-editor',
-                TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS,
-                '학생 글쓰기 화면에 넣을 도움 기능을 켜고 꺼 보세요. 바꾸지 않아도 괜찮습니다.',
-                Object.freeze({ ack: true })
-            )
-        ])
+const STEP_RULES = Object.freeze({
+    'prepare-class': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.CLASS_CREATE,
+        hint: '테두리가 씌워진 버튼을 눌러 올해 맡은 반을 만들어 주세요. 연습이 아니라 실제로 쓰실 학급입니다.',
+        done: Object.freeze({ signal: 'classCount', atLeast: 1 })
+    }),
+    'invite-students': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.STUDENT_ADD,
+        hint: '학생 이름을 적고 추가를 눌러 보세요. 한 명만 등록해도 다음으로 넘어갑니다.',
+        done: Object.freeze({ signal: 'studentCount', atLeast: 1 })
+    }),
+    'prepare-editor': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS,
+        hint: '학생 글쓰기 화면에 넣을 도움 기능을 켜고 꺼 보세요. 바꾸지 않아도 괜찮습니다.'
+    }),
+    'create-mission': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.MISSION_CREATE,
+        hint: '테두리가 씌워진 버튼으로 글 종류를 고르고 과제를 하나 만들어 보세요. 만들면 다음으로 넘어갑니다.',
+        done: Object.freeze({ signal: 'missionCount', atLeast: 1 })
     })
-]);
+});
+
+/**
+ * 안내서의 흐름 8개를 그대로 동행 모드로 만든다.
+ * 안내서에 단계를 더하면 동행 모드에도 저절로 생긴다 — 두 곳을 맞출 일이 없다.
+ */
+export const TEACHER_TOURS = Object.freeze(TEACHER_GUIDE_JOURNEYS.map((journey) => Object.freeze({
+    id: journey.id,
+    journeyId: journey.id,
+    steps: Object.freeze(journey.steps.map((journeyStep) => {
+        const rule = Reflect.get(STEP_RULES, journeyStep.id) || {};
+        return Object.freeze({
+            stepId: journeyStep.id,
+            anchor: rule.anchor || null,
+            hint: rule.hint || null,
+            done: rule.done || ACK
+        });
+    }))
+})));
+
+export const FIRST_TEACHER_TOUR_ID = TEACHER_TOURS[0].id;
 
 export const getTeacherTour = (tourId) => TEACHER_TOURS.find((tour) => tour.id === tourId) || null;
 
@@ -182,6 +198,31 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
     }
 
     return next;
+};
+
+/**
+ * 이 흐름을 끝낸 뒤 이어서 볼 다음 흐름.
+ * 35단계를 한 줄로 세워 두고 끝까지 가라고 하면 아무도 못 간다. 흐름 하나가 끝날 때마다
+ * "이어서 볼까요" 를 권하고, 이미 본 흐름은 건너뛴다.
+ */
+export const getNextTourId = (state, tourId) => {
+    const index = TEACHER_TOURS.findIndex((tour) => tour.id === tourId);
+    if (index === -1) return null;
+    const normalized = normalizeTourState(state);
+    const next = TEACHER_TOURS
+        .slice(index + 1)
+        .find((tour) => Reflect.get(normalized.tours, tour.id)?.status !== 'done');
+    return next?.id || null;
+};
+
+/** 안내서 목차에 "둘러봤음" 을 표시하려고 상태만 뽑아 준다. */
+export const getTourStatuses = (state) => {
+    const normalized = normalizeTourState(state);
+    const statuses = {};
+    TEACHER_TOURS.forEach((tour) => {
+        Reflect.set(statuses, tour.id, Reflect.get(normalized.tours, tour.id)?.status || 'idle');
+    });
+    return statuses;
 };
 
 /** 첫 걸음 카드를 띄울지. 한 번 끝냈거나 스스로 그만둔 교사에게는 다시 권하지 않는다. */

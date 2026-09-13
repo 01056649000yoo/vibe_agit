@@ -316,3 +316,8 @@
 .teacher-guide-center__tour-button:hover {
     background: var(--ui-primary-hover);
 }
+
+.teacher-guide-center__nav-done {
+    margin-left: auto;
+    font-size: var(--ui-text-xs);
+}

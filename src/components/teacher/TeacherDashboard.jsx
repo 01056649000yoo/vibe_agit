@@ -698,6 +698,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             <TeacherTourCompanion
                 tour={tour}
                 journeyTitle={tourJourney?.title || '처음 시작하기'}
+                nextJourneyTitle={getTeacherGuideJourney(tour.nextTourId)?.title || null}
                 onNavigate={handleWorkspaceNavigate}
             />
 
@@ -708,6 +709,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     onClose={() => setGuideCenterRequest(null)}
                     onNavigate={handleWorkspaceNavigate}
                     onStartTour={tour.start}
+                    tourStatuses={tour.statuses}
                     showAiAssistant={guideAiAvailability?.enabled === true}
                     guideAiRemaining={guideAiAvailability?.remaining_today}
                 />

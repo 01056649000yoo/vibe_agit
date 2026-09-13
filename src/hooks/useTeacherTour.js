@@ -4,36 +4,50 @@
  * 무엇이 다음 단계인지는 `teacherTour.js`(순수 함수)가 정한다. 이 훅은 그 결정을
  * DB 에 적고, 자동 판정에 필요한 숫자만 모은다.
  *
- * 학생 수를 **그 단계일 때만** 센다: 동행 모드를 쓰지 않는 교사에게는 조회가 한 번도
+ * 숫자는 **그 단계일 때만** 센다: 동행 모드를 쓰지 않는 교사에게는 조회가 한 번도
  * 붙지 않아야 한다. 학급 수는 대시보드가 이미 들고 있으므로 그대로 받는다.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+    FIRST_TEACHER_TOUR_ID,
+    getNextTourId,
     getTeacherTourSteps,
     getTourEntry,
+    getTourStatuses,
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
     shouldOfferTour
 } from '../guides/teacherTour.js';
-import { countActiveStudents, loadTeacherTourState, saveTeacherTourState } from '../lib/teacherTourStore';
+import { countActiveStudents, countClassMissions, loadTeacherTourState, saveTeacherTourState } from '../lib/teacherTourStore';
 
-const DEFAULT_TOUR_ID = 'getting-started';
-const STUDENT_POLL_MS = 2500;
+const SIGNAL_POLL_MS = 2500;
 
-const useTeacherTour = ({ userId, classes = [], activeClassId = null, tourId = DEFAULT_TOUR_ID }) => {
+// 자동 판정이 필요한 단계에서만, 그 단계가 보는 숫자만 센다.
+const SIGNAL_READERS = Object.freeze({
+    studentCount: countActiveStudents,
+    missionCount: countClassMissions
+});
+
+const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
     const [state, setState] = useState(() => normalizeTourState(null));
     const [loaded, setLoaded] = useState(false);
-    // 학급을 바꾸면 앞 학급의 학생 수로 다음 단계가 열리면 안 된다. 학급 이름표를 함께 들고 다닌다.
-    const [studentTally, setStudentTally] = useState(null);
+    const [activeTourId, setActiveTourId] = useState(FIRST_TEACHER_TOUR_ID);
+    // 학급을 바꾸면 앞 학급의 숫자로 다음 단계가 열리면 안 된다. 학급 이름표를 함께 들고 다닌다.
+    const [tally, setTally] = useState(null);
+    /*
+     * "흐름 하나를 방금 끝냈다" 는 **이번 접속에서만** 참이다. DB 의 done 으로 판단하면
+     * 다음 로그인 때마다 끝난 인사가 다시 뜬다.
+     */
+    const [justFinishedTourId, setJustFinishedTourId] = useState(null);
     const stateRef = useRef(state);
     const ready = !userId || loaded;
 
-    const steps = useMemo(() => getTeacherTourSteps(tourId), [tourId]);
-    const entry = useMemo(() => getTourEntry(state, tourId), [state, tourId]);
+    const steps = useMemo(() => getTeacherTourSteps(activeTourId), [activeTourId]);
+    const entry = useMemo(() => getTourEntry(state, activeTourId), [state, activeTourId]);
     const stepIndex = useMemo(() => {
-        const found = steps.findIndex((step) => step.stepId === entry?.stepId);
+        const found = steps.findIndex((candidate) => candidate.stepId === entry?.stepId);
         return found === -1 ? 0 : found;
     }, [steps, entry]);
     const step = steps.at(stepIndex) || null;
@@ -52,35 +66,45 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null, tourId = D
         return () => { cancelled = true; };
     }, [userId]);
 
-    const apply = useCallback((action) => {
+    const apply = useCallback((action, tourId = activeTourId) => {
         const next = reduceTourState(stateRef.current, tourId, action);
         stateRef.current = next;
         setState(next);
+        setJustFinishedTourId(getTourEntry(next, tourId)?.status === 'done' ? tourId : null);
         void saveTeacherTourState(userId, next).catch(() => {});
-    }, [tourId, userId]);
+    }, [activeTourId, userId]);
 
-    // 학생 수는 그 단계일 때만, 그 학급만 센다.
-    const needsStudentCount = isRunning && step?.done?.signal === 'studentCount';
+    const start = useCallback((tourId = FIRST_TEACHER_TOUR_ID) => {
+        setActiveTourId(tourId);
+        apply('start', tourId);
+    }, [apply]);
+
+    const signalName = isRunning && !step?.done?.ack ? step?.done?.signal : null;
     useEffect(() => {
-        if (!needsStudentCount || !activeClassId) return undefined;
+        const reader = signalName ? Reflect.get(SIGNAL_READERS, signalName) : null;
+        if (!reader || !activeClassId) return undefined;
         let cancelled = false;
         const read = () => {
-            countActiveStudents(activeClassId)
-                .then((count) => { if (!cancelled) setStudentTally({ classId: activeClassId, count }); })
+            reader(activeClassId)
+                .then((count) => { if (!cancelled) setTally({ classId: activeClassId, signal: signalName, count }); })
                 .catch(() => {});
         };
         read();
-        const timerId = window.setInterval(read, STUDENT_POLL_MS);
+        const timerId = window.setInterval(read, SIGNAL_POLL_MS);
         return () => {
             cancelled = true;
             window.clearInterval(timerId);
         };
-    }, [needsStudentCount, activeClassId]);
+    }, [signalName, activeClassId]);
 
-    const signals = useMemo(() => ({
-        classCount: classes.length,
-        studentCount: studentTally?.classId === activeClassId ? studentTally.count : 0
-    }), [classes.length, studentTally, activeClassId]);
+    const signals = useMemo(() => {
+        const observed = tally?.classId === activeClassId ? tally : null;
+        return {
+            classCount: classes.length,
+            studentCount: observed?.signal === 'studentCount' ? observed.count : 0,
+            missionCount: observed?.signal === 'missionCount' ? observed.count : 0
+        };
+    }, [classes.length, tally, activeClassId]);
 
     // 교사가 실제로 해냈으면 저절로 다음 단계로 넘어간다.
     useEffect(() => {
@@ -89,19 +113,30 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null, tourId = D
         apply('complete');
     }, [isRunning, step, signals, apply]);
 
+    const statuses = useMemo(() => getTourStatuses(state), [state]);
+    const nextTourId = useMemo(
+        () => (justFinishedTourId ? getNextTourId(state, justFinishedTourId) : null),
+        [state, justFinishedTourId]
+    );
+
     return {
         ready,
-        tourId,
+        tourId: activeTourId,
         steps,
         step,
         stepIndex,
         totalSteps: steps.length,
         isRunning,
         status: entry?.status || 'idle',
+        statuses,
         completedStepIds: entry?.completed || [],
+        // 흐름 하나가 끝나면 이어서 볼 다음 흐름(이미 본 흐름은 건너뛴다). 없으면 null.
+        justFinishedTourId,
+        nextTourId,
+        dismissFinished: useCallback(() => setJustFinishedTourId(null), []),
         // 이미 학급이 있는 교사에게는 첫 걸음 카드를 권하지 않는다.
-        canOffer: ready && shouldOfferTour(state, tourId),
-        start: useCallback(() => apply('start'), [apply]),
+        canOffer: ready && shouldOfferTour(state, FIRST_TEACHER_TOUR_ID),
+        start,
         acknowledge: useCallback(() => apply('complete'), [apply]),
         skipStep: useCallback(() => apply('skipStep'), [apply]),
         back: useCallback(() => apply('back'), [apply]),

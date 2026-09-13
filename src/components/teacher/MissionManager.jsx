@@ -22,6 +22,7 @@ import EvaluationReport from './EvaluationReport';
 import TeacherGuideButton from './TeacherGuideButton';
 import TeacherSubmissionBoard from './TeacherSubmissionBoard';
 import CardSizeControl from '../../modules/card-layout/CardSizeControl';
+import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
 
 const GENRE_MISSION_BUILDERS = new Map(
     getGenreMissionTypes()
@@ -310,6 +311,7 @@ const MissionManager = ({
                     )}
                     {!isSubmissionBoardView && (
                         <Button
+                            {...tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE)}
                             onClick={() => {
                                 if (isFormOpen) {
                                     handleCancelEdit();

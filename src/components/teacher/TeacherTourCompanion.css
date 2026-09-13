@@ -60,11 +60,21 @@
     color: var(--ui-ink-strong);
 }
 
-.teacher-tour__hint {
+.teacher-tour__purpose {
     margin: 0;
     font-size: var(--ui-text-sm);
     line-height: var(--ui-line-body);
     color: var(--ui-ink-muted);
+}
+
+.teacher-tour__hint {
+    margin: var(--ui-space-2) 0 0;
+    padding: var(--ui-space-2) var(--ui-space-3);
+    background: var(--ui-primary-soft);
+    border-radius: var(--ui-radius-sm);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-strong);
 }
 
 .teacher-tour__missing {
