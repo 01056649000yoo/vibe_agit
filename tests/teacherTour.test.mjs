@@ -428,8 +428,16 @@ test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () =>
          * 도구처럼 한 단계 더 들어가야 보이는 메뉴에서, 지금 열려 있는 **앞 단계 화면**이
          * 통째로 밝아져 "3번인데 4번 화면을 짚는다" 로 보였다(2026-09-13 제보).
          */
-        assert.equal(step.fallbackAnchor, null,
+        /*
+         * 못 찾았을 때 본문 전체를 두르지는 않는다(엉뚱한 화면이 밝아진다). 대신 구역·
+         * 도구처럼 한 단계 더 들어가야 보이는 메뉴는 **먼저 눌러야 할 바깥 메뉴**로 물러선다.
+         */
+        assert.notEqual(step.fallbackAnchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
             `${step.stepId} 가 못 찾았을 때 엉뚱한 화면을 두릅니다.`);
+        if (step.anchor.startsWith('section:') || step.anchor.startsWith('tool:') || step.anchor.startsWith('module:')) {
+            assert.match(String(step.fallbackAnchor), /^tab:/,
+                `${step.stepId} 는 그 화면에 들어가야 보이는 메뉴인데, 먼저 누를 곳을 알려 주지 않습니다.`);
+        }
     });
 
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
@@ -552,11 +560,11 @@ test('테두리는 지금 단계의 것일 때만 그린다', () => {
      * 어긋난 테두리보다 없는 편이 낫다.
      */
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
-    assert.match(panel, /const useAnchorRect = \(stepId, anchorId, isActive\) => \{/);
+    assert.match(panel, /const useAnchorRect = \(stepId, anchorId, fallbackAnchorId, isActive\) => \{/);
     assert.match(panel, /measured\?\.stepId === stepId && measured\?\.anchorId === anchorId/);
-    assert.match(panel, /useAnchorRect\(step\?\.stepId, step\?\.anchor, isRunning\)/);
+    assert.match(panel, /useAnchorRect\(step\?\.stepId, step\?\.anchor, step\?\.fallbackAnchor, isRunning\)/);
     // 단계가 바뀌면 다시 잰다.
-    assert.match(panel, /\}, \[stepId, anchorId, isActive\]\);/);
+    assert.match(panel, /\}, \[stepId, anchorId, fallbackAnchorId, isActive\]\);/);
 });
 
 test('한 흐름 안에서 서로 다른 단계가 같은 곳을 짚지 않는다', () => {
@@ -577,4 +585,61 @@ test('한 흐름 안에서 서로 다른 단계가 같은 곳을 짚지 않는�
     });
     const spelling = getTeacherTourSteps('spelling-and-ai').map((step) => step.anchor);
     assert.equal(new Set(spelling).size, spelling.length, '맞춤법·AI 흐름의 세 단계가 같은 곳을 짚습니다.');
+});
+
+test('안쪽 메뉴는 먼저 누를 바깥 메뉴를 함께 안다', () => {
+    /*
+     * 2026-09-13 제보: `AI 피드백 기준 정하기` 에서 하이라이트가 빠졌다. 설정 화면 안의
+     * 구역을 짚는데, 대시보드에 있는 동안에는 그 구역 메뉴가 화면에 없어서다.
+     */
+    const step = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id))
+        .find((candidate) => candidate.stepId === 'set-ai-standards');
+    assert.equal(step.anchor, 'section:ai-prompts');
+    assert.equal(step.fallbackAnchor, 'tab:settings');
+
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /findVisibleAnchor\(anchorId\) \|\| findVisibleAnchor\(fallbackAnchorId\)/);
+});
+
+test('모든 단계의 이름표가 실제로 그려지는 곳을 가리킨다', () => {
+    /*
+     * 2026-09-13 전면 재점검. "해당 페이지와 스포트라이트가 맞지 않는다" 는 제보가
+     * 거듭됐는데, 뿌리는 늘 같았다 — 이름표는 만들어 두었는데 **그 자리를 그리는 화면이
+     * 없거나**, 한 단계 더 들어가야 나오는 메뉴인데 먼저 누를 곳을 알려 주지 않았다.
+     * 36단계를 한꺼번에 대조한다.
+     */
+    const nav = read('src/constants/teacherNav.js');
+    const settings = read('src/components/teacher/TeacherSettingsHub.jsx');
+    const registry = read('src/modules/registry.js');
+    const handWritten = new Set(Object.values(TEACHER_TOUR_ANCHORS));
+
+    const resolves = (anchor) => {
+        if (!anchor) return false;
+        if (handWritten.has(anchor)) return true;
+        const kind = anchor.slice(0, anchor.indexOf(':'));
+        const id = anchor.slice(anchor.indexOf(':') + 1);
+        if (kind === 'tab') return nav.includes(`id: '${id}'`);
+        if (kind === 'launch') return nav.includes(`id: '${id}'`) && nav.includes('launchHref');
+        // 설정 구역은 고정 목록이거나 `module:<모듈>` 로 만들어진다.
+        if (kind === 'section') {
+            return settings.includes(`id: '${id}'`)
+                || (id.startsWith('module:') && registry.includes(`/${id.slice('module:'.length)}/manifest`));
+        }
+        if (kind === 'tool' || kind === 'module') return registry.includes(`/${id}/manifest`);
+        return false;
+    };
+
+    const problems = [];
+    TEACHER_TOURS.forEach((tour) => {
+        getTeacherTourSteps(tour.id).forEach((step) => {
+            if (!resolves(step.anchor)) problems.push(`${tour.id}/${step.stepId}: 이름표 ${step.anchor} 를 그리는 화면이 없다`);
+            if (/^(section|tool|module):/.test(step.anchor) && !step.fallbackAnchor) {
+                problems.push(`${tour.id}/${step.stepId}: 한 단계 더 들어가야 보이는데 먼저 누를 곳이 없다`);
+            }
+            if (step.fallbackAnchor && !resolves(step.fallbackAnchor)) {
+                problems.push(`${tour.id}/${step.stepId}: 대비책 ${step.fallbackAnchor} 를 그리는 화면이 없다`);
+            }
+        });
+    });
+    assert.deepEqual(problems, []);
 });

@@ -15,6 +15,7 @@ import {
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
+    sectionAnchorId,
     tabAnchorId,
     tourAnchor
 } from '../guides/teacherTour.js';
@@ -172,6 +173,7 @@ export function TeacherTourLiveHook() {
     const [guideOpen, setGuideOpen] = useState(false);
     const [tourId, setTourId] = useState(FIRST_TEACHER_TOUR_ID);
     const [openedTab, setOpenedTab] = useState('');
+    const [openedSection, setOpenedSection] = useState('');
     const tour = useTeacherTour({ userId: null, classes, classesLoaded: true, activeClassId: 'preview-class' });
     const journey = getTeacherGuideJourney(tour.tourId);
 
@@ -197,7 +199,7 @@ export function TeacherTourLiveHook() {
 
             {/* 가짜 하위 메뉴 — 진짜 화면과 같은 이름표·같은 표시(aria-selected)를 쓴다. */}
             <div role="tablist" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-                {['reading-logs', 'diaries', 'archive', 'recent-activity', 'student-agits', 'comments', 'footprints'].map((tabId) => (
+                {['reading-logs', 'diaries', 'archive', 'recent-activity', 'student-agits', 'comments', 'footprints', 'settings'].map((tabId) => (
                     <button
                         key={tabId}
                         type="button"
@@ -211,6 +213,24 @@ export function TeacherTourLiveHook() {
                     </button>
                 ))}
             </div>
+
+            {/* 설정 화면 안의 구역 메뉴 — 설정 탭을 열어야 나온다(진짜 화면과 같은 짜임). */}
+            {openedTab === 'settings' && (
+                <div role="tablist" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                    {['class', 'writing-editor', 'ai-prompts', 'module:spelling-learning'].map((sectionId) => (
+                        <button
+                            key={sectionId}
+                            type="button"
+                            aria-current={openedSection === sectionId ? 'page' : undefined}
+                            onClick={() => setOpenedSection(sectionId)}
+                            {...tourAnchor(sectionAnchorId(sectionId))}
+                            style={{ padding: '8px 14px' }}
+                        >
+                            {sectionId}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{ display: 'grid', gap: 40, maxWidth: 600 }}>
                 <button type="button" onClick={() => setClasses((current) => [...current, { id: `c${current.length}` }])} {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>

@@ -43,14 +43,18 @@ const isOpenedMenu = (element) => element?.getAttribute('aria-selected') === 'tr
  * 그대로 남아** 오른쪽 아래 설명과 테두리가 서로 다른 곳을 가리켰다(2026-09-13 제보).
  * 지금 단계의 것이 아니면 그리지 않는다 — 어긋난 테두리보다 없는 편이 낫다.
  */
-const useAnchorRect = (stepId, anchorId, isActive) => {
+const useAnchorRect = (stepId, anchorId, fallbackAnchorId, isActive) => {
     const [measured, setMeasured] = useState(null);
 
     useEffect(() => {
         if (!isActive || !anchorId) return undefined;
         let scrolledOnce = false;
         const measure = () => {
-            const element = findVisibleAnchor(anchorId);
+            /*
+             * 구역·도구 메뉴는 그 화면에 들어가야 나온다. 아직이면 **먼저 눌러야 할
+             * 바깥 메뉴**로 물러선다(설정·학급운영도구). 본문 전체를 두르지는 않는다.
+             */
+            const element = findVisibleAnchor(anchorId) || findVisibleAnchor(fallbackAnchorId);
             if (!element) {
                 setMeasured(null);
                 return;
@@ -77,7 +81,7 @@ const useAnchorRect = (stepId, anchorId, isActive) => {
             window.removeEventListener('resize', measure);
             window.removeEventListener('scroll', measure, true);
         };
-    }, [stepId, anchorId, isActive]);
+    }, [stepId, anchorId, fallbackAnchorId, isActive]);
 
     // 단계와 이름표가 **둘 다** 지금 것일 때만 그린다.
     return isActive && measured?.stepId === stepId && measured?.anchorId === anchorId ? measured : null;
@@ -85,7 +89,7 @@ const useAnchorRect = (stepId, anchorId, isActive) => {
 
 const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate, onOpenGuide }) => {
     const { isRunning, step, stepIndex, totalSteps } = tour;
-    const rect = useAnchorRect(step?.stepId, step?.anchor, isRunning);
+    const rect = useAnchorRect(step?.stepId, step?.anchor, step?.fallbackAnchor, isRunning);
     const navigatedStepRef = useRef(null);
 
     /*
@@ -175,8 +179,17 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
      * 메뉴 단계의 한 줄 안내는 단계마다 적지 않는다 — 서른 줄을 손으로 쓰면 메뉴 이름이
      * 바뀔 때마다 어긋난다. "테두리가 씌워진 메뉴" 라고만 말하면 늘 맞다.
      */
-    const menuHint = step.spotlight === TOUR_SPOTLIGHT_MENU
-        ? '테두리가 씌워진 메뉴를 눌러 이 화면을 열어 보세요. 열면 안내가 조용해집니다.'
+    /*
+     * 메뉴를 눌러 들어왔는가. 들어온 뒤에는 **다음으로 가는 단추를 분명히** 보여 준다 —
+     * 눌러도 안 넘어간다는 제보가 있었다(2026-09-13). 자동으로 넘기지는 않는다:
+     * 들어가자마자 넘어가면 정작 설명을 읽을 새가 없다.
+     */
+    const isMenuStep = step.spotlight === TOUR_SPOTLIGHT_MENU;
+    const arrived = isMenuStep && rect?.opened === true;
+    const menuHint = isMenuStep
+        ? (arrived
+            ? '열렸습니다. 아래 설명을 읽고 **다음 단계로**를 눌러 주세요.'
+            : '테두리가 씌워진 메뉴를 눌러 이 화면을 열어 보세요.')
         : null;
 
     return (
@@ -231,7 +244,9 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 <h2 className="teacher-tour__title">{step.title}</h2>
                 {/* 설명은 안내서 원본(purpose)을 그대로 쓴다. 눌러야 할 것이 분명한 단계에만 hint 를 더 붙인다. */}
                 <p className="teacher-tour__purpose">{step.purpose}</p>
-                {(step.hint || menuHint) && <p className="teacher-tour__hint">{step.hint || menuHint}</p>}
+                {(step.hint || menuHint) && (
+                    <p className="teacher-tour__hint">{renderEmphasis(step.hint || menuHint)}</p>
+                )}
                 {detail && (
                     <div className="teacher-tour__detail">
                         {detail.points.length > 0 && (
@@ -257,7 +272,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 <div className="teacher-tour__actions">
                     {needsAck ? (
                         <button type="button" className="teacher-tour__primary" onClick={tour.acknowledge}>
-                            확인했어요
+                            {arrived ? '다음 단계로 →' : '확인했어요'}
                         </button>
                     ) : (
                         // 누를 것이 아니라 기다리면 된다는 안내다. 죽은 버튼을 두면 눌러 보고 고장으로 여긴다.

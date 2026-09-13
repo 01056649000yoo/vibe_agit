@@ -65,6 +65,19 @@ const deriveAnchor = (target) => {
 };
 
 /*
+ * 구역·도구·놀이 메뉴는 **한 단계 더 들어가야** 화면에 나온다. 아직 그 화면이 아니면
+ * 짚을 것이 없어 하이라이트가 통째로 사라진다(2026-09-13 제보 — `AI 피드백 기준 정하기`).
+ *
+ * 그때는 **먼저 눌러야 할 바깥 메뉴**(설정·학급운영도구·놀이터)로 물러선다. 본문 전체를
+ * 두르는 대비책과는 다르다 — 그것은 엉뚱한 화면을 밝혀 더 헷갈렸다.
+ */
+const deriveFallbackAnchor = (target, anchor) => {
+    if (!target?.tab) return null;
+    const outer = tabAnchorId(target.tab);
+    return outer === anchor ? null : outer;
+};
+
+/*
  * 짚는 방식은 두 가지다.
  *
  *   'target' — 눌러야 할 자리가 분명한 단계. 주변을 어둡게 덮고 그 자리만 남긴다.
@@ -176,7 +189,7 @@ export const getTeacherTourSteps = (tourId) => {
                  * 통째로 밝아져 "3번인데 4번 화면을 짚는다" 로 보인다(2026-09-13 제보).
                  * 없는 것을 억지로 짚느니 아무것도 짚지 않고 `화면 열기` 를 권한다.
                  */
-                fallbackAnchor: null,
+                fallbackAnchor: mustClick ? null : deriveFallbackAnchor(journeyStep.target, derived),
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,
