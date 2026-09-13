@@ -6,8 +6,9 @@ import { readFileSync } from 'node:fs';
 
 const read = (file) => readFileSync(file, 'utf8');
 const picker = read('src/modules/class-agit/anthology/SourcePicker.jsx');
-const bulk = read('src/modules/class-agit/anthology/MissionBulkPicker.jsx');
+const bulk = read('src/modules/class-agit/selection/MissionBulkPicker.jsx');
 const browser = read('src/modules/class-agit/selection/SourceBrowser.jsx');
+const workspace = read('src/modules/class-agit/selection/SelectionWorkspace.jsx');
 const tuner = read('src/modules/class-agit/anthology/PageTuner.jsx');
 
 const classId = 'class-1';
@@ -115,4 +116,30 @@ test('쪽 다듬기는 목록을 화면에서만 좁힌다', () => {
     assert.match(tuner, /\{shown\.map\(\(work\) => \{/);
     // 쪽 번호와 첫 작품은 원래 값을 그대로 쓴다.
     assert.match(tuner, /const first = work\.index === 0;/);
+});
+
+test('전시관도 같은 방법으로 담는다', () => {
+    /*
+     * 2026-09-14 요청: 문집에 넣은 담는 방식을 전시관에도. 같은 부품을 함께 쓴다.
+     *
+     * 다만 자리가 다르다 — 문집은 한 권의 남은 자리지만 전시는 **그 전시실**의 남은 자리다.
+     * 전시실 하나는 20편이라 학급 전체 미션이 한 방에 들어가지 않는다. 그래서 미션 이름으로
+     * 전시실을 만들어 담는 길을 함께 둔다.
+     */
+    assert.match(workspace, /import MissionBulkPicker from '\.\/MissionBulkPicker\.jsx'/);
+    assert.match(workspace, /const \[way, setWay\] = useState\('mission'\)/);
+    assert.match(workspace, /capacity=\{remaining\}/);
+    assert.match(workspace, /const remaining = room \? limits\.worksPerRoom - items\.length : limits\.maxWorks - draft\.items\.length;/);
+    assert.match(workspace, /label: \(count\) => `새 전시실 만들어 \$\{count\}편 담기`/);
+    // 새 전시실에 담을 수 있는 수는 방 하나(20편)와 전시 전체 남은 자리 중 작은 쪽이다.
+    assert.match(workspace, /capacity: Math\.min\(limits\.worksPerRoom, limits\.maxWorks - draft\.items\.length\)/);
+});
+
+test('전시는 50편씩 끊어 담는다', () => {
+    /*
+     * `addExhibitionSources` 는 한 번에 50편까지다. 미배정처럼 자리가 넓은 곳에 한꺼번에
+     * 넘기면 통째로 튕긴다. 자리를 50으로 줄이는 대신 **끊어서** 넣는다 — 줄이면 덜 담긴다.
+     */
+    assert.match(workspace, /for \(let at = 0; at < sources\.length; at \+= limits\.selectionBatch\)/);
+    assert.match(workspace, /next = addExhibitionSources\(next, sources\.slice\(at, at \+ limits\.selectionBatch\), target\)/);
 });

@@ -56,20 +56,6 @@
     box-shadow: var(--ui-focus-ring);
 }
 
-.teacher-dashboard__nav-badge {
-    display: inline-flex;
-    min-height: 17px;
-    align-items: center;
-    padding: 1px 5px;
-    border: 1px solid #C7D2FE;
-    border-radius: var(--ui-radius-pill);
-    background: #EEF2FF;
-    color: #4F46E5;
-    font-size: var(--ui-text-xs);
-    font-weight: 900;
-    letter-spacing: .025em;
-    line-height: 1;
-}
 
 /*
  * 활용 안내서는 **머리말에서 가장 먼저 눈에 띄어야 하는 단추**다. 옅은 회색 도움말과

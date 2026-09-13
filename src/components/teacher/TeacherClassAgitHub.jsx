@@ -21,7 +21,7 @@ function AccessGate({ activeClass, allowInternal, section }) {
     : (
     <section className="teacher-class-agit" aria-labelledby="teacher-class-agit-title">
         <div className="teacher-class-agit__hero">
-            <span className="teacher-class-agit__badge">Beta · 준비 중</span>
+            <span className="teacher-class-agit__badge">준비 중</span>
             <span className="teacher-class-agit__icon" aria-hidden="true">🏡</span>
             <h1 id="teacher-class-agit-title">우리반 아지트</h1>
             <TeacherGuideButton tabId="class-agit" variant="help" />

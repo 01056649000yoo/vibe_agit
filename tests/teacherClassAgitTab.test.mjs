@@ -21,7 +21,9 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
     const labGroup = teacherNav.slice(labIndex, classAgitIndex);
     assert.match(labGroup, /label: '글쓰기 연구소'/);
     assert.doesNotMatch(labGroup, /beta/i);
-    assert.match(teacherNav, /id: 'class-agit'[\s\S]*label: '우리반 아지트'[\s\S]*badge: 'BETA'[\s\S]*defaultTab: 'class-agit'/);
+    // 2026-09-14: `BETA` 배지를 뗐다. 이름과 기본 탭만 남는다.
+    assert.match(teacherNav, /id: 'class-agit'[\s\S]*label: '우리반 아지트'[\s\S]*defaultTab: 'class-agit'/);
+    assert.doesNotMatch(teacherNav, /badge: 'BETA'/);
     const classAgitGroup = teacherNav.slice(classAgitIndex, operationsIndex);
     assert.doesNotMatch(classAgitGroup, /launchHref/);
     assert.match(dashboard, /lazy\(\(\) => import\('\.\/TeacherClassAgitHub'\)\)/);
@@ -30,7 +32,9 @@ test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교�
 });
 
 test('우리반 아지트 준비 화면은 확정된 전시·문집 업데이트 개요를 보여 준다', () => {
-    assert.match(hub, /Beta · 준비 중/);
+    // 2026-09-14: `Beta` 를 뗐다. 아직 열리지 않은 학급에는 `준비 중` 만 보인다.
+    assert.match(hub, /teacher-class-agit__badge">준비 중</);
+    assert.doesNotMatch(hub, /Beta/i);
     assert.match(hub, /전시하고 문집으로 남길 공간을 준비하고 있습니다/);
     assert.match(hub, /CLASS_AGIT_PREPARATION_ROADMAP/);
     assert.match(hub, /<PreparationRoadmap/);

@@ -38,7 +38,6 @@ export const TEACHER_NAV_GROUPS = [
         id: 'class-agit',
         label: '우리반 아지트',
         icon: '🏡',
-        badge: 'BETA',
         navSection: 'writing',
         defaultTab: 'class-agit',
         secondaryShape: 'sidebar',

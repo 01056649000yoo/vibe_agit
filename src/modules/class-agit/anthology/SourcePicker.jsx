@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import SourceBrowser from '../selection/SourceBrowser.jsx';
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
-import MissionBulkPicker from './MissionBulkPicker.jsx';
+import MissionBulkPicker from '../selection/MissionBulkPicker.jsx';
 
 /*
  * 담는 방법이 둘이다.
@@ -29,6 +29,9 @@ export default function SourcePicker({ classId, api, items, onAdd, onClose }) {
         </div>
         {way === 'mission'
             ? <MissionBulkPicker classId={classId} api={api} items={items} onAdd={onAdd}
+                capacity={Math.max(0, limits.anthologyWorks - items.length)}
+                capacityNote={`남은 자리 ${Math.max(0, limits.anthologyWorks - items.length)}편 · 담음 ${items.length}/${limits.anthologyWorks}편`}
+                addLabel={(count) => `${count}편 모두 담기`}
                 onPickMission={(mission) => { setStartMission(mission); setWay('work'); }} />
             : <SourceBrowser classId={classId} api={api} items={items} maximum={limits.anthologyWorks} scope="글꽃 책방"
                 initialMission={startMission} onAdd={onAdd} />}

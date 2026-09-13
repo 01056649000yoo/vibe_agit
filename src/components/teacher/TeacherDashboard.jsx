@@ -488,13 +488,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 key={group.id}
                                 href={launchHref}
                                 className={itemClassName}
-                                aria-label={`${group.label}${group.badge ? ` ${group.badge}` : ''}로 이동`}
+                                aria-label={`${group.label}로 이동`}
                                 style={itemStyle}
                                 {...tourAnchor(launchAnchorId(group.id))}
                             >
                                 <span aria-hidden="true">{group.icon}</span>
                                 {group.label}
-                                {group.badge && <span className="teacher-dashboard__nav-badge">{group.badge}</span>}
                             </a>
                         );
                     }
@@ -511,7 +510,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         >
                             <span aria-hidden="true">{group.icon}</span>
                             {group.label}
-                            {group.badge && <span className="teacher-dashboard__nav-badge">{group.badge}</span>}
                         </button>
                     );
                 })}

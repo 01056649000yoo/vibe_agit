@@ -238,7 +238,6 @@ function UiPreview() {
                 <a key={group.id} href={group.launchHref} className={className}>
                   <span aria-hidden="true">{group.icon}</span>
                   {group.label}
-                  {group.badge && <span className="ui-preview__nav-badge">{group.badge}</span>}
                   <span aria-hidden="true">↗</span>
                 </a>
               )
@@ -254,7 +253,6 @@ function UiPreview() {
               >
                 <span aria-hidden="true">{group.icon}</span>
                 {group.label}
-                {group.badge && <span className="ui-preview__nav-badge">{group.badge}</span>}
               </button>
             )
           })}
