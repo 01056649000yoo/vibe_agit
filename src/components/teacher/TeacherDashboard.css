@@ -71,7 +71,24 @@
     line-height: 1;
 }
 
-.teacher-guide-center-trigger { margin-right: 0; }
+/*
+ * 활용 안내서는 **머리말에서 가장 먼저 눈에 띄어야 하는 단추**다. 옅은 회색 도움말과
+ * 같은 모양이라 있는 줄 모르고 지나친다는 제보(2026-09-13). 채운 색과 굵은 글씨로 세운다.
+ */
+.teacher-guide-center-trigger {
+    margin-right: 0;
+    height: 36px!important;
+    padding: 0 14px!important;
+    border: 1px solid #4F46E5!important;
+    border-radius: 999px!important;
+    background: #4F46E5!important;
+    color: #FFFFFF!important;
+    font-size: var(--ui-text-sm)!important;
+    font-weight: 900!important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, .28);
+}
+
+.teacher-guide-center-trigger:hover { background: #4338CA!important; border-color: #4338CA!important; }
 .teacher-class-board-shortcut {
     gap: 5px;
     border: 1px solid #BFDBFE!important;

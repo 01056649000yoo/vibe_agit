@@ -66,8 +66,15 @@ const MissionItem = memo(({
                     <button onClick={(e) => {
                         e.stopPropagation();
                         onConnectLabSources(mission);
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7C3AED', fontSize: '1rem', padding: '4px' }} title="연구소 자료 연결" aria-label={`${mission.title} 연구소 자료 연결`}>
-                        🧪
+                    }} style={{
+                        /*
+                         * 옆의 수정·보관·삭제는 아이콘에 글자가 붙어 있는데 이것만 아이콘뿐이라
+                         * 무엇인지 알 수 없었다(2026-09-13 지적). 같은 모양으로 맞춘다.
+                         */
+                        ...CARD_ACTION_BUTTON_STYLE,
+                        background: '#F5F3FF', border: '1px solid #DDD6FE', color: '#6D28D9'
+                    }} title="연구소 자료 연결" aria-label={`${mission.title} 연구소 자료 연결`}>
+                        🧪 연구소 연결
                     </button>
                     <button onClick={(e) => {
                         e.stopPropagation();

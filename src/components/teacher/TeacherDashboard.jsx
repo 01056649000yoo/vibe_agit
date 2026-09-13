@@ -384,6 +384,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     )}
                     <GuideInfoButton
                         variant="help"
+                        icon="🔍"
                         text="활용 안내서"
                         className="teacher-guide-center-trigger"
                         label="끄적끄적 아지트 활용 안내서 열기"
