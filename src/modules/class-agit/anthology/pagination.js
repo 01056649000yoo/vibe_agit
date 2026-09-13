@@ -70,11 +70,14 @@ export function paginateAnthology(doc) {
      */
     const dividers = new Map([...source.querySelectorAll('[data-divider]')]
         .map((node) => [Number(node.dataset.divider), node]));
-    const continuous = [...source.querySelectorAll('[data-toc-work]')].length > 0;
+    const continuous = dividers.size > 0;
     const pageNumberOf = (sheet) => [...output.children].indexOf(sheet) + 1;
     const setTocPage = (key, number) => {
         const row = [...output.querySelectorAll('[data-toc-row]')].find((item) => item.dataset.tocRow === String(key));
         if (row) row.querySelector('[data-page]').textContent = String(number);
+        // 간지의 작품 목록도 같은 쪽번호를 쓴다 — 차례가 주제만 싣는 대신 여기서 찾는다.
+        const dividerRow = [...output.querySelectorAll('[data-divider-row]')].find((item) => item.dataset.dividerRow === String(key));
+        if (dividerRow) dividerRow.querySelector('[data-page]').textContent = String(number);
     };
 
     // 이어붙이기에서 지금 채우고 있는 쪽. 간지 뒤나 넘칠 때 새로 연다.
@@ -116,10 +119,27 @@ export function paginateAnthology(doc) {
          */
         const divider = dividers.get(index);
         if (divider) {
-            const sheet = page('anthology-divider');
-            sheet.content.append(divider.cloneNode(true));
-            if (!fits(sheet.content)) throw new Error('주제 간지가 한 페이지를 넘습니다. 주제 이름을 줄여 주세요.');
-            setTocPage(`g${index}`, pageNumberOf(sheet.sheet));
+            /*
+             * 간지 = 주제 속표지. 이름과 그 주제의 작품 목록을 싣는다.
+             *
+             * 한 주제에 작품이 많으면 목록이 한 쪽을 넘는다(학급 전체가 같은 과제를 쓴 경우).
+             * 그때는 이름만 둔 쪽에 이어 다음 쪽으로 목록을 넘긴다 — 넘친다고 막으면
+             * 정작 큰 학급이 문집을 못 만든다.
+             */
+            const dividerTitle = divider.querySelector('h1');
+            const dividerRows = [...(divider.querySelector('[data-divider-list]')?.children || [])];
+            const dividerPage = (withTitle) => {
+                const p = page('anthology-divider');
+                if (withTitle && dividerTitle) p.content.append(dividerTitle.cloneNode(true));
+                const list = doc.createElement('div'); list.setAttribute('data-divider-list', '');
+                p.content.append(list);
+                if (!fits(p.content)) throw new Error('주제 간지가 한 페이지를 넘습니다. 주제 이름을 줄여 주세요.');
+                return { sheet: p.sheet, content: list, measure: p.content, fixed: 0 };
+            };
+            let firstSheet = null;
+            flow(dividerRows, () => { const p = dividerPage(true); firstSheet = p.sheet; return p; }, () => dividerPage(false));
+            if (!firstSheet) firstSheet = dividerPage(true).sheet;
+            setTocPage(`g${index}`, pageNumberOf(firstSheet));
             cursor = null;
         }
 

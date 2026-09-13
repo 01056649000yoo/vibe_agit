@@ -46,9 +46,12 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 /* 이어붙이기 목차: 주제 줄은 굵게, 그 아래 작품은 들여쓴다 — 어디가 묶음인지 한눈에 보인다. */
 [data-toc-group]{font-weight:800;border-bottom-width:.4mm;margin-top:3mm}
 [data-toc-work] span:first-child{padding-left:6mm}
-/* 간지 — 주제 이름만. 여기서부터 다른 주제라는 표지 역할이라 목록은 넣지 않는다. */
-.anthology-divider .anthology-page-content{display:flex;align-items:center;justify-content:center;text-align:center}
-.anthology-divider h1{font-size:26pt;margin:0}
+/* 간지 = 주제 속표지. 이름과 함께 그 주제의 작품 목록을 싣는다 — 어차피 비는 쪽이라 공짜다. */
+.anthology-divider .anthology-page-content{display:flex;flex-direction:column;justify-content:center;text-align:center}
+.anthology-divider h1{font-size:26pt;margin:0 0 12mm}
+[data-divider-list]{text-align:left;max-width:110mm;margin:0 auto;width:100%}
+[data-divider-row]{display:flex;gap:5mm;align-items:baseline;border-bottom:.2mm solid #e2e8f0;padding:2.5mm 0;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;overflow-wrap:anywhere}
+[data-divider-row] span:first-child{flex:1;min-width:0}[data-divider-row] [data-page]{width:14mm;text-align:right;flex:none}
 #anthology-source{position:absolute;left:-10000px;width:${contentWidth}mm}
 .pdf-entry,.pdf-entry__content,.pdf-poem__content{min-height:0;break-after:auto;page-break-after:auto}
 .anthology-work{white-space:normal}.anthology-work>p{white-space:pre-wrap;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;line-height:1.78}
@@ -79,12 +82,26 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
     const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>우리 반의 이야기</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div><p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
 ${book.introduction ? `<section data-introduction><h1>여는 글</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
 ${book.works.map((w, i) => {
-    const groupTitle = groupStarts.get(i);
-    // 주제 줄은 간지 쪽을, 작품 줄은 그 작품이 시작하는 쪽을 가리킨다.
-    const groupRow = groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
-    return `${groupRow}<div data-toc-row="${i}"${continuous ? ' data-toc-work' : ''}><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+    /*
+     * 이어붙이기의 차례는 **주제만** 싣는다. 작품까지 모두 실으면 주제가 다섯을 넘는 순간
+     * 차례가 몇 쪽이 된다(2026-09-13 지적). 작품 목록은 **간지**로 옮겼다 — 간지는 주제
+     * 이름 한 줄뿐이라 어차피 비어 있어, 거기 실으면 종이를 한 장도 더 쓰지 않는다.
+     */
+    if (continuous) {
+        const groupTitle = groupStarts.get(i);
+        return groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
+    }
+    return `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
 }).join('')}
-${[...groupStarts.entries()].map(([index, title]) => `<div data-divider="${index}"><h1>${e(title)}</h1></div>`).join('')}`;
+${[...groupStarts.entries()].map(([index, title]) => {
+    // 간지 = 주제 이름 + 그 주제에 든 작품 목록. 쪽번호는 쪽을 다 짠 뒤에 채운다.
+    const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;
+    const rows = book.works.slice(index, until).map((w, offset) => {
+        const workIndex = index + offset;
+        return `<div data-divider-row="${workIndex}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+    }).join('');
+    return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
+}).join('')}`;
     const back = `<div data-colophon><h1>${e(book.title)}</h1><p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>우리 반의 글을 모아 엮었습니다.\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
     return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
 }

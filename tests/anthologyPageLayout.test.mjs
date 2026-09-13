@@ -42,13 +42,36 @@ test('고른 배치가 저장까지 이어진다', () => {
     assert.match(migration, /'layout',v_book\.page_layout/);
 });
 
-test('이어붙이기에서만 간지와 묶음 목차를 만든다', () => {
+test('이어붙이기에서만 간지를 만든다', () => {
     /*
      * 작품마다 새 쪽인 문집에 간지가 끼면 종이만 늘어난다. 간지는 이어붙이기의 표지 역할이다.
      */
     assert.match(print, /if \(continuous && title && title !== previous\) groupStarts\.set\(index, title\)/);
     assert.match(print, /data-toc-group/);
-    assert.match(print, /\$\{continuous \? ' data-toc-work' : ''\}/);
+});
+
+test('이어붙이기 차례는 주제만, 작품 목록은 간지로 간다', () => {
+    /*
+     * 2026-09-13 지적: 작품까지 모두 차례에 실으니 **주제가 다섯을 넘는 순간 차례가 몇 쪽**이
+     * 된다. 간지는 주제 이름 한 줄뿐이라 어차피 비어 있으므로, 작품 목록을 거기 실으면
+     * 종이를 한 장도 더 쓰지 않고 차례가 짧아진다.
+     */
+    // 차례는 주제 줄만 만든다.
+    assert.match(print, /if \(continuous\) \{\s*const groupTitle = groupStarts\.get\(i\);/s);
+    // 작품 목록은 간지 안에 들어간다.
+    assert.match(print, /data-divider-row="\$\{workIndex\}"/);
+    assert.match(print, /data-divider-list/);
+    // 간지의 작품 줄에도 쪽번호를 채운다 — 못 채우면 거기서 찾을 수가 없다.
+    assert.match(pagination, /const dividerRow = \[\.\.\.output\.querySelectorAll\('\[data-divider-row\]'\)\]/);
+});
+
+test('한 주제에 작품이 많으면 간지가 다음 쪽으로 이어진다', () => {
+    /*
+     * 학급 전체가 같은 과제를 쓰면 목록이 한 쪽을 넘는다. 넘친다고 막으면 정작 큰 학급이
+     * 문집을 못 만든다. 이름만 둔 쪽에 이어 목록을 다음 쪽으로 넘긴다.
+     */
+    assert.match(pagination, /flow\(dividerRows, \(\) => \{ const p = dividerPage\(true\);/);
+    assert.match(pagination, /\(\) => dividerPage\(false\)/);
 });
 
 test('이어붙이기는 쪽 전체를 재고 작품 상자에 담는다', () => {
