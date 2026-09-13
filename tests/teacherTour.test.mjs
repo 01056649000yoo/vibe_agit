@@ -22,6 +22,7 @@ import {
     shouldOfferTour
 } from '../src/guides/teacherTour.js';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../src/guides/teacherGuideJourneys.js';
+import { TEACHER_NAV_GROUPS } from '../src/constants/teacherNav.js';
 
 const read = (file) => readFileSync(file, 'utf8');
 
@@ -434,9 +435,16 @@ test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () =>
          */
         assert.notEqual(step.fallbackAnchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
             `${step.stepId} 가 못 찾았을 때 엉뚱한 화면을 두릅니다.`);
-        if (step.anchor.startsWith('section:') || step.anchor.startsWith('tool:') || step.anchor.startsWith('module:')) {
+        /*
+         * 늘 보이는 것은 **위쪽 묶음 단추뿐**이다. 하위 탭은 그 묶음을 열어야 그려지고,
+         * 설정 구역·도구·놀이는 그 화면에 들어가야 나온다. 그 둘은 먼저 누를 곳을
+         * 반드시 알려 줘야 한다 — 아니면 다른 화면에서 들어왔을 때 테두리가 통째로
+         * 사라진다(2026-09-13 제보 — 3·4·5번 흐름).
+         */
+        const isGroupEntry = TEACHER_NAV_GROUPS.some((group) => tabAnchorId(group.defaultTab) === step.anchor);
+        if (!isGroupEntry) {
             assert.match(String(step.fallbackAnchor), /^tab:/,
-                `${step.stepId} 는 그 화면에 들어가야 보이는 메뉴인데, 먼저 누를 곳을 알려 주지 않습니다.`);
+                `${step.stepId} 는 다른 화면에서 들어오면 짚을 곳이 없습니다.`);
         }
     });
 
@@ -656,4 +664,32 @@ test('짚어 준 메뉴를 열어야 다음으로 간다 — 다만 갇히지는
     assert.ok(panel.includes('메뉴를 열면 다음으로 갈 수 있어요'));
     // 탈출구는 조건 없이 늘 있어야 한다.
     assert.match(panel, /<button type="button" onClick=\{tour\.skipStep\}>이 단계 건너뛰기<\/button>/);
+});
+
+test('열렸다고 알릴 수 없는 자리에서도 갇히지 않는다', () => {
+    /*
+     * 2026-09-13 제보: 작가 수호룡 운영에서 스포트라이트가 놀이 카드를 짚는데, 그 카드는
+     * 눌러도 "열렸다" 고 알리지 못해 **다음으로 갈 수 없었다.**
+     *
+     * 카드가 스스로 알리게 고쳤고, 그것과 별개로 **누른 사실 자체**를 함께 본다.
+     * 표시를 달 수 없는 자리를 새로 짚게 되더라도 갇히지 않는다.
+     */
+    const cards = read('src/modules/game/teacher/RegisteredGameModuleCards.jsx');
+    assert.match(cards, /aria-current=\{module\.id === selectedId \? 'page' : undefined\}/);
+
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /clickedRef\.current = stepId;/);
+    assert.match(panel, /opened: isOpenedMenu\(element\) \|\| clickedRef\.current === stepId,/);
+});
+
+test('새 화면으로 떠나는 단계는 눌러야 하는 것처럼 보이지 않는다', () => {
+    /*
+     * 2026-09-13 제보: 연구소 메뉴에 스포트라이트가 있어 꼭 눌러야 할 것 같은데,
+     * 누르면 **새 화면으로 떠나 동행 모드가 끊긴다.** 어디 있는지만 알려 주고
+     * 읽은 뒤 넘어가게 한다.
+     */
+    const step = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id))
+        .find((candidate) => candidate.stepId === 'writing-lab');
+    assert.equal(step.done.ack, true, '새 화면으로 떠나는 단계를 자동 판정으로 두면 갇힙니다.');
+    assert.ok(step.hint.includes('동행 모드가 끊기'), '누르면 어떻게 되는지 알려 주지 않습니다.');
 });

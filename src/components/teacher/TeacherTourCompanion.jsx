@@ -45,6 +45,14 @@ const isOpenedMenu = (element) => element?.getAttribute('aria-selected') === 'tr
  */
 const useAnchorRect = (stepId, anchorId, fallbackAnchorId, isActive) => {
     const [measured, setMeasured] = useState(null);
+    /*
+     * 짚어 준 자리를 **직접 눌렀는가.**
+     *
+     * `aria-current` 같은 표시를 달 수 없는 자리도 있다(놀이 카드가 그랬다 — 눌러도
+     * "열렸다" 고 알리지 못해 다음으로 갈 수 없었다, 2026-09-13 제보). 표시를 못 믿을
+     * 때를 대비해 **누른 사실 자체**를 함께 본다. 그래야 어떤 자리를 짚어도 갇히지 않는다.
+     */
+    const clickedRef = useRef(null);
 
     useEffect(() => {
         if (!isActive || !anchorId) return undefined;
@@ -67,7 +75,7 @@ const useAnchorRect = (stepId, anchorId, fallbackAnchorId, isActive) => {
             setMeasured({
                 stepId,
                 anchorId,
-                opened: isOpenedMenu(element),
+                opened: isOpenedMenu(element) || clickedRef.current === stepId,
                 top: box.top, left: box.left, width: box.width, height: box.height
             });
         };
@@ -81,7 +89,13 @@ const useAnchorRect = (stepId, anchorId, fallbackAnchorId, isActive) => {
          * 반응이 없어 "눌렀는데 다음으로 안 간다" 로 보인다(2026-09-13 걷기 검사에서 잡힘).
          * 클릭이 화면에 반영된 뒤 재야 하므로 한 박자 미룬다.
          */
-        const remeasureSoon = () => window.setTimeout(measure, 0);
+        const remeasureSoon = (event) => {
+            const element = findVisibleAnchor(anchorId);
+            if (element && event.target instanceof Node && element.contains(event.target)) {
+                clickedRef.current = stepId;
+            }
+            window.setTimeout(measure, 0);
+        };
         window.addEventListener('click', remeasureSoon, true);
         return () => {
             window.clearInterval(timerId);

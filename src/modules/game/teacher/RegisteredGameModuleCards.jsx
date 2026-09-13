@@ -70,7 +70,12 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
                 {previewModules.map((module) => {
                     const isDisabledPreview = enabledModules.length === 0 && disabledPreviewModule?.id === module.id;
                     return (
-                    <div key={module.id} {...tourAnchor(moduleAnchorId(module.id))} style={{
+                    <div
+                        key={module.id}
+                        {...tourAnchor(moduleAnchorId(module.id))}
+                        /* 고른 카드가 스스로 "열렸다" 고 알린다 — 동행 모드가 이걸 보고 다음으로 넘긴다. */
+                        aria-current={module.id === selectedId ? 'page' : undefined}
+                        style={{
                         minHeight: compact ? '72px' : '112px', padding: compact ? '10px' : '14px', borderRadius: compact ? '13px' : '18px',
                         background: module.playground?.background || 'white',
                         border: `2px solid ${module.id === selectedId ? '#6366F1' : (module.playground?.borderColor || '#E2E8F0')}`,

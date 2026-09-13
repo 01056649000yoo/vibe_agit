@@ -17,6 +17,7 @@
  * 남는 네 단계(학급·학생·과제)만 실제 데이터로 저절로 넘어간다.
  */
 
+import { TEACHER_NAV_GROUPS } from '../constants/teacherNav.js';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from './teacherGuideJourneys.js';
 
 /** 화면 요소에 붙이는 이름. 화면 코드와 이 표가 유일한 짝이다. */
@@ -71,10 +72,24 @@ const deriveAnchor = (target) => {
  * 그때는 **먼저 눌러야 할 바깥 메뉴**(설정·학급운영도구·놀이터)로 물러선다. 본문 전체를
  * 두르는 대비책과는 다르다 — 그것은 엉뚱한 화면을 밝혀 더 헷갈렸다.
  */
+/*
+ * 하위 탭은 **그 묶음을 열었을 때만** 화면에 그려진다. 다른 묶음에 있으면 `tab:diaries`
+ * 같은 이름표가 화면 어디에도 없어 테두리가 통째로 사라진다(2026-09-13 제보 — 3·4·5번
+ * 흐름). 그럴 때 짚을 것은 **늘 보이는 위쪽 묶음 단추**다.
+ */
+const GROUP_ENTRY_TAB = new Map(
+    TEACHER_NAV_GROUPS.flatMap((group) => (group.defaultTab
+        ? group.tabs.map((tab) => [tab.id, group.defaultTab])
+        : []))
+);
+
 const deriveFallbackAnchor = (target, anchor) => {
     if (!target?.tab) return null;
+    // 설정 구역·도구·놀이는 바깥 탭으로, 하위 탭은 그 묶음의 대표 탭(= 위쪽 단추)으로.
     const outer = tabAnchorId(target.tab);
-    return outer === anchor ? null : outer;
+    if (outer !== anchor) return outer;
+    const entry = GROUP_ENTRY_TAB.get(target.tab);
+    return entry && tabAnchorId(entry) !== anchor ? tabAnchorId(entry) : null;
 };
 
 /*
@@ -118,6 +133,14 @@ const STEP_RULES = Object.freeze({
     'prepare-editor': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS,
         hint: '학생 글쓰기 화면에 넣을 도움 기능을 켜고 꺼 보세요. 바꾸지 않아도 괜찮습니다.'
+    }),
+    'writing-lab': Object.freeze({
+        /*
+         * 연구소는 누르면 **새 화면으로 떠난다** — 지금 누르면 동행 모드가 끊긴다.
+         * 그래서 "꼭 눌러야 하는 자리" 로 보이면 안 된다. 어디 있는지만 알려 주고,
+         * 읽은 뒤 `확인했어요` 로 넘어가게 한다(2026-09-13 제보).
+         */
+        hint: '연구소는 여기 있습니다. **지금 누르면 새 화면으로 옮겨 가 동행 모드가 끊기니**, 아래 설명을 읽고 `확인했어요`로 넘어간 뒤 수업 준비할 때 열어 보세요.'
     }),
     'class-board': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN,
