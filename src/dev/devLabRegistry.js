@@ -22,7 +22,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     id: 'teacher-tour',
     icon: '🧭',
     title: '교사 동행 모드',
-    description: '가입 직후 첫 걸음 카드와 3단계 동행 패널을 DB 없이 눌러 본다 — 해내면 저절로 넘어가는지, 테두리가 따라오는지',
+    description: '환영 안내 → 동행 패널 → 활용 안내서의 다시 보기까지 DB 없이 눌러 본다. 여덟 흐름을 골라 걸어 볼 수 있다',
     Component: TeacherTourPreview,
   }),
   Object.freeze({ id: 'class-agit-selection', icon: '🏡', title: '우리반 아지트 작품 찾기', description: '66개 미션·1,040편 합성 글로 검색·일괄 담기·120편 순서를 점검한다', Component: ClassAgitSelectionPreview }),

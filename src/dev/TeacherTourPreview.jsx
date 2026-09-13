@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import TeacherTourCompanion from '../components/teacher/TeacherTourCompanion';
 import TeacherFirstStepsCard from '../components/teacher/TeacherFirstStepsCard';
 import TeacherWelcomeModal from '../components/teacher/TeacherWelcomeModal';
+import TeacherGuideCenter from '../components/teacher/TeacherGuideCenter';
 import {
     FIRST_TEACHER_TOUR_ID,
     TEACHER_TOURS,
@@ -9,6 +10,7 @@ import {
     getNextTourId,
     getTeacherTourSteps,
     getTourEntry,
+    getTourProgress,
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
@@ -29,6 +31,7 @@ export default function TeacherTourPreview() {
     const [tourId, setTourId] = useState(FIRST_TEACHER_TOUR_ID);
     const [finished, setFinished] = useState(null);
     const [welcome, setWelcome] = useState(true);
+    const [guideOpen, setGuideOpen] = useState(false);
     const [counts, setCounts] = useState({ classCount: 0, studentCount: 0, missionCount: 0 });
 
     const steps = useMemo(() => getTeacherTourSteps(tourId), [tourId]);
@@ -85,6 +88,7 @@ export default function TeacherTourPreview() {
                 </select>
                 <button type="button" onClick={() => start(tourId)}>이 흐름 시작</button>
                 <button type="button" onClick={() => setWelcome(true)}>환영 안내 보기</button>
+                <button type="button" onClick={() => setGuideOpen(true)}>활용 안내서 열기</button>
                 <button type="button" onClick={() => { setState(normalizeTourState(null)); setFinished(null); setWelcome(true); setCounts({ classCount: 0, studentCount: 0, missionCount: 0 }); }}>처음으로</button>
                 <span style={{ fontSize: 'var(--ui-text-xs)' }}>
                     {entry.status} · {stepIndex + 1}/{steps.length} · 학급 {counts.classCount} · 학생 {counts.studentCount} · 과제 {counts.missionCount}
@@ -131,6 +135,17 @@ export default function TeacherTourPreview() {
                     ➕ 미션 만들기 (가짜)
                 </button>
             </section>
+
+            {guideOpen && (
+                <TeacherGuideCenter
+                    isOpen
+                    initialRequest={{ journeyId: tourId }}
+                    onClose={() => setGuideOpen(false)}
+                    onNavigate={() => {}}
+                    onStartTour={(journeyId) => { setWelcome(false); start(journeyId); }}
+                    tourProgress={getTourProgress(state)}
+                />
+            )}
 
             <TeacherTourCompanion
                 tour={tour}

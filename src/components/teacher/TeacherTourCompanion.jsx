@@ -71,7 +71,17 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
     const rect = useAnchorRect(step?.anchor, step?.fallbackAnchor, isRunning);
     const navigatedStepRef = useRef(null);
 
-    // 단계가 바뀌면 그 화면으로 옮겨 준다. 같은 단계에서 두 번 옮기지 않는다.
+    /*
+     * 단계가 바뀌면 그 화면으로 옮겨 준다. 같은 단계에서 두 번 옮기지 않는다.
+     *
+     * **흐름을 새로 열면 기억을 지운다.** 안 그러면 다시 보기로 1단계를 열었을 때
+     * "이미 옮겨 준 단계" 로 기억하고 화면을 안 움직여, 눌러도 아무 일이 없는 것처럼
+     * 보인다(2026-09-13 제보). 기억은 그 회차 안에서만 쓸모가 있다.
+     */
+    useEffect(() => {
+        navigatedStepRef.current = null;
+    }, [tour.tourId, tour.isReplay, isRunning]);
+
     useEffect(() => {
         // 새 화면으로 여는 단계는 우리가 대신 눌러 주지 않는다 — 지금 화면이 사라진다.
         if (!isRunning || !step?.target || step.target.launch) return;

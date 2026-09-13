@@ -461,3 +461,14 @@ test('교실에 띄우는 화면은 눌러 보는 단계로 둔다', () => {
     assert.equal(step.spotlight, TOUR_SPOTLIGHT_TARGET);
     assert.ok(step.hint, '무엇을 누르라는 말이 없습니다.');
 });
+
+test('흐름을 새로 열면 "이미 옮겨 줬다" 는 기억을 지운다', () => {
+    /*
+     * 2026-09-13 제보: 안내서에서 `다시 보기` 를 눌러도 아무 일이 없는 것처럼 보였다.
+     * 상태 기계는 1단계로 잘 돌아갔지만, 패널이 "이 단계는 이미 옮겨 줬다" 고 기억하고
+     * 있어 **화면이 움직이지 않았다.** 그 기억은 한 회차 안에서만 쓸모가 있다.
+     */
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /navigatedStepRef\.current = null;\s*\}, \[tour\.tourId, tour\.isReplay, isRunning\]\);/s,
+        '흐름이 바뀌어도 옛 기억이 남아 화면이 안 움직입니다.');
+});
