@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
+import { WRITING_FORMAT } from './writingFormat.js';
 import './writingPresentationModal.css';
 
 export const WRITING_PRESENTATION_FONT_SIZES = Object.freeze([20, 24, 28, 34, 40, 48]);
@@ -12,6 +13,11 @@ const WritingPresentationModal = ({
     title,
     studentName,
     versionLabel,
+    /*
+     * 산문만 양쪽 정렬한다. 시는 줄의 시작과 끝이 작품 그 자체라 건드리지 않는다.
+     * 실제 정렬은 CSS 가 `data-format` 을 보고 한다.
+     */
+    format = WRITING_FORMAT.prose,
     children
 }) => {
     const titleId = useId();
@@ -123,7 +129,7 @@ const WritingPresentationModal = ({
                         <article className="writing-presentation-modal__paper">
                             <h1 id={titleId}>{title || '제목 없는 글'}</h1>
                             <div className="writing-presentation-modal__rule" aria-hidden="true" />
-                            <div className="writing-presentation-modal__content">
+                            <div className="writing-presentation-modal__content" data-format={format}>
                                 {children || '내용이 없습니다.'}
                             </div>
                         </article>

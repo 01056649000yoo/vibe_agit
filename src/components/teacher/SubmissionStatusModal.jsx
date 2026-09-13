@@ -9,6 +9,7 @@ import { fetchTeacherMissionEngagement } from '../../modules/writing/reactions/r
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import WritingPresentationModal from '../../modules/writing/presentation/WritingPresentationModal';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 import WritingPresentationTrigger from '../../modules/writing/presentation/WritingPresentationTrigger';
 
 const SubmissionStatusModal = ({
@@ -734,6 +735,7 @@ const SubmissionStatusModal = ({
                             ? (presentationPost?.original_title || presentationPost?.title)
                             : presentationPost?.title}
                         studentName={presentationPost?.students?.name}
+                        format={getWritingFormat(selectedMission)}
                         versionLabel={presentationVersion === 'original'
                             ? '🌱 최초 제출 (초안)'
                             : '✨ 최종 제출 (수정본)'}

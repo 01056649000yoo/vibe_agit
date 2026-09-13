@@ -13,6 +13,9 @@ import TeacherGuideButton from './TeacherGuideButton';
 import { getPdfRenderModes } from '../../modules/writing/mission-types/registry';
 import CardSizeControl from '../../modules/card-layout/CardSizeControl';
 import { getCardColumns, normalizeCardSize } from '../../modules/card-layout/cardSize';
+import WritingPresentationModal from '../../modules/writing/presentation/WritingPresentationModal';
+import WritingPresentationTrigger from '../../modules/writing/presentation/WritingPresentationTrigger';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 
 const ARCHIVE_PAGE_SIZE = 50;
 const MISSION_POST_LIMIT = 100;
@@ -31,6 +34,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
     const [archiveHasMore, setArchiveHasMore] = useState(false);
     const [archiveTotal, setArchiveTotal] = useState(0);
     const [selectedMission, setSelectedMission] = useState(null);
+    // 보관함에서도 학생 글을 크게 볼 수 있게 한다 — 글쓰기 화면과 같은 모듈을 쓴다.
+    const [presentationPost, setPresentationPost] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [selectedMissionIds, setSelectedMissionIds] = useState([]); // 다중 선택된 미션 ID들
@@ -749,10 +754,20 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                                                     <span style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD' }}>{new Date(post.created_at).toLocaleDateString()}</span>
                                                 </div>
                                                 <h4 style={{ margin: '0 0 12px 0', fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
-                                                <div style={{
-                                                    lineHeight: '1.6', color: '#444', whiteSpace: 'pre-wrap',
-                                                    fontSize: 'var(--ui-text-md)', flex: 1, maxHeight: '300px', overflowY: 'auto'
-                                                }}>{post.content}</div>
+                                                {/*
+                                                  * 글쓰기 화면과 **같은 확대 보기 모듈**을 쓴다. 보관함만 따로 만들면
+                                                  * 정렬·글자 크기 같은 것이 한쪽만 고쳐진다(2026-09-13 요청).
+                                                  */}
+                                                <WritingPresentationTrigger
+                                                    label={`${post.students?.name || '학생'}의 글 전체 화면으로 보기`}
+                                                    onOpen={() => setPresentationPost(post)}
+                                                    style={{ flex: 1, minHeight: 0, border: 'none', background: 'none', padding: 0 }}
+                                                >
+                                                    <div style={{
+                                                        lineHeight: '1.6', color: '#444', whiteSpace: 'pre-wrap',
+                                                        fontSize: 'var(--ui-text-md)', flex: 1, maxHeight: '300px', overflowY: 'auto'
+                                                    }}>{post.content}</div>
+                                                </WritingPresentationTrigger>
                                             </div>
                                         ))}
                                     </div>
@@ -772,6 +787,18 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                 isBulk={exportTarget?.type === 'bulk_missions'}
                 pdfRenderModes={exportTarget?.pdfRenderModes || []}
             />
+            {/* 보관함에서 연 학생 글 확대 보기 — 글쓰기 화면과 같은 모듈·같은 정렬 규칙을 쓴다. */}
+            <WritingPresentationModal
+                isOpen={presentationPost !== null}
+                onClose={() => setPresentationPost(null)}
+                title={presentationPost?.title}
+                studentName={presentationPost?.students?.name}
+                format={getWritingFormat(selectedMission)}
+                versionLabel="📂 보관한 글"
+            >
+                {presentationPost?.content}
+            </WritingPresentationModal>
+
             {confirmDialog}
             {notice}
         </div>

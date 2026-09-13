@@ -140,6 +140,16 @@
     background: #e2ad55;
 }
 
+/*
+ * 산문은 **양쪽 정렬**해 오른쪽 끝을 가지런히 맞춘다. 확대해서 교실에 띄우면
+ * 들쭉날쭉한 오른쪽 끝이 그대로 커져 눈에 걸린다(2026-09-13 제보).
+ *
+ * `white-space: pre-wrap` 은 **그대로 둔다** — 줄바꿈은 글쓴이의 것이라 화면이 마음대로
+ * 없애지 않는다(전에 이것을 지웠다가 학생 글의 줄바꿈이 사라진 적이 있다).
+ * 시(`data-format='poem'`)는 정렬을 건드리지 않는다.
+ */
+.writing-presentation-modal__content[data-format='prose'] { text-align: justify; }
+
 .writing-presentation-modal__content {
     color: #302b26;
     font-size: var(--writing-presentation-font-size);

@@ -10,6 +10,7 @@ import ReportDocument from '../../modules/writing/mission-types/report/ReportDoc
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import LabOutlineReferenceCard from '../../modules/writing/references/LabOutlineReferenceCard';
 import WritingPresentationModal from '../../modules/writing/presentation/WritingPresentationModal';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 import WritingPresentationTrigger from '../../modules/writing/presentation/WritingPresentationTrigger';
 
 const PostDetailViewer = ({
@@ -988,6 +989,7 @@ const PostDetailViewer = ({
                             ? (selectedPost.original_title || selectedPost.title)
                             : selectedPost.title}
                         studentName={selectedPost.students?.name}
+                        format={getWritingFormat(selectedMission)}
                         versionLabel={presentationVersion === 'original'
                             ? '🌱 최초 제출 (초안)'
                             : '✨ 최종 제출 (수정본)'}
