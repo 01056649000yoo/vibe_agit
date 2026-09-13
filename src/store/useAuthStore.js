@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { migrateLegacyAuthSession, SHARED_AUTH_COOKIE_NAME, supabase } from '../lib/supabaseClient';
+import { migrateLegacyAuthSession, SHARED_AUTH_COOKIE_NAME, supabase, clearStoredAuthSession } from '../lib/supabaseClient';
 import { useAppStore } from './useAppStore';
 
 const PROFILE_FETCH_DEDUPE_MS = 15000;
@@ -105,6 +105,8 @@ export const useAuthStore = create((set, get) => ({
 
         // 서버에는 이미 없는 계정이라 서버 로그아웃은 실패한다. 이 브라우저만 정리한다.
         try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* 아래에서 비운다 */ }
+        // 라이브러리가 쿠키를 못 지우고 넘어가는 경우가 있어 이름으로 한 번 더 지운다.
+        clearStoredAuthSession();
         set({ session: null, profile: null, teacherBootstrap: null, profileLoading: false });
         return true;
     },

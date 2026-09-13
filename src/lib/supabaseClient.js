@@ -80,3 +80,35 @@ export const migrateLegacyAuthSession = async () => {
 
     return legacyMigrationPromise;
 };
+
+/**
+ * 이 브라우저에 남은 로그인 흔적을 **확실히** 지운다.
+ *
+ * 세션은 `localStorage` 가 아니라 **쿠키**(`sb-agit-auth-token`)에 있다. 그래서
+ * `localStorage.clear()` 만으로는 지워지지 않는다. 게다가 `@supabase/ssr` 은 세션이 길면
+ * `…-token.0`, `…-token.1` 처럼 조각내 저장하므로, 한 조각만 남아도 다음 접속에서
+ * 엉뚱한 옛 토큰이 복원된다.
+ *
+ * 계정이 이미 지워진 뒤에는 서버 로그아웃이 실패하므로 라이브러리가 쿠키를 못 지우는
+ * 경우가 있다. 그때 탈퇴한 계정의 출입증이 남아 "가입 화면이 뜨고 학교 검색은
+ * 로그인이 만료되었다고 하는" 상태가 됐다(2026-09-13 제보). 이름으로 직접 지운다.
+ */
+export const clearStoredAuthSession = () => {
+    if (typeof document === 'undefined') return;
+
+    const secure = window.location.protocol === 'https:' ? '; secure' : '';
+    const names = new Set([SHARED_AUTH_COOKIE_NAME]);
+    // 조각 쿠키는 몇 개까지 늘어날지 알 수 없으니, 지금 있는 것을 이름으로 훑어 모은다.
+    document.cookie.split(';').forEach((entry) => {
+        const name = entry.split('=')[0]?.trim();
+        if (name && name.startsWith(SHARED_AUTH_COOKIE_NAME)) names.add(name);
+    });
+
+    names.forEach((name) => {
+        document.cookie = `${name}=; Max-Age=0; path=/; sameSite=lax${secure}`;
+    });
+
+    try {
+        if (legacyStorageKey) window.localStorage.removeItem(legacyStorageKey);
+    } catch { /* 사생활 보호 모드면 못 지운다 — 쿠키만으로도 충분하다 */ }
+};

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { useAuthStore } from '../store/useAuthStore';
 
 /*
  * 검색을 보내기 전에 기다리는 시간.
@@ -25,6 +26,7 @@ const readFunctionError = async (error) => {
 };
 
 const isTooManyRequests = (error) => error?.context?.status === 429;
+const isSignedOut = (error) => error?.context?.status === 401;
 
 const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
@@ -53,6 +55,15 @@ export const searchSchools = async (schoolName) => {
     if (error && isTooManyRequests(error)) {
         await wait(SCHOOL_SEARCH_DEBOUNCE_MS);
         ({ data, error } = await ask());
+    }
+    if (error && isSignedOut(error)) {
+        /*
+         * 서버가 "이 출입증으로는 누구인지 모르겠다" 고 답한 것이다. 화면에 빨간 글씨만
+         * 띄우면 선생님은 죽은 가입 화면에 갇힌다. 브라우저에 남은 흔적을 정리해
+         * 로그인 화면으로 돌려보낸다(2026-09-13 제보).
+         */
+        await useAuthStore.getState().signOutIfAccountGone();
+        throw new Error('로그인이 풀렸습니다. 로그인 화면에서 다시 들어와 주세요.');
     }
     if (error) throw new Error(await readFunctionError(error) || error.message || '학교 검색에 연결할 수 없습니다.');
     if (data?.error) throw new Error(data.error);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import useConfirmDialog from '../components/common/useConfirmDialog';
 import useNotice from '../components/common/useNotice';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, clearStoredAuthSession } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { dataCache } from '../lib/cache';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../constants/aiPrompts';
@@ -240,6 +240,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 console.warn("Withdrawal signout failed:", e);
             }
 
+            /*
+             * 세션은 localStorage 가 아니라 **쿠키**에 있다. clear() 만으로는 안 지워진다.
+             * 계정이 이미 사라져 라이브러리 로그아웃이 실패할 수 있으므로 직접 지운다.
+             */
+            clearStoredAuthSession();
             localStorage.clear();
             sessionStorage.clear();
 
