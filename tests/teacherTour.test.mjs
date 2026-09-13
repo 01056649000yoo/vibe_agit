@@ -507,3 +507,31 @@ test('끝까지 가 본 사실은 지워지지 않는다', () => {
     const replaying = reduceTourState(reloaded, FIRST_TEACHER_TOUR_ID, 'start');
     assert.equal(getTourEntry(replaying, FIRST_TEACHER_TOUR_ID).everFinished, true);
 });
+
+test('이미 끝까지 가 본 흐름은 "이어서" 로 다시 권하지 않는다', () => {
+    /*
+     * 현재 상태(`done`)로만 보면, 끝낸 뒤 그만둬 `skipped` 가 된 흐름을 "아직 안 봤다" 며
+     * 다시 권한다 — 안내서 목차의 ✅ 와 말이 어긋난다.
+     */
+    let state = normalizeTourState(null);
+    const finish = (tourId) => {
+        state = reduceTourState(state, tourId, 'start');
+        getTeacherTourSteps(tourId).forEach(() => { state = reduceTourState(state, tourId, 'complete'); });
+    };
+    finish(TEACHER_TOURS[0].id);
+    finish(TEACHER_TOURS[1].id);
+    state = reduceTourState(state, TEACHER_TOURS[1].id, 'stop');
+    assert.equal(getNextTourId(state, TEACHER_TOURS[0].id), TEACHER_TOURS[2].id,
+        '이미 본 흐름을 다시 권하고 있습니다.');
+});
+
+test('다 둘러본 뒤에도 길이 끊기지 않는다', () => {
+    /*
+     * 2026-09-13 제보: 마지막 단계를 끝내니 "모든 흐름을 봤다" 며 `나중에` 만 남았다.
+     * 맞는 말이지만 거기서 갈 곳이 없다 — 다시 보고 싶은 흐름을 고를 곳으로 보내 준다.
+     */
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /tour\.nextTourId \? \(/, '다음 흐름이 없을 때의 길이 없습니다.');
+    assert.ok(panel.includes('활용 안내서에서 고르기'), '다 본 뒤 갈 곳을 주지 않습니다.');
+    assert.match(panel, /onOpenGuide\(tour\.tourId\)/);
+});

@@ -334,9 +334,13 @@ export const getNextTourId = (state, tourId) => {
     const index = TEACHER_TOURS.findIndex((tour) => tour.id === tourId);
     if (index === -1) return null;
     const normalized = normalizeTourState(state);
+    /*
+     * 이미 끝까지 가 본 흐름은 권하지 않는다. 현재 상태(`done`)로만 보면, 끝낸 뒤 그만둬
+     * `skipped` 가 된 흐름을 "아직 안 봤다" 며 다시 권한다 — 목차의 ✅ 와 말이 어긋난다.
+     */
     const next = TEACHER_TOURS
         .slice(index + 1)
-        .find((tour) => Reflect.get(normalized.tours, tour.id)?.status !== 'done');
+        .find((tour) => !Reflect.get(normalized.tours, tour.id)?.everFinished);
     return next?.id || null;
 };
 
