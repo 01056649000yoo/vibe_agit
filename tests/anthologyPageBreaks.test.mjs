@@ -9,6 +9,7 @@ const print = read('src/modules/class-agit/anthology/print.js');
 const pagination = read('src/modules/class-agit/anthology/pagination.js');
 const tuner = read('src/modules/class-agit/anthology/PageTuner.jsx');
 const manager = read('src/modules/class-agit/anthology/AnthologyManager.jsx');
+const css = read('src/modules/class-agit/classAgit.css');
 
 const book = (breaks) => ({
     id: 'b1', revision: 1, title: '문집', subtitle: '', introduction: '', class_label: '', issue_date: '',
@@ -79,4 +80,15 @@ test('초안 쪽은 미리보기 칸 너비에 맞춰 줄인다', () => {
     assert.match(tuner, /window\.addEventListener\('resize', onResize\)/);
     // 원래보다 키우지는 않는다 — 확대하면 오히려 잘린다.
     assert.match(tuner, /Math\.min\(1, available \/ pageWidth\)/);
+});
+
+test('닫기 단추는 쪽 다듬기 창의 오른쪽 끝에 붙는다', () => {
+    /*
+     * 2026-09-14 지적: 창을 넓히자 닫기 단추가 창 끝과 어긋났다.
+     * 머리글이 가로 배치라, 안내 글이 짧으면 단추가 글 옆에 따라붙는다.
+     * 안내 글이 남는 자리를 차지하고 단추는 끝으로 민다.
+     */
+    assert.match(tuner, /className="anthology-tuner__intro"/);
+    assert.match(css, /\.anthology-tuner__intro \{[^}]*flex: 1;/);
+    assert.match(css, /\.anthology-tuner__head > \.ui-icon-button \{[^}]*margin-left: auto;/);
 });

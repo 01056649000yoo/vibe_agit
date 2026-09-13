@@ -1,5 +1,5 @@
 import { buildWritingPdfHtml } from '../../writing/export/writingPdfExport.js';
-import { escapePdfHtml } from '../../writing/export/pdfRenderContract.js';
+import { escapePdfHtml, PDF_KICKER_CLASSES } from '../../writing/export/pdfRenderContract.js';
 import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS } from './contract.js';
 import { getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
 import { paginateAnthology } from './pagination.js';
@@ -66,6 +66,8 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 .anthology-work.poem-sheet__body>p,.anthology-work .poem-sheet__stanza{font-size:${ANTHOLOGY_PRINT_SETTINGS.poem_pt}pt;line-height:2.05;white-space:pre-wrap}
 .anthology-continuation{font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;color:#64748b;white-space:normal;margin-bottom:6mm;line-height:1.4}
 .anthology-work .pdf-entry__header{white-space:normal}.anthology-work .pdf-entry__rule{margin-bottom:5mm}
+/* 갈래 딱지는 문집에서 감춘다 — 글마다 같은 말이 되풀이된다. 감춘 자리는 차지하지 않는다. */
+${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{display:none}
 .anthology-colophon [data-colophon]{padding-top:${small ? 20 : 40}mm;border-top:.4mm solid #476755}
 .anthology-cover{background:${design.paper};color:${design.ink};print-color-adjust:exact;-webkit-print-color-adjust:exact}
 .anthology-cover [data-cover]{border-color:${design.accent};border-style:${design.border};padding:${small ? 7 : 12}mm ${small ? 4 : 8}mm;gap:${small ? 5 : 8}mm}
