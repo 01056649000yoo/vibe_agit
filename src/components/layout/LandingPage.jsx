@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import LandingFeatureModal, { landingExperiences } from './LandingFeatureModal';
 import { AGIT_MEANING, HERO_IMAGE_ALT, SERVICE_IDENTITY_LINE } from '../../constants/serviceIdentity';
 import './LandingPage.css';
+import LandingServiceStats from './LandingServiceStats';
 
 const LandingPage = ({ onStudentLoginClick }) => {
   const [teacherLoginPending, setTeacherLoginPending] = useState(false);
@@ -120,6 +121,8 @@ const LandingPage = ({ onStudentLoginClick }) => {
             ))}
           </div>
         </section>
+
+        <LandingServiceStats />
 
         <footer className="landing-support-footer">
           <nav aria-label="서비스 안내">

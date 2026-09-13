@@ -1,0 +1,57 @@
+.landing-stats {
+    margin-top: var(--ui-space-6);
+    padding: var(--ui-space-5) var(--ui-space-4);
+    background: var(--ui-surface-muted);
+    border-radius: var(--ui-radius-lg);
+    text-align: center;
+}
+
+.landing-stats__lead {
+    margin: 0 0 var(--ui-space-4);
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    color: var(--ui-ink-muted);
+}
+
+.landing-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ui-space-3);
+    margin: 0;
+}
+
+.landing-stats__item {
+    min-width: 0;
+}
+
+.landing-stats__item dt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+    color: var(--ui-ink-subtle);
+    white-space: nowrap;
+}
+
+.landing-stats__item dd {
+    margin: var(--ui-space-1) 0 0;
+    font-size: var(--ui-text-xs);
+    color: var(--ui-ink-muted);
+}
+
+.landing-stats__item dd strong {
+    margin-right: 2px;
+    font-size: var(--ui-text-xl);
+    font-weight: 900;
+    color: var(--ui-primary);
+}
+
+/* 좁은 화면에서는 넷을 한 줄에 두면 숫자가 줄바꿈된다. 두 줄로 나눈다. */
+@media (max-width: 560px) {
+    .landing-stats__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--ui-space-4) var(--ui-space-3);
+    }
+}

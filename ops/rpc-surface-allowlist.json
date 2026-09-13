@@ -98,6 +98,11 @@
       "name": "create_neighbor_activity_v1",
       "reason": "이웃 아지트 모듈이 작업 중이라 2026-09-09 보안 점검 범위에서 뺐다. 지금도 뚫리지는 않는다 — 공개 anon 키로 부르면 42501 '이웃 아지트 교사 인증이 필요합니다' 로 401 이 난다(확인함). 이웃 아지트 작업이 끝나면 다른 교사용 RPC 처럼 anon 을 회수한다.",
       "reasonCheckedAt": "2026-09-09"
+    },
+    {
+      "name": "get_service_stats_v1",
+      "reason": "의식적으로 열었다 — 로그인 화면(비로그인이 보는 첫 화면)의 현황 줄이 부른다. 부르는 곳: src/components/layout/LandingServiceStats.jsx → src/lib/serviceStats.js. 돌려주는 것은 정수 넷(teachers·classes·students·posts)뿐이고 학교명·이름·학급명은 한 글자도 나가지 않는다. 읽는 표 public.service_stats 는 RLS 를 켜고 정책을 두지 않았으며 anon·authenticated 의 권한을 걷어 이 함수로만 읽힌다(2026-09-13 확인: anon 으로 직접 SELECT 하면 permission denied). 로그인 화면에서 현황 줄을 내리면 함께 DROP 한다.",
+      "reasonCheckedAt": "2026-09-13"
     }
   ]
 }
