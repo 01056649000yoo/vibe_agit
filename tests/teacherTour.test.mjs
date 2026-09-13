@@ -12,6 +12,7 @@ import {
     getTourProgress,
     TOUR_SPOTLIGHT_TARGET,
     TOUR_SPOTLIGHT_SCREEN,
+    TOUR_SPOTLIGHT_MENU,
     TEACHER_TOUR_ANCHORS,
     getTeacherTourSteps,
     getTourEntry,
@@ -404,35 +405,37 @@ test('실행해야 하는 단계는 열리면 작업 영역 전체를 짚는다'
         '학급을 적는 창을 짚지 않습니다.');
 });
 
-test('둘러보는 단계는 메뉴가 아니라 볼 내용을 가리킨다', () => {
+test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () => {
     /*
-     * 2026-09-13 점검: 35단계 중 28단계가 **작은 메뉴 버튼만** 밝히고 정작 볼 내용은
-     * 전부 어둡게 덮고 있었다. 정반대다. 게다가 설정 다섯 단계가 모두 같은 `설정` 버튼을
-     * 짚어, 어느 단계인지 구분조차 되지 않았다.
-     *
-     * 눌러야 할 자리가 분명한 단계만 덮고, 나머지는 본문 영역을 옅게 두른다.
+     * 2026-09-13 지적 두 번.
+     *   ① 메뉴 버튼만 밝히고 볼 내용을 덮으니 정반대다 → 본문 전체를 둘렀다.
+     *   ② 본문 전체를 두르니 **어디를 말하는지 알 수 없다** → 메뉴를 짚되,
+     *      그 메뉴가 열리면 덮개를 걷고 설명만 남긴다.
      */
     const steps = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id));
     const dimmed = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_TARGET);
-    const screens = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_SCREEN);
+    const menus = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_MENU);
 
     assert.deepEqual(dimmed.map((step) => step.stepId).sort(),
         ['class-board', 'create-mission', 'invite-students', 'prepare-class', 'prepare-editor', 'writing-lab'],
-        '덮는 단계는 실제로 눌러야 하는 단계여야 합니다.');
-    assert.ok(screens.length > 0);
-    screens.forEach((step) => {
-        assert.equal(step.anchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
-            `${step.stepId} 가 본문이 아닌 곳을 가리킵니다.`);
-        assert.ok(step.fallbackAnchor, `${step.stepId} 에 본문을 못 찾았을 때의 대비책이 없습니다.`);
+        '직접 눌러야 하는 단계 목록이 달라졌습니다.');
+    assert.ok(menus.length > 0);
+    menus.forEach((step) => {
+        assert.match(step.anchor, /^(tab|tool|module):/, `${step.stepId} 가 메뉴를 가리키지 않습니다.`);
+        assert.equal(step.fallbackAnchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
+            `${step.stepId} 에 메뉴를 못 찾았을 때의 대비책이 없습니다.`);
     });
 
     const dashboard = read('src/components/teacher/TeacherDashboard.jsx');
-    assert.ok(dashboard.includes('tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)'), '본문 영역에 이름표가 없습니다.');
+    assert.ok(dashboard.includes('tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)'), '본문 영역 이름표가 없습니다.');
 
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
-    assert.match(panel, /const dims = step\.spotlight === TOUR_SPOTLIGHT_TARGET;/);
-    assert.match(panel, /\{dims && <div className="teacher-tour__dim"/,
-        '둘러보는 단계까지 화면을 덮으면 볼 내용이 어두워집니다.');
+    // 열렸는지는 메뉴가 스스로 표시한다. 따로 상태를 들고 다니면 화면과 어긋난다.
+    assert.match(panel, /aria-selected'\) === 'true'/);
+    assert.match(panel, /const arrivedAtMenu = step\.spotlight === TOUR_SPOTLIGHT_MENU && rect\.opened;/);
+    assert.match(panel, /if \(arrivedAtMenu\) return null;/);
+    // 저절로 옮겨 주면 어느 메뉴였는지 기억에 남지 않는다.
+    assert.match(panel, /if \(step\.spotlight === TOUR_SPOTLIGHT_MENU\) return;/);
 });
 
 test('글쓰기 연구소도 안내서와 동행 모드에 들어 있다', () => {

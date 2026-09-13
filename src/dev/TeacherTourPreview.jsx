@@ -15,6 +15,7 @@ import {
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
+    tabAnchorId,
     tourAnchor
 } from '../guides/teacherTour.js';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../guides/teacherGuideJourneys.js';
@@ -170,6 +171,7 @@ export function TeacherTourLiveHook() {
     const [classes, setClasses] = useState([]);
     const [guideOpen, setGuideOpen] = useState(false);
     const [tourId, setTourId] = useState(FIRST_TEACHER_TOUR_ID);
+    const [openedTab, setOpenedTab] = useState('');
     const tour = useTeacherTour({ userId: null, classes, classesLoaded: true, activeClassId: 'preview-class' });
     const journey = getTeacherGuideJourney(tour.tourId);
 
@@ -191,6 +193,23 @@ export function TeacherTourLiveHook() {
                 <span style={{ fontSize: 'var(--ui-text-xs)' }}>
                     {tour.status} · {tour.stepIndex + 1}/{tour.totalSteps} · 다시보기 {String(tour.isReplay)} · 학급 {classes.length}
                 </span>
+            </div>
+
+            {/* 가짜 하위 메뉴 — 진짜 화면과 같은 이름표·같은 표시(aria-selected)를 쓴다. */}
+            <div role="tablist" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                {['reading-logs', 'diaries', 'archive'].map((tabId) => (
+                    <button
+                        key={tabId}
+                        type="button"
+                        role="tab"
+                        aria-selected={openedTab === tabId}
+                        onClick={() => setOpenedTab(tabId)}
+                        {...tourAnchor(tabAnchorId(tabId))}
+                        style={{ padding: '8px 14px' }}
+                    >
+                        {tabId}
+                    </button>
+                ))}
             </div>
 
             <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{ display: 'grid', gap: 40, maxWidth: 600 }}>

@@ -69,6 +69,14 @@ const deriveAnchor = (target) => {
  * 옅은 테두리로만 둘러 "여기를 보세요" 라고 말한다.
  */
 export const TOUR_SPOTLIGHT_TARGET = 'target';
+/*
+ * 'menu' — "이 메뉴에 있습니다" 단계.
+ *
+ * 본문 전체에 테두리를 두르면 **어디를 말하는지 알 수 없다**(2026-09-13 지적).
+ * 그래서 메뉴 항목을 짚는다. 다만 도착한 뒤에도 계속 덮고 있으면 정작 볼 내용이
+ * 어두워지므로, **그 메뉴가 열리면 조용해지고 설명만 남는다.**
+ */
+export const TOUR_SPOTLIGHT_MENU = 'menu';
 export const TOUR_SPOTLIGHT_SCREEN = 'screen';
 
 const ACK = Object.freeze({ ack: true });
@@ -152,9 +160,10 @@ export const getTeacherTourSteps = (tourId) => {
             const derived = deriveAnchor(journeyStep.target);
             return {
                 ...step,
-                spotlight: mustClick ? TOUR_SPOTLIGHT_TARGET : TOUR_SPOTLIGHT_SCREEN,
-                anchor: step.anchor || (journeyStep.target?.launch ? derived : TEACHER_TOUR_ANCHORS.WORKSPACE),
-                fallbackAnchor: mustClick ? null : derived,
+                spotlight: mustClick ? TOUR_SPOTLIGHT_TARGET : (derived ? TOUR_SPOTLIGHT_MENU : TOUR_SPOTLIGHT_SCREEN),
+                anchor: step.anchor || derived || TEACHER_TOUR_ANCHORS.WORKSPACE,
+                // 메뉴를 못 찾으면(화면이 바뀌었다면) 본문이라도 두른다.
+                fallbackAnchor: mustClick ? null : TEACHER_TOUR_ANCHORS.WORKSPACE,
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,

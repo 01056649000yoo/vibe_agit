@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ModalPortal from '../common/ModalPortal';
-import { TEACHER_TOUR_ANCHOR_SELECTOR, TOUR_SPOTLIGHT_TARGET } from '../../guides/teacherTour.js';
+import { TEACHER_TOUR_ANCHOR_SELECTOR, TOUR_SPOTLIGHT_MENU, TOUR_SPOTLIGHT_TARGET } from '../../guides/teacherTour.js';
 import { getStepDetail } from '../../guides/teacherTourDetail.js';
 import { renderEmphasis } from './guideEmphasis.jsx';
 import './TeacherTourCompanion.css';
@@ -30,6 +30,11 @@ const findVisibleAnchor = (anchorId) => {
     return visible.at(-1) || null;
 };
 
+/** 그 메뉴가 지금 열려 있는가. 메뉴 항목은 열리면 스스로 그렇게 표시한다. */
+const isOpenedMenu = (element) => element?.getAttribute('aria-selected') === 'true'
+    || element?.getAttribute('aria-current') === 'page'
+    || element?.getAttribute('aria-pressed') === 'true';
+
 const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
     const [measured, setMeasured] = useState(null);
 
@@ -48,7 +53,11 @@ const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
                 element.scrollIntoView({ block: 'center', behavior: 'smooth' });
             }
             const box = element.getBoundingClientRect();
-            setMeasured({ anchorId, top: box.top, left: box.left, width: box.width, height: box.height });
+            setMeasured({
+                anchorId,
+                opened: isOpenedMenu(element),
+                top: box.top, left: box.left, width: box.width, height: box.height
+            });
         };
         measure();
         // 화면이 늦게 그려지거나(지연 로딩) 접힌 부분이 펼쳐지면 자리가 바뀐다.
@@ -83,8 +92,14 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
     }, [tour.tourId, tour.isReplay, isRunning]);
 
     useEffect(() => {
-        // 새 화면으로 여는 단계는 우리가 대신 눌러 주지 않는다 — 지금 화면이 사라진다.
+        /*
+         * 대신 눌러 주지 않는 단계 둘.
+         *   · 새 화면으로 여는 단계 — 지금 화면이 사라진다.
+         *   · "이 메뉴에 있습니다" 단계 — **교사가 직접 눌러 봐야** 다음에 혼자 찾아간다.
+         *     저절로 옮겨 주면 어느 메뉴였는지 남지 않는다(2026-09-13 지적).
+         */
         if (!isRunning || !step?.target || step.target.launch) return;
+        if (step.spotlight === TOUR_SPOTLIGHT_MENU) return;
         if (navigatedStepRef.current === step.stepId) return;
         navigatedStepRef.current = step.stepId;
         onNavigate?.(step.target);
@@ -148,6 +163,13 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
      * 모른 채 지나간다. 지나가면서 핵심과 주의를 한 번씩 짚어 준다(안내서 원문 그대로).
      */
     const detail = getStepDetail(step);
+    /*
+     * 메뉴 단계의 한 줄 안내는 단계마다 적지 않는다 — 서른 줄을 손으로 쓰면 메뉴 이름이
+     * 바뀔 때마다 어긋난다. "테두리가 씌워진 메뉴" 라고만 말하면 늘 맞다.
+     */
+    const menuHint = step.spotlight === TOUR_SPOTLIGHT_MENU
+        ? '테두리가 씌워진 메뉴를 눌러 이 화면을 열어 보세요. 열면 안내가 조용해집니다.'
+        : null;
 
     return (
         <ModalPortal>
@@ -158,7 +180,13 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     width: `${rect.width}px`,
                     height: `${rect.height}px`
                 };
-                const dims = step.spotlight === TOUR_SPOTLIGHT_TARGET;
+                /*
+                 * 메뉴 단계는 **도착하기 전까지만** 덮는다. 열고 나면 볼 내용이 어두워지면
+                 * 안 되므로 조용해지고 설명만 남는다.
+                 */
+                const arrivedAtMenu = step.spotlight === TOUR_SPOTLIGHT_MENU && rect.opened;
+                if (arrivedAtMenu) return null;
+                const dims = step.spotlight === TOUR_SPOTLIGHT_TARGET || step.spotlight === TOUR_SPOTLIGHT_MENU;
                 return (
                     <>
                         {/*
@@ -195,7 +223,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 <h2 className="teacher-tour__title">{step.title}</h2>
                 {/* 설명은 안내서 원본(purpose)을 그대로 쓴다. 눌러야 할 것이 분명한 단계에만 hint 를 더 붙인다. */}
                 <p className="teacher-tour__purpose">{step.purpose}</p>
-                {step.hint && <p className="teacher-tour__hint">{step.hint}</p>}
+                {(step.hint || menuHint) && <p className="teacher-tour__hint">{step.hint || menuHint}</p>}
                 {detail && (
                     <div className="teacher-tour__detail">
                         {detail.points.length > 0 && (
