@@ -120,18 +120,29 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
 
     return (
         <ModalPortal>
-            {rect && (
-                <div
-                    className="teacher-tour__ring"
-                    aria-hidden="true"
-                    style={{
-                        top: `${rect.top}px`,
-                        left: `${rect.left}px`,
-                        width: `${rect.width}px`,
-                        height: `${rect.height}px`
-                    }}
-                />
-            )}
+            {rect && (() => {
+                const place = {
+                    top: `${rect.top}px`,
+                    left: `${rect.left}px`,
+                    width: `${rect.width}px`,
+                    height: `${rect.height}px`
+                };
+                return (
+                    <>
+                        {/*
+                          * 주변을 어둡게 덮고 짚어 주는 자리만 밝게 남긴다. 테두리만으로는
+                          * 버튼이 눈에 안 띈다는 지적(2026-09-13)에 따른 것이다.
+                          *
+                          * 덮개를 따로 깔지 않고 **구멍 뚫린 그림자** 하나로 만든다 —
+                          * 요소는 그 자리 크기뿐이고 바깥은 그림자라, `pointer-events: none`
+                          * 과 함께 두면 어두운 곳도 그대로 눌린다. 진짜 덮개를 깔면
+                          * 정작 눌러야 할 버튼이 막힌다.
+                          */}
+                        <div className="teacher-tour__dim" aria-hidden="true" style={place} />
+                        <div className="teacher-tour__ring" aria-hidden="true" style={place} />
+                    </>
+                );
+            })()}
             <section
                 className="teacher-tour__panel"
                 role="status"

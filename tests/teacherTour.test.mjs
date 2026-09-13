@@ -276,16 +276,30 @@ test('짚어 주는 테두리는 앱의 파랑과 달라야 한다', () => {
     assert.ok(ring.includes('var(--ui-accent)'), '테두리 색을 디자인 토큰으로 정하세요.');
 });
 
-test('동행 패널은 화면을 덮지 않는다', () => {
+test('어둡게 덮어도 눌러야 할 버튼은 막히지 않는다', () => {
     /*
-     * 덮개를 씌우면 정작 눌러야 할 버튼이 막힌다. 안내서 모달과 다른 점이 이것이라
-     * 검사로 못 박아 둔다.
+     * 테두리만으로는 눈에 안 띈다는 지적에 따라 주변을 어둡게 덮었다(2026-09-13).
+     * 하지만 **진짜 덮개를 깔면 정작 눌러야 할 버튼이 막힌다.** 그래서 요소는 그 자리
+     * 크기뿐이고 바깥은 그림자로만 그리며, 둘 다 클릭을 통과시킨다.
      */
     const css = read('src/components/teacher/TeacherTourCompanion.css');
-    assert.match(css, /\.teacher-tour__ring[^}]*pointer-events:\s*none/s);
+    ['__dim', '__ring'].forEach((part) => {
+        const block = css.slice(css.indexOf(`.teacher-tour${part} {`));
+        assert.match(block.slice(0, block.indexOf('}')), /pointer-events:\s*none/,
+            `.teacher-tour${part} 가 클릭을 막습니다.`);
+    });
+    // 바깥을 덮는 것은 그림자여야 한다. inset:0 같은 진짜 덮개면 클릭이 막힌다.
+    assert.match(css, /\.teacher-tour__dim[^}]*box-shadow: 0 0 0 9999px/s);
     const jsx = read('src/components/teacher/TeacherTourCompanion.jsx');
     assert.ok(!/className="[^"]*backdrop/.test(jsx),
         '동행 패널에 덮개를 두면 안내가 가리키는 버튼을 누를 수 없습니다.');
+});
+
+test('움직임을 줄여 달라는 설정에서는 맥동을 끈다', () => {
+    // 맥동이 어지러운 분이 있다. 대신 테두리를 굵게 남긴다.
+    const css = read('src/components/teacher/TeacherTourCompanion.css');
+    const reduced = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+    assert.match(reduced, /animation:\s*none/);
 });
 
 test('첫 걸음 카드의 ✅ 는 교사가 누르는 체크가 아니다', () => {
