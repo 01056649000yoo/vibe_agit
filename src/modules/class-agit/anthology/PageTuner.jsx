@@ -36,6 +36,8 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
     const frameRef = useRef(null);
     const [placement, setPlacement] = useState(null);
     const [error, setError] = useState('');
+    // 300편까지 담기니 목록이 길어진다 — 제목·글쓴이·주제로 좁힌다(2026-09-14).
+    const [filter, setFilter] = useState('');
 
     const render = useCallback(async (cancelled = () => false) => {
         const frame = frameRef.current;
@@ -82,6 +84,17 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
         return () => window.removeEventListener('resize', onResize);
     }, []);
 
+    const works = placement?.pages || [];
+    /*
+     * 찾기는 **화면에서만** 좁힌다 — 쪽 나누기는 걸러진 목록이 아니라 전체 순서로 매겨진다.
+     * 여기서 배열 자체를 줄이면 `첫 작품` 판정과 쪽 번호가 어긋난다.
+     */
+    const needle = filter.trim().toLowerCase();
+    const shown = needle
+        ? works.filter((work) => [work.title, work.author, work.group]
+            .some((value) => String(value || '').toLowerCase().includes(needle)))
+        : works;
+
     return (
         <ModalPortal>
             <div className="anthology-tuner__backdrop" role="presentation">
@@ -103,8 +116,19 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
                     {error && <p className="anthology-tuner__error" role="alert">{error}</p>}
 
                     <div className="anthology-tuner__body">
+                        <div className="anthology-tuner__side">
+                            <label className="anthology-tuner__filter">
+                                작품 찾기
+                                <input value={filter} maxLength={80} placeholder="제목 · 글쓴이 · 주제"
+                                    onChange={(event) => setFilter(event.target.value)} />
+                            </label>
+                            <p className="anthology-tuner__count" role="status">
+                                {works.length === shown.length
+                                    ? `모두 ${works.length}편`
+                                    : `${works.length}편 중 ${shown.length}편`}
+                            </p>
                         <ol className="anthology-tuner__list">
-                            {(placement?.pages || []).map((work) => {
+                            {shown.map((work) => {
                                 const forced = breaks.includes(work.sourceId);
                                 const first = work.index === 0;
                                 return (
@@ -131,6 +155,7 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
                                 );
                             })}
                         </ol>
+                        </div>
                         <div className="anthology-tuner__preview">
                             <iframe ref={frameRef} title="문집 초안 미리보기" />
                         </div>

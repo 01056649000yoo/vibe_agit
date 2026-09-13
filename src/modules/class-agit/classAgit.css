@@ -296,6 +296,11 @@
 .anthology-tuner__head > .ui-icon-button { flex: none; margin-left: auto; }
 .anthology-tuner__error { margin: 0; padding: var(--ui-space-3) var(--ui-space-6); background: var(--ui-danger-soft); color: var(--ui-danger); font-size: var(--ui-text-sm); font-weight: 700; }
 .anthology-tuner__body { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: var(--ui-space-4); padding: var(--ui-space-4) var(--ui-space-6) var(--ui-space-6); min-height: 0; }
+/* 목록 칸: 찾기 줄은 고정하고 목록만 구른다 — 300편이면 찾기가 위로 사라진다. */
+.anthology-tuner__side { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: var(--ui-space-2); min-height: 0; }
+.anthology-tuner__filter { display: grid; gap: 4px; font-size: var(--ui-text-sm); font-weight: 700; color: var(--ui-ink-strong); }
+.anthology-tuner__filter input { width: 100%; padding: var(--ui-space-2); font: inherit; font-weight: 400; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.anthology-tuner__count { margin: 0; font-size: var(--ui-text-xs); color: var(--ui-ink-muted); }
 .anthology-tuner__list { margin: 0; padding: 0; list-style: none; overflow-y: auto; display: grid; gap: var(--ui-space-2); align-content: start; }
 .anthology-tuner__list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--ui-space-3); align-items: center; padding: var(--ui-space-3); background: var(--ui-surface-muted); border-radius: var(--ui-radius-md); }
 .anthology-tuner__work { min-width: 0; }
@@ -309,4 +314,20 @@
 @media (max-width: 900px) {
     .anthology-tuner__body { grid-template-columns: minmax(0, 1fr); }
     .anthology-tuner__preview iframe { min-height: 40vh; }
+}
+
+/* 담는 방법 고르기 · 주제째 담기 (2026-09-14) */
+.anthology-ways { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); align-items: center; margin-bottom: var(--ui-space-4); }
+.anthology-ways__detail { flex: 1 1 100%; margin: 0; font-size: var(--ui-text-sm); color: var(--ui-ink-muted); }
+.anthology-bulk__message { margin: 0 0 var(--ui-space-3); padding: var(--ui-space-3); background: var(--ui-success-soft); border-radius: var(--ui-radius-md); font-size: var(--ui-text-sm); font-weight: 700; color: var(--ui-ink-strong); }
+.anthology-bulk__filters { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); align-items: center; margin: var(--ui-space-3) 0; font-size: var(--ui-text-sm); }
+.anthology-bulk__capacity { margin-left: auto; color: var(--ui-ink-muted); }
+.anthology-bulk__list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--ui-space-2); }
+.anthology-bulk__list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--ui-space-3); align-items: center; padding: var(--ui-space-3); background: var(--ui-surface-muted); border-radius: var(--ui-radius-md); }
+.anthology-bulk__work { min-width: 0; }
+.anthology-bulk__work strong { display: block; font-size: var(--ui-text-base); color: var(--ui-ink-strong); overflow-wrap: anywhere; }
+.anthology-bulk__work small { display: block; margin-top: 2px; font-size: var(--ui-text-xs); color: var(--ui-ink-muted); }
+@media (max-width: 640px) {
+    .anthology-bulk__list li { grid-template-columns: minmax(0, 1fr); }
+    .anthology-bulk__capacity { margin-left: 0; }
 }

@@ -5,6 +5,7 @@ import { CLASS_AGIT_LIMITS, isClassAgitChapterId } from '../src/modules/class-ag
 
 const migration = readFileSync('supabase/migrations/20261289_anthology_work_limit_300.sql', 'utf8');
 const guide = readFileSync('src/constants/teacherGuides.js', 'utf8');
+const positionMigration = readFileSync('supabase/migrations/20261290_anthology_item_position_limit.sql', 'utf8');
 const limit = CLASS_AGIT_LIMITS.anthologyWorks;
 
 test('문집 수록 한도는 앱과 DB 가 같은 수를 쓴다', () => {
@@ -56,4 +57,23 @@ test('활용 안내서가 두 한도를 상수에서 읽어 말한다', () => {
      */
     assert.match(guide, /한 권에 최대 \$\{CLASS_AGIT_LIMITS\.anthologyWorks\}편/);
     assert.match(guide, /글꽃 전시관\(\$\{CLASS_AGIT_LIMITS\.maxWorks\}편·\$\{CLASS_AGIT_LIMITS\.maxRooms\}실\)/);
+});
+
+test('작품 자리 번호 제약도 같은 한도를 쓴다', () => {
+    /*
+     * 2026-09-14 사고: 한도를 300으로 올린 당일, 교사가 **200편을 담자 저장이 막혔다.**
+     *   new row for relation "class_agit_book_items" violates check constraint
+     *   "class_agit_book_items_position_check"
+     * 함수 안의 숫자와 `page_breaks` 제약만 훑고 **표 제약**을 놓쳤다. 전시 쪽 표들은
+     * `class_agit_max_works_v1()` 을 불러 쓰는데 문집 표만 숫자가 박혀 있어 눈에 안 띄었다.
+     *
+     * 그래서 문집도 함수를 불러 쓰게 바꿨다 — 숫자를 박아 두면 다음에 또 잊는다.
+     */
+    assert.match(positionMigration, /CREATE OR REPLACE FUNCTION public\.class_agit_max_anthology_works_v1/);
+    assert.match(positionMigration, new RegExp(`SELECT ${limit};`));
+    assert.match(positionMigration, /CHECK \(position >= 1 AND position <= public\.class_agit_max_anthology_works_v1\(\)\)/);
+    // 숫자를 도로 박아 두면 여기서 걸린다.
+    assert.doesNotMatch(positionMigration, /position <= \d+/);
+    // 한도 함수는 아무나 부르지 못한다 — 전시 쪽 `class_agit_max_works_v1` 과 같은 규칙이다.
+    assert.match(positionMigration, /REVOKE ALL ON FUNCTION public\.class_agit_max_anthology_works_v1\(\) FROM PUBLIC,anon,authenticated,service_role;/);
 });

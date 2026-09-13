@@ -9,8 +9,9 @@ import BulkReview from './BulkReview.jsx';
 import { toggleSelection } from './model.js';
 import './selection.css';
 
-export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, onCreateRoom, onAdd, onArrange, onBusyChange }) {
-    const [mission, setMission] = useState(null);
+export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, onCreateRoom, onAdd, onArrange, onBusyChange }) {
+    // 주제째 담기에서 `글 보기` 로 넘어오면 그 미션을 고른 채로 연다.
+    const [mission, setMission] = useState(initialMission);
     const [input, setInput] = useState('');
     const [query, setQuery] = useState('');
     const [searchAll, setSearchAll] = useState(false);
