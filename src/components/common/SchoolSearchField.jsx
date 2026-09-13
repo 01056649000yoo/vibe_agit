@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { searchSchools } from '../../utils/schoolApi';
+import { SCHOOL_SEARCH_DEBOUNCE_MS, searchSchools } from '../../utils/schoolApi';
 
 const defaultInputStyle = {
     width: '100%', padding: '12px', borderRadius: '12px',
@@ -57,7 +57,7 @@ export default function SchoolSearchField({
             } finally {
                 if (active) setLoading(false);
             }
-        }, 350);
+        }, SCHOOL_SEARCH_DEBOUNCE_MS);
         return () => {
             active = false;
             window.clearTimeout(timer);
