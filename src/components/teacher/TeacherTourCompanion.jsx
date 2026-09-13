@@ -63,7 +63,7 @@ const useAnchorRect = (anchorId, isActive) => {
     return isActive && measured?.anchorId === anchorId ? measured : null;
 };
 
-const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate }) => {
+const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate, onOpenGuide }) => {
     const { isRunning, step, stepIndex, totalSteps } = tour;
     const rect = useAnchorRect(step?.anchor, isRunning);
     const navigatedStepRef = useRef(null);
@@ -170,6 +170,12 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     )}
                 </div>
                 <div className="teacher-tour__minor">
+                    {/* 이 단계의 자세한 설명은 안내서에 있다. 동행 중에도 바로 열 수 있어야 한다. */}
+                    {onOpenGuide && (
+                        <button type="button" onClick={() => onOpenGuide(tour.tourId, step.stepId)}>
+                            📘 이 단계 자세히 보기
+                        </button>
+                    )}
                     {stepIndex > 0 && (
                         <button type="button" onClick={tour.back}>이전</button>
                     )}

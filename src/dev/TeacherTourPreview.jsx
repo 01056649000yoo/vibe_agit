@@ -88,7 +88,7 @@ export default function TeacherTourPreview() {
             {welcome && (
                 <TeacherWelcomeModal
                     teacherName="김아지"
-                    journeyCount={TEACHER_GUIDE_JOURNEYS.length}
+                    journeys={TEACHER_GUIDE_JOURNEYS}
                     stepCount={TEACHER_GUIDE_JOURNEYS.reduce((total, item) => total + item.steps.length, 0)}
                     onStartTour={() => { setWelcome(false); start(FIRST_TEACHER_TOUR_ID); }}
                     onOpenGuide={() => setWelcome(false)}
@@ -131,6 +131,7 @@ export default function TeacherTourPreview() {
                 journeyTitle={journey?.title || ''}
                 nextJourneyTitle={getTeacherGuideJourney(nextTourId)?.title || null}
                 onNavigate={() => {}}
+                onOpenGuide={(journeyId, stepId) => console.info('안내서 열기', journeyId, stepId)}
             />
         </div>
     );

@@ -31,7 +31,7 @@ const SIGNAL_READERS = Object.freeze({
     missionCount: countClassMissions
 });
 
-const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
+const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeClassId = null }) => {
     const [state, setState] = useState(() => normalizeTourState(null));
     const [loaded, setLoaded] = useState(false);
     const [activeTourId, setActiveTourId] = useState(FIRST_TEACHER_TOUR_ID);
@@ -43,7 +43,14 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
      */
     const [justFinishedTourId, setJustFinishedTourId] = useState(null);
     const stateRef = useRef(state);
-    const ready = !userId || loaded;
+    /*
+     * 학급 목록을 **다 받은 뒤에야** 판단한다. 받는 동안에는 `classes` 가 빈 배열이라,
+     * 이미 학급이 있는 선생님도 잠깐 "학급 0개" 로 보인다. 그 틈에 환영 안내가 번쩍이거나
+     * 동행 모드가 저절로 켜지면 안 된다.
+     */
+    const ready = (!userId || loaded) && classesLoaded;
+    // 이번 접속에서 학급이 0개에서 늘어난 순간을 잡는다(= 첫 학급을 방금 만들었다).
+    const lastClassCountRef = useRef(null);
 
     const steps = useMemo(() => getTeacherTourSteps(activeTourId), [activeTourId]);
     const entry = useMemo(() => getTourEntry(state, activeTourId), [state, activeTourId]);
@@ -120,6 +127,24 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
         setState(next);
         void saveTeacherTourState(userId, next).catch(() => {});
     }, [userId]);
+
+    /*
+     * 첫 학급을 만들면 그 자리에서 동행 모드가 이어진다.
+     *
+     * 전에는 학급이 생기는 순간 첫 걸음 카드가 사라져(카드는 학급 0개 화면에만 있다)
+     * 안내서로 들어가지 않는 한 다시 시작할 길이 없었다. **이번 접속에서 0 → 1 로 바뀐
+     * 경우만** 켠다 — 이미 학급이 있는 선생님은 처음부터 1 이상이라 걸리지 않는다.
+     */
+    useEffect(() => {
+        if (!ready) return;
+        const previous = lastClassCountRef.current;
+        lastClassCountRef.current = classes.length;
+        if (previous !== 0 || classes.length === 0) return;
+        if (!shouldOfferTour(stateRef.current, FIRST_TEACHER_TOUR_ID)) return;
+        if (getTourEntry(stateRef.current, FIRST_TEACHER_TOUR_ID)?.status === 'running') return;
+        // 흐름 이름을 따로 세우지 않는다 — 첫 흐름이 기본값이라 그대로 이어 연다.
+        apply('start', FIRST_TEACHER_TOUR_ID);
+    }, [ready, classes.length, apply]);
 
     const statuses = useMemo(() => getTourStatuses(state), [state]);
     const nextTourId = useMemo(

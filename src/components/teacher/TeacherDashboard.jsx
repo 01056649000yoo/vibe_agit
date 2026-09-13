@@ -148,6 +148,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const tour = useTeacherTour({
         userId: session?.user?.id,
         classes,
+        classesLoaded: !loadingClasses,
         activeClassId: activeClass?.id || null
     });
     const tourJourney = getTeacherGuideJourney(tour.tourId);
@@ -703,7 +704,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             {tour.needsWelcome && (
                 <TeacherWelcomeModal
                     teacherName={teacherInfo?.full_name || profile?.full_name || ''}
-                    journeyCount={TEACHER_GUIDE_JOURNEYS.length}
+                    journeys={TEACHER_GUIDE_JOURNEYS}
                     stepCount={TEACHER_GUIDE_JOURNEYS.reduce((total, journey) => total + journey.steps.length, 0)}
                     onStartTour={() => { tour.markWelcomeSeen(); tour.start(); }}
                     onOpenGuide={() => {
@@ -719,6 +720,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 journeyTitle={tourJourney?.title || '처음 시작하기'}
                 nextJourneyTitle={getTeacherGuideJourney(tour.nextTourId)?.title || null}
                 onNavigate={handleWorkspaceNavigate}
+                onOpenGuide={(journeyId, stepId) => setGuideCenterRequest({
+                    journeyId,
+                    stepId,
+                    requestId: `tour-${Date.now()}`
+                })}
             />
 
             <Suspense fallback={null}>

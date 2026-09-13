@@ -94,6 +94,46 @@ test('환영 안내는 학급이 있는 교사에게 뜨지 않는다', () => {
     assert.match(hook, /needsWelcome:[^,]*!state\.welcomeSeenAt[^,]*classes\.length === 0/s);
 });
 
+test('학급 목록을 다 받기 전에는 아무 판단도 하지 않는다', () => {
+    /*
+     * 받는 동안 `classes` 는 빈 배열이라 이미 학급이 있는 선생님도 잠깐 "0개" 로 보인다.
+     * 그 틈에 환영 안내가 번쩍이거나 동행 모드가 저절로 켜지면 안 된다.
+     */
+    const hook = read('src/hooks/useTeacherTour.js');
+    assert.match(hook, /const ready = \(!userId \|\| loaded\) && classesLoaded;/);
+    const dashboard = read('src/components/teacher/TeacherDashboard.jsx');
+    assert.match(dashboard, /classesLoaded: !loadingClasses/);
+});
+
+test('첫 학급을 만들면 동행 모드가 이어진다 — 다만 이번 접속에서 늘어난 경우만', () => {
+    /*
+     * 학급이 생기는 순간 첫 걸음 카드가 사라져(카드는 학급 0개 화면에만 있다) 다시 시작할
+     * 길이 없었다. 그렇다고 "학급이 있으면 켠다" 로 두면 쓰고 계신 568명에게 전부 켜진다.
+     * 0 → 1 로 **바뀌는 순간**만 잡아야 한다.
+     */
+    const hook = read('src/hooks/useTeacherTour.js');
+    assert.match(hook, /lastClassCountRef/);
+    assert.match(hook, /if \(previous !== 0 \|\| classes\.length === 0\) return;/);
+    // 이미 따라 했거나 그만둔 사람에게 다시 켜지 않는다.
+    assert.match(hook, /if \(!shouldOfferTour\(stateRef\.current, FIRST_TEACHER_TOUR_ID\)\) return;/);
+});
+
+test('환영 안내가 안내서에 무엇이 들었는지 실제로 보여 준다', () => {
+    // "안내서가 있습니다" 라고만 하면 무엇이 들었는지 몰라 열어 보지 않는다.
+    const modal = read('src/components/teacher/TeacherWelcomeModal.jsx');
+    assert.match(modal, /journeys\.map\(\(journey\) =>/);
+    assert.ok(modal.includes('journey.steps.length'), '흐름마다 몇 단계인지 보여 주어야 합니다.');
+    // 나중에 어디서 다시 여는지까지 알려 준다.
+    assert.ok(modal.includes('활용 안내서'));
+});
+
+test('동행 중에도 그 단계의 안내서를 바로 열 수 있다', () => {
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /onOpenGuide\(tour\.tourId, step\.stepId\)/);
+    const dashboard = read('src/components/teacher/TeacherDashboard.jsx');
+    assert.match(dashboard, /onOpenGuide=\{\(journeyId, stepId\) => setGuideCenterRequest/);
+});
+
 test('안내서의 모든 흐름을 빠짐없이 따라 할 수 있다', () => {
     /*
      * 안내서에만 흐름을 더하고 동행 모드를 잊으면, 교사는 목차에서 본 흐름을
