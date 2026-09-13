@@ -3,12 +3,20 @@
  * 색·글자·간격은 design-system.css 의 --ui-* 토큰만 쓴다.
  */
 
+/*
+ * 테두리는 **파랑이 아니어야 한다.**
+ *
+ * 앱 전체가 파랑이라 파란 테두리는 화면에 묻힌다. 짚어 주는 표시는 주위와 달라야 눈에
+ * 걸린다(2026-09-13 사용자 지적). 다만 `--ui-danger` 는 이 앱에서 **삭제·위험**의 색이라
+ * 쓰지 않는다 — "여기를 누르세요" 가 지우는 단추처럼 보이면 안 된다.
+ * 그래서 붉은 계열 중 주의를 뜻하는 `--ui-accent`(주황빛 빨강)를 쓴다.
+ */
 .teacher-tour__ring {
     position: fixed;
     z-index: 1200;
     pointer-events: none;
     border-radius: var(--ui-radius-md);
-    box-shadow: 0 0 0 3px var(--ui-primary), 0 0 0 9px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 0 0 3px var(--ui-accent), 0 0 0 9px rgba(194, 65, 12, 0.20);
     transition: top var(--ui-motion-fast), left var(--ui-motion-fast),
         width var(--ui-motion-fast), height var(--ui-motion-fast);
 }

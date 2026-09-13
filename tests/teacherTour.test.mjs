@@ -264,6 +264,18 @@ test('진행 상태를 적는 열 이름이 DB 와 화면에서 같다', () => {
     assert.ok(store.includes(".is('deleted_at', null)"));
 });
 
+test('짚어 주는 테두리는 앱의 파랑과 달라야 한다', () => {
+    /*
+     * 2026-09-13 사용자 지적: 앱 전체가 파랑이라 파란 테두리는 묻힌다.
+     * 그렇다고 `--ui-danger`(삭제·위험의 색)를 쓰면 "여기를 누르세요" 가 지우는 단추처럼 보인다.
+     */
+    const css = read('src/components/teacher/TeacherTourCompanion.css');
+    const ring = css.slice(css.indexOf('.teacher-tour__ring'), css.indexOf('@media (prefers-reduced-motion'));
+    assert.ok(!ring.includes('var(--ui-primary)'), '테두리가 앱의 파랑과 같아 묻힙니다.');
+    assert.ok(!ring.includes('var(--ui-danger)'), '삭제·위험의 색은 쓰지 않습니다.');
+    assert.ok(ring.includes('var(--ui-accent)'), '테두리 색을 디자인 토큰으로 정하세요.');
+});
+
 test('동행 패널은 화면을 덮지 않는다', () => {
     /*
      * 덮개를 씌우면 정작 눌러야 할 버튼이 막힌다. 안내서 모달과 다른 점이 이것이라
