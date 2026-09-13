@@ -15,7 +15,7 @@
 
 import { getTeacherGuide, getTeacherGuideSection } from './teacherGuideRegistry.js';
 
-const MAX_POINTS = 3;
+const MAX_POINTS = 5;
 const MAX_CAUTIONS = 2;
 /** 조사·접미사에 붙어도 걸리도록 두 글자 이상만 본다. */
 const MIN_KEYWORD = 2;

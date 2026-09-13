@@ -43,7 +43,7 @@ test('관계없는 주의를 억지로 채우지 않는다', () => {
     allSteps.forEach((step) => {
         const detail = getStepDetail(step);
         assert.ok(detail.cautions.length <= 2, `${step.stepId} 주의가 너무 많습니다.`);
-        assert.ok(detail.points.length <= 3, `${step.stepId} 핵심이 너무 많습니다.`);
+        assert.ok(detail.points.length <= 5, `${step.stepId} 핵심이 너무 많습니다.`);
     });
 });
 
@@ -61,4 +61,23 @@ test('안내서와 패널이 같은 방법으로 글자를 그린다', () => {
     const guide = read('src/components/teacher/TeacherGuideContent.jsx');
     assert.match(panel, /from '\.\/guideEmphasis\.jsx'/);
     assert.match(guide, /from '\.\/guideEmphasis\.jsx'/);
+});
+
+test('연구소 단계는 네 활동을 빠짐없이 설명한다', () => {
+    /*
+     * 2026-09-13 지적: 연구소가 무엇을 하는 곳인지, 어떤 활동이 있는지 설명이 얕았다.
+     *
+     * 그리고 README 가 낡아 다섯 활동으로 적혀 있었다 — `한자 활용 문장 만들기` 는
+     * 2026-08-19 에 **새로 만드는 길을 닫았다**(연구소 코드에서 확인). 지금 만들 수 있는
+     * 것은 네 가지다. 목록이 실제와 어긋나면 안내서가 없는 기능을 가리키게 된다.
+     */
+    const detail = getStepDetail(stepOf('writing-lab'));
+    const text = detail.points.join('\n');
+    ['질문 만들기', '좋은 질문 고르기', '글 개요 짜기', '한줄모아'].forEach((activity) => {
+        assert.ok(text.includes(activity), `${activity} 설명이 빠졌습니다.`);
+    });
+    // 아지트로 어떻게 이어지는지도 같은 자리에서 알려 준다.
+    assert.match(text, /연구소 좋은 질문 불러오기|연구소 자료 연결/);
+    // 이어지는 순서와 "연결해야 보인다" 는 놓치면 헛수고가 되는 대목이다.
+    assert.match(detail.cautions.join('\n'), /연결해야|제출이 끝나야/);
 });
