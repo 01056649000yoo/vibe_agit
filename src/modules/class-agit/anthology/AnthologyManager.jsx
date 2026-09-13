@@ -7,7 +7,7 @@ import { classAgitApi } from '../api/classAgitApi.js';
 import { addBookItems, bookItemFromSource, sortBookItems } from './contract.js';
 import { prepareAnthologyWindow } from './printWindow.js';
 import { useDataExport } from '../../../hooks/useDataExport.js';
-import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign } from '../designs.js';
+import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, BOOK_PAGE_LAYOUTS, getBookPageLayout } from '../designs.js';
 import DesignPicker from '../teacher/DesignPicker.jsx';
 import BookCover from './BookCover.jsx';
 import SourcePicker from './SourcePicker.jsx';
@@ -146,7 +146,15 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>책에 담을 글을 모아요</h2><p>학생 글에서 바로 담거나 만들어 둔 전시의 작품을 가져옵니다. 차례의 순서는 여기서 정합니다.</p></div>
                 <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={locked} onClick={() => setPicker(!picker)}>학생 글에서 담기</Button>
                     <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button>
-                    <label>작품 묶기<select value={book.grouping} disabled={locked} onChange={(e) => edit({ ...book, grouping: e.target.value, items: sortBookItems(book.items, e.target.value) })}><option value="custom">직접 정한 순서</option><option value="author">학생별</option><option value="topic">주제별</option></select></label></div>
+                    <label>작품 묶기<select value={book.grouping} disabled={locked} onChange={(e) => edit({ ...book, grouping: e.target.value, items: sortBookItems(book.items, e.target.value) })}><option value="custom">직접 정한 순서</option><option value="author">학생별</option><option value="topic">주제별</option></select></label>
+                    {/*
+                      * 쪽 배치. `이어붙이기` 는 앞 작품이 끝난 자리에서 이어 붙여 종이를 아끼고,
+                      * 주제가 바뀌는 자리에 간지를 넣는다. 기본은 지금까지의 모양이다.
+                      */}
+                    <label>쪽 배치<select value={getBookPageLayout(book.page_layout).id} disabled={locked} onChange={(e) => edit({ ...book, page_layout: e.target.value })}>
+                        {BOOK_PAGE_LAYOUTS.map((layout) => <option key={layout.id} value={layout.id}>{layout.label}</option>)}
+                    </select></label>
+                    <p className="anthology-hint">{getBookPageLayout(book.page_layout).hint}</p></div>
                 {projects && <div className="class-agit-book-picker"><h3>가져올 전시</h3>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <Button variant="outline" type="button" key={project.id} disabled={busy} onClick={() => run(async () => {
                     const data = await sourceApi.getWorkspace(classId, project.id);
                     const items = data.draft.items.filter((item) => !item.unavailable && !item.revoked).map((item) => ({ ...item, author: item.authorName, group: item.groupTitle || '' }));

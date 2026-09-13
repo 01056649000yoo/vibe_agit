@@ -1,4 +1,4 @@
-import { getBookPaper, getBookDesign, validBookPrintSettings } from '../designs.js';
+import { getBookPaper, getBookDesign, getBookPageLayout, validBookPrintSettings } from '../designs.js';
 import { CLASS_AGIT_LIMITS } from '../policy.js';
 import { assertDraftSources, getSourceExclusion, presentSource } from '../sourceContract.js';
 
@@ -21,6 +21,7 @@ export function buildBookSavePayload(book) {
     return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
         introduction: book.introduction, class_label: book.class_label, issue_date: book.issue_date, grouping: book.grouping,
         paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,
+        page_layout: getBookPageLayout(book.page_layout).id,
         items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision })) };
 }
 export function sortBookItems(items, grouping) {

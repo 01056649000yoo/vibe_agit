@@ -1,13 +1,26 @@
 import { buildWritingPdfHtml } from '../../writing/export/writingPdfExport.js';
 import { escapePdfHtml } from '../../writing/export/pdfRenderContract.js';
 import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS } from './contract.js';
-import { getBookPaper, getBookDesign } from '../designs.js';
+import { getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
 import { paginateAnthology } from './pagination.js';
 
 export async function buildAnthologyHtml(edition) {
     assertBookEdition(edition);
     const book = edition.book;
     const paper = getBookPaper(book.print.paper), design = getBookDesign(book.print.design);
+    /*
+     * 쪽 배치. 이어붙이기(`continuous`)면 주제가 바뀌는 자리마다 간지를 넣고,
+     * 목차도 **주제 아래 작품**으로 들여쓴다. 예전 확정판에는 이 값이 없어 기본(작품마다 새 쪽)이다.
+     */
+    const layout = getBookPageLayout(book.print.layout).id;
+    const continuous = layout === 'continuous';
+    // 주제가 바뀌는 첫 작품의 자리를 미리 표시해 둔다 — 간지와 목차가 같은 기준을 쓴다.
+    const groupStarts = new Map();
+    book.works.forEach((work, index) => {
+        const title = String(work.group || '').trim();
+        const previous = index > 0 ? String(book.works[index - 1].group || '').trim() : null;
+        if (continuous && title && title !== previous) groupStarts.set(index, title);
+    });
     const contentHeight = paper.height - paper.marginTop - paper.marginBottom;
     const contentWidth = paper.width - paper.marginX * 2;
     const small = paper.id === 'A5';
@@ -30,6 +43,12 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 .anthology-cover [data-compact=true]{gap:5mm;padding:10mm}.anthology-cover [data-compact=true] h1{font-size:24pt}.anthology-cover h1{font-size:30pt;margin:0}.anthology-cover .cover-mark{font-size:44pt;color:#476755}.anthology-cover p{margin:0}
 [data-toc-row]{display:flex;gap:5mm;align-items:baseline;border-bottom:.2mm solid #ddd;padding:2.5mm 0;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;overflow-wrap:anywhere}
 [data-toc-row] span:first-child{flex:1;min-width:0}[data-toc-row] [data-page]{width:14mm;text-align:right;flex:none}
+/* 이어붙이기 목차: 주제 줄은 굵게, 그 아래 작품은 들여쓴다 — 어디가 묶음인지 한눈에 보인다. */
+[data-toc-group]{font-weight:800;border-bottom-width:.4mm;margin-top:3mm}
+[data-toc-work] span:first-child{padding-left:6mm}
+/* 간지 — 주제 이름만. 여기서부터 다른 주제라는 표지 역할이라 목록은 넣지 않는다. */
+.anthology-divider .anthology-page-content{display:flex;align-items:center;justify-content:center;text-align:center}
+.anthology-divider h1{font-size:26pt;margin:0}
 #anthology-source{position:absolute;left:-10000px;width:${contentWidth}mm}
 .pdf-entry,.pdf-entry__content,.pdf-poem__content{min-height:0;break-after:auto;page-break-after:auto}
 .anthology-work{white-space:normal}.anthology-work>p{white-space:pre-wrap;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;line-height:1.78}
@@ -59,7 +78,13 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 </style>`;
     const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>우리 반의 이야기</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div><p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
 ${book.introduction ? `<section data-introduction><h1>여는 글</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
-${book.works.map((w, i) => `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`).join('')}`;
+${book.works.map((w, i) => {
+    const groupTitle = groupStarts.get(i);
+    // 주제 줄은 간지 쪽을, 작품 줄은 그 작품이 시작하는 쪽을 가리킨다.
+    const groupRow = groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
+    return `${groupRow}<div data-toc-row="${i}"${continuous ? ' data-toc-work' : ''}><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+}).join('')}
+${[...groupStarts.entries()].map(([index, title]) => `<div data-divider="${index}"><h1>${e(title)}</h1></div>`).join('')}`;
     const back = `<div data-colophon><h1>${e(book.title)}</h1><p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>우리 반의 글을 모아 엮었습니다.\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
     return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
 }

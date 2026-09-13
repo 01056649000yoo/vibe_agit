@@ -31,13 +31,32 @@ export function galleryCoverStyle(themeId) {
     return { '--gallery-wall': theme.wall, '--gallery-floor': theme.floor, '--gallery-accent': theme.accent,
         '--gallery-ink': Reflect.get(GALLERY_COVER_INK, theme.id), aspectRatio: `${BOOK_PAPERS[0].width} / ${BOOK_PAPERS[0].height}` };
 }
+/*
+ * 쪽 배치 — `work-per-page` 는 작품마다 새 쪽에서 시작(지금까지의 모양),
+ * `continuous` 는 앞 작품이 끝난 자리에서 이어 붙인다.
+ * **기본은 work-per-page** 다. 예전에 만든 문집의 모양이 바뀌면 안 된다.
+ */
+export const BOOK_PAGE_LAYOUTS = Object.freeze([
+    Object.freeze({ id: 'work-per-page', label: '작품마다 새 쪽', hint: '작품 하나하나가 새 쪽에서 시작합니다.' }),
+    Object.freeze({ id: 'continuous', label: '이어붙이기', hint: '앞 작품에 이어 붙여 종이를 아낍니다. 주제가 바뀌면 간지가 들어갑니다.' })
+]);
+
+export const getBookPageLayout = (id) => BOOK_PAGE_LAYOUTS.find((layout) => layout.id === id) || BOOK_PAGE_LAYOUTS[0];
+
 export function createBookPrintSettings(book = {}) {
-    return { paper: getBookPaper(book.paper_format).id, design: getBookDesign(book.design_id).id, body_pt: 12, poem_pt: 14, version: 2 };
+    return { paper: getBookPaper(book.paper_format).id, design: getBookDesign(book.design_id).id,
+        layout: getBookPageLayout(book.page_layout).id, body_pt: 12, poem_pt: 14, version: 2 };
 }
 export function validBookPrintSettings(settings) {
     return settings?.body_pt === 12 && settings?.poem_pt === 14 && (settings.version === 1
         ? settings.paper === 'A4' && settings.design === undefined
-        : settings.version === 2 && BOOK_PAPERS.some((paper) => paper.id === settings.paper) && BOOK_DESIGNS.some((design) => design.id === settings.design));
+        /*
+         * `layout` 은 없어도 된다 — 이 설정이 생기기 전에 만든 확정판이 있다.
+         * 없으면 예전 모양(작품마다 새 쪽)으로 읽는다. 다만 **아는 값이어야** 한다.
+         */
+        : settings.version === 2 && BOOK_PAPERS.some((paper) => paper.id === settings.paper)
+            && BOOK_DESIGNS.some((design) => design.id === settings.design)
+            && (settings.layout === undefined || BOOK_PAGE_LAYOUTS.some((layout) => layout.id === settings.layout)));
 }
 
 const ROOM_VARIANTS = Object.freeze({
