@@ -223,7 +223,14 @@ export function paginateAnthology(doc) {
                 hasNeighbours = place(box);
             }
             setTocPage(index, pageNumberOf(cursor.sheet));
-            return { sheet: cursor.sheet, content: box, measure: cursor.content, fixed: 0, hasNeighbours };
+            /*
+             * `fixed` = 상자에 이미 들어 있는 것(제목·글쓴이·줄) 수.
+             *
+             * 0 으로 두면 첫 문단이 안 들어갈 때 `flow` 가 "이 쪽엔 이미 본문이 있다" 고 잘못 읽어
+             * 문단을 쪼개지 않고 다음 쪽으로 보낸다. 그러면 **제목만 남은 쪽**이 생긴다 — 한 쪽을
+             * 넘는 긴 문단이 그랬다(2026-09-14 지적). 제 쪽을 통째로 쓰는 글은 문단을 쪼개야 한다.
+             */
+            return { sheet: cursor.sheet, content: box, measure: cursor.content, fixed: box.childElementCount, hasNeighbours };
         };
         const continuation = () => {
             cursor = page();
