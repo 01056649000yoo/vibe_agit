@@ -4,7 +4,9 @@ import test from 'node:test';
 import { SERVICE_STAT_ITEMS } from '../src/constants/serviceStats.js';
 
 const read = (file) => readFileSync(file, 'utf8');
-const migration = read('supabase/migrations/20261282_service_stats_snapshot.sql');
+// 세는 기준·간격의 현재 원본은 마지막으로 함수를 다시 쓴 장이다. 옛 장을 보면 이미 지난 규칙을 검사하게 된다.
+const migration = read('supabase/migrations/20261284_service_stats_live_refresh.sql');
+const firstMigration = read('supabase/migrations/20261282_service_stats_snapshot.sql');
 const strip = read('src/components/layout/LandingServiceStats.jsx');
 const landing = read('src/components/layout/LandingPage.jsx');
 const allowlist = JSON.parse(read('ops/rpc-surface-allowlist.json'));
@@ -16,8 +18,8 @@ test('비로그인에게 여는 것은 총계뿐이고 표는 닫아 둔다', ()
      */
     assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.get_service_stats_v1\(\) TO anon, authenticated/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_service_stats_v1\(\) FROM PUBLIC/);
-    assert.match(migration, /ALTER TABLE public\.service_stats ENABLE ROW LEVEL SECURITY/);
-    assert.match(migration, /REVOKE ALL ON TABLE public\.service_stats FROM anon, authenticated/);
+    assert.match(firstMigration, /ALTER TABLE public\.service_stats ENABLE ROW LEVEL SECURITY/);
+    assert.match(firstMigration, /REVOKE ALL ON TABLE public\.service_stats FROM anon, authenticated/);
 
     // 돌려주는 열쇠는 넷뿐이다. 이름·학교명이 섞여 나갈 자리가 없다.
     const returned = [...migration.matchAll(/'(teachers|classes|students|posts)',/g)].map((match) => match[1]);
@@ -37,7 +39,12 @@ test('방문 한 번에 네 표를 세지 않는다', () => {
      * 로그인 화면은 방문이 많다. 그때그때 count(*) 를 돌리면 조회가 방문 수만큼 늘고,
      * 아무나 늘릴 수 있다. 한 시간에 한 번만 세고 나머지는 적어 둔 값을 읽는다.
      */
-    assert.match(migration, /computed_at < now\(\) - INTERVAL '1 hour'/);
+    const interval = migration.match(/computed_at < now\(\) - INTERVAL '(\d+) seconds'/);
+    assert.ok(interval, '다시 세는 간격을 찾지 못했습니다.');
+    // 0초면 방문마다 세는 것과 같아 봇이 조회를 마음대로 늘릴 수 있다.
+    assert.ok(Number(interval[1]) >= 30, `간격이 ${interval[1]}초입니다. 30초 이상 두세요.`);
+    // 너무 길면 가입·학급 생성이 첫 화면에 한참 반영되지 않는다(2026-09-13 제보).
+    assert.ok(Number(interval[1]) <= 300, `간격이 ${interval[1]}초입니다. 5분 이내로 두세요.`);
     // 여럿이 동시에 들이닥쳐도 한 세션만 센다.
     assert.match(migration, /pg_try_advisory_xact_lock/);
 });
@@ -56,7 +63,7 @@ test('화면 문구와 DB 가 세는 기준이 같다', () => {
         const found = [...migration.matchAll(
             new RegExp(`${column}\\s*= \\(SELECT count\\(\\*\\) FROM public\\.${table}([\\s\\S]*?)\\)\\s*,?\\n`, 'g')
         )];
-        assert.equal(found.length, 2, `${column} 계산이 두 곳(함수·첫 채움)에 있어야 하는데 ${found.length}곳입니다.`);
+        assert.equal(found.length, 1, `${column} 계산이 한 곳이어야 하는데 ${found.length}곳입니다.`);
         return found.map((match) => match[1]);
     };
 

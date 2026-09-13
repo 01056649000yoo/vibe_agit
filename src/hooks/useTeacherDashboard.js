@@ -224,16 +224,24 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             const { error } = await supabase.rpc('withdraw_my_teacher_account');
             if (error) throw error;
 
-            // 4. 브라우저 저장 데이터 완전 초기화
-            localStorage.clear();
-            sessionStorage.clear();
-
-            // 5. 로그아웃 처리
+            /*
+             * 로그아웃을 **먼저** 한다.
+             *
+             * 전에는 저장소를 먼저 비우고 로그아웃했는데, 그 사이 supabase 클라이언트가
+             * 메모리에 들고 있던 세션을 저장소에 다시 적어 넣었다. 그래서 탈퇴하고 다시
+             * 들어오면 로그인 창 대신 가입 화면이 뜨고(옛 출입증이 남아 있어서),
+             * 학교를 검색하면 "교사 로그인이 만료되었습니다" 가 떴다(2026-09-13 제보).
+             *
+             * 계정은 이미 지워졌으므로 서버 로그아웃은 실패한다 — 이 브라우저만 정리한다.
+             */
             try {
-                await supabase.auth.signOut();
+                await supabase.auth.signOut({ scope: 'local' });
             } catch (e) {
                 console.warn("Withdrawal signout failed:", e);
             }
+
+            localStorage.clear();
+            sessionStorage.clear();
 
             notify('탈퇴가 끝났어요. 모든 자료를 삭제했습니다.');
             window.location.href = '/';

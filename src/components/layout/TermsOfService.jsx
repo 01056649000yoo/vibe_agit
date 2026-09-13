@@ -9,7 +9,7 @@ const TermsOfService = () => {
         <div style={{ textAlign: 'left' }}>
             <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>
                 최초 시행일: 2026년 1월 16일 · 개정일: 2026년 9월 11일 · 개정 시행일: 2026년 9월 21일
-                <br />작품 저작권 안내 보완: 2026년 9월 5일
+                <br />작품 저작권 안내 보완: 2026년 9월 5일 · 개인 API 키 관련 문구 삭제: 2026년 9월 13일
             </p>
 
             <section style={{ marginBottom: '20px' }}>
@@ -42,7 +42,7 @@ const TermsOfService = () => {
                     <li>부적절하거나 불법적인 콘텐츠를 게시하지 않을 것</li>
                     <li>서비스의 정상적인 운영을 방해하지 않을 것</li>
                 </ul>
-                <p style={{ marginTop: '10px' }}><strong>'끄적끄적 아지트'는 본 서비스의 기능만을 제공하며, 이를 이용하면서 발생하는 부수적 사안(API 비용 등)에 대한 모든 책임은 이용자에게 있습니다.</strong></p>
+                <p style={{ marginTop: '10px' }}><strong>AI 기능은 '끄적끄적 아지트'가 서비스 계정으로 직접 운영하며, 이용자가 별도의 API 키를 등록하거나 AI 이용 요금을 부담하지 않습니다.</strong> 다만 AI가 만든 문장은 제안일 뿐이므로, 학생에게 전달하기 전에 교사가 확인하고 필요한 부분을 고쳐 사용해 주세요.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>

@@ -79,6 +79,36 @@ export const useAuthStore = create((set, get) => ({
     setLoading: (loading) => set({ loading }),
 
     // 1. 프로필 정보 가져오기 (교사/관리자)
+    /*
+     * 프로필이 없다는 것만으로는 두 경우를 가를 수 없다.
+     *   ① 이제 막 가입하는 사람 — 아직 프로필을 안 만들었다(정상).
+     *   ② 탈퇴로 계정이 사라졌는데 이 브라우저에만 옛 출입증이 남았다.
+     *
+     * PostgREST 는 토큰의 **서명만** 보므로 ②도 통과해 가입 화면으로 들어가고,
+     * 정작 엣지 함수는 인증 서버에 물어보기 때문에 "교사 로그인이 만료되었습니다" 가 뜬다
+     * (2026-09-13 제보). 둘을 가르는 것은 **인증 서버에 이 사람이 아직 있는가** 뿐이다.
+     *
+     * 통신이 잠깐 끊긴 것과 헷갈리면 멀쩡한 선생님을 쫓아낸다. 그래서 인증 서버가
+     * **401/403 으로 거절했을 때만** 정리한다.
+     */
+    signOutIfAccountGone: async () => {
+        if (!supabase) return false;
+        let rejected = false;
+        try {
+            const { data, error } = await supabase.auth.getUser();
+            if (!error && data?.user) return false;
+            rejected = error?.status === 401 || error?.status === 403;
+        } catch {
+            rejected = false;
+        }
+        if (!rejected) return false;
+
+        // 서버에는 이미 없는 계정이라 서버 로그아웃은 실패한다. 이 브라우저만 정리한다.
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* 아래에서 비운다 */ }
+        set({ session: null, profile: null, teacherBootstrap: null, profileLoading: false });
+        return true;
+    },
+
     fetchProfile: async (userId, options = {}) => {
         if (!userId) return;
 
@@ -135,6 +165,8 @@ export const useAuthStore = create((set, get) => ({
             return await fetchPromise;
         } catch (e) {
             console.warn("[AuthStore] 프로필 로드 중 오류 발생:", e);
+            // 탈퇴한 계정의 옛 출입증이면 여기서 정리한다. 아니면 가입 화면 그대로 간다.
+            await get().signOutIfAccountGone();
         } finally {
             profileFetchInflight.delete(userId);
             set({ profileLoading: false });

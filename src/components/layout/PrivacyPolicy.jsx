@@ -17,6 +17,7 @@ const PrivacyPolicy = () => {
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
                 개정 이력 — 최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 21일
                 <br />학생 개인정보 처리 근거·수집 항목 정정, 동의 기록 보관 명시: 2026년 9월 21일
+                <br />개인 API 키 미수집 명시: 2026년 9월 13일
                 <br />전시 공개·작품 보호 안내 보완: 2026년 9월 5일
             </p>
 
@@ -132,7 +133,7 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제8조 (개인정보의 안전성 확보 조치)</h4>
                 <ul style={{ paddingLeft: '20px' }}>
                     <li><strong>개인정보의 암호화:</strong> 이용자의 비밀번호는 단방향 암호화되어 저장됩니다.</li>
-                        <li><strong>AI 서비스 보안:</strong> AI 서비스 키는 서버측(Edge Functions) 환경 변수에서만 관리되며, 이용자 브라우저와 데이터베이스에 노출하지 않습니다.</li>
+                        <li><strong>AI 서비스 보안:</strong> AI 서비스 키는 서버측(Edge Functions) 환경 변수에서만 관리되며, 이용자 브라우저와 데이터베이스에 노출하지 않습니다. 이용자에게 개인 API 키를 받지 않으며, 과거에 저장되어 있던 개인 키는 2026년 9월 13일에 모두 삭제했습니다.</li>
                     <li><strong>기술적 대책:</strong> SSL(HTTPS) 인증서를 통한 구간 암호화 통신을 의무화하고 있습니다.</li>
                 </ul>
             </section>
