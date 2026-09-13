@@ -130,7 +130,8 @@
     display: grid;
     width: 100%;
     min-height: 52px;
-    grid-template-columns: 24px 25px minmax(0, 1fr);
+    /* 번호 · 아이콘 · 제목 · 진도 — 네 칸. 진도가 제목 칸에 끼면 두 줄이 된다. */
+    grid-template-columns: 24px 25px minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     padding: 9px 11px;
@@ -150,6 +151,21 @@
 .teacher-guide-center__nav-item.is-active { border-color: #C7D2FE; background: #FFFFFF; color: #3730A3; box-shadow: 0 7px 18px rgba(79, 70, 229, .09); }
 .teacher-guide-center__nav-number { color: #94A3B8; font-size: var(--ui-text-xs); font-weight: 900; text-align: center; }
 .teacher-guide-center__nav-icon { font-size: 1.15rem; text-align: center; }
+
+/* 제목은 한 줄만. 길면 말줄임으로 줄이고 줄바꿈하지 않는다. */
+.teacher-guide-center__nav-title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 진도 칸. 아무것도 없으면 폭이 0 이라 제목이 그만큼 넓어진다. */
+.teacher-guide-center__nav-state {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+}
 
 .teacher-guide-center__main {
     min-width: 0;
@@ -261,7 +277,7 @@
 @media (max-width: 900px) {
     .teacher-guide-center__body { grid-template-columns: 230px minmax(0, 1fr); }
     .teacher-guide-center__body.has-ai-assistant { grid-template-columns: 210px minmax(0, 1fr) 300px; }
-    .teacher-guide-center__nav-item { grid-template-columns: 22px minmax(0, 1fr); }
+    .teacher-guide-center__nav-item { grid-template-columns: 22px minmax(0, 1fr) auto; }
     .teacher-guide-center__nav-icon { display: none; }
     .teacher-guide-center__step-overview { align-items: flex-start; flex-wrap: wrap; }
     .teacher-guide-center__actions { width: 100%; padding-left: 48px; }
@@ -276,7 +292,7 @@
     .teacher-guide-center__nav { flex: 0 0 auto; overflow-x: auto; overflow-y: hidden; padding: 10px 12px; border-right: 0; border-bottom: 1px solid #DCE4F0; }
     .teacher-guide-center__nav-heading { display: none; }
     .teacher-guide-center__nav-list { display: flex; width: max-content; }
-    .teacher-guide-center__nav-item { width: auto; min-height: 42px; grid-template-columns: 20px minmax(0, auto); padding: 7px 11px; white-space: nowrap; }
+    .teacher-guide-center__nav-item { width: auto; min-height: 42px; grid-template-columns: 20px minmax(0, auto) auto; padding: 7px 11px; white-space: nowrap; }
     .teacher-guide-center__main { padding: 15px 13px 28px; }
     .teacher-guide-center__hero { gap: 12px; padding: 16px; }
     .teacher-guide-center__hero-icon { width: 44px; height: 44px; border-radius: 13px; font-size: 1.35rem; }
@@ -318,12 +334,11 @@
 }
 
 .teacher-guide-center__nav-done {
-    margin-left: auto;
     font-size: var(--ui-text-xs);
+    line-height: 1;
 }
 
 .teacher-guide-center__nav-progress {
-    margin-left: auto;
     padding: 1px var(--ui-space-2);
     background: var(--ui-surface-muted);
     border-radius: var(--ui-radius-pill);

@@ -162,13 +162,19 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                         >
                                             <span className="teacher-guide-center__nav-number">{index + 1}</span>
                                             <span aria-hidden="true" className="teacher-guide-center__nav-icon">{journey.icon}</span>
-                                            <span>{journey.title}</span>
-                                            {finished && <span className="teacher-guide-center__nav-done" title="동행 모드로 다 해봤습니다">✅</span>}
-                                            {partway && (
-                                                <span className="teacher-guide-center__nav-progress" title="동행 모드 진도">
-                                                    {progress.done}/{progress.total}
-                                                </span>
-                                            )}
+                                            <span className="teacher-guide-center__nav-title">{journey.title}</span>
+                                            {/*
+                                              * 진도 표시는 **한 칸을 따로 차지**한다. 제목과 같은 칸에 두면
+                                              * 밀려 내려가 목차가 두 줄이 된다(2026-09-13 지적).
+                                              */}
+                                            <span className="teacher-guide-center__nav-state">
+                                                {finished && <span className="teacher-guide-center__nav-done" title="동행 모드로 다 해봤습니다">✅</span>}
+                                                {partway && (
+                                                    <span className="teacher-guide-center__nav-progress" title="동행 모드 진도">
+                                                        {progress.done}/{progress.total}
+                                                    </span>
+                                                )}
+                                            </span>
                                         </button>
                                     );
                                 })}
