@@ -76,10 +76,18 @@ const useAnchorRect = (stepId, anchorId, fallbackAnchorId, isActive) => {
         const timerId = window.setInterval(measure, RECT_POLL_MS);
         window.addEventListener('resize', measure);
         window.addEventListener('scroll', measure, true);
+        /*
+         * 눌린 직후 **바로** 다시 잰다. 주기(300ms)만 기다리면 메뉴를 눌러도 잠깐 아무
+         * 반응이 없어 "눌렀는데 다음으로 안 간다" 로 보인다(2026-09-13 걷기 검사에서 잡힘).
+         * 클릭이 화면에 반영된 뒤 재야 하므로 한 박자 미룬다.
+         */
+        const remeasureSoon = () => window.setTimeout(measure, 0);
+        window.addEventListener('click', remeasureSoon, true);
         return () => {
             window.clearInterval(timerId);
             window.removeEventListener('resize', measure);
             window.removeEventListener('scroll', measure, true);
+            window.removeEventListener('click', remeasureSoon, true);
         };
     }, [stepId, anchorId, fallbackAnchorId, isActive]);
 
@@ -186,10 +194,15 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
      */
     const isMenuStep = step.spotlight === TOUR_SPOTLIGHT_MENU;
     const arrived = isMenuStep && rect?.opened === true;
+    /*
+     * 앞 단계와 같은 화면을 이어서 쓰는 단계가 있다(대시보드에서 제출 확인 → 승인,
+     * 독서록에서 확인 → 활동 운영). 그때는 이미 열려 있어 **테두리가 아예 없다** —
+     * 왜 하이라이트가 없는지 몰라 헷갈린다는 제보가 있어 말로 알려 준다(2026-09-13).
+     */
     const menuHint = isMenuStep
         ? (arrived
-            ? '열렸습니다. 아래 설명을 읽고 **다음 단계로**를 눌러 주세요.'
-            : '테두리가 씌워진 메뉴를 눌러 이 화면을 열어 보세요.')
+            ? '이 화면은 이미 열려 있습니다. 아래 설명을 읽고 **다음 단계로**를 눌러 주세요.'
+            : '테두리가 씌워진 메뉴를 눌러 이 화면을 **열어야** 다음으로 갈 수 있습니다.')
         : null;
 
     return (
@@ -270,7 +283,14 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     </p>
                 )}
                 <div className="teacher-tour__actions">
-                    {needsAck ? (
+                    {isMenuStep && !arrived ? (
+                        /*
+                         * 짚어 준 메뉴를 **실제로 열어야** 다음으로 간다(2026-09-13 사용자 제안).
+                         * 안 보고 넘기면 진행이 되는지 마는지 알 수 없고, 설명과 화면이 계속
+                         * 어긋난다. 다만 갇히면 안 되므로 아래 `건너뛰기` 는 늘 열려 있다.
+                         */
+                        <p className="teacher-tour__waiting">메뉴를 열면 다음으로 갈 수 있어요</p>
+                    ) : needsAck ? (
                         <button type="button" className="teacher-tour__primary" onClick={tour.acknowledge}>
                             {arrived ? '다음 단계로 →' : '확인했어요'}
                         </button>

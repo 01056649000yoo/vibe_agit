@@ -15,8 +15,11 @@ import {
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
+    launchAnchorId,
+    moduleAnchorId,
     sectionAnchorId,
     tabAnchorId,
+    toolAnchorId,
     tourAnchor
 } from '../guides/teacherTour.js';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../guides/teacherGuideJourneys.js';
@@ -199,7 +202,7 @@ export function TeacherTourLiveHook() {
 
             {/* 가짜 하위 메뉴 — 진짜 화면과 같은 이름표·같은 표시(aria-selected)를 쓴다. */}
             <div role="tablist" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-                {['reading-logs', 'diaries', 'archive', 'recent-activity', 'student-agits', 'comments', 'footprints', 'settings'].map((tabId) => (
+                {['dashboard', 'reading-logs', 'diaries', 'archive', 'recent-activity', 'student-agits', 'comments', 'footprints', 'tools', 'playground', 'evaluation', 'activity', 'class-agit', 'class-agit-books', 'neighbor-agit', 'settings'].map((tabId) => (
                     <button
                         key={tabId}
                         type="button"
@@ -231,6 +234,37 @@ export function TeacherTourLiveHook() {
                     ))}
                 </div>
             )}
+
+            {/* 학급운영도구 목록 — 도구 탭을 열어야 나온다. */}
+            {openedTab === 'tools' && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                    {['class-board', 'class-notice', 'meal-board', 'classroom-arrangement'].map((toolId) => (
+                        <button key={toolId} type="button" aria-current={openedSection === toolId ? 'page' : undefined}
+                            onClick={() => setOpenedSection(toolId)} {...tourAnchor(toolAnchorId(toolId))} style={{ padding: '8px 12px' }}>
+                            {toolId}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* 놀이 카드 — 놀이터 탭을 열어야 나온다. */}
+            {openedTab === 'playground' && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                    {['dragon', 'vocab-tower'].map((moduleId) => (
+                        <button key={moduleId} type="button" aria-current={openedSection === moduleId ? 'page' : undefined}
+                            onClick={() => setOpenedSection(moduleId)} {...tourAnchor(moduleAnchorId(moduleId))} style={{ padding: '8px 12px' }}>
+                            {moduleId}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <a href="#lab" {...tourAnchor(launchAnchorId('writing-lab'))} style={{ padding: '8px 12px' }}>🧪 연구소</a>
+                <button type="button" {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)} style={{ padding: '8px 12px' }}>우리 반 스크린</button>
+                <span {...tourAnchor(TEACHER_TOUR_ANCHORS.STUDENT_ADD)} style={{ padding: '8px 12px', border: '1px solid var(--ui-border)' }}>학생 추가</span>
+                <span {...tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE)} style={{ padding: '8px 12px', border: '1px solid var(--ui-border)' }}>미션 만들기</span>
+            </div>
 
             <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{ display: 'grid', gap: 40, maxWidth: 600 }}>
                 <button type="button" onClick={() => setClasses((current) => [...current, { id: `c${current.length}` }])} {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>

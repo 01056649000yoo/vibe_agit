@@ -643,3 +643,17 @@ test('모든 단계의 이름표가 실제로 그려지는 곳을 가리킨다',
     });
     assert.deepEqual(problems, []);
 });
+
+test('짚어 준 메뉴를 열어야 다음으로 간다 — 다만 갇히지는 않는다', () => {
+    /*
+     * 2026-09-13 사용자 제안: 스포트라이트를 눌러 보지 않고도 넘어가지면 진행이 되는지
+     * 마는지 알 수 없고, 설명과 화면이 계속 어긋난다. 열어야 넘어가게 한다.
+     * 다만 어떤 사정으로 못 여는 교사가 갇히면 안 되므로 `건너뛰기` 는 늘 열어 둔다.
+     */
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /\{isMenuStep && !arrived \? \(/,
+        '열지 않아도 다음으로 넘어갑니다.');
+    assert.ok(panel.includes('메뉴를 열면 다음으로 갈 수 있어요'));
+    // 탈출구는 조건 없이 늘 있어야 한다.
+    assert.match(panel, /<button type="button" onClick=\{tour\.skipStep\}>이 단계 건너뛰기<\/button>/);
+});
