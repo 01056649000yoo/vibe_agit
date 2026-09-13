@@ -15,7 +15,9 @@ import {
     getTeacherTourSteps,
     getTourEntry,
     getTourStatuses,
+    isFirstSession,
     isStepSatisfied,
+    markFirstLogin,
     markWelcomeSeen,
     normalizeTourState,
     reduceTourState,
@@ -121,6 +123,18 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
         apply('complete');
     }, [isRunning, step, signals, apply]);
 
+    /*
+     * 가입하고 처음 앉은 자리를 한 번 적어 둔다. 이 자리에서는 공지를 미뤄 둔다 —
+     * 환영 안내·첫 걸음 카드·동행 패널이 이미 겹쳐 있어 무엇부터 할지 묻힌다.
+     */
+    useEffect(() => {
+        if (!ready || stateRef.current.firstLoginAt) return;
+        const next = markFirstLogin(stateRef.current);
+        stateRef.current = next;
+        setState(next);
+        void saveTeacherTourState(userId, next).catch(() => {});
+    }, [ready, userId]);
+
     const rememberWelcomeSeen = useCallback(() => {
         const next = markWelcomeSeen(stateRef.current);
         stateRef.current = next;
@@ -176,6 +190,8 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
         needsWelcome: ready && !state.welcomeSeenAt && classes.length === 0
             && shouldOfferTour(state, FIRST_TEACHER_TOUR_ID),
         markWelcomeSeen: rememberWelcomeSeen,
+        // 첫 자리에서는 공지 띠·공지 팝업을 띄우지 않는다. 다음에 들어올 때 보여 준다.
+        isFirstSession: ready && isFirstSession(state),
         start,
         acknowledge: useCallback(() => apply('complete'), [apply]),
         skipStep: useCallback(() => apply('skipStep'), [apply]),

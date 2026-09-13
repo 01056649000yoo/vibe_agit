@@ -438,11 +438,18 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
               * 새 공지는 머리말의 작은 버튼만으로는 눈에 띄지 않았다(사용자 지적).
               * 안 읽은 공지가 있을 때만 여기에 띠가 뜨고, 다 읽으면 사라진다.
               */}
-            <AnnouncementSpotlight
-                unread={announcementSeen.unread}
-                onMarkSeen={announcementSeen.markSeen}
-                onViewAll={() => setShowAnnouncementList(true)}
-            />
+            {/*
+              * 가입하고 처음 앉은 자리에서는 공지를 미뤄 둔다. 환영 안내·첫 걸음 카드·동행
+              * 패널이 이미 겹쳐 있어, 여기에 공지 띠까지 얹으면 무엇부터 해야 하는지 묻힌다.
+              * 읽음으로 넘기지 않으므로 다음에 들어올 때 그대로 뜬다.
+              */}
+            {!tour.isFirstSession && (
+                <AnnouncementSpotlight
+                    unread={announcementSeen.unread}
+                    onMarkSeen={announcementSeen.markSeen}
+                    onViewAll={() => setShowAnnouncementList(true)}
+                />
+            )}
 
             {/* 교사 업무 영역 네비게이션 */}
             <nav ref={teacherNavRef} className="teacher-dashboard__nav" style={{
@@ -756,7 +763,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
               * 그전에는 이 창이 만들어져 있고도 아무 데서도 쓰이지 않아 설정이 헛돌았다.
               */}
             <AnimatePresence>
-                {announcementSeen.popupAnnouncement && (
+                {!tour.isFirstSession && announcementSeen.popupAnnouncement && (
                     <AnnouncementModal
                         announcement={announcementSeen.popupAnnouncement}
                         onClose={() => announcementSeen.markSeen([announcementSeen.popupAnnouncement.id])}

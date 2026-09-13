@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { announcementVisibleSince } from '../constants/announcements.js';
 
 const ANNOUNCEMENT_LIMIT = 20;
 
@@ -18,6 +19,8 @@ export const useAnnouncements = (role = 'TEACHER', initialAnnouncements = null) 
                 // is_popup 을 빼먹어 관리자의 '팝업' 설정이 아무 일도 하지 않았다(2026-08-21 수정).
                 .select('id, title, content, created_at, target_role, is_popup')
                 .or(`target_role.eq.${role},target_role.eq.ALL`)
+                // 2주가 지난 공지는 목록에서 뺀다 — 지난 공지가 쌓이면 새 공지가 묻힌다.
+                .gte('created_at', announcementVisibleSince())
                 .order('created_at', { ascending: false })
                 .limit(ANNOUNCEMENT_LIMIT);
 

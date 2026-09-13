@@ -159,8 +159,35 @@ export const normalizeTourState = (raw) => {
         version: 1,
         // 가입 직후 한 번 뜨는 환영 안내를 봤는지. 흐름별이 아니라 교사당 하나다.
         welcomeSeenAt: typeof raw?.welcomeSeenAt === 'string' ? raw.welcomeSeenAt : null,
+        // 대시보드에 처음 들어온 시각. 첫 자리에서는 공지를 미뤄 두는 데 쓴다.
+        firstLoginAt: typeof raw?.firstLoginAt === 'string' ? raw.firstLoginAt : null,
         tours
     };
+};
+
+/**
+ * 가입하고 처음 앉은 자리인지.
+ *
+ * 첫 자리에는 환영 안내·첫 걸음 카드·동행 패널이 이미 겹쳐 뜬다. 여기에 공지 띠와 공지
+ * 팝업까지 얹으면 **무엇부터 해야 하는지** 가 묻힌다. 학급을 만드는 일에만 집중하게 두고,
+ * 공지는 다음에 들어올 때 보여 준다.
+ *
+ * 시간으로 재는 이유: "이번 페이지에서 처음 썼는가" 로 보면 새로고침 한 번에 공지가
+ * 튀어나온다. 가입 직후 한 자리(30분) 동안만 미루면 다음 로그인에는 자연히 보인다.
+ */
+export const FIRST_SESSION_QUIET_MS = 30 * 60 * 1000;
+
+export const markFirstLogin = (state, { now = new Date().toISOString() } = {}) => {
+    const normalized = normalizeTourState(state);
+    if (normalized.firstLoginAt) return normalized;
+    return { ...normalized, firstLoginAt: now };
+};
+
+export const isFirstSession = (state, { now = Date.now() } = {}) => {
+    const firstLoginAt = normalizeTourState(state).firstLoginAt;
+    if (!firstLoginAt) return false;
+    const startedAt = Date.parse(firstLoginAt);
+    return Number.isFinite(startedAt) && now - startedAt < FIRST_SESSION_QUIET_MS;
 };
 
 /** 환영 안내를 봤다고 적는다. 한 번 본 사람에게 다시 띄우지 않는다. */
