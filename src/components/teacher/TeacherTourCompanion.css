@@ -228,3 +228,49 @@
     border-radius: var(--ui-radius-lg);
     box-shadow: 0 0 0 2px var(--ui-accent), 0 0 0 6px rgba(194, 65, 12, 0.14);
 }
+
+/*
+ * 단계마다 짚어 주는 핵심과 주의. 안내서 원문을 그대로 읽어 온다.
+ * 길어질 수 있으므로 높이를 묶고 넘치면 그 안에서만 스크롤한다 — 패널이 화면을 밀면 안 된다.
+ */
+.teacher-tour__detail {
+    max-height: 34vh;
+    overflow-y: auto;
+    margin-top: var(--ui-space-3);
+    padding-top: var(--ui-space-3);
+    border-top: 1px solid var(--ui-border);
+}
+
+.teacher-tour__points {
+    margin: 0;
+    padding-left: var(--ui-space-5);
+    display: grid;
+    gap: var(--ui-space-2);
+}
+
+.teacher-tour__points li {
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-muted);
+}
+
+.teacher-tour__caution {
+    display: flex;
+    gap: var(--ui-space-2);
+    margin: var(--ui-space-3) 0 0;
+    padding: var(--ui-space-2) var(--ui-space-3);
+    background: var(--ui-warning-soft);
+    border-radius: var(--ui-radius-sm);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-strong);
+}
+
+.teacher-tour__detail .teacher-guide__key {
+    padding: 1px 5px;
+    background: var(--ui-surface-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-xs);
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+}

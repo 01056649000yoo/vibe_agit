@@ -33,6 +33,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         summary: '과제를 만들고 학생 제출을 확인한 뒤 다시 쓰기·승인·평가까지 이어 갑니다.',
         estimatedTime: '수업 전 10분',
         steps: [
+            step('writing-lab', '글쓰기 전에 생각 모으기', '연구소에서 개요·질문을 함께 만들고 그 결과를 과제로 이어 줍니다.', 'writing-lab'),
             step('create-mission', '과제 만들기', '글 종류와 조건을 정하고 학생 화면을 확인한 뒤 과제를 공개합니다.', 'dashboard', 'create'),
             step('review-submissions', '제출 확인과 피드백', '학생별 제출 상태를 보고 글을 읽은 뒤 확인 또는 다시 쓰기를 결정합니다.', 'dashboard', 'review'),
             step('approve-and-evaluate', '승인과 평가로 마무리', '완성 글을 승인하고 필요하면 평가와 리포트로 이어 갑니다.', 'dashboard', 'complete'),

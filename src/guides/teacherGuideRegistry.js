@@ -12,6 +12,8 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'settings:ai-prompts': { tab: 'settings', section: 'ai-prompts' },
     'settings:writing-editor': { tab: 'settings', section: 'writing-editor' },
     'settings:module:spelling-learning': { tab: 'settings', section: 'module:spelling-learning' },
+    // 연구소는 탭이 아니라 새 화면으로 여는 링크다. 탭으로 적으면 없는 탭으로 옮기려다 만다.
+    'writing-lab': { launch: 'writing-lab' },
     'neighbor-agit': { tab: 'neighbor-agit' },
     'class-agit': { tab: 'class-agit' },
     'class-agit-books': { tab: 'class-agit-books' },

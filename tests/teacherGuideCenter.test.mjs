@@ -64,11 +64,12 @@ test('활용 안내서는 교사의 목적에 따른 여덟 개 큰 흐름을 �
     }
 });
 
-test('교사 도움말 26개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
+test('교사 도움말 27개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
     // 개수를 못 박는 이유는 도움말이 조용히 사라지는 것을 잡기 위해서다.
     // 아래 반복문이 "새로 넣고 연결 안 함"을 잡고, 이 숫자가 "있던 것이 없어짐"을 잡는다.
     // 2026-09-07 에 27 → 26: `reading-events` 를 `reading-logs` 의 세부 탭으로 합쳤다.
-    assert.equal(Object.keys(TEACHER_GUIDES).length, 26);
+    // 2026-09-13 에 26 → 27: `writing-lab`(글쓰기 연구소)가 상단 메뉴에 있는데 안내서에 없었다.
+    assert.equal(Object.keys(TEACHER_GUIDES).length, 27);
     for (const guideId of Object.keys(TEACHER_GUIDES)) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);
         assert.ok(Reflect.get(TEACHER_GUIDE_TARGETS, guideId), `${guideId}: 실제 화면 이동 대상이 없다`);
@@ -77,7 +78,14 @@ test('교사 도움말 26개는 빠짐없이 활용 안내서의 큰 흐름과 �
 
 test('도움말 화면 이동 대상은 실제 교사 탭과 등록 모듈만 사용한다', () => {
     const teacherTabs = new Set(TEACHER_NAV_GROUPS.flatMap((group) => group.tabs.map((tab) => tab.id)));
+    // 탭이 아니라 **새 화면으로 여는 메뉴**도 있다(글쓰기 연구소). 그 경우 그런 메뉴가
+    // 실제로 있고 열 주소를 갖는지 본다 — 탭 검사로는 걸러지지 않는다.
+    const launchGroups = new Set(TEACHER_NAV_GROUPS.filter((group) => group.launchHref).map((group) => group.id));
     for (const [guideId, target] of Object.entries(TEACHER_GUIDE_TARGETS)) {
+        if (target.launch) {
+            assert.ok(launchGroups.has(target.launch), `${guideId}: 새 화면으로 여는 메뉴 ${target.launch} 가 없다`);
+            continue;
+        }
         assert.ok(teacherTabs.has(target.tab), `${guideId}: 존재하지 않는 교사 탭 ${target.tab}`);
         if (target.section?.startsWith('module:')) {
             const moduleId = target.section.slice('module:'.length);

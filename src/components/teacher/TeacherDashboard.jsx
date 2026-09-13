@@ -35,7 +35,7 @@ import TeacherTourCompanion from './TeacherTourCompanion';
 import TeacherFirstStepsCard from './TeacherFirstStepsCard';
 import TeacherWelcomeModal from './TeacherWelcomeModal';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../../guides/teacherGuideJourneys';
-import { TEACHER_TOUR_ANCHORS, tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
+import { TEACHER_TOUR_ANCHORS, launchAnchorId, tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
@@ -395,6 +395,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         variant="ghost"
                         size="sm"
                         className="teacher-class-board-shortcut"
+                        {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)}
                         disabled={!activeClass?.id || openingClassBoard}
                         title="별표로 지정한 기본 우리 반 스크린 열기"
                         onClick={() => void handleOpenDefaultClassBoard()}
@@ -488,6 +489,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 className={itemClassName}
                                 aria-label={`${group.label}${group.badge ? ` ${group.badge}` : ''}로 이동`}
                                 style={itemStyle}
+                                {...tourAnchor(launchAnchorId(group.id))}
                             >
                                 <span aria-hidden="true">{group.icon}</span>
                                 {group.label}

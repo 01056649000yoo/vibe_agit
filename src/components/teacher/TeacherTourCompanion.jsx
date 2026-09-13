@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import ModalPortal from '../common/ModalPortal';
 import { TEACHER_TOUR_ANCHOR_SELECTOR, TOUR_SPOTLIGHT_TARGET } from '../../guides/teacherTour.js';
+import { getStepDetail } from '../../guides/teacherTourDetail.js';
+import { renderEmphasis } from './guideEmphasis.jsx';
 import './TeacherTourCompanion.css';
 
 /*
@@ -71,7 +73,8 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
 
     // 단계가 바뀌면 그 화면으로 옮겨 준다. 같은 단계에서 두 번 옮기지 않는다.
     useEffect(() => {
-        if (!isRunning || !step?.target) return;
+        // 새 화면으로 여는 단계는 우리가 대신 눌러 주지 않는다 — 지금 화면이 사라진다.
+        if (!isRunning || !step?.target || step.target.launch) return;
         if (navigatedStepRef.current === step.stepId) return;
         navigatedStepRef.current = step.stepId;
         onNavigate?.(step.target);
@@ -118,6 +121,11 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
 
     // 다시 보기에서는 모든 단계를 확인했어요로 넘긴다 — 학급을 또 만들라는 뜻이 아니다.
     const needsAck = Boolean(step.done?.ack) || tour.isReplay;
+    /*
+     * 창 위치만 알려 주고 "자세한 건 안내서에서" 로 끝나면 찾기 어려운 기능은 끝까지
+     * 모른 채 지나간다. 지나가면서 핵심과 주의를 한 번씩 짚어 준다(안내서 원문 그대로).
+     */
+    const detail = getStepDetail(step);
 
     return (
         <ModalPortal>
@@ -166,6 +174,23 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 {/* 설명은 안내서 원본(purpose)을 그대로 쓴다. 눌러야 할 것이 분명한 단계에만 hint 를 더 붙인다. */}
                 <p className="teacher-tour__purpose">{step.purpose}</p>
                 {step.hint && <p className="teacher-tour__hint">{step.hint}</p>}
+                {detail && (
+                    <div className="teacher-tour__detail">
+                        {detail.points.length > 0 && (
+                            <ul className="teacher-tour__points">
+                                {detail.points.map((point) => (
+                                    <li key={point}>{renderEmphasis(point)}</li>
+                                ))}
+                            </ul>
+                        )}
+                        {detail.cautions.map((caution) => (
+                            <p key={caution} className="teacher-tour__caution">
+                                <span aria-hidden="true">⚠</span>
+                                <span>{renderEmphasis(caution)}</span>
+                            </p>
+                        ))}
+                    </div>
+                )}
                 {!rect && (
                     <p className="teacher-tour__missing">
                         해당 화면을 여는 중입니다. 바뀌지 않으면 아래 <strong>화면 열기</strong>를 눌러 주세요.
@@ -180,7 +205,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                         // 누를 것이 아니라 기다리면 된다는 안내다. 죽은 버튼을 두면 눌러 보고 고장으로 여긴다.
                         <p className="teacher-tour__waiting">다 하시면 저절로 넘어갑니다</p>
                     )}
-                    {step.target && (
+                    {step.target && !step.target.launch && (
                         <button
                             type="button"
                             className="teacher-tour__ghost"

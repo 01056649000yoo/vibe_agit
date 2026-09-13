@@ -26,7 +26,9 @@ export const TEACHER_TOUR_ANCHORS = Object.freeze({
     WRITING_EDITOR_SETTINGS: 'writing-editor-settings',
     MISSION_CREATE: 'mission-create',
     // 화면 본문 전체. "이 화면을 둘러보세요" 단계가 가리키는 자리다.
-    WORKSPACE: 'workspace'
+    WORKSPACE: 'workspace',
+    // 머리말의 `우리 반 스크린` 단추. 교실에 띄우는 화면은 눌러 봐야 안다.
+    CLASS_BOARD_OPEN: 'class-board-open'
 });
 
 /** `<Button {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>` 처럼 펼쳐 쓴다. */
@@ -45,9 +47,11 @@ export const TEACHER_TOUR_ANCHOR_SELECTOR = (anchorId) => `[data-tour="${anchorI
 export const tabAnchorId = (tabId) => `tab:${tabId}`;
 export const toolAnchorId = (toolId) => `tool:${toolId}`;
 export const moduleAnchorId = (moduleId) => `module:${moduleId}`;
+export const launchAnchorId = (groupId) => `launch:${groupId}`;
 
 const deriveAnchor = (target) => {
     if (!target) return null;
+    if (target.launch) return launchAnchorId(target.launch);
     if (target.tool) return toolAnchorId(target.tool);
     if (target.module) return moduleAnchorId(target.module);
     if (target.tab) return tabAnchorId(target.tab);
@@ -87,6 +91,10 @@ const STEP_RULES = Object.freeze({
     'prepare-editor': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS,
         hint: '학생 글쓰기 화면에 넣을 도움 기능을 켜고 꺼 보세요. 바꾸지 않아도 괜찮습니다.'
+    }),
+    'class-board': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN,
+        hint: '머리말의 `우리 반 스크린`을 눌러 교실에 띄울 화면을 한 번 열어 보세요. 새 창으로 크게 열립니다.'
     }),
     'create-mission': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.MISSION_CREATE,
@@ -136,12 +144,17 @@ export const getTeacherTourSteps = (tourId) => {
              * 열어 주고 둘러보는 단계이므로 본문 영역을 가리킨다 — 메뉴 버튼을 짚어 봐야
              * 정작 볼 내용이 어두워질 뿐이다. 메뉴 이름표는 본문을 못 찾았을 때의 대비책.
              */
-            const spotlight = step.anchor ? TOUR_SPOTLIGHT_TARGET : TOUR_SPOTLIGHT_SCREEN;
+            /*
+             * 새 화면으로 여는 단계(연구소)는 **그 링크를 눌러야** 진행된다. 화면을 옮겨
+             * 주지 못하므로 본문이 아니라 링크 자리를 또렷이 짚어야 한다.
+             */
+            const mustClick = Boolean(step.anchor) || Boolean(journeyStep.target?.launch);
+            const derived = deriveAnchor(journeyStep.target);
             return {
                 ...step,
-                spotlight,
-                anchor: step.anchor || TEACHER_TOUR_ANCHORS.WORKSPACE,
-                fallbackAnchor: step.anchor ? null : deriveAnchor(journeyStep.target),
+                spotlight: mustClick ? TOUR_SPOTLIGHT_TARGET : TOUR_SPOTLIGHT_SCREEN,
+                anchor: step.anchor || (journeyStep.target?.launch ? derived : TEACHER_TOUR_ANCHORS.WORKSPACE),
+                fallbackAnchor: mustClick ? null : derived,
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,

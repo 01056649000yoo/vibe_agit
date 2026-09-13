@@ -41,6 +41,7 @@ const ANCHOR_HOSTS = Object.freeze([
 /* 메뉴·도구·놀이 목록은 이름을 규칙(`tabAnchorId` 등)으로 붙인다. */
 const DERIVED_ANCHOR_HOSTS = Object.freeze([
     ['tab', 'src/components/teacher/TeacherDashboard.jsx', 'tabAnchorId'],
+    ['launch', 'src/components/teacher/TeacherDashboard.jsx', 'launchAnchorId'],
     ['tool', 'src/components/teacher/TeachingToolsHub.jsx', 'toolAnchorId'],
     ['module', 'src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'moduleAnchorId']
 ]);
@@ -416,8 +417,8 @@ test('둘러보는 단계는 메뉴가 아니라 볼 내용을 가리킨다', ()
     const screens = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_SCREEN);
 
     assert.deepEqual(dimmed.map((step) => step.stepId).sort(),
-        ['create-mission', 'invite-students', 'prepare-class', 'prepare-editor'],
-        '덮는 단계는 실제로 눌러야 하는 넷뿐이어야 합니다.');
+        ['class-board', 'create-mission', 'invite-students', 'prepare-class', 'prepare-editor', 'writing-lab'],
+        '덮는 단계는 실제로 눌러야 하는 단계여야 합니다.');
     assert.ok(screens.length > 0);
     screens.forEach((step) => {
         assert.equal(step.anchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
@@ -432,4 +433,31 @@ test('둘러보는 단계는 메뉴가 아니라 볼 내용을 가리킨다', ()
     assert.match(panel, /const dims = step\.spotlight === TOUR_SPOTLIGHT_TARGET;/);
     assert.match(panel, /\{dims && <div className="teacher-tour__dim"/,
         '둘러보는 단계까지 화면을 덮으면 볼 내용이 어두워집니다.');
+});
+
+test('글쓰기 연구소도 안내서와 동행 모드에 들어 있다', () => {
+    /*
+     * 2026-09-13 지적: 상단 메뉴에 `🧪 글쓰기 연구소` 가 있는데 안내서에도 동행 모드에도
+     * 없었다. 교사가 스스로 찾아 들어가 무엇인지 알아내야 했다.
+     */
+    const step = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id))
+        .find((candidate) => candidate.stepId === 'writing-lab');
+    assert.ok(step, '연구소 단계가 없습니다.');
+    assert.equal(step.guideRef, 'writing-lab');
+    // 새 화면으로 여는 링크라 우리가 대신 눌러 줄 수 없다 — 링크 자리를 또렷이 짚어야 한다.
+    assert.equal(step.anchor, 'launch:writing-lab');
+    assert.equal(step.spotlight, TOUR_SPOTLIGHT_TARGET);
+    assert.deepEqual(step.target, { launch: 'writing-lab' });
+
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /step\.target\.launch/, '새 화면으로 여는 단계를 대신 눌러 화면이 사라집니다.');
+});
+
+test('교실에 띄우는 화면은 눌러 보는 단계로 둔다', () => {
+    // 우리 반 스크린은 말로 들어서는 모른다. 머리말 단추를 짚어 한 번 열어 보게 한다.
+    const step = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id))
+        .find((candidate) => candidate.stepId === 'class-board');
+    assert.equal(step.anchor, TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN);
+    assert.equal(step.spotlight, TOUR_SPOTLIGHT_TARGET);
+    assert.ok(step.hint, '무엇을 누르라는 말이 없습니다.');
 });

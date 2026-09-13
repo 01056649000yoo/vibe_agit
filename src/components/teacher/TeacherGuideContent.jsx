@@ -1,14 +1,6 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
+import { renderEmphasis } from './guideEmphasis.jsx';
 
-const renderEmphasis = (text) => text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((piece, index) => {
-    if (piece.startsWith('**') && piece.endsWith('**')) {
-        return <strong key={index}>{piece.slice(2, -2)}</strong>;
-    }
-    if (piece.startsWith('`') && piece.endsWith('`') && piece.length > 2) {
-        return <code key={index} className="teacher-guide__key">{piece.slice(1, -1)}</code>;
-    }
-    return <React.Fragment key={index}>{piece}</React.Fragment>;
-});
 
 const TeacherGuideContent = ({ guide, initialSectionId = '' }) => {
     const idPrefix = useId();
