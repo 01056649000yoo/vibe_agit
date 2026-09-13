@@ -9,6 +9,7 @@ import {
     toolAnchorId,
     TEACHER_TOURS,
     getNextTourId,
+    getTourProgress,
     TEACHER_TOUR_ANCHORS,
     getTeacherTourSteps,
     getTourEntry,
@@ -280,4 +281,73 @@ test('첫 걸음 카드의 ✅ 는 교사가 누르는 체크가 아니다', () 
     const card = read('src/components/teacher/TeacherFirstStepsCard.jsx');
     assert.ok(card.includes('completedStepIds.includes(step.stepId)'));
     assert.ok(!card.includes('type="checkbox"'));
+});
+
+test('다 해본 흐름을 다시 열면 처음부터, 자동 판정 없이 둘러본다', () => {
+    /*
+     * 2026-09-13 제보: 다 하고 안내서에서 `다시 하기` 를 눌러도 다시 해볼 수 없었다.
+     *
+     * 원인은 자동 판정이었다 — "학급이 하나 이상" 같은 조건이 **이미 충족돼 있어** 단계가
+     * 순식간에 지나갔다. 다시 보기는 실제 작업이 아니라 둘러보기이므로, 학급을 또 만들라고
+     * 할 수 없다. 자동 판정을 끄고 모든 단계를 `확인했어요` 로 넘긴다.
+     */
+    let state = reduceTourState(normalizeTourState(null), FIRST_TEACHER_TOUR_ID, 'start');
+    getTeacherTourSteps(FIRST_TEACHER_TOUR_ID).forEach(() => {
+        state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    });
+    assert.equal(getTourEntry(state, FIRST_TEACHER_TOUR_ID).status, 'done');
+
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'start');
+    const entry = getTourEntry(state, FIRST_TEACHER_TOUR_ID);
+    assert.equal(entry.status, 'running');
+    assert.equal(entry.replay, true, '다시 보기 표시가 없으면 자동 판정이 다시 켜집니다.');
+    assert.equal(entry.stepId, getTeacherTourSteps(FIRST_TEACHER_TOUR_ID)[0].stepId, '처음부터 열어야 합니다.');
+    assert.deepEqual(entry.completed, [], '진도를 새로 세야 다시 보기가 눈에 보입니다.');
+});
+
+test('하다 만 흐름은 다시 열어도 이어서 간다', () => {
+    // 다시 보기와 이어 하기는 다르다. 하다 만 것을 처음으로 되돌리면 한 일을 또 시킨다.
+    let state = reduceTourState(normalizeTourState(null), FIRST_TEACHER_TOUR_ID, 'start');
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'stop');
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'start');
+    const entry = getTourEntry(state, FIRST_TEACHER_TOUR_ID);
+    assert.equal(entry.replay, false);
+    assert.equal(entry.stepId, getTeacherTourSteps(FIRST_TEACHER_TOUR_ID)[1].stepId);
+});
+
+test('다시 보기에서는 훅이 자동 판정을 돌리지 않는다', () => {
+    const hook = read('src/hooks/useTeacherTour.js');
+    assert.match(hook, /const isReplay = entry\?\.replay === true;/);
+    assert.match(hook, /if \(!isRunning \|\| !step \|\| isReplay\) return;/);
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /Boolean\(step\.done\?\.ack\) \|\| tour\.isReplay/);
+});
+
+test('안내서 목차에서 어디까지 해봤는지 보인다', () => {
+    /*
+     * 진도가 안 보이면 여덟 흐름 중 무엇을 아직 안 봤는지 알 수 없다.
+     * 다 해본 흐름은 다시 보기로 진도가 0 이 되어도 "다 해봤다" 는 사실이 남아야 한다.
+     */
+    let state = reduceTourState(normalizeTourState(null), FIRST_TEACHER_TOUR_ID, 'start');
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    let progress = Reflect.get(getTourProgress(state), FIRST_TEACHER_TOUR_ID);
+    assert.equal(progress.done, 1);
+    assert.equal(progress.total, getTeacherTourSteps(FIRST_TEACHER_TOUR_ID).length);
+    assert.equal(progress.hasFinished, false);
+
+    getTeacherTourSteps(FIRST_TEACHER_TOUR_ID).forEach(() => {
+        state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    });
+    assert.equal(Reflect.get(getTourProgress(state), FIRST_TEACHER_TOUR_ID).hasFinished, true);
+
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'start');
+    progress = Reflect.get(getTourProgress(state), FIRST_TEACHER_TOUR_ID);
+    assert.equal(progress.done, 0, '다시 보기는 진도를 새로 센다.');
+    assert.equal(progress.hasFinished, true, '다 해봤다는 사실까지 지워지면 안 됩니다.');
+
+    const center = read('src/components/teacher/TeacherGuideCenter.jsx');
+    assert.ok(center.includes('progress.done'), '목차에 진도를 그리지 않습니다.');
+    assert.ok(center.includes('다 해보셨습니다'), '다 해봤다는 표시가 없습니다.');
+    assert.ok(center.includes('동행 모드 다시 보기'), '다 해본 뒤에도 다시 할 길이 있어야 합니다.');
 });

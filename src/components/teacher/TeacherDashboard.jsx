@@ -741,7 +741,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     onClose={() => setGuideCenterRequest(null)}
                     onNavigate={handleWorkspaceNavigate}
                     onStartTour={tour.start}
-                    tourStatuses={tour.statuses}
+                    tourProgress={tour.progress}
                     showAiAssistant={guideAiAvailability?.enabled === true}
                     guideAiRemaining={guideAiAvailability?.remaining_today}
                 />

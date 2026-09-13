@@ -145,6 +145,14 @@ const normalizeTourEntry = (raw, tourId) => {
         status,
         stepId,
         completed,
+        /*
+         * 다시 보기 중인가.
+         *
+         * 한 번 끝낸 흐름을 다시 열면 "학급이 하나 이상" 같은 조건은 **이미 충족돼 있어**
+         * 단계가 순식간에 통과해 버린다. 그래서 다시 보기에서는 자동 판정을 끄고 모든
+         * 단계를 `확인했어요` 로 넘긴다 — 학급을 또 만들라는 뜻이 아니라 둘러보는 것이다.
+         */
+        replay: raw?.replay === true,
         updatedAt: typeof raw?.updatedAt === 'string' ? raw.updatedAt : null
     };
 };
@@ -223,11 +231,23 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
     const currentStep = steps.at(index) || null;
 
     if (action === 'start') {
-        // 이미 끝낸 단계는 건너뛴 자리에서 이어 연다.
+        // 이미 다 해본 흐름은 처음부터 **다시 보기**로 연다(자동 판정 없이 둘러본다).
+        if (entry.status === 'done') {
+            Reflect.set(next.tours, tourId, withUpdatedAt({
+                ...entry,
+                status: 'running',
+                stepId: steps.at(0).stepId,
+                completed: [],
+                replay: true
+            }, now));
+            return next;
+        }
+        // 하다 만 흐름은 아직 못 끝낸 단계에서 이어 연다.
         const resumeIndex = steps.findIndex((step) => !entry.completed.includes(step.stepId));
         Reflect.set(next.tours, tourId, withUpdatedAt({
             ...entry,
             status: 'running',
+            replay: false,
             stepId: steps.at(resumeIndex === -1 ? 0 : resumeIndex).stepId
         }, now));
         return next;
@@ -275,14 +295,28 @@ export const getNextTourId = (state, tourId) => {
     return next?.id || null;
 };
 
-/** 안내서 목차에 "둘러봤음" 을 표시하려고 상태만 뽑아 준다. */
-export const getTourStatuses = (state) => {
+/**
+ * 안내서 목차에 보여 줄 흐름별 진도.
+ *
+ * 상태만으로는 "어디까지 해봤는지" 를 알 수 없어, 몇 단계 중 몇 개를 끝냈는지 함께 준다.
+ * 다시 보기 중이면 그 회차의 진도를 보여 준다(다 해봤다는 사실은 `hasFinished` 가 지킨다).
+ */
+export const getTourProgress = (state) => {
     const normalized = normalizeTourState(state);
-    const statuses = {};
+    const progress = {};
     TEACHER_TOURS.forEach((tour) => {
-        Reflect.set(statuses, tour.id, Reflect.get(normalized.tours, tour.id)?.status || 'idle');
+        const entry = Reflect.get(normalized.tours, tour.id);
+        const total = getTeacherTourSteps(tour.id).length;
+        Reflect.set(progress, tour.id, {
+            status: entry?.status || 'idle',
+            done: Math.min(entry?.completed?.length || 0, total),
+            total,
+            // 한 번이라도 끝까지 가 본 흐름인지. 다시 보기로 진도가 0 이 되어도 이건 남는다.
+            hasFinished: entry?.status === 'done' || (entry?.replay === true),
+            replay: entry?.replay === true
+        });
     });
-    return statuses;
+    return progress;
 };
 
 /** 첫 걸음 카드를 띄울지. 한 번 끝냈거나 스스로 그만둔 교사에게는 다시 권하지 않는다. */

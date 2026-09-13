@@ -115,7 +115,8 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
 
     if (!isRunning || !step) return null;
 
-    const needsAck = Boolean(step.done?.ack);
+    // 다시 보기에서는 모든 단계를 확인했어요로 넘긴다 — 학급을 또 만들라는 뜻이 아니다.
+    const needsAck = Boolean(step.done?.ack) || tour.isReplay;
 
     return (
         <ModalPortal>
@@ -139,7 +140,10 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
             >
                 <header className="teacher-tour__head">
                     <span className="teacher-tour__journey">{journeyTitle}</span>
-                    <span className="teacher-tour__count">{stepIndex + 1} / {totalSteps}</span>
+                    <span className="teacher-tour__count">
+                        {tour.isReplay && <em className="teacher-tour__replay">다시 보기</em>}
+                        {stepIndex + 1} / {totalSteps}
+                    </span>
                 </header>
                 <h2 className="teacher-tour__title">{step.title}</h2>
                 {/* 설명은 안내서 원본(purpose)을 그대로 쓴다. 눌러야 할 것이 분명한 단계에만 hint 를 더 붙인다. */}

@@ -22,7 +22,7 @@ const findInitialLocation = ({ guideId, journeyId, stepId }) => {
     return { journeyId: TEACHER_GUIDE_JOURNEYS[0].id, stepId: null };
 };
 
-const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, onStartTour, tourStatuses = {}, showAiAssistant = false, guideAiRemaining = 5 }) => {
+const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, onStartTour, tourProgress = {}, showAiAssistant = false, guideAiRemaining = 5 }) => {
     const titleId = useId();
     const dialogRef = useRef(null);
     const closeRef = useRef(null);
@@ -145,8 +145,13 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                             </div>
                             <div className="teacher-guide-center__nav-list">
                                 {TEACHER_GUIDE_JOURNEYS.map((journey, index) => {
-                                    // 따라 해본 흐름에는 표를 남긴다. 무엇을 아직 안 봤는지 목차에서 바로 보인다.
-                                    const toured = Reflect.get(tourStatuses, journey.id) === 'done';
+                                    /*
+                                     * 목차에서 **어디까지 해봤는지** 가 바로 보여야 한다.
+                                     * 다 한 흐름은 ✅, 하다 만 흐름은 `2/4` 로 남은 몫을 보여 준다.
+                                     */
+                                    const progress = Reflect.get(tourProgress, journey.id);
+                                    const finished = progress?.hasFinished === true;
+                                    const partway = !finished && progress?.done > 0;
                                     return (
                                         <button
                                             key={journey.id}
@@ -158,7 +163,12 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                             <span className="teacher-guide-center__nav-number">{index + 1}</span>
                                             <span aria-hidden="true" className="teacher-guide-center__nav-icon">{journey.icon}</span>
                                             <span>{journey.title}</span>
-                                            {toured && <span className="teacher-guide-center__nav-done" title="동행 모드로 따라 해봤습니다">✅</span>}
+                                            {finished && <span className="teacher-guide-center__nav-done" title="동행 모드로 다 해봤습니다">✅</span>}
+                                            {partway && (
+                                                <span className="teacher-guide-center__nav-progress" title="동행 모드 진도">
+                                                    {progress.done}/{progress.total}
+                                                </span>
+                                            )}
                                         </button>
                                     );
                                 })}
@@ -173,18 +183,35 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                     <h3>{selectedJourney.title}</h3>
                                     <p>{selectedJourney.summary}</p>
                                     {/* 동행 모드가 있는 흐름만. 읽고 끝나지 않고 실제 화면에서 한 단계씩 따라 한다. */}
-                                    {onStartTour && getTeacherTour(selectedJourney.id) && (
-                                        <button
-                                            type="button"
-                                            className="teacher-guide-center__tour-button"
-                                            onClick={() => {
-                                                onStartTour(selectedJourney.id);
-                                                onClose();
-                                            }}
-                                        >
-                                            {Reflect.get(tourStatuses, selectedJourney.id) === 'done' ? '🧭 동행 모드 다시 하기' : '🧭 동행 모드로 따라 하기'}
-                                        </button>
-                                    )}
+                                    {onStartTour && getTeacherTour(selectedJourney.id) && (() => {
+                                        const progress = Reflect.get(tourProgress, selectedJourney.id);
+                                        const finished = progress?.hasFinished === true;
+                                        const partway = !finished && progress?.done > 0;
+                                        return (
+                                            <div className="teacher-guide-center__tour">
+                                                {finished && (
+                                                    <p className="teacher-guide-center__tour-state is-done">
+                                                        ✅ 이 흐름은 동행 모드로 다 해보셨습니다. 언제든 다시 보실 수 있습니다.
+                                                    </p>
+                                                )}
+                                                {partway && (
+                                                    <p className="teacher-guide-center__tour-state">
+                                                        동행 모드 {progress.total}단계 중 <strong>{progress.done}단계</strong>까지 하셨습니다. 이어서 하실 수 있습니다.
+                                                    </p>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="teacher-guide-center__tour-button"
+                                                    onClick={() => {
+                                                        onStartTour(selectedJourney.id);
+                                                        onClose();
+                                                    }}
+                                                >
+                                                    {finished ? '🧭 동행 모드 다시 보기' : partway ? '🧭 동행 모드 이어서 하기' : '🧭 동행 모드로 따라 하기'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 

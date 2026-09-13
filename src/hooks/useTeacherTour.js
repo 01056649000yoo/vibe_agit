@@ -14,7 +14,7 @@ import {
     getNextTourId,
     getTeacherTourSteps,
     getTourEntry,
-    getTourStatuses,
+    getTourProgress,
     isFirstSession,
     isStepSatisfied,
     markFirstLogin,
@@ -89,7 +89,12 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
         apply('start', tourId);
     }, [apply]);
 
-    const signalName = isRunning && !step?.done?.ack ? step?.done?.signal : null;
+    /*
+     * 다시 보기에서는 자동 판정을 끈다. 학급·학생·과제는 이미 있으므로 조건이 처음부터
+     * 충족돼 단계가 순식간에 지나가 버린다 — 다시 보려던 뜻과 정반대가 된다.
+     */
+    const isReplay = entry?.replay === true;
+    const signalName = isRunning && !isReplay && !step?.done?.ack ? step?.done?.signal : null;
     useEffect(() => {
         const reader = signalName ? Reflect.get(SIGNAL_READERS, signalName) : null;
         if (!reader || !activeClassId) return undefined;
@@ -118,10 +123,10 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
 
     // 교사가 실제로 해냈으면 저절로 다음 단계로 넘어간다.
     useEffect(() => {
-        if (!isRunning || !step) return;
+        if (!isRunning || !step || isReplay) return;
         if (!isStepSatisfied(step, signals)) return;
         apply('complete');
-    }, [isRunning, step, signals, apply]);
+    }, [isRunning, step, isReplay, signals, apply]);
 
     /*
      * 가입하고 처음 앉은 자리를 한 번 적어 둔다. 이 자리에서는 공지를 미뤄 둔다 —
@@ -160,7 +165,7 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
         apply('start', FIRST_TEACHER_TOUR_ID);
     }, [ready, classes.length, apply]);
 
-    const statuses = useMemo(() => getTourStatuses(state), [state]);
+    const progress = useMemo(() => getTourProgress(state), [state]);
     const nextTourId = useMemo(
         () => (justFinishedTourId ? getNextTourId(state, justFinishedTourId) : null),
         [state, justFinishedTourId]
@@ -175,7 +180,8 @@ const useTeacherTour = ({ userId, classes = [], classesLoaded = false, activeCla
         totalSteps: steps.length,
         isRunning,
         status: entry?.status || 'idle',
-        statuses,
+        progress,
+        isReplay,
         completedStepIds: entry?.completed || [],
         // 흐름 하나가 끝나면 이어서 볼 다음 흐름(이미 본 흐름은 건너뛴다). 없으면 null.
         justFinishedTourId,

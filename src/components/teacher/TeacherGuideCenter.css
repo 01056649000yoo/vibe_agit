@@ -321,3 +321,29 @@
     margin-left: auto;
     font-size: var(--ui-text-xs);
 }
+
+.teacher-guide-center__nav-progress {
+    margin-left: auto;
+    padding: 1px var(--ui-space-2);
+    background: var(--ui-surface-muted);
+    border-radius: var(--ui-radius-pill);
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    color: var(--ui-ink-muted);
+}
+
+.teacher-guide-center__tour {
+    margin-top: var(--ui-space-3);
+}
+
+.teacher-guide-center__tour-state {
+    margin: 0 0 var(--ui-space-2);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-muted);
+}
+
+.teacher-guide-center__tour-state.is-done {
+    color: var(--ui-success);
+    font-weight: 700;
+}

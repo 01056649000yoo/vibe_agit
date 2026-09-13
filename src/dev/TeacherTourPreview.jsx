@@ -47,8 +47,13 @@ export default function TeacherTourPreview() {
 
     const start = (id = FIRST_TEACHER_TOUR_ID) => { setTourId(id); run('start', id); };
 
-    // 실제 훅이 하는 자동 판정을 미리보기에서도 같은 함수로 흉내 낸다.
-    if (isRunning && step && isStepSatisfied(step, counts)) queueMicrotask(() => run('complete'));
+    /*
+     * 실제 훅이 하는 자동 판정을 같은 함수로 흉내 낸다.
+     * **다시 보기에서는 끈다** — 훅과 여기가 어긋나면 미리보기가 거짓말을 한다
+     * (2026-09-13: 여기만 안 고쳐 다시 보기가 단계를 건너뛰는 것처럼 보였다).
+     */
+    const isReplay = entry.replay === true;
+    if (isRunning && step && !isReplay && isStepSatisfied(step, counts)) queueMicrotask(() => run('complete'));
 
     const bump = (key) => setCounts((current) => ({ ...current, [key]: Reflect.get(current, key) + 1 }));
 
@@ -58,6 +63,7 @@ export default function TeacherTourPreview() {
         stepIndex,
         totalSteps: steps.length,
         justFinishedTourId: finished,
+        isReplay,
         nextTourId,
         start,
         dismissFinished: () => setFinished(null),
