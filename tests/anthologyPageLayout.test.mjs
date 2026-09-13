@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { BOOK_PAGE_LAYOUTS, getBookPageLayout, createBookPrintSettings, validBookPrintSettings } from '../src/modules/class-agit/designs.js';
 import { buildBookSavePayload } from '../src/modules/class-agit/anthology/contract.js';
-import { ANTHOLOGY_MIN_ORPHAN_LINES } from '../src/modules/class-agit/anthology/pagination.js';
+import { ANTHOLOGY_MIN_BODY_RATIO } from '../src/modules/class-agit/anthology/pagination.js';
 
 const read = (file) => readFileSync(file, 'utf8');
 const migration = read('supabase/migrations/20261287_anthology_page_layout.sql');
@@ -85,27 +85,40 @@ test('이어붙이기는 쪽 전체를 재고 작품 상자에 담는다', () =>
     assert.match(pagination, /current\.content\.childElementCount > current\.fixed \|\| current\.hasNeighbours/);
 });
 
-test('이어붙이기에서 제목만 쪽 끝에 걸치면 다음 쪽에서 시작한다', () => {
+test('이어붙이기에서 본문이 조금밖에 못 실리면 글을 통째로 다음 쪽으로 넘긴다', () => {
     /*
-     * 2026-09-14 지적: 다음 글의 제목만 쪽 아래에 붙는 초안이 나온다. 교사가 그걸
-     * 일일이 손으로 넘기게 된다. 짜는 자리에서 미리 넘긴다.
+     * 2026-09-14 지적: 다음 글의 제목만 쪽 아래에 붙는 초안이 나온다.
      *
-     * 진짜 브라우저(A4·이어붙이기)로 열두 가지 길이 조합을 짜 본 결과,
-     * 고치기 전 네 곳에서 제목만 걸쳤고 고친 뒤에는 0곳이다.
+     * 처음에는 "제목 아래 세 줄 자리가 있나" 만 봤는데 그것으로는 못 막았다. 이어붙이기에서는
+     * 앞 작품이 있는 쪽에서 **문단을 쪼개지 않기 때문에**, 첫 문단이 긴 글은 세 줄 자리가
+     * 있어도 문단째 다음 쪽으로 밀리고 제목만 남는다. 그래서 자리가 아니라 **실제로 실릴 몫**을 잰다.
+     *
+     * 진짜 브라우저(A4·이어붙이기)로 열 가지 책을 짜 본 결과, 고치기 전 쪽 끝에서 시작한
+     * 작품 47개 가운데 17개가 본문의 30% 에 못 미쳤고(제목만 실린 것 포함), 고친 뒤에는 0개다.
+     * 대신 책 열 권 합쳐 128쪽이 135쪽이 된다 — 한 권에 한 쪽꼴이다.
      */
-    assert.ok(ANTHOLOGY_MIN_ORPHAN_LINES >= 2, '한 줄만 남아도 넘기지 않으면 고친 뜻이 없습니다.');
-    // 줄 높이는 글자 크기·판형마다 다르므로 **실제로 재서** 쓴다. 픽셀을 못박으면 A5에서 틀린다.
-    assert.match(pagination, /const line = probe\.offsetHeight;/);
-    assert.match(pagination, /probe\.style\.height = `\$\{line \* ANTHOLOGY_MIN_ORPHAN_LINES\}px`/);
+    assert.equal(ANTHOLOGY_MIN_BODY_RATIO, 0.3);
+    // 본문을 다 붙여 보고, 넘치는 문단을 뒤에서부터 뺀 나머지가 이 쪽에 실릴 몫이다.
+    assert.match(pagination, /const clones = blocks\.map\(\(block\) => block\.cloneNode\(true\)\);/);
+    assert.match(pagination, /for \(let index = clones\.length - 1; index >= 0 && !fits\(cursor\.content\); index--\)/);
+    assert.match(pagination, /const placed = box\.offsetHeight - headerHeight;/);
+    // 재 보던 문단은 모두 지우고 나온다 — 남으면 그만큼 본문이 밀린다.
+    assert.match(pagination, /clones\.forEach\(\(clone\) => clone\.remove\(\)\);/);
     // 자리가 모자라면 상자를 빼고 새 쪽에 다시 놓는다.
     assert.match(pagination, /if \(hasNeighbours && !roomForBody\(box\)\) \{\s*box\.remove\(\);\s*cursor = page\(\);/);
-    // 재 보는 종이는 지우고 나온다 — 남으면 그만큼 본문이 밀린다.
-    assert.match(pagination, /const room = fits\(cursor\.content\);\s*probe\.remove\(\);\s*return room;/);
+});
+
+test('쪽보다 긴 글은 한 쪽 몫을 기준으로 잰다', () => {
+    /*
+     * 글 전체의 30% 를 그대로 요구하면 여러 쪽짜리 글은 남은 자리가 아무리 넓어도 늘 다음 쪽으로
+     * 밀린다. 이어붙이기인데 쪽 아래가 통째로 비는 셈이다. 기준을 한 쪽 몫에서 끊는다.
+     */
+    assert.match(pagination, /Math\.min\(whole, cursor\.content\.clientHeight\) \* ANTHOLOGY_MIN_BODY_RATIO/);
 });
 
 test('첫 작품은 제 쪽을 통째로 쓰므로 넘기지 않는다', () => {
     // 빈 쪽에서까지 넘기면 끝없이 새 쪽만 연다. 옆에 앞 작품이 있을 때만 넘긴다.
     assert.match(pagination, /if \(hasNeighbours && !roomForBody/);
     // 본문이 아예 없는 작품(제목만 낸 글)은 잴 것이 없으니 그냥 둔다.
-    assert.match(pagination, /const sample = blocks\.at\(0\);\s*if \(!sample\) return true;/);
+    assert.match(pagination, /if \(!blocks\.length\) return true;/);
 });

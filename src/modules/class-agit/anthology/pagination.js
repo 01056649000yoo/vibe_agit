@@ -1,8 +1,8 @@
 /**
- * 이어붙이기에서 새 작품이 쪽에 남으려면 제목 아래로 있어야 할 최소 본문 줄 수.
- * 이보다 적게 남으면 그 작품은 다음 쪽에서 시작한다.
+ * 이어붙이기에서 새 작품이 쪽에 남으려면 그 쪽에 실려야 할 본문의 최소 몫.
+ * 이보다 적게 실리면 그 작품은 통째로 다음 쪽에서 시작한다.
  */
-export const ANTHOLOGY_MIN_ORPHAN_LINES = 3;
+export const ANTHOLOGY_MIN_BODY_RATIO = 0.3;
 
 // The same measured DOM pages are used on screen and by the browser's selected paper size.
 // No font shrinking; oversized paragraphs split at Unicode code point boundaries.
@@ -186,24 +186,32 @@ export function paginateAnthology(doc) {
         };
 
         /*
-         * 쪽 맨 아래에 **제목만** 걸치는 것을 막는다(2026-09-14 지적).
+         * 쪽 맨 아래에 **제목만**(또는 몇 줄만) 걸치는 것을 막는다.
          *
-         * 제목 아래로 본문이 세 줄도 못 들어가면 읽는 사람은 제목을 보고 쪽을 넘겨야 하고,
-         * 교사는 초안을 받아 그 작품을 손으로 다음 쪽에 넘기게 된다. 처음부터 넘겨 둔다.
-         * 재는 방법: 본문 한 줄 높이를 실제로 재서 세 줄만큼 자리를 잡아 보고, 안 들어가면 넘긴다.
+         * 처음에는 "제목 아래 세 줄 자리가 있나" 만 봤는데 그것으로는 모자랐다(2026-09-14 지적).
+         * 이어붙이기에서는 앞 작품이 있는 쪽에서 **문단을 쪼개지 않는다.** 그래서 첫 문단이 긴 글은
+         * 세 줄 자리가 있어도 문단째 다음 쪽으로 밀리고 제목만 남는다.
+         *
+         * 그래서 자리를 재지 않고 **이 쪽에 실제로 실릴 몫**을 잰다 — 본문을 다 붙여 보고 넘치는
+         * 문단을 뒤에서부터 빼면, 남은 것이 이 쪽에 실릴 몫이다. 그 몫이 글 전체 본문의
+         * `ANTHOLOGY_MIN_BODY_RATIO` 에 못 미치면 글을 통째로 다음 쪽으로 넘긴다.
          */
         const roomForBody = (box) => {
-            const sample = blocks.at(0);
-            if (!sample) return true;
-            const probe = sample.cloneNode(false);
-            probe.textContent = '가';
-            box.append(probe);
-            const line = probe.offsetHeight;
-            if (!line) { probe.remove(); return true; }
-            probe.style.height = `${line * ANTHOLOGY_MIN_ORPHAN_LINES}px`;
-            const room = fits(cursor.content);
-            probe.remove();
-            return room;
+            if (!blocks.length) return true;
+            const headerHeight = box.offsetHeight;
+            const clones = blocks.map((block) => block.cloneNode(true));
+            box.append(...clones);
+            const whole = box.offsetHeight - headerHeight;
+            for (let index = clones.length - 1; index >= 0 && !fits(cursor.content); index--) clones.at(index).remove();
+            const placed = box.offsetHeight - headerHeight;
+            clones.forEach((clone) => clone.remove());
+            /*
+             * 쪽보다 긴 글은 **한 쪽 몫**을 기준으로 잰다. 글 전체의 30% 를 그대로 요구하면
+             * 여러 쪽짜리 글은 남은 자리가 아무리 넓어도 늘 다음 쪽으로 밀려, 이어붙이기인데
+             * 쪽 아래가 통째로 비게 된다.
+             */
+            const need = Math.min(whole, cursor.content.clientHeight) * ANTHOLOGY_MIN_BODY_RATIO;
+            return whole <= 0 || placed >= need;
         };
 
         const first = () => {
