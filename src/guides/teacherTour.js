@@ -202,7 +202,14 @@ export const getTeacherTourSteps = (tourId) => {
             const derived = deriveAnchor(journeyStep.target);
             return {
                 ...step,
-                spotlight: mustClick ? TOUR_SPOTLIGHT_TARGET : (derived ? TOUR_SPOTLIGHT_MENU : TOUR_SPOTLIGHT_SCREEN),
+                /*
+                 * 놀이 카드는 **막지 않는다.** 앞 단계에서 이미 놀이터 화면을 열어 카드가
+                 * 다 보이는데, 그중 하나를 다시 짚고 누르라고 막으면 얻는 것이 없다
+                 * (2026-09-13 지적). 어느 카드인지 옅게 짚어만 주고 읽고 넘어가게 한다.
+                 */
+                spotlight: mustClick
+                    ? TOUR_SPOTLIGHT_TARGET
+                    : (derived && !derived.startsWith('module:') ? TOUR_SPOTLIGHT_MENU : TOUR_SPOTLIGHT_SCREEN),
                 anchor: step.anchor || derived || TEACHER_TOUR_ANCHORS.WORKSPACE,
                 /*
                  * 대비책을 두지 않는다.
