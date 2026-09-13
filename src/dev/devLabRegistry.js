@@ -16,8 +16,16 @@ const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
 const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
+const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'teacher-tour-live',
+    icon: '🧭',
+    title: '교사 동행 모드 (진짜 훅)',
+    description: '손으로 흉내 내지 않고 useTeacherTour 를 그대로 돌린다 — 흉내가 본 코드와 어긋나 생기는 거짓 통과를 막는다',
+    Component: TeacherTourLiveHook,
+  }),
   Object.freeze({
     id: 'teacher-tour',
     icon: '🧭',

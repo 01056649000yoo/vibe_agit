@@ -472,3 +472,38 @@ test('흐름을 새로 열면 "이미 옮겨 줬다" 는 기억을 지운다', (
     assert.match(panel, /navigatedStepRef\.current = null;\s*\}, \[tour\.tourId, tour\.isReplay, isRunning\]\);/s,
         '흐름이 바뀌어도 옛 기억이 남아 화면이 안 움직입니다.');
 });
+
+test('끝낸 뒤 그만두었어도 다시 보기로 열린다', () => {
+    /*
+     * 2026-09-13 제보(재발): 다시 보기를 눌러도 전체가 진행되지 않았다.
+     *
+     * "한 번 끝냈다" 를 `status === 'done'` 으로만 봤기 때문이다. 끝낸 뒤 그만두거나
+     * 다른 흐름을 열어 상태가 바뀌면 **이어 하기**로 열리고, 그러면 자동 판정이 켜진 채
+     * 열려 과제가 없는 학급의 선생님은 "다 하시면 저절로 넘어갑니다" 앞에서 갇혔다.
+     */
+    let state = reduceTourState(normalizeTourState(null), FIRST_TEACHER_TOUR_ID, 'start');
+    getTeacherTourSteps(FIRST_TEACHER_TOUR_ID).forEach(() => {
+        state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    });
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'stop');
+    assert.equal(getTourEntry(state, FIRST_TEACHER_TOUR_ID).status, 'skipped');
+
+    state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'start');
+    const entry = getTourEntry(state, FIRST_TEACHER_TOUR_ID);
+    assert.equal(entry.replay, true, '끝까지 가 본 흐름인데 자동 판정이 켜진 채 열립니다.');
+    assert.equal(entry.stepId, getTeacherTourSteps(FIRST_TEACHER_TOUR_ID)[0].stepId);
+    assert.equal(Reflect.get(getTourProgress(state), FIRST_TEACHER_TOUR_ID).hasFinished, true);
+});
+
+test('끝까지 가 본 사실은 지워지지 않는다', () => {
+    // 이것이 지워지면 다시 보기가 이어 하기로 바뀌어 다시 갇힌다.
+    let state = reduceTourState(normalizeTourState(null), FIRST_TEACHER_TOUR_ID, 'start');
+    getTeacherTourSteps(FIRST_TEACHER_TOUR_ID).forEach(() => {
+        state = reduceTourState(state, FIRST_TEACHER_TOUR_ID, 'complete');
+    });
+    // 저장했다 다시 읽어도, 다시 보기를 시작해 진도가 0 이 되어도 남아야 한다.
+    const reloaded = normalizeTourState(JSON.parse(JSON.stringify(state)));
+    assert.equal(getTourEntry(reloaded, FIRST_TEACHER_TOUR_ID).everFinished, true);
+    const replaying = reduceTourState(reloaded, FIRST_TEACHER_TOUR_ID, 'start');
+    assert.equal(getTourEntry(replaying, FIRST_TEACHER_TOUR_ID).everFinished, true);
+});

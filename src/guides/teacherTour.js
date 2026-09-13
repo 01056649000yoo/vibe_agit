@@ -188,6 +188,15 @@ const normalizeTourEntry = (raw, tourId) => {
          * 단계를 `확인했어요` 로 넘긴다 — 학급을 또 만들라는 뜻이 아니라 둘러보는 것이다.
          */
         replay: raw?.replay === true,
+        /*
+         * 한 번이라도 끝까지 가 봤는가.
+         *
+         * `status === 'done'` 만 보면, 끝낸 뒤 그만두거나 다른 흐름을 열어 상태가 바뀐
+         * 교사는 다시 보기가 아니라 **이어 하기**로 열린다. 그러면 자동 판정이 켜진 채
+         * 열려, 이미 학급이 있는데 과제가 없는 선생님은 "다 하시면 저절로 넘어갑니다"
+         * 앞에서 갇힌다(2026-09-13 제보). 끝까지 가 본 사실은 지워지면 안 된다.
+         */
+        everFinished: raw?.everFinished === true || raw?.status === 'done',
         updatedAt: typeof raw?.updatedAt === 'string' ? raw.updatedAt : null
     };
 };
@@ -266,8 +275,8 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
     const currentStep = steps.at(index) || null;
 
     if (action === 'start') {
-        // 이미 다 해본 흐름은 처음부터 **다시 보기**로 연다(자동 판정 없이 둘러본다).
-        if (entry.status === 'done') {
+        // 한 번이라도 끝까지 가 본 흐름은 처음부터 **다시 보기**로 연다(자동 판정 없이 둘러본다).
+        if (entry.everFinished) {
             Reflect.set(next.tours, tourId, withUpdatedAt({
                 ...entry,
                 status: 'running',
@@ -306,6 +315,7 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
         Reflect.set(next.tours, tourId, withUpdatedAt({
             ...entry,
             completed,
+            everFinished: entry.everFinished || isLast,
             status: isLast ? 'done' : 'running',
             stepId: isLast ? currentStep?.stepId || entry.stepId : steps.at(index + 1).stepId
         }, now));
@@ -347,7 +357,7 @@ export const getTourProgress = (state) => {
             done: Math.min(entry?.completed?.length || 0, total),
             total,
             // 한 번이라도 끝까지 가 본 흐름인지. 다시 보기로 진도가 0 이 되어도 이건 남는다.
-            hasFinished: entry?.status === 'done' || (entry?.replay === true),
+            hasFinished: entry?.everFinished === true,
             replay: entry?.replay === true
         });
     });

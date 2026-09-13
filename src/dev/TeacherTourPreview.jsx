@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import useTeacherTour from '../hooks/useTeacherTour';
 import TeacherTourCompanion from '../components/teacher/TeacherTourCompanion';
 import TeacherFirstStepsCard from '../components/teacher/TeacherFirstStepsCard';
 import TeacherWelcomeModal from '../components/teacher/TeacherWelcomeModal';
@@ -153,6 +154,71 @@ export default function TeacherTourPreview() {
                 nextJourneyTitle={getTeacherGuideJourney(nextTourId)?.title || null}
                 onNavigate={() => {}}
                 onOpenGuide={(journeyId, stepId) => console.info('안내서 열기', journeyId, stepId)}
+            />
+        </div>
+    );
+}
+
+/*
+ * 진짜 훅으로 도는 미리보기 (2026-09-13).
+ *
+ * 위쪽 미리보기는 상태 기계를 손으로 흉내 내는데, 그 흉내가 본 코드와 어긋나 오늘 두 번
+ * 거짓말을 했다(다시 보기가 되는 것처럼 보였다). 여기서는 `useTeacherTour` 를 그대로
+ * 쓴다 — `userId` 를 주지 않으면 저장은 건너뛰고 메모리에서만 돈다.
+ */
+export function TeacherTourLiveHook() {
+    const [classes, setClasses] = useState([]);
+    const [guideOpen, setGuideOpen] = useState(false);
+    const [tourId, setTourId] = useState(FIRST_TEACHER_TOUR_ID);
+    const tour = useTeacherTour({ userId: null, classes, classesLoaded: true, activeClassId: 'preview-class' });
+    const journey = getTeacherGuideJourney(tour.tourId);
+
+    return (
+        <div style={{ padding: 24, minHeight: '140vh', background: 'var(--ui-page)' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
+                <select value={tourId} onChange={(event) => setTourId(event.target.value)}>
+                    {TEACHER_TOURS.map((option) => (
+                        <option key={option.id} value={option.id}>
+                            {getTeacherGuideJourney(option.id)?.title} ({option.steps.length})
+                        </option>
+                    ))}
+                </select>
+                <button type="button" onClick={() => tour.start(tourId)}>이 흐름 시작</button>
+                <button type="button" onClick={() => setGuideOpen(true)}>활용 안내서 열기</button>
+                <button type="button" onClick={() => setClasses((current) => [...current, { id: `c${current.length}` }])}>
+                    가짜 학급 +1
+                </button>
+                <span style={{ fontSize: 'var(--ui-text-xs)' }}>
+                    {tour.status} · {tour.stepIndex + 1}/{tour.totalSteps} · 다시보기 {String(tour.isReplay)} · 학급 {classes.length}
+                </span>
+            </div>
+
+            <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{ display: 'grid', gap: 40, maxWidth: 600 }}>
+                <button type="button" onClick={() => setClasses((current) => [...current, { id: `c${current.length}` }])} {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>
+                    ➕ 새 학급 만들기 (가짜)
+                </button>
+                <div style={{ padding: 12, border: '1px solid var(--ui-border)' }} {...tourAnchor(TEACHER_TOUR_ANCHORS.WRITING_EDITOR_SETTINGS)}>
+                    학급별 글쓰기 지원 기능 목록 (가짜)
+                </div>
+            </div>
+
+            {guideOpen && (
+                <TeacherGuideCenter
+                    isOpen
+                    initialRequest={{ journeyId: tourId }}
+                    onClose={() => setGuideOpen(false)}
+                    onNavigate={() => {}}
+                    onStartTour={(id) => { setTourId(id); tour.start(id); }}
+                    tourProgress={tour.progress}
+                />
+            )}
+
+            <TeacherTourCompanion
+                tour={tour}
+                journeyTitle={journey?.title || ''}
+                nextJourneyTitle={getTeacherGuideJourney(tour.nextTourId)?.title || null}
+                onNavigate={() => {}}
+                onOpenGuide={() => setGuideOpen(true)}
             />
         </div>
     );
