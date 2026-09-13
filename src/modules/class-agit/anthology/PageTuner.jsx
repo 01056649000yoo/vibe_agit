@@ -15,6 +15,23 @@ import { paginateAnthology } from './pagination.js';
  * **당기기는 "강제를 푸는 것"** 이다. 앞 쪽에 자리가 없으면 풀어도 올라오지 않는다 —
  * 그 사실을 화면 문구로 분명히 적는다. 안 그러면 "눌렀는데 안 올라온다" 가 된다.
  */
+/*
+ * 초안 쪽(A4)은 창보다 넓어 **좌우가 잘려 보인다**(2026-09-13 지적). 창 너비에 맞춰 줄인다.
+ *
+ * `zoom` 을 쓴다 — `transform: scale` 은 자리(레이아웃 상자)는 그대로라 줄여도 옆으로
+ * 넘치고 아래에 빈 공간이 남는다. 미리보기 전용이라 인쇄본에는 영향이 없다.
+ */
+const fitToWidth = (frame) => {
+    const doc = frame.contentDocument;
+    const first = doc.querySelector('.anthology-page');
+    if (!first) return;
+    doc.documentElement.style.setProperty('--tuner-zoom', '1');
+    const available = frame.clientWidth - 24;
+    const pageWidth = first.offsetWidth;
+    if (!pageWidth || available <= 0) return;
+    doc.documentElement.style.setProperty('--tuner-zoom', String(Math.min(1, available / pageWidth)));
+};
+
 const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
     const frameRef = useRef(null);
     const [placement, setPlacement] = useState(null);
@@ -27,11 +44,16 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
             const html = await buildAnthologyHtml(edition);
             const doc = frame.contentDocument;
             doc.open(); doc.write(html); doc.close();
+            // 쪽을 창 너비에 맞춰 줄이는 규칙. 인쇄본 스타일은 건드리지 않는다.
+            const fitStyle = doc.createElement('style');
+            fitStyle.textContent = ':root{--tuner-zoom:1}.anthology-page{zoom:var(--tuner-zoom);margin:4mm auto}body{background:#e9e7e2}';
+            doc.head.append(fitStyle);
             await doc.fonts.ready;
             await new Promise((resolve) => frame.contentWindow.requestAnimationFrame(
                 () => frame.contentWindow.requestAnimationFrame(resolve)));
             const count = paginateAnthology(doc);
             doc.querySelector('.anthology-toolbar')?.remove();
+            fitToWidth(frame);
             // 작품이 실제로 어느 쪽에서 시작했는지 읽어 온다 — 목차와 같은 값이다.
             const pages = edition.book.works.map((work, index) => {
                 const row = doc.querySelector(`[data-toc-row="${index}"] [data-page], [data-divider-row="${index}"] [data-page]`);
@@ -52,6 +74,13 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
         void render(() => cancelled);
         return () => { cancelled = true; };
     }, [render]);
+
+    // 창 크기가 바뀌면 다시 맞춘다 — 다시 그리지 않고 줄이는 배율만 고친다.
+    useEffect(() => {
+        const onResize = () => { if (frameRef.current?.contentDocument) fitToWidth(frameRef.current); };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     return (
         <ModalPortal>

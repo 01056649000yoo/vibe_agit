@@ -63,3 +63,20 @@ test('당기기가 늘 되는 것처럼 말하지 않는다', () => {
     // 목차가 저절로 맞춰진다는 것도 알려 준다.
     assert.ok(tuner.includes('저절로'));
 });
+
+test('초안 쪽은 미리보기 칸 너비에 맞춰 줄인다', () => {
+    /*
+     * 2026-09-13 지적: A4 쪽이 칸보다 넓어 **좌우가 잘려** 보였다.
+     *
+     * `transform: scale` 이 아니라 `zoom` 을 쓴다 — scale 은 자리(레이아웃 상자)가 그대로라
+     * 줄여도 옆으로 넘치고 아래에 빈 공간이 남는다. 미리보기 전용이라 인쇄본에는 영향이 없다.
+     */
+    assert.match(tuner, /const fitToWidth = \(frame\) => \{/);
+    assert.match(tuner, /zoom:var\(--tuner-zoom\)/);
+    // 설명하는 주석은 놔두고, 실제로 쓰는 곳만 본다.
+    assert.ok(!/transform:\s*scale\(/.test(tuner), 'scale 로 줄이면 좌우가 그대로 넘칩니다.');
+    // 창 크기가 바뀌어도 다시 맞춘다.
+    assert.match(tuner, /window\.addEventListener\('resize', onResize\)/);
+    // 원래보다 키우지는 않는다 — 확대하면 오히려 잘린다.
+    assert.match(tuner, /Math\.min\(1, available \/ pageWidth\)/);
+});
