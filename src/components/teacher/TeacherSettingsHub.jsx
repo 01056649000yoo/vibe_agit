@@ -4,6 +4,7 @@ import TeacherSettingsTab from './TeacherSettingsTab';
 import TeacherGuideButton from './TeacherGuideButton';
 import { getAllModules } from '../../modules/registry';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
+import { sectionAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 
 const ClassManager = lazy(() => import('./ClassManager'));
 const loadTeacherWritingEditorManager = () => import('../../modules/writing/editor-settings/TeacherWritingEditorManager');
@@ -94,6 +95,7 @@ const TeacherSettingsHub = ({
                                 onMouseEnter={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
                                 onFocus={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
                                 aria-current={active ? 'page' : undefined}
+                                {...tourAnchor(sectionAnchorId(item.id))}
                                 style={{
                                 minWidth: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : 0, width: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : '100%',
                                 minHeight: isMobile ? '64px' : '76px', padding: isMobile ? '11px 14px' : '13px 15px',

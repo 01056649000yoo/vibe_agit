@@ -197,7 +197,7 @@ export function TeacherTourLiveHook() {
 
             {/* 가짜 하위 메뉴 — 진짜 화면과 같은 이름표·같은 표시(aria-selected)를 쓴다. */}
             <div role="tablist" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-                {['reading-logs', 'diaries', 'archive'].map((tabId) => (
+                {['reading-logs', 'diaries', 'archive', 'recent-activity', 'student-agits', 'comments', 'footprints'].map((tabId) => (
                     <button
                         key={tabId}
                         type="button"

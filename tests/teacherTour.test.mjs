@@ -43,6 +43,7 @@ const ANCHOR_HOSTS = Object.freeze([
 const DERIVED_ANCHOR_HOSTS = Object.freeze([
     ['tab', 'src/components/teacher/TeacherDashboard.jsx', 'tabAnchorId'],
     ['launch', 'src/components/teacher/TeacherDashboard.jsx', 'launchAnchorId'],
+    ['section', 'src/components/teacher/TeacherSettingsHub.jsx', 'sectionAnchorId'],
     ['tool', 'src/components/teacher/TeachingToolsHub.jsx', 'toolAnchorId'],
     ['module', 'src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'moduleAnchorId']
 ]);
@@ -421,13 +422,15 @@ test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () =>
         '직접 눌러야 하는 단계 목록이 달라졌습니다.');
     assert.ok(menus.length > 0);
     menus.forEach((step) => {
-        assert.match(step.anchor, /^(tab|tool|module):/, `${step.stepId} 가 메뉴를 가리키지 않습니다.`);
-        assert.equal(step.fallbackAnchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
-            `${step.stepId} 에 메뉴를 못 찾았을 때의 대비책이 없습니다.`);
+        assert.match(step.anchor, /^(tab|tool|module|section):/, `${step.stepId} 가 메뉴를 가리키지 않습니다.`);
+        /*
+         * 못 찾았을 때 본문 전체를 두르는 대비책은 **두지 않는다.** 학급운영도구 안의
+         * 도구처럼 한 단계 더 들어가야 보이는 메뉴에서, 지금 열려 있는 **앞 단계 화면**이
+         * 통째로 밝아져 "3번인데 4번 화면을 짚는다" 로 보였다(2026-09-13 제보).
+         */
+        assert.equal(step.fallbackAnchor, null,
+            `${step.stepId} 가 못 찾았을 때 엉뚱한 화면을 두릅니다.`);
     });
-
-    const dashboard = read('src/components/teacher/TeacherDashboard.jsx');
-    assert.ok(dashboard.includes('tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)'), '본문 영역 이름표가 없습니다.');
 
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
     // 열렸는지는 메뉴가 스스로 표시한다. 따로 상태를 들고 다니면 화면과 어긋난다.
@@ -537,4 +540,41 @@ test('다 둘러본 뒤에도 길이 끊기지 않는다', () => {
     assert.match(panel, /tour\.nextTourId \? \(/, '다음 흐름이 없을 때의 길이 없습니다.');
     assert.ok(panel.includes('활용 안내서에서 고르기'), '다 본 뒤 갈 곳을 주지 않습니다.');
     assert.match(panel, /onOpenGuide\(tour\.tourId\)/);
+});
+
+test('테두리는 지금 단계의 것일 때만 그린다', () => {
+    /*
+     * 2026-09-13 제보: 테두리와 오른쪽 아래 설명이 서로 다른 곳을 가리켰다. 중간에
+     * 그만두고 다른 흐름을 다시 볼 때 특히 그랬다.
+     *
+     * 재는 자리를 **이름표에만** 묶어 두었기 때문이다. 설정 다섯 단계가 모두 `tab:settings`
+     * 를 쓰는 것처럼 여러 단계가 같은 이름표를 쓰면, 앞 단계의 자리가 그대로 남는다.
+     * 어긋난 테두리보다 없는 편이 낫다.
+     */
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /const useAnchorRect = \(stepId, anchorId, isActive\) => \{/);
+    assert.match(panel, /measured\?\.stepId === stepId && measured\?\.anchorId === anchorId/);
+    assert.match(panel, /useAnchorRect\(step\?\.stepId, step\?\.anchor, isRunning\)/);
+    // 단계가 바뀌면 다시 잰다.
+    assert.match(panel, /\}, \[stepId, anchorId, isActive\]\);/);
+});
+
+test('한 흐름 안에서 서로 다른 단계가 같은 곳을 짚지 않는다', () => {
+    /*
+     * 2026-09-13 제보: 맞춤법·AI 흐름을 다시 보기로 열면 **설정만** 계속 짚었다.
+     * 세 단계가 모두 `설정` 탭을 가리켜 서로 구분되지 않았기 때문이다. 구역이 있으면
+     * 구역 메뉴를 짚어야 한다.
+     */
+    TEACHER_TOURS.forEach((tour) => {
+        const steps = getTeacherTourSteps(tour.id);
+        const counts = {};
+        steps.forEach((step) => { Reflect.set(counts, step.anchor, (Reflect.get(counts, step.anchor) || 0) + 1); });
+        Object.entries(counts).forEach(([anchor, count]) => {
+            // 같은 화면을 두 단계가 나눠 설명하는 경우(독서록 확인·독서 활동)는 둘까지 봐준다.
+            assert.ok(count <= 2,
+                `${tour.id}: ${count}개 단계가 모두 ${anchor} 를 짚습니다 — 어느 단계인지 구분되지 않습니다.`);
+        });
+    });
+    const spelling = getTeacherTourSteps('spelling-and-ai').map((step) => step.anchor);
+    assert.equal(new Set(spelling).size, spelling.length, '맞춤법·AI 흐름의 세 단계가 같은 곳을 짚습니다.');
 });

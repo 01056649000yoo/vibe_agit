@@ -35,15 +35,22 @@ const isOpenedMenu = (element) => element?.getAttribute('aria-selected') === 'tr
     || element?.getAttribute('aria-current') === 'page'
     || element?.getAttribute('aria-pressed') === 'true';
 
-const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
+/*
+ * 테두리 자리를 잰다.
+ *
+ * **재는 자리를 단계에 묶는다.** 전에는 이름표에만 묶여 있어, 여러 단계가 같은 이름표를
+ * 쓰거나(설정 다섯 단계는 모두 `tab:settings`) 흐름을 바꿔 다시 볼 때 **앞 단계의 자리가
+ * 그대로 남아** 오른쪽 아래 설명과 테두리가 서로 다른 곳을 가리켰다(2026-09-13 제보).
+ * 지금 단계의 것이 아니면 그리지 않는다 — 어긋난 테두리보다 없는 편이 낫다.
+ */
+const useAnchorRect = (stepId, anchorId, isActive) => {
     const [measured, setMeasured] = useState(null);
 
     useEffect(() => {
         if (!isActive || !anchorId) return undefined;
         let scrolledOnce = false;
         const measure = () => {
-            // 본문 영역을 못 찾으면(아직 안 그려졌거나 화면이 다르면) 메뉴 이름표로 물러선다.
-            const element = findVisibleAnchor(anchorId) || findVisibleAnchor(fallbackAnchorId);
+            const element = findVisibleAnchor(anchorId);
             if (!element) {
                 setMeasured(null);
                 return;
@@ -54,6 +61,7 @@ const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
             }
             const box = element.getBoundingClientRect();
             setMeasured({
+                stepId,
                 anchorId,
                 opened: isOpenedMenu(element),
                 top: box.top, left: box.left, width: box.width, height: box.height
@@ -69,15 +77,15 @@ const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
             window.removeEventListener('resize', measure);
             window.removeEventListener('scroll', measure, true);
         };
-    }, [anchorId, fallbackAnchorId, isActive]);
+    }, [stepId, anchorId, isActive]);
 
-    // 이름표가 바뀐 직후 한 박자 동안 앞 단계 자리에 테두리가 남지 않도록 짝을 맞춰 본다.
-    return isActive && measured?.anchorId === anchorId ? measured : null;
+    // 단계와 이름표가 **둘 다** 지금 것일 때만 그린다.
+    return isActive && measured?.stepId === stepId && measured?.anchorId === anchorId ? measured : null;
 };
 
 const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate, onOpenGuide }) => {
     const { isRunning, step, stepIndex, totalSteps } = tour;
-    const rect = useAnchorRect(step?.anchor, step?.fallbackAnchor, isRunning);
+    const rect = useAnchorRect(step?.stepId, step?.anchor, isRunning);
     const navigatedStepRef = useRef(null);
 
     /*
@@ -243,7 +251,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 )}
                 {!rect && (
                     <p className="teacher-tour__missing">
-                        해당 화면을 여는 중입니다. 바뀌지 않으면 아래 <strong>화면 열기</strong>를 눌러 주세요.
+                        짚어 드릴 메뉴가 지금 화면에 없습니다. 아래 <strong>화면 열기</strong>를 누르면 그 화면으로 옮겨 드립니다.
                     </p>
                 )}
                 <div className="teacher-tour__actions">

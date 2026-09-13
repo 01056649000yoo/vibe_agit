@@ -48,10 +48,16 @@ export const tabAnchorId = (tabId) => `tab:${tabId}`;
 export const toolAnchorId = (toolId) => `tool:${toolId}`;
 export const moduleAnchorId = (moduleId) => `module:${moduleId}`;
 export const launchAnchorId = (groupId) => `launch:${groupId}`;
+export const sectionAnchorId = (sectionId) => `section:${sectionId}`;
 
 const deriveAnchor = (target) => {
     if (!target) return null;
     if (target.launch) return launchAnchorId(target.launch);
+    /*
+     * 구역이 있으면 **구역 메뉴**를 짚는다. 탭만 보면 설정 화면의 세 단계가 모두 `설정`
+     * 하나만 짚어 서로 구분되지 않았다(2026-09-13 제보 — 맞춤법·AI 흐름).
+     */
+    if (target.section) return sectionAnchorId(target.section);
     if (target.tool) return toolAnchorId(target.tool);
     if (target.module) return moduleAnchorId(target.module);
     if (target.tab) return tabAnchorId(target.tab);
@@ -162,8 +168,15 @@ export const getTeacherTourSteps = (tourId) => {
                 ...step,
                 spotlight: mustClick ? TOUR_SPOTLIGHT_TARGET : (derived ? TOUR_SPOTLIGHT_MENU : TOUR_SPOTLIGHT_SCREEN),
                 anchor: step.anchor || derived || TEACHER_TOUR_ANCHORS.WORKSPACE,
-                // 메뉴를 못 찾으면(화면이 바뀌었다면) 본문이라도 두른다.
-                fallbackAnchor: mustClick ? null : TEACHER_TOUR_ANCHORS.WORKSPACE,
+                /*
+                 * 대비책을 두지 않는다.
+                 *
+                 * 짚을 메뉴가 아직 화면에 없을 때(학급운영도구 안의 도구처럼 한 단계 더
+                 * 들어가야 보이는 것) 본문 전체를 두르면, **지금 열려 있는 앞 단계 화면**이
+                 * 통째로 밝아져 "3번인데 4번 화면을 짚는다" 로 보인다(2026-09-13 제보).
+                 * 없는 것을 억지로 짚느니 아무것도 짚지 않고 `화면 열기` 를 권한다.
+                 */
+                fallbackAnchor: null,
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,
