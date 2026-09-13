@@ -4,7 +4,9 @@ export const CLASS_AGIT_LIMITS = Object.freeze({
     worksPerRoom, maxRooms: 10, maxWorks, maxCandidates: 100,
     roomTitleLength: 60, roomIntroductionLength: 240,
     titleLength: 80, introductionLength: 240, authorLength: 30,
-    anthologyWorks: 100, externalExpiryDays: 30,
+    // 문집 한 권의 수록 한도. DB 쪽 검사·조회 한도와 **함께** 움직인다 —
+    // 한 곳만 올리면 101편째부터 조용히 사라진다. `tests/anthologyWorkLimit.test.mjs` 가 대조한다.
+    anthologyWorks: 300, externalExpiryDays: 30,
     selectionBatch: 50, candidatePage: 30, missionPage: 50,
 });
 

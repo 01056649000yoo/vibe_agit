@@ -10,17 +10,19 @@ import { createShareToken, validShareToken, buildShareUrl, assertPublicGalleryRe
 import { previewSources, previewClass } from '../src/dev/fixtures/classAgitFixtures.js';
 import { BOOK_PAPERS, GALLERY_THEMES, bookCoverStyle, galleryCoverStyle } from '../src/modules/class-agit/designs.js';
 import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
+import { CLASS_AGIT_LIMITS } from '../src/modules/class-agit/policy.js';
 const sql = readFileSync('supabase/migrations/20261241_class_agit_internal_publication.sql', 'utf8') + readFileSync('supabase/migrations/20261242_class_agit_120_works.sql', 'utf8') + readFileSync('supabase/migrations/20261243_class_agit_frozen_public_reads.sql', 'utf8');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';
 const editionId = '11111111-1111-4111-8111-111111111111';
 const work = { id: 'chapter-1', title: '봄', author: '글쓴이', format: 'poem', kindLabel: '시', group: '계절', excerpt: '안녕 봄', blocks: ['안녕\n봄', '또 만나'] };
 const book = { title: '우리 책', subtitle: '', introduction: '', class_label: '', term: '', issue_date: '2026-09-05', grouping: 'custom' };
-test('문집은 별도 확인 없이 중복 제거·100편 상한을 지키고 서버에 본문을 보내지 않는다', () => {
+test('문집은 별도 확인 없이 중복 제거·수록 상한을 지키고 서버에 본문을 보내지 않는다', () => {
     const item = bookItemFromSource(previewSources[0], previewClass.id);
     assert.equal('anthologyConfirmed' in item, false);
     const next = addBookItems({ items: [] }, [item, item]); assert.equal(next.items.length, 1);
-    const full = { items: Array.from({ length: 100 }, (_, i) => ({ sourceId: String(i) })) };
-    assert.throws(() => addBookItems(full, [item]), /100편/);
+    // 상한은 policy.js 한 곳에서 나온다 — 숫자를 여기 적으면 올린 날 이 검사만 옛 수로 남는다.
+    const full = { items: Array.from({ length: CLASS_AGIT_LIMITS.anthologyWorks }, (_, i) => ({ sourceId: String(i) })) };
+    assert.throws(() => addBookItems(full, [item]), new RegExp(`${CLASS_AGIT_LIMITS.anthologyWorks}편`));
     const payload = buildBookSavePayload({ ...book, id: editionId, revision: 2, items: [item] });
     assert.deepEqual(Object.keys(payload.items[0]).sort(), ['sourceId', 'sourceRevision']);
     assert.equal(payload.expected_revision, 2);
@@ -37,11 +39,12 @@ test('학생 서가·차례·전문 응답은 교사 식별자와 전문의 과�
     assert.throws(() => assertStudentBooks({ ...detailed, work: { ...work, blocks: ['글'.repeat(20001)] } }, editionId, work.id));
 });
 test('문집 방문 기록에는 판·작품 주소만 남고 뒤로가기는 차례와 서가로 간다', () => {
-    const route = normalizeClassAgitParams({ mode: 'chapter', editionId, workId: 'chapter-100', blocks: ['private'] });
-    assert.deepEqual(route, { mode: 'chapter', editionId, workId: 'chapter-100' });
+    const last = `chapter-${CLASS_AGIT_LIMITS.anthologyWorks}`;
+    const route = normalizeClassAgitParams({ mode: 'chapter', editionId, workId: last, blocks: ['private'] });
+    assert.deepEqual(route, { mode: 'chapter', editionId, workId: last });
     assert.deepEqual(getClassAgitBackDestination(route).params, { mode: 'book', editionId });
     assert.deepEqual(getClassAgitBackDestination({ mode: 'book', editionId }).params, { mode: 'books' });
-    assert.equal(normalizeClassAgitParams({ ...route, workId: 'chapter-101' }).mode, 'book');
+    assert.equal(normalizeClassAgitParams({ ...route, workId: `chapter-${CLASS_AGIT_LIMITS.anthologyWorks + 1}` }).mode, 'book');
     assert.equal(normalizeClassAgitParams({ ...route, workId: { toString: () => 'chapter-1' } }).mode, 'book');
 });
 test('확정판 A4 출력은 공용 장르 렌더러·고정 설정·HTML 이스케이프를 사용한다', async () => {
