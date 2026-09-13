@@ -116,7 +116,7 @@ export default function TeacherTourPreview() {
                 </div>
             )}
 
-            <section style={{ display: 'grid', gap: 40, maxWidth: 600 }}>
+            <section style={{ display: 'grid', gap: 40, maxWidth: 600 }} {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)}>
                 <button type="button" onClick={() => bump('classCount')} {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>
                     ➕ 새 학급 만들기 (가짜)
                 </button>

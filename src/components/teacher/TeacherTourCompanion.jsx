@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ModalPortal from '../common/ModalPortal';
-import { TEACHER_TOUR_ANCHOR_SELECTOR } from '../../guides/teacherTour.js';
+import { TEACHER_TOUR_ANCHOR_SELECTOR, TOUR_SPOTLIGHT_TARGET } from '../../guides/teacherTour.js';
 import './TeacherTourCompanion.css';
 
 /*
@@ -28,14 +28,15 @@ const findVisibleAnchor = (anchorId) => {
     return visible.at(-1) || null;
 };
 
-const useAnchorRect = (anchorId, isActive) => {
+const useAnchorRect = (anchorId, fallbackAnchorId, isActive) => {
     const [measured, setMeasured] = useState(null);
 
     useEffect(() => {
         if (!isActive || !anchorId) return undefined;
         let scrolledOnce = false;
         const measure = () => {
-            const element = findVisibleAnchor(anchorId);
+            // 본문 영역을 못 찾으면(아직 안 그려졌거나 화면이 다르면) 메뉴 이름표로 물러선다.
+            const element = findVisibleAnchor(anchorId) || findVisibleAnchor(fallbackAnchorId);
             if (!element) {
                 setMeasured(null);
                 return;
@@ -57,7 +58,7 @@ const useAnchorRect = (anchorId, isActive) => {
             window.removeEventListener('resize', measure);
             window.removeEventListener('scroll', measure, true);
         };
-    }, [anchorId, isActive]);
+    }, [anchorId, fallbackAnchorId, isActive]);
 
     // 이름표가 바뀐 직후 한 박자 동안 앞 단계 자리에 테두리가 남지 않도록 짝을 맞춰 본다.
     return isActive && measured?.anchorId === anchorId ? measured : null;
@@ -65,7 +66,7 @@ const useAnchorRect = (anchorId, isActive) => {
 
 const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate, onOpenGuide }) => {
     const { isRunning, step, stepIndex, totalSteps } = tour;
-    const rect = useAnchorRect(step?.anchor, isRunning);
+    const rect = useAnchorRect(step?.anchor, step?.fallbackAnchor, isRunning);
     const navigatedStepRef = useRef(null);
 
     // 단계가 바뀌면 그 화면으로 옮겨 준다. 같은 단계에서 두 번 옮기지 않는다.
@@ -127,6 +128,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     width: `${rect.width}px`,
                     height: `${rect.height}px`
                 };
+                const dims = step.spotlight === TOUR_SPOTLIGHT_TARGET;
                 return (
                     <>
                         {/*
@@ -138,8 +140,12 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                           * 과 함께 두면 어두운 곳도 그대로 눌린다. 진짜 덮개를 깔면
                           * 정작 눌러야 할 버튼이 막힌다.
                           */}
-                        <div className="teacher-tour__dim" aria-hidden="true" style={place} />
-                        <div className="teacher-tour__ring" aria-hidden="true" style={place} />
+                        {dims && <div className="teacher-tour__dim" aria-hidden="true" style={place} />}
+                        <div
+                            className={`teacher-tour__ring${dims ? '' : ' is-screen'}`}
+                            aria-hidden="true"
+                            style={place}
+                        />
                     </>
                 );
             })()}

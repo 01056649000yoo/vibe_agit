@@ -217,7 +217,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             variant="primary"
                             style={{ width: '100%', height: '60px', fontSize: '1.1rem', borderRadius: '16px', fontWeight: 'bold' }}
                             onClick={() => setIsModalOpen(true)}
-                            {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}
+                            {...(isModalOpen ? {} : tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE))}
                         >
                             ➕ 새 학급 만들기
                         </Button>
@@ -320,7 +320,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))', gap: '9px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #EEF2F7' }}>
                         {onNavigate && <ClassActionButton icon="👥" label="학생 명단" description="학생 추가·별명·코드" onClick={() => onNavigate({ tab: 'students', section: 'students' })} />}
                         <ClassActionButton icon="✏️" label="이름 바꾸기" description="학급 이름 수정" onClick={handleRenameClass} disabled={isSaving} />
-                        <ClassActionButton icon="➕" label="학급 추가" description="새 학급 만들기" onClick={() => setIsModalOpen(true)} anchorProps={tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)} />
+                        <ClassActionButton icon="➕" label="학급 추가" description="새 학급 만들기" onClick={() => setIsModalOpen(true)} anchorProps={isModalOpen ? undefined : tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)} />
                         <ClassActionButton icon="⭐" label="주 학급 지정" description={activeClass.id === primaryClassId ? '현재 주 학급' : '로그인 후 기본 학급'} onClick={() => onSetPrimaryClass?.(activeClass.id)} disabled={activeClass.id === primaryClassId || isSaving} />
                         <ClassActionButton icon="♻️" label="삭제 학급 복구" description="3일 안에 되돌리기" onClick={handleOpenTrash} />
                         <ClassActionButton danger icon="🗑️" label="학급 삭제" description="복구함으로 이동" onClick={() => handleDeleteClass(activeClass.id, activeClass.name)} disabled={isSaving} />
@@ -336,7 +336,11 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     zIndex: 2500, backdropFilter: 'blur(5px)'
                 }}>
-                    <Card style={{ width: '90%', maxWidth: '420px', padding: '40px', borderRadius: '32px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+                    {/*
+                      * 창이 열리면 짚는 자리를 **적는 창 전체**로 옮긴다. 뒤에 가려진 버튼을
+                      * 계속 짚으면 무엇을 하라는 것인지 보이지 않는다(2026-09-13 제보).
+                      */}
+                    <Card {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)} style={{ width: '90%', maxWidth: '420px', padding: '40px', borderRadius: '32px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
                         <h2 style={{ fontSize: 'var(--ui-text-2xl)', marginBottom: '8px', color: '#2C3E50', fontWeight: '900' }}>새로운 학급 만들기</h2>
                         <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: 'var(--ui-text-md)' }}>아이들과 함께할 멋진 학급 이름을 지어주세요!</p>
                         <input

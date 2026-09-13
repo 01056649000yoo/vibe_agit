@@ -311,7 +311,12 @@ const MissionManager = ({
                     )}
                     {!isSubmissionBoardView && (
                         <Button
-                            {...tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE)}
+                            /*
+                             * 이 버튼은 열리면 **같은 자리에서 `✖ 닫기` 가 된다.** 그대로 짚고 있으면
+                             * 동행 모드가 "닫기를 누르세요" 처럼 보인다(2026-09-13 제보).
+                             * 열린 뒤에는 아래 작업 영역 전체로 짚는 자리를 옮긴다.
+                             */
+                            {...(isFormOpen || isMissionTypePickerOpen ? {} : tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE))}
                             onClick={() => {
                                 if (isFormOpen) {
                                     handleCancelEdit();
@@ -367,6 +372,7 @@ const MissionManager = ({
                 aria-labelledby="teacher-mission-workspace-tab-manage"
                 className="teacher-mission-management-panel"
                 hidden={isSubmissionBoardView}
+                {...(isFormOpen || isMissionTypePickerOpen ? tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE) : {})}
             >
                 {isMissionTypePickerOpen && (
                     <MissionTypePicker

@@ -35,7 +35,7 @@ import TeacherTourCompanion from './TeacherTourCompanion';
 import TeacherFirstStepsCard from './TeacherFirstStepsCard';
 import TeacherWelcomeModal from './TeacherWelcomeModal';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../../guides/teacherGuideJourneys';
-import { tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
+import { TEACHER_TOUR_ANCHORS, tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
@@ -516,7 +516,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
             {/* 메인 콘텐츠 영역 */}
             <main className="teacher-dashboard__main">
-                <div className="teacher-dashboard__workspace" style={{
+                {/* 둘러보는 단계가 가리키는 자리 — 메뉴가 아니라 **지금 보고 있는 내용** 이다. */}
+                <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{
                     display: usesSecondarySidebar ? 'grid' : 'block',
                     gridTemplateColumns: usesSecondarySidebar ? 'clamp(180px, 10vw, 240px) minmax(0, 1fr)' : undefined,
                     gap: usesSecondarySidebar ? 'clamp(20px, 1.25vw, 32px)' : undefined,

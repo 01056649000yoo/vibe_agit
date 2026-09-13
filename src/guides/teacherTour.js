@@ -24,7 +24,9 @@ export const TEACHER_TOUR_ANCHORS = Object.freeze({
     CLASS_CREATE: 'class-create',
     STUDENT_ADD: 'student-add',
     WRITING_EDITOR_SETTINGS: 'writing-editor-settings',
-    MISSION_CREATE: 'mission-create'
+    MISSION_CREATE: 'mission-create',
+    // 화면 본문 전체. "이 화면을 둘러보세요" 단계가 가리키는 자리다.
+    WORKSPACE: 'workspace'
 });
 
 /** `<Button {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>` 처럼 펼쳐 쓴다. */
@@ -51,6 +53,19 @@ const deriveAnchor = (target) => {
     if (target.tab) return tabAnchorId(target.tab);
     return null;
 };
+
+/*
+ * 짚는 방식은 두 가지다.
+ *
+ *   'target' — 눌러야 할 자리가 분명한 단계. 주변을 어둡게 덮고 그 자리만 남긴다.
+ *   'screen' — "이 화면을 한 번 둘러보세요" 단계. **덮지 않는다.**
+ *
+ * 둘러보는 단계까지 덮으면 정반대가 된다 — 봐야 할 내용이 어두워지고 작은 메뉴 버튼만
+ * 밝아진다(2026-09-13 점검에서 35단계 중 28단계가 이랬다). 그런 단계는 본문 영역을
+ * 옅은 테두리로만 둘러 "여기를 보세요" 라고 말한다.
+ */
+export const TOUR_SPOTLIGHT_TARGET = 'target';
+export const TOUR_SPOTLIGHT_SCREEN = 'screen';
 
 const ACK = Object.freeze({ ack: true });
 
@@ -116,10 +131,17 @@ export const getTeacherTourSteps = (tourId) => {
         .map((step) => {
             const journeyStep = journey.steps.find((candidate) => candidate.id === step.stepId);
             if (!journeyStep) return null;
+            /*
+             * 손으로 적은 이름표가 있으면 눌러야 할 자리가 분명한 단계다. 없으면 화면만
+             * 열어 주고 둘러보는 단계이므로 본문 영역을 가리킨다 — 메뉴 버튼을 짚어 봐야
+             * 정작 볼 내용이 어두워질 뿐이다. 메뉴 이름표는 본문을 못 찾았을 때의 대비책.
+             */
+            const spotlight = step.anchor ? TOUR_SPOTLIGHT_TARGET : TOUR_SPOTLIGHT_SCREEN;
             return {
                 ...step,
-                // 손으로 적은 이름표가 있으면 그것이 이긴다(메뉴보다 그 안의 버튼이 더 정확하다).
-                anchor: step.anchor || deriveAnchor(journeyStep.target),
+                spotlight,
+                anchor: step.anchor || TEACHER_TOUR_ANCHORS.WORKSPACE,
+                fallbackAnchor: step.anchor ? null : deriveAnchor(journeyStep.target),
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,

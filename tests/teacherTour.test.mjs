@@ -10,6 +10,8 @@ import {
     TEACHER_TOURS,
     getNextTourId,
     getTourProgress,
+    TOUR_SPOTLIGHT_TARGET,
+    TOUR_SPOTLIGHT_SCREEN,
     TEACHER_TOUR_ANCHORS,
     getTeacherTourSteps,
     getTourEntry,
@@ -31,7 +33,9 @@ const ANCHOR_HOSTS = Object.freeze([
     'src/components/teacher/ClassManager.jsx',
     'src/components/teacher/StudentManagerHeader.jsx',
     'src/modules/writing/editor-settings/TeacherWritingEditorManager.jsx',
-    'src/components/teacher/MissionManager.jsx'
+    'src/components/teacher/MissionManager.jsx',
+    // 본문 영역(둘러보는 단계가 가리키는 자리)은 대시보드가 붙인다.
+    'src/components/teacher/TeacherDashboard.jsx'
 ]);
 
 /* 메뉴·도구·놀이 목록은 이름을 규칙(`tabAnchorId` 등)으로 붙인다. */
@@ -376,4 +380,56 @@ test('안내서 목차에서 어디까지 해봤는지 보인다', () => {
     assert.ok(center.includes('progress.done'), '목차에 진도를 그리지 않습니다.');
     assert.ok(center.includes('다 해보셨습니다'), '다 해봤다는 표시가 없습니다.');
     assert.ok(center.includes('동행 모드 다시 보기'), '다 해본 뒤에도 다시 할 길이 있어야 합니다.');
+});
+
+test('실행해야 하는 단계는 열리면 작업 영역 전체를 짚는다', () => {
+    /*
+     * 2026-09-13 제보: `미션 만들기` 를 짚었는데, 그 버튼은 열리면 **같은 자리에서
+     * `✖ 닫기` 가 된다.** 그대로 짚고 있으니 "닫기를 누르세요" 처럼 보였다.
+     *
+     * 여닫이 버튼에는 이름표를 고정해 두면 안 된다 — 열린 뒤에는 **실제로 일하는 자리**
+     * (적는 창, 만드는 판) 로 옮겨야 한다.
+     */
+    const mission = read('src/components/teacher/MissionManager.jsx');
+    assert.match(mission, /\{\.\.\.\(isFormOpen \|\| isMissionTypePickerOpen \? \{\} : tourAnchor\(TEACHER_TOUR_ANCHORS\.MISSION_CREATE\)\)\}/,
+        '닫기로 바뀌는 버튼이 이름표를 계속 들고 있습니다.');
+    assert.match(mission, /\{\.\.\.\(isFormOpen \|\| isMissionTypePickerOpen \? tourAnchor\(TEACHER_TOUR_ANCHORS\.MISSION_CREATE\) : \{\}\)\}/,
+        '열린 뒤 짚을 작업 영역이 없습니다.');
+
+    const classes = read('src/components/teacher/ClassManager.jsx');
+    assert.match(classes, /isModalOpen \? \{\} : tourAnchor\(TEACHER_TOUR_ANCHORS\.CLASS_CREATE\)/,
+        '창이 열렸는데 뒤에 가려진 버튼을 계속 짚습니다.');
+    assert.match(classes, /<Card \{\.\.\.tourAnchor\(TEACHER_TOUR_ANCHORS\.CLASS_CREATE\)\}/,
+        '학급을 적는 창을 짚지 않습니다.');
+});
+
+test('둘러보는 단계는 메뉴가 아니라 볼 내용을 가리킨다', () => {
+    /*
+     * 2026-09-13 점검: 35단계 중 28단계가 **작은 메뉴 버튼만** 밝히고 정작 볼 내용은
+     * 전부 어둡게 덮고 있었다. 정반대다. 게다가 설정 다섯 단계가 모두 같은 `설정` 버튼을
+     * 짚어, 어느 단계인지 구분조차 되지 않았다.
+     *
+     * 눌러야 할 자리가 분명한 단계만 덮고, 나머지는 본문 영역을 옅게 두른다.
+     */
+    const steps = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id));
+    const dimmed = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_TARGET);
+    const screens = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_SCREEN);
+
+    assert.deepEqual(dimmed.map((step) => step.stepId).sort(),
+        ['create-mission', 'invite-students', 'prepare-class', 'prepare-editor'],
+        '덮는 단계는 실제로 눌러야 하는 넷뿐이어야 합니다.');
+    assert.ok(screens.length > 0);
+    screens.forEach((step) => {
+        assert.equal(step.anchor, TEACHER_TOUR_ANCHORS.WORKSPACE,
+            `${step.stepId} 가 본문이 아닌 곳을 가리킵니다.`);
+        assert.ok(step.fallbackAnchor, `${step.stepId} 에 본문을 못 찾았을 때의 대비책이 없습니다.`);
+    });
+
+    const dashboard = read('src/components/teacher/TeacherDashboard.jsx');
+    assert.ok(dashboard.includes('tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)'), '본문 영역에 이름표가 없습니다.');
+
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /const dims = step\.spotlight === TOUR_SPOTLIGHT_TARGET;/);
+    assert.match(panel, /\{dims && <div className="teacher-tour__dim"/,
+        '둘러보는 단계까지 화면을 덮으면 볼 내용이 어두워집니다.');
 });
