@@ -5,7 +5,16 @@ export const GUIDE_CHAT_LIMITS = Object.freeze({
     questionChars: 200,
     candidateCount: 3,
     candidateChars: 450,
-    contextChars: 1200
+    contextChars: 1200,
+    /*
+     * 낱말이 안 맞을 때 보내는 **전체 훑어보기** 후보 수.
+     *
+     * 전에는 낱말이 하나도 안 걸리면 AI 를 부르지도 않고 "기능 이름을 넣어 다시 물어봐
+     * 주세요" 로 끝냈다 — 'AI 길잡이' 라면서 낱말 하나로 문을 닫는 셈이다(2026-09-13 지적).
+     * 이제 안내서 전체의 짧은 목록을 후보로 보내 **AI 가 뜻으로 고르게** 한다.
+     * 문맥 총량은 그대로라 비용은 늘지 않는다 — 후보가 많으면 하나하나가 짧아질 뿐이다.
+     */
+    overviewCount: 8
 });
 
 const clean = (value) => String(value || '')
@@ -126,4 +135,29 @@ export const getLocalTeacherGuideAnswer = (question, candidates = searchTeacherG
         confidence: 'high',
         local: true
     };
+};
+
+/**
+ * 안내서 전체를 짧게 훑는 후보 — 낱말이 하나도 안 걸렸을 때 쓴다.
+ *
+ * 흐름(journey)을 단위로 고른다. 안내서 27개를 다 보내면 하나하나가 너무 짧아져 뜻을
+ * 알아볼 수 없고, 흐름은 교사가 실제로 일하는 갈래라 AI 가 고르기에도 낫다.
+ */
+export const buildTeacherGuideOverview = () => {
+    const perCandidate = Math.floor(GUIDE_CHAT_LIMITS.contextChars / GUIDE_CHAT_LIMITS.overviewCount);
+    return TEACHER_GUIDE_JOURNEYS
+        .slice(0, GUIDE_CHAT_LIMITS.overviewCount)
+        .map((journey) => {
+            const first = journey.steps[0];
+            const titles = journey.steps.map((step) => step.title).join(', ');
+            const context = clean(`${journey.summary} 포함: ${titles}`).slice(0, perCandidate);
+            return {
+                // 버튼이 갈 곳은 그 흐름의 첫 단계가 가리키는 도움말이다.
+                guideRef: first?.guideRef || '',
+                sectionRef: first?.sectionRef || null,
+                title: journey.title,
+                context
+            };
+        })
+        .filter((candidate) => candidate.guideRef && candidate.context);
 };

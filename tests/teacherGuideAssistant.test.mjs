@@ -66,7 +66,12 @@ test('서버는 공개 단계와 질문·후보·출력 상한을 강제한다',
     assert.match(edge, /teacher_guide_ai_stage/);
     assert.match(edge, /actorRole !== 'ADMIN'/);
     assert.match(edge, /safeQuestion\.length > 200/);
-    assert.match(edge, /candidates\.length > 3/);
+    /*
+     * 2026-09-13: 3 → 8. 낱말이 안 걸릴 때 안내서 전체의 짧은 목록을 보내 **AI 가 뜻으로
+     * 고르게** 하기 위해서다. 늘어난 것은 개수뿐이고 **문맥 총량은 그대로**라 비용은
+     * 따라 늘지 않는다 — 그 상한(1200자)은 바로 아래에서 함께 본다.
+     */
+    assert.match(edge, /candidates\.length > 8/);
     assert.match(edge, /slice\(0, 450\)/);
     assert.match(edge, /contextChars > 1200/);
     assert.match(edge, /TEACHER_GUIDE_CHAT' \? 120/);

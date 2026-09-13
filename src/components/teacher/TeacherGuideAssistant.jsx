@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { askTeacherGuideAssistant } from '../../lib/teacherGuideAssistantApi';
-import { GUIDE_CHAT_LIMITS, getLocalTeacherGuideAnswer, searchTeacherGuides } from '../../guides/teacherGuideSearch';
+import { GUIDE_CHAT_LIMITS, getLocalTeacherGuideAnswer, searchTeacherGuides, buildTeacherGuideOverview } from '../../guides/teacherGuideSearch';
 
 const EXAMPLES = ['학생 접속 코드는 어디서 확인해?', '독서록 설정은 어디서 바꿔?', '학기말 자료는 어떻게 내보내?'];
 
@@ -27,14 +27,20 @@ const TeacherGuideAssistant = ({ onOpenGuide, onOpenScreen, initialRemaining = 5
             setError('오늘 AI 안내 횟수는 모두 사용했어요. 위치를 묻는 질문은 계속 이용할 수 있습니다.');
             return;
         }
-        if (!candidates.length) {
-            setError('가까운 도움말을 찾지 못했어요. 기능 이름이나 메뉴 이름을 넣어 다시 물어봐 주세요.');
+        /*
+         * 낱말이 하나도 안 걸려도 **거절하지 않는다.** 전에는 여기서 끝내 'AI 길잡이' 라면서
+         * 낱말 하나로 문을 닫았다(2026-09-13 지적). 안내서 전체의 짧은 목록을 후보로 넘겨
+         * AI 가 뜻으로 고르게 한다.
+         */
+        const askWith = candidates.length ? candidates : buildTeacherGuideOverview();
+        if (!askWith.length) {
+            setError('도움말을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.');
             return;
         }
         setLoading(true);
         setError('');
         try {
-            const result = await askTeacherGuideAssistant({ question: trimmed, candidates });
+            const result = await askTeacherGuideAssistant({ question: trimmed, candidates: askWith });
             setAnswer(result);
             if (Number.isFinite(Number(result?.remainingToday))) setRemaining(Number(result.remainingToday));
         } catch (requestError) {
