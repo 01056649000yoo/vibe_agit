@@ -71,6 +71,12 @@ export function paginateAnthology(doc) {
     const dividers = new Map([...source.querySelectorAll('[data-divider]')]
         .map((node) => [Number(node.dataset.divider), node]));
     const continuous = dividers.size > 0;
+    /*
+     * 교사가 초안을 보고 "이 작품은 다음 쪽에서" 라고 정한 자리. 간지와 달리 쪽을 새로
+     * 열기만 한다 — 목차는 다시 짤 때 저절로 맞춰지므로 따로 손댈 것이 없다.
+     */
+    const forcedBreaks = new Set([...source.querySelectorAll('[data-forced-break]')]
+        .map((node) => Number(node.dataset.forcedBreak)));
     const pageNumberOf = (sheet) => [...output.children].indexOf(sheet) + 1;
     const setTocPage = (key, number) => {
         const row = [...output.querySelectorAll('[data-toc-row]')].find((item) => item.dataset.tocRow === String(key));
@@ -117,6 +123,8 @@ export function paginateAnthology(doc) {
          * 상자를 쓰는 이유: 작품마다 갈래가 달라(산문·시) 글자 크기와 정렬이 다른데,
          * 쪽 하나에 그 규칙을 직접 걸면 한 쪽에 두 작품을 담을 수 없다.
          */
+        if (forcedBreaks.has(index)) cursor = null;
+
         const divider = dividers.get(index);
         if (divider) {
             /*

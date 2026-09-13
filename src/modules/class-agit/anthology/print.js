@@ -15,6 +15,10 @@ export async function buildAnthologyHtml(edition) {
     const layout = getBookPageLayout(book.print.layout).id;
     const continuous = layout === 'continuous';
     // 주제가 바뀌는 첫 작품의 자리를 미리 표시해 둔다 — 간지와 목차가 같은 기준을 쓴다.
+    // 교사가 "여기서 쪽을 넘긴다" 고 정한 작품. 확정판에도 함께 실려 온다.
+    const forcedBreaks = new Set((Array.isArray(book.page_breaks) ? book.page_breaks : [])
+        .map((id) => book.works.findIndex((work) => work.sourceId === id))
+        .filter((index) => index > 0));
     const groupStarts = new Map();
     book.works.forEach((work, index) => {
         const title = String(work.group || '').trim();
@@ -93,6 +97,7 @@ ${book.works.map((w, i) => {
     }
     return `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
 }).join('')}
+${[...forcedBreaks].map((index) => `<div data-forced-break="${index}"></div>`).join('')}
 ${[...groupStarts.entries()].map(([index, title]) => {
     // 간지 = 주제 이름 + 그 주제에 든 작품 목록. 쪽번호는 쪽을 다 짠 뒤에 채운다.
     const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;

@@ -4,10 +4,11 @@ import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.j
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
 import { classAgitApi } from '../api/classAgitApi.js';
-import { addBookItems, bookItemFromSource, sortBookItems } from './contract.js';
+import { addBookItems, bookItemFromSource, sortBookItems, normalizeBookPageBreaks, toggleBookPageBreak } from './contract.js';
 import { prepareAnthologyWindow } from './printWindow.js';
 import { useDataExport } from '../../../hooks/useDataExport.js';
 import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, BOOK_PAGE_LAYOUTS, getBookPageLayout } from '../designs.js';
+import PageTuner from './PageTuner.jsx';
 import DesignPicker from '../teacher/DesignPicker.jsx';
 import BookCover from './BookCover.jsx';
 import SourcePicker from './SourcePicker.jsx';
@@ -31,6 +32,8 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     const [dirty, setDirty] = useState(false);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+    // 쪽 다듬기 창. 초안 스냅샷을 받아 앱 안에서 쪽을 그려 보여 준다.
+    const [tuner, setTuner] = useState(null);
     const [busy, setBusy] = useState(false);
     const [picker, setPicker] = useState(false);
     const [source, setSource] = useState(null);
@@ -75,6 +78,27 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         if (!await ask({ title: `“${entry.title}” 문집을 삭제할까요?`, body: '초안과 모든 확정판이 삭제되고 학생 서가에서도 내려갑니다. 학생 원글과 전시관은 남습니다. 삭제한 문집은 복구할 수 없습니다.', confirmLabel: '문집 삭제' })) return;
         run(async () => receive(await api.bookAction(classId, 'delete', { book_id: entry.id, expected_revision: entry.revision, confirmed: true })));
     };
+    /*
+     * 쪽 다듬기 창을 연다.
+     *
+     * 초안 스냅샷(`getBookPreview`)을 그대로 쓴다 — 인쇄본과 **같은 것**을 보여 줘야
+     * 다듬은 결과가 인쇄물과 어긋나지 않는다.
+     */
+    const openTuner = () => run(async () => {
+        setTuner(await api.getBookPreview(classId, book.id, book.revision));
+    });
+
+    /*
+     * 쪽 나누기를 바꾸면 **바로 저장**한다. 저장해야 미리보기에 쓰는 스냅샷이 따라오고,
+     * 창을 닫았다 다시 열어도 남는다. 목차는 다시 그릴 때 저절로 맞춰진다.
+     */
+    const toggleTunerBreak = (sourceId) => run(async () => {
+        const next = toggleBookPageBreak(book, sourceId);
+        const saved = await api.saveBook(classId, next);
+        receive(saved);
+        setTuner(await api.getBookPreview(classId, book.id, saved?.book?.revision ?? book.revision));
+    });
+
     const printEdition = (edition = null) => run(async () => {
         const target = prepareAnthologyWindow();
         try { const [{ renderAnthologyWindow }, snapshot] = await Promise.all([import('./print.js'), edition ? api.getEdition(classId, edition.id) : api.getBookPreview(classId, book.id, book.revision)]); await renderAnthologyWindow(target, snapshot); setMessage('인쇄용 문집을 열었습니다. 인쇄 창에서 PDF로 저장할 수 있습니다.'); }
@@ -176,6 +200,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>인쇄하고 한 판으로 확정해요</h2><p>초안을 미리 출력해 보고 새 판을 확정합니다. 확정판은 이후 편집과 원글 수정으로 바뀌지 않습니다.</p></div>
                 <div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => printEdition()}>초안 {getBookPaper(book.paper_format).label} 미리보기</Button>
+                    {/*
+                      * 쪽 다듬기는 **이어붙이기에서만** 뜻이 있다 — 작품마다 새 쪽인 문집은
+                      * 이미 작품마다 쪽이 나뉘어 있어 더 정할 것이 없다.
+                      */}
+                    {getBookPageLayout(book.page_layout).id === 'continuous' && (
+                        <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => openTuner()}>쪽 다듬기</Button>
+                    )}
                     <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived || !isGapiLoaded} onClick={() => exportEditionToGoogleDoc()}>초안 구글 문서로 보내기</Button>
                     <Button variant="primary" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</Button></div>
                 {dirty && <p>편집 내용을 먼저 저장하면 미리보기와 확정을 할 수 있습니다.</p>}
@@ -199,6 +230,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             </footer>
         </>}
         {source && <ArtworkReader work={source} onClose={() => setSource(null)} footer={source.refreshing ? <Button variant="primary" type="button" onClick={() => { edit({ ...book, items: book.items.map((item) => item.sourceId === source.sourceId ? { ...source, itemId: item.itemId } : item) }); setSource(null); }}>이 내용으로 반영</Button> : <Button variant="outline" type="button" onClick={() => setSource(null)}>읽기 닫기</Button>} />}
+        {tuner && <PageTuner edition={tuner} breaks={normalizeBookPageBreaks(book.page_breaks, book.items)} saving={busy} onToggle={toggleTunerBreak} onClose={() => setTuner(null)} />}
         {confirmDialog}
     </section>;
 }

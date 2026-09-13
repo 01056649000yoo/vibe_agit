@@ -22,6 +22,8 @@ export function buildBookSavePayload(book) {
         introduction: book.introduction, class_label: book.class_label, issue_date: book.issue_date, grouping: book.grouping,
         paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,
         page_layout: getBookPageLayout(book.page_layout).id,
+        // 그 앞에서 쪽을 넘길 작품의 원글 id. 순서를 바꿔도 교사가 정한 것이 따라간다.
+        page_breaks: normalizeBookPageBreaks(book.page_breaks, book.items),
         items: book.items.map((item) => ({ sourceId: item.sourceId, sourceRevision: item.sourceRevision })) };
 }
 export function sortBookItems(items, grouping) {
@@ -42,4 +44,21 @@ export function assertBookEdition(data) {
         || !Array.isArray(data.book.works) || data.book.works.length < 1 || data.book.works.length > CLASS_AGIT_LIMITS.anthologyWorks
         || data.book.works.some((work) => !Array.isArray(work.blocks) || work.blocks.length > 200 || Array.from(work.blocks.join(' ')).length > 20000)) throw new Error('확정판을 확인할 수 없습니다.');
     return data;
+}
+
+/**
+ * 쪽 나누기 목록을 지금 문집에 있는 작품만 남겨 정리한다.
+ *
+ * 작품을 빼면 그 표시도 함께 사라져야 한다 — 남겨 두면 다음에 그 작품을 다시 담았을 때
+ * 교사가 정한 적 없는 쪽 넘김이 되살아난다.
+ */
+export function normalizeBookPageBreaks(breaks, items = []) {
+    const present = new Set(items.map((item) => item.sourceId));
+    return [...new Set((Array.isArray(breaks) ? breaks : []).filter((id) => present.has(id)))];
+}
+
+export function toggleBookPageBreak(book, sourceId) {
+    const current = normalizeBookPageBreaks(book.page_breaks, book.items);
+    const next = current.includes(sourceId) ? current.filter((id) => id !== sourceId) : [...current, sourceId];
+    return { ...book, page_breaks: next };
 }
