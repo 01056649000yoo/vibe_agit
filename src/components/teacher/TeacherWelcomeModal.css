@@ -1,0 +1,99 @@
+.teacher-welcome__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ui-space-4);
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.teacher-welcome {
+    box-sizing: border-box;
+    width: min(480px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: var(--ui-space-8) var(--ui-space-6) var(--ui-space-6);
+    background: var(--ui-surface-raised);
+    border-radius: var(--ui-radius-xl);
+    box-shadow: var(--ui-shadow-modal);
+    font-family: var(--ui-font-sans);
+    text-align: center;
+}
+
+.teacher-welcome__icon {
+    display: block;
+    font-size: 2.6rem;
+    line-height: 1;
+    margin-bottom: var(--ui-space-3);
+}
+
+.teacher-welcome h2 {
+    margin: 0 0 var(--ui-space-4);
+    font-size: var(--ui-text-xl);
+    font-weight: 900;
+    color: var(--ui-ink-strong);
+}
+
+.teacher-welcome__lead {
+    margin: 0 0 var(--ui-space-3);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-muted);
+    text-align: left;
+}
+
+.teacher-welcome__lead strong {
+    color: var(--ui-primary);
+}
+
+.teacher-welcome__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+    margin-top: var(--ui-space-5);
+}
+
+.teacher-welcome__primary,
+.teacher-welcome__secondary {
+    min-height: var(--ui-control-lg);
+    padding: var(--ui-space-3) var(--ui-space-5);
+    border-radius: var(--ui-radius-md);
+    font-family: inherit;
+    font-size: var(--ui-text-md);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.teacher-welcome__primary {
+    background: var(--ui-primary);
+    border: 1px solid var(--ui-primary);
+    color: #ffffff;
+}
+
+.teacher-welcome__secondary {
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-primary-border);
+    color: var(--ui-primary);
+}
+
+.teacher-welcome__later {
+    margin-top: var(--ui-space-4);
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+    color: var(--ui-ink-subtle);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.teacher-welcome__note {
+    margin: var(--ui-space-3) 0 0;
+    font-size: var(--ui-text-xs);
+    line-height: var(--ui-line-body);
+    color: var(--ui-ink-subtle);
+}

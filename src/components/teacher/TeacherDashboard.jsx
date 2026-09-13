@@ -33,7 +33,9 @@ import usePendingStudentConsent from '../../hooks/usePendingStudentConsent';
 import useTeacherTour from '../../hooks/useTeacherTour';
 import TeacherTourCompanion from './TeacherTourCompanion';
 import TeacherFirstStepsCard from './TeacherFirstStepsCard';
-import { getTeacherGuideJourney } from '../../guides/teacherGuideJourneys';
+import TeacherWelcomeModal from './TeacherWelcomeModal';
+import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../../guides/teacherGuideJourneys';
+import { tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
@@ -494,6 +496,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             aria-pressed={isActive}
                             onClick={() => handleTabChange(group.defaultTab)}
                             style={itemStyle}
+                            {...tourAnchor(tabAnchorId(group.defaultTab))}
                         >
                             <span aria-hidden="true">{group.icon}</span>
                             {group.label}
@@ -534,6 +537,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                     aria-selected={visibleTab === tab.id}
                                     onClick={() => handleTabChange(tab.id)}
                                     className="teacher-subtab__button"
+                                    {...tourAnchor(tabAnchorId(tab.id))}
                                     style={{
                                         padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
                                         fontSize: isMobile ? '0.85rem' : '0.9rem',
@@ -694,6 +698,21 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 onClose={() => setIsFeedbackOpen(false)}
                 onRepliesSeen={() => setFeedbackReplyCount(0)}
             />
+
+            {/* 가입 직후: 먼저 안내서를 알리고, 그다음에 따라 할지 고르게 한다. */}
+            {tour.needsWelcome && (
+                <TeacherWelcomeModal
+                    teacherName={teacherInfo?.full_name || profile?.full_name || ''}
+                    journeyCount={TEACHER_GUIDE_JOURNEYS.length}
+                    stepCount={TEACHER_GUIDE_JOURNEYS.reduce((total, journey) => total + journey.steps.length, 0)}
+                    onStartTour={() => { tour.markWelcomeSeen(); tour.start(); }}
+                    onOpenGuide={() => {
+                        tour.markWelcomeSeen();
+                        setGuideCenterRequest({ requestId: `welcome-${Date.now()}` });
+                    }}
+                    onLater={tour.markWelcomeSeen}
+                />
+            )}
 
             <TeacherTourCompanion
                 tour={tour}

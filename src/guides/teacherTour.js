@@ -32,6 +32,26 @@ export const tourAnchor = (anchorId) => ({ 'data-tour': anchorId });
 
 export const TEACHER_TOUR_ANCHOR_SELECTOR = (anchorId) => `[data-tour="${anchorId}"]`;
 
+/*
+ * 35단계마다 이름표를 손으로 적지 않는다.
+ *
+ * 단계는 이미 "어느 화면으로 가는가"(`target`)를 갖고 있고, 그 화면으로 가는 **메뉴 항목**은
+ * 화면에 그려져 있다. 그래서 메뉴·도구·놀이 목록에 이름을 규칙대로 붙여 두고, 단계는
+ * 자기 target 에서 이름을 계산한다. 손으로 적는 이름표는 "메뉴가 아니라 그 안의 특정
+ * 버튼"을 가리켜야 하는 네 단계뿐이다(학급 만들기·학생 추가·글쓰기 설정·과제 만들기).
+ */
+export const tabAnchorId = (tabId) => `tab:${tabId}`;
+export const toolAnchorId = (toolId) => `tool:${toolId}`;
+export const moduleAnchorId = (moduleId) => `module:${moduleId}`;
+
+const deriveAnchor = (target) => {
+    if (!target) return null;
+    if (target.tool) return toolAnchorId(target.tool);
+    if (target.module) return moduleAnchorId(target.module);
+    if (target.tab) return tabAnchorId(target.tab);
+    return null;
+};
+
 const ACK = Object.freeze({ ack: true });
 
 /**
@@ -98,6 +118,8 @@ export const getTeacherTourSteps = (tourId) => {
             if (!journeyStep) return null;
             return {
                 ...step,
+                // 손으로 적은 이름표가 있으면 그것이 이긴다(메뉴보다 그 안의 버튼이 더 정확하다).
+                anchor: step.anchor || deriveAnchor(journeyStep.target),
                 title: journeyStep.title,
                 purpose: journeyStep.purpose,
                 guideRef: journeyStep.guideRef,
@@ -133,8 +155,19 @@ export const normalizeTourState = (raw) => {
     TEACHER_TOURS.forEach((tour) => {
         Reflect.set(tours, tour.id, normalizeTourEntry(Reflect.get(raw?.tours || {}, tour.id), tour.id));
     });
-    return { version: 1, tours };
+    return {
+        version: 1,
+        // 가입 직후 한 번 뜨는 환영 안내를 봤는지. 흐름별이 아니라 교사당 하나다.
+        welcomeSeenAt: typeof raw?.welcomeSeenAt === 'string' ? raw.welcomeSeenAt : null,
+        tours
+    };
 };
+
+/** 환영 안내를 봤다고 적는다. 한 번 본 사람에게 다시 띄우지 않는다. */
+export const markWelcomeSeen = (state, { now = new Date().toISOString() } = {}) => ({
+    ...normalizeTourState(state),
+    welcomeSeenAt: now
+});
 
 export const getTourEntry = (state, tourId) => Reflect.get(normalizeTourState(state).tours, tourId) || null;
 

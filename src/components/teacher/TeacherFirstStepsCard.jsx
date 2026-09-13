@@ -30,7 +30,7 @@ const TeacherFirstStepsCard = ({ title, summary, estimatedTime, steps, completed
         </ol>
         <div className="teacher-first-steps__actions">
             <button type="button" className="teacher-first-steps__start" onClick={onStart}>
-                따라 하며 시작하기
+                🧭 동행 모드로 시작하기
             </button>
             <button type="button" className="teacher-first-steps__skip" onClick={onDismiss}>
                 혼자 할게요

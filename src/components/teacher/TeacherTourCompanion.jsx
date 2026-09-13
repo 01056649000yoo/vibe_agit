@@ -13,14 +13,19 @@ import './TeacherTourCompanion.css';
 
 const RECT_POLL_MS = 300;
 
-/** 같은 이름표가 여러 곳에 붙어 있으면 지금 눈에 보이는 것을 고른다. */
+/*
+ * 같은 이름표가 여러 곳에 붙어 있으면 지금 눈에 보이는 것 중 **마지막** 을 고른다.
+ * 같은 탭을 위쪽 큰 메뉴와 아래쪽 하위 메뉴가 함께 가리키는데, 문서에서 나중에 나오는
+ * 하위 메뉴가 교사가 실제로 누를 자리다.
+ */
 const findVisibleAnchor = (anchorId) => {
     if (!anchorId || typeof document === 'undefined') return null;
-    const candidates = [...document.querySelectorAll(TEACHER_TOUR_ANCHOR_SELECTOR(anchorId))];
-    return candidates.find((element) => {
-        const rect = element.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-    }) || null;
+    const visible = [...document.querySelectorAll(TEACHER_TOUR_ANCHOR_SELECTOR(anchorId))]
+        .filter((element) => {
+            const rect = element.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        });
+    return visible.at(-1) || null;
 };
 
 const useAnchorRect = (anchorId, isActive) => {

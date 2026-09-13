@@ -16,6 +16,7 @@ import {
     getTourEntry,
     getTourStatuses,
     isStepSatisfied,
+    markWelcomeSeen,
     normalizeTourState,
     reduceTourState,
     shouldOfferTour
@@ -113,6 +114,13 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
         apply('complete');
     }, [isRunning, step, signals, apply]);
 
+    const rememberWelcomeSeen = useCallback(() => {
+        const next = markWelcomeSeen(stateRef.current);
+        stateRef.current = next;
+        setState(next);
+        void saveTeacherTourState(userId, next).catch(() => {});
+    }, [userId]);
+
     const statuses = useMemo(() => getTourStatuses(state), [state]);
     const nextTourId = useMemo(
         () => (justFinishedTourId ? getNextTourId(state, justFinishedTourId) : null),
@@ -136,6 +144,13 @@ const useTeacherTour = ({ userId, classes = [], activeClassId = null }) => {
         dismissFinished: useCallback(() => setJustFinishedTourId(null), []),
         // 이미 학급이 있는 교사에게는 첫 걸음 카드를 권하지 않는다.
         canOffer: ready && shouldOfferTour(state, FIRST_TEACHER_TOUR_ID),
+        /*
+         * 환영 안내는 **가입 직후에만** 뜬다. 학급이 하나라도 있으면 이미 쓰고 계신
+         * 선생님이라 어느 날 갑자기 환영 인사가 뜨면 안 된다.
+         */
+        needsWelcome: ready && !state.welcomeSeenAt && classes.length === 0
+            && shouldOfferTour(state, FIRST_TEACHER_TOUR_ID),
+        markWelcomeSeen: rememberWelcomeSeen,
         start,
         acknowledge: useCallback(() => apply('complete'), [apply]),
         skipStep: useCallback(() => apply('skipStep'), [apply]),

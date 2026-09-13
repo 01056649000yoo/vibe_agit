@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { TEACHER_TOOL_SECTION_LABEL } from '../../constants/teacherNav.js';
 import { getAllModules } from '../../modules/registry';
+import { toolAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 
 const TOOL_MODULES = getAllModules()
     .filter((module) => module.part === 'tool' && module.available !== false && typeof module.teacherEntry === 'function')
@@ -71,7 +72,7 @@ const TeachingToolsHub = ({
                         {TOOL_MODULES.map(({ module }) => {
                             const active = module.id === selected.module.id;
                             return (
-                                <button key={module.id} type="button" onClick={() => setSelectedId(module.id)} aria-current={active ? 'page' : undefined} style={{
+                                <button key={module.id} type="button" onClick={() => setSelectedId(module.id)} aria-current={active ? 'page' : undefined} {...tourAnchor(toolAnchorId(module.id))} style={{
                                     minWidth: isMobile ? '140px' : 0, width: isMobile ? 'auto' : '100%', padding: isMobile ? '11px 14px' : '13px 12px',
                                     borderRadius: '13px', border: active ? '1px solid #C7D7FE' : '1px solid transparent',
                                     background: active ? 'white' : 'transparent', color: active ? '#315FC4' : '#526176',

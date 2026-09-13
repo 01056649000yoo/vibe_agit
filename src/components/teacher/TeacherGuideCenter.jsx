@@ -158,7 +158,7 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                             <span className="teacher-guide-center__nav-number">{index + 1}</span>
                                             <span aria-hidden="true" className="teacher-guide-center__nav-icon">{journey.icon}</span>
                                             <span>{journey.title}</span>
-                                            {toured && <span className="teacher-guide-center__nav-done" title="따라 해봤습니다">✅</span>}
+                                            {toured && <span className="teacher-guide-center__nav-done" title="동행 모드로 따라 해봤습니다">✅</span>}
                                         </button>
                                     );
                                 })}
@@ -182,7 +182,7 @@ const TeacherGuideCenter = ({ isOpen, onClose, initialRequest = {}, onNavigate, 
                                                 onClose();
                                             }}
                                         >
-                                            {Reflect.get(tourStatuses, selectedJourney.id) === 'done' ? '🧭 다시 따라 해보기' : '🧭 따라 해보기'}
+                                            {Reflect.get(tourStatuses, selectedJourney.id) === 'done' ? '🧭 동행 모드 다시 하기' : '🧭 동행 모드로 따라 하기'}
                                         </button>
                                     )}
                                 </div>

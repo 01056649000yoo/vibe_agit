@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import TeacherTourCompanion from '../components/teacher/TeacherTourCompanion';
 import TeacherFirstStepsCard from '../components/teacher/TeacherFirstStepsCard';
+import TeacherWelcomeModal from '../components/teacher/TeacherWelcomeModal';
 import {
     FIRST_TEACHER_TOUR_ID,
     TEACHER_TOURS,
@@ -13,7 +14,7 @@ import {
     reduceTourState,
     tourAnchor
 } from '../guides/teacherTour.js';
-import { getTeacherGuideJourney } from '../guides/teacherGuideJourneys.js';
+import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../guides/teacherGuideJourneys.js';
 
 /*
  * 교사 동행 모드 미리보기 (2026-09-13).
@@ -27,6 +28,7 @@ export default function TeacherTourPreview() {
     const [state, setState] = useState(() => normalizeTourState(null));
     const [tourId, setTourId] = useState(FIRST_TEACHER_TOUR_ID);
     const [finished, setFinished] = useState(null);
+    const [welcome, setWelcome] = useState(true);
     const [counts, setCounts] = useState({ classCount: 0, studentCount: 0, missionCount: 0 });
 
     const steps = useMemo(() => getTeacherTourSteps(tourId), [tourId]);
@@ -76,11 +78,23 @@ export default function TeacherTourPreview() {
                     ))}
                 </select>
                 <button type="button" onClick={() => start(tourId)}>이 흐름 시작</button>
-                <button type="button" onClick={() => { setState(normalizeTourState(null)); setFinished(null); setCounts({ classCount: 0, studentCount: 0, missionCount: 0 }); }}>처음으로</button>
+                <button type="button" onClick={() => setWelcome(true)}>환영 안내 보기</button>
+                <button type="button" onClick={() => { setState(normalizeTourState(null)); setFinished(null); setWelcome(true); setCounts({ classCount: 0, studentCount: 0, missionCount: 0 }); }}>처음으로</button>
                 <span style={{ fontSize: 'var(--ui-text-xs)' }}>
                     {entry.status} · {stepIndex + 1}/{steps.length} · 학급 {counts.classCount} · 학생 {counts.studentCount} · 과제 {counts.missionCount}
                 </span>
             </div>
+
+            {welcome && (
+                <TeacherWelcomeModal
+                    teacherName="김아지"
+                    journeyCount={TEACHER_GUIDE_JOURNEYS.length}
+                    stepCount={TEACHER_GUIDE_JOURNEYS.reduce((total, item) => total + item.steps.length, 0)}
+                    onStartTour={() => { setWelcome(false); start(FIRST_TEACHER_TOUR_ID); }}
+                    onOpenGuide={() => setWelcome(false)}
+                    onLater={() => setWelcome(false)}
+                />
+            )}
 
             {!isRunning && !finished && journey && (
                 <div style={{ maxWidth: 600 }}>

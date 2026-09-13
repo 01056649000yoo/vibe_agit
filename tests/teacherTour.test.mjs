@@ -3,6 +3,10 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
     FIRST_TEACHER_TOUR_ID,
+    markWelcomeSeen,
+    moduleAnchorId,
+    tabAnchorId,
+    toolAnchorId,
     TEACHER_TOURS,
     getNextTourId,
     TEACHER_TOUR_ANCHORS,
@@ -29,20 +33,65 @@ const ANCHOR_HOSTS = Object.freeze([
     'src/components/teacher/MissionManager.jsx'
 ]);
 
+/* 메뉴·도구·놀이 목록은 이름을 규칙(`tabAnchorId` 등)으로 붙인다. */
+const DERIVED_ANCHOR_HOSTS = Object.freeze([
+    ['tab', 'src/components/teacher/TeacherDashboard.jsx', 'tabAnchorId'],
+    ['tool', 'src/components/teacher/TeachingToolsHub.jsx', 'toolAnchorId'],
+    ['module', 'src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'moduleAnchorId']
+]);
+
 const anchorSources = ANCHOR_HOSTS.map((file) => ({ file, body: read(file) }));
 
 test('동행 모드가 가리키는 이름표는 모두 실제 화면에 붙어 있다', () => {
     const anchorConstantName = (anchorId) => Object.keys(TEACHER_TOUR_ANCHORS)
         .find((key) => Reflect.get(TEACHER_TOUR_ANCHORS, key) === anchorId);
 
-    const anchored = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id)).filter((step) => step.anchor);
-    assert.ok(anchored.length > 0, '테두리를 씌우는 단계가 하나도 없습니다.');
-    anchored.forEach((step) => {
+    const steps = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id));
+    assert.ok(steps.length > 0);
+
+    steps.forEach((step) => {
+        // 모든 단계가 가리킬 곳을 갖는다. 하나라도 비면 그 단계는 안내만 뜨고 아무 데도 안 가리킨다.
+        assert.ok(step.anchor, `${step.stepId} 에 가리킬 자리가 없습니다.`);
+
         const constantName = anchorConstantName(step.anchor);
-        assert.ok(constantName, `${step.stepId} 의 이름표 ${step.anchor} 가 TEACHER_TOUR_ANCHORS 에 없습니다.`);
-        const used = anchorSources.some(({ body }) => body.includes(`tourAnchor(TEACHER_TOUR_ANCHORS.${constantName})`));
-        assert.ok(used, `${step.stepId} 의 이름표(${step.anchor})를 붙인 화면이 없습니다. 화면을 옮겼다면 tourAnchor 도 같이 옮기세요.`);
+        if (constantName) {
+            const used = anchorSources.some(({ body }) => body.includes(`tourAnchor(TEACHER_TOUR_ANCHORS.${constantName})`));
+            assert.ok(used, `${step.stepId} 의 이름표(${step.anchor})를 붙인 화면이 없습니다. 화면을 옮겼다면 tourAnchor 도 같이 옮기세요.`);
+            return;
+        }
+
+        // 손으로 적지 않은 이름표는 메뉴·도구·놀이 목록이 규칙으로 붙여야 한다.
+        const kind = step.anchor.split(':')[0];
+        const host = DERIVED_ANCHOR_HOSTS.find(([prefix]) => prefix === kind);
+        assert.ok(host, `${step.stepId} 의 이름표 ${step.anchor} 를 붙일 화면을 모릅니다.`);
+        assert.ok(read(host[1]).includes(`tourAnchor(${host[2]}(`),
+            `${host[1]} 이 ${host[2]} 로 이름표를 붙이지 않습니다. 목록을 옮겼다면 이름표도 같이 옮기세요.`);
     });
+});
+
+test('이름표 규칙은 화면과 안내가 같은 문자열을 만든다', () => {
+    // 규칙이 어긋나면 테두리가 아무 데도 안 붙는데 오류는 나지 않는다.
+    assert.equal(tabAnchorId('dashboard'), 'tab:dashboard');
+    assert.equal(toolAnchorId('class-board'), 'tool:class-board');
+    assert.equal(moduleAnchorId('dragon'), 'module:dragon');
+});
+
+test('환영 안내는 한 번 보면 다시 뜨지 않는다', () => {
+    /*
+     * 가입 직후 안내서를 알리는 창이다. 매번 뜨면 로그인마다 치우고 시작해야 한다.
+     */
+    const fresh = normalizeTourState(null);
+    assert.equal(fresh.welcomeSeenAt, null);
+    const seen = markWelcomeSeen(fresh, { now: '2026-09-13T00:00:00.000Z' });
+    assert.equal(seen.welcomeSeenAt, '2026-09-13T00:00:00.000Z');
+    // 저장했다 다시 읽어도 남아 있어야 한다.
+    assert.equal(normalizeTourState(JSON.parse(JSON.stringify(seen))).welcomeSeenAt, '2026-09-13T00:00:00.000Z');
+});
+
+test('환영 안내는 학급이 있는 교사에게 뜨지 않는다', () => {
+    // 568명이 쓰고 있는 앱이다. 조건이 느슨하면 어느 날 전원에게 환영 인사가 뜬다.
+    const hook = read('src/hooks/useTeacherTour.js');
+    assert.match(hook, /needsWelcome:[^,]*!state\.welcomeSeenAt[^,]*classes\.length === 0/s);
 });
 
 test('안내서의 모든 흐름을 빠짐없이 따라 할 수 있다', () => {
