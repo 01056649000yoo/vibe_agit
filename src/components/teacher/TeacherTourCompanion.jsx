@@ -14,6 +14,18 @@ import './TeacherTourCompanion.css';
  */
 
 const RECT_POLL_MS = 300;
+/*
+ * 접어 둔 상태는 그 사람의 편의일 뿐이라 브라우저에만 남긴다. 못 읽어도(사생활 보호
+ * 모드) 펼친 채로 시작하면 그만이라 실패를 삼킨다.
+ */
+const COLLAPSED_KEY = 'teacher-tour-collapsed-v1';
+const readCollapsed = () => {
+    try {
+        return window.localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+        return false;
+    }
+};
 
 /*
  * 같은 이름표가 여러 곳에 붙어 있으면 지금 눈에 보이는 것 중 **마지막** 을 고른다.
@@ -113,6 +125,13 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
     const { isRunning, step, stepIndex, totalSteps } = tour;
     const rect = useAnchorRect(step?.stepId, step?.anchor, step?.fallbackAnchor, isRunning);
     const navigatedStepRef = useRef(null);
+    // 패널이 화면 오른쪽 아래를 늘 차지해 그 뒤 내용을 못 본다는 제보(2026-09-13).
+    const [collapsed, setCollapsed] = useState(readCollapsed);
+
+    const toggleCollapsed = (next) => {
+        setCollapsed(next);
+        try { window.localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0'); } catch { /* 이번만 못 남긴다 */ }
+    };
 
     /*
      * 단계가 바뀌면 그 화면으로 옮겨 준다. 같은 단계에서 두 번 옮기지 않는다.
@@ -190,6 +209,24 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
 
     if (!isRunning || !step) return null;
 
+    /*
+     * 접으면 작은 알약만 남는다. 덮개와 테두리도 함께 걷어 **화면을 온전히 보게** 한다 —
+     * 접었는데도 화면이 어두우면 접은 뜻이 없다.
+     */
+    if (collapsed) {
+        return (
+            <ModalPortal>
+                <button
+                    type="button"
+                    className="teacher-tour__pill"
+                    onClick={() => toggleCollapsed(false)}
+                >
+                    🧭 {journeyTitle} {stepIndex + 1}/{totalSteps} 펴기
+                </button>
+            </ModalPortal>
+        );
+    }
+
     // 다시 보기에서는 모든 단계를 확인했어요로 넘긴다 — 학급을 또 만들라는 뜻이 아니다.
     const needsAck = Boolean(step.done?.ack) || tour.isReplay;
     /*
@@ -263,6 +300,15 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
             >
                 <header className="teacher-tour__head">
                     <span className="teacher-tour__journey">{journeyTitle}</span>
+                    <button
+                        type="button"
+                        className="teacher-tour__collapse"
+                        onClick={() => toggleCollapsed(true)}
+                        aria-label="동행 안내 접기"
+                        title="접어 두고 화면을 보기"
+                    >
+                        ⌄
+                    </button>
                     <span className="teacher-tour__count">
                         {tour.isReplay && <em className="teacher-tour__replay">다시 보기</em>}
                         {stepIndex + 1} / {totalSteps}

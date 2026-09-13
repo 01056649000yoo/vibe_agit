@@ -423,7 +423,7 @@ test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () =>
         '직접 눌러야 하는 단계 목록이 달라졌습니다.');
     assert.ok(menus.length > 0);
     menus.forEach((step) => {
-        assert.match(step.anchor, /^(tab|tool|section):/, `${step.stepId} 가 메뉴를 가리키지 않습니다.`);
+        assert.match(step.anchor, /^(tab|tool|module|section):/, `${step.stepId} 가 메뉴를 가리키지 않습니다.`);
         /*
          * 못 찾았을 때 본문 전체를 두르는 대비책은 **두지 않는다.** 학급운영도구 안의
          * 도구처럼 한 단계 더 들어가야 보이는 메뉴에서, 지금 열려 있는 **앞 단계 화면**이
@@ -694,17 +694,35 @@ test('새 화면으로 떠나는 단계는 눌러야 하는 것처럼 보이지 
     assert.ok(step.hint.includes('동행 모드가 끊기'), '누르면 어떻게 되는지 알려 주지 않습니다.');
 });
 
-test('놀이 카드는 짚어만 주고 막지 않는다', () => {
+test('놀이 단계는 보여 주기만 하는 카드가 아니라 여는 단추를 짚는다', () => {
     /*
-     * 2026-09-13 지적: 앞 단계에서 이미 놀이터 화면을 열어 카드가 다 보이는데, 그중
-     * 하나를 다시 짚고 **누르라고 막기까지** 하니 얻는 것이 없었다(게다가 카드는 열렸다고
-     * 알리지 못해 갇히기도 했다).
+     * 2026-09-13 제보: 수호룡 단계가 **학생 대시보드 미리보기 카드**를 짚었다. 그 카드는
+     * 보여 주기만 할 뿐 눌러도 열리지 않아, 다음으로 갈 수 없었다.
+     * 실제로 여는 자리는 `전체 콘텐츠 빠른 설정` 의 단추다.
      */
-    const cards = TEACHER_TOURS.flatMap((tour) => getTeacherTourSteps(tour.id))
-        .filter((step) => step.anchor.startsWith('module:'));
-    assert.ok(cards.length > 0);
-    cards.forEach((step) => {
-        assert.equal(step.spotlight, TOUR_SPOTLIGHT_SCREEN,
-            `${step.stepId} 가 카드를 누르라고 막습니다.`);
-    });
+    const cards = read('src/modules/game/teacher/RegisteredGameModuleCards.jsx');
+    const previewAt = cards.indexOf('const StudentDashboardPreview');
+    const overviewAt = cards.indexOf('const Overview =');
+    const anchorAt = cards.indexOf('tourAnchor(moduleAnchorId(module.id))');
+    assert.ok(anchorAt > overviewAt, '이름표가 아직 미리보기 카드에 붙어 있습니다.');
+    assert.ok(previewAt < overviewAt);
+    // 눌러 고른 것이 "열렸다" 고 알려야 동행 모드가 다음으로 넘긴다.
+    assert.match(cards, /aria-current=\{module\.id === selectedId \? 'page' : undefined\}/);
+    assert.match(cards, /selectedId=\{selectedId\}/, 'Overview 가 지금 고른 것을 모릅니다.');
+});
+
+test('패널을 접어 화면을 볼 수 있다', () => {
+    /*
+     * 2026-09-13 제보: 패널이 오른쪽 아래를 늘 차지해 **그 뒤에 볼 내용이 있으면 답답하다.**
+     * 접으면 작은 알약만 남고, 덮개와 테두리도 함께 걷는다 — 접었는데 화면이 어두우면
+     * 접은 뜻이 없다.
+     */
+    const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
+    assert.match(panel, /if \(collapsed\) \{/);
+    assert.match(panel, /teacher-tour__pill/);
+    // 접기 판단이 덮개·테두리를 그리는 곳보다 **앞에** 있어야 함께 걷힌다.
+    assert.ok(panel.indexOf('if (collapsed) {') < panel.indexOf('teacher-tour__dim'),
+        '접어도 화면이 어두운 채로 남습니다.');
+    // 접은 상태는 그 사람 브라우저에만 남긴다.
+    assert.match(panel, /window\.localStorage\.setItem\(COLLAPSED_KEY/);
 });

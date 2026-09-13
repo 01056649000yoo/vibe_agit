@@ -70,12 +70,7 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
                 {previewModules.map((module) => {
                     const isDisabledPreview = enabledModules.length === 0 && disabledPreviewModule?.id === module.id;
                     return (
-                    <div
-                        key={module.id}
-                        {...tourAnchor(moduleAnchorId(module.id))}
-                        /* 고른 카드가 스스로 "열렸다" 고 알린다 — 동행 모드가 이걸 보고 다음으로 넘긴다. */
-                        aria-current={module.id === selectedId ? 'page' : undefined}
-                        style={{
+                    <div key={module.id} style={{
                         minHeight: compact ? '72px' : '112px', padding: compact ? '10px' : '14px', borderRadius: compact ? '13px' : '18px',
                         background: module.playground?.background || 'white',
                         border: `2px solid ${module.id === selectedId ? '#6366F1' : (module.playground?.borderColor || '#E2E8F0')}`,
@@ -104,7 +99,7 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
     );
 };
 
-const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) => {
+const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect, selectedId }) => {
     const enabledModules = modules.filter(({ module }) => enabledIds.includes(module.id)).map(({ module }) => module);
 
     return (
@@ -136,7 +131,17 @@ const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) =
                                 padding: '14px', border: '1px solid #E2E8F0', borderRadius: '16px', background: 'white',
                                 display: 'flex', flexDirection: 'column', gap: '12px'
                             }}>
-                                <button type="button" onClick={() => onSelect(module.id)} style={{
+                                {/*
+                                  * 동행 모드가 짚는 자리는 **여기**다. 위쪽 학생 대시보드
+                                  * 미리보기 카드는 보여 주기만 할 뿐 눌러도 열리지 않아,
+                                  * 그쪽을 짚었더니 다음으로 갈 수 없었다(2026-09-13 제보).
+                                  */}
+                                <button
+                                    type="button"
+                                    onClick={() => onSelect(module.id)}
+                                    {...tourAnchor(moduleAnchorId(module.id))}
+                                    aria-current={module.id === selectedId ? 'page' : undefined}
+                                    style={{
                                     display: 'flex', alignItems: 'center', gap: '12px', padding: 0, border: 0,
                                     background: 'transparent', textAlign: 'left', cursor: 'pointer'
                                 }}>
@@ -318,6 +323,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                         savingModuleId={savingModuleId}
                         onToggle={handleToggle}
                         onSelect={setSelectedId}
+                        selectedId={selectedId}
                     />
                 )}
             </section>
