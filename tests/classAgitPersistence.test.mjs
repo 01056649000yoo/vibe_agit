@@ -16,7 +16,17 @@ test('저장 요청은 원문과 개인정보·권한 필드를 보내지 않고
     const payload = buildClassAgitSavePayload({ ...draft, revision: 999, state: 'published' }, 7);
     assert.deepEqual(payload, { layout_version: 2, rooms: draft.rooms, exhibition_id: 'exhibition', expected_revision: 7, title: draft.title, introduction: draft.introduction, theme: 'garden',
         items: [{ roomId: draft.rooms[0].id, sourceId: 'source', sourceRevision: 'old', publicAlias: '새싹 작가 01' }] });
-    assert.doesNotMatch(JSON.stringify(payload), /student|authorName|blocks|published|999|첫 문단/);
+    /*
+     * 화면이 준 revision·state 를 서버로 흘리지 않는지 본다.
+     * 예전에는 이것을 `999` 라는 글자가 있는지로 확인했는데, 방 ID 가 무작위 UUID 라
+     * 우연히 `999` 를 품으면(약 0.5%) **바뀐 것이 없는데도 배포가 실패했다**(2026-09-14).
+     * 숫자를 글자로 찾지 말고 값 자체를 본다.
+     */
+    assert.equal('revision' in payload, false, '화면이 가진 revision 을 서버로 보내고 있다');
+    assert.equal('state' in payload, false, '화면이 가진 공개 상태를 서버로 보내고 있다');
+    assert.equal(payload.expected_revision, 7, '서버가 준 revision 만 써야 한다');
+    // 남은 것은 글자로 찾아도 무작위 ID 와 겹치지 않는 말뿐이다.
+    assert.doesNotMatch(JSON.stringify(payload), /student|authorName|blocks|published|첫 문단/);
     draft.items[0].scopes.class = false;
     assert.equal('classAcknowledged' in buildClassAgitSavePayload(draft, 7).items[0], false);
 });
