@@ -307,3 +307,25 @@
     border-top: 1px solid #f1f5f9;
     background: #f8fafc;
 }
+
+/* 투표방과 질문 만들기 방을 나누는 탭. 섞어 두면 방이 쌓일수록 고르기 어렵다. */
+.mission-lab-questions-tabs { display: flex; gap: var(--ui-space-2); margin-bottom: var(--ui-space-3); }
+.mission-lab-questions-tab {
+    display: inline-flex; align-items: center; gap: var(--ui-space-2);
+    padding: var(--ui-space-2) var(--ui-space-4);
+    border: 1px solid var(--ui-border, #e2e8f0); border-radius: var(--ui-radius-pill);
+    background: #fff; color: var(--ui-text-muted, #64748b);
+    font-size: var(--ui-text-xs); font-weight: 800; cursor: pointer;
+}
+.mission-lab-questions-tab span {
+    min-width: 20px; padding: 0 6px; border-radius: var(--ui-radius-pill);
+    background: #f1f5f9; color: #475569; font-size: var(--ui-text-xs);
+}
+.mission-lab-questions-tab.is-active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+.mission-lab-questions-tab.is-active span { background: #dbeafe; color: #1d4ed8; }
+
+/* 누가 쓴 질문인지. 교사가 다듬을 때 맥락이 된다. */
+.mission-lab-question-authors {
+    margin: 4px 0 0; color: var(--ui-text-muted, #64748b);
+    font-size: var(--ui-text-xs); line-height: 1.5;
+}

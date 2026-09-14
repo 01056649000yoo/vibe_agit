@@ -7,6 +7,8 @@ import { labReferenceApi } from '../../modules/writing/references/labReferenceAp
 import './MissionLabQuestionsModal.css';
 
 const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
+    // 투표방과 질문 만들기 방을 함께 받아 탭으로 나눠 보여 준다. 섞어 놓으면 방이 쌓일수록 헷갈린다.
+    const [roomKind, setRoomKind] = useState('question_voting');
     const [rooms, setRooms] = useState([]);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [questions, setQuestions] = useState([]);
@@ -16,6 +18,8 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
     const [error, setError] = useState('');
     const roomsRequestIdRef = useRef(0);
     const questionsRequestIdRef = useRef(0);
+
+    const visibleRooms = rooms.filter((room) => room.activityType === roomKind);
 
     const loadRooms = useCallback(async () => {
         const requestId = ++roomsRequestIdRef.current;
@@ -35,7 +39,7 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
         setLoadingRooms(true);
         setError('');
         try {
-            const data = await labReferenceApi.listQuestionVotingRooms(classId);
+            const data = await labReferenceApi.listQuestionRooms(classId);
             if (requestId !== roomsRequestIdRef.current) return;
             setRooms(data);
         } catch {
@@ -57,11 +61,12 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
         setError('');
         setSelectedQuestionIds(new Set());
         try {
-            const data = await labReferenceApi.getQuestionVotingRanking(classId, room.roomId);
+            const data = await labReferenceApi.getRoomQuestionPool(classId, room.roomId);
             if (requestId !== questionsRequestIdRef.current) return;
             setQuestions(data);
             // 기본으로 득표수가 1표 이상인 질문들을 전부 선택 상태로 초기화
-            const topIds = new Set(data.filter((q) => q.votes > 0).map((q) => q.questionId));
+            // 여럿이 고른(쓴) 질문을 먼저 체크해 둔다. 교사가 거기서 덜어 내며 다듬는 편이 빠르다.
+            const topIds = new Set(data.filter((q) => q.pickedCount > 1).map((q) => q.questionId));
             if (topIds.size === 0 && data.length > 0) {
                 topIds.add(data[0].questionId);
             }
@@ -157,12 +162,12 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                             </span>
                             <div>
                                 <h2 id="mission-lab-questions-title">
-                                    {selectedRoom ? selectedRoom.title : '연구소 좋은 질문 불러오기'}
+                                    {selectedRoom ? selectedRoom.title : '연구소 질문 불러오기'}
                                 </h2>
                                 <p className="mission-lab-questions-subtitle">
                                     {selectedRoom
                                         ? `주제: ${selectedRoom.topic || '없음'} · 참여 ${selectedRoom.participantCount}명`
-                                        : '우리 반 학생들이 투표로 뽑은 좋은 질문을 미션 질문으로 가져옵니다.'}
+                                        : '우리 반 학생들이 만든 질문을 골라 미션 질문으로 가져옵니다. 가져온 뒤 자유롭게 고칠 수 있어요.'}
                                 </p>
                             </div>
                         </div>
@@ -179,19 +184,40 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                         {!selectedRoom ? (
                             /* 1단계: 좋은 질문 고르기 활동 목록 */
                             <div className="mission-lab-questions-rooms">
+                                {/* 두 활동을 탭으로 나눈다. 투표를 거치지 않은 질문도 교사가 추려 쓸 수 있어야 한다. */}
+                                <div className="mission-lab-questions-tabs" role="tablist" aria-label="질문을 가져올 활동 종류">
+                                    {[
+                                        { id: 'question_voting', label: '🗳️ 좋은 질문 고르기' },
+                                        { id: 'question_generator', label: '✍️ 학생이 만든 질문' }
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={roomKind === tab.id}
+                                            className={`mission-lab-questions-tab${roomKind === tab.id ? ' is-active' : ''}`}
+                                            onClick={() => setRoomKind(tab.id)}
+                                        >
+                                            {tab.label}
+                                            <span>{rooms.filter((room) => room.activityType === tab.id).length}</span>
+                                        </button>
+                                    ))}
+                                </div>
                                 {loadingRooms ? (
                                     <div className="mission-lab-questions-loading">
                                         활동 목록을 불러오는 중입니다...
                                     </div>
-                                ) : rooms.length === 0 ? (
+                                ) : visibleRooms.length === 0 ? (
                                     <div className="mission-lab-questions-empty">
                                         <FlaskConical size={36} aria-hidden="true" />
-                                        <p>우리 반에서 진행된 &lsquo;좋은 질문 고르기&rsquo; 활동이 없습니다.</p>
+                                        <p>
+                                            우리 반에서 진행된 &lsquo;{roomKind === 'question_voting' ? '좋은 질문 고르기' : '질문 만들기'}&rsquo; 활동이 없습니다.
+                                        </p>
                                         <span>글쓰기 연구소에서 활동을 먼저 진행해 주세요.</span>
                                     </div>
                                 ) : (
                                     <div className="mission-lab-questions-room-list">
-                                        {rooms.map((room) => (
+                                        {visibleRooms.map((room) => (
                                             <button
                                                 key={room.roomId}
                                                 type="button"
@@ -199,7 +225,9 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                                                 onClick={() => void loadQuestions(room)}
                                             >
                                                 <div className="mission-lab-questions-room-info">
-                                                    <span className="mission-lab-questions-room-tag">좋은 질문 고르기</span>
+                                                    <span className="mission-lab-questions-room-tag">
+                                                        {room.isVoting ? '좋은 질문 고르기' : '질문 만들기'}
+                                                    </span>
                                                     <h4>{room.title}</h4>
                                                     {room.topic && <p>주제: {room.topic}</p>}
                                                 </div>
@@ -274,10 +302,15 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                                                     <div className="mission-lab-question-rank">
                                                         <span className="mission-lab-question-rank-badge">{idx + 1}</span>
                                                         <span className="mission-lab-question-votes">
-                                                            🗳️ {q.votes}표
+                                                            {selectedRoom?.isVoting
+                                                                ? `🗳️ ${q.pickedCount}표`
+                                                                : `✍️ ${q.pickedCount}명`}
                                                         </span>
                                                     </div>
                                                     <p className="mission-lab-question-text">{q.text}</p>
+                                                    {!selectedRoom?.isVoting && q.authors && (
+                                                        <p className="mission-lab-question-authors">{q.authors}</p>
+                                                    )}
                                                     <div className="mission-lab-question-check">
                                                         {isSelected ? (
                                                             <span className="mission-lab-question-checked-box">

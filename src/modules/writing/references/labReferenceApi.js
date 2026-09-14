@@ -47,29 +47,43 @@ export const labReferenceApi = {
         if (error) throw error;
     },
 
-    async listQuestionVotingRooms(classId) {
+    /*
+     * 질문을 가져올 수 있는 활동방. 투표방과 질문 만들기 방을 함께 싣는다.
+     * 투표를 거치지 않은 질문도 교사가 추려 쓸 수 있어야 한다는 요청(2026-09-14).
+     */
+    async listQuestionRooms(classId) {
         if (!supabase || !classId) throw new Error('학급 정보를 준비하지 못했습니다.');
 
-        const { data, error } = await supabase.rpc('get_teacher_question_voting_rooms_v1', {
+        const { data, error } = await supabase.rpc('get_teacher_question_rooms_v1', {
             p_class_id: classId
         });
         if (error) throw error;
 
-        return (Array.isArray(data) ? data : []).map((row) => ({
-            roomId: row.room_id,
-            title: String(row.title || '').trim() || '좋은 질문 고르기',
-            topic: String(row.topic || '').trim(),
-            createdAt: row.created_at,
-            isActive: row.is_active === true,
-            questionCount: Number(row.question_count) || 0,
-            participantCount: Number(row.participant_count) || 0
-        }));
+        return (Array.isArray(data) ? data : []).map((row) => {
+            const activityType = String(row.activity_type || '');
+            const voting = activityType === 'question_voting';
+            return {
+                roomId: row.room_id,
+                activityType,
+                isVoting: voting,
+                title: String(row.title || '').trim() || (voting ? '좋은 질문 고르기' : '질문 만들기'),
+                topic: String(row.topic || '').trim(),
+                createdAt: row.created_at,
+                isActive: row.is_active === true,
+                questionCount: Number(row.question_count) || 0,
+                participantCount: Number(row.participant_count) || 0
+            };
+        });
     },
 
-    async getQuestionVotingRanking(classId, roomId) {
+    /*
+     * 방 하나의 질문 꾸러미. 두 활동이 같은 모양으로 온다.
+     * pickedCount 는 투표방이면 받은 표, 질문 만들기 방이면 같은 질문을 쓴 학생 수다.
+     */
+    async getRoomQuestionPool(classId, roomId) {
         if (!supabase || !classId || !roomId) throw new Error('활동 정보를 준비하지 못했습니다.');
 
-        const { data, error } = await supabase.rpc('get_teacher_question_voting_ranking_v1', {
+        const { data, error } = await supabase.rpc('get_teacher_room_question_pool_v1', {
             p_class_id: classId,
             p_room_id: roomId
         });
@@ -78,7 +92,8 @@ export const labReferenceApi = {
         return (Array.isArray(data) ? data : []).map((row) => ({
             questionId: row.question_id,
             text: String(row.text || '').trim(),
-            votes: Number(row.votes) || 0
+            pickedCount: Number(row.picked_count) || 0,
+            authors: String(row.authors || '').trim()
         }));
     }
 };
