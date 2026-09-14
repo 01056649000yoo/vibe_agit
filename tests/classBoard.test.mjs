@@ -479,7 +479,14 @@ test('스크린 탭은 새 탭까지 좌우로 재정렬하고 별표 기본 화
   assert.match(tabOrderMigration, /class\.teacher_id = auth\.uid\(\) OR public\.auth_user_role\(\) = 'ADMIN'/);
   assert.match(tabOrderSmoke, /별표로 지정한 스크린이 기본 화면 조회에 반영되지 않았습니다/);
   assert.match(tabOrderSmoke, /드래그 탭 순서 또는 기본 별표가 작업공간에 유지되지 않았습니다/);
-  assert.match(teacherDashboard, /GuideInfoButton[\s\S]*teacher-class-board-shortcut[\s\S]*⚙️ 정보 수정/);
+  /*
+   * 2026-09-14 머리말 정리: `정보 수정`은 계정 메뉴로 접었다. `우리 반 스크린`은 **접지 않는다** —
+   * 동행 모드가 짚는 자리라 숨으면 그 단계에서 선생님이 갇힌다. 활용 안내서 바로 옆,
+   * 자주 쓰는 것 무리에 남아 있어야 한다.
+   */
+  assert.match(teacherDashboard, /GuideInfoButton[\s\S]{0,900}teacher-class-board-shortcut/);
+  assert.match(teacherDashboard, /teacher-dashboard__tools-group[\s\S]{0,1200}teacher-class-board-shortcut/);
+  assert.doesNotMatch(teacherDashboard.slice(0, teacherDashboard.indexOf('</header>')), /⚙️ 정보 수정/);
   assert.match(teacherDashboard, /import\('\.\.\/\.\.\/modules\/tool\/class-board\/classBoardApi'\)/);
   assert.match(teacherDashboard, /classBoardApi\.getDefault\(activeClass\.id\)/);
   assert.match(teacherDashboard, /popup=yes[\s\S]*window\.screen\.availWidth[\s\S]*window\.screen\.availHeight/);

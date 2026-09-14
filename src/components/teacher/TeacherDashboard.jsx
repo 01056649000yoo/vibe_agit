@@ -38,6 +38,7 @@ import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../../guides/tea
 import { TEACHER_TOUR_ANCHORS, launchAnchorId, tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
+import TeacherAccountMenu from './TeacherAccountMenu.jsx';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
 import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
@@ -376,63 +377,67 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         />
                     )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!isMobile && (
-                        <span style={{ fontSize: '0.85rem', color: '#6C757D', fontWeight: 'bold' }}>
-                            {teacherInfo.name || profile?.full_name} 선생님
-                        </span>
-                    )}
-                    <GuideInfoButton
-                        variant="help"
-                        icon="🔍"
-                        text="활용 안내서"
-                        className="teacher-guide-center-trigger"
-                        label="끄적끄적 아지트 활용 안내서 열기"
-                        onClick={() => setGuideCenterRequest({
-                            requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                        })}
-                    />
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="teacher-class-board-shortcut"
-                        {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)}
-                        disabled={!activeClass?.id || openingClassBoard}
-                        title="별표로 지정한 기본 우리 반 스크린 열기"
-                        onClick={() => void handleOpenDefaultClassBoard()}
-                    >
-                        <span aria-hidden="true">🖥️</span>
-                        <span>{openingClassBoard ? '여는 중…' : '우리 반 스크린'}</span>
-                    </Button>
-                    {isAdmin && (
-                        <Button variant="primary" size="sm" onClick={handleOpenAdminPasswordModal} style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}>
-                            🛡️ 관리자
-                        </Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
-                        ⚙️ 정보 수정
-                    </Button>
-                    <TeacherAnnouncementManager
-                        isMobile={isMobile}
-                        unreadCount={announcementSeen.unreadCount}
-                        onOpenList={() => setShowAnnouncementList(true)}
-                    />
+                <div className="teacher-dashboard__tools">
                     {/*
-                      * 예전 이름은 `📢 의견 보내기` 였고 회색 설정 버튼 무리에 끼어 있었다.
-                      * 건의함처럼 보여 아무도 누르지 않았다(제보 0건). 무엇을 하는 곳인지로 이름을 바꾸고
-                      * 색을 줘서 설정 항목과 구분한다.
+                      * 머리말을 셋으로 가른다(2026-09-14 지적: "메뉴가 너무 정신이 없다").
+                      *   ① 자주 쓰는 것 — 활용 안내서 · 우리 반 스크린. **여기만 색을 준다.**
+                      *   ② 소식 — 공지 · 오류 알려주기. 배지는 그대로 두되 강조는 뺀다.
+                      *   ③ 계정 — 이름 · 관리자 · 정보 수정 · 로그아웃은 오른쪽 끝에 접는다.
+                      * 강조가 넷이면 강조가 없는 것과 같다. 전에는 노랑·주황·빨강·빨간 배지가 함께 있었고,
+                      * 하루에 한 번 쓸까 말까 한 로그아웃이 빨강이라 제일 튀었다.
                       */}
-                    <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#B45309', border: '1px solid #FCD34D', background: '#FFFBEB', borderRadius: '8px', fontWeight: 700 }}>
-                        🐞 오류·정정 알려주기
-                        {feedbackReplyCount > 0 && (
-                            <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '999px', background: '#DC2626', color: 'white', fontSize: '0.7rem', fontWeight: 900 }}>
-                                답장 {feedbackReplyCount}
-                            </span>
-                        )}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={onLogout} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
-                        로그아웃
-                    </Button>
+                    <div className="teacher-dashboard__tools-group">
+                        <GuideInfoButton
+                            variant="help"
+                            icon="🔍"
+                            text="활용 안내서"
+                            className="teacher-guide-center-trigger"
+                            label="끄적끄적 아지트 활용 안내서 열기"
+                            onClick={() => setGuideCenterRequest({
+                                requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                            })}
+                        />
+                        {/* 동행 모드가 짚는 자리다. 접으면 그 단계에서 선생님이 갇힌다. */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="teacher-class-board-shortcut"
+                            {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)}
+                            disabled={!activeClass?.id || openingClassBoard}
+                            title="별표로 지정한 기본 우리 반 스크린 열기"
+                            onClick={() => void handleOpenDefaultClassBoard()}
+                        >
+                            <span aria-hidden="true">🖥️</span>
+                            <span>{openingClassBoard ? '여는 중…' : '우리 반 스크린'}</span>
+                        </Button>
+                    </div>
+
+                    <div className="teacher-dashboard__tools-group teacher-dashboard__tools-group--news">
+                        <TeacherAnnouncementManager
+                            isMobile={isMobile}
+                            unreadCount={announcementSeen.unreadCount}
+                            onOpenList={() => setShowAnnouncementList(true)}
+                        />
+                        {/*
+                          * 예전 이름은 `📢 의견 보내기` 였고 회색 설정 버튼 무리에 끼어 있었다.
+                          * 건의함처럼 보여 아무도 누르지 않았다(제보 0건). 무엇을 하는 곳인지로 이름을 바꿨다.
+                          * 색은 뺐다 — 이제 자주 쓰는 것과 자리로 갈리므로 색까지 쓸 일이 없다.
+                          */}
+                        <Button variant="ghost" size="sm" className="teacher-dashboard__news-button" onClick={() => setIsFeedbackOpen(true)}>
+                            🐞 오류·정정 알려주기
+                            {feedbackReplyCount > 0 && (
+                                <span className="teacher-dashboard__reply-badge">답장 {feedbackReplyCount}</span>
+                            )}
+                        </Button>
+                    </div>
+
+                    <TeacherAccountMenu
+                        teacherName={isMobile ? '' : (teacherInfo.name || profile?.full_name)}
+                        isAdmin={isAdmin}
+                        onOpenAdmin={handleOpenAdminPasswordModal}
+                        onEditProfile={() => setIsEditProfileOpen(true)}
+                        onLogout={onLogout}
+                    />
                 </div>
             </header>
 
@@ -455,7 +460,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
             {/* 교사 업무 영역 네비게이션 */}
             <nav ref={teacherNavRef} className="teacher-dashboard__nav" style={{
-                display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
+                display: 'flex', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
             }} aria-label="교사 업무 메뉴">
                 {TEACHER_NAV_GROUPS.map((group, groupIndex) => {
@@ -469,7 +474,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     ].filter(Boolean).join(' ');
                     const itemStyle = {
                             padding: isMobile ? '10px 12px' : '12px clamp(13px, 1.15vw, 22px)', border: 'none',
-                            background: isActive ? '#EFF6FF' : 'transparent',
+                            background: isActive ? 'white' : 'transparent',
                             borderBottom: isActive ? '3px solid #3498DB' : '3px solid transparent',
                             color: isActive ? '#2563EB' : '#64748B',
                             fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s',
