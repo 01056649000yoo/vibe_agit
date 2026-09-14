@@ -13,6 +13,7 @@ import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionTypePicker from './MissionTypePicker';
 import MissionList from './MissionList';
+import { applyMissionStarter } from '../../constants/missionStarters.js';
 import SubmissionStatusModal from './SubmissionStatusModal';
 import PostDetailViewer from './PostDetailViewer';
 import useFeedbackPhrases from '../../hooks/useFeedbackPhrases';
@@ -422,6 +423,12 @@ const MissionManager = ({
                 />
 
                 <MissionList
+                    onUseStarter={(starter) => {
+                        // 폼을 **채운 채 연다.** 조용히 만들면 선생님이 무엇이 저장됐는지 모른다.
+                        setFormData((current) => applyMissionStarter(current, starter));
+                        setIsMissionTypePickerOpen(false);
+                        setIsFormOpen(true);
+                    }}
                     missions={missions}
                     loading={loading}
                     submissionCounts={submissionCounts}

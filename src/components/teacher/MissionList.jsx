@@ -1,4 +1,6 @@
-import React, { memo, useState } from 'react';
+import { MISSION_STARTERS } from '../../constants/missionStarters.js';
+import React, { memo, useState } from 'react';
+
 import { formatMissionOpenAt, isMissionScheduled } from '../../modules/writing/mission-form/missionSchedule';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
@@ -197,6 +199,7 @@ const MissionItem = memo(({
 });
 
 const MissionList = ({
+    onUseStarter,
     missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
@@ -210,11 +213,35 @@ const MissionList = ({
     }
 
     if (missions.length === 0) {
+        /*
+         * 빈 화면에서 **예시로 바로 시작**할 수 있게 한다(2026-09-14 분석).
+         * 학생을 등록한 교사 168명 중 과제를 만든 사람은 90명뿐이고, 과제만 만들면 그 뒤는
+         * 81%가 학생 글까지 간다. 누르면 폼이 채워진 채 열린다 — 조용히 만들지 않는다.
+         */
         return (
             <div style={EMPTY_STATE_STYLE}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📖</div>
                 <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 등록된 글쓰기 미션이 없습니다.</p>
-                <p style={{ color: '#BDC3C7', fontSize: '0.9rem' }}>새로운 글쓰기 미션을 등록해 아이들과 소통해보세요! ✨</p>
+                <p style={{ color: '#BDC3C7', fontSize: '0.9rem' }}>아래 예시로 바로 시작하거나, `➕ 미션 만들기`로 직접 만들 수 있어요.</p>
+                {onUseStarter && (
+                    <div style={{ display: 'grid', gap: '10px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '18px', textAlign: 'left' }}>
+                        {MISSION_STARTERS.map((starter) => (
+                            <button
+                                key={starter.id}
+                                type="button"
+                                onClick={() => onUseStarter(starter)}
+                                style={{
+                                    padding: '14px', border: '1px solid #D6E4FF', borderRadius: '14px',
+                                    background: 'white', cursor: 'pointer', textAlign: 'left'
+                                }}
+                            >
+                                <strong style={{ display: 'block', fontSize: '0.95rem', color: '#1E293B' }}>{starter.emoji} {starter.label}</strong>
+                                <span style={{ display: 'block', marginTop: '4px', fontSize: '0.78rem', color: '#64748B' }}>{starter.detail}</span>
+                                <span style={{ display: 'block', marginTop: '8px', fontSize: '0.78rem', color: '#2563EB', fontWeight: 800 }}>이 과제로 시작하기 →</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         );
     }

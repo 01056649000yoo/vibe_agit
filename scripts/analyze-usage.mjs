@@ -123,6 +123,29 @@ sections.push([`학교를 어떻게 적었나 (가입 주차별, 최근 ${WEEKS}
         .map(([week, total, manual]) => `- ${week} 주 가입 ${total}명 · 이름을 직접 적은 교사 **${manual}명** (${pct(n(manual), n(total))})`);
 }]);
 
+sections.push([`학생 등록 뒤에 무엇이 막나 (최근 ${DAYS}일 가입)`, () => {
+    /*
+     * 학생 등록과 첫 글 사이에는 단계가 더 있다. 통째로 "43%" 로 보면 어디가 막혔는지 모른다.
+     * 2026-09-14 첫 판독: 학생 168 → **과제 90** → 학생 로그인 89 → 첫 글 73.
+     * 과제만 만들면 그 뒤는 81%가 글까지 간다 — 문턱은 첫 과제다.
+     */
+    const [kids, missions, signedIn, posts] = one(`
+        WITH t AS (
+            SELECT p.id FROM public.profiles p
+            WHERE p.role='TEACHER' AND p.created_at > now() - INTERVAL '${DAYS} days'
+              AND EXISTS (SELECT 1 FROM public.students s JOIN public.classes c ON c.id=s.class_id WHERE c.teacher_id=p.id)
+        )
+        SELECT (SELECT count(*) FROM t),
+               (SELECT count(*) FROM t WHERE EXISTS (SELECT 1 FROM public.writing_missions m JOIN public.classes c ON c.id=m.class_id WHERE c.teacher_id=t.id)),
+               (SELECT count(*) FROM t WHERE EXISTS (SELECT 1 FROM public.students s JOIN public.classes c ON c.id=s.class_id JOIN auth.users u ON u.id=s.auth_id WHERE c.teacher_id=t.id AND u.last_sign_in_at IS NOT NULL)),
+               (SELECT count(*) FROM t WHERE EXISTS (SELECT 1 FROM public.student_posts sp JOIN public.students s ON s.id=sp.student_id JOIN public.classes c ON c.id=s.class_id WHERE c.teacher_id=t.id))`);
+    const steps = [['학생을 등록함', n(kids)], ['과제를 만듦', n(missions)], ['학생이 로그인함', n(signedIn)], ['학생 글을 받음', n(posts)]];
+    return steps.map(([label, value], index) => {
+        const previous = index === 0 ? value : steps.at(index - 1).at(1);
+        return `- ${label}: **${value}명**${index === 0 ? '' : ` · 앞 단계 대비 ${pct(value, previous)}`}`;
+    });
+}]);
+
 sections.push([`주마다 얼마나 쓰나 (최근 ${WEEKS}주)`, () => rows(`
         SELECT to_char(w,'MM-DD'), posts, kids, classes FROM (
           SELECT date_trunc('week', p.created_at) w, count(*) posts,
