@@ -9,6 +9,7 @@ const migration = read('supabase/migrations/20261284_service_stats_live_refresh.
 const firstMigration = read('supabase/migrations/20261282_service_stats_snapshot.sql');
 const strip = read('src/components/layout/LandingServiceStats.jsx');
 const landing = read('src/components/layout/LandingPage.jsx');
+const statsPanel = read('src/components/layout/LandingServiceStats.jsx');
 const allowlist = JSON.parse(read('ops/rpc-surface-allowlist.json'));
 
 test('비로그인에게 여는 것은 총계뿐이고 표는 닫아 둔다', () => {
@@ -92,4 +93,20 @@ test('현황 줄은 로그인 버튼 아래에 둔다', () => {
      */
     assert.ok(landing.indexOf('landing-entry') < landing.indexOf('<LandingServiceStats />'),
         '현황 줄이 로그인 버튼보다 위에 있습니다.');
+});
+
+test('현황 숫자는 화면을 켜 둔 동안 다시 읽는다', () => {
+    /*
+     * 2026-09-14 지적: 함께하는 선생님 수가 그대로다.
+     *
+     * 화면이 뜰 때 한 번만 읽고 끝이었다. 로그인 화면은 켜 둔 채로 오래 머무는 자리라,
+     * 그동안 선생님이 더 들어와도 숫자가 바뀌지 않았다. 서버가 다시 세는 주기와 같은
+     * 60초로 맞춰 다시 읽는다 — 더 자주 물어도 서버는 같은 값을 돌려준다.
+     */
+    assert.match(statsPanel, /const REFRESH_MS = 60000;/);
+    assert.match(statsPanel, /setInterval\(\(\) => \{ if \(document\.visibilityState === 'visible'\) read\(\); \}, REFRESH_MS\)/);
+    // 덮어 둔 탭에서는 부르지 않는다. 쓰지도 않을 값을 1분마다 세게 된다.
+    assert.match(statsPanel, /document\.addEventListener\('visibilitychange', onVisible\)/);
+    // 뒷정리를 안 하면 화면을 떠난 뒤에도 계속 부른다.
+    assert.match(statsPanel, /clearInterval\(timer\);[\s\S]*removeEventListener\('visibilitychange', onVisible\)/);
 });
