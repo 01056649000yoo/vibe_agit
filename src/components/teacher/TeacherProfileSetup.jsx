@@ -36,17 +36,26 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
     };
 
     const handleSaveAndStart = async () => {
-        if (!teacherName.trim()) {
-            alert('선생님 이름을 입력해 주세요! 😊');
+        /*
+         * 이름은 확인할 길이 없으니 **모양만** 본다. 한 글자나 숫자가 섞인 이름은 실수이거나
+         * 아무렇게나 적은 것이다 — 문제가 생겼을 때 누구인지 알 수 있어야 한다.
+         */
+        const cleanName = teacherName.trim();
+        if (cleanName.length < 2 || /[0-9]/u.test(cleanName)) {
+            alert('선생님 성함을 정확히 적어 주세요. (두 글자 이상, 숫자는 넣지 않습니다) 😊');
             return;
         }
         /*
-         * 목록에서 고르거나, 못 찾으면 **이름을 그대로 쓰는 길**로 넘어온다(`manual`).
-         * 학교를 못 고른다고 가입 자체가 막히면 안 된다 — 최근 30일에 계정을 만든 655명 중
-         * 143명이 이 단계를 넘지 못했다(2026-09-14 분석).
+         * 학교는 **목록에서 고른 것만** 받는다(2026-09-14 결정).
+         *
+         * 한때 "못 찾으면 이름을 그대로 쓰기" 를 열었다가 바로 되돌렸다. 확인해 보니 검색은
+         * 나이스에서 100곳을 받아 초등학교만 거른 뒤 20곳까지 보여 주고 정확히 같은 이름을
+         * 맨 앞에 올리므로, **정상적인 초등학교는 거의 다 나온다**(2026-08-27에 이미 고친 자리).
+         * 직접 적게 하면 얻는 것보다 잃는 것이 크다 — 이름과 학교가 정확해야 문제가 생겼을 때
+         * 누구인지 알 수 있고, 학교 코드가 없으면 급식 같은 기능도 못 쓴다.
          */
-        if (!schoolName.trim() || !selectedSchool) {
-            alert('학교를 검색해 목록에서 고르거나, 찾는 학교가 없으면 “그대로 쓰기”를 눌러 주세요! 🏫');
+        if (!schoolName.trim() || !selectedSchool?.schoolCode) {
+            alert('학교를 검색한 후 목록에서 선택해 주세요! 🏫');
             return;
         }
 
@@ -58,7 +67,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
             // [보안 수정] 서버 사이드 RPC로 프로필 설정
             // role과 is_approved는 서버에서만 결정 (클라이언트 조작 불가)
             const { data: profileResult, error: profileError } = await supabase.rpc('setup_teacher_profile', {
-                p_full_name: teacherName.trim(),
+                p_full_name: cleanName,
                 p_email: user.email,
                 p_api_mode: 'SYSTEM'
             });
@@ -81,7 +90,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
                 .from('teachers')
                 .upsert({
                     id: user.id,
-                    name: teacherName.trim(),
+                    name: cleanName,
                     ...toTeacherSchoolColumns(selectedSchool),
                     phone: phone.trim(),
                     email: user.email
@@ -225,7 +234,6 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
                                     selectedSchool={selectedSchool}
                                     onSelect={setSelectedSchool}
                                     placeholder="학교명을 입력해 주세요 (예: 서울미래초등학교)"
-                                    allowManualEntry
                                     inputStyle={{
                                         padding: '14px', borderRadius: '16px',
                                         border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',

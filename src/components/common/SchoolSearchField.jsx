@@ -13,18 +13,7 @@ export default function SchoolSearchField({
     onSelect,
     placeholder = '초등학교 이름을 입력해 주세요',
     inputStyle = null,
-    disabled = false,
-    /*
-     * 목록에서 못 찾을 때 **이름을 직접 적고 넘어가는 길**을 열어 준다(2026-09-14 분석).
-     *
-     * 가입에서 학교는 필수인데 목록에서 고르는 것 말고는 길이 없다. 나이스에 이름이 조금
-     * 다르게 있거나 새로 생긴 학교면 **가입 자체를 끝낼 수 없다.** 최근 30일에 계정을 만든
-     * 655명 중 143명이 이 단계를 넘지 못했다.
-     *
-     * 급식처럼 **학교 코드가 있어야 되는 기능**에서는 열지 않는다 — 거기서 이름만 받으면
-     * 나중에 "왜 급식이 안 나오죠" 로 돌아온다. 가입·프로필에서만 연다.
-     */
-    allowManualEntry = false
+    disabled = false
 }) {
     const listboxId = useId();
     const rootRef = useRef(null);
@@ -103,10 +92,8 @@ export default function SchoolSearchField({
                 style={{ ...defaultInputStyle, ...(inputStyle || {}) }}
             />
             {selectedSchool ? (
-                <div style={{ marginTop: '6px', color: selectedSchool.manual ? '#B45309' : '#047857', fontSize: '0.78rem', fontWeight: 800 }}>
-                    {selectedSchool.manual
-                        ? '직접 적은 학교 이름으로 저장됩니다 · 급식 같은 학교 기능은 설정에서 학교를 고른 뒤에 쓸 수 있어요'
-                        : `선택됨 · ${selectedSchool.address || selectedSchool.region || '초등학교'}`}
+                <div style={{ marginTop: '6px', color: '#047857', fontSize: '0.78rem', fontWeight: 800 }}>
+                    선택됨 · {selectedSchool.address || selectedSchool.region || '초등학교'}
                 </div>
             ) : value?.trim().length >= 2 ? (
                 <div style={{ marginTop: '6px', color: '#B45309', fontSize: '0.76rem' }}>
@@ -125,22 +112,6 @@ export default function SchoolSearchField({
                     {error ? <div style={{ padding: '12px', color: '#B91C1C', fontSize: '0.82rem' }}>{error}</div> : null}
                     {!error && results.length === 0 && !loading ? (
                         <div style={{ padding: '12px', color: '#64748B', fontSize: '0.82rem' }}>일치하는 초등학교가 없습니다.</div>
-                    ) : null}
-                    {allowManualEntry && !loading && String(value || '').trim().length >= 2 ? (
-                        <button
-                            type="button"
-                            onClick={() => choose({ schoolName: String(value).trim(), manual: true })}
-                            style={{
-                                width: '100%', display: 'block', marginTop: results.length ? '6px' : 0, padding: '11px',
-                                border: '1px dashed #CBD5E1', borderRadius: '10px', background: '#F8FAFC',
-                                textAlign: 'left', cursor: 'pointer', color: '#1E293B'
-                            }}
-                        >
-                            <strong style={{ display: 'block', fontSize: '0.86rem' }}>찾는 학교가 없나요? “{String(value).trim()}” 그대로 쓰기</strong>
-                            <span style={{ display: 'block', marginTop: '3px', color: '#64748B', fontSize: '0.74rem' }}>
-                                학교 이름만 저장합니다. 나중에 설정에서 다시 고를 수 있어요.
-                            </span>
-                        </button>
                     ) : null}
                     {results.map((school) => (
                         <button

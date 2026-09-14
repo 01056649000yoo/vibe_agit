@@ -104,11 +104,12 @@ sections.push([`가입 깔때기 (최근 ${DAYS}일 가입한 교사)`, () => {
     });
 }]);
 
-sections.push([`학교를 어떻게 적었나 (가입 주차별, 최근 ${WEEKS}주)`, () => {
+sections.push([`학교 확인 (가입 주차별, 최근 ${WEEKS}주)`, () => {
     /*
-     * 가입에서 학교는 필수인데, 목록에서 못 찾으면 넘어갈 길이 없었다(2026-09-14).
-     * 직접 적고 넘어간 사람이 얼마나 되는지가 그대로 답이다 — 많으면 검색이 문제고,
-     * 없으면 막힌 원인은 다른 데 있다.
+     * 학교는 **목록에서 고른 것만** 받는다(2026-09-14 결정). 이름과 학교가 정확해야
+     * 문제가 생겼을 때 누구인지 알 수 있다. 그러므로 이 수는 앞으로 0이어야 정상이다 —
+     * 0이 아닌 주가 생기면 어딘가 확인 없이 지나가는 구멍이 난 것이다.
+     * (2026-09 이전 가입자는 학교 선택이 필수가 아니어서 확인 없이 저장돼 있다.)
      */
     /*
      * 주마다 나눠 본다. 통째로 세면 **규칙이 바뀐 때를 넘어** 섞인다 — 2026-09 이전에는
@@ -120,7 +121,7 @@ sections.push([`학교를 어떻게 적었나 (가입 주차별, 최근 ${WEEKS}
           SELECT date_trunc('week', created_at) w, count(*) total,
                  count(*) FILTER (WHERE school_verified_at IS NULL) manual
           FROM public.teachers WHERE created_at > now() - INTERVAL '${WEEKS} weeks' GROUP BY 1) t ORDER BY w`)
-        .map(([week, total, manual]) => `- ${week} 주 가입 ${total}명 · 이름을 직접 적은 교사 **${manual}명** (${pct(n(manual), n(total))})`);
+        .map(([week, total, manual]) => `- ${week} 주 가입 ${total}명 · 학교 확인 안 된 교사 **${manual}명** (${pct(n(manual), n(total))})`);
 }]);
 
 sections.push([`학생 등록 뒤에 무엇이 막나 (최근 ${DAYS}일 가입)`, () => {
