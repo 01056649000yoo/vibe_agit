@@ -104,6 +104,25 @@ sections.push([`가입 깔때기 (최근 ${DAYS}일 가입한 교사)`, () => {
     });
 }]);
 
+sections.push([`학교를 어떻게 적었나 (가입 주차별, 최근 ${WEEKS}주)`, () => {
+    /*
+     * 가입에서 학교는 필수인데, 목록에서 못 찾으면 넘어갈 길이 없었다(2026-09-14).
+     * 직접 적고 넘어간 사람이 얼마나 되는지가 그대로 답이다 — 많으면 검색이 문제고,
+     * 없으면 막힌 원인은 다른 데 있다.
+     */
+    /*
+     * 주마다 나눠 본다. 통째로 세면 **규칙이 바뀐 때를 넘어** 섞인다 — 2026-09 이전에는
+     * 학교를 고르지 않아도 가입이 됐고, 그 뒤로 목록에서 고르는 것만 허용됐다.
+     * 섞어 놓으면 "직접 적은 사람 44%" 처럼 지금과 무관한 수가 나온다.
+     */
+    return rows(`
+        SELECT to_char(w,'MM-DD'), total, manual FROM (
+          SELECT date_trunc('week', created_at) w, count(*) total,
+                 count(*) FILTER (WHERE school_verified_at IS NULL) manual
+          FROM public.teachers WHERE created_at > now() - INTERVAL '${WEEKS} weeks' GROUP BY 1) t ORDER BY w`)
+        .map(([week, total, manual]) => `- ${week} 주 가입 ${total}명 · 이름을 직접 적은 교사 **${manual}명** (${pct(n(manual), n(total))})`);
+}]);
+
 sections.push([`주마다 얼마나 쓰나 (최근 ${WEEKS}주)`, () => rows(`
         SELECT to_char(w,'MM-DD'), posts, kids, classes FROM (
           SELECT date_trunc('week', p.created_at) w, count(*) posts,

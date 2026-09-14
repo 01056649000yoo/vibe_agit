@@ -40,8 +40,13 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
             alert('선생님 이름을 입력해 주세요! 😊');
             return;
         }
+        /*
+         * 목록에서 고르거나, 못 찾으면 **이름을 그대로 쓰는 길**로 넘어온다(`manual`).
+         * 학교를 못 고른다고 가입 자체가 막히면 안 된다 — 최근 30일에 계정을 만든 655명 중
+         * 143명이 이 단계를 넘지 못했다(2026-09-14 분석).
+         */
         if (!schoolName.trim() || !selectedSchool) {
-            alert('학교를 검색한 후 목록에서 선택해 주세요! 🏫');
+            alert('학교를 검색해 목록에서 고르거나, 찾는 학교가 없으면 “그대로 쓰기”를 눌러 주세요! 🏫');
             return;
         }
 
@@ -220,6 +225,7 @@ const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
                                     selectedSchool={selectedSchool}
                                     onSelect={setSelectedSchool}
                                     placeholder="학교명을 입력해 주세요 (예: 서울미래초등학교)"
+                                    allowManualEntry
                                     inputStyle={{
                                         padding: '14px', borderRadius: '16px',
                                         border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',
