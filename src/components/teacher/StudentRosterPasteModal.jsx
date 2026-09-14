@@ -4,7 +4,7 @@ import ModalCloseButton from '../common/ModalCloseButton.jsx';
 import { parseStudentRoster, findExistingNames, STUDENT_ROSTER_MAX } from '../../lib/studentRoster.js';
 
 /*
- * 명단 붙여넣기.
+ * 명단 일괄 붙여넣기.
  *
  * 2026-09-14 사용자 분석: 학급까지 만든 교사 505명 중 학생을 등록한 사람은 168명이고,
  * 학생 0명으로 멈춘 337명 중 다시 들어온 사람은 2명이었다. 명단은 이미 나이스·엑셀·한글에
@@ -20,17 +20,17 @@ const StudentRosterPasteModal = ({ students = [], isSaving = false, onClose, onS
 
     return (
         <div role="presentation" style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--ui-space-4)', background: 'rgba(15,23,42,.5)' }}>
-            <section role="dialog" aria-modal="true" aria-label="명단 붙여넣기"
+            <section role="dialog" aria-modal="true" aria-label="명단 일괄 붙여넣기"
                 style={{ width: 'min(640px, 100%)', maxHeight: '92vh', overflowY: 'auto', background: 'var(--ui-surface-raised)', borderRadius: 'var(--ui-radius-xl)', boxShadow: 'var(--ui-shadow-modal)', padding: 'var(--ui-space-6)' }}>
                 <header style={{ display: 'flex', gap: 'var(--ui-space-4)', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <h2 style={{ margin: '0 0 var(--ui-space-2)', fontSize: 'var(--ui-text-xl)', fontWeight: 900, color: 'var(--ui-ink-strong)' }}>명단 붙여넣기</h2>
+                        <h2 style={{ margin: '0 0 var(--ui-space-2)', fontSize: 'var(--ui-text-xl)', fontWeight: 900, color: 'var(--ui-ink-strong)' }}>명단 일괄 붙여넣기</h2>
                         <p style={{ margin: 0, fontSize: 'var(--ui-text-sm)', lineHeight: 'var(--ui-line-body)', color: 'var(--ui-ink-muted)' }}>
                             나이스·엑셀·한글에서 <strong>이름 칸을 그대로 긁어</strong> 붙여넣으세요.
                             번호가 같이 붙어 와도 됩니다. 한 번에 {STUDENT_ROSTER_MAX}명까지예요.
                         </p>
                     </div>
-                    <ModalCloseButton onClick={onClose} label="명단 붙여넣기 닫기" />
+                    <ModalCloseButton onClick={onClose} label="명단 일괄 붙여넣기 닫기" />
                 </header>
 
                 <label style={{ display: 'block', margin: 'var(--ui-space-4) 0 var(--ui-space-2)', fontSize: 'var(--ui-text-sm)', fontWeight: 700, color: 'var(--ui-ink-strong)' }}>

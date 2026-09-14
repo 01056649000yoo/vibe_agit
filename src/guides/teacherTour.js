@@ -127,7 +127,7 @@ const STEP_RULES = Object.freeze({
     }),
     'invite-students': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.STUDENT_ADD,
-        hint: '📋 명단 붙여넣기를 누르고 나이스·엑셀의 이름 칸을 그대로 붙여넣어 보세요. 번호가 같이 와도 괜찮습니다. 한 명씩 넣어도 되고, 한 명만 등록해도 다음으로 넘어갑니다.',
+        hint: '📋 명단 일괄 붙여넣기를 누르고 나이스·엑셀의 이름 칸을 그대로 붙여넣어 보세요. 번호가 같이 와도 괜찮습니다. 한 명씩 넣어도 되고, 한 명만 등록해도 다음으로 넘어갑니다.',
         done: Object.freeze({ signal: 'studentCount', atLeast: 1 })
     }),
     'prepare-editor': Object.freeze({

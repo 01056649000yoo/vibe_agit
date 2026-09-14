@@ -66,7 +66,7 @@ test('학생 명단 화면에서 붙여넣기로 갈 수 있다', () => {
     const header = readFileSync('src/components/teacher/StudentManagerHeader.jsx', 'utf8');
     const manager = readFileSync('src/components/teacher/StudentManager.jsx', 'utf8');
     const hook = readFileSync('src/hooks/useStudentManager.js', 'utf8');
-    assert.match(header, /명단 붙여넣기/);
+    assert.match(header, /명단 일괄 붙여넣기/);
     assert.match(header, /onOpenRosterPaste\?\.\(\)/);
     assert.match(header, /placeholder="이름 입력"/);
     assert.match(manager, /<StudentRosterPasteModal/);
@@ -79,6 +79,6 @@ test('동행 모드와 안내서가 붙여넣기를 알려 준다', () => {
     // 이 단계가 가입 뒤 가장 크게 막히는 자리다. 길이 생겼으면 안내도 같이 바뀌어야 한다.
     const tour = readFileSync('src/guides/teacherTour.js', 'utf8');
     const guide = readFileSync('src/constants/teacherGuides.js', 'utf8');
-    assert.match(tour, /'invite-students': Object\.freeze\(\{[\s\S]{0,200}명단 붙여넣기/);
-    assert.match(guide, /`📋 명단 붙여넣기`로 한 번에 넣습니다/);
+    assert.match(tour, /'invite-students': Object\.freeze\(\{[\s\S]{0,200}명단 일괄 붙여넣기/);
+    assert.match(guide, /`📋 명단 일괄 붙여넣기`로 한 번에 넣습니다/);
 });

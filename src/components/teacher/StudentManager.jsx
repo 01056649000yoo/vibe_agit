@@ -37,7 +37,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
     } = useStudentManager(classId);
 
     const [recordStudent, setRecordStudent] = useState(null);
-    // 명단 붙여넣기 창. 학생 등록이 가입 뒤 가장 크게 막히는 자리다(2026-09-14 분석).
+    // 명단 일괄 붙여넣기 창. 학생 등록이 가입 뒤 가장 크게 막히는 자리다(2026-09-14 분석).
     const [isRosterPasteOpen, setIsRosterPasteOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedStudents, setDeletedStudents] = useState([]);

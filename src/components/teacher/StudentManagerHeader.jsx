@@ -170,7 +170,7 @@ const StudentManagerHeader = ({
                     />
                     <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
                     {/* 명단은 이미 나이스·엑셀에 있다. 한 명씩 치게 두면 거기서 멈춘다(2026-09-14 분석). */}
-                    <Button onClick={() => onOpenRosterPaste?.()} disabled={isAdding} size="sm" variant="outline">📋 명단 붙여넣기</Button>
+                    <Button onClick={() => onOpenRosterPaste?.()} disabled={isAdding} size="sm" variant="outline">📋 명단 일괄 붙여넣기</Button>
                 </div>
                 <Button
                     variant="ghost"
