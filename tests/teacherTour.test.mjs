@@ -19,7 +19,8 @@ import {
     isStepSatisfied,
     normalizeTourState,
     reduceTourState,
-    shouldOfferTour
+    shouldOfferTour,
+    TOUR_TRAIL_LIMIT
 } from '../src/guides/teacherTour.js';
 import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../src/guides/teacherGuideJourneys.js';
 import { TEACHER_NAV_GROUPS } from '../src/constants/teacherNav.js';
@@ -732,4 +733,60 @@ test('접기 단추는 글자로 무엇인지 알려 준다', () => {
     const panel = read('src/components/teacher/TeacherTourCompanion.jsx');
     assert.ok(panel.includes('접어 두기'), '접기 단추에 글자가 없습니다.');
     assert.ok(panel.includes('안내 다시 펴기'), '접힌 알약이 무엇인지 알려 주지 않습니다.');
+});
+
+test('동행 모드는 발자국을 남긴다', () => {
+    /*
+     * 2026-09-14: 이틀치 상태를 보니 학생 등록 앞뒤에서 절반이 멈추는데, **얼마나 붙들다
+     * 멈췄는지**, **건너뛰기를 눌렀는지 그냥 나갔는지** 를 알 수가 없었다. 고칠 자리를
+     * 찾으려면 그 둘이 필요하다.
+     *
+     * 발자국은 **떠나는 자리**에 남긴다 — 다음 단계가 아니라 방금 무엇을 했는지가 알고 싶은 것이다.
+     */
+    const steps = getTeacherTourSteps('getting-started');
+    let state = markWelcomeSeen({}, { now: '2026-09-14T01:00:00.000Z' });
+    assert.deepEqual(state.trail.map((item) => item.how), ['welcome']);
+
+    state = reduceTourState(state, 'getting-started', 'start', { now: '2026-09-14T01:01:00.000Z' });
+    state = reduceTourState(state, 'getting-started', 'complete', { now: '2026-09-14T01:02:00.000Z' });
+    state = reduceTourState(state, 'getting-started', 'skipStep', { now: '2026-09-14T01:09:00.000Z' });
+
+    assert.deepEqual(state.trail.map((item) => [item.how, item.step]), [
+        ['welcome', 'welcome'],
+        ['start', steps.at(0).stepId],
+        ['next', steps.at(0).stepId],
+        ['skip', steps.at(1).stepId]
+    ]);
+    // 시각이 있어야 "5초 만에 껐는지 10분 붙들었는지" 를 안다.
+    assert.equal(state.trail.at(-1).at, '2026-09-14T01:09:00.000Z');
+    // 마지막 단계를 마치면 `done` 으로 남는다 — 끝까지 간 사람을 세는 기준이다.
+    const finished = steps.reduce((acc, _step, index) => reduceTourState(acc, 'getting-started', 'complete', { now: `2026-09-14T02:0${index}:00.000Z` }), state);
+    assert.equal(finished.trail.at(-1).how, 'done');
+});
+
+test('발자국은 정해진 수만 남기고 오래된 것부터 버린다', () => {
+    // 교사 한 명의 기록이 끝없이 자라면 프로필을 읽을 때마다 그만큼 따라온다.
+    let state = {};
+    for (let n = 0; n < TOUR_TRAIL_LIMIT + 15; n++) {
+        state = reduceTourState(state, 'getting-started', 'back', { now: `2026-09-14T03:00:${String(n).padStart(2, '0')}.000Z` });
+    }
+    assert.equal(state.trail.length, TOUR_TRAIL_LIMIT);
+    assert.equal(state.trail.at(-1).at, '2026-09-14T03:00:54.000Z');
+});
+
+test('발자국에는 글이나 이름이 섞이지 않는다', () => {
+    /*
+     * 남기는 것은 단계 이름·시각·한 낱말뿐이다. 남의 손을 탄 값이 들어와도 모양이 맞지
+     * 않으면 버린다 — 다음에 읽을 때 분석이 엉키고, 담아서는 안 될 것이 담길 수 있다.
+     */
+    const dirty = normalizeTourState({
+        trail: [
+            { step: 'invite-students', at: '2026-09-14T01:00:00.000Z', how: 'next', tour: 'getting-started', note: '학생 이름' },
+            { step: 'invite-students', at: '2026-09-14T01:00:00.000Z', how: '엿보기' },
+            { step: 42, at: '2026-09-14T01:00:00.000Z', how: 'next' },
+            'nope'
+        ]
+    });
+    assert.equal(dirty.trail.length, 1);
+    assert.deepEqual(Object.keys(dirty.trail.at(0)).sort(), ['at', 'how', 'step', 'tour']);
 });

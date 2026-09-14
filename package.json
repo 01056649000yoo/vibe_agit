@@ -8,6 +8,7 @@
     "prebuild": "node scripts/export-spelling-detection.mjs --check",
     "build": "vite build",
     "checklist": "node scripts/checklist.mjs",
+    "analyze:usage": "node scripts/analyze-usage.mjs",
     "lint": "eslint .",
     "test": "npm run test:all",
     "test:all": "node --test tests/*.test.mjs",

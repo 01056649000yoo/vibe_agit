@@ -259,6 +259,33 @@ const normalizeTourEntry = (raw, tourId) => {
     };
 };
 
+/*
+ * 동행 모드 **발자국**.
+ *
+ * 상태(`tours`)만으로는 "지금 어디에 서 있나" 까지만 안다. 이틀치를 보니 학생 등록 앞뒤에서
+ * 절반이 멈추는데, **5초 만에 껐는지 10분 붙들다 포기했는지**, **건너뛰기를 눌렀는지 그냥
+ * 나갔는지** 를 알 수가 없었다(2026-09-14). 고칠 자리를 찾으려면 그 둘이 필요하다.
+ *
+ * 남기는 것: 그 단계에서 **무엇을 했는가** 뿐이다(단계 이름·시각·한 낱말). 글이나 이름 같은
+ * 내용은 남기지 않는다. 최근 것만 두고 오래된 것부터 버려, 교사 한 명의 기록이 4KB 를 넘지 않는다.
+ *
+ * 멈춘 자리는 **마지막 발자국 다음 단계**다 — 나간 것은 기록으로 남길 수 없으니,
+ * "여기까지 하고 더는 없다" 로 읽는다.
+ */
+export const TOUR_TRAIL_LIMIT = 40;
+
+export const TOUR_TRAIL_MOVES = Object.freeze(['start', 'next', 'skip', 'back', 'stop', 'done', 'welcome']);
+
+const normalizeTrail = (raw) => (Array.isArray(raw) ? raw : [])
+    .filter((item) => typeof item?.step === 'string' && typeof item?.at === 'string' && TOUR_TRAIL_MOVES.includes(item?.how))
+    .map((item) => ({ tour: typeof item.tour === 'string' ? item.tour : '', step: item.step, at: item.at, how: item.how }))
+    .slice(-TOUR_TRAIL_LIMIT);
+
+const addTrail = (state, entry) => ({
+    ...state,
+    trail: [...state.trail, entry].slice(-TOUR_TRAIL_LIMIT)
+});
+
 /** DB 에서 읽은 값을 언제나 같은 모양으로 만든다. 열이 비어 있어도 기본값이 나온다. */
 export const normalizeTourState = (raw) => {
     const tours = {};
@@ -271,6 +298,7 @@ export const normalizeTourState = (raw) => {
         welcomeSeenAt: typeof raw?.welcomeSeenAt === 'string' ? raw.welcomeSeenAt : null,
         // 대시보드에 처음 들어온 시각. 첫 자리에서는 공지를 미뤄 두는 데 쓴다.
         firstLoginAt: typeof raw?.firstLoginAt === 'string' ? raw.firstLoginAt : null,
+        trail: normalizeTrail(raw?.trail),
         tours
     };
 };
@@ -301,10 +329,10 @@ export const isFirstSession = (state, { now = Date.now() } = {}) => {
 };
 
 /** 환영 안내를 봤다고 적는다. 한 번 본 사람에게 다시 띄우지 않는다. */
-export const markWelcomeSeen = (state, { now = new Date().toISOString() } = {}) => ({
+export const markWelcomeSeen = (state, { now = new Date().toISOString() } = {}) => addTrail({
     ...normalizeTourState(state),
     welcomeSeenAt: now
-});
+}, { tour: '', step: 'welcome', at: now, how: 'welcome' });
 
 export const getTourEntry = (state, tourId) => Reflect.get(normalizeTourState(state).tours, tourId) || null;
 
@@ -324,17 +352,22 @@ const withUpdatedAt = (entry, now) => ({ ...entry, updatedAt: now });
  * action: 'start' | 'complete' | 'skipStep' | 'back' | 'stop'
  */
 export const reduceTourState = (state, tourId, action, { now = new Date().toISOString() } = {}) => {
-    const next = normalizeTourState(state);
+    let next = normalizeTourState(state);
     const entry = Reflect.get(next.tours, tourId);
     const steps = getTeacherTourSteps(tourId);
     if (!entry || !steps.length) return next;
 
     const index = Math.max(0, steps.findIndex((step) => step.stepId === entry.stepId));
     const currentStep = steps.at(index) || null;
+    // 발자국은 **떠나는 자리**에 남긴다. 다음 단계가 아니라 방금 무엇을 했는지가 알고 싶은 것이다.
+    const walk = (how, step = currentStep?.stepId || entry.stepId) => {
+        next = addTrail(next, { tour: tourId, step, at: now, how });
+    };
 
     if (action === 'start') {
         // 한 번이라도 끝까지 가 본 흐름은 처음부터 **다시 보기**로 연다(자동 판정 없이 둘러본다).
         if (entry.everFinished) {
+            walk('start', steps.at(0).stepId);
             Reflect.set(next.tours, tourId, withUpdatedAt({
                 ...entry,
                 status: 'running',
@@ -346,6 +379,7 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
         }
         // 하다 만 흐름은 아직 못 끝낸 단계에서 이어 연다.
         const resumeIndex = steps.findIndex((step) => !entry.completed.includes(step.stepId));
+        walk('start', steps.at(resumeIndex === -1 ? 0 : resumeIndex).stepId);
         Reflect.set(next.tours, tourId, withUpdatedAt({
             ...entry,
             status: 'running',
@@ -356,11 +390,13 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
     }
 
     if (action === 'stop') {
+        walk('stop');
         Reflect.set(next.tours, tourId, withUpdatedAt({ ...entry, status: 'skipped' }, now));
         return next;
     }
 
     if (action === 'back') {
+        walk('back');
         Reflect.set(next.tours, tourId, withUpdatedAt({ ...entry, stepId: steps.at(Math.max(0, index - 1)).stepId }, now));
         return next;
     }
@@ -370,6 +406,7 @@ export const reduceTourState = (state, tourId, action, { now = new Date().toISOS
             ? [...entry.completed, currentStep.stepId]
             : entry.completed;
         const isLast = index >= steps.length - 1;
+        walk(isLast ? 'done' : action === 'complete' ? 'next' : 'skip');
         Reflect.set(next.tours, tourId, withUpdatedAt({
             ...entry,
             completed,
