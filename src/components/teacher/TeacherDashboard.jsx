@@ -475,8 +475,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     const itemStyle = {
                             padding: isMobile ? '10px 12px' : '12px clamp(13px, 1.15vw, 22px)', border: 'none',
                             background: isActive ? 'white' : 'transparent',
-                            borderBottom: isActive ? '3px solid #3498DB' : '3px solid transparent',
-                            color: isActive ? '#2563EB' : '#64748B',
+                            // 활성 표시는 **토큰 색**을 쓴다. 여기만 #3498DB 라 연구소(--ui-primary)와 파랑이 달랐다.
+                            borderBottom: isActive ? '3px solid var(--ui-primary)' : '3px solid transparent',
+                            color: isActive ? 'var(--ui-primary)' : 'var(--ui-ink-muted)',
                             fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s',
                             fontSize: isMobile ? '0.82rem' : '0.95rem', whiteSpace: 'nowrap',
                             display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none'
