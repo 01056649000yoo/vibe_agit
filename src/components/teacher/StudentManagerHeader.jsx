@@ -154,49 +154,54 @@ const StudentManagerHeader = ({
                 </h3>
                 <TeacherGuideButton tabId="students" variant="help" className="student-list-heading__help" />
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
-                <input type="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="학생 이름 검색" aria-label="학생 이름 검색" style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.82rem', width: '140px' }} />
-                <select value={sortMode} onChange={(e) => setSortMode(e.target.value)} aria-label="학생 정렬" style={{ padding: '6px 9px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'white', color: '#475569', fontSize: '0.82rem', fontWeight: '700' }}>
-                    <option value="number">번호순</option><option value="name">이름순</option><option value="points">포인트순</option><option value="recent">최근 등록순</option>
-                </select>
-                <div style={{ display: 'flex', gap: '4px' }} {...tourAnchor(TEACHER_TOUR_ANCHORS.STUDENT_ADD)}>
+            {/*
+              * 도구를 셋으로 가른다(2026-09-14 지적: 눈에 잘 안 들어온다).
+              *   ① 찾기 — 이름 검색 · 정렬
+              *   ② 명단에 넣기 — 이름 한 명 · 명단 일괄 붙여넣기. **여기만 색을 준다.**
+              *   ③ 명단 손보기 — 번호 다시 매기기 · 복구함 · 전원 코드
+              * 전에는 일곱 개가 한 줄에 뒤섞이고 배경색이 셋(파랑·회색·노랑)이라, 색이 많은데
+              * 무엇이 중요한지는 알 수 없었다. 색이 아니라 **자리**로 가른다.
+              */}
+            <div className={`student-toolbar${isMobile ? ' is-mobile' : ''}`}>
+                <div className="student-toolbar__group">
+                    <input type="search" className="student-toolbar__search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="학생 이름 검색" aria-label="학생 이름 검색" />
+                    <select className="student-toolbar__select" value={sortMode} onChange={(e) => setSortMode(e.target.value)} aria-label="학생 정렬">
+                        <option value="number">번호순</option><option value="name">이름순</option><option value="points">포인트순</option><option value="recent">최근 등록순</option>
+                    </select>
+                </div>
+
+                {/* 동행 모드가 짚는 자리다. 묶음을 바꾸더라도 이 상자는 그대로 둔다. */}
+                <div className="student-toolbar__group student-toolbar__group--add" {...tourAnchor(TEACHER_TOUR_ANCHORS.STUDENT_ADD)}>
                     <input
                         type="text"
+                        className="student-toolbar__name"
                         placeholder="이름 입력"
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
-                        style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #DEE2E6', fontSize: '0.9rem', width: '100px' }}
                     />
                     <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
                     {/* 명단은 이미 나이스·엑셀에 있다. 한 명씩 치게 두면 거기서 멈춘다(2026-09-14 분석). */}
-                    <Button onClick={() => onOpenRosterPaste?.()} disabled={isAdding} size="sm" variant="outline">📋 명단 일괄 붙여넣기</Button>
+                    <Button onClick={() => onOpenRosterPaste?.()} disabled={isAdding} size="sm" variant="primary">📋 명단 일괄 붙여넣기</Button>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRenumber?.('name')}
-                    title="이름 가나다순으로 번호를 1번부터 다시 붙입니다. 번호나 이름은 명단에서 눌러 바로 고칠 수도 있습니다."
-                    style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: 'bold' }}
-                >
-                    🔢 번호 다시 매기기
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onOpenTrash}
-                    style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', color: '#7F8C8D', fontWeight: 'bold' }}
-                >
-                    ♻️ 복구함
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAllCodesModalOpen(true)}
-                    style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', color: '#B7950B', fontWeight: 'bold' }}
-                >
-                    🔑 전원 코드 확대
-                </Button>
+
+                <div className="student-toolbar__group student-toolbar__group--manage">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="student-toolbar__tool"
+                        onClick={() => onRenumber?.('name')}
+                        title="이름 가나다순으로 번호를 1번부터 다시 붙입니다. 번호나 이름은 명단에서 눌러 바로 고칠 수도 있습니다."
+                    >
+                        🔢 번호 다시 매기기
+                    </Button>
+                    <Button variant="ghost" size="sm" className="student-toolbar__tool" onClick={onOpenTrash}>
+                        ♻️ 복구함
+                    </Button>
+                    <Button variant="ghost" size="sm" className="student-toolbar__tool" onClick={() => setIsAllCodesModalOpen(true)}>
+                        🔑 전원 코드 확대
+                    </Button>
+                </div>
             </div>
         </div>
     );

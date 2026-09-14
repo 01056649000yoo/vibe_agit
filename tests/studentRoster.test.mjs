@@ -82,3 +82,28 @@ test('동행 모드와 안내서가 붙여넣기를 알려 준다', () => {
     assert.match(tour, /'invite-students': Object\.freeze\(\{[\s\S]{0,200}명단 일괄 붙여넣기/);
     assert.match(guide, /`📋 명단 일괄 붙여넣기`로 한 번에 넣습니다/);
 });
+
+test('학생 명단 도구는 찾기·넣기·손보기 셋으로 갈린다', () => {
+    /*
+     * 2026-09-14 지적: 학생 명단 메뉴가 눈에 잘 안 들어온다.
+     * 일곱 개가 한 줄에 뒤섞이고 배경색이 셋(파랑·회색·노랑)이었다. 색은 많은데 무엇이
+     * 중요한지는 알 수 없었다. 색이 아니라 **자리**로 가른다.
+     */
+    const header = readFileSync('src/components/teacher/StudentManagerHeader.jsx', 'utf8');
+    const css = readFileSync('src/components/teacher/StudentManager.css', 'utf8');
+    assert.match(header, /student-toolbar__group--add/);
+    assert.match(header, /student-toolbar__group--manage/);
+    assert.match(css, /\.student-toolbar__group--manage \{[^}]*border-left/);
+    // 손보는 도구는 모두 같은 옷을 입는다. 색을 손으로 박아 두지 않는다.
+    assert.ok(!/#EFF6FF|#F7DC6F|#FDFCF0/.test(header), '도구에 색이 박혀 있습니다.');
+    // 이 화면에서 제일 자주 하는 일에만 강조를 준다.
+    assert.match(header, /명단 일괄 붙여넣기<\/Button>/);
+    assert.match(header, /variant="primary">📋 명단 일괄 붙여넣기/);
+});
+
+test('학생 추가 자리는 동행 모드가 짚는 그대로 둔다', () => {
+    // 묶음을 바꾸면서 이 상자를 흩뜨리면 `학생 등록` 단계에서 테두리를 씌울 곳이 없어진다.
+    const header = readFileSync('src/components/teacher/StudentManagerHeader.jsx', 'utf8');
+    assert.match(header, /student-toolbar__group--add" \{\.\.\.tourAnchor\(TEACHER_TOUR_ANCHORS\.STUDENT_ADD\)\}/);
+    assert.match(header, /placeholder="이름 입력"/);
+});
