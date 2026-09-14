@@ -7,6 +7,7 @@ import './StudentManager.css';
 
 // 분리된 서브 컴포넌트들
 import StudentManagerHeader from './StudentManagerHeader';
+import StudentRosterPasteModal from './StudentRosterPasteModal.jsx';
 import StudentRankingList from './StudentRankingList';
 import StudentManagementList from './StudentManagementList';
 import StudentModals from './StudentModals';
@@ -29,13 +30,15 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
         isRankingModalOpen, setIsRankingModalOpen,
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
-        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
+        handleAddStudent, handleAddStudents, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded,
         fetchDeletedStudents, handleRestoreStudent,
         handleSetStudentNumber, handleRenumberStudents, handleRenameStudent
     } = useStudentManager(classId);
 
     const [recordStudent, setRecordStudent] = useState(null);
+    // 명단 붙여넣기 창. 학생 등록이 가입 뒤 가장 크게 막히는 자리다(2026-09-14 분석).
+    const [isRosterPasteOpen, setIsRosterPasteOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedStudents, setDeletedStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -96,6 +99,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                 studentName={studentName}
                 setStudentName={setStudentName}
                 handleAddStudent={handleAddStudent}
+                onOpenRosterPaste={() => setIsRosterPasteOpen(true)}
                 isAdding={isAdding}
                 setIsAllCodesModalOpen={setIsAllCodesModalOpen}
                 onOpenTrash={handleOpenTrash}
@@ -106,6 +110,15 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                 setSortMode={setSortMode}
                 onRenumber={handleRenumberStudents}
             />
+
+            {isRosterPasteOpen && (
+                <StudentRosterPasteModal
+                    students={students}
+                    isSaving={isAdding}
+                    onClose={() => setIsRosterPasteOpen(false)}
+                    onSubmit={async (names) => { if (await handleAddStudents(names)) setIsRosterPasteOpen(false); }}
+                />
+            )}
 
             {/* 메인 리스트 섹션 */}
             {isDashboardMode ? (

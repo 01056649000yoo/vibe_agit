@@ -97,6 +97,40 @@ export const useStudentManager = (classId) => {
         }
     };
 
+    /*
+     * 명단을 한 번에 넣는다 (2026-09-14 사용자 분석).
+     *
+     * 왕복을 서른 번 하지 않고 **한 번**에 보낸다 — 중간에 하나가 실패하면 절반만 들어간
+     * 명단이 남는다. 서버 함수가 다 넣거나 하나도 안 넣는다.
+     */
+    const handleAddStudents = async (names) => {
+        if (!Array.isArray(names) || !names.length) return false;
+        setIsAdding(true);
+        try {
+            const { error } = await supabase.rpc('add_students_bulk_v1', {
+                p_class_id: classId,
+                p_names: names,
+                p_initial_points: 100
+            });
+            if (error) throw error;
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
+            await fetchStudents();
+            return true;
+        } catch (err) {
+            console.error('명단 추가 실패:', err.message);
+            await ask({
+                title: '명단을 넣지 못했습니다',
+                body: '한 명도 들어가지 않았습니다. 붙여넣은 명단은 그대로 있으니 잠시 뒤 다시 눌러 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+            return false;
+        } finally {
+            setIsAdding(false);
+        }
+    };
+
     /**
      * 명단 고치기 세 가지 — 번호 직접 입력 · 번호 다시 매기기 · 이름 고치기.
      *
@@ -412,7 +446,7 @@ export const useStudentManager = (classId) => {
         isRankingModalOpen, setIsRankingModalOpen, // [신규] 반환값 추가
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
-        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
+        handleAddStudent, handleAddStudents, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded,
         fetchDeletedStudents, handleRestoreStudent,
         handleSetStudentNumber, handleRenumberStudents, handleRenameStudent

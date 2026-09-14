@@ -5,7 +5,7 @@ import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
 
 const StudentManagerHeader = ({
     isDashboardMode, isMobile, toggleSelectAll, setIsPointModalOpen,
-    selectedIds, students, studentName, setStudentName, handleAddStudent,
+    selectedIds, students, studentName, setStudentName, handleAddStudent, onOpenRosterPaste,
     isAdding, setIsAllCodesModalOpen, onOpenTrash, setIsRankingModalOpen,
     searchTerm, setSearchTerm, sortMode, setSortMode, onRenumber
 }) => {
@@ -169,6 +169,8 @@ const StudentManagerHeader = ({
                         style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #DEE2E6', fontSize: '0.9rem', width: '100px' }}
                     />
                     <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
+                    {/* 명단은 이미 나이스·엑셀에 있다. 한 명씩 치게 두면 거기서 멈춘다(2026-09-14 분석). */}
+                    <Button onClick={() => onOpenRosterPaste?.()} disabled={isAdding} size="sm" variant="outline">📋 명단 붙여넣기</Button>
                 </div>
                 <Button
                     variant="ghost"
