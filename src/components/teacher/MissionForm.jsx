@@ -1,4 +1,9 @@
-import React from 'react';
+import React from 'react';
+import {
+    getMissionScheduleError,
+    getMissionScheduleInputMin,
+    MISSION_SCHEDULE_TICK_SECONDS
+} from '../../modules/writing/mission-form/missionSchedule';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -1078,6 +1083,49 @@ const MissionForm = ({
                                     isMobile={isMobile}
                                     onSaveDefaultRubric={handleSaveDefaultRubric}
                                 />
+
+                                {/*
+                                  * 예약 공개. 켜면 정한 시각까지 학생에게 보이지 않는다.
+                                  * 숨기는 방법이 보관과 같은 스위치라, 학생 쪽 조회·쓰기는 이미 막혀 있다.
+                                  */}
+                                <div style={{ padding: '14px 16px', borderRadius: '14px', background: '#F8F9FA', border: '1px solid #E9ECEF' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={Boolean(formData.schedule_at)}
+                                            onChange={(event) => setFormData({
+                                                ...formData,
+                                                schedule_at: event.target.checked ? getMissionScheduleInputMin() : ''
+                                            })}
+                                        />
+                                        🕒 정한 시각에 저절로 열기
+                                    </label>
+                                    {formData.schedule_at ? (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <input
+                                                type="datetime-local"
+                                                value={formData.schedule_at}
+                                                min={getMissionScheduleInputMin()}
+                                                onChange={(event) => setFormData({ ...formData, schedule_at: event.target.value })}
+                                                style={{ padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}
+                                            />
+                                            {getMissionScheduleError(formData.schedule_at) ? (
+                                                <p style={{ margin: '8px 0 0', color: '#b91c1c', fontSize: 'var(--ui-text-xs)', fontWeight: 'bold' }}>
+                                                    {getMissionScheduleError(formData.schedule_at)}
+                                                </p>
+                                            ) : (
+                                                <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: 'var(--ui-text-xs)', lineHeight: 1.6 }}>
+                                                    그때까지 학생에게 보이지 않아요. 시각은 한국 시간이고, 확인이
+                                                    {' '}{MISSION_SCHEDULE_TICK_SECONDS}초마다 돌아 최대 1분쯤 늦게 열릴 수 있어요.
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: 'var(--ui-text-xs)' }}>
+                                            끄면 저장하는 순간 학생에게 열려요.
+                                        </p>
+                                    )}
+                                </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                                     <Button
                                         type="button"
@@ -1097,7 +1145,7 @@ const MissionForm = ({
                                         </Button>
                                     )}
                                     <Button type="submit" style={{ flex: 2, backgroundColor: isEditing ? '#F39C12' : '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>
-                                        {isEditing ? '수정 완료 ✏️' : '글쓰기 미션 공개하기 🚀'}
+                                        {isEditing ? '수정 완료 ✏️' : (formData.schedule_at ? '예약하기 🕒' : '글쓰기 미션 공개하기 🚀')}
                                     </Button>
                                 </div>
                             </form >

@@ -13,6 +13,11 @@ import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 import { getLatestSubmissionBoardMission } from '../modules/writing/submission-board/boardMissionScope';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
 import { createMissionDraft } from '../modules/writing/mission-form/missionDraft';
+import {
+    getMissionScheduleError,
+    resolveMissionSchedulePatch,
+    toMissionScheduleInput
+} from '../modules/writing/mission-form/missionSchedule';
 
 export const useMissionManager = (
     activeClass,
@@ -61,6 +66,8 @@ export const useMissionManager = (
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [isEditing, setIsEditing] = useState(false);
     const [editingMissionId, setEditingMissionId] = useState(null);
+    // 고치기 전의 공개 상태. 보관해 둔 과제를 고쳤다고 다시 열리는 일을 막는 데 쓴다.
+    const [editingMissionSchedule, setEditingMissionSchedule] = useState(null);
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
     const [frequentTags, setFrequentTags] = useState(() => bootstrapProfile?.frequent_tags || []);
     const [defaultRubric, setDefaultRubric] = useState(() => bootstrapProfile?.default_rubric || null);
@@ -122,6 +129,8 @@ export const useMissionManager = (
             title: '',
             guide: '',
             genre: '일기',
+            // 예약 공개 시각(서울 벽시계). 표의 칸이 아니라 화면에서만 쓰는 값이다.
+            schedule_at: '',
             min_chars: defaults.min_chars ?? 100,
             min_paragraphs: defaults.min_paragraphs ?? 1,
             base_reward: defaults.base_reward ?? 100,
@@ -255,7 +264,7 @@ export const useMissionManager = (
 
         const { data, error } = await supabase
             .from('writing_missions')
-            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
+            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, archived_at, open_at, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
             .eq('id', missionId)
             .maybeSingle();
 
@@ -317,6 +326,7 @@ export const useMissionManager = (
             repeat_bonus_max_count: mission.repeat_bonus_max_count ?? 3,
             allow_comments: mission.allow_comments ?? true,
             mission_type: mission.mission_type || mission.genre || '일기',
+            schedule_at: toMissionScheduleInput(mission.open_at),
             guide_questions: mission.guide_questions || [],
             tags: mission.tags || [],
             evaluation_rubric: mission.evaluation_rubric || {
@@ -333,6 +343,11 @@ export const useMissionManager = (
         if (!editingMission) return;
 
         setFormData(buildMissionFormData(editingMission));
+        setEditingMissionSchedule({
+            open_at: editingMission.open_at ?? null,
+            is_archived: editingMission.is_archived ?? false,
+            archived_at: editingMission.archived_at ?? null
+        });
     }, [isEditing, editingMissionId, missions, buildMissionFormData]);
 
     const handleEditClick = async (mission) => {
@@ -341,7 +356,7 @@ export const useMissionManager = (
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric, is_archived, archived_at, open_at')
                 .eq('id', mission.id)
                 .maybeSingle();
 
@@ -356,13 +371,48 @@ export const useMissionManager = (
         setIsEditing(true);
         setEditingMissionId(mission.id);
         setFormData(buildMissionFormData(missionForEdit));
+        setEditingMissionSchedule({
+            open_at: missionForEdit.open_at ?? null,
+            is_archived: missionForEdit.is_archived ?? false,
+            archived_at: missionForEdit.archived_at ?? null
+        });
+
         setIsFormOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    /*
+     * 예약을 지금 풀고 학생에게 바로 연다.
+     * 세 칸이 함께 움직여야 DB 제약(open_at 이 있으면 숨김·비보관)에 걸리지 않는다.
+     */
+    const handleOpenScheduledMission = async (mission) => {
+        if (!mission?.id) return;
+        try {
+            const { error } = await supabase
+                .from('writing_missions')
+                .update({ open_at: null, is_archived: false, archived_at: null })
+                .eq('id', mission.id);
+            if (error) throw error;
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
+            }
+            notify('🚀 예약을 풀고 지금 열었어요.');
+            fetchMissions();
+        } catch (err) {
+            await ask({
+                title: '지금 열지 못했습니다',
+                body: `${err.message}\n\n잠시 뒤 다시 시도해 주세요.`,
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+        }
     };
 
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditingMissionId(null);
+        setEditingMissionSchedule(null);
         setFormData(getResetFormData());
         setIsFormOpen(false);
     };
@@ -420,25 +470,41 @@ export const useMissionManager = (
             return;
         }
 
+        // 예약 칸은 표에 없는 값이라 떼어 낸 뒤, 공개 상태 세 칸으로 바꿔 넣는다.
+        const { schedule_at: scheduleInput, ...missionFields } = formData;
+        const scheduleError = getMissionScheduleError(scheduleInput);
+        if (scheduleError) {
+            notify(scheduleError);
+            return;
+        }
+        const schedulePatch = resolveMissionSchedulePatch({
+            scheduleInput,
+            current: isEditing ? editingMissionSchedule : null,
+            isEditing
+        });
+
         try {
             if (isEditing) {
                 const { error } = await supabase
                     .from('writing_missions')
-                    .update({ ...formData, mission_type: formData.genre })
+                    .update({ ...missionFields, mission_type: missionFields.genre, ...(schedulePatch || {}) })
                     .eq('id', editingMissionId);
 
                 if (error) throw error;
-                notify('✏️ 글쓰기 과제를 고쳤어요.');
+                notify(schedulePatch?.open_at ? '🕒 예약 시각을 바꿨어요.' : '✏️ 글쓰기 과제를 고쳤어요.');
             } else {
                 const { data: { user } } = await supabase.auth.getUser();
                 const { error } = await supabase.from('writing_missions').insert({
-                    ...formData,
-                    mission_type: formData.genre,
+                    ...missionFields,
+                    mission_type: missionFields.genre,
                     class_id: activeClass.id,
-                    teacher_id: user?.id
+                    teacher_id: user?.id,
+                    ...(schedulePatch || {})
                 });
                 if (error) throw error;
-                notify('🚀 새 글쓰기 과제를 열었어요.');
+                notify(schedulePatch?.open_at
+                    ? '🕒 예약했어요. 정한 시각이 되면 학생에게 저절로 열려요.'
+                    : '🚀 새 글쓰기 과제를 열었어요.');
             }
 
             // [추가] 캐시 무효화로 즉각 반영 보장
@@ -1487,7 +1553,7 @@ ${postArray.map((p, idx) => {
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,
-        handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
+        handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission, handleOpenScheduledMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleRecallPosts, handleUndoRecall,

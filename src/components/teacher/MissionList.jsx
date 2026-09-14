@@ -1,4 +1,5 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState } from 'react';
+import { formatMissionOpenAt, isMissionScheduled } from '../../modules/writing/mission-form/missionSchedule';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
 import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
@@ -37,7 +38,7 @@ const MissionItem = memo(({
     mission, isMobile, submittedCount, missionStatus, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
     showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    isHighlighted, missionCardSize
+    isHighlighted, missionCardSize, onOpenScheduledMission
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
@@ -115,6 +116,30 @@ const MissionItem = memo(({
             </div>
             <h4 style={{ margin: 0, fontSize: isSmall ? '0.92rem' : isLarge ? '1.08rem' : '1rem', lineHeight: 1.35, color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
 
+            {/* 예약 과제는 학생에게 아직 안 보인다. 선생님 화면에서만 이렇게 갈라 보여 준다. */}
+            {isMissionScheduled(mission) && (
+                <div style={{
+                    display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px',
+                    padding: '8px 10px', borderRadius: '10px',
+                    background: '#FFF7ED', border: '1px solid #FDBA74', color: '#9A3412'
+                }}>
+                    <strong style={{ fontSize: 'var(--ui-text-xs)' }}>🕒 {formatMissionOpenAt(mission.open_at)} 공개 예정</strong>
+                    <span style={{ fontSize: 'var(--ui-text-xs)', color: '#B45309' }}>학생에게는 아직 안 보여요</span>
+                    {onOpenScheduledMission && (
+                        <button type="button" onClick={() => onOpenScheduledMission(mission)}
+                            title="예약을 지금 풀고 학생에게 바로 엽니다"
+                            aria-label={`${mission.title} 지금 열기`}
+                            style={{
+                                marginLeft: 'auto', border: '1px solid #9A3412', borderRadius: '999px',
+                                padding: '4px 12px', background: '#fff', color: '#9A3412',
+                                fontSize: 'var(--ui-text-xs)', fontWeight: 'bold', cursor: 'pointer'
+                            }}>
+                            지금 열기
+                        </button>
+                    )}
+                </div>
+            )}
+
             {mission.tags && mission.tags.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px', maxHeight: isSmall ? '18px' : 'none', overflow: 'hidden' }}>
                     {mission.tags.slice(0, isSmall ? 2 : mission.tags.length).map((tag, idx) => (
@@ -175,7 +200,7 @@ const MissionList = ({
     missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    highlightedMissionId, missionCardSize
+    highlightedMissionId, missionCardSize, onOpenScheduledMission
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
     const cardColumns = getMissionCardColumns(missionCardSize);
@@ -251,6 +276,7 @@ const MissionList = ({
                             submittedCount={submissionCounts[mission.id] || 0}
                             missionStatus={missionStatuses?.[mission.id]}
                             totalStudentCount={totalStudentCount}
+                            onOpenScheduledMission={onOpenScheduledMission}
                             handleEditClick={handleEditClick}
                             setArchiveModal={setArchiveModal}
                             handleDeleteMission={handleDeleteMission}

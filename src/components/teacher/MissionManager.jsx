@@ -65,7 +65,7 @@ const MissionManager = ({
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
         editingMissionId,
-        handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
+        handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission, handleOpenScheduledMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
@@ -427,6 +427,7 @@ const MissionManager = ({
                     submissionCounts={submissionCounts}
                     missionStatuses={submissionBoard.mission_statuses}
                     totalStudentCount={totalStudentCount}
+                    onOpenScheduledMission={handleOpenScheduledMission}
                     handleEditClick={handleMissionEditClick}
                     setArchiveModal={setArchiveModal}
                     handleDeleteMission={handleDeleteMission}
