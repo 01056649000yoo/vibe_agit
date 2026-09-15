@@ -64,7 +64,8 @@ export default function MyShelfPreview() {
   const teacherPosts = useMemo(() => samplePosts('assignment', 6), [])
   const friendShelf = useMemo(() => friendPosts(), [])
   return (
-    <main style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 16px 60px' }}>
+    // 선생님 화면의 책장은 1,100px 이 넘는다. 넓은 책장도 오른쪽이 비지 않는지 보려면 미리보기도 넓어야 한다.
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px 60px' }}>
       <h2 style={{ margin: '0 0 4px', fontSize: 'var(--ui-text-xl)', fontWeight: 900 }}>📖 책장과 책등</h2>
       <p style={{ margin: '0 0 22px', color: '#8D7B6C', fontSize: 'var(--ui-text-sm)' }}>
         앞 8권은 보통 제목, 뒤 5권은 극단(200자·영어·이모지·빈 제목·빈칸만)이다.
@@ -86,7 +87,7 @@ export default function MyShelfPreview() {
       })}
 
       <section style={{ marginBottom: '28px' }}>
-        <Heading>📚 30권 <span style={{ opacity: .6 }}>한 칸 최대 12권 · 넘치면 다음 책장으로 미끄러진다 · 손가락으로 밀어도 된다</span></Heading>
+        <Heading>📚 30권 <span style={{ opacity: .6 }}>폭에 들어가는 만큼 한 칸 · 꽉 찬 칸은 오른쪽이 비지 않는다 · 넘치면 다음 책장으로 미끄러진다</span></Heading>
         <Bookshelf
           ariaLabel="30권 미리보기"
           items={manyPosts}

@@ -5,6 +5,7 @@ import {
     SHELF_ROW_MIN_HEIGHT,
     SHELF_ROW_PADDING_TOP,
     SHELF_ROW_PADDING_X,
+    shelfPageIsFull,
     shelfPages
 } from './shelfBookLayout';
 
@@ -13,9 +14,10 @@ import {
  *
  * 세 화면(학생 내 서재, 선생님의 학생 아지트 보기, 친구 공개 서재)이 같은 책장을 쓴다.
  *
- * 책은 `items` + `renderItem` 으로 꽂는다. 한 칸에 최대 12권(화면이 좁으면 들어가는 만큼)이고,
- * 넘치면 다음 칸으로 **옆으로 미끄러져** 넘어간다(2026-09-15 요청). 옆으로 길게 스크롤하던 방식은
- * 40~60권이 되면 찾기 힘들었다. 손가락으로 밀어도, 단추를 눌러도 넘어간다.
+ * 책은 `items` + `renderItem` 으로 꽂는다. 한 칸에는 그 책장 폭에 들어가는 만큼 꽂고(좁은 폰은 4~5권,
+ * 넓은 선생님 화면은 15권 남짓), 넘치면 다음 칸으로 **옆으로 미끄러져** 넘어간다(2026-09-15 요청).
+ * 옆으로 길게 스크롤하던 방식은 40~60권이 되면 찾기 힘들었다. 손가락으로 밀어도, 단추를 눌러도 넘어간다.
+ * 꽉 찬 칸은 남는 몇 px 를 책 사이에 나눠 오른쪽이 비지 않는다("빈칸 없도록").
  *
  * 책이 없거나 읽는 중이면 그 안내를 children 으로 넘긴다 — 책장은 그것이 무엇인지 모른다.
  * `mode="list"` 면 같은 틀 안에 제목 목록을 세로로 쌓는다(넘기기 없음).
@@ -135,7 +137,11 @@ const PagedRow = ({ items, renderItem, itemWidth, ariaLabel }) => {
                             aria-hidden={index !== current}
                             // 보이지 않는 칸의 책은 Tab 으로도 못 간다.
                             inert={index !== current}
-                            style={{ ...ROW_STYLE, flex: '0 0 100%', minWidth: 0 }}
+                            style={{
+                                ...ROW_STYLE, flex: '0 0 100%', minWidth: 0,
+                                // 마지막이 아닌 칸은 다음 책이 안 들어가서 닫힌 칸이니 꽉 찬 것이다. 마지막 칸만 따로 본다.
+                                justifyContent: index < pageCount - 1 || shelfPageIsFull(pageItems, width, itemWidth) ? 'space-between' : 'flex-start'
+                            }}
                         >
                             {pageItems.map(renderItem)}
                         </div>

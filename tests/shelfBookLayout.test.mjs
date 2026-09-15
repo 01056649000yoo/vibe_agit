@@ -201,28 +201,37 @@ test('책장을 보여 주는 세 화면 모두 공용 책장·책등만 쓴다'
 
 /*
  * 2026-09-15 "12권 넘으면 밀어서 다음 책을 보는 애니메이션." 옆으로 길게 스크롤하던 줄을 칸으로 나눴다.
+ * 이어서 "선생님 화면은 책장이 넓어 12권이면 오른쪽이 남는다. 가로 길이에 맞춰서, 빈칸 없도록." —
+ * 그래서 12권 상한은 버리고 **폭에 들어가는 만큼** 꽂으며, 꽉 찬 칸은 남는 px 를 책 사이에 나눈다.
  * 칸 나누기는 순수 함수(shelfPages)라 여기서 값으로 검사한다. 미끄러지는 움직임 자체는 미리보기에서 눈으로 본다.
  */
-test('책장은 한 칸 최대 12권이고, 화면이 좁으면 들어가는 만큼만 꽂아 책이 잘리지 않는다', async () => {
-    const { SHELF_PAGE_MAX_BOOKS, SHELF_ROW_GAP, SHELF_ROW_PADDING_X, shelfPages } = await import('../src/components/common/bookshelf/shelfBookLayout.js');
-    assert.equal(SHELF_PAGE_MAX_BOOKS, 12);
+test('책장 한 칸은 그 폭에 들어가는 만큼 꽂고, 책은 잘리지 않으며, 꽉 찬 칸은 오른쪽이 비지 않는다', async () => {
+    const { SHELF_PAGE_FALLBACK_BOOKS, SHELF_ROW_GAP, SHELF_ROW_PADDING_X, shelfPages, shelfPageIsFull } = await import('../src/components/common/bookshelf/shelfBookLayout.js');
     const posts = (count, length = 6) => Array.from({ length: count }, (_, i) => ({ id: i, title: '가'.repeat(length) }));
 
     // 폭을 모르면(아직 못 잼) 12권씩
+    assert.equal(SHELF_PAGE_FALLBACK_BOOKS, 12);
     assert.deepEqual(shelfPages(posts(30), 0).map((p) => p.length), [12, 12, 6]);
-    assert.deepEqual(shelfPages(posts(12), 0).map((p) => p.length), [12]);
     assert.deepEqual(shelfPages([], 0), []);
     assert.deepEqual(shelfPages(null, 0), []);
 
-    // 폰 폭(390): 54px 책이 5~6권. 어떤 칸도 줄 폭을 넘지 않는다.
-    const inner = 390 - SHELF_ROW_PADDING_X * 2;
-    for (const page of shelfPages(posts(30), 390)) {
-        const filled = page.length * 54 + (page.length - 1) * SHELF_ROW_GAP;
-        assert.ok(filled <= inner, `칸이 폭을 넘친다: ${filled} > ${inner}`);
-        assert.ok(page.length <= SHELF_PAGE_MAX_BOOKS);
+    // 폭을 알면 폭이 정한다 — 폰(390)은 5~6권, 선생님 화면(1100)은 12권보다 많다.
+    const inner = (width) => width - SHELF_ROW_PADDING_X * 2;
+    for (const width of [390, 760, 1100]) {
+        for (const page of shelfPages(posts(40), width)) {
+            const filled = page.length * 54 + (page.length - 1) * SHELF_ROW_GAP;
+            assert.ok(filled <= inner(width), `칸이 폭을 넘친다(${width}): ${filled} > ${inner(width)}`);
+        }
     }
-    // 넓은 화면이어도 12권이 끝
-    assert.deepEqual(shelfPages(posts(30, 3), 5000).map((p) => p.length), [12, 12, 6]);
+    const teacherPages = shelfPages(posts(40), 1100);
+    assert.ok(teacherPages[0].length > 12, `넓은 책장인데 ${teacherPages[0].length}권만 꽂았다 — 오른쪽이 빈다`);
+    // 꽉 찬 칸에는 가장 얇은 책도 더 못 들어간다. 마지막 덜 찬 칸은 꽉 찬 것이 아니다.
+    assert.equal(shelfPageIsFull(teacherPages[0], 1100), true);
+    assert.equal(shelfPageIsFull(teacherPages.at(-1), 1100), false);
+    assert.equal(shelfPageIsFull(posts(2), 0), false, '폭을 모르면 꽉 찼다고 하지 않는다');
+    // 화면(Bookshelf)은 꽉 찬 칸만 책 사이를 벌려 오른쪽을 채운다 — 마지막이 아닌 칸은 늘 꽉 찬 칸이다.
+    const shelf = await readFile('src/components/common/bookshelf/Bookshelf.jsx', 'utf8');
+    assert.match(shelf, /justifyContent: index < pageCount - 1 \|\| shelfPageIsFull\(pageItems, width, itemWidth\) \? 'space-between' : 'flex-start'/);
     // 책 하나가 폭보다 커도 한 권은 꽂는다(무한 루프·빈 칸 없음)
     assert.deepEqual(shelfPages(posts(3), 10).map((p) => p.length), [1, 1, 1]);
     // 순서는 그대로
