@@ -21,9 +21,24 @@ import { bookItemGroupLabel, bookItemNeedsReview, findBookItems, moveBookItem, p
  */
 
 const GROUPINGS = [
-    { id: 'custom', label: '직접 정한 순서', description: '현재 순서를 유지하고 직접 옮깁니다.' },
-    { id: 'author', label: '학생별로 묶기', description: '같은 학생의 글을 모아 보여 줍니다.' },
-    { id: 'topic', label: '주제별로 묶기', description: '같은 주제를 모으고 출력할 때 주제 간지를 넣습니다.' },
+    {
+        id: 'custom',
+        label: '직접 정한 순서',
+        description: '교사가 정한 번호 순서대로 목차를 구성합니다.',
+        tocNote: '목차: 1번부터 차례대로 나열되며, ≡ 끌기나 번호 이동 순서가 그대로 차례가 됩니다.'
+    },
+    {
+        id: 'author',
+        label: '학생별로 묶기',
+        description: '학생 이름(가나다순)으로 묶어서 목차를 구성합니다.',
+        tocNote: '목차: 가장 앞 차례에는 학생 이름과 시작 쪽수만 실리고, 각 학생 글 시작 쪽에 학생별 간지(속표지)와 해당 학생의 글 목록이 들어갑니다.'
+    },
+    {
+        id: 'topic',
+        label: '주제별로 묶기',
+        description: '미션·주제별로 묶어서 목차를 구성합니다.',
+        tocNote: '목차: 주제 제목이 대단원이 되며, 인쇄 시 주제별 간지(구분 쪽)가 함께 들어갑니다.'
+    },
 ];
 
 function RowMenu({ item, index, count, locked, busy, dirty, onRead, onRefresh, onMoveTo, onRemove, onWithdraw }) {
@@ -96,22 +111,36 @@ export default function BookOrderEditor({ book, locked, busy, dirty, onEdit, onR
     const moveTo = (from, to) => setOrder(moveBookItem(items, from, to));
     const step = (index, delta) => moveTo(index, index + delta);
     const remove = (index) => onEdit({ ...book, items: items.filter((_, i) => i !== index) });
-    const rowProps = { count, locked, busy, dirty, hideAuthor: false, onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
+    const rowProps = { count, locked, busy, dirty, hideAuthor: personal || book.grouping === 'author', onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
 
     return <section className="book-order" aria-label="목차 정하기">
         <div className="book-order__settings">
             <fieldset disabled={locked}><legend><span>1</span> 작품 묶기</legend><p>목차에서 작품을 어떤 기준으로 모을지 정합니다.</p><div className="book-order__choices">
-                {GROUPINGS.filter((entry) => !personal || entry.id !== 'author').map((entry) => <label key={entry.id} className={book.grouping === entry.id ? 'is-selected' : ''}><input type="radio" name="book-grouping" checked={book.grouping === entry.id} onChange={() => onEdit({ ...book, grouping: entry.id, items: sortBookItems(items, entry.id) })} /><span><strong>{entry.label}</strong><small>{entry.description}</small></span></label>)}
+                {GROUPINGS.filter((entry) => !personal || entry.id !== 'author').map((entry) => <label key={entry.id} className={book.grouping === entry.id ? 'is-selected' : ''}>
+                    <input type="radio" name="book-grouping" checked={book.grouping === entry.id} onChange={() => onEdit({ ...book, grouping: entry.id, items: sortBookItems(items, entry.id) })} />
+                    <span className="book-order__choice-text">
+                        <strong>{entry.label}</strong>
+                        <small>{entry.description}</small>
+                        <small className="book-order__toc-note">{entry.tocNote}</small>
+                    </span>
+                </label>)}
             </div></fieldset>
             <fieldset disabled={locked}><legend><span>2</span> 쪽 배치</legend><p>묶기 방식과 관계없이 글이 시작되는 위치를 정합니다.</p><div className="book-order__choices">
-                {BOOK_PAGE_LAYOUTS.map((layout) => <label key={layout.id} className={getBookPageLayout(book.page_layout).id === layout.id ? 'is-selected' : ''}><input type="radio" name="book-page-layout" checked={getBookPageLayout(book.page_layout).id === layout.id} onChange={() => onEdit({ ...book, page_layout: layout.id })} /><span><strong>{layout.label}</strong><small>{layout.hint}</small></span></label>)}
+                {BOOK_PAGE_LAYOUTS.map((layout) => <label key={layout.id} className={getBookPageLayout(book.page_layout).id === layout.id ? 'is-selected' : ''}>
+                    <input type="radio" name="book-page-layout" checked={getBookPageLayout(book.page_layout).id === layout.id} onChange={() => onEdit({ ...book, page_layout: layout.id })} />
+                    <span className="book-order__choice-text">
+                        <strong>{layout.label}</strong>
+                        <small>{layout.hint}</small>
+                        <small className="book-order__toc-note">{layout.id === 'continuous' ? '쪽수 절약: 앞 글이 끝난 자리 바로 다음 줄에 이어붙여 출력 쪽수를 줄입니다.' : '정돈된 구성: 작품마다 항상 새 쪽 첫머리에서 시작해 여백을 둡니다.'}</small>
+                    </span>
+                </label>)}
             </div></fieldset>
         </div>
         <div className="book-order__toolbar">
             <label className="book-order__search">찾기<input value={query} maxLength={80} placeholder={personal ? '제목 · 주제' : '제목 · 학생 이름 · 주제'} onChange={(event) => setQuery(event.target.value)} /></label>
             <span className="book-order__count">{filtering ? `${shown.length}편 찾음 · ` : ''}차례 {count}편</span>
         </div>
-        <p className="anthology-hint">{book.grouping === 'topic' ? '주제별 묶기라 출력물에 주제 간지가 들어갑니다. ' : ''}{getBookPageLayout(book.page_layout).hint}{' '}
+        <p className="anthology-hint">{book.grouping === 'topic' && getBookPageLayout(book.page_layout).id === 'continuous' ? '주제별 묶기라 출력물에 주제 간지가 들어갑니다. ' : ''}{book.grouping === 'author' ? '학생별 묶기라 출력물에 학생별 간지가 들어가고 목차에 학생 이름이 실립니다. ' : ''}{getBookPageLayout(book.page_layout).hint}{' '}
             {book.grouping === 'custom' ? '≡ 를 끌어 놓거나 ↑↓, ⋯ 메뉴의 번호로 옮기기로 순서를 정합니다.' : `${GROUPINGS.find((entry) => entry.id === book.grouping)?.label}로 묶여 있습니다. 한 편을 옮기면 직접 정한 순서로 바뀝니다.`}</p>
 
         {count === 0 && <p className="class-agit-empty">아직 담은 작품이 없습니다. 3단계에서 학생 글이나 전시 작품을 담아 주세요.</p>}

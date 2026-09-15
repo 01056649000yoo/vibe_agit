@@ -98,6 +98,34 @@ export function paginateAnthology(doc) {
         if (main.children.length) blocks = [...main.children].map((child) => { const copy = child.cloneNode(false); copy.textContent = child.textContent; return copy; });
         else blocks = main.textContent.split(/\n\s*\n/u).map((text) => { const p = doc.createElement('p'); p.textContent = text; return p; });
 
+        if (forcedBreaks.has(index)) cursor = null;
+
+        const divider = dividers.get(index);
+        if (divider) {
+            /*
+             * 간지 = 주제/학생 속표지. 이름과 그 묶음에 든 작품 목록을 싣는다.
+             *
+             * 한 주제/학생에 작품이 많으면 목록이 한 쪽을 넘는다(학급 전체가 같은 과제를 쓴 경우).
+             * 그때는 이름만 둔 쪽에 이어 다음 쪽으로 목록을 넘긴다 — 넘친다고 막으면
+             * 정작 큰 학급이 문집을 못 만든다.
+             */
+            const dividerTitle = divider.querySelector('h1');
+            const dividerRows = [...(divider.querySelector('[data-divider-list]')?.children || [])];
+            const dividerPage = (withTitle) => {
+                const p = page('anthology-divider');
+                if (withTitle && dividerTitle) p.content.append(dividerTitle.cloneNode(true));
+                const list = doc.createElement('div'); list.setAttribute('data-divider-list', '');
+                p.content.append(list);
+                if (!fits(p.content)) throw new Error('간지가 한 페이지를 넘습니다. 이름을 줄여 주세요.');
+                return { sheet: p.sheet, content: list, measure: p.content, fixed: 0 };
+            };
+            let firstSheet = null;
+            flow(dividerRows, () => { const p = dividerPage(true); firstSheet = p.sheet; return p; }, () => dividerPage(false));
+            if (!firstSheet) firstSheet = dividerPage(true).sheet;
+            setTocPage(`g${index}`, pageNumberOf(firstSheet));
+            cursor = null;
+        }
+
         if (!continuous) {
             setTocPage(index, output.children.length + 1);
             const first = () => {
@@ -117,41 +145,6 @@ export function paginateAnthology(doc) {
             };
             flow(blocks, first, continuation);
             return;
-        }
-
-        /*
-         * 이어붙이기.
-         *
-         * 작품을 쪽 안의 제 상자(`anthology-work`)에 담아 **앞 작품 아래에 이어 붙인다.**
-         * 상자를 쓰는 이유: 작품마다 갈래가 달라(산문·시) 글자 크기와 정렬이 다른데,
-         * 쪽 하나에 그 규칙을 직접 걸면 한 쪽에 두 작품을 담을 수 없다.
-         */
-        if (forcedBreaks.has(index)) cursor = null;
-
-        const divider = dividers.get(index);
-        if (divider) {
-            /*
-             * 간지 = 주제 속표지. 이름과 그 주제의 작품 목록을 싣는다.
-             *
-             * 한 주제에 작품이 많으면 목록이 한 쪽을 넘는다(학급 전체가 같은 과제를 쓴 경우).
-             * 그때는 이름만 둔 쪽에 이어 다음 쪽으로 목록을 넘긴다 — 넘친다고 막으면
-             * 정작 큰 학급이 문집을 못 만든다.
-             */
-            const dividerTitle = divider.querySelector('h1');
-            const dividerRows = [...(divider.querySelector('[data-divider-list]')?.children || [])];
-            const dividerPage = (withTitle) => {
-                const p = page('anthology-divider');
-                if (withTitle && dividerTitle) p.content.append(dividerTitle.cloneNode(true));
-                const list = doc.createElement('div'); list.setAttribute('data-divider-list', '');
-                p.content.append(list);
-                if (!fits(p.content)) throw new Error('주제 간지가 한 페이지를 넘습니다. 주제 이름을 줄여 주세요.');
-                return { sheet: p.sheet, content: list, measure: p.content, fixed: 0 };
-            };
-            let firstSheet = null;
-            flow(dividerRows, () => { const p = dividerPage(true); firstSheet = p.sheet; return p; }, () => dividerPage(false));
-            if (!firstSheet) firstSheet = dividerPage(true).sheet;
-            setTocPage(`g${index}`, pageNumberOf(firstSheet));
-            cursor = null;
         }
 
         const openWork = (withHeader) => {

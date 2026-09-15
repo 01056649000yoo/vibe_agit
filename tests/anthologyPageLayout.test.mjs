@@ -4,6 +4,7 @@ import test from 'node:test';
 import { BOOK_PAGE_LAYOUTS, getBookPageLayout, createBookPrintSettings, validBookPrintSettings } from '../src/modules/class-agit/designs.js';
 import { buildBookSavePayload } from '../src/modules/class-agit/anthology/contract.js';
 import { ANTHOLOGY_MIN_BODY_RATIO } from '../src/modules/class-agit/anthology/pagination.js';
+import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js';
 
 const read = (file) => readFileSync(file, 'utf8');
 const migration = read('supabase/migrations/20261287_anthology_page_layout.sql');
@@ -142,4 +143,51 @@ test('제 쪽을 통째로 쓰는 글은 긴 문단을 쪼갠다', () => {
     assert.match(pagination, /fixed: box\.childElementCount, hasNeighbours/);
     // 작품마다 새 쪽일 때도 같은 기준이다 — 머리글 수를 센다.
     assert.match(pagination, /fixed: header\.length/);
+});
+
+test('학생별로 묶으면 가장 앞 차례에는 학생 이름만 싣고 각 학생 시작 쪽에 간지와 작품 목록을 넣는다', async () => {
+    const classAuthorEdition = {
+        version: 1,
+        id: 'edition-1',
+        draft: true,
+        number: 1,
+        book: {
+            title: '우리 반 모음집',
+            subtitle: '함께 쓴 글',
+            cover_kicker: '',
+            introduction: '여는 말',
+            class_label: '3학년 1반',
+            term: '2026-1',
+            issue_date: '2026-09-15',
+            grouping: 'author',
+            book_type: 'class',
+            owner_student_id: null,
+            owner_student_name: null,
+            page_breaks: [],
+            print: { paper: 'A4', design: 'botanical', layout: 'work-per-page', body_pt: 12, poem_pt: 14, version: 2 },
+            works: [
+                { title: '봄의 소리', author: '강민준', group: '봄', format: 'prose', kindLabel: '글', excerpt: '', blocks: ['봄이 왔다.'] },
+                { title: '여름 바다', author: '강민준', group: '여름', format: 'poem', kindLabel: '시', excerpt: '', blocks: ['바다가 푸르다.'] },
+                { title: '가을 단풍', author: '박서연', group: '가을', format: 'prose', kindLabel: '글', excerpt: '', blocks: ['단풍이 곱다.'] },
+            ]
+        }
+    };
+
+    const html = await buildAnthologyHtml(classAuthorEdition);
+    // 가장 앞 차례(TOC)에는 학생 이름만 굵게 실린다.
+    assert.match(html, /data-toc-row="g0" data-toc-group><span>강민준<\/span><span data-page><\/span><\/div>/);
+    assert.match(html, /data-toc-row="g2" data-toc-group><span>박서연<\/span><span data-page><\/span><\/div>/);
+    // 가장 앞 차례에 작품 제목이 직접 실리지 않는다.
+    assert.doesNotMatch(html, /data-toc-row="[012]"><span>봄의 소리/);
+    assert.doesNotMatch(html, /data-toc-row="[012]"><span>가을 단풍/);
+
+    // 각 학생 시작 쪽에 간지(Divider)가 들어간다.
+    assert.match(html, /<div data-divider="0"><h1>강민준<\/h1><div data-divider-list>/);
+    assert.match(html, /<div data-divider="2"><h1>박서연<\/h1><div data-divider-list>/);
+
+    // 간지 내부 작품 목록에는 그 학생의 작품이 들어가고, 학생 이름이 중복되지 않는다.
+    assert.match(html, /data-divider-row="0"><span>봄의 소리<\/span><span data-page><\/span><\/div>/);
+    assert.match(html, /data-divider-row="1"><span>여름 바다<\/span><span data-page><\/span><\/div>/);
+    assert.match(html, /data-divider-row="2"><span>가을 단풍<\/span><span data-page><\/span><\/div>/);
+    assert.doesNotMatch(html, /data-divider-row="[012]"><span>[^<]*· 강민준/);
 });

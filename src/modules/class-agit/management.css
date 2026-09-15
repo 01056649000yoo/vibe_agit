@@ -95,7 +95,7 @@
     font-weight: 700;
 }
 .class-agit-management .class-agit-book-settings legend { padding-inline: var(--ui-space-2); font-size: var(--ui-text-md); font-weight: 800; color: var(--ui-ink-strong); }
-.class-agit-management :is(input:not([type='checkbox']), textarea, select) {
+.class-agit-management :is(input:not([type='checkbox']):not([type='radio']), textarea, select) {
     min-height: var(--ui-control-md);
     border: 1px solid var(--ui-border-strong);
     border-radius: var(--ui-radius-sm);
@@ -107,7 +107,7 @@
 .class-agit-management .class-agit-search input { font-size: var(--ui-text-md) !important; }
 .class-agit-management :is(input, textarea)::placeholder { color: var(--ui-ink-subtle); }
 .class-agit-management textarea { resize: vertical; }
-.class-agit-management input[type='checkbox'] { accent-color: var(--ui-primary); }
+.class-agit-management :is(input[type='checkbox'], input[type='radio']) { accent-color: var(--ui-primary); }
 .class-agit-management :focus-visible:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-public *)) {
     outline: 2px solid var(--ui-primary);
     outline-offset: 2px;

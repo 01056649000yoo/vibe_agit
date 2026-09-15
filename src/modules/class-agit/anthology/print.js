@@ -25,6 +25,9 @@ export async function buildAnthologyHtml(edition) {
         const title = String(work.group || '').trim();
         const previous = index > 0 ? String(book.works[index - 1].group || '').trim() : null;
         if (continuous && book.grouping === 'topic' && title && title !== previous) groupStarts.set(index, title);
+        const author = String(work.author || '지은이 없음').trim();
+        const previousAuthor = index > 0 ? String(book.works[index - 1].author || '지은이 없음').trim() : null;
+        if (book.grouping === 'author' && !personal && author && author !== previousAuthor) groupStarts.set(index, author);
     });
     const contentHeight = paper.height - paper.marginTop - paper.marginBottom;
     const contentWidth = paper.width - paper.marginX * 2;
@@ -105,15 +108,19 @@ ${book.works.map((w, i) => {
         const groupTitle = groupStarts.get(i);
         return groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
     }
+    if (book.grouping === 'author' && !personal) {
+        const authorTitle = groupStarts.get(i);
+        return authorTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(authorTitle)}</span><span data-page></span></div>` : '';
+    }
     return `<div data-toc-row="${i}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
 }).join('')}
 ${[...forcedBreaks].map((index) => `<div data-forced-break="${index}"></div>`).join('')}
 ${[...groupStarts.entries()].map(([index, title]) => {
-    // 간지 = 주제 이름 + 그 주제에 든 작품 목록. 쪽번호는 쪽을 다 짠 뒤에 채운다.
+    // 간지 = 주제/학생 이름 + 그 그룹에 든 작품 목록. 쪽번호는 쪽을 다 짠 뒤에 채운다.
     const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;
     const rows = book.works.slice(index, until).map((w, offset) => {
         const workIndex = index + offset;
-        return `<div data-divider-row="${workIndex}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
+        return `<div data-divider-row="${workIndex}"><span>${e(w.title)}${personal || book.grouping === 'author' ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
     }).join('');
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;
