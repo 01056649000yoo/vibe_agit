@@ -101,7 +101,7 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
                 <section className="anthology-tuner" role="dialog" aria-modal="true" aria-label="문집 쪽 다듬기">
                     <header className="anthology-tuner__head">
                         <div className="anthology-tuner__intro">
-                            <span className="class-agit-eyebrow">STEP 04 · 쪽 다듬기</span>
+                            <span className="class-agit-eyebrow">STEP 05 · 쪽 다듬기</span>
                             <h2>작품이 어느 쪽에서 시작할지 정해요</h2>
                             <p>
                                 {placement ? `지금 모두 ${placement.count}쪽입니다. ` : '초안을 그리고 있습니다… '}

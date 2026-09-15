@@ -117,15 +117,29 @@ test('학기는 표지·판권·학생 화면과 저장 payload 어디에도 남
     for (const source of anthology) assert.doesNotMatch(source, /\bterm\b|학기/);
     assert.doesNotMatch(JSON.stringify(TEACHER_GUIDES['class-agit-books']), /학기/);
 });
-test('문집 제작은 전시 준비처럼 네 단계 탭으로 나뉜다', () => {
+test('문집 제작은 다섯 단계 탭으로 나뉘고, 차례는 담기와 다른 단계다', () => {
+    /*
+     * 2026-09-15 "차례를 수정하는 화면이 불편하다 … 작품 담기 다음에 목차 정하기가 들어가고 그다음 확정·보관함."
+     * 담기와 순서 정하기가 한 화면에 있으면 100편의 차례가 담기 단추 아래에 늘어져 안쪽 상자에서 따로 스크롤됐다.
+     */
     const source = readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
     const steps = [...source.matchAll(/\{ id: '([a-z]+)', title: '([^']+)'/g)].map((m) => m[1]);
-    assert.deepEqual(steps, ['cover', 'design', 'works', 'publish']);
+    assert.deepEqual(steps, ['cover', 'design', 'works', 'order', 'publish']);
     assert.match(source, /role="tablist"/);
     for (const id of steps) assert.ok(source.includes(`role: 'tabpanel'`) && source.includes(`panel('${id}')`), `${id} 패널이 없습니다.`);
-    // 작품을 담는 3단계가 따로 있어야 차례가 길어져도 다른 단계가 밀리지 않는다.
-    const works = source.slice(source.indexOf("panel('works')"), source.indexOf("panel('publish')"));
-    for (const label of ['학생 글에서 담기', '전시 작품 가져오기', '차례 · ']) assert.ok(works.includes(label), `3단계에 ${label}이 없습니다.`);
+    const works = source.slice(source.indexOf("panel('works')"), source.indexOf("panel('order')"));
+    for (const label of ['학생 글에서 담기', '전시 작품 가져오기', '담은 글 · ']) assert.ok(works.includes(label), `3단계에 ${label}이 없습니다.`);
+    // 3단계에는 차례 목록·묶기·쪽 배치가 없다 — 그것은 4단계 것이다.
+    for (const label of ['작품 묶기', '쪽 배치', '<ol']) assert.ok(!works.includes(label), `3단계에 ${label}이 남아 있습니다.`);
+    const order = source.slice(source.indexOf("panel('order')"), source.indexOf("panel('publish')"));
+    assert.match(order, /<BookOrderEditor/);
     assert.ok(source.slice(source.indexOf("panel('publish')")).includes('새 판 확정'));
     assert.match(source, /이전 단계/); assert.match(source, /BOOK_STEPS\[stepIndex \+ 1\].title/);
+    // 단계 칸도 다섯.
+    const css = readFileSync('src/modules/class-agit/classAgit.css', 'utf8');
+    assert.match(css, /\.class-agit-steps \{ display: grid; grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+    // 도움말도 다섯 단계를 말한다.
+    const guide = JSON.stringify(TEACHER_GUIDES['class-agit-books']);
+    assert.match(guide, /4 목차 정하기 \/ 5 확정·보관함/);
+    assert.doesNotMatch(guide, /네 단계/);
 });

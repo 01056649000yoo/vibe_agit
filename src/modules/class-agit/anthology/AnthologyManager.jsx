@@ -7,20 +7,26 @@ import { classAgitApi } from '../api/classAgitApi.js';
 import { addBookItems, bookItemFromSource, sortBookItems, normalizeBookPageBreaks, toggleBookPageBreak } from './contract.js';
 import { prepareAnthologyWindow } from './printWindow.js';
 import { useDataExport } from '../../../hooks/useDataExport.js';
-import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, BOOK_PAGE_LAYOUTS, getBookPageLayout } from '../designs.js';
+import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
 import PageTuner from './PageTuner.jsx';
 import DesignPicker from '../teacher/DesignPicker.jsx';
 import BookCover from './BookCover.jsx';
 import SourcePicker from './SourcePicker.jsx';
+import BookOrderEditor from './BookOrderEditor.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
 import '../management.css';
 
-// 전시 준비와 같은 네 단계로 나눈다. 작품을 담을수록 한 화면이 길어지던 것을 3단계 안으로 모았다.
+/*
+ * 다섯 단계. 작품을 담을수록 한 화면이 길어지던 것을 3단계 안으로 모았고(2026-09-06),
+ * 2026-09-15 에 차례를 4단계로 떼어 냈다 — 담기와 순서 정하기가 한 화면에 있으면 100편의 차례가
+ * 담기 단추 아래에 늘어져 안쪽 상자에서 따로 스크롤됐다.
+ */
 const BOOK_STEPS = [
     { id: 'cover', title: '표지 · 여는 글', detail: '제목 · 학급명 · 여는 글' },
     { id: 'design', title: '판형 · 디자인', detail: '실제 출력 크기 · 표지' },
-    { id: 'works', title: '작품 담기', detail: '학생 글 · 전시 작품 · 차례' },
+    { id: 'works', title: '작품 담기', detail: '학생 글 · 전시 작품' },
+    { id: 'order', title: '목차 정하기', detail: '순서 · 묶기 · 쪽 배치' },
     { id: 'publish', title: '확정 · 보관함', detail: '미리보기 · 새 판 · 학생 서가' },
 ];
 
@@ -116,7 +122,6 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         window.open(created.url, '_blank', 'noopener');
         setMessage('구글 문서를 만들었습니다. 문서에서 `삽입 → 목차`와 `삽입 → 페이지 번호`를 누르면 쪽수가 채워집니다.');
     });
-    const move = (index, delta) => { const items = [...book.items]; const target = index + delta; if (target < 0 || target >= items.length) return; const item = items.splice(index, 1)[0]; items.splice(target, 0, item); edit({ ...book, grouping: 'custom', items }); };
     const selected = new Set(book?.items.map((item) => item.studentId));
     const locked = busy || book?.archived;
     const panel = (id) => ({ role: 'tabpanel', id: `${stepId}-panel-${id}`, 'aria-labelledby': `${stepId}-tab-${id}`, hidden: step !== id, className: 'class-agit-step-panel' });
@@ -167,37 +172,34 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             </div>
 
             <div {...panel('works')}>
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>책에 담을 글을 모아요</h2><p>학생 글에서 바로 담거나 만들어 둔 전시의 작품을 가져옵니다. 차례의 순서는 여기서 정합니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>책에 담을 글을 모아요</h2><p>학생 글에서 바로 담거나 만들어 둔 전시의 작품을 가져옵니다. 순서는 다음 단계 `목차 정하기`에서 정합니다.</p></div>
                 <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={locked} onClick={() => setPicker(!picker)}>학생 글에서 담기</Button>
-                    <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button>
-                    <label>작품 묶기<select value={book.grouping} disabled={locked} onChange={(e) => edit({ ...book, grouping: e.target.value, items: sortBookItems(book.items, e.target.value) })}><option value="custom">직접 정한 순서</option><option value="author">학생별</option><option value="topic">주제별</option></select></label>
-                    {/*
-                      * 쪽 배치. `이어붙이기` 는 앞 작품이 끝난 자리에서 이어 붙여 종이를 아끼고,
-                      * 주제가 바뀌는 자리에 간지를 넣는다. 기본은 지금까지의 모양이다.
-                      */}
-                    <label>쪽 배치<select value={getBookPageLayout(book.page_layout).id} disabled={locked} onChange={(e) => edit({ ...book, page_layout: e.target.value })}>
-                        {BOOK_PAGE_LAYOUTS.map((layout) => <option key={layout.id} value={layout.id}>{layout.label}</option>)}
-                    </select></label>
-                    <p className="anthology-hint">{getBookPageLayout(book.page_layout).hint}</p></div>
+                    <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button></div>
                 {projects && <div className="class-agit-book-picker"><h3>가져올 전시</h3>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <Button variant="outline" type="button" key={project.id} disabled={busy} onClick={() => run(async () => {
                     const data = await sourceApi.getWorkspace(classId, project.id);
                     const items = data.draft.items.filter((item) => !item.unavailable && !item.revoked).map((item) => ({ ...item, author: item.authorName, group: item.groupTitle || '' }));
                     const next = addBookItems(book, items); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); setProjects(null); setMessage('전시 작품을 가져왔습니다.');
                 })}>{project.title} 가져오기</Button>)}<Button variant="outline" type="button" onClick={() => setProjects(null)}>가져오기 닫기</Button></div>}
                 {picker && <SourcePicker key={`${classId}:${book.id}`} items={book.items} classId={classId} api={sourceApi} onClose={() => setPicker(false)} onAdd={(values) => { const next = addBookItems(book, values.map((value) => bookItemFromSource(value, classId))); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); }} />}
-                <div className="class-agit-project-heading"><h3>차례 · {book.items.length}편</h3></div>
-                <div className="class-agit-order-panel"><ol className="class-agit-book-items">{book.items.map((item, index) => <li key={item.itemId || item.sourceId}><div><strong>{item.title}</strong><p>{item.author} · {item.group}</p>{(item.sourceChanged || item.unavailable || item.revoked) && <span className="class-agit-error">원글 재확인 필요</span>}</div>
-                    <div className="class-agit-header-actions"><Button variant="outline" type="button" onClick={() => setSource({ ...item, id: item.itemId || item.sourceId })}>읽기</Button>
-                        <Button variant="outline" type="button" disabled={locked || !item.sourceId} onClick={() => run(async () => { const current = await sourceApi.getSource(classId, item.sourceId); setSource({ ...bookItemFromSource(current, classId), id: item.sourceId, refreshing: true }); })}>원글 재확인</Button>
-                        <Button variant="outline" type="button" aria-label={`${item.title} 위로`} disabled={locked || index === 0} onClick={() => move(index, -1)}>↑</Button><Button variant="outline" type="button" aria-label={`${item.title} 아래로`} disabled={locked || index === book.items.length - 1} onClick={() => move(index, 1)}>↓</Button>
-                        <Button variant="outline" type="button" disabled={locked} onClick={() => edit({ ...book, items: book.items.filter((_, i) => i !== index) })}>초안에서 빼기</Button>
-                        {item.itemId && <Button variant="outline" type="button" disabled={busy || dirty || item.revoked} onClick={() => act('withdraw', { item_id: item.itemId })}>수록 철회</Button>}</div></li>)}</ol>
-                    {!book.items.length && <p className="class-agit-empty">아직 담은 작품이 없습니다. 위에서 학생 글이나 전시 작품을 담아 주세요.</p>}</div>
+                {/* 담은 것을 확인하는 짧은 요약. 순서는 4단계에서 정하니 여기서는 몇 편·누구 글인지만 본다. */}
+                <div className="class-agit-project-heading"><h3>담은 글 · {book.items.length}편</h3>
+                    {book.items.length > 0 && <Button variant="outline" type="button" disabled={busy} onClick={() => selectStep('order')}>목차 정하기 →</Button>}</div>
+                {book.items.length === 0
+                    ? <p className="class-agit-empty">아직 담은 작품이 없습니다. 위에서 학생 글이나 전시 작품을 담아 주세요.</p>
+                    : <p className="anthology-hint">{[...new Set(book.items.map((item) => item.author).filter(Boolean))].length}명의 글 · 주제 {[...new Set(book.items.map((item) => item.group).filter(Boolean))].length}가지</p>}
                 <details className="class-agit-participation"><summary>아직 작품이 없는 학생 {workspace.students.filter((student) => !selected.has(student.id)).length}명</summary><p>{workspace.students.filter((student) => !selected.has(student.id)).map((student) => student.name).join(' · ') || '모두 수록했습니다.'}</p></details>
             </div>
 
+            <div {...panel('order')}>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>차례를 정해요</h2><p>끌어서 놓거나 번호로 옮겨 순서를 정하고, 학생별·주제별로 묶거나 쪽 배치를 고릅니다.</p></div>
+                <BookOrderEditor book={book} locked={locked} busy={busy} dirty={dirty} onEdit={edit}
+                    onRead={(item) => setSource({ ...item, id: item.itemId || item.sourceId })}
+                    onRefresh={(item) => run(async () => { const current = await sourceApi.getSource(classId, item.sourceId); setSource({ ...bookItemFromSource(current, classId), id: item.sourceId, refreshing: true }); })}
+                    onWithdraw={(item) => act('withdraw', { item_id: item.itemId })} />
+            </div>
+
             <div {...panel('publish')}>
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>인쇄하고 한 판으로 확정해요</h2><p>초안을 미리 출력해 보고 새 판을 확정합니다. 확정판은 이후 편집과 원글 수정으로 바뀌지 않습니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 05</span><h2>인쇄하고 한 판으로 확정해요</h2><p>초안을 미리 출력해 보고 새 판을 확정합니다. 확정판은 이후 편집과 원글 수정으로 바뀌지 않습니다.</p></div>
                 <div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => printEdition()}>초안 {getBookPaper(book.paper_format).label} 미리보기</Button>
                     {/*
