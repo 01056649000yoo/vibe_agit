@@ -10,6 +10,7 @@ const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCele
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
 const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
+const MyShelfPreview = lazy(() => import('./MyShelfPreview.jsx'))
 const NoticeComposerPreview = lazy(() => import('./NoticeComposerPreview.jsx'))
 const StudentConsentGatePreview = lazy(() => import('./StudentConsentGatePreview.jsx'))
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
@@ -125,6 +126,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '마라톤 완주 축하',
     description: '완주 축하 창과 결승선 반짝임을 실제 카드로 확인한다',
     Component: ReadingMarathonCelebratePreview,
+  }),
+  Object.freeze({
+    id: 'my-shelf',
+    icon: '📖',
+    title: '내 서재 책등',
+    description: '갈래별 책등을 짧은·긴 제목과 나만 보는 글로 꽂아 모양을 점검한다',
+    Component: MyShelfPreview,
   }),
 ])
 

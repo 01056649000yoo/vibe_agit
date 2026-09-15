@@ -8,7 +8,7 @@ import MyAgitModuleSlotHost from '../../modules/MyAgitModuleSlotHost';
 import MyTitleStatusPanel from '../../modules/writing/title-status/MyTitleStatusPanel';
 import MasteryBadges from '../../modules/learning/MasteryBadges';
 import useLearningMastery from '../../modules/learning/useLearningMastery';
-import { FREE_WRITING_TYPE, SELF_WRITING_TYPES, getSelfWritingType } from '../../modules/writing/selfWritingTypes';
+import ShelfBook, { SHELF_SECTIONS } from './ShelfBook';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
@@ -27,120 +27,6 @@ const INK = '#3E2E23';
 const INK_SOFT = '#8D7B6C';
 const SHELF_TTL_MS = 30000;
 
-// 새 글쓰기 유형은 이 배열에 탭 정보와 match만 추가한다.
-// `free`는 아직 분류되지 않은 자율 글을 받는 마지막 폴백이므로 항상 맨 아래에 둔다.
-const SHELF_SECTIONS = [
-    {
-        id: 'assignment', tabLabel: '과제 책장', emptyMessage: '완성한 과제가 아직 없어요.', alwaysVisible: true,
-        match: (post) => post.writing_context !== 'self',
-        label: '과제', icon: '📝',
-        colors: [
-            ['#477DB6', '#28527D', '#193B60'],
-            ['#6589B1', '#365F8C', '#23466B'],
-            ['#426A9B', '#25476F', '#173552']
-        ]
-    },
-    {
-        id: 'reading', tabLabel: SELF_WRITING_TYPES.reading_log.shelfTabLabel,
-        emptyMessage: SELF_WRITING_TYPES.reading_log.emptyMessage, alwaysVisible: true,
-        match: (post) => getSelfWritingType(post)?.id === 'reading_log',
-        label: SELF_WRITING_TYPES.reading_log.label, icon: SELF_WRITING_TYPES.reading_log.icon,
-        colors: [
-            ['#6B9A70', '#3F704A', '#295237'],
-            ['#5E958B', '#356A64', '#28514D'],
-            ['#77955C', '#4E6F37', '#384F29']
-        ]
-    },
-    {
-        id: 'diary', tabLabel: SELF_WRITING_TYPES.diary.shelfTabLabel,
-        emptyMessage: SELF_WRITING_TYPES.diary.emptyMessage, alwaysVisible: true,
-        match: (post) => getSelfWritingType(post)?.id === 'diary',
-        label: SELF_WRITING_TYPES.diary.label, icon: SELF_WRITING_TYPES.diary.icon,
-        colors: [
-            ['#7C86D6', '#4F5AA8', '#343C7A'],
-            ['#8E86C9', '#5C509C', '#3E356F'],
-            ['#6E8FCB', '#42639C', '#2D466F']
-        ]
-    },
-    {
-        id: 'free', tabLabel: FREE_WRITING_TYPE.shelfTabLabel,
-        emptyMessage: FREE_WRITING_TYPE.emptyMessage, alwaysVisible: false,
-        match: (post) => getSelfWritingType(post)?.id === 'free',
-        label: FREE_WRITING_TYPE.label, icon: FREE_WRITING_TYPE.icon,
-        colors: [
-            ['#D17A67', '#A24E48', '#793538'],
-            ['#C88658', '#9D5B32', '#743F23'],
-            ['#9C76A8', '#714E7E', '#54395F']
-        ]
-    }
-];
-
-const shelfSectionFor = (post) => SHELF_SECTIONS.find((section) => section.match(post)) || SHELF_SECTIONS[0];
-
-const stableBookVariant = (post) => String(post.id || post.title || '')
-    .split('')
-    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
-const ShelfBook = ({ post, section, onOpen }) => {
-    const type = section || shelfSectionFor(post);
-    const variant = stableBookVariant(post);
-    const [light, middle, dark] = type.colors[variant % type.colors.length];
-    const title = post.title || '제목 없는 글';
-    const titleLength = Array.from(title).length;
-    const width = titleLength > 16 ? 60 : titleLength > 8 ? 52 : 44;
-    const height = 146 + ((variant % 4) * 7);
-    const isPrivate = post.visibility !== 'class';
-
-    return (
-        <motion.button
-            type="button"
-            role="listitem"
-            onClick={onOpen}
-            aria-label={`${type.label} ‘${title}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}`}
-            title={`${type.icon} ${type.label} · ${title}`}
-            whileHover={{ y: -5, rotate: -1 }}
-            whileTap={{ y: 1, scale: 0.97 }}
-            style={{
-                position: 'relative', flex: `0 0 ${width}px`, width: `${width}px`, height: `${height}px`,
-                padding: '8px 5px 7px', overflow: 'hidden', border: `1px solid ${dark}`,
-                borderRadius: '5px 5px 2px 2px', color: '#FFF9E9', cursor: 'pointer',
-                background: `linear-gradient(90deg,${dark} 0 8%,${light} 13%,${middle} 72%,${dark} 100%)`,
-                boxShadow: 'inset 2px 0 0 rgba(255,255,255,.18), inset -2px 0 0 rgba(0,0,0,.12), 3px 3px 6px rgba(55,31,17,.28)',
-                fontFamily: 'inherit', scrollSnapAlign: 'start'
-            }}
-        >
-            <span aria-hidden="true" style={{
-                position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)',
-                fontSize: '.8rem', lineHeight: 1
-            }}>{type.icon}</span>
-            <span aria-hidden="true" style={{
-                position: 'absolute', top: '25px', right: '5px', bottom: isPrivate ? '30px' : '14px', left: '5px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
-            }}>
-                <span style={{
-                    display: 'block', height: '100%', maxWidth: '100%', overflow: 'hidden',
-                    writingMode: 'vertical-rl', textOrientation: 'upright', color: '#FFFDF5',
-                    whiteSpace: 'normal', wordBreak: 'break-all', fontSize: '.7rem', fontWeight: 900,
-                    lineHeight: 1.18, letterSpacing: '.02em', textAlign: 'center',
-                    textShadow: '0 1px 1px rgba(0,0,0,.35)'
-                }}>
-                    {title}
-                </span>
-            </span>
-            {isPrivate && (
-                <span aria-hidden="true" style={{
-                    position: 'absolute', left: '50%', bottom: '6px', transform: 'translateX(-50%)',
-                    display: 'grid', placeItems: 'center', width: '20px', height: '20px',
-                    borderRadius: '50%', background: 'rgba(35,25,20,.5)', fontSize: '.64rem'
-                }}>🔒</span>
-            )}
-            <span aria-hidden="true" style={{
-                position: 'absolute', left: '5px', right: '5px', bottom: '3px', height: '2px',
-                borderTop: '1px solid rgba(255,255,255,.55)', borderBottom: '1px solid rgba(0,0,0,.25)'
-            }} />
-        </motion.button>
-    );
-};
 
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0, onPointsChange,
@@ -433,7 +319,7 @@ const MyAgitPanel = ({
                                 <div
                                     role={activeShelfPosts.length ? 'list' : undefined}
                                     style={shelfViewMode === 'books' ? {
-                                        minHeight: '182px', display: 'flex', alignItems: 'flex-end', gap: '5px',
+                                        minHeight: '200px', display: 'flex', alignItems: 'flex-end', gap: '5px',
                                         padding: '14px 12px 0', overflowX: 'auto', overscrollBehaviorX: 'contain',
                                         scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box'
                                     } : {
