@@ -3,6 +3,9 @@ import { CLASS_AGIT_LIMITS } from '../policy.js';
 import { assertDraftSources, getSourceExclusion, presentSource } from '../sourceContract.js';
 
 export const ANTHOLOGY_PRINT_SETTINGS = Object.freeze({ paper: 'A4', body_pt: 12, poem_pt: 14, version: 1 });
+export const bookCoverKicker = (book = {}) => Reflect.has(book, 'cover_kicker')
+    ? String(book.cover_kicker || '')
+    : (book.book_type === 'personal' ? '나의 글 모음' : '우리 반의 이야기');
 
 export function bookItemFromSource(source, classId) {
     const reason = getSourceExclusion(source, classId);
@@ -18,7 +21,7 @@ export function addBookItems(book, items) {
 }
 export function buildBookSavePayload(book) {
     assertDraftSources(book.items);
-    return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
+    return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle, cover_kicker: bookCoverKicker(book),
         introduction: book.introduction, class_label: book.class_label, issue_date: book.issue_date, grouping: book.grouping,
         book_type: book.book_type || 'class', owner_student_id: book.owner_student_id || null,
         paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,

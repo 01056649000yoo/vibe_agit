@@ -4,7 +4,7 @@ import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.j
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
 import { classAgitApi } from '../api/classAgitApi.js';
-import { addBookItems, bookItemFromSource, sortBookItems, normalizeBookPageBreaks, toggleBookPageBreak } from './contract.js';
+import { addBookItems, bookCoverKicker, bookItemFromSource, sortBookItems, normalizeBookPageBreaks, toggleBookPageBreak } from './contract.js';
 import { prepareAnthologyWindow } from './printWindow.js';
 import { useDataExport } from '../../../hooks/useDataExport.js';
 import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
@@ -159,6 +159,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 01</span><h2>책의 첫인상을 정해요</h2><p>{ownerStudent ? `${ownerStudent.name} 학생의 이름은 표지에 자동으로 들어갑니다. 책을 여는 작가의 말을 남겨 보세요.` : '표지에 들어갈 제목과 학급명을 적고, 책을 여는 인사말을 남깁니다.'}</p></div>
                 <div className="class-agit-book-layout"><BookCover book={book} />
                     <fieldset className="class-agit-book-settings" disabled={locked}><legend>표지 · 여는 글</legend>
+                        <label>표지 윗문구<input value={bookCoverKicker(book)} maxLength={60} placeholder="비워 두면 표지에서 숨깁니다" onChange={(e) => edit({ ...book, cover_kicker: e.target.value })} /></label>
                         {[['title', '문집 제목', 80], ['subtitle', '부제', 120], ['class_label', '표시 학급명', 80]].map(([key, label, max]) => <label key={key}>{label}<input value={Reflect.get(book, key)} maxLength={max} onChange={(e) => edit({ ...book, [key]: e.target.value })} /></label>)}
                         <label>발행일<input type="date" value={book.issue_date} onChange={(e) => edit({ ...book, issue_date: e.target.value })} /></label>
                         <label>{ownerStudent ? '작가의 말' : '여는 글'}<textarea value={book.introduction} maxLength={2000} rows={5} onChange={(e) => edit({ ...book, introduction: e.target.value })} /></label>
@@ -179,6 +180,11 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
 
             <div {...panel('works')}>
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>책에 담을 글을 모아요</h2><p>학생 글에서 바로 담거나 만들어 둔 전시의 작품을 가져옵니다. 순서는 다음 단계 `목차 정하기`에서 정합니다.</p></div>
+                <div className={`anthology-book-kind ${ownerStudent ? 'is-personal' : 'is-class'}`} role="status">
+                    <span>{ownerStudent ? '개인 문집' : '우리 반 문집'}</span>
+                    <div><strong>{ownerStudent ? `${ownerStudent.name} 학생 한 사람의 책` : '여러 학생이 함께 만드는 책'}</strong>
+                        <p>{ownerStudent ? '목차에는 지은이를 표시하고, 각 작품 본문에서는 같은 이름을 반복하지 않습니다.' : '목차와 각 작품 본문에 글쓴이를 표시합니다.'} 문집 종류는 만든 뒤 바꿀 수 없습니다.</p></div>
+                </div>
                 <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={locked} onClick={() => setPicker(!picker)}>학생 글에서 담기</Button>
                     {!ownerStudent && <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button>}</div>
                 {projects && <div className="class-agit-book-picker"><h3>가져올 전시</h3>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <Button variant="outline" type="button" key={project.id} disabled={busy} onClick={() => run(async () => {

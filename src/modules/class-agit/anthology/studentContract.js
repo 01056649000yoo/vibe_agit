@@ -11,7 +11,7 @@ export function assertStudentBooks(data, editionId = null, workId = null) {
         if (!keys(data, ['version', 'books']) || !Array.isArray(data.books) || data.books.length > CLASS_AGIT_LIMITS.anthologyShelfBooks || data.books.some((b) => !keys(b, ['id', 'number', 'created_at', 'title', 'subtitle', 'design', 'paper', 'book_type']) || !validDesign(b) || !text(b.id, 36) || !Number.isInteger(b.number) || b.number < 1 || !text(b.title, 80) || !text(b.subtitle, 120) || (b.book_type !== undefined && b.book_type !== null && b.book_type !== 'class' && b.book_type !== 'personal'))) fail();
     } else {
         if (!keys(data, ['version', 'id', 'number', 'book', 'works', 'work']) || data.id !== editionId || !Number.isInteger(data.number) || data.number < 1
-            || !keys(data.book, ['title', 'subtitle', 'introduction', 'class_label', 'term', 'issue_date', 'grouping', 'design', 'paper', 'book_type', 'owner_student_id', 'owner_student_name', 'page_breaks']) || !validDesign(data.book) || !text(data.book.title, 80) || !text(data.book.introduction, 2000)) fail();
+            || !keys(data.book, ['title', 'subtitle', 'cover_kicker', 'introduction', 'class_label', 'term', 'issue_date', 'grouping', 'design', 'paper', 'book_type', 'owner_student_id', 'owner_student_name', 'page_breaks']) || !validDesign(data.book) || !text(data.book.title, 80) || !text(data.book.introduction, 2000)) fail();
         if (workId) {
             const work = data.work;
             if (data.works !== null || !keys(work, ['id', 'title', 'author', 'format', 'kindLabel', 'excerpt', 'blocks', 'group']) || work?.id !== workId || !id(work.id) || !text(work.title, 200) || !text(work.author, 30)

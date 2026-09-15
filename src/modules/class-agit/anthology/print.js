@@ -1,6 +1,6 @@
 import { buildWritingPdfHtml } from '../../writing/export/writingPdfExport.js';
 import { escapePdfHtml, PDF_KICKER_CLASSES } from '../../writing/export/pdfRenderContract.js';
-import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS } from './contract.js';
+import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS, bookCoverKicker } from './contract.js';
 import { getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
 import { paginateAnthology } from './pagination.js';
 
@@ -92,7 +92,8 @@ ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{displa
 .anthology-page-number{border-top:.2mm solid #cbd5e1;padding-top:2mm;color:#475569}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
-    const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>${personal ? '나의 글 모음' : '우리 반의 이야기'}</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div>${personal ? `<p><strong>${e(book.owner_student_name)} 지음</strong></p>` : ''}<p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
+    const kicker = bookCoverKicker(book);
+    const front = `<div data-cover data-design="${design.id}" data-compact="${[kicker, book.title, book.subtitle, book.class_label].join('').length > 180}">${kicker ? `<p>${e(kicker)}</p>` : ''}<h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div>${personal ? `<p><strong>${e(book.owner_student_name)} 지음</strong></p>` : ''}<p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
 ${book.introduction ? `<section data-introduction><h1>${personal ? '작가의 말' : '여는 글'}</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
 ${book.works.map((w, i) => {
     /*
@@ -104,7 +105,7 @@ ${book.works.map((w, i) => {
         const groupTitle = groupStarts.get(i);
         return groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
     }
-    return `<div data-toc-row="${i}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
+    return `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
 }).join('')}
 ${[...forcedBreaks].map((index) => `<div data-forced-break="${index}"></div>`).join('')}
 ${[...groupStarts.entries()].map(([index, title]) => {
@@ -112,7 +113,7 @@ ${[...groupStarts.entries()].map(([index, title]) => {
     const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;
     const rows = book.works.slice(index, until).map((w, offset) => {
         const workIndex = index + offset;
-        return `<div data-divider-row="${workIndex}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
+        return `<div data-divider-row="${workIndex}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
     }).join('');
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;

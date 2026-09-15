@@ -334,6 +334,11 @@
 
 /* 4단계 · 목차 정하기(2026-09-15). 한 편이 한 줄이고 안쪽 스크롤 상자가 없다 — 화면 스크롤을 그대로 쓴다. */
 .book-order__settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-4); margin-bottom: var(--ui-space-4); }
+.anthology-book-kind { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--ui-space-3); align-items: start; margin-bottom: var(--ui-space-4); padding: var(--ui-space-4); border: 1px solid #cbd8cb; border-radius: 14px; background: #f5f8f1; }
+.anthology-book-kind > span { padding: 5px 9px; border-radius: 999px; background: #355c46; color: #fff; font-size: var(--ui-text-xs); font-weight: 800; }
+.anthology-book-kind.is-personal > span { background: #7a4f81; }
+.anthology-book-kind strong { display: block; color: var(--ca-ink); }
+.anthology-book-kind p { margin: 4px 0 0; color: var(--ca-muted); font-size: var(--ui-text-sm); line-height: 1.55; }
 .book-order__settings fieldset { min-width: 0; margin: 0; padding: var(--ui-space-4); border: 1px solid var(--ca-line); border-radius: 16px; background: #fff; }
 .book-order__settings legend { padding: 0 6px; font-size: var(--ui-text-base); font-weight: 800; color: var(--ca-ink); }
 .book-order__settings legend span { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 6px; border-radius: 50%; background: #355c46; color: #fff; font-size: var(--ui-text-xs); }

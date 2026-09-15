@@ -17,7 +17,7 @@
  * 검사에서 그대로 부를 수 있다. 실제 전송은 `exportAnthologyToGoogleDoc` 한 곳뿐이다.
  */
 
-import { assertBookEdition } from './contract.js';
+import { assertBookEdition, bookCoverKicker } from './contract.js';
 import { createGoogleDocument, applyGoogleDocRequests, googleDocEditUrl } from '../../writing/export/googleDocsApi.js';
 
 /** 구글 문서 편집기가 감당할 만한 크기로 제한한다. PDF 와 같은 상한을 쓴다. */
@@ -69,7 +69,8 @@ export function buildAnthologyDocRequests(edition) {
     };
 
     // ── 표지 ──────────────────────────────────────────────────────────────
-    write(`${personal ? '나의 글 모음' : '우리 반의 이야기'}\n`, { alignment: 'CENTER' });
+    const kicker = bookCoverKicker(book);
+    if (kicker) write(`${kicker}\n`, { alignment: 'CENTER' });
     write(`${book.title}\n`, { style: 'TITLE', alignment: 'CENTER' });
     if (book.subtitle) write(`${book.subtitle}\n`, { alignment: 'CENTER' });
     if (personal && book.owner_student_name) write(`${book.owner_student_name} 지음\n`, { alignment: 'CENTER' });
@@ -94,7 +95,7 @@ export function buildAnthologyDocRequests(edition) {
     write('\n');
     // 제목을 `HEADING_1` 로 쓰지 않는다. 그러면 자동 목차가 목차 자신을 포함해 버린다.
     write('목차\n', { bold: true });
-    book.works.forEach((work, index) => write(`${index + 1}. ${work.title}${personal ? '' : ` · ${work.author}`}\n`));
+    book.works.forEach((work, index) => write(`${index + 1}. ${work.title} · ${work.author}\n`));
     pageBreak();
 
     // ── 본문 ──────────────────────────────────────────────────────────────

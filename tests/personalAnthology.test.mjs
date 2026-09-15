@@ -18,19 +18,21 @@ const edition = {
     }
 };
 
-test('개인 문집은 표지·작가의 말·판권에만 작가를 두고 작품마다 이름을 반복하지 않는다', async () => {
+test('개인 문집은 목차에 지은이를 싣고 작품 본문에서는 같은 이름을 반복하지 않는다', async () => {
     const html = await buildAnthologyHtml(edition);
     assert.match(html, /나의 글 모음/);
     assert.match(html, /김하늘 지음/);
     assert.match(html, /<h1>작가의 말<\/h1>/);
     assert.match(html, /anthology-personal \.pdf-entry__author/);
-    assert.doesNotMatch(html, /첫 번째 글 · 김하늘|두 번째 시 · 김하늘/);
+    assert.match(html, /data-toc-row="0"><span>첫 번째 글 · 김하늘/);
+    assert.match(html, /data-toc-row="1"><span>두 번째 시 · 김하늘/);
 
     const { requests } = buildAnthologyDocRequests(edition);
     const text = requests.flatMap((request) => request.insertText?.text || []).join('');
     assert.match(text, /김하늘 지음/);
     assert.match(text, /작가의 말/);
-    assert.doesNotMatch(text, /첫 번째 글 · 김하늘|두 번째 시 · 김하늘/);
+    assert.match(text, /1\. 첫 번째 글 · 김하늘/);
+    assert.match(text, /2\. 두 번째 시 · 김하늘/);
 });
 
 test('개인 문집은 학생당 하나이며 다른 학생 글과 다른 학생의 열람을 서버에서 막는다', () => {
@@ -45,5 +47,7 @@ test('개인 문집 생성 시 학생을 먼저 고르고 이후 작품 찾기�
     const picker = readFileSync('src/modules/class-agit/selection/StudentBulkPicker.jsx', 'utf8');
     assert.match(manager, /학생 개인 문집 만들기/);
     assert.match(manager, /ownerStudent=\{ownerStudent\}/);
+    assert.match(manager, /목차에는 지은이를 표시하고, 각 작품 본문에서는 같은 이름을 반복하지 않습니다/);
+    assert.match(manager, /문집 종류는 만든 뒤 바꿀 수 없습니다/);
     assert.match(picker, /student\.id === fixedStudent\.id/);
 });

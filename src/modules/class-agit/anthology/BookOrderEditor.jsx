@@ -96,7 +96,7 @@ export default function BookOrderEditor({ book, locked, busy, dirty, onEdit, onR
     const moveTo = (from, to) => setOrder(moveBookItem(items, from, to));
     const step = (index, delta) => moveTo(index, index + delta);
     const remove = (index) => onEdit({ ...book, items: items.filter((_, i) => i !== index) });
-    const rowProps = { count, locked, busy, dirty, hideAuthor: personal, onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
+    const rowProps = { count, locked, busy, dirty, hideAuthor: false, onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
 
     return <section className="book-order" aria-label="목차 정하기">
         <div className="book-order__settings">
