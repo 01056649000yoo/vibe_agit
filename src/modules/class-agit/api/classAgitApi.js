@@ -32,6 +32,10 @@ export const classAgitApi = {
         const params = { p_class_id: classId, p_query: query, p_scope: scope, p_cursor: cursor, p_limit: limits.missionPage };
         return browse(classId, 'missions', params, 1, 100, 'get_class_agit_missions_v1');
     },
+    /** 학생 명단과 각자 담을 수 있는 글 수 — 학생째 담기의 목록. 학급 인원이라 한 번에 온다. */
+    async getStudents(classId) {
+        return browse(classId, 'students', { p_class_id: classId }, 1, 100, 'get_class_agit_students_v1');
+    },
     async getCandidates(classId, filters = {}) {
         return browse(classId, 'candidates', { p_class_id: classId, p_filters: { ...filters, limit: limits.candidatePage } }, 2, 50, 'get_class_agit_candidates_v2');
     },

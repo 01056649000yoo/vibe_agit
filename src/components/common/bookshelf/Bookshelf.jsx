@@ -24,7 +24,7 @@ import {
  */
 
 const FRAME_STYLE = {
-    margin: 0, overflow: 'hidden', border: '8px solid #85502E', borderBottom: 0,
+    margin: 0, overflow: 'hidden', borderWidth: '8px 8px 0', borderStyle: 'solid', borderColor: '#85502E',
     borderRadius: '8px 8px 0 0', background: 'linear-gradient(180deg,#E8CFAC 0%,#D9B582 100%)',
     boxShadow: 'inset 0 8px 16px rgba(67,37,18,.2), inset 5px 0 6px rgba(67,37,18,.12), inset -5px 0 6px rgba(67,37,18,.12)'
 };

@@ -22,8 +22,16 @@ export function createClassAgitBrowseFixture(sources, classId, missions) {
                 .map((item) => ({ ...item, review_count: current().filter((entry) => entry.mission_id === item.id && !getSourceExclusion(entry, classId)).length }));
             return page(all, cursor, limits.missionPage, 1);
         },
-        async getCandidates(_classId, { query = '', mission_id = null, cursor = null, sort = 'recent', excluded_students = [] } = {}) {
-            const all = current().filter((item) => !getSourceExclusion(item, classId) && (!mission_id || item.mission_id === mission_id)
+        // 학생째 담기의 명단. 담을 수 있는 글 수는 getCandidates 와 같은 자격으로 센다.
+        async getStudents() {
+            const counts = new Map();
+            for (const item of current()) if (!getSourceExclusion(item, classId)) counts.set(item.student_id, (counts.get(item.student_id) || 0) + 1);
+            const names = new Map(current().map((item) => [item.student_id, item.student_name]));
+            const items = [...names].map(([id, name]) => ({ id, name, review_count: counts.get(id) || 0 })).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+            return { version: 1, class_id: classId, items };
+        },
+        async getCandidates(_classId, { query = '', mission_id = null, student_id = null, cursor = null, sort = 'recent', excluded_students = [] } = {}) {
+            const all = current().filter((item) => !getSourceExclusion(item, classId) && (!mission_id || item.mission_id === mission_id) && (!student_id || item.student_id === student_id)
                 && !excluded_students.includes(item.student_id) && `${item.title} ${item.student_name}`.toLocaleLowerCase('ko-KR').includes(query.toLocaleLowerCase('ko-KR')))
                 .sort((a, b) => (sort === 'student' ? a.student_name.localeCompare(b.student_name, 'ko') : 0) || b.updated_at.localeCompare(a.updated_at) || b.id.localeCompare(a.id))
                 .map(({ id, title, student_name, student_id, mission_id: missionId, group_title, content, updated_at }) => ({ id, title, student_name, student_id, mission_id: missionId, group_title, excerpt: content.slice(0, 96), updated_at }));

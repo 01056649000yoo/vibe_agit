@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { collectMissionSources, describeBulkResult } from '../src/modules/class-agit/anthology/bulkAdd.js';
+import { collectMissionSources, collectStudentSources, describeBulkResult } from '../src/modules/class-agit/anthology/bulkAdd.js';
 import { CLASS_AGIT_LIMITS as limits } from '../src/modules/class-agit/policy.js';
 import { readFileSync } from 'node:fs';
 
 const read = (file) => readFileSync(file, 'utf8');
 const picker = read('src/modules/class-agit/anthology/SourcePicker.jsx');
 const bulk = read('src/modules/class-agit/selection/MissionBulkPicker.jsx');
+const studentBulk = read('src/modules/class-agit/selection/StudentBulkPicker.jsx');
+const studentMigration = read('supabase/migrations/20261295_anthology_student_bulk_add.sql');
 const browser = read('src/modules/class-agit/selection/SourceBrowser.jsx');
 const workspace = read('src/modules/class-agit/selection/SelectionWorkspace.jsx');
 const tuner = read('src/modules/class-agit/anthology/PageTuner.jsx');
@@ -87,16 +89,47 @@ test('빼는 학생이 서버 한도를 넘으면 거르기를 포기한다', as
     assert.deepEqual(sent, []);
 });
 
-test('담는 방법은 둘이고 주제째 담기가 기본이다', () => {
+test('담는 방법은 셋이고 주제째 담기가 기본이다', () => {
     /*
      * 2026-09-14 요청: 주제별로 담을 때는 주제만 고르면 되는데 작품이 전부 펼쳐져 불편하다.
      * 문집은 대부분 "이 미션 글 다 넣기" 라 주제째가 기본이고, 골라 담기는 몇 편만 고를 때 쓴다.
+     * 2026-09-15 요청: 학생별로 문집을 만들고 싶다 → 학생째 담기.
      */
     assert.match(picker, /const \[way, setWay\] = useState\('mission'\)/);
     assert.match(picker, /id: 'mission', label: '주제째 담기'/);
+    assert.match(picker, /id: 'student', label: '학생째 담기'/);
     assert.match(picker, /id: 'work', label: '작품 골라 담기'/);
-    // 주제째 담기 화면은 작품을 펼치지 않는다 — 미션 한 줄과 담기 단추뿐이다.
+    // 통째로 담는 화면은 작품을 펼치지 않는다 — 한 줄과 담기 단추뿐이다.
     assert.ok(!bulk.includes('getCandidates('), '주제째 담기 화면이 작품 목록을 직접 부르고 있습니다.');
+    assert.ok(!studentBulk.includes('getCandidates('), '학생째 담기 화면이 작품 목록을 직접 부르고 있습니다.');
+    // 학생 목록은 한 번에 받는다 — 학생마다 검색을 돌리면 30명이면 30번이다.
+    assert.match(studentBulk, /api\.getStudents\(classId\)/);
+});
+
+test('학생째 담기는 학생으로만 거르고, 이미 담은 학생 빼기는 받지 않는다', async () => {
+    /*
+     * 2026-09-15 "학생별로 문집을 만드는 기능이 있으면 좋겠어. 기존 기능에 필터링만 추가하면 되는걸까?"
+     * — 그렇다. 서버 검색에 student_id 조건 하나를 더하고, 모으는 고리는 주제째 담기와 같은 것을 쓴다.
+     */
+    const sent = [];
+    const api = { async getCandidates(_class, filters) { sent.push(filters); return { items: [{ id: 'post-1' }, { id: 'post-2' }], has_more: false, next_cursor: null }; },
+        async getSources(_class, ids) { return ids.map((id) => ({ id, source: { id } })); } };
+    const result = await collectStudentSources(api, classId, { studentId: 's1', capacity: 10, excludedStudents: ['s9'] });
+    assert.equal(result.sources.length, 2);
+    assert.equal(sent[0].student_id, 's1');
+    assert.equal(sent[0].mission_id, undefined, '미션 조건이 섞이면 그 학생의 한 미션 글만 담긴다.');
+    assert.deepEqual(sent[0].excluded_students, [], '학생 한 명을 담는데 학생을 빼는 조건은 뜻이 없다.');
+    await assert.rejects(collectStudentSources(api, classId, { capacity: 10 }), /담을 학생을 골라 주세요/);
+    // 자리 검사는 같은 고리라 학생째도 똑같이 막힌다.
+    await assert.rejects(collectStudentSources(api, classId, { studentId: 's1', capacity: 0 }), /남은 자리가 없습니다/);
+
+    // 서버 쪽: 검색 함수에 학생 조건이 있고, 학생 목록 함수의 자격이 검색과 같다(승인·미반려·학급 공개·시/글).
+    assert.match(studentMigration, /\(v_student IS NULL OR p\.student_id=v_student\)/);
+    assert.match(studentMigration, /CREATE OR REPLACE FUNCTION public\.get_class_agit_students_v1\(p_class_id uuid\)/);
+    const listBody = studentMigration.slice(studentMigration.indexOf('get_class_agit_students_v1(p_class_id uuid)'));
+    for (const gate of ["p.writing_context='assignment'", 'p.is_confirmed IS TRUE', 'p.is_returned IS NOT TRUE', "p.visibility='class'", "IN('prose','poem')"]) {
+        assert.ok(listBody.includes(gate), `학생 목록의 글 수가 검색과 다른 자격으로 센다: ${gate}`);
+    }
 });
 
 test('글 보기로 넘어가면 그 미션이 골라진 채로 열린다', () => {

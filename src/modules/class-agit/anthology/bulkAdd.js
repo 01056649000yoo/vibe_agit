@@ -1,7 +1,7 @@
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 
 /*
- * 주제(미션) 하나를 통째로 담기.
+ * 주제(미션) 하나, 또는 학생 한 명의 글을 통째로 담기.
  *
  * 왜 따로 두나: 담기 화면은 원래 전시실 큐레이션용이라 글을 **한 편씩** 고르게 되어 있다.
  * 문집은 대부분 "이 미션 글 다 넣기" 라서, 30편짜리 미션이면 체크를 서른 번 해야 했다(2026-09-14 지적).
@@ -13,8 +13,21 @@ import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 // 커서가 잘못돼 제자리를 돌 때 멈추는 고리. 한도만큼 받으려면 최대 몇 번인지에서 두 번을 더한다.
 const MAX_ROUNDS = Math.ceil(limits.anthologyWorks / limits.candidatePage) + 2;
 
-export async function collectMissionSources(api, classId, { missionId, capacity, added = new Set(), excludedStudents = [], onProgress } = {}) {
+export async function collectMissionSources(api, classId, { missionId, ...rest } = {}) {
     if (!missionId) throw new Error('담을 미션을 골라 주세요.');
+    return collectSources(api, classId, { mission_id: missionId }, rest);
+}
+
+/**
+ * 학생 한 명의 글을 모두 담기(2026-09-15 "학생별 문집"). 미션 대신 학생으로 거를 뿐, 나머지는 같다.
+ * 학생 한 명이면 "이미 담은 학생 빼기" 는 뜻이 없어 받지 않는다.
+ */
+export async function collectStudentSources(api, classId, { studentId, ...rest } = {}) {
+    if (!studentId) throw new Error('담을 학생을 골라 주세요.');
+    return collectSources(api, classId, { student_id: studentId }, { ...rest, excludedStudents: [] });
+}
+
+async function collectSources(api, classId, filter, { capacity, added = new Set(), excludedStudents = [], onProgress } = {}) {
     if (!(capacity > 0)) throw new Error(`문집에 남은 자리가 없습니다. 한 권에 ${limits.anthologyWorks}편까지 담을 수 있습니다.`);
     const ids = [];
     const seen = new Set();
@@ -22,7 +35,7 @@ export async function collectMissionSources(api, classId, { missionId, capacity,
     for (let round = 0; round < MAX_ROUNDS; round++) {
         // 커서를 받아야 다음 쪽을 부를 수 있어 하나씩 기다린다.
         const page = await api.getCandidates(classId, {
-            mission_id: missionId, query: '', sort: 'student',
+            ...filter, query: '', sort: 'student',
             // 서버가 100명까지만 받는다. 그보다 많으면 거르지 않고 담은 뒤 화면에서 뺀다.
             excluded_students: excludedStudents.length <= limits.maxCandidates ? excludedStudents : [],
             cursor,
