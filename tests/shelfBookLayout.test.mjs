@@ -198,3 +198,43 @@ test('책장을 보여 주는 세 화면 모두 공용 책장·책등만 쓴다'
     const teacher = await readFile('src/components/teacher/TeacherStudentAgitViewer.jsx', 'utf8');
     assert.doesNotMatch(teacher, /const SHELF_SECTIONS = /);
 });
+
+/*
+ * 2026-09-15 "12권 넘으면 밀어서 다음 책을 보는 애니메이션." 옆으로 길게 스크롤하던 줄을 칸으로 나눴다.
+ * 칸 나누기는 순수 함수(shelfPages)라 여기서 값으로 검사한다. 미끄러지는 움직임 자체는 미리보기에서 눈으로 본다.
+ */
+test('책장은 한 칸 최대 12권이고, 화면이 좁으면 들어가는 만큼만 꽂아 책이 잘리지 않는다', async () => {
+    const { SHELF_PAGE_MAX_BOOKS, SHELF_ROW_GAP, SHELF_ROW_PADDING_X, shelfPages } = await import('../src/components/common/bookshelf/shelfBookLayout.js');
+    assert.equal(SHELF_PAGE_MAX_BOOKS, 12);
+    const posts = (count, length = 6) => Array.from({ length: count }, (_, i) => ({ id: i, title: '가'.repeat(length) }));
+
+    // 폭을 모르면(아직 못 잼) 12권씩
+    assert.deepEqual(shelfPages(posts(30), 0).map((p) => p.length), [12, 12, 6]);
+    assert.deepEqual(shelfPages(posts(12), 0).map((p) => p.length), [12]);
+    assert.deepEqual(shelfPages([], 0), []);
+    assert.deepEqual(shelfPages(null, 0), []);
+
+    // 폰 폭(390): 54px 책이 5~6권. 어떤 칸도 줄 폭을 넘지 않는다.
+    const inner = 390 - SHELF_ROW_PADDING_X * 2;
+    for (const page of shelfPages(posts(30), 390)) {
+        const filled = page.length * 54 + (page.length - 1) * SHELF_ROW_GAP;
+        assert.ok(filled <= inner, `칸이 폭을 넘친다: ${filled} > ${inner}`);
+        assert.ok(page.length <= SHELF_PAGE_MAX_BOOKS);
+    }
+    // 넓은 화면이어도 12권이 끝
+    assert.deepEqual(shelfPages(posts(30, 3), 5000).map((p) => p.length), [12, 12, 6]);
+    // 책 하나가 폭보다 커도 한 권은 꽂는다(무한 루프·빈 칸 없음)
+    assert.deepEqual(shelfPages(posts(3), 10).map((p) => p.length), [1, 1, 1]);
+    // 순서는 그대로
+    assert.deepEqual(shelfPages(posts(30), 0).flat().map((p) => p.id), posts(30).map((p) => p.id));
+
+    // 세 화면 모두 책을 items/renderItem 으로 넘겨 칸 나누기를 받는다 — children 으로 직접 꽂으면 넘기기가 없다.
+    for (const path of [
+        'src/components/student/MyAgitPanel.jsx',
+        'src/components/teacher/TeacherStudentAgitViewer.jsx',
+        'src/modules/community/friends-hideout/FriendWritingShelf.jsx',
+    ]) {
+        const text = await readFile(path, 'utf8');
+        assert.match(text, /<Bookshelf[\s\S]*?renderItem=\{/, `${path} 가 책을 칸으로 안 나눈다`);
+    }
+});

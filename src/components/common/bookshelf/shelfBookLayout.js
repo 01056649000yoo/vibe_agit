@@ -134,3 +134,41 @@ export const shelfBookPalette = (colors, variant) => {
         band: variant % 3 === 0 ? '#E9C97A' : '#F3DFA6',
     };
 };
+
+/*
+ * 책장 넘기기(2026-09-15). "12권 넘으면 밀어서 다음 책을 보는 애니메이션."
+ * 한 칸에 최대 12권. 화면이 좁아 12권이 안 들어가면 **들어가는 만큼만** 꽂는다 — 책은 절대 줄이지 않고
+ * 잘리지도 않는다(폰에서는 5~6권). 그래서 칸 나누기는 책 폭의 합으로 정한다.
+ */
+export const SHELF_PAGE_MAX_BOOKS = 12;
+export const SHELF_ROW_GAP = 5;
+export const SHELF_ROW_PADDING_X = 12;
+
+/**
+ * 책들을 칸(page)으로 나눈다. 앞에서부터 차례로 채우고, 12권이 되거나 폭이 차면 다음 칸.
+ * @param items      책이 될 것들(글)
+ * @param innerWidth 책을 꽂는 줄의 안쪽 폭(px). 0 이하(아직 못 잼)면 폭은 무시하고 12권씩 끊는다
+ * @param widthOf    책 한 권의 폭을 주는 함수. 기본은 제목으로 정하는 규칙
+ */
+export const shelfPages = (items, innerWidth, widthOf = (item) => shelfBookWidth(item?.title)) => {
+    const list = Array.isArray(items) ? items : [];
+    if (list.length === 0) return [];
+    const usable = innerWidth > 0 ? innerWidth - SHELF_ROW_PADDING_X * 2 : Infinity;
+    const pages = [];
+    let page = [];
+    let filled = 0;
+    for (const item of list) {
+        const width = widthOf(item);
+        const next = page.length === 0 ? width : filled + SHELF_ROW_GAP + width;
+        if (page.length > 0 && (page.length >= SHELF_PAGE_MAX_BOOKS || next > usable)) {
+            pages.push(page);
+            page = [];
+            filled = width;
+        } else {
+            filled = next;
+        }
+        page.push(item);
+    }
+    if (page.length > 0) pages.push(page);
+    return pages;
+};

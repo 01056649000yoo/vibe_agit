@@ -410,10 +410,10 @@ const TeacherStudentAgitViewer = ({
                                 {shelfError ? (
                                     <div className="teacher-student-agit__shelf-state is-error">{shelfError}</div>
                                 ) : (
-                                    <Bookshelf ariaLabel={`${activeShelf?.tabLabel || '책장'} 글 목록`} hasItems={Boolean(activeShelf?.posts.length)}>
-                                        {shelfLoading ? (
-                                            <BookshelfNotice>책장을 정리하는 중…</BookshelfNotice>
-                                        ) : activeShelf?.posts.length ? activeShelf.posts.map((post) => (
+                                    <Bookshelf
+                                        ariaLabel={`${activeShelf?.tabLabel || '책장'} 글 목록`}
+                                        items={shelfLoading ? undefined : activeShelf?.posts}
+                                        renderItem={(post) => (
                                             <ShelfBook
                                                 key={post.id}
                                                 post={post}
@@ -421,7 +421,11 @@ const TeacherStudentAgitViewer = ({
                                                 note={`${formatNumber(post.char_count)}자`}
                                                 onOpen={() => openShelfPost(post)}
                                             />
-                                        )) : (
+                                        )}
+                                    >
+                                        {shelfLoading ? (
+                                            <BookshelfNotice>책장을 정리하는 중…</BookshelfNotice>
+                                        ) : (
                                             <BookshelfNotice icon="🪵">이 책장에는 완성한 글이 없습니다.</BookshelfNotice>
                                         )}
                                     </Bookshelf>

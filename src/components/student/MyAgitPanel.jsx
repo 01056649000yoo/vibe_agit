@@ -311,16 +311,17 @@ const MyAgitPanel = ({
                             id="my-agit-bookshelf"
                             ariaLabel={`${activeShelf.tabLabel} 글 목록`}
                             mode={shelfViewMode}
-                            hasItems={activeShelfPosts.length > 0}
+                            items={loading ? undefined : activeShelfPosts}
+                            renderItem={(post) => (
+                                <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
+                            )}
                             style={{ margin: '0 10px' }}
                         >
                             {loading ? (
                                 <BookshelfNotice>책을 꽂는 중... 📚</BookshelfNotice>
                             ) : activeShelfPosts.length === 0 ? (
                                 <BookshelfNotice icon="🪵">{activeShelf.emptyMessage}</BookshelfNotice>
-                            ) : shelfViewMode === 'books' ? activeShelfPosts.map((post) => (
-                                <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
-                            )) : activeShelfPosts.map((post) => (
+                            ) : shelfViewMode === 'books' ? null : activeShelfPosts.map((post) => (
                                 <button
                                     key={post.id}
                                     type="button"
@@ -348,7 +349,6 @@ const MyAgitPanel = ({
                             color: '#80624D', fontSize: '.64rem', fontWeight: 850
                         }}>
                             <span>{activeShelf.icon} {activeShelf.label} {activeShelfPosts.length}권</span>
-                            {shelfViewMode === 'books' && activeShelfPosts.length > 7 && <span style={{ whiteSpace: 'nowrap' }}>옆으로 넘기기 →</span>}
                         </div>
                     </section>
 

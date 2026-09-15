@@ -247,10 +247,8 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
             ) : (
                 <Bookshelf
                     ariaLabel={`${FILTERS.find((item) => item.id === filter)?.label || '전체 책장'} 책등`}
-                    hint="← 책장을 좌우로 밀어 더 많은 글을 찾아보세요 →"
-                    style={{ borderRadius: '15px 15px 0 0' }}
-                >
-                    {visiblePosts.map((post) => {
+                    items={visiblePosts}
+                    renderItem={(post) => {
                         const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
                         return (
                             <ShelfBook
@@ -262,8 +260,9 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                                 onOpen={() => handleOpenPost(post)}
                             />
                         );
-                    })}
-                </Bookshelf>
+                    }}
+                    style={{ borderRadius: '15px 15px 0 0' }}
+                />
             )}
 
             <style>{`
