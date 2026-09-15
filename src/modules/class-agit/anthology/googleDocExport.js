@@ -95,7 +95,7 @@ export function buildAnthologyDocRequests(edition) {
     write('\n');
     // 제목을 `HEADING_1` 로 쓰지 않는다. 그러면 자동 목차가 목차 자신을 포함해 버린다.
     write('목차\n', { bold: true });
-    book.works.forEach((work, index) => write(`${index + 1}. ${work.title} · ${work.author}\n`));
+    book.works.forEach((work, index) => write(`${index + 1}. ${work.title}${personal ? '' : ` · ${work.author}`}\n`));
     pageBreak();
 
     // ── 본문 ──────────────────────────────────────────────────────────────

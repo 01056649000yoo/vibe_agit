@@ -101,11 +101,11 @@ ${book.works.map((w, i) => {
      * 차례가 몇 쪽이 된다(2026-09-13 지적). 작품 목록은 **간지**로 옮겼다 — 간지는 주제
      * 이름 한 줄뿐이라 어차피 비어 있어, 거기 실으면 종이를 한 장도 더 쓰지 않는다.
      */
-    if (continuous) {
+    if (continuous && book.grouping === 'topic' && !personal) {
         const groupTitle = groupStarts.get(i);
         return groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
     }
-    return `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+    return `<div data-toc-row="${i}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
 }).join('')}
 ${[...forcedBreaks].map((index) => `<div data-forced-break="${index}"></div>`).join('')}
 ${[...groupStarts.entries()].map(([index, title]) => {
@@ -113,7 +113,7 @@ ${[...groupStarts.entries()].map(([index, title]) => {
     const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;
     const rows = book.works.slice(index, until).map((w, offset) => {
         const workIndex = index + offset;
-        return `<div data-divider-row="${workIndex}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+        return `<div data-divider-row="${workIndex}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
     }).join('');
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;

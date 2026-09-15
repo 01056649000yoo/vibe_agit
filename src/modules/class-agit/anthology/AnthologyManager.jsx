@@ -14,6 +14,8 @@ import BookCover from './BookCover.jsx';
 import SourcePicker from './SourcePicker.jsx';
 import BookOrderEditor from './BookOrderEditor.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
+import { collectStudentSources, describeBulkResult } from './bulkAdd.js';
+import { CLASS_AGIT_LIMITS } from '../policy.js';
 import '../classAgit.css';
 import '../management.css';
 
@@ -159,7 +161,16 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         {!book && workspace && <><p>학급의 글을 함께 묶거나, 한 학생의 작품만 모은 개인 문집을 만들 수 있습니다.</p>{message && <p role="status">{message}</p>}
             <div className="class-agit-header-actions"><Button variant="primary" type="button" disabled={busy} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); openBook(await api.bookAction(classId, 'create', { book_id: createId.current, book_type: 'class' })); createId.current = null; })}>우리 반 문집 만들기</Button>
                 <Button variant="outline" type="button" disabled={busy} onClick={() => setCreatingPersonal((value) => !value)}>학생 개인 문집 만들기</Button></div>
-            {creatingPersonal && <div className="class-agit-book-picker"><label>학생 선택<select value={newOwnerId} onChange={(event) => setNewOwnerId(event.target.value)}><option value="">학생을 선택하세요</option>{workspace.students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label><Button variant="primary" type="button" disabled={busy || !newOwnerId} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); openBook(await api.bookAction(classId, 'create', { book_id: createId.current, book_type: 'personal', owner_student_id: newOwnerId })); createId.current = null; })}>선택한 학생의 문집 만들기</Button></div>}
+            {creatingPersonal && <div className="class-agit-book-picker"><label>학생 선택<select value={newOwnerId} onChange={(event) => setNewOwnerId(event.target.value)}><option value="">학생을 선택하세요</option>{workspace.students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label><Button variant="primary" type="button" disabled={busy || !newOwnerId} onClick={() => run(async () => {
+                createId.current ||= crypto.randomUUID();
+                const created = await api.bookAction(classId, 'create', { book_id: createId.current, book_type: 'personal', owner_student_id: newOwnerId });
+                createId.current = null; openBook(created);
+                const { sources, skipped, truncated } = await collectStudentSources(sourceApi, classId, { studentId: newOwnerId, capacity: CLASS_AGIT_LIMITS.anthologyWorks });
+                if (!sources.length) { setStep('works'); setMessage(skipped.length ? '현재 문집에 담을 수 있는 글이 없습니다.' : '이 학생은 아직 문집에 담을 수 있는 글이 없습니다.'); return; }
+                const next = { ...created.book, items: sources.map((source) => bookItemFromSource(source, classId)) };
+                receive(await api.saveBook(classId, next)); setStep('works');
+                setMessage(describeBulkResult({ added: sources.length, skipped: skipped.length, truncated }));
+            })}>학생 글을 담아 개인 문집 만들기</Button></div>}
             <ul className="class-agit-projects">{workspace.books.map((entry) => <li key={entry.id}><strong>{entry.book_type === 'personal' ? `개인 문집 · ${entry.owner_student_name} · ` : ''}{entry.title}{entry.archived ? ' · 보관함' : ''}</strong><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => run(async () => openBook(await api.getBooks(classId, entry.id)))}>문집 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => removeFromList(entry)} aria-label={`${entry.title} 문집 삭제`}>삭제</Button></div></li>)}</ul></>}
         {book && <>
             <p className="class-agit-workbench-summary">{book.items.length}편의 작품 · {getBookPaper(book.paper_format).label} · {book.editions.length}개 확정판{book.archived ? ' · 보관함' : ''}</p>
@@ -206,7 +217,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 <fieldset className="anthology-book-kind" disabled={kindLocked}><legend>먼저 문집 종류를 정해 주세요</legend>
                     <div className="anthology-kind-options">
                         <label className={book.book_type === 'class' ? 'is-selected' : ''}><input type="radio" name="문집 종류" checked={book.book_type === 'class'} onChange={() => chooseBookType('class')} /><span><strong>우리 반 문집</strong><small>여러 학생의 글을 담고, 목차와 각 작품에 글쓴이를 표시해요.</small></span></label>
-                        <label className={book.book_type === 'personal' ? 'is-selected' : ''}><input type="radio" name="문집 종류" checked={book.book_type === 'personal'} onChange={() => chooseBookType('personal')} /><span><strong>개인 문집</strong><small>한 학생의 글만 담고, 지은이는 목차에만 표시해요.</small></span></label>
+                        <label className={book.book_type === 'personal' ? 'is-selected' : ''}><input type="radio" name="문집 종류" checked={book.book_type === 'personal'} onChange={() => chooseBookType('personal')} /><span><strong>개인 문집</strong><small>한 학생의 글만 담고, 지은이는 표지에 한 번만 표시해요.</small></span></label>
                     </div>
                     {book.book_type === 'personal' && <label className="anthology-owner-select">학생 선택<select value={book.owner_student_id || ''} onChange={(event) => { const student = workspace.students.find((entry) => entry.id === event.target.value); edit({ ...book, owner_student_id: student?.id || null, owner_student_name: student?.name || null }); setPicker(false); setError(''); }}><option value="">학생을 선택하세요</option>{workspace.students.map((student) => <option key={student.id} value={student.id} disabled={unavailableOwnerIds.has(student.id)}>{student.name}{unavailableOwnerIds.has(student.id) ? ' · 개인 문집 있음' : ''}</option>)}</select></label>}
                     {book.editions.length > 0 && <p>확정판이 있는 문집은 공개 범위가 달라질 수 있어 종류를 바꿀 수 없습니다.</p>}

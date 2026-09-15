@@ -19,21 +19,32 @@ const edition = {
     }
 };
 
-test('개인 문집은 목차에 지은이를 싣고 작품 본문에서는 같은 이름을 반복하지 않는다', async () => {
+test('개인 문집은 지은이를 표지에만 싣고 목차와 작품 본문에서는 반복하지 않는다', async () => {
     const html = await buildAnthologyHtml(edition);
     assert.match(html, /나의 글 모음/);
     assert.match(html, /김하늘 지음/);
     assert.match(html, /<h1>작가의 말<\/h1>/);
     assert.match(html, /anthology-personal \.pdf-entry__author/);
-    assert.match(html, /data-toc-row="0"><span>첫 번째 글 · 김하늘/);
-    assert.match(html, /data-toc-row="1"><span>두 번째 시 · 김하늘/);
+    assert.match(html, /data-toc-row="0"><span>첫 번째 글<\/span>/);
+    assert.match(html, /data-toc-row="1"><span>두 번째 시<\/span>/);
+    assert.doesNotMatch(html, /data-toc-row="[01]"><span>[^<]*김하늘/);
 
     const { requests } = buildAnthologyDocRequests(edition);
     const text = requests.flatMap((request) => request.insertText?.text || []).join('');
     assert.match(text, /김하늘 지음/);
     assert.match(text, /작가의 말/);
-    assert.match(text, /1\. 첫 번째 글 · 김하늘/);
-    assert.match(text, /2\. 두 번째 시 · 김하늘/);
+    assert.match(text, /1\. 첫 번째 글\n/);
+    assert.match(text, /2\. 두 번째 시\n/);
+    assert.doesNotMatch(text, /[12]\. [^\n]*김하늘/);
+});
+
+test('이어붙이는 개인 문집도 묶음 제목 대신 모든 작품 제목으로 목차를 만든다', async () => {
+    const continuous = structuredClone(edition);
+    continuous.book.print.layout = 'continuous';
+    continuous.book.grouping = 'custom';
+    const html = await buildAnthologyHtml(continuous);
+    assert.match(html, /data-toc-row="0"><span>첫 번째 글<\/span>/);
+    assert.match(html, /data-toc-row="1"><span>두 번째 시<\/span>/);
 });
 
 test('개인 문집은 학생당 하나이며 다른 학생 글과 다른 학생의 열람을 서버에서 막는다', () => {
@@ -47,6 +58,8 @@ test('작품 담기에서 문집 종류와 학생을 확정하고 이후 작품 
     const manager = readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
     const picker = readFileSync('src/modules/class-agit/selection/StudentBulkPicker.jsx', 'utf8');
     assert.match(manager, /학생 개인 문집 만들기/);
+    assert.match(manager, /collectStudentSources\(sourceApi, classId, \{ studentId: newOwnerId/);
+    assert.match(manager, /학생 글을 담아 개인 문집 만들기/);
     assert.match(manager, /ownerStudent=\{ownerStudent\}/);
     assert.match(manager, /name="문집 종류"/);
     assert.match(manager, /먼저 문집 종류를 정해 주세요/);

@@ -57,14 +57,14 @@ test('간지가 없어도 이어붙이기 설정을 그대로 사용한다', () 
     assert.doesNotMatch(pagination, /const continuous = dividers\.size > 0;/);
 });
 
-test('이어붙이기 차례는 주제만, 작품 목록은 간지로 간다', () => {
+test('우리 반 이어붙이기 차례는 주제만, 개인 문집 차례는 작품 제목을 유지한다', () => {
     /*
      * 2026-09-13 지적: 작품까지 모두 차례에 실으니 **주제가 다섯을 넘는 순간 차례가 몇 쪽**이
      * 된다. 간지는 주제 이름 한 줄뿐이라 어차피 비어 있으므로, 작품 목록을 거기 실으면
      * 종이를 한 장도 더 쓰지 않고 차례가 짧아진다.
      */
-    // 차례는 주제 줄만 만든다.
-    assert.match(print, /if \(continuous\) \{\s*const groupTitle = groupStarts\.get\(i\);/s);
+    // 우리 반 주제별 문집만 차례를 주제 줄로 줄인다. 개인 문집은 작품 제목별 차례를 유지한다.
+    assert.match(print, /if \(continuous && book\.grouping === 'topic' && !personal\) \{\s*const groupTitle = groupStarts\.get\(i\);/s);
     // 작품 목록은 간지 안에 들어간다.
     assert.match(print, /data-divider-row="\$\{workIndex\}"/);
     assert.match(print, /data-divider-list/);
