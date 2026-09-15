@@ -47,9 +47,12 @@ export async function createClassAgitReleaseFixture() {
             if (action === 'delete') { if (!p.confirmed) throw new Error('문집 삭제를 확인해 주세요.'); books.delete(p.book_id); return workspace(); }
             if (action === 'save') {
                 const items = [];
+                const owner = previewStudents.find((student) => student.id === p.owner_student_id);
+                if (p.book_type === 'personal' && !owner) throw new Error('개인 문집에 담을 학생을 선택해 주세요.');
+                if ((p.book_type !== book.book_type || p.owner_student_id !== book.owner_student_id) && book.editions.length) throw new Error('확정판이 있는 문집은 종류를 바꿀 수 없습니다.');
                 if (p.items.length > 100 || new Set(p.items.map((i) => i.sourceId)).size !== p.items.length) throw new Error('수록 작품을 확인해 주세요.');
-                for (const input of p.items) { const s = await source(input.sourceId); if (s.source_revision !== input.sourceRevision) throw new Error('바뀐 원글을 다시 불러와 주세요.'); const old = book.history.get(s.id); items.push({ ...bookItemFromSource(s, previewClass.id), itemId: old?.itemId || crypto.randomUUID(), consentId: old && !old.revoked ? old.consentId : crypto.randomUUID(), revoked: false }); }
-                Object.assign(book, { title: p.title, subtitle: p.subtitle, cover_kicker: p.cover_kicker, introduction: p.introduction, class_label: p.class_label, term: p.term || '', issue_date: p.issue_date, grouping: p.grouping, paper_format: p.paper_format || book.paper_format, page_layout: p.page_layout || book.page_layout, page_breaks: p.page_breaks || book.page_breaks, design_id: p.design_id || book.design_id, items });
+                for (const input of p.items) { const s = await source(input.sourceId); if (s.source_revision !== input.sourceRevision) throw new Error('바뀐 원글을 다시 불러와 주세요.'); if (p.book_type === 'personal' && s.student_id !== owner.id) throw new Error('개인 문집에는 선택한 학생의 글만 담을 수 있습니다.'); const old = book.history.get(s.id); items.push({ ...bookItemFromSource(s, previewClass.id), itemId: old?.itemId || crypto.randomUUID(), consentId: old && !old.revoked ? old.consentId : crypto.randomUUID(), revoked: false }); }
+                Object.assign(book, { book_type: p.book_type || 'class', owner_student_id: owner?.id || null, owner_student_name: owner?.name || null, title: p.title, subtitle: p.subtitle, cover_kicker: p.cover_kicker, introduction: p.introduction, class_label: p.class_label, term: p.term || '', issue_date: p.issue_date, grouping: p.grouping, paper_format: p.paper_format || book.paper_format, page_layout: p.page_layout || book.page_layout, page_breaks: p.page_breaks || book.page_breaks, design_id: p.design_id || book.design_id, items });
                 items.forEach((i) => book.history.set(i.sourceId, i));
             } else if (action === 'finalize') {
                 if (!book.items.length || book.items.some((i) => i.revoked)) throw new Error('수록할 작품을 확인해 주세요.');

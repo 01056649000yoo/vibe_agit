@@ -5,6 +5,7 @@ import { buildAnthologyHtml } from '../src/modules/class-agit/anthology/print.js
 import { buildAnthologyDocRequests } from '../src/modules/class-agit/anthology/googleDocExport.js';
 
 const migration = readFileSync('supabase/migrations/20261296_personal_anthologies_and_book_designs.sql', 'utf8');
+const kindMigration = readFileSync('supabase/migrations/20261298_select_anthology_kind_in_works.sql', 'utf8');
 const edition = {
     version: 1, id: 'edition-personal', number: 1,
     book: {
@@ -42,12 +43,21 @@ test('개인 문집은 학생당 하나이며 다른 학생 글과 다른 학생
     assert.match(migration, /학급 문집은 20권까지/);
 });
 
-test('개인 문집 생성 시 학생을 먼저 고르고 이후 작품 찾기는 그 학생으로 고정한다', () => {
+test('작품 담기에서 문집 종류와 학생을 확정하고 이후 작품 찾기는 그 학생으로 고정한다', () => {
     const manager = readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
     const picker = readFileSync('src/modules/class-agit/selection/StudentBulkPicker.jsx', 'utf8');
     assert.match(manager, /학생 개인 문집 만들기/);
     assert.match(manager, /ownerStudent=\{ownerStudent\}/);
-    assert.match(manager, /목차에는 지은이를 표시하고, 각 작품 본문에서는 같은 이름을 반복하지 않습니다/);
-    assert.match(manager, /문집 종류는 만든 뒤 바꿀 수 없습니다/);
+    assert.match(manager, /name="문집 종류"/);
+    assert.match(manager, /먼저 문집 종류를 정해 주세요/);
+    assert.match(manager, /학생을 선택하세요/);
+    assert.match(manager, /확정판이 있는 문집은 공개 범위가 달라질 수 있어 종류를 바꿀 수 없습니다/);
     assert.match(picker, /student\.id === fixedStudent\.id/);
+});
+
+test('문집 종류 변경은 확정판 없는 초안에서만 허용하고 개인 문집의 학생과 작품을 검증한다', () => {
+    assert.match(kindMigration, /class_agit_book_editions[\s\S]*종류를 바꿀 수 없습니다/);
+    assert.match(kindMigration, /students[\s\S]*class_id=p_class_id[\s\S]*is_active IS DISTINCT FROM FALSE/);
+    assert.match(kindMigration, /class_agit_book_items[\s\S]*student_id[\s\S]*선택한 학생의 글만/);
+    assert.match(kindMigration, /REVOKE ALL ON FUNCTION public\.run_class_agit_book_cover_core/);
 });
