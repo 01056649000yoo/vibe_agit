@@ -1,10 +1,12 @@
 import React, { Fragment } from 'react';
 import { motion } from 'framer-motion';
-import { FREE_WRITING_TYPE, SELF_WRITING_TYPES, getSelfWritingType } from '../../modules/writing/selfWritingTypes';
+import { FREE_WRITING_TYPE, SELF_WRITING_TYPES, getSelfWritingType } from '../../../modules/writing/selfWritingTypes';
 import {
     SHELF_BOOK_ELLIPSIS,
     SHELF_BOOK_LABEL_HEIGHT,
     SHELF_BOOK_LABEL_TOP,
+    SHELF_BOOK_NOTE_GAP,
+    SHELF_BOOK_NOTE_HEIGHT,
     SHELF_BOOK_TITLE_FONT,
     shelfBookColumns,
     shelfBookHeight,
@@ -16,7 +18,9 @@ import {
 } from './shelfBookLayout';
 
 /*
- * 내 서재의 책장 갈래와 책등 한 권.
+ * 책장 갈래와 책등 한 권. **세 화면이 같이 쓴다** — 학생의 내 서재(MyAgitPanel),
+ * 선생님의 학생 아지트 보기(TeacherStudentAgitViewer), 친구 아지트의 공개 서재(FriendWritingShelf).
+ * 책 모양을 고치려면 여기 한 곳만 고친다. 각 화면이 따로 그리면 하나만 새 모양이 된다.
  *
  * MyAgitPanel 에서 꺼냈다(2026-09-15). 책등 모양을 다듬으려면 진짜 부품으로 띄워 봐야 하는데,
  * 패널 안에 있으면 학생 세션·DB 없이는 그릴 수 없었다. 여기 두면 `?dev-lab=my-shelf` 로 바로 본다.
@@ -75,11 +79,38 @@ export const SHELF_SECTIONS = [
     }
 ];
 
-export const shelfSectionFor = (post) => SHELF_SECTIONS.find((section) => section.match(post)) || SHELF_SECTIONS[0];
+/**
+ * 탭은 아니지만 책 색은 따로인 갈래. 이웃 아지트의 안건 의견 글은 과제 책장에 꽂히되 보라색이다.
+ * 과제 탭의 match 가 먼저 잡으므로 여기서 먼저 본다.
+ */
+const normalizeRelation = (value) => (Array.isArray(value) ? (value[0] || null) : (value || null));
+export const isMeetingPost = (post) => {
+    const mission = normalizeRelation(post?.writing_missions);
+    return mission?.mission_type === 'meeting' || mission?.input_template === 'meeting';
+};
+export const MEETING_SHELF_KIND = {
+    id: 'meeting', label: '안건 의견', icon: '🏛️',
+    colors: [
+        ['#9C76A8', '#714E7E', '#54395F'],
+        ['#8B72B5', '#604B8D', '#403467'],
+        ['#AF7FAE', '#80517F', '#5D385C']
+    ]
+};
+
+export const shelfSectionFor = (post) => {
+    if (isMeetingPost(post)) return MEETING_SHELF_KIND;
+    return SHELF_SECTIONS.find((section) => section.match(post)) || SHELF_SECTIONS[0];
+};
 
 export { stableBookVariant };
 
-export const ShelfBook = ({ post, section, onOpen }) => {
+/**
+ * @param post     제목·visibility(·writing_missions) 가 있는 글 한 편
+ * @param section  책장 탭을 넘기면 그 색으로, 안 넘기면 글을 보고 고른다
+ * @param note     라벨 아래 쪽지 한 줄(`♡ 3`). 없어도 자리는 비워 둔다
+ * @param opening  여는 중이면 책을 어둡게 덮는다
+ */
+export const ShelfBook = ({ post, section, onOpen, note, opening = false, disabled = false }) => {
     const type = section || shelfSectionFor(post);
     const variant = stableBookVariant(post);
     const palette = shelfBookPalette(type.colors, variant);
@@ -96,14 +127,15 @@ export const ShelfBook = ({ post, section, onOpen }) => {
             type="button"
             role="listitem"
             onClick={onOpen}
-            aria-label={`${type.label} ‘${fullTitle}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}`}
+            disabled={disabled}
+            aria-label={`${type.label} ‘${fullTitle}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}${note ? `, ${note}` : ''}`}
             title={`${type.icon} ${type.label} · ${fullTitle}`}
             whileHover={{ y: -6, rotate: -1.2 }}
             whileTap={{ y: 1, scale: 0.97 }}
             style={{
                 position: 'relative', flex: `0 0 ${width}px`, width: `${width}px`, height: `${height}px`,
                 padding: 0, overflow: 'hidden', border: `1px solid ${palette.dark}`,
-                borderRadius: '4px 4px 2px 2px', cursor: 'pointer',
+                borderRadius: '4px 4px 2px 2px', cursor: disabled ? 'wait' : 'pointer',
                 /* 등의 둥근 느낌: 왼쪽 어둡게 → 가운데 밝게 → 오른쪽 다시 어둡게 */
                 background: `linear-gradient(90deg, ${palette.dark} 0%, ${palette.middle} 18%, ${palette.light} 46%, ${palette.middle} 80%, ${palette.dark} 100%)`,
                 boxShadow: 'inset 3px 0 2px -1px rgba(255,255,255,.22), inset -3px 0 3px -1px rgba(0,0,0,.28), 3px 4px 7px rgba(55,31,17,.3)',
@@ -174,6 +206,26 @@ export const ShelfBook = ({ post, section, onOpen }) => {
                     ))}
                 </span>
             </span>
+
+            {/* 쪽지: 라벨 아래 한 줄. 친구 서재는 반응 수를 적는다. */}
+            {note && (
+                <span aria-hidden="true" style={{
+                    position: 'absolute', top: `${SHELF_BOOK_LABEL_TOP + SHELF_BOOK_LABEL_HEIGHT + SHELF_BOOK_NOTE_GAP}px`,
+                    left: '4px', right: '4px', height: `${SHELF_BOOK_NOTE_HEIGHT}px`, overflow: 'hidden',
+                    color: 'rgba(255,250,236,.92)', fontSize: SHELF_BOOK_TITLE_FONT, fontWeight: 850,
+                    lineHeight: `${SHELF_BOOK_NOTE_HEIGHT}px`, textAlign: 'center', whiteSpace: 'nowrap',
+                    textShadow: '0 1px 1px rgba(0,0,0,.4)'
+                }}>
+                    {note}
+                </span>
+            )}
+
+            {opening && (
+                <span aria-hidden="true" style={{
+                    position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
+                    background: 'rgba(35,25,20,.7)', color: '#FFFFFF', fontSize: SHELF_BOOK_TITLE_FONT, fontWeight: 950
+                }}>여는 중</span>
+            )}
         </motion.button>
     );
 };

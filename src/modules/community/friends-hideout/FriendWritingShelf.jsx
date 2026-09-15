@@ -2,6 +2,8 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSelfWritingType } from '../../writing/selfWritingTypes';
 import { supabase } from '../../../lib/supabaseClient';
 import { classKey, dataCache } from '../../../lib/cache';
+import ShelfBook, { isMeetingPost, shelfSectionFor } from '../../../components/common/bookshelf/ShelfBook';
+import Bookshelf from '../../../components/common/bookshelf/Bookshelf';
 
 const FILTERS = [
     { id: 'all', label: '전체 책장' },
@@ -9,31 +11,6 @@ const FILTERS = [
     { id: 'reading_log', label: '📚 독서록 책장' },
     { id: 'diary', label: '📔 일기 책장' }
 ];
-
-const BOOK_COLORS = new Map(Object.entries({
-    assignment: [
-        ['#477DB6', '#28527D', '#193B60'],
-        ['#6589B1', '#365F8C', '#23466B'],
-        ['#426A9B', '#25476F', '#173552']
-    ],
-    reading_log: [
-        ['#6B9A70', '#3F704A', '#295237'],
-        ['#5E958B', '#356A64', '#28514D'],
-        ['#77955C', '#4E6F37', '#384F29']
-    ],
-    diary: [
-        ['#7C86D6', '#4F5AA8', '#343C7A'],
-        ['#8E86C9', '#5C509C', '#3E356F'],
-        ['#6E8FCB', '#42639C', '#2D466F']
-    ],
-    meeting: [
-        ['#9C76A8', '#714E7E', '#54395F'],
-        ['#8B72B5', '#604B8D', '#403467'],
-        ['#AF7FAE', '#80517F', '#5D385C']
-    ]
-}));
-
-const KIND_ICONS = new Map(Object.entries({ assignment: '✍️', reading_log: '📚', diary: '📔', meeting: '🏛️' }));
 
 const normalizeRelation = (value) => Array.isArray(value) ? (value[0] || null) : (value || null);
 
@@ -43,18 +20,6 @@ const isDiaryPost = (post) => getSelfWritingType(post)?.id === 'diary';
 // 공개한 일기가 과제 칸에 섞여 들어갔다.
 const isAssignmentPost = (post) => !getSelfWritingType(post);
 
-const isMeetingPost = (post) => {
-    const mission = normalizeRelation(post?.writing_missions);
-    return mission?.mission_type === 'meeting' || mission?.input_template === 'meeting';
-};
-
-const getBookKind = (post) => {
-    if (isReadingLog(post)) return 'reading_log';
-    if (isDiaryPost(post)) return 'diary';
-    if (isMeetingPost(post)) return 'meeting';
-    return 'assignment';
-};
-
 const getBookLabel = (post) => {
     const mission = normalizeRelation(post?.writing_missions);
     const selfType = getSelfWritingType(post);
@@ -63,48 +28,7 @@ const getBookLabel = (post) => {
     return mission?.title || '선생님 과제';
 };
 
-const stableBookVariant = (post) => String(post?.id || post?.title || '')
-    .split('')
-    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
 const SHELF_CACHE_MS = 120000;
-
-const ShelfBook = ({ post, opening, disabled, onOpen }) => {
-    const kind = getBookKind(post);
-    const variant = stableBookVariant(post);
-    const palette = BOOK_COLORS.get(kind) || BOOK_COLORS.get('assignment');
-    const [light, middle, dark] = palette[variant % palette.length];
-    const title = post.title || '제목 없는 글';
-    const titleLength = Array.from(title).length;
-    const width = titleLength > 16 ? 60 : titleLength > 8 ? 52 : 44;
-    const height = 146 + ((variant % 4) * 7);
-    const icon = KIND_ICONS.get(kind) || KIND_ICONS.get('assignment');
-    const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
-
-    return (
-        <button
-            type="button"
-            onClick={onOpen}
-            disabled={disabled}
-            aria-label={`${getBookLabel(post)} ‘${title}’ 펼쳐보기, 반응 ${reactionCount}개`}
-            title={`${icon} ${getBookLabel(post)} · ${title}`}
-            className="friend-bookshelf-book"
-            style={{
-                flexBasis: `${width}px`, width: `${width}px`, height: `${height}px`,
-                borderColor: dark,
-                background: `linear-gradient(90deg,${dark} 0 8%,${light} 13%,${middle} 72%,${dark} 100%)`
-            }}
-        >
-            <span className="friend-bookshelf-book-icon" aria-hidden="true">{icon}</span>
-            <span className="friend-bookshelf-book-title" aria-hidden="true">
-                <span>{title}</span>
-            </span>
-            <span className="friend-bookshelf-book-reactions" aria-hidden="true">♡ {reactionCount}</span>
-            <span className="friend-bookshelf-book-ridge" aria-hidden="true" />
-            {opening && <span className="friend-bookshelf-book-opening">여는 중</span>}
-        </button>
-    );
-};
 
 const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
     const friendId = friend?.id;
@@ -306,8 +230,7 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
             ) : viewMode === 'titles' ? (
                 <div className="friend-writing-title-list" role="group" aria-label="공개 글 제목 전체 목록">
                     {visiblePosts.map((post) => {
-                        const kind = getBookKind(post);
-                        const icon = KIND_ICONS.get(kind) || KIND_ICONS.get('assignment');
+                        const icon = shelfSectionFor(post).icon;
                         const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
                         return (
                             <button key={post.id} type="button" onClick={() => handleOpenPost(post)} disabled={Boolean(openingPostId)}>
@@ -322,23 +245,25 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                     })}
                 </div>
             ) : (
-                <div className="friend-bookshelf-scene">
-                    <div className="friend-bookshelf-books" role="group" aria-label={`${FILTERS.find((item) => item.id === filter)?.label || '전체 책장'} 책등`}>
-                        {visiblePosts.map((post) => (
+                <Bookshelf
+                    ariaLabel={`${FILTERS.find((item) => item.id === filter)?.label || '전체 책장'} 책등`}
+                    hint="← 책장을 좌우로 밀어 더 많은 글을 찾아보세요 →"
+                    style={{ borderRadius: '15px 15px 0 0' }}
+                >
+                    {visiblePosts.map((post) => {
+                        const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
+                        return (
                             <ShelfBook
                                 key={post.id}
                                 post={post}
+                                note={`♡ ${reactionCount}`}
                                 opening={openingPostId === post.id}
                                 disabled={Boolean(openingPostId)}
                                 onOpen={() => handleOpenPost(post)}
                             />
-                        ))}
-                    </div>
-                    <div className="friend-bookshelf-board" aria-hidden="true">
-                        <span />
-                    </div>
-                    <p>← 책장을 좌우로 밀어 더 많은 글을 찾아보세요 →</p>
-                </div>
+                        );
+                    })}
+                </Bookshelf>
             )}
 
             <style>{`
@@ -357,20 +282,6 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                 .friend-writing-shelf-state { display:flex; align-items:center; justify-content:center; gap:8px; min-height:120px; border:2px dashed rgba(112,65,38,.2); border-radius:18px; background:rgba(255,255,255,.36); color:#9A7A61; font-weight:800; text-align:center; }
                 .friend-writing-shelf-state > span { font-size:1.5rem; }
                 .friend-writing-shelf-state.error { color:#C62828; background:#FFF5F5; }
-                .friend-bookshelf-scene { overflow:hidden; border-radius:15px; background:linear-gradient(180deg,#D9BB8B 0%,#B98755 62%,#82502D 100%); box-shadow:inset 0 5px 12px rgba(76,43,24,.28),0 7px 14px rgba(76,43,24,.14); }
-                .friend-bookshelf-books { display:flex; align-items:flex-end; gap:3px; min-height:190px; padding:17px 14px 0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:#704126 transparent; scroll-snap-type:x proximity; }
-                .friend-bookshelf-book { position:relative; flex-grow:0; flex-shrink:0; padding:8px 5px 7px; overflow:hidden; border-width:1px; border-style:solid; border-radius:5px 5px 2px 2px; color:#FFF9E9; cursor:pointer; font-family:inherit; scroll-snap-align:start; box-shadow:inset 2px 0 0 rgba(255,255,255,.18),inset -2px 0 0 rgba(0,0,0,.12),3px 3px 6px rgba(55,31,17,.28); transition:transform .15s ease,filter .15s ease; }
-                .friend-bookshelf-book:hover { transform:translateY(-5px) rotate(-1deg); filter:brightness(1.06); }
-                .friend-bookshelf-book:disabled { cursor:wait; opacity:.76; }
-                .friend-bookshelf-book-icon { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:.78rem; line-height:1; }
-                .friend-bookshelf-book-title { position:absolute; top:25px; right:5px; bottom:28px; left:5px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-                .friend-bookshelf-book-title > span { display:block; height:100%; max-width:100%; overflow:hidden; writing-mode:vertical-rl; text-orientation:upright; color:#FFFDF5; white-space:normal; word-break:break-all; font-size:.69rem; font-weight:900; line-height:1.18; letter-spacing:.02em; text-align:center; text-shadow:0 1px 1px rgba(0,0,0,.35); }
-                .friend-bookshelf-book-reactions { position:absolute; right:4px; bottom:8px; left:4px; overflow:hidden; color:rgba(255,255,255,.86); font-size:.54rem; font-weight:850; text-align:center; white-space:nowrap; }
-                .friend-bookshelf-book-ridge { position:absolute; right:5px; bottom:3px; left:5px; height:2px; border-top:1px solid rgba(255,255,255,.55); border-bottom:1px solid rgba(0,0,0,.25); }
-                .friend-bookshelf-book-opening { position:absolute; inset:0; display:grid; place-items:center; background:rgba(35,25,20,.7); color:#FFFFFF; font-size:.64rem; font-weight:950; writing-mode:horizontal-tb; }
-                .friend-bookshelf-board { position:relative; height:21px; border-top:4px solid #6B3E22; border-bottom:3px solid #4B2B1A; background:linear-gradient(180deg,#A66A3E,#704126); box-shadow:0 5px 8px rgba(61,34,18,.38); }
-                .friend-bookshelf-board > span { position:absolute; inset:4px 0 auto; height:2px; background:rgba(255,220,170,.16); }
-                .friend-bookshelf-scene > p { margin:0; padding:8px 12px 10px; background:rgba(80,44,22,.88); color:#F8E4C8; font-size:.6rem; font-weight:800; text-align:center; }
                 .friend-writing-title-list { display:grid; gap:7px; max-height:310px; overflow-y:auto; }
                 .friend-writing-title-list > button { display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center; gap:8px; width:100%; padding:10px 11px; border:1px solid rgba(112,65,38,.15); border-radius:13px; background:rgba(255,255,255,.72); cursor:pointer; text-align:left; }
                 .friend-writing-title-list > button:disabled { cursor:wait; opacity:.7; }
@@ -385,7 +296,6 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                     .friend-writing-shelf-heading p { max-width:250px; }
                     .friend-writing-shelf-toolbar { align-items:flex-end; flex-direction:column; }
                     .friend-writing-shelf-filters { width:100%; }
-                    .friend-bookshelf-books { min-height:186px; padding-right:12px; padding-left:12px; }
                 }
             `}</style>
         </section>

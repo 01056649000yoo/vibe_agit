@@ -1,5 +1,8 @@
 /*
- * 내 서재 책등의 크기·제목 규칙. 화면(.jsx) 밖에 둔 이유는 `node --test` 가 직접 부르기 위해서다.
+ * 책등의 크기·제목 규칙. 화면(.jsx) 밖에 둔 이유는 `node --test` 가 직접 부르기 위해서다.
+ *
+ * 책등은 세 화면이 같이 쓴다 — 학생의 내 서재, 선생님의 학생 아지트 보기, 친구 아지트의 공개 서재.
+ * 전에는 세 화면이 각자 책을 그려서 한 곳을 고치면 나머지 둘은 옛 모양으로 남았다(2026-09-15).
  *
  * 2026-09-15 제보: "책 모양이 맘에 안 들고 제목도 부실하다."
  *   긴 제목이 세로로 두세 줄로 쪼개져 읽는 순서가 뒤엉켰다("계절과 그 이유 / 내가 좋아하는").
@@ -21,7 +24,8 @@
 export const SHELF_BOOK_WIDTHS = Object.freeze({ slim: 46, regular: 54, wide: 62 });
 
 /** 키는 제목과 무관하다. 책마다 정해진 네 단계 가운데 하나이고, 어떤 제목이 와도 바뀌지 않는다. */
-export const SHELF_BOOK_HEIGHTS = Object.freeze([168, 174, 180, 186]);
+export const SHELF_BOOK_HEIGHTS = Object.freeze([180, 186, 192, 198]);
+export const SHELF_BOOK_MAX_HEIGHT = Math.max(...SHELF_BOOK_HEIGHTS);
 
 /** 글자 바닥. 태블릿에서 아이가 읽는 화면이라 0.8rem 아래로 내리지 않는다. */
 export const SHELF_BOOK_TITLE_FONT = 'var(--ui-text-xs)';
@@ -42,8 +46,21 @@ export const SHELF_BOOK_LABEL_INSET = 6;
 export const SHELF_BOOK_LABEL_HEIGHT = Math.ceil(SHELF_BOOK_CHARS_PER_COLUMN * SHELF_BOOK_CHAR_HEIGHT + SHELF_BOOK_LABEL_INSET);
 
 /** 라벨 위 자리(머리띠·배지). 라벨은 여기서 시작하고, 남는 키는 라벨 아래로 간다. */
-export const SHELF_BOOK_LABEL_TOP = 40;
-export const SHELF_BOOK_LABEL_MIN_BOTTOM = 14;
+export const SHELF_BOOK_LABEL_TOP = 38;
+
+/**
+ * 라벨 아래 쪽지 한 줄(친구 서재의 `♡ 3` 같은 것). 글자 바닥(0.8rem)을 지키는 높이이고,
+ * 쪽지가 없는 책도 이 자리를 비워 둔다 — 그래야 쪽지 유무로 라벨 자리가 흔들리지 않는다.
+ */
+export const SHELF_BOOK_NOTE_GAP = 3;
+export const SHELF_BOOK_NOTE_HEIGHT = 14;
+/** 꼬리띠(3px)와 그 아래 여백(6px). */
+export const SHELF_BOOK_TAIL = 9;
+export const SHELF_BOOK_LABEL_MIN_BOTTOM = SHELF_BOOK_NOTE_GAP + SHELF_BOOK_NOTE_HEIGHT + SHELF_BOOK_TAIL;
+
+/** 책을 꽂는 줄의 최소 높이 — 가장 큰 책 + 위 여백. 책장 세 곳이 같은 값을 쓴다. */
+export const SHELF_ROW_PADDING_TOP = 14;
+export const SHELF_ROW_MIN_HEIGHT = SHELF_BOOK_MAX_HEIGHT + SHELF_ROW_PADDING_TOP;
 
 /** 말줄임 표시. 세로 곧추쓰기에서 "…" 는 점 세 개가 세로로 서서 쌍점처럼 보여, 가로 점 세 개(⋯)를 쓴다. */
 export const SHELF_BOOK_ELLIPSIS = '⋯';

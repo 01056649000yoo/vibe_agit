@@ -45,7 +45,8 @@ test('교사 학생 아지트는 담당 학급을 직접 제한하고 읽기 전
     assert.doesNotMatch(viewerStyles, /\.teacher-student-agit__room \.dragon-hideout-scene\s*\{[\s\S]{0,180}min-height: clamp/);
     assert.match(viewer, /teacher-student-agit-shelf-detail/);
     assert.match(viewer, /\.eq\('class_id', classId\)[\s\S]*\.eq\('student_id', selectedStudentId\)[\s\S]*\.eq\('id', summary\.id\)[\s\S]*\.eq\('is_submitted', true\)[\s\S]*\.limit\(1\)[\s\S]*\.maybeSingle\(\)/);
-    assert.match(viewer, /onClick=\{\(\) => openShelfPost\(post\)\}/);
+    // 책등은 공용 부품(ShelfBook)이고, 누르면 이 화면의 읽기 전용 상세로 간다.
+    assert.match(viewer, /<ShelfBook[\s\S]*?onOpen=\{\(\) => openShelfPost\(post\)\}/);
     assert.match(postDetail, /교사 읽기 전용/);
     assert.match(postDetail, /<ReportDocument/);
     assert.match(postDetail, /normalizeBookCoverUrl/);

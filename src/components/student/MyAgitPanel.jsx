@@ -8,7 +8,8 @@ import MyAgitModuleSlotHost from '../../modules/MyAgitModuleSlotHost';
 import MyTitleStatusPanel from '../../modules/writing/title-status/MyTitleStatusPanel';
 import MasteryBadges from '../../modules/learning/MasteryBadges';
 import useLearningMastery from '../../modules/learning/useLearningMastery';
-import ShelfBook, { SHELF_SECTIONS } from './ShelfBook';
+import ShelfBook, { SHELF_SECTIONS } from '../common/bookshelf/ShelfBook';
+import Bookshelf, { BookshelfNotice } from '../common/bookshelf/Bookshelf';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
@@ -306,65 +307,41 @@ const MyAgitPanel = ({
                             </button>
                         </div>
 
-                        <div style={{
-                            margin: '0 10px', overflow: 'hidden', border: '8px solid #85502E', borderBottom: 0,
-                            borderRadius: '8px 8px 0 0', background: 'linear-gradient(180deg,#E8CFAC 0%,#D9B582 100%)',
-                            boxShadow: 'inset 0 8px 16px rgba(67,37,18,.2), inset 5px 0 6px rgba(67,37,18,.12), inset -5px 0 6px rgba(67,37,18,.12)'
-                        }}>
-                            <div
-                                id="my-agit-bookshelf"
-                                role="tabpanel"
-                                aria-label={`${activeShelf.tabLabel} 글 목록`}
-                            >
-                                <div
-                                    role={activeShelfPosts.length ? 'list' : undefined}
-                                    style={shelfViewMode === 'books' ? {
-                                        minHeight: '200px', display: 'flex', alignItems: 'flex-end', gap: '5px',
-                                        padding: '14px 12px 0', overflowX: 'auto', overscrollBehaviorX: 'contain',
-                                        scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box'
-                                    } : {
-                                        minHeight: '182px', maxHeight: '282px', display: 'flex', flexDirection: 'column', gap: '6px',
-                                        padding: '10px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box'
+                        <Bookshelf
+                            id="my-agit-bookshelf"
+                            ariaLabel={`${activeShelf.tabLabel} 글 목록`}
+                            mode={shelfViewMode}
+                            hasItems={activeShelfPosts.length > 0}
+                            style={{ margin: '0 10px' }}
+                        >
+                            {loading ? (
+                                <BookshelfNotice>책을 꽂는 중... 📚</BookshelfNotice>
+                            ) : activeShelfPosts.length === 0 ? (
+                                <BookshelfNotice icon="🪵">{activeShelf.emptyMessage}</BookshelfNotice>
+                            ) : shelfViewMode === 'books' ? activeShelfPosts.map((post) => (
+                                <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
+                            )) : activeShelfPosts.map((post) => (
+                                <button
+                                    key={post.id}
+                                    type="button"
+                                    role="listitem"
+                                    onClick={() => openShelfPost(post)}
+                                    style={{
+                                        display: 'flex', alignItems: 'flex-start', gap: '9px', width: '100%',
+                                        padding: '10px 11px', border: '1px solid rgba(103,66,40,.18)', borderRadius: '11px',
+                                        background: 'rgba(255,252,244,.9)', color: INK, cursor: 'pointer',
+                                        textAlign: 'left', fontFamily: 'inherit', boxSizing: 'border-box'
                                     }}
                                 >
-                                    {loading ? (
-                                        <p style={{ alignSelf: 'center', width: '100%', margin: 'auto 0', textAlign: 'center', color: '#76563D', fontWeight: 850 }}>책을 꽂는 중... 📚</p>
-                                    ) : activeShelfPosts.length === 0 ? (
-                                        <div style={{ alignSelf: 'center', width: '100%', margin: 'auto 0', textAlign: 'center', color: '#76563D' }}>
-                                            <span aria-hidden="true" style={{ display: 'block', marginBottom: '6px', fontSize: '2rem' }}>🪵</span>
-                                            <span style={{ fontSize: '.8rem', fontWeight: 850 }}>{activeShelf.emptyMessage}</span>
-                                        </div>
-                                    ) : shelfViewMode === 'books' ? activeShelfPosts.map((post) => (
-                                        <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
-                                    )) : activeShelfPosts.map((post) => (
-                                        <button
-                                            key={post.id}
-                                            type="button"
-                                            role="listitem"
-                                            onClick={() => openShelfPost(post)}
-                                            style={{
-                                                display: 'flex', alignItems: 'flex-start', gap: '9px', width: '100%',
-                                                padding: '10px 11px', border: '1px solid rgba(103,66,40,.18)', borderRadius: '11px',
-                                                background: 'rgba(255,252,244,.9)', color: INK, cursor: 'pointer',
-                                                textAlign: 'left', fontFamily: 'inherit', boxSizing: 'border-box'
-                                            }}
-                                        >
-                                            <span aria-hidden="true" style={{ flex: '0 0 auto', fontSize: '.9rem' }}>{activeShelf.icon}</span>
-                                            <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', fontSize: '.8rem', fontWeight: 850, lineHeight: 1.4 }}>
-                                                {post.title || '제목 없는 글'}
-                                            </span>
-                                            {post.visibility !== 'class' && <span aria-label="나만 보는 글" style={{ flex: '0 0 auto', fontSize: '.72rem' }}>🔒</span>}
-                                            <span aria-hidden="true" style={{ flex: '0 0 auto', color: '#9C856F', fontWeight: 900 }}>›</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div aria-hidden="true" style={{
-                                height: '17px', borderTop: '2px solid #B97943', borderBottom: '4px solid #552C18',
-                                background: 'linear-gradient(180deg,#A96838 0%,#7E4525 58%,#60331C 100%)',
-                                boxShadow: '0 -3px 6px rgba(57,29,14,.2), 0 5px 8px rgba(57,29,14,.28)'
-                            }} />
-                        </div>
+                                    <span aria-hidden="true" style={{ flex: '0 0 auto', fontSize: '.9rem' }}>{activeShelf.icon}</span>
+                                    <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', fontSize: '.8rem', fontWeight: 850, lineHeight: 1.4 }}>
+                                        {post.title || '제목 없는 글'}
+                                    </span>
+                                    {post.visibility !== 'class' && <span aria-label="나만 보는 글" style={{ flex: '0 0 auto', fontSize: '.72rem' }}>🔒</span>}
+                                    <span aria-hidden="true" style={{ flex: '0 0 auto', color: '#9C856F', fontWeight: 900 }}>›</span>
+                                </button>
+                            ))}
+                        </Bookshelf>
 
                         <div style={{
                             display: 'flex', justifyContent: 'space-between', gap: '8px', padding: '9px 16px 12px',

@@ -18,11 +18,8 @@ import {
 } from '../../constants/writerLevels';
 import MasteryBadges from '../../modules/learning/MasteryBadges';
 import useLearningMastery from '../../modules/learning/useLearningMastery';
-import {
-    FREE_WRITING_TYPE,
-    SELF_WRITING_TYPES,
-    getSelfWritingType
-} from '../../modules/writing/selfWritingTypes';
+import ShelfBook, { SHELF_SECTIONS } from '../common/bookshelf/ShelfBook';
+import Bookshelf, { BookshelfNotice } from '../common/bookshelf/Bookshelf';
 import './TeacherStudentAgitViewer.css';
 
 const TeacherStudentAgitPostDetail = lazy(() => import('./TeacherStudentAgitPostDetail'));
@@ -31,24 +28,7 @@ const OVERVIEW_TTL_MS = 60000;
 const SHELF_TTL_MS = 30000;
 const SHELF_LIMIT = 60;
 
-const SHELF_SECTIONS = [
-    {
-        id: 'assignment', label: '과제 책장', icon: '📝', alwaysVisible: true,
-        match: (post) => post.writing_context !== 'self'
-    },
-    {
-        id: 'reading', label: SELF_WRITING_TYPES.reading_log.shelfTabLabel, icon: SELF_WRITING_TYPES.reading_log.icon, alwaysVisible: true,
-        match: (post) => getSelfWritingType(post)?.id === 'reading_log'
-    },
-    {
-        id: 'diary', label: SELF_WRITING_TYPES.diary.shelfTabLabel, icon: SELF_WRITING_TYPES.diary.icon, alwaysVisible: true,
-        match: (post) => getSelfWritingType(post)?.id === 'diary'
-    },
-    {
-        id: 'free', label: FREE_WRITING_TYPE.shelfTabLabel, icon: FREE_WRITING_TYPE.icon, alwaysVisible: false,
-        match: (post) => getSelfWritingType(post)?.id === 'free'
-    }
-];
+// 책장 갈래·책등은 학생의 내 서재와 같은 부품을 쓴다(common/bookshelf). 여기서 따로 그리지 않는다.
 
 const formatNumber = (value) => Number(value || 0).toLocaleString('ko-KR');
 
@@ -423,32 +403,28 @@ const TeacherStudentAgitViewer = ({
                                             className={activeShelf?.id === section.id ? 'is-active' : ''}
                                             onClick={() => setActiveShelfId(section.id)}
                                         >
-                                            {section.icon} {section.label} <strong>{section.posts.length}</strong>
+                                            {section.icon} {section.tabLabel} <strong>{section.posts.length}</strong>
                                         </button>
                                     ))}
                                 </div>
-                                {shelfLoading ? (
-                                    <div className="teacher-student-agit__shelf-state">책장을 정리하는 중…</div>
-                                ) : shelfError ? (
+                                {shelfError ? (
                                     <div className="teacher-student-agit__shelf-state is-error">{shelfError}</div>
-                                ) : activeShelf?.posts.length ? (
-                                    <div className="teacher-student-agit__books" aria-label={`${activeShelf.label} 글 목록`}>
-                                        {activeShelf.posts.map((post, index) => (
-                                            <button
-                                                key={post.id}
-                                                type="button"
-                                                className={`teacher-student-agit__book is-variant-${index % 4}`}
-                                                title={`${post.title || '제목 없는 글'} · ${formatNumber(post.char_count)}자`}
-                                                aria-label={`${post.title || '제목 없는 글'} 읽기`}
-                                                onClick={() => openShelfPost(post)}
-                                            >
-                                                <span>{post.title || '제목 없는 글'}</span>
-                                                {post.visibility !== 'class' && <i aria-label="친구에게 비공개">🔒</i>}
-                                            </button>
-                                        ))}
-                                    </div>
                                 ) : (
-                                    <div className="teacher-student-agit__shelf-state">이 책장에는 완성한 글이 없습니다.</div>
+                                    <Bookshelf ariaLabel={`${activeShelf?.tabLabel || '책장'} 글 목록`} hasItems={Boolean(activeShelf?.posts.length)}>
+                                        {shelfLoading ? (
+                                            <BookshelfNotice>책장을 정리하는 중…</BookshelfNotice>
+                                        ) : activeShelf?.posts.length ? activeShelf.posts.map((post) => (
+                                            <ShelfBook
+                                                key={post.id}
+                                                post={post}
+                                                section={activeShelf}
+                                                note={`${formatNumber(post.char_count)}자`}
+                                                onOpen={() => openShelfPost(post)}
+                                            />
+                                        )) : (
+                                            <BookshelfNotice icon="🪵">이 책장에는 완성한 글이 없습니다.</BookshelfNotice>
+                                        )}
+                                    </Bookshelf>
                                 )}
                             </section>
                         </main>

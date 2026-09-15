@@ -9,9 +9,11 @@ import {
     SHELF_BOOK_LABEL_MIN_BOTTOM,
     SHELF_BOOK_LABEL_TOP,
     SHELF_BOOK_MAX_COLUMNS,
+    SHELF_BOOK_MAX_HEIGHT,
     SHELF_BOOK_TITLE_FONT,
     SHELF_BOOK_TRUNCATE_FROM,
     SHELF_BOOK_WIDTHS,
+    SHELF_ROW_MIN_HEIGHT,
     shelfBookColumns,
     shelfBookHeight,
     shelfBookPalette,
@@ -19,7 +21,7 @@ import {
     shelfBookTitleCapacity,
     shelfBookWidth,
     stableBookVariant,
-} from '../src/components/student/shelfBookLayout.js';
+} from '../src/components/common/bookshelf/shelfBookLayout.js';
 
 /*
  * 2026-09-15 제보: "서재의 책 모양이 맘에 안 들고 제목도 부실하다."
@@ -104,12 +106,14 @@ test('어떤 제목이 와도 책은 폭 3종·키 4종 안에 있고, 라벨 �
     assert.equal(shelfBookHeight.length, 1, '키 계산이 제목을 받으면 크기가 흔들린다');
     assert.equal(shelfBookWidth('한'.repeat(500)), SHELF_BOOK_WIDTHS.wide, '200자여도 wide 가 끝');
 
-    // 라벨은 모든 책에서 같은 높이이고, 가장 작은 책에도 들어간다.
+    // 라벨은 모든 책에서 같은 높이이고, 가장 작은 책에도 라벨 + 쪽지 한 줄 + 꼬리띠가 들어간다.
     const smallest = Math.min(...SHELF_BOOK_HEIGHTS);
     assert.ok(
         SHELF_BOOK_LABEL_TOP + SHELF_BOOK_LABEL_HEIGHT + SHELF_BOOK_LABEL_MIN_BOTTOM <= smallest,
-        `가장 작은 책(${smallest})에 라벨(${SHELF_BOOK_LABEL_HEIGHT})이 안 들어간다`
+        `가장 작은 책(${smallest})에 라벨(${SHELF_BOOK_LABEL_HEIGHT})과 쪽지가 안 들어간다`
     );
+    // 책장 줄은 가장 큰 책보다 높다 — 아니면 책 머리가 잘린다.
+    assert.ok(SHELF_ROW_MIN_HEIGHT > SHELF_BOOK_MAX_HEIGHT);
 });
 
 test('제목의 별난 값을 모두 받아 낸다', () => {
@@ -141,7 +145,7 @@ test('글자 바닥을 지키고, 화면은 이 규칙만 쓴다', async () => {
     assert.equal(SHELF_BOOK_TITLE_FONT, 'var(--ui-text-xs)');
 
     const [book, panel] = await Promise.all([
-        readFile('src/components/student/ShelfBook.jsx', 'utf8'),
+        readFile('src/components/common/bookshelf/ShelfBook.jsx', 'utf8'),
         readFile('src/components/student/MyAgitPanel.jsx', 'utf8'),
     ]);
     // 제목이 뒤엉켰던 진짜 원인은 줄이 오른쪽부터 시작한 것(vertical-rl). 왼쪽부터(vertical-lr) 쓴다.
@@ -164,6 +168,33 @@ test('글자 바닥을 지키고, 화면은 이 규칙만 쓴다', async () => {
     assert.doesNotMatch(book, /bottom: `\$\{isPrivate/);
     assert.doesNotMatch(book, /fontSize: '\.7rem'/);
     // 패널은 책등을 여기서 가져다 쓴다.
-    assert.match(panel, /import ShelfBook, \{ SHELF_SECTIONS \} from '\.\/ShelfBook'/);
+    assert.match(panel, /import ShelfBook, \{ SHELF_SECTIONS \} from '\.\.\/common\/bookshelf\/ShelfBook'/);
     assert.doesNotMatch(panel, /const ShelfBook = /);
+});
+
+/*
+ * 2026-09-15 "선생님이 학생 아지트를 보는 화면도 똑같이 적용 안 됐을까?" — 안 됐었다.
+ * 책등을 그리는 곳이 셋(학생 내 서재·선생님의 학생 아지트 보기·친구 공개 서재)이었고 하나만 고쳐졌다.
+ * 이제 셋 다 common/bookshelf 를 쓰고, 어느 화면도 책을 직접 그리지 않는다.
+ */
+test('책장을 보여 주는 세 화면 모두 공용 책장·책등만 쓴다', async () => {
+    const screens = [
+        'src/components/student/MyAgitPanel.jsx',
+        'src/components/teacher/TeacherStudentAgitViewer.jsx',
+        'src/modules/community/friends-hideout/FriendWritingShelf.jsx',
+    ];
+    for (const path of screens) {
+        const text = await readFile(path, 'utf8');
+        assert.match(text, /from '[./a-z]+\/common\/bookshelf\/ShelfBook'/, `${path} 가 공용 책등을 안 쓴다`);
+        assert.match(text, /from '[./a-z]+\/common\/bookshelf\/Bookshelf'/, `${path} 가 공용 책장을 안 쓴다`);
+        // 책을 직접 그리는 흔적 — 세로쓰기·책 색 표·책마다 다른 키.
+        assert.doesNotMatch(text, /writing-?[Mm]ode/, `${path} 가 책등 글씨를 직접 그린다`);
+        assert.doesNotMatch(text, /BOOK_COLORS|is-variant-|colors: \[/, `${path} 가 책 색을 따로 가진다`);
+    }
+    // 선생님 화면의 옛 책 CSS 도 남아 있으면 안 된다(공용 부품과 겹쳐 두 벌이 된다).
+    const teacherCss = await readFile('src/components/teacher/TeacherStudentAgitViewer.css', 'utf8');
+    assert.doesNotMatch(teacherCss, /__books?\b/);
+    // 갈래 정의도 한 곳 — 선생님 화면이 SHELF_SECTIONS 를 따로 베끼지 않는다.
+    const teacher = await readFile('src/components/teacher/TeacherStudentAgitViewer.jsx', 'utf8');
+    assert.doesNotMatch(teacher, /const SHELF_SECTIONS = /);
 });

@@ -1,11 +1,13 @@
-import ShelfBook, { SHELF_SECTIONS } from '../components/student/ShelfBook'
+import ShelfBook, { SHELF_SECTIONS } from '../components/common/bookshelf/ShelfBook'
+import Bookshelf, { BookshelfNotice } from '../components/common/bookshelf/Bookshelf'
 
 /*
- * 내 서재 책등 미리보기. `?dev-lab=my-shelf`
+ * 책장·책등 미리보기. `?dev-lab=my-shelf`
  *
  * 책등 모양을 다듬을 때 진짜 부품으로 띄워 본다(2026-09-15).
  * 짧은 제목·긴 제목·나만 보는 글을 갈래마다 섞어, 제목이 잘리는지·색이 갈리는지를 한눈에 본다.
- * 책장 판자·선반은 MyAgitPanel 의 것과 같은 값이다 — 그 안에 꽂힌 모습으로 봐야 한다.
+ * 책장(Bookshelf)·책(ShelfBook)은 학생 내 서재·선생님의 학생 아지트 보기·친구 공개 서재가
+ * 함께 쓰는 공용 부품이라, 여기서 본 모습이 세 화면 그대로다.
  */
 
 /*
@@ -38,45 +40,75 @@ const samplePosts = (sectionId, count) => Array.from({ length: count }, (_, inde
   visibility: index % 3 === 2 ? 'private' : 'class',
   writing_context: sectionId === 'assignment' ? 'assignment' : 'self',
   self_writing_type: sectionId === 'assignment' ? null : sectionId === 'reading' ? 'reading_log' : sectionId,
+  char_count: 120 + index * 137,
+  post_reactions: Array.from({ length: index % 5 }, (_, i) => ({ id: i })),
 }))
 
-const Shelf = ({ section, posts }) => (
-  <section style={{ marginBottom: '28px' }}>
-    <h3 style={{ margin: '0 0 8px', fontSize: 'var(--ui-text-md)', fontWeight: 900, color: '#3E2E23' }}>
-      {section.icon} {section.tabLabel} <span style={{ opacity: .6 }}>{posts.length}권</span>
-    </h3>
-    <div style={{
-      borderRadius: '8px 8px 0 0', background: 'linear-gradient(180deg,#E8CFAC 0%,#D9B582 100%)',
-      boxShadow: 'inset 0 8px 16px rgba(67,37,18,.2), inset 5px 0 6px rgba(67,37,18,.12), inset -5px 0 6px rgba(67,37,18,.12)',
-    }}>
-      <div style={{
-        minHeight: '200px', display: 'flex', alignItems: 'flex-end', gap: '5px',
-        padding: '14px 12px 0', overflowX: 'auto', boxSizing: 'border-box',
-      }}>
-        {posts.map((post) => (
-          <ShelfBook key={post.id} post={post} section={section} onOpen={() => {}} />
-        ))}
-      </div>
-      <div aria-hidden="true" style={{
-        height: '17px', borderTop: '2px solid #B97943', borderBottom: '4px solid #552C18',
-        background: 'linear-gradient(180deg,#A96838 0%,#7E4525 58%,#60331C 100%)',
-        boxShadow: '0 -3px 6px rgba(57,29,14,.2), 0 5px 8px rgba(57,29,14,.28)',
-      }} />
-    </div>
-  </section>
+/* 친구 서재: 갈래를 섞어 꽂고, 안건 의견(보라)도 한 권 넣는다. 쪽지는 반응 수. */
+const friendPosts = () => [
+  ...samplePosts('assignment', 3),
+  { id: 'meeting-1', title: '급식 순서를 바꾸자는 안건에 대한 내 생각', visibility: 'class', writing_context: 'assignment', self_writing_type: null, writing_missions: { mission_type: 'meeting' }, post_reactions: [{ id: 1 }, { id: 2 }] },
+  ...samplePosts('reading', 3),
+  ...samplePosts('diary', 2),
+].map((post) => ({ ...post, visibility: 'class' }))
+
+const Heading = ({ children }) => (
+  <h3 style={{ margin: '0 0 8px', fontSize: 'var(--ui-text-md)', fontWeight: 900, color: '#3E2E23' }}>{children}</h3>
 )
 
 export default function MyShelfPreview() {
   return (
     <main style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 16px 60px' }}>
-      <h2 style={{ margin: '0 0 4px', fontSize: 'var(--ui-text-xl)', fontWeight: 900 }}>📖 내 서재 책등</h2>
+      <h2 style={{ margin: '0 0 4px', fontSize: 'var(--ui-text-xl)', fontWeight: 900 }}>📖 책장과 책등</h2>
       <p style={{ margin: '0 0 22px', color: '#8D7B6C', fontSize: 'var(--ui-text-sm)' }}>
         앞 8권은 보통 제목, 뒤 5권은 극단(200자·영어·이모지·빈 제목·빈칸만)이다.
         어떤 제목이 와도 책 크기가 흔들리지 않는지, 제목이 순서대로 읽히는지 본다. 옆으로 넘겨 끝까지 확인한다.
       </p>
-      {SHELF_SECTIONS.map((section) => (
-        <Shelf key={section.id} section={section} posts={samplePosts(section.id, 13)} />
-      ))}
+
+      {SHELF_SECTIONS.map((section) => {
+        const posts = samplePosts(section.id, 13)
+        return (
+          <section key={section.id} style={{ marginBottom: '28px' }}>
+            <Heading>{section.icon} {section.tabLabel} <span style={{ opacity: .6 }}>{posts.length}권</span></Heading>
+            <Bookshelf ariaLabel={`${section.tabLabel} 미리보기`}>
+              {posts.map((post) => (
+                <ShelfBook key={post.id} post={post} section={section} onOpen={() => {}} />
+              ))}
+            </Bookshelf>
+          </section>
+        )
+      })}
+
+      <section style={{ marginBottom: '28px' }}>
+        <Heading>👀 선생님이 보는 학생 아지트 <span style={{ opacity: .6 }}>쪽지에 글자 수</span></Heading>
+        <Bookshelf ariaLabel="선생님 보기 미리보기">
+          {samplePosts('assignment', 6).map((post) => (
+            <ShelfBook key={post.id} post={post} section={SHELF_SECTIONS[0]} note={`${post.char_count.toLocaleString('ko-KR')}자`} onOpen={() => {}} />
+          ))}
+        </Bookshelf>
+      </section>
+
+      <section style={{ marginBottom: '28px' }}>
+        <Heading>🤝 친구 공개 서재 <span style={{ opacity: .6 }}>갈래 섞임 · 쪽지에 반응 수 · 안건 의견은 보라</span></Heading>
+        <Bookshelf ariaLabel="친구 서재 미리보기" hint="← 책장을 좌우로 밀어 더 많은 글을 찾아보세요 →" style={{ borderRadius: '15px 15px 0 0' }}>
+          {friendPosts().map((post, index) => (
+            <ShelfBook
+              key={post.id}
+              post={post}
+              note={`♡ ${post.post_reactions.length}`}
+              opening={index === 1}
+              onOpen={() => {}}
+            />
+          ))}
+        </Bookshelf>
+      </section>
+
+      <section>
+        <Heading>🪵 빈 책장</Heading>
+        <Bookshelf ariaLabel="빈 책장 미리보기" hasItems={false}>
+          <BookshelfNotice icon="🪵">완성한 과제가 아직 없어요.</BookshelfNotice>
+        </Bookshelf>
+      </section>
     </main>
   )
 }
