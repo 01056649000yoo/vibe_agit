@@ -70,13 +70,10 @@ export function paginateAnthology(doc) {
     const tocPage = () => { const p = page('anthology-toc'); const h = doc.createElement('h1'); h.textContent = '차례'; p.content.append(h); return { ...p, fixed: 1 }; };
     flow(tocRows, tocPage, tocPage);
     const articles = [...source.querySelectorAll('.pdf-entry')];
-    /*
-     * 쪽 배치는 인쇄본을 만들 때 정해져 소스에 심어져 있다(`print.js`).
-     * 간지가 하나라도 있으면 이어붙이기다 — 간지는 이어붙이기에서만 만든다.
-     */
+    // 쪽 배치는 간지 유무로 추측하지 않는다. 간지 없는 이어붙이기도 같은 배치 엔진을 써야 한다.
     const dividers = new Map([...source.querySelectorAll('[data-divider]')]
         .map((node) => [Number(node.dataset.divider), node]));
-    const continuous = dividers.size > 0;
+    const continuous = source.dataset.layout === 'continuous';
     /*
      * 교사가 초안을 보고 "이 작품은 다음 쪽에서" 라고 정한 자리. 간지와 달리 쪽을 새로
      * 열기만 한다 — 목차는 다시 짤 때 저절로 맞춰지므로 따로 손댈 것이 없다.

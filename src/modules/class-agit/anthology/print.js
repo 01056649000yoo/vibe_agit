@@ -24,7 +24,7 @@ export async function buildAnthologyHtml(edition) {
     book.works.forEach((work, index) => {
         const title = String(work.group || '').trim();
         const previous = index > 0 ? String(book.works[index - 1].group || '').trim() : null;
-        if (continuous && title && title !== previous) groupStarts.set(index, title);
+        if (continuous && book.grouping === 'topic' && title && title !== previous) groupStarts.set(index, title);
     });
     const contentHeight = paper.height - paper.marginTop - paper.marginBottom;
     const contentWidth = paper.width - paper.marginX * 2;
@@ -117,7 +117,7 @@ ${[...groupStarts.entries()].map(([index, title]) => {
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;
     const back = `<div data-colophon><h1>${e(book.title)}</h1>${personal ? `<p>글쓴이 ${e(book.owner_student_name)}</p>` : ''}<p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>${personal ? '한 사람의 글을 모아 엮었습니다.' : '우리 반의 글을 모아 엮었습니다.'}\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
-    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body class="${personal ? 'anthology-personal' : 'anthology-class'}"><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
+    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body class="${personal ? 'anthology-personal' : 'anthology-class'}"><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source" data-layout="${layout}">${front}`).replace('</body>', `${back}</div></body>`);
 }
 export async function renderAnthologyWindow(target, edition) {
     const html = await buildAnthologyHtml(edition);

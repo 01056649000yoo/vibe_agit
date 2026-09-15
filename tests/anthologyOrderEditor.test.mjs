@@ -68,6 +68,14 @@ test('목차 화면은 안쪽 스크롤 상자가 없고, 끌기는 직접 정�
     assert.doesNotMatch(css, /\.book-order__list \{[^}]*max-height/);
     assert.doesNotMatch(css, /\.book-order__list \{[^}]*overflow-y/);
     assert.doesNotMatch(editor, /class-agit-order-panel|class-agit-book-items/);
+    // 묶기와 쪽 배치는 검색창 같은 select가 아니라 서로 독립된 선택 영역이다.
+    assert.match(editor, /<div className="book-order__settings">/);
+    assert.match(editor, /<legend><span>1<\/span> 작품 묶기<\/legend>/);
+    assert.match(editor, /<legend><span>2<\/span> 쪽 배치<\/legend>/);
+    assert.match(editor, /name="book-grouping"/);
+    assert.match(editor, /name="book-page-layout"/);
+    assert.match(editor, /묶기 방식과 관계없이 글이 시작되는 위치를 정합니다/);
+    assert.match(css, /\.book-order__settings \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
     // 끌기: 손잡이를 잡았을 때만(줄 전체를 잡게 하면 단추를 누르다 끌린다), 직접 정한 순서·찾기 아님·잠기지 않음.
     assert.match(editor, /const draggable = book\.grouping === 'custom' && !filtering && !locked;/);
     assert.match(editor, /dragListener=\{false\} dragControls=\{dragControls\}/);

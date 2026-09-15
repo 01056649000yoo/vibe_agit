@@ -41,8 +41,8 @@ export function galleryCoverStyle(themeId) {
  * **기본은 work-per-page** 다. 예전에 만든 문집의 모양이 바뀌면 안 된다.
  */
 export const BOOK_PAGE_LAYOUTS = Object.freeze([
-    Object.freeze({ id: 'work-per-page', label: '작품마다 새 쪽', hint: '작품 하나하나가 새 쪽에서 시작합니다.' }),
-    Object.freeze({ id: 'continuous', label: '이어붙이기', hint: '앞 작품에 이어 붙여 종이를 아낍니다. 주제가 바뀌면 간지가 들어갑니다.' })
+    Object.freeze({ id: 'work-per-page', label: '작품마다 새 쪽', hint: '각 작품을 새 쪽에서 시작해 여백을 넉넉히 둡니다.' }),
+    Object.freeze({ id: 'continuous', label: '그대로 이어붙이기', hint: '앞 작품이 끝난 자리부터 다음 작품을 이어서 종이를 아낍니다.' })
 ]);
 
 export const getBookPageLayout = (id) => BOOK_PAGE_LAYOUTS.find((layout) => layout.id === id) || BOOK_PAGE_LAYOUTS[0];

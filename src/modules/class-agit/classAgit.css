@@ -333,6 +333,18 @@
 }
 
 /* 4단계 · 목차 정하기(2026-09-15). 한 편이 한 줄이고 안쪽 스크롤 상자가 없다 — 화면 스크롤을 그대로 쓴다. */
+.book-order__settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-4); margin-bottom: var(--ui-space-4); }
+.book-order__settings fieldset { min-width: 0; margin: 0; padding: var(--ui-space-4); border: 1px solid var(--ca-line); border-radius: 16px; background: #fff; }
+.book-order__settings legend { padding: 0 6px; font-size: var(--ui-text-base); font-weight: 800; color: var(--ca-ink); }
+.book-order__settings legend span { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 6px; border-radius: 50%; background: #355c46; color: #fff; font-size: var(--ui-text-xs); }
+.book-order__settings fieldset > p { margin: 0 0 var(--ui-space-3); color: var(--ca-muted); font-size: var(--ui-text-sm); }
+.book-order__choices { display: grid; gap: 8px; }
+.book-order__choices label { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border: 1px solid #dce2d5; border-radius: 11px; background: #fafbf8; cursor: pointer; }
+.book-order__choices label.is-selected { border-color: #355c46; background: #e9efdf; box-shadow: inset 0 0 0 1px #355c46; }
+.book-order__choices input { margin-top: 3px; accent-color: #355c46; }
+.book-order__choices strong, .book-order__choices small { display: block; }
+.book-order__choices strong { color: var(--ca-ink); font-size: var(--ui-text-sm); }
+.book-order__choices small { margin-top: 2px; color: var(--ca-muted); font-size: var(--ui-text-xs); line-height: 1.45; }
 .book-order__toolbar { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: var(--ui-space-3); align-items: flex-end; padding: var(--ui-space-2) 0 var(--ui-space-3); background: #f8f8f1; border-bottom: 1px solid var(--ca-line); }
 .book-order__toolbar label { display: grid; gap: 4px; font-size: var(--ui-text-xs); color: var(--ca-muted); }
 .book-order__toolbar select, .book-order__toolbar input { min-height: 38px; padding: 6px 10px; border: 1px solid #dce2d5; border-radius: 9px; background: #fff; font: inherit; font-size: var(--ui-text-sm); color: var(--ca-ink); }
@@ -364,6 +376,7 @@
 .book-order__jump input { width: 84px; min-height: 36px; padding: 4px 8px; border: 1px solid #dce2d5; border-radius: 8px; font: inherit; font-size: var(--ui-text-sm); }
 .book-order__group { position: sticky; top: 64px; z-index: 2; margin-top: var(--ui-space-3); padding: 8px 6px 6px; background: #e9efdf; border-radius: 8px 8px 0 0; font-size: var(--ui-text-sm); font-weight: 800; color: #234c37; }
 @media (max-width: 720px) {
+    .book-order__settings { grid-template-columns: minmax(0, 1fr); }
     .book-order__row { grid-template-columns: 28px 30px minmax(0, 1fr) auto; }
     .book-order__flag { grid-column: 3; }
     .book-order__steps { grid-column: 3; justify-content: flex-start; }

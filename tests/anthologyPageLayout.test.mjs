@@ -43,12 +43,18 @@ test('고른 배치가 저장까지 이어진다', () => {
     assert.match(migration, /'layout',v_book\.page_layout/);
 });
 
-test('이어붙이기에서만 간지를 만든다', () => {
+test('주제별 묶기와 이어붙이기를 함께 골랐을 때만 간지를 만든다', () => {
     /*
      * 작품마다 새 쪽인 문집에 간지가 끼면 종이만 늘어난다. 간지는 이어붙이기의 표지 역할이다.
      */
-    assert.match(print, /if \(continuous && title && title !== previous\) groupStarts\.set\(index, title\)/);
+    assert.match(print, /if \(continuous && book\.grouping === 'topic' && title && title !== previous\) groupStarts\.set\(index, title\)/);
     assert.match(print, /data-toc-group/);
+});
+
+test('간지가 없어도 이어붙이기 설정을 그대로 사용한다', () => {
+    assert.match(print, /id="anthology-source" data-layout="\$\{layout\}"/);
+    assert.match(pagination, /const continuous = source\.dataset\.layout === 'continuous';/);
+    assert.doesNotMatch(pagination, /const continuous = dividers\.size > 0;/);
 });
 
 test('이어붙이기 차례는 주제만, 작품 목록은 간지로 간다', () => {
