@@ -346,6 +346,7 @@
 .anthology-owner-select select { width: 100%; }
 .anthology-book-kind > p { margin: var(--ui-space-3) 0 0; color: var(--ca-muted); font-size: var(--ui-text-sm); line-height: 1.55; }
 .anthology-book-kind .anthology-kind-error { color: var(--ui-color-danger, #a32626); font-weight: 700; }
+.anthology-kind-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--ui-space-3); margin-bottom: var(--ui-space-3); padding: var(--ui-space-3) var(--ui-space-4); border: 1px solid #cbd8cb; border-radius: 12px; background: #f5f8f1; font-weight: 700; color: var(--ca-ink); }
 @media (max-width: 640px) { .anthology-kind-options { grid-template-columns: 1fr; } }
 .book-order__settings fieldset { min-width: 0; margin: 0; padding: var(--ui-space-4); border: 1px solid var(--ca-line); border-radius: 16px; background: #fff; }
 .book-order__settings legend { padding: 0 6px; font-size: var(--ui-text-base); font-weight: 800; color: var(--ca-ink); }

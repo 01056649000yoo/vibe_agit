@@ -54,12 +54,13 @@ test('개인 문집은 학생당 하나이며 다른 학생 글과 다른 학생
     assert.match(migration, /학급 문집은 20권까지/);
 });
 
-test('작품 담기에서 문집 종류와 학생을 확정하고 이후 작품 찾기는 그 학생으로 고정한다', () => {
+test('1단계 표지·여는 글에서 문집 종류와 학생을 확정하고 학생 글을 자동 수집한다', () => {
     const manager = readFileSync('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
     const picker = readFileSync('src/modules/class-agit/selection/StudentBulkPicker.jsx', 'utf8');
     assert.match(manager, /학생 개인 문집 만들기/);
     assert.match(manager, /collectStudentSources\(sourceApi, classId, \{ studentId: newOwnerId/);
     assert.match(manager, /학생 글을 담아 개인 문집 만들기/);
+    assert.match(manager, /chooseOwnerStudent/);
     assert.match(manager, /ownerStudent=\{ownerStudent\}/);
     assert.match(manager, /name="문집 종류"/);
     assert.match(manager, /먼저 문집 종류를 정해 주세요/);
