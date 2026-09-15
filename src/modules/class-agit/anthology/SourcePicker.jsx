@@ -19,27 +19,29 @@ const WAYS = [
     { id: 'work', label: '작품 골라 담기', detail: '글을 하나씩 보고 고릅니다' },
 ];
 
-export default function SourcePicker({ classId, api, items, onAdd, onClose }) {
+export default function SourcePicker({ classId, api, items, onAdd, onClose, ownerStudent = null }) {
     const [way, setWay] = useState('mission');
     // `글 보기` 로 넘어올 때 그 미션을 골라 둔 채로 연다.
     const [startMission, setStartMission] = useState(null);
-    const chosen = WAYS.find((entry) => entry.id === way);
+    const effectiveWay = ownerStudent ? 'student' : way;
+    const chosen = WAYS.find((entry) => entry.id === effectiveWay);
     return <section className="class-agit-book-picker">
         <header><h2>수록할 글 찾기</h2><Button variant="outline" type="button" onClick={onClose}>찾기 닫기</Button></header>
-        <div className="anthology-ways" role="group" aria-label="담는 방법">
+        {ownerStudent && <p className="anthology-ways__detail"><strong>{ownerStudent.name}</strong> 학생의 글만 담을 수 있습니다. 지은이는 표지에 한 번만 표시됩니다.</p>}
+        {!ownerStudent && <div className="anthology-ways" role="group" aria-label="담는 방법">
             {WAYS.map((entry) => <Button key={entry.id} variant={way === entry.id ? 'primary' : 'outline'} type="button"
                 aria-pressed={way === entry.id} onClick={() => { setWay(entry.id); if (entry.id === 'mission') setStartMission(null); }}>{entry.label}</Button>)}
             <p className="anthology-ways__detail">{chosen.detail}</p>
-        </div>
-        {way === 'mission' && <MissionBulkPicker classId={classId} api={api} items={items} onAdd={onAdd}
+        </div>}
+        {effectiveWay === 'mission' && <MissionBulkPicker classId={classId} api={api} items={items} onAdd={onAdd}
             capacity={Math.max(0, limits.anthologyWorks - items.length)}
             capacityNote={`남은 자리 ${Math.max(0, limits.anthologyWorks - items.length)}편 · 담음 ${items.length}/${limits.anthologyWorks}편`}
             addLabel={(count) => `${count}편 모두 담기`}
             onPickMission={(mission) => { setStartMission(mission); setWay('work'); }} />}
-        {way === 'student' && <StudentBulkPicker classId={classId} api={api} items={items} onAdd={onAdd}
+        {effectiveWay === 'student' && <StudentBulkPicker classId={classId} api={api} items={items} onAdd={onAdd} fixedStudent={ownerStudent}
             capacity={Math.max(0, limits.anthologyWorks - items.length)}
             capacityNote={`남은 자리 ${Math.max(0, limits.anthologyWorks - items.length)}편 · 담음 ${items.length}/${limits.anthologyWorks}편`} />}
-        {way === 'work' && <SourceBrowser classId={classId} api={api} items={items} maximum={limits.anthologyWorks} scope="글꽃 책방"
+        {effectiveWay === 'work' && <SourceBrowser classId={classId} api={api} items={items} maximum={limits.anthologyWorks} scope="글꽃 책방"
             initialMission={startMission} onAdd={onAdd} />}
     </section>;
 }

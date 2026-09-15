@@ -1,16 +1,18 @@
--- 소급 기록이 표로 옮겨졌고, 추가 동의가 첫 동의를 덮지 않으며, 표·함수가 닫혀 있는지 본다. 모두 롤백된다.
+-- 기존 교사의 소급 기록과 이후 교사의 가입 동의가 표에 있고, 추가 동의가 첫 동의를 덮지 않으며,
+-- 표·함수가 닫혀 있는지 본다. 모두 롤백된다.
 DO $$
 DECLARE
     v_teacher UUID;
     v_result JSONB;
     v_missing INTEGER;
 BEGIN
-    -- 1) 20261279 가 소급한 568명이 표에 kind='backfill' 로 있어야 한다
+    -- 1) 기존 교사는 backfill, 마이그레이션 이후 가입한 교사는 signup 이므로
+    --    모든 교사에게 첫 동의 이력이 하나 이상 있어야 한다.
     SELECT count(*) INTO v_missing FROM public.profiles p
     WHERE p.role = 'TEACHER'
-      AND NOT EXISTS (SELECT 1 FROM public.policy_consents c WHERE c.user_id = p.id AND c.kind = 'backfill');
+      AND NOT EXISTS (SELECT 1 FROM public.policy_consents c WHERE c.user_id = p.id);
     IF v_missing > 0 THEN
-        RAISE EXCEPTION '소급 기록이 표에 없는 교사가 %명 있습니다.', v_missing;
+        RAISE EXCEPTION '동의 이력이 표에 없는 교사가 %명 있습니다.', v_missing;
     END IF;
     IF EXISTS (SELECT 1 FROM public.policy_consents c JOIN public.profiles p ON p.id = c.user_id
                WHERE c.kind = 'backfill' AND c.terms_agreed_at <> p.created_at) THEN

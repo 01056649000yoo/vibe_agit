@@ -15,6 +15,10 @@ export const BOOK_DESIGNS = Object.freeze([
     { id: 'editorial', label: '우리 반 매거진', description: '큰 제목과 선명한 주황 띠', paper: '#fff7ed', ink: '#2d343b', accent: '#b84920', mark: '—', border: 'solid' },
     { id: 'notebook', label: '이야기 노트', description: '푸른 줄과 손글씨 공책의 분위기', paper: '#f2f7fb', ink: '#29475e', accent: '#326481', mark: '〰', border: 'solid' },
     { id: 'constellation', label: '별을 모은 책', description: '짙은 남색 표지와 별빛 장식', paper: '#22304a', ink: '#fff8e8', accent: '#d6b577', mark: '✧', border: 'solid' },
+    { id: 'storybook', label: '동화책', description: '포근한 살구빛과 둥근 액자 장식', paper: '#fff1e6', ink: '#623d35', accent: '#d4775b', mark: '❦', border: 'solid' },
+    { id: 'ocean', label: '푸른 바다', description: '시원한 물결과 깊어지는 푸른빛', paper: '#e9f7fb', ink: '#163f59', accent: '#2186a6', mark: '≈', border: 'solid' },
+    { id: 'modern', label: '모던 블록', description: '선명한 색면과 간결한 타이포그래피', paper: '#f7f5ef', ink: '#222222', accent: '#e0b12d', mark: '■', border: 'solid' },
+    { id: 'hanji', label: '한지 문집', description: '담백한 종이결과 전통 인장 장식', paper: '#f3ecda', ink: '#392f29', accent: '#9b3d34', mark: '書', border: 'double' },
 ]);
 export const getGalleryTheme = (id) => GALLERY_THEMES.find((item) => item.id === id) || GALLERY_THEMES[0];
 export const getBookPaper = (id) => BOOK_PAPERS.find((item) => item.id === id) || BOOK_PAPERS[0];

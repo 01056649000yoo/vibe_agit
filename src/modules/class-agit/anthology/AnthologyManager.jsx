@@ -44,6 +44,8 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     const [picker, setPicker] = useState(false);
     const [source, setSource] = useState(null);
     const [projects, setProjects] = useState(null);
+    const [creatingPersonal, setCreatingPersonal] = useState(false);
+    const [newOwnerId, setNewOwnerId] = useState('');
     const busyRef = useRef(false);
     const createId = useRef(null);
     const tabs = useRef(new Map());
@@ -123,6 +125,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         setMessage('구글 문서를 만들었습니다. 문서에서 `삽입 → 목차`와 `삽입 → 페이지 번호`를 누르면 쪽수가 채워집니다.');
     });
     const selected = new Set(book?.items.map((item) => item.studentId));
+    const ownerStudent = book?.book_type === 'personal' ? workspace?.students.find((student) => student.id === book.owner_student_id) || { id: book.owner_student_id, name: book.owner_student_name } : null;
     const locked = busy || book?.archived;
     const panel = (id) => ({ role: 'tabpanel', id: `${stepId}-panel-${id}`, 'aria-labelledby': `${stepId}-tab-${id}`, hidden: step !== id, className: 'class-agit-step-panel' });
     return <section className="class-agit class-agit-management class-agit-books">
@@ -130,8 +133,11 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit-books" variant="help" />{(book || onExit) && <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => { if (book) { setBook(null); setPicker(false); setProjects(null); setStep('cover'); } else onExit(); })}>{book ? '문집 목록' : '전시 관리로'}</Button>}</div></header>
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {!workspace && !error && <p role="status">문집을 불러오고 있습니다…</p>}
-        {!book && workspace && <><p>표지와 차례를 꾸미고 우리 반의 글을 한 권의 책으로 모아 보세요.</p>{message && <p role="status">{message}</p>}<Button variant="primary" type="button" disabled={busy || workspace.books.length >= 20} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); openBook(await api.bookAction(classId, 'create', { book_id: createId.current })); createId.current = null; })}>새 문집 만들기</Button>
-            <ul className="class-agit-projects">{workspace.books.map((entry) => <li key={entry.id}><strong>{entry.title}{entry.archived ? ' · 보관함' : ''}</strong><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => run(async () => openBook(await api.getBooks(classId, entry.id)))}>문집 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => removeFromList(entry)} aria-label={`${entry.title} 문집 삭제`}>삭제</Button></div></li>)}</ul></>}
+        {!book && workspace && <><p>학급의 글을 함께 묶거나, 한 학생의 작품만 모은 개인 문집을 만들 수 있습니다.</p>{message && <p role="status">{message}</p>}
+            <div className="class-agit-header-actions"><Button variant="primary" type="button" disabled={busy} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); openBook(await api.bookAction(classId, 'create', { book_id: createId.current, book_type: 'class' })); createId.current = null; })}>우리 반 문집 만들기</Button>
+                <Button variant="outline" type="button" disabled={busy} onClick={() => setCreatingPersonal((value) => !value)}>학생 개인 문집 만들기</Button></div>
+            {creatingPersonal && <div className="class-agit-book-picker"><label>학생 선택<select value={newOwnerId} onChange={(event) => setNewOwnerId(event.target.value)}><option value="">학생을 선택하세요</option>{workspace.students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label><Button variant="primary" type="button" disabled={busy || !newOwnerId} onClick={() => run(async () => { createId.current ||= crypto.randomUUID(); openBook(await api.bookAction(classId, 'create', { book_id: createId.current, book_type: 'personal', owner_student_id: newOwnerId })); createId.current = null; })}>선택한 학생의 문집 만들기</Button></div>}
+            <ul className="class-agit-projects">{workspace.books.map((entry) => <li key={entry.id}><strong>{entry.book_type === 'personal' ? `개인 문집 · ${entry.owner_student_name} · ` : ''}{entry.title}{entry.archived ? ' · 보관함' : ''}</strong><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => run(async () => openBook(await api.getBooks(classId, entry.id)))}>문집 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => removeFromList(entry)} aria-label={`${entry.title} 문집 삭제`}>삭제</Button></div></li>)}</ul></>}
         {book && <>
             <p className="class-agit-workbench-summary">{book.items.length}편의 작품 · {getBookPaper(book.paper_format).label} · {book.editions.length}개 확정판{book.archived ? ' · 보관함' : ''}</p>
             <div className="class-agit-steps" role="tablist" aria-label="문집 제작 단계">
@@ -150,12 +156,12 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             {book.archived && <p className="class-agit-error" role="status">보관한 문집입니다. 4단계에서 복원하면 다시 편집할 수 있습니다.</p>}
 
             <div {...panel('cover')}>
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 01</span><h2>책의 첫인상을 정해요</h2><p>표지에 들어갈 제목과 학급명을 적고, 책을 여는 인사말을 남깁니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 01</span><h2>책의 첫인상을 정해요</h2><p>{ownerStudent ? `${ownerStudent.name} 학생의 이름은 표지에 자동으로 들어갑니다. 책을 여는 작가의 말을 남겨 보세요.` : '표지에 들어갈 제목과 학급명을 적고, 책을 여는 인사말을 남깁니다.'}</p></div>
                 <div className="class-agit-book-layout"><BookCover book={book} />
                     <fieldset className="class-agit-book-settings" disabled={locked}><legend>표지 · 여는 글</legend>
                         {[['title', '문집 제목', 80], ['subtitle', '부제', 120], ['class_label', '표시 학급명', 80]].map(([key, label, max]) => <label key={key}>{label}<input value={Reflect.get(book, key)} maxLength={max} onChange={(e) => edit({ ...book, [key]: e.target.value })} /></label>)}
                         <label>발행일<input type="date" value={book.issue_date} onChange={(e) => edit({ ...book, issue_date: e.target.value })} /></label>
-                        <label>여는 글<textarea value={book.introduction} maxLength={2000} rows={5} onChange={(e) => edit({ ...book, introduction: e.target.value })} /></label>
+                        <label>{ownerStudent ? '작가의 말' : '여는 글'}<textarea value={book.introduction} maxLength={2000} rows={5} onChange={(e) => edit({ ...book, introduction: e.target.value })} /></label>
                     </fieldset></div>
             </div>
 
@@ -174,20 +180,20 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             <div {...panel('works')}>
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>책에 담을 글을 모아요</h2><p>학생 글에서 바로 담거나 만들어 둔 전시의 작품을 가져옵니다. 순서는 다음 단계 `목차 정하기`에서 정합니다.</p></div>
                 <div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={locked} onClick={() => setPicker(!picker)}>학생 글에서 담기</Button>
-                    <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button></div>
+                    {!ownerStudent && <Button variant="outline" type="button" disabled={locked} onClick={() => run(async () => setProjects((await sourceApi.getWorkspace(classId)).projects))}>전시 작품 가져오기</Button>}</div>
                 {projects && <div className="class-agit-book-picker"><h3>가져올 전시</h3>{projects.length === 0 && <p>아직 전시가 없습니다. 학생 글에서 바로 담을 수 있습니다.</p>}{projects.map((project) => <Button variant="outline" type="button" key={project.id} disabled={busy} onClick={() => run(async () => {
                     const data = await sourceApi.getWorkspace(classId, project.id);
                     const items = data.draft.items.filter((item) => !item.unavailable && !item.revoked).map((item) => ({ ...item, author: item.authorName, group: item.groupTitle || '' }));
                     const next = addBookItems(book, items); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); setProjects(null); setMessage('전시 작품을 가져왔습니다.');
                 })}>{project.title} 가져오기</Button>)}<Button variant="outline" type="button" onClick={() => setProjects(null)}>가져오기 닫기</Button></div>}
-                {picker && <SourcePicker key={`${classId}:${book.id}`} items={book.items} classId={classId} api={sourceApi} onClose={() => setPicker(false)} onAdd={(values) => { const next = addBookItems(book, values.map((value) => bookItemFromSource(value, classId))); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); }} />}
+                {picker && <SourcePicker key={`${classId}:${book.id}`} items={book.items} classId={classId} api={sourceApi} ownerStudent={ownerStudent} onClose={() => setPicker(false)} onAdd={(values) => { const next = addBookItems(book, values.map((value) => bookItemFromSource(value, classId))); edit({ ...next, items: sortBookItems(next.items, next.grouping) }); }} />}
                 {/* 담은 것을 확인하는 짧은 요약. 순서는 4단계에서 정하니 여기서는 몇 편·누구 글인지만 본다. */}
                 <div className="class-agit-project-heading"><h3>담은 글 · {book.items.length}편</h3>
                     {book.items.length > 0 && <Button variant="outline" type="button" disabled={busy} onClick={() => selectStep('order')}>목차 정하기 →</Button>}</div>
                 {book.items.length === 0
                     ? <p className="class-agit-empty">아직 담은 작품이 없습니다. 위에서 학생 글이나 전시 작품을 담아 주세요.</p>
                     : <p className="anthology-hint">{[...new Set(book.items.map((item) => item.author).filter(Boolean))].length}명의 글 · 주제 {[...new Set(book.items.map((item) => item.group).filter(Boolean))].length}가지</p>}
-                <details className="class-agit-participation"><summary>아직 작품이 없는 학생 {workspace.students.filter((student) => !selected.has(student.id)).length}명</summary><p>{workspace.students.filter((student) => !selected.has(student.id)).map((student) => student.name).join(' · ') || '모두 수록했습니다.'}</p></details>
+                {!ownerStudent && <details className="class-agit-participation"><summary>아직 작품이 없는 학생 {workspace.students.filter((student) => !selected.has(student.id)).length}명</summary><p>{workspace.students.filter((student) => !selected.has(student.id)).map((student) => student.name).join(' · ') || '모두 수록했습니다.'}</p></details>}
             </div>
 
             <div {...panel('order')}>

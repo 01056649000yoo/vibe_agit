@@ -11,7 +11,7 @@ import { collectStudentSources, describeBulkResult } from '../anthology/bulkAdd.
  *
  * 목록은 학생마다 검색을 돌리지 않고 `getStudents` 한 번으로 받는다(학생 수와 담을 수 있는 글 수).
  */
-export default function StudentBulkPicker({ classId, api, items, capacity, capacityNote, onAdd }) {
+export default function StudentBulkPicker({ classId, api, items, capacity, capacityNote, onAdd, fixedStudent = null }) {
     const [students, setStudents] = useState(null);
     const [loadError, setLoadError] = useState('');
     const [input, setInput] = useState('');
@@ -49,14 +49,14 @@ export default function StudentBulkPicker({ classId, api, items, capacity, capac
         ? (progress ? `${progress.done}/${progress.total}편 확인 중…` : '글을 찾고 있습니다…') : null);
 
     const needle = input.trim().toLowerCase();
-    const shown = (students || []).filter((student) => !needle || student.name.toLowerCase().includes(needle));
+    const shown = (students || []).filter((student) => (!fixedStudent || student.id === fixedStudent.id) && (!needle || student.name.toLowerCase().includes(needle)));
 
     return <section className="anthology-bulk" aria-label="학생째 담기">
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {message && <p className="anthology-bulk__message" role="status">{message}</p>}
-        <div className="class-agit-selection-search">
+        {!fixedStudent && <div className="class-agit-selection-search">
             <label>학생 이름 찾기<input value={input} maxLength={30} placeholder="이름 일부만 적어도 됩니다" onChange={(event) => setInput(event.target.value)} /></label>
-        </div>
+        </div>}
         <div className="anthology-bulk__filters">
             <span>담을 수 있는 글은 학급에 공개하고 제출·확인한 과제 글입니다.</span>
             <span className="anthology-bulk__capacity">{capacityNote}</span>

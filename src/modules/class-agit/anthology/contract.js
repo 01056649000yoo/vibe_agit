@@ -20,6 +20,7 @@ export function buildBookSavePayload(book) {
     assertDraftSources(book.items);
     return { book_id: book.id, expected_revision: book.revision, title: book.title, subtitle: book.subtitle,
         introduction: book.introduction, class_label: book.class_label, issue_date: book.issue_date, grouping: book.grouping,
+        book_type: book.book_type || 'class', owner_student_id: book.owner_student_id || null,
         paper_format: getBookPaper(book.paper_format).id, design_id: getBookDesign(book.design_id).id,
         page_layout: getBookPageLayout(book.page_layout).id,
         // 그 앞에서 쪽을 넘길 작품의 원글 id. 순서를 바꿔도 교사가 정한 것이 따라간다.
@@ -32,7 +33,7 @@ export function sortBookItems(items, grouping) {
     return [...items].sort((a, b) => String(Reflect.get(a, key)).localeCompare(String(Reflect.get(b, key)), 'ko'));
 }
 export function assertBookWorkspace(data, classId) {
-    if (data?.version !== 1 || data.class_id !== classId || !Array.isArray(data.books) || data.books.length > 20
+    if (data?.version !== 1 || data.class_id !== classId || !Array.isArray(data.books) || data.books.length > CLASS_AGIT_LIMITS.anthologyShelfBooks
         || !Array.isArray(data.students) || data.students.length > CLASS_AGIT_LIMITS.maxCandidates
         || (data.book && (data.book.class_id !== classId || !Array.isArray(data.book.items) || data.book.items.length > CLASS_AGIT_LIMITS.anthologyWorks
             || !Array.isArray(data.book.editions) || data.book.editions.length > 20))) throw new Error('문집 응답을 확인할 수 없습니다.');

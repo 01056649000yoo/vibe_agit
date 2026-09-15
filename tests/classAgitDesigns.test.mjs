@@ -14,6 +14,7 @@ import { assertPublicGalleryResponse } from '../src/modules/class-agit/public/pu
 import { createPublicPreviewApi } from '../src/modules/class-agit/public/preview.js';
 const migration = 'supabase/migrations/20261246_class_agit_designs_and_deletion.sql';
 const sql = readFileSync(migration, 'utf8');
+const personalSql = readFileSync('supabase/migrations/20261296_personal_anthologies_and_book_designs.sql', 'utf8');
 const body = (name) => {
     const start = sql.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`);
     return start < 0 ? undefined : sql.slice(start, sql.indexOf('$$;', start) + 3);
@@ -41,9 +42,10 @@ test('같이 쓰는 디자인·판형 ID는 UI 레지스트리와 DB의 모든 �
     }
     assert.deepEqual(BOOK_PAPERS.map(({ id, width, height }) => [id, width, height]), [['A4', 210, 297], ['A5', 148, 210], ['B5', 182, 257]]);
     assert.ok(sql.includes(`CHECK(paper_format IN (${BOOK_PAPERS.map(({ id }) => `'${id}'`).join(',')}))`));
-    assert.ok(sql.includes(`CHECK(design_id IN (${BOOK_DESIGNS.map(({ id }) => `'${id}'`).join(',')}))`));
+    assert.ok(personalSql.includes(`CHECK(design_id IN (${BOOK_DESIGNS.map(({ id }) => `'${id}'`).join(',')}))`));
     for (const id of GALLERY_THEMES.map((theme) => theme.id)) assert.ok(body('run_class_agit_action_v1').includes(`'${id}'`));
-    for (const id of [...BOOK_PAPERS, ...BOOK_DESIGNS].map((entry) => entry.id)) assert.ok(body('run_class_agit_book_action_v1').includes(`'${id}'`));
+    for (const id of BOOK_PAPERS.map((entry) => entry.id)) assert.ok(body('run_class_agit_book_action_v1').includes(`'${id}'`));
+    for (const id of BOOK_DESIGNS.map((entry) => entry.id)) assert.ok(personalSql.includes(`'${id}'`));
 });
 test('기존 확정판은 A4 v1로 읽고 새 판은 허용 판형·디자인만 받아 12pt 이상으로 출력한다', async () => {
     assert.equal(validBookPrintSettings(ANTHOLOGY_PRINT_SETTINGS), true);

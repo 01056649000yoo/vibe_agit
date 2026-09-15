@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal.jsx';
 import ModalCloseButton from '../../../components/common/ModalCloseButton.jsx';
 
-export default function ArtworkReader({ work, onClose, onPrevious, onNext, footer, roomTitle, loading = false, error = null }) {
+export default function ArtworkReader({ work, onClose, onPrevious, onNext, footer, roomTitle, loading = false, error = null, hideAuthor = false }) {
     const dialog = useRef(null);
     const text = useRef(null);
     const titleId = useId();
@@ -40,7 +40,7 @@ export default function ArtworkReader({ work, onClose, onPrevious, onNext, foote
         <article ref={text} className="class-agit-reader__page" data-format={work?.format} style={{ '--reading-size': `${fontSize}px` }}>
             <span className="class-agit-eyebrow">{work?.kindLabel || '작품 읽기'}</span>
             <h2 id={titleId}>{work?.title || '작품 읽기'}</h2>
-            {loading ? <p role="status">작품을 불러오고 있어요…</p> : error ? <p role="alert">{error}</p> : work && <><p className="class-agit-reader__author">{work.author}</p>
+            {loading ? <p role="status">작품을 불러오고 있어요…</p> : error ? <p role="alert">{error}</p> : work && <>{!hideAuthor && <p className="class-agit-reader__author">{work.author}</p>}
             <div className="class-agit-reader__text">{work.blocks.map((block, index) => <p key={index}>{block}</p>)}</div></>}
         </article>
         <footer className="class-agit-reader__footer">

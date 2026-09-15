@@ -55,7 +55,7 @@ function RowMenu({ item, index, count, locked, busy, dirty, onRead, onRefresh, o
     </details>;
 }
 
-function RowBody({ item, index, count, locked, draggable, dragControls, onStep, onRead, ...menu }) {
+function RowBody({ item, index, count, locked, draggable, dragControls, onStep, onRead, hideAuthor = false, ...menu }) {
     return <>
         {draggable
             ? <button type="button" className="book-order__handle" aria-label={`${item.title} 끌어서 옮기기`} title="끌어서 옮기기"
@@ -64,7 +64,7 @@ function RowBody({ item, index, count, locked, draggable, dragControls, onStep, 
         <span className="book-order__number">{index + 1}</span>
         <button type="button" className="book-order__title" onClick={() => onRead(item)} title="읽기">
             <strong>{item.title}</strong>
-            <small>{item.author}{item.group ? ` · ${item.group}` : ''}</small>
+            <small>{hideAuthor ? item.group : `${item.author}${item.group ? ` · ${item.group}` : ''}`}</small>
         </button>
         {bookItemNeedsReview(item) && <span className="book-order__flag class-agit-error">원글 재확인 필요</span>}
         <span className="book-order__steps">
@@ -86,6 +86,7 @@ function DraggableRow({ item, ...rest }) {
 export default function BookOrderEditor({ book, locked, busy, dirty, onEdit, onRead, onRefresh, onWithdraw }) {
     const [query, setQuery] = useState('');
     const items = book.items;
+    const personal = book.book_type === 'personal';
     const count = items.length;
     const shown = findBookItems(items, query);
     const filtering = query.trim() !== '';
@@ -95,17 +96,17 @@ export default function BookOrderEditor({ book, locked, busy, dirty, onEdit, onR
     const moveTo = (from, to) => setOrder(moveBookItem(items, from, to));
     const step = (index, delta) => moveTo(index, index + delta);
     const remove = (index) => onEdit({ ...book, items: items.filter((_, i) => i !== index) });
-    const rowProps = { count, locked, busy, dirty, onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
+    const rowProps = { count, locked, busy, dirty, hideAuthor: personal, onStep: step, onMoveTo: moveTo, onRead, onRefresh, onRemove: remove, onWithdraw };
 
     return <section className="book-order" aria-label="목차 정하기">
         <div className="book-order__toolbar">
             <label>작품 묶기<select value={book.grouping} disabled={locked} onChange={(event) => onEdit({ ...book, grouping: event.target.value, items: sortBookItems(items, event.target.value) })}>
-                {GROUPINGS.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+                {GROUPINGS.filter((entry) => !personal || entry.id !== 'author').map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
             </select></label>
             <label>쪽 배치<select value={getBookPageLayout(book.page_layout).id} disabled={locked} onChange={(event) => onEdit({ ...book, page_layout: event.target.value })}>
                 {BOOK_PAGE_LAYOUTS.map((layout) => <option key={layout.id} value={layout.id}>{layout.label}</option>)}
             </select></label>
-            <label className="book-order__search">찾기<input value={query} maxLength={80} placeholder="제목 · 학생 이름 · 주제" onChange={(event) => setQuery(event.target.value)} /></label>
+            <label className="book-order__search">찾기<input value={query} maxLength={80} placeholder={personal ? '제목 · 주제' : '제목 · 학생 이름 · 주제'} onChange={(event) => setQuery(event.target.value)} /></label>
             <span className="book-order__count">{filtering ? `${shown.length}편 찾음 · ` : ''}차례 {count}편</span>
         </div>
         <p className="anthology-hint">{getBookPageLayout(book.page_layout).hint}{' '}

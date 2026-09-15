@@ -37,6 +37,7 @@ const documentTitle = (edition) => {
 export function buildAnthologyDocRequests(edition) {
     assertBookEdition(edition);
     const book = edition.book;
+    const personal = book.book_type === 'personal';
     const requests = [];
     let cursor = 1;
 
@@ -68,9 +69,10 @@ export function buildAnthologyDocRequests(edition) {
     };
 
     // ── 표지 ──────────────────────────────────────────────────────────────
-    write('우리 반의 이야기\n', { alignment: 'CENTER' });
+    write(`${personal ? '나의 글 모음' : '우리 반의 이야기'}\n`, { alignment: 'CENTER' });
     write(`${book.title}\n`, { style: 'TITLE', alignment: 'CENTER' });
     if (book.subtitle) write(`${book.subtitle}\n`, { alignment: 'CENTER' });
+    if (personal && book.owner_student_name) write(`${book.owner_student_name} 지음\n`, { alignment: 'CENTER' });
     write('\n', { alignment: 'CENTER' });
     if (book.class_label) write(`${book.class_label}\n`, { alignment: 'CENTER' });
     if (book.issue_date) write(`${book.issue_date}\n`, { alignment: 'CENTER' });
@@ -79,7 +81,7 @@ export function buildAnthologyDocRequests(edition) {
 
     // ── 여는 글 ───────────────────────────────────────────────────────────
     if (book.introduction) {
-        write('여는 글\n', { style: 'HEADING_1' });
+        write(`${personal ? '작가의 말' : '여는 글'}\n`, { style: 'HEADING_1' });
         book.introduction.split(/\n\s*\n/u).forEach((paragraph) => write(`${paragraph}\n`));
         pageBreak();
     }
@@ -92,7 +94,7 @@ export function buildAnthologyDocRequests(edition) {
     write('\n');
     // 제목을 `HEADING_1` 로 쓰지 않는다. 그러면 자동 목차가 목차 자신을 포함해 버린다.
     write('목차\n', { bold: true });
-    book.works.forEach((work, index) => write(`${index + 1}. ${work.title} · ${work.author}\n`));
+    book.works.forEach((work, index) => write(`${index + 1}. ${work.title}${personal ? '' : ` · ${work.author}`}\n`));
     pageBreak();
 
     // ── 본문 ──────────────────────────────────────────────────────────────
@@ -100,7 +102,7 @@ export function buildAnthologyDocRequests(edition) {
         if (index > 0) pageBreak();
         // 자동 목차가 잡는 것은 이 `HEADING_1` 뿐이다.
         write(`${work.title}\n`, { style: 'HEADING_1' });
-        const byline = [work.author, work.group].filter(Boolean).join(' · ');
+        const byline = [personal ? null : work.author, work.group].filter(Boolean).join(' · ');
         if (byline) write(`${byline}\n`);
         write('\n');
         work.blocks.forEach((block) => write(`${block}\n`));
@@ -110,9 +112,10 @@ export function buildAnthologyDocRequests(edition) {
     // ── 판권지 ────────────────────────────────────────────────────────────
     write('판권지\n', { bold: true });
     write(`${book.title}\n`, { alignment: 'CENTER' });
+    if (personal && book.owner_student_name) write(`글쓴이 ${book.owner_student_name}\n`, { alignment: 'CENTER' });
     if (book.class_label) write(`${book.class_label}\n`, { alignment: 'CENTER' });
     write(`발행일 ${book.issue_date || '-'} · ${edition.draft ? '검토용 초안' : `${edition.number}판`}\n`, { alignment: 'CENTER' });
-    write('우리 반의 글을 모아 엮었습니다.\n', { alignment: 'CENTER' });
+    write(`${personal ? '한 사람의 글을 모아 엮었습니다.' : '우리 반의 글을 모아 엮었습니다.'}\n`, { alignment: 'CENTER' });
     write('글의 권리는 각 글쓴이에게 있습니다.\n', { alignment: 'CENTER' });
     write('끄적끄적 아지트 · 글꽃 책방\n', { alignment: 'CENTER' });
 

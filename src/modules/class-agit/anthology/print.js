@@ -13,6 +13,7 @@ export async function buildAnthologyHtml(edition) {
      * 목차도 **주제 아래 작품**으로 들여쓴다. 예전 확정판에는 이 값이 없어 기본(작품마다 새 쪽)이다.
      */
     const layout = getBookPageLayout(book.print.layout).id;
+    const personal = book.book_type === 'personal';
     const continuous = layout === 'continuous';
     // 주제가 바뀌는 첫 작품의 자리를 미리 표시해 둔다 — 간지와 목차가 같은 기준을 쓴다.
     // 교사가 "여기서 쪽을 넘긴다" 고 정한 작품. 확정판에도 함께 실려 온다.
@@ -79,14 +80,20 @@ ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{displa
 .anthology-cover[data-design="editorial"] [data-cover]{border:0;border-top:6mm solid ${design.accent};border-bottom:1.5mm solid ${design.accent};text-align:left;align-items:stretch}
 .anthology-cover[data-design="notebook"] [data-cover]{border:.3mm solid #adc3d4;border-left:2mm solid ${design.accent};background:repeating-linear-gradient(0deg,transparent 0 7mm,#32648118 7.1mm 7.3mm)}
 .anthology-cover[data-design="constellation"]{background-image:radial-gradient(circle at 15% 20%,#d6b577 0 .3mm,transparent .5mm),radial-gradient(circle at 90% 70%,#d6b577 0 .3mm,transparent .5mm);background-size:23mm 29mm,31mm 37mm}
+.anthology-cover[data-design="storybook"] [data-cover]{border-radius:45% 45% 3mm 3mm;box-shadow:inset 0 0 0 1mm #fff8}
+.anthology-cover[data-design="ocean"]{background-image:radial-gradient(ellipse at 15% 92%,#fff8 0 9%,transparent 10%),radial-gradient(ellipse at 52% 96%,#fff7 0 13%,transparent 14%),linear-gradient(#eafaff,#94d7e7)}
+.anthology-cover[data-design="ocean"] [data-cover]{border:0;border-bottom:5mm solid ${design.accent}}
+.anthology-cover[data-design="modern"] [data-cover]{border:0;border-left:10mm solid ${design.accent};text-align:left;align-items:stretch}
+.anthology-cover[data-design="hanji"]{background-image:repeating-linear-gradient(8deg,#ffffff10 0 .5mm,#684f3610 .7mm 1mm)}
+.anthology-personal .pdf-entry__author,.anthology-personal .poem-sheet__author{display:none}
 .anthology-page:not(.anthology-cover) h1{color:${design.id === 'constellation' ? '#3b4b68' : design.accent}}
 .anthology-page:not(.anthology-cover) .pdf-entry__rule{border-color:${design.id === 'constellation' ? '#8c784e' : design.accent}}
 .anthology-cover .anthology-page-number{color:${design.ink};border:0}
 .anthology-page-number{border-top:.2mm solid #cbd5e1;padding-top:2mm;color:#475569}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
-    const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>우리 반의 이야기</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div><p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
-${book.introduction ? `<section data-introduction><h1>여는 글</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
+    const front = `<div data-cover data-design="${design.id}" data-compact="${[book.title, book.subtitle, book.class_label].join('').length > 180}"><p>${personal ? '나의 글 모음' : '우리 반의 이야기'}</p><h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div>${personal ? `<p><strong>${e(book.owner_student_name)} 지음</strong></p>` : ''}<p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
+${book.introduction ? `<section data-introduction><h1>${personal ? '작가의 말' : '여는 글'}</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
 ${book.works.map((w, i) => {
     /*
      * 이어붙이기의 차례는 **주제만** 싣는다. 작품까지 모두 실으면 주제가 다섯을 넘는 순간
@@ -97,7 +104,7 @@ ${book.works.map((w, i) => {
         const groupTitle = groupStarts.get(i);
         return groupTitle ? `<div data-toc-row="g${i}" data-toc-group><span>${e(groupTitle)}</span><span data-page></span></div>` : '';
     }
-    return `<div data-toc-row="${i}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+    return `<div data-toc-row="${i}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
 }).join('')}
 ${[...forcedBreaks].map((index) => `<div data-forced-break="${index}"></div>`).join('')}
 ${[...groupStarts.entries()].map(([index, title]) => {
@@ -105,12 +112,12 @@ ${[...groupStarts.entries()].map(([index, title]) => {
     const until = [...groupStarts.keys()].find((key) => key > index) ?? book.works.length;
     const rows = book.works.slice(index, until).map((w, offset) => {
         const workIndex = index + offset;
-        return `<div data-divider-row="${workIndex}"><span>${e(w.title)} · ${e(w.author)}</span><span data-page></span></div>`;
+        return `<div data-divider-row="${workIndex}"><span>${e(w.title)}${personal ? '' : ` · ${e(w.author)}`}</span><span data-page></span></div>`;
     }).join('');
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;
-    const back = `<div data-colophon><h1>${e(book.title)}</h1><p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>우리 반의 글을 모아 엮었습니다.\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
-    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
+    const back = `<div data-colophon><h1>${e(book.title)}</h1>${personal ? `<p>글쓴이 ${e(book.owner_student_name)}</p>` : ''}<p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>${personal ? '한 사람의 글을 모아 엮었습니다.' : '우리 반의 글을 모아 엮었습니다.'}\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
+    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body class="${personal ? 'anthology-personal' : 'anthology-class'}"><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source">${front}`).replace('</body>', `${back}</div></body>`);
 }
 export async function renderAnthologyWindow(target, edition) {
     const html = await buildAnthologyHtml(edition);
