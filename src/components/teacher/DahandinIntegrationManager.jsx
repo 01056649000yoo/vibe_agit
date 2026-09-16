@@ -100,6 +100,16 @@ export default function DahandinIntegrationManager({ activeClass }) {
     const [lastRun, setLastRun] = useState(null);
     const [error, setError] = useState('');
     const [tab, setTab] = useState('setup'); // 'setup'(연동) | 'dashboard'(정산·대시보드)
+    const [days, setDays] = useState(30);    // 대시보드 조회 기간(일)
+
+    // 기간 토글: 고른 기간으로 대시보드만 다시 불러온다.
+    const changeDays = useCallback(async (nextDays) => {
+        setDays(nextDays);
+        try {
+            const dash = await getDashboard(classId, nextDays);
+            setDashboard(dash);
+        } catch { /* 조회 실패는 조용히 넘긴다(직전 값 유지) */ }
+    }, [classId]);
 
     const loadAll = useCallback(async () => {
         if (!classId) return;
@@ -485,14 +495,36 @@ export default function DahandinIntegrationManager({ activeClass }) {
             <section style={sectionStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <h3 style={{ ...titleStyle, marginBottom: 0 }}>📊 다했어요 대시보드</h3>
-                    <Button type="button" variant="ghost" size="sm" onClick={exportCsv} disabled={!(dashboard?.per_student?.length)}>
-                        CSV 내려받기
-                    </Button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        {/* 기간 토글: 지저분해지지 않게 고른 기간만 본다 */}
+                        <div role="group" aria-label="조회 기간" style={{ display: 'flex', gap: '4px', padding: '3px', background: '#E9EEF6', borderRadius: 'var(--ui-radius-md)' }}>
+                            {[{ d: 7, l: '7일' }, { d: 30, l: '30일' }, { d: 90, l: '90일' }].map((opt) => {
+                                const active = days === opt.d;
+                                return (
+                                    <button
+                                        key={opt.d} type="button" onClick={() => changeDays(opt.d)}
+                                        aria-pressed={active}
+                                        style={{
+                                            padding: '5px 12px', borderRadius: 'var(--ui-radius-sm)', cursor: 'pointer',
+                                            border: 'none', background: active ? 'white' : 'transparent',
+                                            color: active ? '#315FC4' : '#64748B', fontWeight: 700, fontSize: 'var(--ui-text-sm)',
+                                            boxShadow: active ? '0 2px 6px rgba(37,99,235,.08)' : 'none'
+                                        }}
+                                    >
+                                        {opt.l}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" onClick={exportCsv} disabled={!(dashboard?.per_student?.length)}>
+                            CSV 내려받기
+                        </Button>
+                    </div>
                 </div>
-                <p style={hintStyle}>최근 30일 다했니 포인트 지급 현황이에요.</p>
+                <p style={hintStyle}>최근 {days}일 다했니 포인트 지급 현황이에요. (오래된 기록은 자동으로 정리됩니다.)</p>
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                    <StatCard label="지급 포인트(30일)" value={`${summary.total_points ?? 0}P`} />
+                    <StatCard label={`지급 포인트(${days}일)`} value={`${summary.total_points ?? 0}P`} />
                     <StatCard label="지급 횟수" value={summary.total_grants ?? 0} />
                     <StatCard label="받은 학생" value={`${summary.student_count ?? 0}명`} />
                     <StatCard label="매칭된 학생" value={`${summary.linked_count ?? 0}명`} />
