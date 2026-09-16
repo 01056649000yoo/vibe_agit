@@ -247,7 +247,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                     }}><span className="class-agit-step-number">{index + 1}</span><span><strong>{entry.title}</strong><small>{entry.detail}</small></span></button>)}
             </div>
             <div className="class-agit-status" role="status">{busy ? '문집을 처리하고 있습니다…' : message || (dirty ? '저장하지 않은 변경이 있습니다.' : '저장된 초안입니다.')}</div>
-            {book.archived && <p className="class-agit-error" role="status">보관한 문집입니다. 4단계에서 복원하면 다시 편집할 수 있습니다.</p>}
+            {book.archived && <p className="class-agit-error" role="status">보관한 문집입니다. 5단계에서 복원하면 다시 편집할 수 있습니다.</p>}
 
             <div {...panel('cover')}>
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 01</span><h2>책의 첫인상을 정해요</h2><p>{ownerStudent ? `${ownerStudent.name} 학생의 이름은 표지에 자동으로 들어갑니다. 책을 여는 작가의 말을 남겨 보세요.` : '먼저 우리 반 문집과 개인 문집 중 고르고, 표지에 들어갈 제목과 책을 여는 인사말을 남깁니다.'}</p></div>

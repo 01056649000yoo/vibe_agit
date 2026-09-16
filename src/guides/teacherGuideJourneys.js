@@ -116,7 +116,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         estimatedTime: '학기말',
         steps: [
             step('class-exhibition', '우리 반 글꽃 전시관', '작품을 선정하고 공간을 꾸며 학생 감상·외부 공유로 이어갑니다.', 'class-agit'),
-            step('class-anthology', '우리 반의 책 만들기', '판형과 디자인을 골라 글을 엮고 확정판을 남깁니다.', 'class-agit-books'),
+            step('class-anthology', '우리 반 책·문집 만들기', '우리 반 문집이나 학생 개인 문집을 골라 판형과 디자인으로 엮고 확정판을 남깁니다.', 'class-agit-books'),
             step('export-records', '글과 기록 내보내기', '보관한 글을 필요한 형식으로 확인하고 내보냅니다.', 'archive'),
             step('close-dragon-season', '수호룡 시즌 마감', '작별 편지·시즌 종료·새 학기 시작의 차이를 확인한 뒤 진행합니다.', 'dragon'),
             step('archive-or-delete-class', '학급 보관과 삭제', '복구 가능한 보관과 되돌릴 수 없는 영구 삭제를 구분합니다.', 'settings:class')
