@@ -99,6 +99,7 @@ export default function DahandinIntegrationManager({ activeClass }) {
     const [syncing, setSyncing] = useState(false);
     const [lastRun, setLastRun] = useState(null);
     const [error, setError] = useState('');
+    const [tab, setTab] = useState('setup'); // 'setup'(연동) | 'dashboard'(정산·대시보드)
 
     const loadAll = useCallback(async () => {
         if (!classId) return;
@@ -268,6 +269,36 @@ export default function DahandinIntegrationManager({ activeClass }) {
             {notice}
             {error && <p style={{ color: '#B91C1C', fontSize: 'var(--ui-text-sm)' }}>{error}</p>}
 
+            {/* 탭: 사이드바를 내리지 않고 한 화면에서 연동/대시보드를 오간다 */}
+            <div role="tablist" aria-label="다했니 연동" style={{
+                display: 'flex', gap: '6px', padding: '5px', marginBottom: '16px',
+                background: '#E9EEF6', borderRadius: 'var(--ui-radius-lg)', width: 'fit-content'
+            }}>
+                {[
+                    { id: 'setup', icon: '🔗', label: '연동 설정' },
+                    { id: 'dashboard', icon: '📊', label: '정산·대시보드' }
+                ].map((t) => {
+                    const active = tab === t.id;
+                    return (
+                        <button
+                            key={t.id} type="button" role="tab" aria-selected={active}
+                            onClick={() => setTab(t.id)}
+                            style={{
+                                padding: '9px 16px', borderRadius: 'var(--ui-radius-md)', cursor: 'pointer',
+                                border: active ? '1px solid #C7D7FE' : '1px solid transparent',
+                                background: active ? 'white' : 'transparent',
+                                color: active ? '#315FC4' : '#64748B',
+                                boxShadow: active ? '0 3px 10px rgba(37,99,235,.09)' : 'none',
+                                fontSize: 'var(--ui-text-md)', fontWeight: 700
+                            }}
+                        >
+                            {t.icon} {t.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {tab === 'setup' && (<>
             {/* ① 키 연결 */}
             <section style={sectionStyle}>
                 <h3 style={titleStyle}><span style={stepBadge}>1</span>다했니 API 키 연결</h3>
@@ -447,8 +478,10 @@ export default function DahandinIntegrationManager({ activeClass }) {
                     </div>
                 )}
             </section>
+            </>)}
 
-            {/* 📊 다했어요 대시보드 */}
+            {tab === 'dashboard' && (
+            /* 📊 정산 실행 결과 · 다했어요 대시보드 */
             <section style={sectionStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <h3 style={{ ...titleStyle, marginBottom: 0 }}>📊 다했어요 대시보드</h3>
@@ -504,6 +537,7 @@ export default function DahandinIntegrationManager({ activeClass }) {
                     </div>
                 )}
             </section>
+            )}
         </div>
     );
 }
