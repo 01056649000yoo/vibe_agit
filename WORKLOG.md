@@ -19,6 +19,20 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-16 — 교사 과제 미확인 제출건 NEW 알림 및 강조 UI 구현 (Gemini)
+- **요청**: 교사가 과제를 확인하고 나서 학생이 나중에 제출하는 경우 NEW를 표시해서 확인해야 할 과제제출건이 있음을 보여주도록 개선.
+- **한 일**:
+  - `MissionList.jsx`의 과제 카드(`MissionItem`)에서 학생이 제출했으나 미승인된 글이 있을 때(`pendingCount > 0`), 카드 상단 장르 태그 옆에 선명한 빨간 알약 배지(`NEW ${pendingCount}`)를 표시하고, 카드 테두리에 부드러운 붉은 톤 하이라이트(`1.5px solid #FCA5A5`)와 그림자 적용.
+  - 과제 카드의 하단 '학생 글 확인' 버튼을 붉은색 계열(`bg: #FEF2F2, border: #FECACA, text: #DC2626`)로 강조하고 텍스트에 `📝 학생 글 확인 · 미확인 ${pendingCount}` 표시.
+  - 과제 목록 상단 필터바에 미확인 글이 있는 과제가 1개 이상 존재할 때 `🔔 확인 필요 (N)` 탭을 생성하여 클릭 한 번으로 미확인 과제만 모아볼 수 있도록 지원.
+  - `MissionManager.jsx`, `TeacherMissionTab.jsx`, `TeacherWritingHub.jsx`, `TeacherDashboard.jsx` 간 `onPendingCountChange`를 연결하여 `submissionBoard.pending_total`을 상위 대시보드로 동기화.
+  - `TeacherDashboard.jsx` 2차 사이드바 메뉴의 `선생님 과제` 탭에 총 미확인 편수를 나타내는 빨간 카운트 배지(`.teacher-subtab__badge-new`)를 표시하고, 다른 1차 탭에 있을 때는 `✍️ 글쓰기` 탭에 알림 도트(`.teacher-dashboard__nav-dot`) 표시.
+  - `TeacherDashboard.css`에 디자인 시스템 글자 크기 토큰(`var(--ui-text-xs)`)을 준수한 뱃지 및 도트 스타일 추가.
+  - `tests/missionPendingNotification.test.mjs` 신규 단위 테스트 추가.
+- **변경**: `MissionList.jsx`, `MissionManager.jsx`, `TeacherMissionTab.jsx`, `TeacherWritingHub.jsx`, `TeacherDashboard.jsx`, `TeacherDashboard.css`, `tests/missionPendingNotification.test.mjs`, `ROADMAP.md`, `WORKLOG.md`. DB 변경 없음.
+- **결과/검증**: `node --test tests/missionPendingNotification.test.mjs` 등 관련 26개 테스트 100% 통과, ESLint 오류 0건, 디자인 시스템 토큰 규격 준수.
+- **남은 것 / 다음**: 운영 배포 후 과제 카드 및 상단 메뉴 탭의 알림 동작 확인.
+
 ## 2026-09-16 — 2026-09-16 업데이트 공지사항 등록 마이그레이션 (Gemini)
 - **요청**: 오늘 작업한 내역(독서록·일기 NEW 뱃지, 운영현황 첫 화면, 학급 스크린 버그 수정 및 전환 단축키)을 앱 내 공지사항에 등록.
 - **한 일**:

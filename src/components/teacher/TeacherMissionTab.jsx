@@ -5,7 +5,8 @@ const MissionManager = lazy(() => import('./MissionManager'));
 const TeacherMissionTab = ({
     activeClass, isMobile, missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
-    navigationTarget, onNavigationHandled, bootstrapProfile
+    navigationTarget, onNavigationHandled, bootstrapProfile,
+    onPendingCountChange
 }) => (
     <section
         aria-labelledby="teacher-missions-heading"
@@ -27,6 +28,7 @@ const TeacherMissionTab = ({
                     navigationTarget={navigationTarget}
                     onNavigationHandled={onNavigationHandled}
                     bootstrapProfile={bootstrapProfile}
+                    onPendingCountChange={onPendingCountChange}
                 />
             </Suspense>
         </div>

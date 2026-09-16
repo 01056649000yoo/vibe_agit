@@ -46,6 +46,7 @@ const MissionItem = memo(({
     const isMeetingMission = genreMissionType?.id === 'meeting';
     const supportsEvaluation = genreMissionType?.supportsEvaluation !== false;
     const pendingCount = Number(missionStatus?.pendingCount || 0);
+    const hasPending = pendingCount > 0 && !isMeetingMission;
     const progressLabel = isMeetingMission
         ? `💡 제안 ${submittedCount}건`
         : `✍️ 제출 ${submittedCount}/${totalStudentCount}`;
@@ -56,15 +57,51 @@ const MissionItem = memo(({
     return (
         <motion.div data-mission-id={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
             background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : (isSmall ? '10px' : isLarge ? '18px' : '14px'),
-            borderRadius: '16px', border: isHighlighted ? '2px solid #F59E0B' : isMeetingMission ? '1px solid #DDD6FE' : '1px solid #ECEFF1',
-            boxShadow: isHighlighted ? '0 8px 20px rgba(245, 158, 11, 0.16)' : '0 3px 9px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: isSmall ? '6px' : isLarge ? '10px' : '8px',
+            borderRadius: '16px',
+            border: isHighlighted
+                ? '2px solid #F59E0B'
+                : hasPending
+                    ? '1.5px solid #FCA5A5'
+                    : isMeetingMission
+                        ? '1px solid #DDD6FE'
+                        : '1px solid #ECEFF1',
+            boxShadow: isHighlighted
+                ? '0 8px 20px rgba(245, 158, 11, 0.16)'
+                : hasPending
+                    ? '0 4px 14px rgba(239, 68, 68, 0.08)'
+                    : '0 3px 9px rgba(0,0,0,0.03)',
+            display: 'flex', flexDirection: 'column', gap: isSmall ? '6px' : isLarge ? '10px' : '8px',
             width: '100%', boxSizing: 'border-box',
             wordBreak: 'keep-all', overflowWrap: 'break-word', transition: 'all 0.25s ease'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span style={isMeetingMission ? { ...GENRE_TAG_STYLE, background: '#F5F3FF', color: '#6D28D9' } : GENRE_TAG_STYLE}>
-                    {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
+                    <span style={isMeetingMission ? { ...GENRE_TAG_STYLE, background: '#F5F3FF', color: '#6D28D9' } : GENRE_TAG_STYLE}>
+                        {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
+                    </span>
+                    {hasPending && (
+                        <span
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '2px 7px',
+                                background: '#EF4444',
+                                color: '#FFFFFF',
+                                borderRadius: '999px',
+                                fontSize: '0.72rem',
+                                fontWeight: '900',
+                                lineHeight: 1.2,
+                                letterSpacing: '-0.2px',
+                                boxShadow: '0 2px 4px rgba(239, 68, 68, 0.28)'
+                            }}
+                            title={`확인 대기 중인 글이 ${pendingCount}편 있습니다.`}
+                            aria-label={`확인 대기 ${pendingCount}편`}
+                        >
+                            NEW {pendingCount}
+                        </span>
+                    )}
+                </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '4px' }}>
                     <button onClick={(e) => {
                         e.stopPropagation();
@@ -171,11 +208,20 @@ const MissionItem = memo(({
                     onClick={() => isMeetingMission ? onReviewMission(mission) : fetchPostsForMission(mission)}
                     style={isMeetingMission
                         ? { ...VIEWER_BUTTON_STYLE, backgroundColor: '#7C3AED', color: 'white', border: '1px solid #7C3AED' }
-                        : { ...VIEWER_BUTTON_STYLE, backgroundColor: '#F1F3F5', color: '#495057', border: '1px solid #E9ECEF' }}
+                        : hasPending
+                            ? {
+                                ...VIEWER_BUTTON_STYLE,
+                                backgroundColor: '#FEF2F2',
+                                color: '#DC2626',
+                                border: '1px solid #FECACA'
+                            }
+                            : { ...VIEWER_BUTTON_STYLE, backgroundColor: '#F1F3F5', color: '#495057', border: '1px solid #E9ECEF' }}
                 >
                     {isMeetingMission
                         ? `💡 ${isSmall ? '검토' : genreMissionType.reviewLabel} (${submittedCount})`
-                        : `📝 ${isSmall ? '글 확인' : '학생 글 확인'}${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
+                        : hasPending
+                            ? `📝 ${isSmall ? '글 확인' : '학생 글 확인'} · 미확인 ${pendingCount}`
+                            : `📝 ${isSmall ? '글 확인' : '학생 글 확인'}`}
                 </Button>
                 {supportsEvaluation && mission.evaluation_rubric?.use_rubric && (
                     <>
@@ -246,8 +292,21 @@ const MissionList = ({
         );
     }
 
+    const pendingMissions = missions.filter((mission) => {
+        const status = missionStatuses?.[mission.id];
+        const count = Number(status?.pendingCount || 0);
+        const isMeeting = resolveGenreMissionTypeId(mission) === 'meeting';
+        return count > 0 && !isMeeting;
+    });
+
     const filters = [
         { id: 'all', label: '전체', count: missions.length },
+        ...(pendingMissions.length > 0 ? [{
+            id: 'pending',
+            label: '🔔 확인 필요',
+            count: pendingMissions.length,
+            isHighlight: true
+        }] : []),
         { id: 'freeform', label: '자유 글쓰기', count: missions.filter((mission) => !resolveGenreMissionTypeId(mission)).length },
         ...getGenreMissionTypes().map((missionType) => ({
             id: missionType.id,
@@ -257,11 +316,13 @@ const MissionList = ({
     ];
     const visibleMissions = activeFilter === 'all'
         ? missions
-        : missions.filter((mission) => (
-            activeFilter === 'freeform'
-                ? !resolveGenreMissionTypeId(mission)
-                : resolveGenreMissionTypeId(mission) === activeFilter
-        ));
+        : activeFilter === 'pending'
+            ? pendingMissions
+            : missions.filter((mission) => (
+                activeFilter === 'freeform'
+                    ? !resolveGenreMissionTypeId(mission)
+                    : resolveGenreMissionTypeId(mission) === activeFilter
+            ));
 
     return (
         <>
@@ -273,9 +334,15 @@ const MissionList = ({
                         onClick={() => setActiveFilter(filter.id)}
                         style={{
                             flexShrink: 0, padding: '8px 13px', borderRadius: '12px', cursor: 'pointer',
-                            border: activeFilter === filter.id ? '1px solid #7C3AED' : '1px solid #E2E8F0',
-                            background: activeFilter === filter.id ? '#F5F3FF' : 'white',
-                            color: activeFilter === filter.id ? '#6D28D9' : '#64748B',
+                            border: activeFilter === filter.id
+                                ? (filter.isHighlight ? '1px solid #DC2626' : '1px solid #7C3AED')
+                                : (filter.isHighlight ? '1px solid #FECACA' : '1px solid #E2E8F0'),
+                            background: activeFilter === filter.id
+                                ? (filter.isHighlight ? '#EF4444' : '#F5F3FF')
+                                : (filter.isHighlight ? '#FEF2F2' : 'white'),
+                            color: activeFilter === filter.id
+                                ? (filter.isHighlight ? '#FFFFFF' : '#6D28D9')
+                                : (filter.isHighlight ? '#DC2626' : '#64748B'),
                             fontWeight: '800', fontSize: '0.82rem'
                         }}
                     >

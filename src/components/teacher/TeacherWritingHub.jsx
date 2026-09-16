@@ -8,7 +8,8 @@ const TeacherDiaryManager = lazy(getModule('diary').teacherEntry);
 const TeacherWritingHub = ({
     activeClass, isMobile, section = 'missions', missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
-    navigationTarget, onNavigationHandled, bootstrapProfile
+    navigationTarget, onNavigationHandled, bootstrapProfile,
+    onPendingCountChange
 }) => {
     return (
         <div style={{ width: '100%' }}>
@@ -23,6 +24,7 @@ const TeacherWritingHub = ({
                     navigationTarget={navigationTarget}
                     onNavigationHandled={onNavigationHandled}
                     bootstrapProfile={bootstrapProfile}
+                    onPendingCountChange={onPendingCountChange}
                 />
             ) : section === 'diaries' ? (
                 <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>학생 일기를 정리하는 중... 📔</div>}>

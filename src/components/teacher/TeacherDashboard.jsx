@@ -125,6 +125,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [guideCenterRequest, setGuideCenterRequest] = useState(null);
     const [openingClassBoard, setOpeningClassBoard] = useState(false);
     const [guideAiAvailability, setGuideAiAvailability] = useState(null);
+    const [missionPendingTotal, setMissionPendingTotal] = useState(0);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -511,7 +512,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         );
                     }
 
-                    const hasWritingUnreviewed = group.id === 'writing' && totalWritingUnreviewedCount > 0;
+                    const hasWritingUnreviewed = (group.id === 'writing' && totalWritingUnreviewedCount > 0)
+                        || (group.id === 'writing' && missionPendingTotal > 0);
 
                     return (
                         <button
@@ -554,6 +556,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         }}
                     >
                         {secondaryTabs.map(tab => {
+                            const isDashboardPending = tab.id === 'dashboard' && missionPendingTotal > 0;
                             const hasSubtabUnreviewed = (tab.id === 'reading-logs' && readingLogsUnreviewedCount > 0)
                                 || (tab.id === 'diaries' && diariesUnreviewedCount > 0);
                             return (
@@ -572,10 +575,19 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                         style={{
                                             padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
                                             fontSize: isMobile ? '0.85rem' : '0.9rem',
-                                            textAlign: usesSecondarySidebar ? 'left' : 'center'
+                                            textAlign: usesSecondarySidebar ? 'left' : 'center',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: usesSecondarySidebar ? 'space-between' : 'center',
+                                            gap: '6px'
                                         }}
                                     >
                                         <span>{tab.label}</span>
+                                        {isDashboardPending && (
+                                            <span className="teacher-subtab__badge-new" aria-label={`확인 대기 과제 ${missionPendingTotal}건`}>
+                                                {missionPendingTotal}
+                                            </span>
+                                        )}
                                         {hasSubtabUnreviewed && (
                                             <span className="teacher-subtab__new-badge" aria-label="새 미확인 글 있음">NEW</span>
                                         )}
@@ -664,6 +676,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
+                                onPendingCountChange={setMissionPendingTotal}
                             />
                         ) : ['class-agit', 'class-agit-books'].includes(visibleTab) ? (
                             <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />

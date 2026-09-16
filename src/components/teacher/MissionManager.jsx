@@ -39,7 +39,8 @@ const MissionLabSourcesModal = lazy(() => import('./MissionLabSourcesModal'));
 const MissionManager = ({
     activeClass, isDashboardMode = true, missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
-    navigationTarget, onNavigationHandled, bootstrapProfile
+    navigationTarget, onNavigationHandled, bootstrapProfile,
+    onPendingCountChange
 }) => {
     const activeWorkspaceView = normalizeMissionWorkspaceView(missionWorkspaceView);
     const isSubmissionBoardView = activeWorkspaceView === 'board';
@@ -99,6 +100,12 @@ const MissionManager = ({
         const timerId = window.setTimeout(() => setHighlightedMissionId(null), 5000);
         return () => window.clearTimeout(timerId);
     }, [highlightedMissionId]);
+
+    useEffect(() => {
+        if (typeof onPendingCountChange === 'function') {
+            onPendingCountChange(Number(submissionBoard.pending_total || 0));
+        }
+    }, [submissionBoard.pending_total, onPendingCountChange]);
 
     useEffect(() => {
         if (!submissionBoardMissionId) return;

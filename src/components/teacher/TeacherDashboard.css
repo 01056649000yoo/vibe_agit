@@ -264,6 +264,32 @@
     background: #EF4444;
     color: #FFFFFF;
     box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
+}
+
+.teacher-subtab__badge-new {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.2px;
+}
+
+.teacher-dashboard__nav-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #EF4444;
+    margin-left: 2px;
+    box-shadow: 0 0 0 2px white;
     vertical-align: middle;
 }
 
