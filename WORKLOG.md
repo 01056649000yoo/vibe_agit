@@ -19,6 +19,16 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-16 — 2026-09-16 업데이트 공지사항 등록 마이그레이션 (Gemini)
+- **요청**: 오늘 작업한 내역(독서록·일기 NEW 뱃지, 운영현황 첫 화면, 학급 스크린 버그 수정 및 전환 단축키)을 앱 내 공지사항에 등록.
+- **한 일**:
+  - `supabase/migrations/20261299_announcement_20260916_update.sql`: `public.announcements` 테이블에 업데이트 공지사항을 등록하는 마이그레이션 생성.
+  - 교사용 대상(`target_role: 'TEACHER'`), 팝업 알림 포함(`is_popup: true`)으로 등록되어 로그인 시 팝업 및 상단 공지 띠(`AnnouncementSpotlight`)에 노출.
+  - `tests/migrationVersionCleanup.test.mjs`, `tests/announcementWindow.test.mjs` 검증 통과.
+- **변경**: `supabase/migrations/20261299_announcement_20260916_update.sql`, `WORKLOG.md`, `ROADMAP.md`. DB 마이그레이션 1건 추가.
+- **결과/검증**: 전체 테스트 1,191개 통과, 린트 오류 0개.
+- **남은 것 / 다음**: 배포 완료 후 교사 로그인 시 공지 팝업과 상단 공지 띠 노출을 확인한다.
+
 ## 2026-09-16 — 교사 대시보드 미확인 글 NEW 표시·기본 탭 변경 및 학급 스크린 새 탭 오류 수정·전환 단축키 추가 (Gemini)
 - **요청**:
   1. 교사 대시보드에서 학생 독서록과 학생 일기에 새로운 글이 올라오면 좌측 메뉴와 상단 글쓰기 탭에 NEW 표기.
