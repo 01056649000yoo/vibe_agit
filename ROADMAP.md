@@ -36,7 +36,7 @@
 
 ## 🧭 현재 위치
 
-- [x] **다했니 쿠키 → "다했니 포인트" 연동** (2026-09-16, 로컬 배포 완료·브라우저 최종 확인만 남음). 교사가 설정 안 `🍪 다했니 연동`에서 자기 다했니 API 키를 넣고(서버가 AES-GCM 암호화 저장, 계정별 키), 이름·코드를 붙여넣어 자동 매칭한 뒤, 쿠키 증가분(delta)만 포인트로 정산한다. **자동 정산 매일/매주**(pg_cron+pg_net, 10분 간격 시계)·다했어요 대시보드(통계·그래프·CSV) 포함. 마이그레이션 `20261300`·`20261301`, 엣지 함수 `dahandin-credential`·`dahandin-cookie-sync` 배포 완료, 시크릿·`dahandin_runtime_config` 설정 완료, 앱 재빌드 완료. 상세 [DAHANDIN_COOKIE_SYNC_PLAN.md](DAHANDIN_COOKIE_SYNC_PLAN.md)·WORKLOG 2026-09-16. ⚠️ `DAHANDIN_ENC_KEY` 변경 금지. 아직 git 커밋 안 함.
+- [x] **다했니 쿠키 → "다했니 포인트" 연동** (2026-09-16, 로컬 배포 완료·브라우저 최종 확인만 남음). 교사가 설정 안 `🍪 다했니 연동`에서 자기 다했니 API 키를 넣고(서버가 AES-GCM 암호화 저장, 계정별 키), 이름·코드를 붙여넣어 자동 매칭한 뒤, 쿠키 증가분(delta)만 포인트로 정산한다. **자동 정산 매일/매주**(pg_cron+pg_net, 10분 간격 시계)·다했어요 대시보드(통계·그래프·CSV) 포함. 마이그레이션 `20261300`~`20261304`(연동 공지·`dahandin_can_manage_class` anon 회수·정산 로그 자동 정리·대시보드 기간 토글 포함) **운영 DB 적용 완료**, 엣지 함수 `dahandin-credential`·`dahandin-cookie-sync` 배포 완료, 시크릿·`dahandin_runtime_config` 설정 완료, 앱 재빌드 완료. 개인정보 처리방침 2026-09-21 시행 판에 선택 연동 반영(제3·4·5·8조). **git 커밋·푸시 완료**(`4b5b3420`..`431ffec0`, 2026-09-17). 상세 [DAHANDIN_COOKIE_SYNC_PLAN.md](DAHANDIN_COOKIE_SYNC_PLAN.md)·WORKLOG 2026-09-16~17. ⚠️ `DAHANDIN_ENC_KEY` 변경 금지.
 
 - [x] 교사 과제 화면에서 확인 후 학생이 나중에 제출한 글(`pendingCount > 0`)이 있을 때, 과제 카드에 `NEW` 뱃지와 테두리 강조, '확인 필요' 필터 탭, 2차 사이드바 카운트 배지 및 1차 네비게이션 도트 알림을 제공하여 미확인 제출건을 즉각 인지할 수 있도록 개선 (2026-09-16).
 
