@@ -56,6 +56,7 @@ import {
     MISSION_WORKSPACE_VIEW_STORAGE_KEY,
     normalizeMissionWorkspaceView
 } from '../../modules/writing/mission-workspace/missionWorkspaceView';
+import { useTeacherUnreviewedWriting } from '../../hooks/useTeacherUnreviewedWriting';
 import './TeacherDashboard.css';
 
 const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
@@ -66,9 +67,9 @@ const loadTeacherTab = () => {
         const requestedTab = new URL(window.location.href).searchParams.get('teacherTab');
         if (TEACHER_TAB_IDS.includes(requestedTab)) return requestedTab;
         const savedTab = window.sessionStorage.getItem(TEACHER_TAB_STORAGE_KEY);
-        return TEACHER_TAB_IDS.includes(savedTab) ? savedTab : 'dashboard';
+        return TEACHER_TAB_IDS.includes(savedTab) ? savedTab : 'operations';
     } catch {
-        return 'dashboard';
+        return 'operations';
     }
 };
 
@@ -138,6 +139,12 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap);
+
+    const {
+        readingLogsUnreviewedCount,
+        diariesUnreviewedCount,
+        totalWritingUnreviewedCount
+    } = useTeacherUnreviewedWriting(activeClass?.id);
 
     // 학생 개인정보 동의서를 확인하지 않은 학급이 있으면 대시보드 대신 관문을 띄운다.
     const studentConsent = usePendingStudentConsent(session, profile);
@@ -327,7 +334,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     }, [adminPassword, onSwitchToAdminMode]);
 
     const hasZeroClasses = classes.length === 0;
-    const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'dashboard';
+    const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'operations';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
     const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
@@ -504,6 +511,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         );
                     }
 
+                    const hasWritingUnreviewed = group.id === 'writing' && totalWritingUnreviewedCount > 0;
+
                     return (
                         <button
                             key={group.id}
@@ -516,6 +525,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         >
                             <span aria-hidden="true">{group.icon}</span>
                             {group.label}
+                            {hasWritingUnreviewed && (
+                                <span className="teacher-dashboard__nav-new" aria-label="새 미확인 글 있음">NEW</span>
+                            )}
                         </button>
                     );
                 })}
@@ -541,29 +553,36 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             borderRadius: '16px', background: '#E2E8F0', position: usesSecondarySidebar ? 'sticky' : undefined, top: usesSecondarySidebar ? 0 : undefined
                         }}
                     >
-                        {secondaryTabs.map(tab => (
-                            <div
-                                key={tab.id}
-                                className={`teacher-subtab${visibleTab === tab.id ? ' is-active' : ''}`}
-                                style={{ flex: isMobile ? '1 0 auto' : undefined }}
-                            >
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={visibleTab === tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className="teacher-subtab__button"
-                                    {...tourAnchor(tabAnchorId(tab.id))}
-                                    style={{
-                                        padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
-                                        fontSize: isMobile ? '0.85rem' : '0.9rem',
-                                        textAlign: usesSecondarySidebar ? 'left' : 'center'
-                                    }}
+                        {secondaryTabs.map(tab => {
+                            const hasSubtabUnreviewed = (tab.id === 'reading-logs' && readingLogsUnreviewedCount > 0)
+                                || (tab.id === 'diaries' && diariesUnreviewedCount > 0);
+                            return (
+                                <div
+                                    key={tab.id}
+                                    className={`teacher-subtab${visibleTab === tab.id ? ' is-active' : ''}`}
+                                    style={{ flex: isMobile ? '1 0 auto' : undefined }}
                                 >
-                                    {tab.label}
-                                </button>
-                            </div>
-                        ))}
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={visibleTab === tab.id}
+                                        onClick={() => handleTabChange(tab.id)}
+                                        className="teacher-subtab__button"
+                                        {...tourAnchor(tabAnchorId(tab.id))}
+                                        style={{
+                                            padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
+                                            fontSize: isMobile ? '0.85rem' : '0.9rem',
+                                            textAlign: usesSecondarySidebar ? 'left' : 'center'
+                                        }}
+                                    >
+                                        <span>{tab.label}</span>
+                                        {hasSubtabUnreviewed && (
+                                            <span className="teacher-subtab__new-badge" aria-label="새 미확인 글 있음">NEW</span>
+                                        )}
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
                 <div style={{ minWidth: 0 }}>

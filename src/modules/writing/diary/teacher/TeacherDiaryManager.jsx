@@ -8,6 +8,7 @@ import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
 import { supabase } from '../../../../lib/supabaseClient';
 import { useDataExport } from '../../../../hooks/useDataExport';
+import { notifyTeacherWritingReviewed } from '../../../../hooks/useTeacherUnreviewedWriting';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import {
     SelfWritingBulkToolbar,
@@ -244,6 +245,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
             return;
         }
         setSelected(null);
+        notifyTeacherWritingReviewed();
         await load();
     };
 
@@ -392,6 +394,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
         const awardedPoints = Number(data?.points_awarded || 0);
         setSelectedReviewIds(new Set());
         setBulkNotice(`✅ 일기 ${confirmedCount}편 확인${awardedPoints > 0 ? ` · ${awardedPoints}P 지급` : ''}`);
+        notifyTeacherWritingReviewed();
         await load();
     };
 

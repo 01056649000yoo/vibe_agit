@@ -308,7 +308,14 @@
 .class-board-presentation-page.is-fullscreen .class-board-presentation-editbar { grid-template-columns:minmax(0,1fr) auto; }
 .class-board-presentation-page.is-fullscreen .class-board-presentation-editbar__state { display:none; }
 .class-board-presentation-header { display:flex; justify-content:space-between; align-items:center; gap:18px; padding:clamp(12px,1.4vw,20px) clamp(14px,1.8vw,28px); }
-.class-board-presentation-class-name { margin:0; color:#31538f; font-size:clamp(1.6rem,3vw,3rem); font-weight:950; letter-spacing:-.025em; line-height:1.08; }
+.class-board-presentation-header__left { display:flex; align-items:center; gap:clamp(10px,1.2vw,20px); min-width:0; }
+.class-board-presentation-class-name { margin:0; color:#31538f; font-size:clamp(1.6rem,3vw,3rem); font-weight:950; letter-spacing:-.025em; line-height:1.08; white-space:nowrap; }
+.class-board-presentation-switcher { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border:1px solid #cbd7e7; border-radius:999px; background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(30,50,80,.06); }
+.class-board-presentation-switcher__btn { border:0!important; border-radius:6px!important; padding:4px 7px!important; background:transparent!important; color:#475569!important; font-size:.75rem!important; font-weight:900!important; cursor:pointer; }
+.class-board-presentation-switcher__btn:hover { background:#e2e8f0!important; color:#1e293b!important; }
+.class-board-presentation-switcher__title { display:inline-flex; align-items:center; gap:6px; max-width:min(260px,30vw); overflow:hidden; color:#1e3a8a; font-size:.82rem; font-weight:850; text-overflow:ellipsis; white-space:nowrap; }
+.class-board-presentation-switcher__count { padding:1px 6px; border-radius:999px; background:#e0e7ff; color:#3730a3; font-size:.68rem; font-weight:900; }
+.class-board-presentation-switcher__single-title { margin-left:2px; color:#64748b; font-size:.85rem; font-weight:800; }
 .class-board-presentation-header>div:last-child { display:flex; align-items:center; gap:8px; }
 .class-board-presentation-header time { margin-right:8px; color:#64748b; font-size:.85rem; font-weight:850; }
 .class-board-presentation-header button:not(.ui-icon-button) { border:1px solid #cbd7e7; border-radius:10px; padding:9px 12px; background:rgba(255,255,255,.9); color:#334155; font-weight:900; cursor:pointer; }

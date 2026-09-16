@@ -221,12 +221,16 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
    */
   const openScreen = async () => {
     if (saving || pastingImage) return;
-    const target = window.open('', '_blank', 'noopener');
+    const target = window.open('about:blank', '_blank');
     if (!target) { setError('새 탭이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.'); return; }
     try {
+      if (target.document) {
+        target.document.title = '우리 반 스크린 준비 중…';
+      }
       const boardId = dirty || !board?.id ? (await save())?.id : board.id;
       if (!boardId) { target.close(); return; }
       target.location.replace(`/class-board/${boardId}`);
+      try { target.opener = null; } catch {}
     } catch (openError) {
       target.close();
       setError(openError.message || '스크린을 열지 못했습니다.');

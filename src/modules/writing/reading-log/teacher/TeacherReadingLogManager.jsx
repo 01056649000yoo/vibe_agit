@@ -4,6 +4,7 @@ import ExportSelectModal from '../../../../components/common/ExportSelectModal';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
 import { useDataExport } from '../../../../hooks/useDataExport';
+import { notifyTeacherWritingReviewed } from '../../../../hooks/useTeacherUnreviewedWriting';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
@@ -206,6 +207,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const refresh = useCallback(async () => {
         dataCache.invalidatePrefix(classScope(classId));
         setStudentLogs(new Map());
+        notifyTeacherWritingReviewed();
         if (viewMode === 'student') await fetchSummary();
         else await fetchRecent();
     }, [classId, viewMode, fetchSummary, fetchRecent]);

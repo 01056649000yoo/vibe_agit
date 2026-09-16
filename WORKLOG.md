@@ -19,6 +19,27 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-16 — 교사 대시보드 미확인 글 NEW 표시·기본 탭 변경 및 학급 스크린 새 탭 오류 수정·전환 단축키 추가 (Gemini)
+- **요청**:
+  1. 교사 대시보드에서 학생 독서록과 학생 일기에 새로운 글이 올라오면 좌측 메뉴와 상단 글쓰기 탭에 NEW 표기.
+  2. 교사 대시보드 최초 진입 기본 탭을 '학급 운영 > 운영 현황'(`operations`)으로 변경.
+  3. 학급 스크린에서 새 스크린 생성 후 '스크린 열기' 시 빈 화면(`about:blank`)만 뜨는 오류 해결.
+  4. 발표 화면 상단에서 저장된 스크린 목록을 확인하고 좌우 방향키(`ArrowLeft`, `ArrowRight`)로 전환할 수 있도록 기능 추가.
+- **한 일**:
+  - `useTeacherUnreviewedWriting.js`: 미확인 독서록·일기 편수를 조회하고, 검토 처리 커스텀 이벤트(`teacher-writing-reviewed`)를 수신해 실시간 카운트를 동기화하는 공용 훅 신설.
+  - `TeacherDashboard.jsx` & `TeacherDashboard.css`:
+    - 최초 기본 탭 fallback을 `dashboard`(선생님 과제)에서 `operations`(운영 현황)으로 변경.
+    - 미확인 글이 있을 때 상단 글쓰기 탭에 `teacher-dashboard__nav-new`, 좌측 `reading-logs`와 `diaries` 서브탭에 `teacher-subtab__new-badge` 표기. 디자인 시스템 타이포 스케일 준수를 위해 상대 폰트 단위(`em`) 적용.
+  - `TeacherReadingLogManager.jsx` & `TeacherDiaryManager.jsx`: 교사가 글 검토(피드백/추천/확인 등) 완료 시 `notifyTeacherWritingReviewed()`를 호출하여 대시보드 배지가 즉시 갱신되도록 연동.
+  - `TeacherEntry.jsx`: 새 스크린 생성 후 `openScreen` 클릭 시 `window.open('', '_blank', 'noopener')`의 `noopener`로 인해 WindowProxy가 `null`이 되어 `target.location.replace`가 실패하고 빈 페이지로 멈추던 버그 수정. `about:blank`로 창 참조를 안전하게 획득하고, 저장 완료 후 `replace` 이동 및 `opener = null` 정리.
+  - `ClassBoardPresentationPage.jsx` & `classBoard.css`:
+    - 학급 활성 스크린 목록(`getWorkspace`)을 로드하여 상단 바에 스크린 스위처 네비게이터(`(1/3) 우리 반 기본`, 이전/다음 버튼, 좌우키 안내) 구현.
+    - `ArrowLeft` / `ArrowRight` 키보드 단축키 이벤트 리스너를 등록해 텍스트 입력 중이 아닐 때 스크린을 좌우로 즉시 전환. `history.pushState`로 브라우저 주소창 동기화.
+  - `tests/teacherUnreviewedWritingBadge.test.mjs` & `tests/classBoardPresentationSwitcher.test.mjs`: 새 기능 및 계약 검증 테스트 추가.
+- **변경**: `TeacherDashboard.jsx`, `TeacherDashboard.css`, `TeacherReadingLogManager.jsx`, `TeacherDiaryManager.jsx`, `TeacherEntry.jsx`, `ClassBoardPresentationPage.jsx`, `classBoard.css`, `useTeacherUnreviewedWriting.js`, `tests/teacherUnreviewedWritingBadge.test.mjs`, `tests/classBoardPresentationSwitcher.test.mjs`, `ROADMAP.md`, `WORKLOG.md`. DB 변경 없음.
+- **결과/검증**: 전체 테스트 1,191개 통과, 린트 오류 0개, Vite 프로덕션 빌드 성공.
+- **남은 것 / 다음**: 운영 배포 후 교사 대시보드 최초 진입 탭 및 학생 글 작성 시 NEW 뱃지 노출, 학급 스크린 새 스크린 열기 및 좌우 방향키 전환을 확인한다.
+
 ## 2026-09-15 — 문집 4단계 학생별 목차 및 학생 간지 생성 (Gemini)
 - **요청**: 작품 묶기/쪽 배치 라디오 버튼 좌측 정렬 및 묶기 기준별 목차 설명 보강, 학생별로 묶는 경우 가장 앞 목차는 학생 이름별로 시작 쪽수만 표시하고 해당 학생 글 시작 페이지에 간지(속표지)를 두어 해당 학생의 글 목록과 쪽수를 싣도록 개선.
 - **한 일**:

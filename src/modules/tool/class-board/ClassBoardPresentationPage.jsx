@@ -31,6 +31,8 @@ const NoticeComposer = lazy(() => import('./widgets/notice-board/NoticeComposer'
 
 export default function ClassBoardPresentationPage({ boardId }) {
   const autoFullscreen = new URLSearchParams(window.location.search).get('fullscreen') === '1';
+  const [currentBoardId, setCurrentBoardId] = useState(boardId);
+  const [classBoards, setClassBoards] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,6 +46,10 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const canvasContentRef = useRef(null);
   const assetSeedRef = useRef(null);
+
+  useEffect(() => {
+    setCurrentBoardId(boardId);
+  }, [boardId]);
 
   const editing = Boolean(draftBoard);
   const visibleBoard = draftBoard || data?.board;
@@ -87,8 +93,12 @@ export default function ClassBoardPresentationPage({ boardId }) {
     },
   });
 
+  // 현재 스크린 데이터 로드
   useEffect(() => {
     let active = true;
+    const boardId = currentBoardId;
+    setLoading(true);
+    setError('');
     // 이 스크린에 어떤 사진이 있었는지 기억해 두었으므로, 스크린 내용을 기다리지 않고
     // 사진 주소 받기를 나란히 시작한다. 사진이 그대로면 왕복 한 번을 통째로 아낀다.
     const remembered = readRememberedClassBoardAssetPaths(window.localStorage, boardId);
@@ -104,7 +114,93 @@ export default function ClassBoardPresentationPage({ boardId }) {
       .catch((loadError) => { if (active) setError(loadError.message || '스크린을 불러오지 못했습니다.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [boardId]);
+  }, [currentBoardId]);
+
+  // 학급 내 활성 스크린 목록 조회 (스위처용)
+  useEffect(() => {
+    if (!data?.class?.id) return;
+    let active = true;
+    void classBoardApi.getWorkspace(data.class.id)
+      .then((result) => {
+        if (!active) return;
+        const list = Array.isArray(result?.boards) ? result.boards : [];
+        setClassBoards(list);
+      })
+      .catch((workspaceError) => console.error('스크린 목록 조회 실패:', workspaceError));
+    return () => { active = false; };
+  }, [data?.class?.id]);
+
+  // 브라우저 뒤로가기 / 앞으로가기 동기화
+  useEffect(() => {
+    const handlePopState = () => {
+      const match = window.location.pathname.match(/^\/class-board\/([0-9a-f-]{36})$/i);
+      if (match?.[1] && match[1] !== currentBoardId) {
+        setDraftBoard(null);
+        setSelectedInstanceId(null);
+        setCurrentBoardId(match[1]);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentBoardId]);
+
+  const switchToBoardId = useCallback((targetId) => {
+    if (!targetId || targetId === currentBoardId || loading || saving) return;
+    if (dirty && !window.confirm('저장하지 않은 변경사항이 있습니다. 다른 스크린으로 이동할까요?')) {
+      return;
+    }
+    setDraftBoard(null);
+    setSelectedInstanceId(null);
+    setEditError('');
+    setNotice('');
+    setCurrentBoardId(targetId);
+
+    const url = new URL(window.location.href);
+    url.pathname = `/class-board/${targetId}`;
+    window.history.pushState({ boardId: targetId }, '', url.toString());
+  }, [currentBoardId, loading, saving, dirty]);
+
+  const currentIndex = useMemo(() => {
+    return classBoards.findIndex((item) => item.id === currentBoardId);
+  }, [classBoards, currentBoardId]);
+
+  const hasMultipleBoards = classBoards.length > 1;
+
+  const goToPrevBoard = useCallback(() => {
+    if (!hasMultipleBoards || currentIndex < 0) return;
+    const prevIndex = (currentIndex - 1 + classBoards.length) % classBoards.length;
+    switchToBoardId(classBoards[prevIndex].id);
+  }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
+
+  const goToNextBoard = useCallback(() => {
+    if (!hasMultipleBoards || currentIndex < 0) return;
+    const nextIndex = (currentIndex + 1) % classBoards.length;
+    switchToBoardId(classBoards[nextIndex].id);
+  }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
+
+  // 좌우 화살표 키로 스크린 전환
+  useEffect(() => {
+    if (!hasMultipleBoards) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (editing || noticeOpen || fullscreenPrompt) return;
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToPrevBoard();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToNextBoard();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasMultipleBoards, editing, noticeOpen, fullscreenPrompt, goToPrevBoard, goToNextBoard]);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
@@ -269,7 +365,37 @@ export default function ClassBoardPresentationPage({ boardId }) {
   return (
     <main className={`class-board-presentation-page${editing ? ' is-editing' : ''}${fullscreen ? ' is-fullscreen' : ''}`}>
       <header className="class-board-presentation-header">
-        <h1 className="class-board-presentation-class-name">{data.class?.name || '우리 반'}</h1>
+        <div className="class-board-presentation-header__left">
+          <h1 className="class-board-presentation-class-name">{data.class?.name || '우리 반'}</h1>
+          {hasMultipleBoards ? (
+            <div className="class-board-presentation-switcher" role="navigation" aria-label="스크린 전환">
+              <button
+                type="button"
+                className="class-board-presentation-switcher__btn"
+                onClick={goToPrevBoard}
+                aria-label="이전 스크린 (왼쪽 방향키)"
+                title="이전 스크린 (←)"
+              >◀</button>
+              <span className="class-board-presentation-switcher__title">
+                {visibleBoard?.title || '스크린'}
+                <span className="class-board-presentation-switcher__count">
+                  {currentIndex >= 0 ? `${currentIndex + 1}/${classBoards.length}` : ''}
+                </span>
+              </span>
+              <button
+                type="button"
+                className="class-board-presentation-switcher__btn"
+                onClick={goToNextBoard}
+                aria-label="다음 스크린 (오른쪽 방향키)"
+                title="다음 스크린 (→)"
+              >▶</button>
+            </div>
+          ) : visibleBoard?.title ? (
+            <span className="class-board-presentation-switcher__single-title">
+              {visibleBoard.title}
+            </span>
+          ) : null}
+        </div>
         <div>
           <time>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</time>
           {!editing && hasNoticeWidget ? (
