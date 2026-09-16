@@ -16,8 +16,9 @@ const PrivacyPolicy = () => {
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
                 개정 이력 — 최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 21일
+                <br />다했니 쿠키 연동(선택 기능) 도입 — 교사 다했니 API 키 수집 항목(선택)·암호화 보관 방법 신설: 2026년 9월 21일 시행
                 <br />학생 개인정보 처리 근거·수집 항목 정정, 동의 기록 보관 명시: 2026년 9월 21일
-                <br />개인 API 키 미수집 명시: 2026년 9월 13일
+                <br />개인 API 키 미수집 명시(2026년 9월 21일 다했니 선택 연동 키 수집 신설로 개정됨): 2026년 9월 13일
                 <br />전시 공개·작품 보호 안내 보완: 2026년 9월 5일
             </p>
 
@@ -43,12 +44,13 @@ const PrivacyPolicy = () => {
                 <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
                     <p><strong>1. 수집 항목</strong></p>
                     <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
-                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 이름, 재직 학교명 / 선택항목 - 전화번호, 학교 주소·학교 코드</li>
+                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 이름, 재직 학교명 / 선택항목 - 전화번호, 학교 주소·학교 코드, 다했니(dahandin) API 키</li>
                         <li><strong>교사 계정 관리 항목:</strong> 가입일, 마지막 로그인 일시, 승인 및 미접속 분류 상태, 이용약관·개인정보 처리방침 동의 일시와 동의한 판</li>
                         <li><strong>학생 (이용자):</strong> 필수항목 - 이름, 출석 번호(담당 교사가 입력) / 학생이 작성한 글·댓글·독서록·일기 등 학습 활동물</li>
                         <li><strong>학급 관리 항목:</strong> 담당 교사의 학생 개인정보 동의서 확인 일시</li>
                         <li><strong>선택 항목:</strong> 포인트 정보, 퀘스트 정보, 학급 활동 데이터 등 서비스 이용 과정에서 생성되는 정보</li>
                         <li><strong>급식 도구 선택 항목:</strong> 학생별 짧은 비고(교사가 필요한 경우에만 입력하며 민감한 건강정보 입력 금지)</li>
+                        <li><strong>다했니 연동 선택 항목:</strong> 다했니(dahandin) API 키. 다했니에서 학생이 모은 쿠키를 아지트 학생 포인트로 정산하는 <strong>선택 기능</strong>을 사용하려는 교사만 입력합니다. <strong>이 항목은 의무가 아니며, 입력하지 않아도 다른 서비스 이용에는 아무런 제한이 없습니다.</strong> 이 키는 교사가 다했니에서 스스로 발급받은 자신의 연동용 키이며, 이용 목적은 다했니 쿠키 수를 불러와 학생 포인트로 정산하는 데에 한정됩니다.</li>
                     </ul>
                     <p><strong>2. 이용 목적</strong></p>
                     <ul style={{ paddingLeft: '20px' }}>
@@ -69,6 +71,8 @@ const PrivacyPolicy = () => {
                     <li><strong>교사 계정 정보, 마지막 로그인 일시, 약관 동의 기록:</strong> 회원 탈퇴 시까지</li>
                     <li><strong>학생 활동 정보 및 계정:</strong> 교사가 해당 클래스를 '초기화' 또는 '삭제'하거나 '회원 탈퇴'를 하는 즉시 영구 삭제</li>
                     <li><strong>급식 도구 학생별 비고:</strong> 교사가 비고를 지우거나 해당 학생·학급을 삭제하면 즉시 영구 삭제</li>
+                    <li><strong>다했니 API 키(선택):</strong> 교사가 '연결 해제'를 하거나 회원 탈퇴 시 즉시 삭제</li>
+                    <li><strong>다했니 정산 실행 기록:</strong> 학생 개인정보를 담지 않는 정산 요약(지급 시각·금액·성공/실패 건수)이며, 최대 180일 보관 후 자동 삭제</li>
                     <li><strong>서버 접속 로그:</strong> 3개월 (통신비밀보호법 등 관계 법령에 따른 기간)</li>
                 </ul>
                 <div style={{ marginTop: '12px', padding: '14px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
@@ -113,6 +117,9 @@ const PrivacyPolicy = () => {
                 <p style={{ marginTop: '10px', fontSize: '0.88rem', color: '#5f6b7a' }}>
                     AI 기능은 교사가 실행하는 보조 기능이며, 결과는 교사가 확인한 뒤 사용합니다. 운영자는 서비스 전체 또는 교사별로 AI 기능 사용을 중지할 수 있습니다.
                 </p>
+                <p style={{ marginTop: '10px' }}>
+                    <strong>다했니(dahandin) 쿠키 연동(선택 기능):</strong> 교사가 이 선택 기능을 사용하는 경우에 한해, 교사가 입력한 다했니 API 키와 교사가 입력한 학생 코드를 다했니 서비스(api.dahandin.com)에 전송하여 학생별 쿠키 수를 받아옵니다. 학생의 이름·글·활동물 등 다른 개인정보는 다했니로 전송하지 않으며, 전송은 교사가 직접 정산을 실행하거나 교사가 설정한 자동 정산 시각에만 이루어집니다. 다했니는 교사가 별도로 가입한 외부 서비스이며, 다했니 내부의 개인정보 처리는 다했니의 방침을 따릅니다.
+                </p>
             </section>
 
             <section style={{ marginBottom: '30px' }}>
@@ -133,7 +140,8 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제8조 (개인정보의 안전성 확보 조치)</h4>
                 <ul style={{ paddingLeft: '20px' }}>
                     <li><strong>개인정보의 암호화:</strong> 이용자의 비밀번호는 단방향 암호화되어 저장됩니다.</li>
-                        <li><strong>AI 서비스 보안:</strong> AI 서비스 키는 서버측(Edge Functions) 환경 변수에서만 관리되며, 이용자 브라우저와 데이터베이스에 노출하지 않습니다. 이용자에게 개인 API 키를 받지 않으며, 과거에 저장되어 있던 개인 키는 2026년 9월 13일에 모두 삭제했습니다.</li>
+                        <li><strong>AI 서비스 보안:</strong> AI 서비스 키는 서버측(Edge Functions) 환경 변수에서만 관리되며, 이용자 브라우저와 데이터베이스에 노출하지 않습니다.</li>
+                    <li><strong>교사 다했니 API 키 보안(선택 연동):</strong> 교사가 다했니 연동을 선택해 입력한 API 키는 서버에서 <strong>AES-256-GCM 방식으로 암호화</strong>하여 저장합니다. 복호화에 필요한 키는 서버측(Edge Functions) 환경 변수에만 두므로, 데이터베이스가 유출되더라도 이 키 없이는 복호화할 수 없습니다. 입력한 API 키 원문은 저장 후 화면에 다시 표시하지 않고 마지막 일부 자리만 보여 주며, 브라우저와 데이터베이스에 평문으로 저장하지 않습니다. 키의 복호화와 다했니 호출은 서버(Edge Functions)에서만 이루어지고, 교사는 언제든 '연결 해제'로 저장된 키를 즉시 삭제할 수 있습니다.</li>
                     <li><strong>기술적 대책:</strong> SSL(HTTPS) 인증서를 통한 구간 암호화 통신을 의무화하고 있습니다.</li>
                 </ul>
             </section>
