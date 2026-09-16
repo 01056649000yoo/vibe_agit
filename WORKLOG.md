@@ -19,6 +19,26 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-16 — 다했니 쿠키 → "다했니 포인트" 연동 (Claude Opus)
+- **요청**: 다했니(dahandin) 학생별 쿠키를 아지트 학생 포인트와 연동. 교사마다 자기 API 키를 설정 메뉴에서 입력→학생 매칭→사용. 붙여넣기 자동 인식, 자동 정산 주기(매일/매주), "다했니 포인트" 라벨, 다했어요 대시보드(통계·그래프)까지.
+- **API 실측(2026-09-16)**: 인증 헤더 `X-API-Key`. `GET /openapi/v1/get/class/list`(키만), `GET /openapi/v1/get/student/total?code=`(학생 1명, `cookie` 누적·`usedCookie`·`totalCookie`·`badges`; 실제 응답에 `chocoChips` 없음). 코드 오류 시에도 "API KEY 가 올바르지 않습니다" 를 주는 함정 확인. 제한 평균 5req/초·300req/분. **키는 발급 계정의 데이터만** 조회 → 교사별 키 필수.
+- **한 일**:
+  - 마이그레이션 `20261300_dahandin_cookie_sync.sql`: `dahandin_teacher_credentials`(AES-GCM 암호문·IV, 끝자리만 노출·컬럼 권한으로 암호문 SELECT 차단), `dahandin_class_settings`(환율·켜짐·자동주기), `dahandin_student_links`(매칭·`last_cookie` 기준선), `dahandin_sync_runs`/`dahandin_sync_items`(대시보드용 로그). RLS 는 담임/ADMIN. RPC `award_dahandin_cookie_points_v1`(service_role 전용, `point_engine_apply` 를 event_key 로 호출 → 중복지급 차단, reason "다했니 포인트", metadata.source), `dahandin_due_classes_v1`(KST 기준 자동 정산 대상), `get_dahandin_dashboard_v1`(요약·일자별·학생별·최근 실행). **코어 point_engine_apply 미변경**.
+  - 엣지 함수 `dahandin-credential`(키 저장/검증/삭제, 저장 전 class/list 로 유효성 확인, AES-256-GCM), `dahandin-cookie-sync`(수동=교사 JWT / 자동=`x-cron-secret`; 학생 순차 호출 220ms·429·slow down 재시도, delta 지급 후에만 last_cookie 갱신, run/items 기록). `config.toml` 에 cookie-sync `verify_jwt=false`.
+  - 프런트: `lib/dahandinRoster.js`(붙여넣기 파서·delta 순수 로직), `lib/dahandinApi.js`(호출 한 자리), `components/teacher/DahandinIntegrationManager.jsx`(① 키 연결 ② 붙여넣기 자동 매칭 ③ 정산 설정·실행 + 다했어요 대시보드=요약카드·일자별 SVG 막대·학생별 순위·최근 정산·CSV). `TeacherSettingsHub` 에 "🍪 다했니 연동" 항목, `teacherGuides.js` 안내 추가.
+  - 테스트 `tests/dahandinCookieSync.test.mjs`(파서·delta 9건).
+  - **자동 정산 시계**(추가): 마이그레이션 `20261301_dahandin_auto_sync_cron.sql` — pg_cron 이 10분마다 `dahandin_trigger_auto_sync()` 를 깨우고, 정산할 학급(매일/매주·시각 지남·오늘 미실행)마다 pg_net(`net.http_post`)으로 `http://kong:8000/functions/v1/dahandin-cookie-sync` 를 `x-cron-secret` 로 학급 단위 호출. 비밀·주소는 git 밖 `dahandin_runtime_config`(RLS 잠금, SECURITY DEFINER 만 읽음)에 배포 후 수동 입력. cookie-sync cron 모드가 `classId` 하나만 처리하도록 보완.
+  - 안내 연결: `teacherGuides.js`·`teacherGuideRegistry.js`·`teacherGuideJourneys.js`(포인트·동기부여 흐름에 `settings:dahandin` 추가) + `tests/teacherGuideCenter.test.mjs` 개수 27→28.
+- **변경**: 위 신규 파일 + `TeacherSettingsHub.jsx`·`constants/teacherGuides.js`·`guides/teacherGuideRegistry.js`·`guides/teacherGuideJourneys.js`·`supabase/config.toml`·`tests/teacherGuideCenter.test.mjs`·마이그레이션 2개(`20261300`,`20261301`)·`DAHANDIN_COOKIE_SYNC_PLAN.md`. **아직 git 커밋 안 함**(로컬 배포만).
+- **결과/검증**: 전체 `node --test tests/*.test.mjs` **1204/1204 통과**, ESLint 0, `migrate:check`·`check:rpc-surface` 통과. 유효 키로 실제 학급("여수진남초 4학년", 794쿠키)·학생(김단우 28쿠키) 응답 확인.
+- **git 밖 인프라 변경(맥미니, 2026-09-16 실행 완료)**:
+  1. `~/agit-supabase/secrets.agit.env` 에 `DAHANDIN_ENC_KEY`(hex32)·`DAHANDIN_CRON_SECRET`(hex24) 추가(값 미기재, 권한 600). 백업 `.bak-*` 남김. ⚠️ `DAHANDIN_ENC_KEY` 는 절대 바꾸지 말 것(바꾸면 저장된 교사 키 복호화 불가).
+  2. 운영 DB에 마이그레이션 `20261300`·`20261301` 적용.
+  3. 엣지 함수 `dahandin-credential`·`dahandin-cookie-sync` 를 `~/agit-supabase/volumes/functions/` 에 배포·컨테이너 재기동. 스모크: 무인증 401 / 틀린 cron 시크릿 401 / 올바른 cron 시크릿 200(ran:0).
+  4. `dahandin_runtime_config` 에 `function_base_url=http://kong:8000` + `cron_secret`(값 숨김) 입력. `cron.job` 에 `dahandin-auto-sync`(*/10) 등록 확인.
+  5. `npm run deploy:local` 로 앱 컨테이너 재빌드·교체(앱 200). → 교사 설정에 `🍪 다했니 연동` 노출.
+- **남은 것 / 다음**: 브라우저에서 실제 교사 계정으로 ①키 연결 ②붙여넣기 매칭 ③수동 동기화·자동(매일) 동작을 눈으로 확인. 필요 시 git 커밋/푸시(사용자 지시 시).
+
 ## 2026-09-16 — 교사 과제 미확인 제출건 NEW 알림 및 강조 UI 구현 (Gemini)
 - **요청**: 교사가 과제를 확인하고 나서 학생이 나중에 제출하는 경우 NEW를 표시해서 확인해야 할 과제제출건이 있음을 보여주도록 개선.
 - **한 일**:

@@ -7,6 +7,7 @@ import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 import { sectionAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 
 const ClassManager = lazy(() => import('./ClassManager'));
+const DahandinIntegrationManager = lazy(() => import('./DahandinIntegrationManager'));
 const loadTeacherWritingEditorManager = () => import('../../modules/writing/editor-settings/TeacherWritingEditorManager');
 const TeacherWritingEditorManager = lazy(loadTeacherWritingEditorManager);
 
@@ -31,7 +32,9 @@ const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
     { id: 'ai-prompts', icon: '🤖', label: '피드백·평어 기준', description: 'AI 피드백과 평어 작성 기준' },
     { id: 'writing-editor', icon: '✍️', label: '글쓰기 창 관리', description: '글쓰기 화면 설정' },
-    ...MODULE_SETTINGS_ITEMS
+    ...MODULE_SETTINGS_ITEMS,
+    // 다했니 연동은 설정 목록 맨 아래에 둔다(사용자 요청 2026-09-16).
+    { id: 'dahandin', icon: '🍪', label: '다했니 연동', description: '다했니 쿠키를 포인트로 정산' }
 ];
 
 const TeacherSettingsHub = ({
@@ -137,6 +140,10 @@ const TeacherSettingsHub = ({
                     />
                 ) : section === 'writing-editor' ? (
                     <TeacherWritingEditorManager activeClass={activeClass} isMobile={isMobile} />
+                ) : section === 'dahandin' ? (
+                    <React.Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>다했니 연동을 불러오는 중입니다...</div>}>
+                        <DahandinIntegrationManager activeClass={activeClass} isMobile={isMobile} />
+                    </React.Suspense>
                 ) : section === 'ai-prompts' ? (
                     <div>
                         {/* 종류 선택 줄 오른쪽이 넓게 비어 있었다. 카드 안에서 세로 한 줄을 먹던

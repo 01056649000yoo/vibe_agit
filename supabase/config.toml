@@ -3,3 +3,8 @@ verify_jwt = false
 
 [functions.class-agit-public-read]
 verify_jwt = false
+
+# 다했니 쿠키 정산: 자동(cron) 모드는 JWT 없이 x-cron-secret 으로 부르므로 플랫폼 JWT 검증을 끄고
+# 함수 안에서 직접 인증한다(수동 모드는 교사 JWT 를 getUser 로 확인).
+[functions.dahandin-cookie-sync]
+verify_jwt = false
