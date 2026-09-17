@@ -16,40 +16,16 @@ export const NEIGHBOR_AGIT_LIMITS = Object.freeze({
 
 export const NEIGHBOR_AGIT_DEFAULT_ROLLOUT_MODE = NEIGHBOR_AGIT_ROLLOUT_MODES.INTERNAL;
 
-const VALID_ROLLOUT_MODES = new Set(Object.values(NEIGHBOR_AGIT_ROLLOUT_MODES));
 
-/**
- * 화면 선택을 위한 보조 함수다. 실제 권한은 같은 조건을 DB의 전용 RPC에서 다시 검사해야 한다.
- * 알 수 없는 단계는 공개하지 않는 쪽으로 닫는다.
+/*
+ * 관문은 서버 한 곳이다 — 여기에 다시 두지 않는다.
+ *
+ * 학생: 홈 bootstrap 이 내려 주는 `neighbor_agit_available` 하나로 메뉴와 진입을 정한다
+ *       (공개 단계·학급 선택·교사 스위치·활성 공간·참여 상태를 서버가 모두 본 결과다).
+ * 교사: 화면은 그냥 열고, 자격이 없으면 RPC 가 거절한다. `TeacherEntry` 가 그 거절을
+ *       "현재 선택한 학급에서는 이웃 아지트를 아직 사용할 수 없습니다." 로 받는다.
+ *
+ * 2026-09-17: 같은 판단을 하는 `getNeighborAgitTeacherSurface`·`canEnterNeighborAgitAsStudent`
+ * 가 여기 있었지만 **화면 어디서도 부르지 않았다**. 검사만 그 둘을 붙들고 있어 "통과는 하는데
+ * 아무것도 안 보는 검사" 가 됐다. 판단이 두 곳에 있으면 한 곳이 낡는다 — 서버만 남긴다.
  */
-export function getNeighborAgitTeacherSurface({ rolloutMode, isAdmin = false, classAllowed = false }) {
-    if (!VALID_ROLLOUT_MODES.has(rolloutMode)) return 'preparation';
-    if (rolloutMode === NEIGHBOR_AGIT_ROLLOUT_MODES.PAUSED) return 'paused';
-    if (rolloutMode === NEIGHBOR_AGIT_ROLLOUT_MODES.INTERNAL) {
-        return isAdmin ? 'workspace' : 'preparation';
-    }
-    if (rolloutMode === NEIGHBOR_AGIT_ROLLOUT_MODES.LIMITED_BETA) {
-        return classAllowed ? 'workspace' : 'preparation';
-    }
-    return 'workspace';
-}
-
-/**
- * 학생 메뉴와 화면의 최소 노출 조건이다. 서버 RPC 권한 검사를 대신하지 않는다.
- */
-export function canEnterNeighborAgitAsStudent({
-    rolloutMode,
-    classAllowed = false,
-    classModuleEnabled = false,
-    spaceStatus,
-    membershipStatus,
-    activeClassCount = 0
-}) {
-    const rolloutAllowsClass = rolloutMode === NEIGHBOR_AGIT_ROLLOUT_MODES.PUBLIC_BETA
-        || (rolloutMode === NEIGHBOR_AGIT_ROLLOUT_MODES.LIMITED_BETA && classAllowed);
-    return rolloutAllowsClass
-        && classModuleEnabled === true
-        && spaceStatus === 'active'
-        && membershipStatus === 'active'
-        && activeClassCount >= NEIGHBOR_AGIT_LIMITS.minimumActiveClasses;
-}

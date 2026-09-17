@@ -19,6 +19,45 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-17 — 이웃 아지트 코드 점검과 뒤처진 자리 정리 (Claude Opus 5)
+- **요청**: 진행 중이던 이웃 아지트 코드 점검. 저녁에 더 작업해 공개할 예정.
+- **현재 상태(운영 DB 재조회)**: 단계 `limited_beta`, 관리자 소유 `테스트`·`테스트2` 두 학급만.
+  공간 3 · 참여 학급 6 · 공개 글 2 · 댓글 1 · 공감 0 · 간직 0 — 거의 안 써 본 상태.
+  인수 점검 여섯 항목 모두 `false`(ROADMAP 의 남은 `[ ]` 세 개와 일치). **코드로 남은 일은 없었다.**
+- **안전 확인(이상 없음)**: 이웃 표 19개 전부 RLS 켜짐. RPC 권한도 경계가 맞다 — 내부 헬퍼
+  (`guard_*`·`publish_*`·`review_neighbor_shared_post_v1` 등)는 `supabase_admin`·`postgres` 뿐이고
+  화면이 부르는 것만 `authenticated`. `toggle_neighbor_save_v1` 도 잠긴 채다.
+- **⚠️ anon 에 열린 RPC 하나 — 이미 적어 둔 것, 아직 안 걷음**: `create_neighbor_activity_v1` 이
+  `SECURITY DEFINER` 인데 anon EXECUTE 가 있다. **뚫리지는 않는다** — 오늘 공개 키로 직접 찔러
+  `401 42501 '이웃 아지트 교사 인증이 필요합니다'` 를 재확인했다(함수 첫 줄이
+  `assert_neighbor_participating_teacher_v1`). `ops/rpc-surface-allowlist.json` 에 이유와 함께
+  올라와 있고 회수 조건이 **"이웃 아지트 작업이 끝나면"** 이다 — 즉 지금 공개 준비가 그 조건이다.
+  원인: `20261266` 이 함수를 `DROP` 하고 새 서식으로 다시 만들며 `REVOKE` 를 안 했다(새 함수는
+  기본이 PUBLIC EXECUTE). `20261267` 도 같다. **공개 전에 회수 마이그레이션 한 줄이 필요하다.**
+- **고친 것**:
+  1. `ROADMAP` 의 `[ ] 내 아지트에 이웃 글 보관함을 연결…` — **지운 기능이 만들 일로 남아 있었다.**
+     간직하기는 2026-09-07 에 뺐다(`20261265`). 다음 사람이 다시 만들 자리라 결정 내용으로 바꿨다.
+  2. `policy.js` 의 `getNeighborAgitTeacherSurface`·`canEnterNeighborAgitAsStudent` 삭제 —
+     **화면 어디서도 부르지 않고 검사만 붙들고 있었다**(통과는 하는데 아무것도 안 보는 검사).
+     관문은 서버 하나다: 학생은 bootstrap 의 `neighbor_agit_available`, 교사는 RPC 거절을
+     `TeacherEntry` 가 "아직 사용할 수 없습니다" 로 받는다. 그 사실을 파일에 주석으로 남겼다.
+  3. `AdminNeighborAgitPanel` 의 `간직하기 0개` 타일 제거(표가 잠겨 영원히 0).
+  4. `preparationRoadmaps.js` 의 "…공감·**간직하기**만 사용합니다" 문구에서 간직하기 삭제.
+     이 상수를 그리는 화면이 아직 없다는 사실도 주석으로 적었다.
+- **검사**: `neighborAgitRolloutPolicy.test.mjs` 를 다시 썼다. 죽은 함수 검사 둘을 걷고, 대신
+  **모듈 명세의 `maxInitialRows` 가 정책 상수와 어긋나면 갈리는** 검사를 넣었다(숫자가 두 곳에 있다).
+  일부러 20→25 로 바꿔 실패하는 것까지 확인했다. `manifest.js` 는 `./policy` 를 확장자 없이
+  import 해 Node 가 못 읽으므로 소스를 글로 읽어 본다(PITFALLS 의 그 함정).
+- **변경**: `ROADMAP.md`, `src/modules/community/neighbor-agit/policy.js`,
+  `src/components/admin/AdminNeighborAgitPanel.jsx`, `src/constants/preparationRoadmaps.js`,
+  `tests/neighborAgitRolloutPolicy.test.mjs`. DB·인프라 변경 없음.
+- **결과/검증**: `npm run test:all` 1211/1211(검사 둘 제거·하나 추가로 1212→1211), lint 오류 0.
+- **남은 것 / 다음 (저녁 공개 작업)**:
+  1. 인수 세 가지 — 교사·학생 실계정으로 세 활동 흐름, 관리자 화면, PC·태블릿·모바일 배치.
+     관리자 `운영 → 기능 공개` 의 여섯 항목 체크가 DB에 남으므로 화면에서 눌러 기록한다.
+  2. **`create_neighbor_activity_v1` 의 anon EXECUTE 회수 마이그레이션**(+ 허용 목록에서 줄 삭제).
+  3. `public_beta` 전환은 관리자 화면 스위치로 하고, 문제가 있으면 다시 제한 공개로 되돌린다.
+
 ## 2026-09-17 — 푸시 전 검사에 lint 추가 (Claude Opus 5)
 - **배경**: `PITFALLS` 의 "빌드는 통과했다 — lint 를 안 돌렸으면 그대로 배포될 뻔했다"(2026-09-03)가
   지금도 유효한지 확인해 보니 **그대로였다**. 배포 이미지는 `npm run test:all` 과 `npm run build` 만 돌고

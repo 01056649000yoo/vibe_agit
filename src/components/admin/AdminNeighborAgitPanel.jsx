@@ -25,8 +25,9 @@ const SUMMARY_ITEMS = Object.freeze([
     { id: 'classes', label: '참여 학급', unit: '개', read: (summary) => summary?.active_class_count },
     { id: 'posts', label: '공개 글', unit: '편', read: (summary) => summary?.published_post_count },
     { id: 'comments', label: '보이는 댓글', unit: '개', read: (summary) => summary?.visible_comment_count },
-    { id: 'reactions', label: '공감', unit: '개', read: (summary) => summary?.reaction_count },
-    { id: 'saves', label: '간직하기', unit: '개', read: (summary) => summary?.save_count }
+    { id: 'reactions', label: '공감', unit: '개', read: (summary) => summary?.reaction_count }
+    // 간직하기(`saves`)는 2026-09-07 에 뺐다(`20261265`). 표를 잠가 두어 세면 언제나 0 이므로
+    // 관리자 화면에서도 칸을 없앴다. 서버는 아직 `save_count` 를 내려 주지만 읽지 않는다.
 ]);
 
 const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard = null }) => {

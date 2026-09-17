@@ -28,6 +28,8 @@ export const CLASS_AGIT_PREPARATION_ROADMAP = {
     note: '관리자 내부 확인 → 시범 학급 → 모든 교사에게 기능이 꺼진 상태로 제공하는 순서로 천천히 엽니다.'
 };
 
+// ⚠️ 2026-09-17 확인: 이 안내문을 그리는 화면이 아직 없다(`CLASS_AGIT_PREPARATION_ROADMAP` 만 쓰인다).
+//    이웃 아지트 준비 화면을 붙일 때 이어서 쓰고, 안 쓸 거면 그때 지운다.
 export const NEIGHBOR_AGIT_PREPARATION_ROADMAP = {
     eyebrow: '업데이트 미리보기',
     title: '여러 학급이 한 공간에서 글로 만나고 서로의 독자가 됩니다',
@@ -42,7 +44,7 @@ export const NEIGHBOR_AGIT_PREPARATION_ROADMAP = {
         },
         {
             title: '하나의 이웃 글 피드',
-            description: '학생은 글 읽기·글 쓰기·한 줄 댓글·공감·간직하기만 간단하게 사용합니다.'
+            description: '학생은 글 읽기·글 쓰기·한 줄 댓글·공감만 간단하게 사용합니다.'
         },
         {
             title: '학급별 사용 관리',
