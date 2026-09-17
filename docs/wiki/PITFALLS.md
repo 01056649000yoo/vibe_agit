@@ -77,3 +77,11 @@
 - **로그인 세션은 localStorage 가 아니라 쿠키(`sb-agit-auth-token`)에 있다.** `localStorage.clear()` 로는
   안 지워지고, `@supabase/ssr` 은 조각(`.0`,`.1`)으로 나눠 담아 하나만 남아도 옛 토큰이 되살아난다.
   계정이 지워진 뒤엔 서버 로그아웃도 실패한다 — `clearStoredAuthSession()` 로 이름·조각까지 지운다. (2026-09-13)
+- **시크릿을 넣은 뒤 `docker restart` 로 끝내지 않는다.** 엣지 함수 컨테이너는 `docker-compose.agit.yml`
+  의 `env_file: secrets.agit.env` 로 값을 받는데, env_file 은 **컨테이너를 만들 때만** 읽힌다. restart 로는
+  새 키가 안 들어가서 "넣었는데 왜 안 되지" 가 된다. `docker compose -p agit -f docker-compose.yml
+  -f docker-compose.pg17.yml -f docker-compose.agit.yml up -d --force-recreate --no-deps functions`
+  로 다시 만들고(`--dry-run` 먼저), `docker inspect` 로 **이름만** 확인한다. (2026-09-17)
+- **외부 API 는 이름만 믿지 말고 한 번 찔러 본다.** "국회도서관 키" 로 받은 값이 실제로는
+  국립중앙도서관 키였다(2026-09-17). 국회도서관 쪽은 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR` 를 준다.
+  또 국립중앙도서관 소장자료 검색은 **한글 검색어가 전달되지 않는다** — ISBN 조회에만 쓴다.

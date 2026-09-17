@@ -43,11 +43,21 @@
   `ROADMAP.md`(결정 기록)·`WORKLOG.md`. DB 변경 없음.
 - **결과/검증**: `node --test tests/nlSeojiPageCount.test.mjs tests/googleBooksPageCount.test.mjs` 12/12 통과, ESLint 0.
   실제 키로 seoji ISBN 조회 응답 확인(예: `9791192049380` → `PAGE="170 p."`).
-- **남은 것 / 다음 (서버 작업, 사용자 확인 필요)**:
-  1. ⚠️ **키 재발급 권장** — 이 키는 대화창에 평문으로 붙여넣어져 노출됐다. 국립중앙도서관에서 새로 발급받아 쓰는 편이 낫다.
-  2. 맥미니 `~/agit-supabase/secrets.agit.env` 에 `NL_SEOJI_API_KEY` 추가(값은 여기에 적지 않는다, 권한 600).
-  3. `book-search` 함수를 `~/agit-supabase/volumes/functions/` 에 다시 배포하고 컨테이너 재기동.
-  4. 키를 넣기 전까지는 동작이 예전과 같다(구글만 조회). 넣은 뒤 쪽수가 비던 국내 도서로 확인.
+- **git 밖 인프라 변경(맥미니, 2026-09-17 실행 완료)**:
+  1. `~/agit-supabase/secrets.agit.env` 에 `NL_SEOJI_API_KEY` 추가(값 미기재, 권한 600).
+     백업 `secrets.agit.env.bak-20260917-111830` 남김.
+  2. `book-search` 함수 4개 파일(`index.ts`·`googleBooks.js`·`isbn.js`·`nlSeoji.js`)을
+     `~/agit-supabase/volumes/functions/book-search/` 에 배포. 저장소와 `diff -r` 동일 확인.
+  3. 시크릿은 `docker-compose.agit.yml` 의 `functions.env_file` 로 들어간다 — **restart 로는 안 읽힌다**.
+     `docker compose -p agit -f docker-compose.yml -f docker-compose.pg17.yml -f docker-compose.agit.yml
+     up -d --force-recreate --no-deps functions` 로 재생성했다(`--dry-run` 으로 대상이 함수 컨테이너
+     하나뿐인 것 먼저 확인). 컨테이너 healthy, `NL_SEOJI_API_KEY` 전달 확인.
+  4. 스모크: 무인증 POST `/functions/v1/book-search` → 401 `학생 인증이 필요합니다.`
+     (모듈 적재 오류 없음 = `nlSeoji.js` import 정상).
+- **남은 것 / 다음**:
+  - 브라우저에서 학생 계정으로 구글에 쪽수가 없던 국내 도서를 골라 쪽수가 채워지는지, 출처가 `nl` 로 남는지 확인.
+  - ⚠️ 이 키는 대화창에 평문으로 노출된 적이 있다(사용자가 그대로 쓰기로 결정). 문제가 보이면 재발급 후 위 2~3 단계를 다시 밟는다.
+  - 국립중앙도서관 소장자료 검색의 한글 검색어 문제는 미해결 — 풀리면 제목 검색도 카카오와 함께 쓸 수 있다.
 
 ## 2026-09-17 — 다했니 연동 후속(공지·권한·로그 정리·처리방침) 커밋·푸시 및 적용 상태 대조 (Claude Opus 5)
 - **한 일**: 세 기기(윈도우 `jinnam`·맥미니·GitHub)의 커밋을 한 줄로 맞추고, 운영 DB 의 마이그레이션 적용 상태를 저장소와 전수 대조했다.
