@@ -31,34 +31,33 @@ const functionSource = (name) => {
     return migration.slice(start, next < 0 ? migration.length : next);
 };
 
-test('모두의 아지트는 글 나눔 공간·함께 쓰는 주제 두 활동만 두고 교사 화면은 세 단계다', () => {
+test('모두의 아지트는 두 활동만 두고, 준비는 진행형 마법사·운영은 요약바+탭 2개다', () => {
     // 2026-09-06: 글짝 교환 활동을 제품에서 뺐다(SQL 61254).
+    // 2026-09-17: 3단계 탭을 걷어내고, 준비(참여 2학급 전)는 진행형 마법사로, 운영은
+    //             얇은 요약 바 + 최상위 탭 2개(글 나눔/함께 쓰는 주제)로 재구성했다.
     for (const label of ['글 나눔 공간', '함께 쓰는 주제']) {
         assert.ok(activityTypes.includes(label), `공용 활동 이름에 ${label} 표시가 없습니다.`);
     }
     assert.ok(!activityTypes.includes("id: 'exchange'"), '글짝 교환 항목이 남아 있습니다.');
     assert.match(teacherEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
     assert.match(studentEntry, /NEIGHBOR_ACTIVITY_TABS\.map/);
-    // 교사 화면은 만들기 → 초대하기 → 활동하기 세 단계다.
-    // 2026-09-07: 번호를 글자에 붙여 적던 것을 `steps` 목록과 번호 칸으로 나눴다(따라가는 길로 보이게).
-    assert.match(teacherEntry, /aria-label="모두의 아지트 준비 단계"/);
-    const stepBlock = teacherEntry.slice(teacherEntry.indexOf('const steps = useMemo'));
-    for (const [index, step] of ['모두의 아지트 만들기', '아지트 초대하기', '활동하기'].entries()) {
-        assert.ok(stepBlock.includes(`label: '${step}'`), `${step} 단계가 없습니다.`);
-        assert.ok(stepBlock.indexOf(`label: '${step}'`) > -1);
-        // 순서가 뜻이므로 앞 단계가 뒤 단계보다 먼저 나와야 한다.
-        if (index > 0) {
-            const previous = ['모두의 아지트 만들기', '아지트 초대하기', '활동하기'][index - 1];
-            assert.ok(stepBlock.indexOf(`label: '${previous}'`) < stepBlock.indexOf(`label: '${step}'`),
-                `${previous} 가 ${step} 보다 뒤에 있습니다.`);
-        }
+
+    // 준비 마법사: 끝난 단계 ✓(is-done), 지금 단계 강조(is-current), 순서대로.
+    assert.match(teacherEntry, /neighbor-teacher__wizard-steps/);
+    assert.match(teacherEntry, /is-done/);
+    assert.match(teacherEntry, /is-current/);
+    for (const step of ['공간 만들기', '이웃 반 초대', '참여 확인']) {
+        assert.ok(teacherEntry.includes(step), `${step} 단계가 없습니다.`);
     }
-    // 끝난 단계에 ✓ 를 달아 지금 어디까지 왔는지 보인다.
-    assert.match(teacherEntry, /step\.done \? '✓' : index \+ 1/);
-    // 검토·공개 글 관리는 활동 화면의 글 나눔 오른쪽 열에 함께 있어 별도 탭이나 하단 화면이 아니다.
-    assert.equal((teacherEntry.match(/activeTab === 'activities'/g) || []).length, 1);
+
+    // 운영: 얇은 요약 바 + 통합 검토함 + 공간 관리 모달.
+    assert.match(teacherEntry, /neighbor-teacher__bar/);
+    assert.match(teacherEntry, /setReviewInboxOpen\(true\)/);
+    assert.match(teacherEntry, /setManageOpen\(true\)/);
+    // 공개 글 관리는 글 나눔 오른쪽 열에 그대로.
     assert.match(teacherEntry, /neighbor-teacher__management-column/);
-    assert.doesNotMatch(teacherEntry, /activeTab === 'review'|activeTab === 'feed'/);
+    // 옛 3단계 탭 모델(activeTab)은 없앴다.
+    assert.doesNotMatch(teacherEntry, /activeTab === /);
 });
 
 test('활동 원장·참여 학급·글짝은 브라우저와 service_role이 직접 읽지 못한다', () => {
@@ -122,5 +121,5 @@ test('교사 활동 생성·매칭안·승인·종료는 작업공간 RPC 한 �
     assert.match(action, /run_neighbor_teacher_action_core_20261238/);
     assert.match(teacherEntry, /close_activity/);
     assert.match(action, /get_neighbor_teacher_workspace_v1/);
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 5);
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 7);
 });

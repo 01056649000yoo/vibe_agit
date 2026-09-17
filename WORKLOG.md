@@ -190,6 +190,27 @@
 - **남은 것 / 다음**: 브라우저에서 실제 교사 계정으로 ①키 연결 ②붙여넣기 매칭 ③수동·자동 정산을 눈으로 확인(2026-09-16 항목에서 이어짐). 2026-09-21 처리방침 시행 판 재동의 동작 확인.
 - **메모**: 적용 여부는 추측하지 말고 `npm run migrate:status`(맥미니) 로 묻는다. 다른 기기에서는 도커가 없어 실패하므로 `ssh macmini` 로 조회한다.
 
+## 2026-09-17 — 모두의 아지트(옛 이웃 아지트) 이름 변경·UI 대개편·알림 (Claude Opus)
+- **요청 흐름**: ① "이웃 아지트" 이름이 "남의 반으로 감" 느낌 → **모두의 아지트**로 변경. ② 교사 화면이 복잡·비직관 →
+  진입 역할선택·준비 마법사·운영 탭 2개로 재구성, 탭 이동 최소화 + 새 글/처리할 것 **배지**. ③ 검토는 두 활동 공통이라 **통합 검토함**.
+  ④ AI에 막힌 이웃 댓글이 학급 "학생 댓글"에서 안 보임 → 검토함에서 처리하게.
+- **한 일(커밋됨)**:
+  - `bcc5f36c` 표시명 "이웃 아지트"→"모두의 아지트" 일괄(내부 id `neighbor-agit`·RPC·CSS·서버 RAISE 문구·문서는 유지).
+  - `f15624f3` `create_neighbor_activity_v1` anon 실행 권한 회수(+허용목록 정리).
+- **한 일(오늘 미커밋 → 이번 커밋 예정)**:
+  - **서버**: `20261306` 교사 방문표 `neighbor_space_teacher_visits` + `mark_neighbor_teacher_seen_v1` + 워크스페이스에 `notifications`(pending_reviews·approvals·joins·new_posts·new_comments). `20261307` 메뉴 배지 RPC `get_neighbor_teacher_badge_v1`. `20261308` 차단 댓글: `review_neighbor_blocked_comment_v1`(담임이 blocked→visible/deleted) + 워크스페이스에 `blocked_comments` 목록/카운트. `20261309` 메뉴 배지에 blocked 포함. (네 개 모두 운영 DB 적용 완료.)
+  - **교사 화면(`TeacherEntry.jsx`/`.css`)**: 진입 **역할 선택(호스트/게스트)→모달**, 참여 2학급 전 **준비 마법사**(①공간✓ ②초대 ③참여확인), 운영 = **얇은 요약 바**(학생공개 토글·🗂️검토·⚙️공간관리) + **최상위 탭 2개**(글 나눔/함께 쓰는 주제) + **통합 검토함 모달**(공개 요청 + AI 막은 우리 반 댓글 되살리기/삭제) + **공간 관리 모달**. 탭·상단·메뉴 **배지**. 옛 3단계 탭(activeTab)·steps 제거.
+  - **클라 API(`teacherApi.js`)**: `markSeen`, `reviewBlockedComment`, `notifications`/`blocked_comments` 기본값.
+  - **메뉴 배지(`TeacherDashboard.jsx`)**: 모두의 아지트 메뉴에 처리할 일 수 배지(`get_neighbor_teacher_badge_v1`).
+  - **테스트 갱신**: `neighborAgitActivities`·`neighborSafety`를 새 구조(마법사/요약바/탭)로, teacherApi rpc 개수 7로.
+- **검증**: 전체 `node --test tests/*.test.mjs` **1211개 통과**, ESLint 0, `migrate:check`·`check:rpc-surface` 통과. 로컬 배포 완료.
+- **⚠️ 미해결(내일 최우선) — 이웃 댓글 AI 검사 큐 트리거 누락**:
+  - 증상: 글 나눔 댓글이 "AI에 막혀 보인다"지만 실제론 **pending 에서 멈춤**(운영 DB: 이웃 댓글 pending 2·blocked 0). 그래서 blocked만 보이는 검토함에 안 뜸.
+  - 원인: 댓글 검사 큐(`comment_ai_review_slots`, 두 표 공용)를 도는 `vibe-ai`의 `drainCommentSafetyQueue`는 **학급 댓글 검사 요청(post_comments 전용 액션) 뒤 곁다리로만** 실행(vibe-ai 349행). **이웃 댓글 저장은 이 트리거를 안 부르고, 댓글 검사 전용 cron도 없음** → pending 방치.
+  - 제약: `neighborSafety` 규칙 — **AI 작업기(vibe-ai)는 `neighbor_comments` 표 이름을 알면 안 됨**(큐 RPC가 두 표를 봄). 그러니 작업기 말고 **트리거만** 추가.
+  - 계획: ①이웃 댓글 저장 시 vibe-ai에 **표 이름 없는 일반 드레인 poke** 호출(학급과 대칭) ②보강용 **pg_cron 주기 드레인** ③(선택) 검토함에 "검사 대기 N"·학생 화면 pending/blocked 표시. 갇힌 2건은 트리거 넣으면 다음 드레인에 풀림.
+- **남은 선택**: `함께 쓰는 주제`에 **전체 `MissionForm` 드롭인**(옵션 B, `mode` prop) — 현재는 기존 컴포넌트 재사용 컴포저 유지(계약 테스트 통과). 학생 화면 pending/blocked 표시.
+
 ## 2026-09-16 — 다했니 쿠키 → "다했니 포인트" 연동 (Claude Opus)
 - **요청**: 다했니(dahandin) 학생별 쿠키를 아지트 학생 포인트와 연동. 교사마다 자기 API 키를 설정 메뉴에서 입력→학생 매칭→사용. 붙여넣기 자동 인식, 자동 정산 주기(매일/매주), "다했니 포인트" 라벨, 다했어요 대시보드(통계·그래프)까지.
 - **API 실측(2026-09-16)**: 인증 헤더 `X-API-Key`. `GET /openapi/v1/get/class/list`(키만), `GET /openapi/v1/get/student/total?code=`(학생 1명, `cookie` 누적·`usedCookie`·`totalCookie`·`badges`; 실제 응답에 `chocoChips` 없음). 코드 오류 시에도 "API KEY 가 올바르지 않습니다" 를 주는 함정 확인. 제한 평균 5req/초·300req/분. **키는 발급 계정의 데이터만** 조회 → 교사별 키 필수.

@@ -75,23 +75,29 @@ test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () =
         /neighbor-teacher__reward-grid/);
 });
 
-test('교사 화면은 세 단계를 따라가는 길로 보여 주고 활동은 두 탭으로 나뉜다', () => {
-    // 선생님 요청(2026-09-07): 순서대로 따라하기만 하면 되게, 활동하기 안은 두 탭으로.
+test('준비는 진행형 마법사로 안내하고, 운영은 요약 바 + 활동 두 탭으로 나뉜다', () => {
+    // 2026-09-17 재구성: 3단계 탭을 걷어내고 준비(참여 2학급 전)는 진행형 마법사로,
+    // 운영은 얇은 요약 바 + 최상위 탭 2개로 바꿨다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
 
-    // 지금 어디까지 왔는지 보이게 끝난 단계에 ✓ 를, 다음 할 일을 한 줄로 적는다.
-    assert.match(teacher, /neighbor-teacher__steps/);
-    assert.match(teacher, /step\.done \? '✓' : index \+ 1/);
-    assert.match(teacher, /hint: hasPartner \? '이웃 학급과 연결됨'/);
+    // 준비 마법사: 끝난 단계 ✓(is-done), 지금 단계 강조(is-current).
+    assert.match(teacher, /neighbor-teacher__wizard-steps/);
+    assert.match(teacher, /className="is-done"/);
+    assert.match(teacher, /is-current/);
+    // 옛 3단계 탭 nav 는 없앴다.
+    assert.doesNotMatch(teacher, /neighbor-teacher__steps\b/);
 
-    // 활동은 둘뿐이라 큰 카드 두 장 대신 내용 폭만 쓰는 얇은 전환 바로 둔다.
+    // 운영: 얇은 요약 바로 학생 공개·검토함·공간 관리를 어느 탭에서든 연다.
+    assert.match(teacher, /neighbor-teacher__bar/);
+
+    // 활동은 둘뿐이라 내용 폭만 쓰는 얇은 전환 바로 둔다.
     const activityTabRule = css.slice(css.indexOf('.neighbor-teacher__activity-tabs {'));
     assert.match(activityTabRule.slice(0, 260), /width: fit-content/);
     assert.match(css, /activity-tabs button[^}]*min-height: 36px/);
 
-    // 좁은 화면에서도 단계는 세 칸을 지킨다 — 세로로 쌓으면 순서가 흐름으로 안 읽힌다.
-    assert.match(css, /단계는 순서가 뜻이라 좁아져도 세 칸을 유지/);
+    // 좁은 화면에서는 마법사 단계가 한 열로 접힌다.
+    assert.match(css, /\.neighbor-teacher__wizard-steps \{ grid-template-columns: 1fr/);
 });
 
 test('주제 만들기는 넓은 화면에서 두 열로 모으고 질문만 내부 스크롤한다', () => {

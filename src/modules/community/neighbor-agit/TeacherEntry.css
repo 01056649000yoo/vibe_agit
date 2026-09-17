@@ -13,6 +13,59 @@
 .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .neighbor-teacher__activity-layout { gap: 8px; }
 .neighbor-teacher__space-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 진입: 역할 선택(호스트/게스트) 카드 두 장. 고르면 모달로 진행한다. */
+.neighbor-teacher__start-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.neighbor-teacher__choice { display: grid; justify-items: start; align-content: start; gap: 6px; padding: 22px; border: 1px solid #d9e2ec; border-radius: 17px; background: #fff; box-shadow: 0 2px 8px rgba(16, 42, 67, .05); cursor: pointer; text-align: left; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.neighbor-teacher__choice:hover { border-color: #9db8d6; box-shadow: 0 6px 16px rgba(16, 42, 67, .1); transform: translateY(-1px); }
+.neighbor-teacher__choice strong { color: #243b53; font-size: var(--ui-text-lg); }
+.neighbor-teacher__choice small { color: #627d98; font-size: var(--ui-text-sm); }
+.neighbor-teacher__choice-mark { font-size: 2rem; }
+.neighbor-teacher__start-form { display: grid; gap: 13px; }
+.neighbor-teacher__start-form label { display: grid; gap: 6px; color: #486581; font-size: var(--ui-text-sm); font-weight: 800; }
+.neighbor-teacher__start-form input, .neighbor-teacher__start-form textarea { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: var(--ui-text-md); font-family: inherit; }
+.neighbor-teacher__start-form textarea { min-height: 72px; resize: vertical; }
+
+/* 준비 마법사(진행형): 참여 2학급 전. 순서대로 따라가기만 하면 되게 보인다. */
+.neighbor-teacher__wizard { display: grid; gap: 16px; }
+.neighbor-teacher__wizard-head span { color: #627d98; font-size: var(--ui-text-sm); font-weight: 800; }
+.neighbor-teacher__wizard-head h2 { margin: 4px 0 6px; color: #243b53; }
+.neighbor-teacher__wizard-head p { margin: 0; color: #486581; font-size: var(--ui-text-md); }
+.neighbor-teacher__wizard-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.neighbor-teacher__wizard-steps li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
+.neighbor-teacher__wizard-steps li > span { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; background: #e2e8f0; color: #64748b; font-weight: 800; font-size: var(--ui-text-sm); }
+.neighbor-teacher__wizard-steps li.is-done { border-color: #bbf7d0; background: #f0fdf4; }
+.neighbor-teacher__wizard-steps li.is-done > span { background: #16a34a; color: #fff; }
+.neighbor-teacher__wizard-steps li.is-current { border-color: #c7d7fe; background: #eef2ff; }
+.neighbor-teacher__wizard-steps li.is-current > span { background: #4f46e5; color: #fff; }
+.neighbor-teacher__wizard-steps strong { display: block; color: #243b53; font-size: var(--ui-text-md); }
+.neighbor-teacher__wizard-steps small { display: block; color: #627d98; font-size: var(--ui-text-xs); margin-top: 2px; }
+.neighbor-teacher__wizard-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+@media (max-width: 720px) {
+    .neighbor-teacher__wizard-steps { grid-template-columns: 1fr; }
+    .neighbor-teacher__wizard-body { grid-template-columns: 1fr; }
+}
+
+/* 운영 요약 바: 얇은 한 줄. 학생 공개·검토함·공간 관리를 어느 탭에서든 연다. */
+.neighbor-teacher__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border: 1px solid #d9e2ec; border-radius: 14px; background: #f8fafc; }
+.neighbor-teacher__bar-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.neighbor-teacher__bar-title span { color: #627d98; font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-teacher__bar-title h2 { margin: 0; color: #243b53; font-size: var(--ui-text-lg); }
+.neighbor-teacher__bar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.neighbor-teacher__bar-metric { color: #486581; font-size: var(--ui-text-sm); font-weight: 700; }
+.neighbor-teacher__access-toggle { padding: 7px 12px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; font-weight: 800; font-size: var(--ui-text-sm); cursor: pointer; }
+.neighbor-teacher__access-toggle.is-on { border-color: #86efac; background: #f0fdf4; color: #166534; }
+/* 배지: 처리할 것/새 것 수. 탭을 오가지 않아도 눈에 띈다. */
+.neighbor-teacher__badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-teacher__inbox-note { margin: 0 0 10px; color: #627d98; font-size: var(--ui-text-sm); }
+.neighbor-teacher__inbox-heading { margin: 18px 0 8px; color: #243b53; font-size: var(--ui-text-md); }
+.neighbor-teacher__inbox-heading:first-child { margin-top: 0; }
+.neighbor-teacher__block-reason { display: block; margin-top: 4px; color: #b45309; font-size: var(--ui-text-xs); }
+/* 공간 관리 모달 내부 */
+.neighbor-teacher__manage { display: grid; gap: 18px; }
+.neighbor-teacher__manage section { display: grid; gap: 8px; }
+.neighbor-teacher__manage h3 { margin: 0; color: #243b53; font-size: var(--ui-text-md); }
+.neighbor-teacher__manage p { margin: 0; color: #627d98; font-size: var(--ui-text-sm); }
+
 .neighbor-teacher-card { display: grid; align-content: start; gap: 13px; padding: 20px; border: 1px solid #d9e2ec; border-radius: 17px; background: #fff; box-shadow: 0 2px 8px rgba(16, 42, 67, .05); }
 .neighbor-teacher-card h2, .neighbor-teacher-card h3 { margin: 4px 0 0; color: #243b53; }
 .neighbor-teacher-card label { display: grid; gap: 6px; color: #486581; font-size: var(--ui-text-sm); font-weight: 800; }
@@ -213,7 +266,7 @@
     .neighbor-teacher__step { flex-direction: column; gap: 5px; padding: 9px 8px; min-height: 66px; text-align: center; }
     .neighbor-teacher__step-text small { display: none; }
     .neighbor-teacher__header, .neighbor-teacher__overview, .neighbor-teacher__post-list article { align-items: stretch; flex-direction: column; }
-    .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout { grid-template-columns: 1fr; }
+    .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout, .neighbor-teacher__start-choice { grid-template-columns: 1fr; }
     .neighbor-teacher__activity-list > article { align-items: stretch; flex-direction: column; }
     .neighbor-teacher__activity-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; box-sizing: border-box; }
     .neighbor-teacher__activity-tabs button { min-height: 36px; }

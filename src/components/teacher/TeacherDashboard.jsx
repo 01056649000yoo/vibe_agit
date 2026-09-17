@@ -107,6 +107,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     // 관리자가 답장을 달면 여기에 숫자가 붙는다. 답장이 보이지 않으면 아무도 두 번 제보하지 않는다.
     const [feedbackReplyCount, setFeedbackReplyCount] = useState(0);
+    // 모두의 아지트: 들어가기 전에도 처리할 것(검토·승인·참여신청)을 메뉴 배지로 알린다.
+    const [neighborBadge, setNeighborBadge] = useState(0);
 
     /*
      * 공지는 대시보드가 한 번만 읽어 머리말 버튼과 위쪽 띠에 함께 넘긴다.
@@ -201,6 +203,18 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     useEffect(() => {
         void loadFeedbackReplyCount();
     }, [loadFeedbackReplyCount]);
+
+    // 모두의 아지트 메뉴 배지 — 학급이 바뀔 때 한 번만 싸게 센다(자격 없으면 0).
+    const loadNeighborBadge = useCallback(async () => {
+        if (!activeClass?.id) { setNeighborBadge(0); return; }
+        const { data, error } = await supabase.rpc('get_neighbor_teacher_badge_v1', { p_class_id: activeClass.id });
+        if (error) { setNeighborBadge(0); return; }
+        setNeighborBadge(Number(data?.count ?? 0));
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        void loadNeighborBadge();
+    }, [loadNeighborBadge]);
 
     useEffect(() => {
         try {
@@ -529,6 +543,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             {group.label}
                             {hasWritingUnreviewed && (
                                 <span className="teacher-dashboard__nav-new" aria-label="새 미확인 글 있음">NEW</span>
+                            )}
+                            {group.id === 'neighbor-agit' && neighborBadge > 0 && (
+                                <span className="teacher-subtab__badge-new" aria-label={`모두의 아지트 처리할 일 ${neighborBadge}건`}>{neighborBadge}</span>
                             )}
                         </button>
                     );
