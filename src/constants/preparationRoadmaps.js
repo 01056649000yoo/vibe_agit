@@ -29,7 +29,7 @@ export const CLASS_AGIT_PREPARATION_ROADMAP = {
 };
 
 // ⚠️ 2026-09-17 확인: 이 안내문을 그리는 화면이 아직 없다(`CLASS_AGIT_PREPARATION_ROADMAP` 만 쓰인다).
-//    이웃 아지트 준비 화면을 붙일 때 이어서 쓰고, 안 쓸 거면 그때 지운다.
+//    모두의 아지트 준비 화면을 붙일 때 이어서 쓰고, 안 쓸 거면 그때 지운다.
 export const NEIGHBOR_AGIT_PREPARATION_ROADMAP = {
     eyebrow: '업데이트 미리보기',
     title: '여러 학급이 한 공간에서 글로 만나고 서로의 독자가 됩니다',

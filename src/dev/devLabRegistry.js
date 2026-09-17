@@ -53,7 +53,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
   Object.freeze({
     id: 'neighbor-agit-teacher',
     icon: '🤝',
-    title: '이웃 아지트 교사 활동',
+    title: '모두의 아지트 교사 활동',
     description: '교사 직접 글 전시와 활동 화면을 DB 없이 확인한다',
     Component: NeighborAgitTeacherPreview,
   }),

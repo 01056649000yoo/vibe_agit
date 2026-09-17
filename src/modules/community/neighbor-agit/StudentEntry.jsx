@@ -320,7 +320,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                 <StudentBackButton onClick={onBack} />
                 <div>
                     <span className="neighbor-student-page__eyebrow">여러 학급이 함께 읽는 공간</span>
-                    <h1>🤝 {feed?.space?.name || '이웃 아지트'}</h1>
+                    <h1>🤝 {feed?.space?.name || '모두의 아지트'}</h1>
                     <p>선생님이 확인한 글만 보여요. 서로의 학급 이름과 등록 이름으로 책임 있게 만나요.</p>
                 </div>
                 {feed?.space?.active_class_count > 0 && (
@@ -330,7 +330,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                 )}
             </header>
 
-            <nav className="neighbor-student-activities" aria-label="이웃 아지트 활동">
+            <nav className="neighbor-student-activities" aria-label="모두의 아지트 활동">
                 {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => (
                     <button type="button" key={id} className={activeSection === id ? 'is-active' : ''} aria-pressed={activeSection === id} onClick={() => selectSection(id)}>
                         <span aria-hidden="true">{icon}</span><strong>{label}</strong>

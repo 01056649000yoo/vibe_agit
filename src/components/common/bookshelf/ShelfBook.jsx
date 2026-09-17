@@ -80,7 +80,7 @@ export const SHELF_SECTIONS = [
 ];
 
 /**
- * 탭은 아니지만 책 색은 따로인 갈래. 이웃 아지트의 안건 의견 글은 과제 책장에 꽂히되 보라색이다.
+ * 탭은 아니지만 책 색은 따로인 갈래. 모두의 아지트의 안건 의견 글은 과제 책장에 꽂히되 보라색이다.
  * 과제 탭의 match 가 먼저 잡으므로 여기서 먼저 본다.
  */
 const normalizeRelation = (value) => (Array.isArray(value) ? (value[0] || null) : (value || null));

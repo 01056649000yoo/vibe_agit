@@ -5,7 +5,7 @@ export const NeighborAgitTeacherPreview = ({ space }) => (
         <header>
             <div>
                 <span>교사 화면 미리보기</span>
-                <h3>{space?.name || '선택한 이웃 아지트 없음'}</h3>
+                <h3>{space?.name || '선택한 모두의 아지트 없음'}</h3>
             </div>
             {space && <strong>{space.status === 'active' ? '운영 중' : space.status}</strong>}
         </header>

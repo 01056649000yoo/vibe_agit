@@ -49,7 +49,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
             const nextSpaceId = spaceId || next.preview_space_id || next.spaces[0]?.space_id || '';
             setSelectedSpaceId(nextSpaceId);
         } catch (error) {
-            setErrorMessage(error.message || '이웃 아지트 운영 현황을 불러오지 못했습니다.');
+            setErrorMessage(error.message || '모두의 아지트 운영 현황을 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }
@@ -166,10 +166,10 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
         let confirmation = '';
         if (mode === 'limited_beta') {
             if (limitedClassCount < 2) return;
-            if (!window.confirm('선택한 학급에만 이웃 아지트 실제 기능을 공개할까요?')) return;
+            if (!window.confirm('선택한 학급에만 모두의 아지트 실제 기능을 공개할까요?')) return;
         } else if (mode === 'public_beta') {
             if (!acceptanceReady) return;
-            if (!window.confirm('이웃 아지트를 모든 승인 교사에게 정상 공개할까요? 학생 메뉴는 학급별로 켠 경우에만 열립니다.')) return;
+            if (!window.confirm('모두의 아지트를 모든 승인 교사에게 정상 공개할까요? 학생 메뉴는 학급별로 켠 경우에만 열립니다.')) return;
             confirmation = PUBLIC_ROLLOUT_CONFIRMATION;
         } else if (!window.confirm(`${getModeLabel(mode)} 단계로 변경할까요?`)) {
             return;
@@ -189,7 +189,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
     };
 
     if (loading && !dashboard) {
-        return <div className="neighbor-admin-state">이웃 아지트 운영 현황을 불러오는 중입니다…</div>;
+        return <div className="neighbor-admin-state">모두의 아지트 운영 현황을 불러오는 중입니다…</div>;
     }
 
     return (
@@ -199,7 +199,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                     <span className={`neighbor-admin__mode neighbor-admin__mode--${dashboard?.rollout?.mode || 'internal'}`}>
                         {getModeLabel(dashboard?.rollout?.mode)}
                     </span>
-                    <h2 id="neighbor-admin-title">🤝 이웃 아지트 기능 공개</h2>
+                    <h2 id="neighbor-admin-title">🤝 모두의 아지트 기능 공개</h2>
                     <p>선택 학급에서 먼저 개발·점검하고, 준비가 끝나면 스위치로 정상 공개합니다.</p>
                 </div>
                 <Button type="button" variant="outline" loading={loading} onClick={() => loadDashboard(selectedSpaceId || null)}>
@@ -313,7 +313,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                                 <span>글 {Number(space.published_post_count) || 0} · 댓글 {Number(space.visible_comment_count) || 0}</span>
                             </button>
                         ))}
-                        {!dashboard?.spaces?.length && <p>아직 만든 이웃 아지트 공간이 없습니다.</p>}
+                        {!dashboard?.spaces?.length && <p>아직 만든 모두의 아지트 공간이 없습니다.</p>}
                     </div>
                 </section>
             </div>
@@ -358,7 +358,7 @@ const AdminNeighborAgitPanel = ({ api = neighborAgitAdminApi, initialDashboard =
                         <input
                             type="checkbox"
                             role="switch"
-                            aria-label="이웃 아지트 정상 공개 전환"
+                            aria-label="모두의 아지트 정상 공개 전환"
                             checked={isPublicRollout}
                             disabled={rolloutSwitchDisabled}
                             onChange={(event) => changeRollout(event.target.checked ? 'public_beta' : 'limited_beta')}

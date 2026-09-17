@@ -7,7 +7,7 @@ const assertWorkspace = (data) => {
         || !Array.isArray(data?.activities)
         || !Array.isArray(data?.review_posts)
         || !Array.isArray(data?.public_posts)) {
-        throw new Error('지원하지 않는 이웃 아지트 교사 응답입니다.');
+        throw new Error('지원하지 않는 모두의 아지트 교사 응답입니다.');
     }
     return data;
 };
@@ -39,7 +39,7 @@ export const neighborAgitTeacherApi = {
         });
         if (error) throw error;
         if (data?.success !== true || !data?.workspace) {
-            throw new Error('이웃 아지트 동작 결과를 확인할 수 없습니다.');
+            throw new Error('모두의 아지트 동작 결과를 확인할 수 없습니다.');
         }
         return {
             result: data.action_result || {},

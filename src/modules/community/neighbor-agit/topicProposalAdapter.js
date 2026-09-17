@@ -7,7 +7,7 @@ export const createNeighborTopicDraft = () => createMissionDraft({
     bonus_reward: 0
 });
 
-/** 공용 미션 초안을 이웃 아지트의 교사 승인형 제안 명령으로 바꾼다. */
+/** 공용 미션 초안을 모두의 아지트의 교사 승인형 제안 명령으로 바꾼다. */
 export const toNeighborTopicProposal = ({ spaceId, draft }) => {
     const mission = normalizeMissionDraft(draft);
     return {

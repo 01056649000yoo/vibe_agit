@@ -1,4 +1,4 @@
-// 이웃 아지트는 별도 편집기나 글 사본을 만들지 않는다. 기존 글쓰기 화면이 만든
+// 모두의 아지트는 별도 편집기나 글 사본을 만들지 않는다. 기존 글쓰기 화면이 만든
 // student_posts 원본과 임시저장을 그대로 쓰고, 제출된 글의 공개 연결만 전용 RPC로 관리한다.
 export const NEIGHBOR_AGIT_WRITING_BRIDGE = Object.freeze({
     sourceTable: 'student_posts',

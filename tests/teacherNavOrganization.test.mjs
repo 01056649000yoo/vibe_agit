@@ -41,12 +41,12 @@ test('메뉴에는 배지를 달지 않고 상태는 이름에 적는다', () =>
     /*
      * 2026-09-14 요청: 우리반 아지트의 `BETA` 를 뗀다.
      *
-     * 이웃 아지트는 2026-08 에 "별도 경고문 없이 **메뉴명**으로 알린다" 고 정했다(`이웃 아지트(제작 중)`).
+     * 모두의 아지트는 2026-08 에 "별도 경고문 없이 **메뉴명**으로 알린다" 고 정했다(`모두의 아지트(제작 중)`).
      * 그래서 배지를 쓰는 메뉴가 하나도 남지 않는다 — 그리는 자리도 함께 걷어낸다. 두 방식이
      * 같이 있으면 다음 사람이 어느 쪽으로 적을지 헷갈린다.
      */
     assert.deepEqual(TEACHER_NAV_GROUPS.filter((group) => group.badge).map((group) => group.id), []);
-    assert.equal(TEACHER_NAV_GROUPS.find((group) => group.id === 'neighbor-agit')?.label, '이웃 아지트(제작 중)');
+    assert.equal(TEACHER_NAV_GROUPS.find((group) => group.id === 'neighbor-agit')?.label, '모두의 아지트(제작 중)');
     assert.doesNotMatch(TEACHER_NAV_GROUPS.map((group) => group.label).join(' '), /\(beta\)|beta/i);
     assert.ok(!dashboard.includes('nav-badge'), '대시보드에 배지를 그리는 자리가 남아 있습니다.');
     assert.ok(!uiPreview.includes('nav-badge'), 'UI 작업실에 배지를 그리는 자리가 남아 있습니다.');

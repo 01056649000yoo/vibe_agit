@@ -19,9 +19,9 @@ const functionSource = (name) => {
     return migration.slice(start, next < 0 ? migration.length : next);
 };
 
-test('관리자 운영 묶음에 이웃 아지트 전용 탭을 두고 선택할 때만 지연 로딩한다', () => {
-    // 2026-09-06에 `기능 공개` 한 탭을 우리반 아지트·이웃 아지트 두 탭으로 갈랐다.
-    assert.match(dashboard, /\{ id: 'neighbor-agit', label: '이웃 아지트' \}/);
+test('관리자 운영 묶음에 모두의 아지트 전용 탭을 두고 선택할 때만 지연 로딩한다', () => {
+    // 2026-09-06에 `기능 공개` 한 탭을 우리반 아지트·모두의 아지트 두 탭으로 갈랐다.
+    assert.match(dashboard, /\{ id: 'neighbor-agit', label: '모두의 아지트' \}/);
     assert.match(dashboard, /const AdminNeighborAgitPanel = React\.lazy/);
     assert.match(dashboard, /active=\{currentTab === 'neighbor-agit'\}/);
     assert.match(dashboard, /visited=\{visitedTabs\.has\('neighbor-agit'\)\}/);
@@ -82,7 +82,7 @@ test('관리 화면은 좁은 화면에서 한 열로 줄고 공개 스위치·�
     assert.match(panelCss, /grid-template-columns:\s*1fr/);
     assert.match(panel, /type="checkbox"/);
     assert.match(panel, /htmlFor=\{`neighbor-acceptance-/);
-    assert.match(panel, /aria-label="이웃 아지트 정상 공개 전환"/);
+    assert.match(panel, /aria-label="모두의 아지트 정상 공개 전환"/);
     assert.match(panel, /disabled=\{rolloutSwitchDisabled\}/);
     assert.match(panel, /aria-live="polite"/);
 });

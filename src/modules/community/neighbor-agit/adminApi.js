@@ -17,7 +17,7 @@ const assertDashboard = (data) => {
         || !Array.isArray(data?.limited_classes)
         || !Array.isArray(data?.spaces)
         || !Array.isArray(data?.preview_feed)) {
-        throw new Error('지원하지 않는 이웃 아지트 관리자 응답입니다.');
+        throw new Error('지원하지 않는 모두의 아지트 관리자 응답입니다.');
     }
     return data;
 };

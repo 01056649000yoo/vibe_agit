@@ -28,7 +28,7 @@ const STATUS_LABELS = Object.freeze({
 
 const getErrorMessage = (error, fallback) => {
     const message = error?.message || '';
-    if (message.includes('현재 공개 대상')) return '현재 선택한 학급에서는 이웃 아지트를 아직 사용할 수 없습니다.';
+    if (message.includes('현재 공개 대상')) return '현재 선택한 학급에서는 모두의 아지트를 아직 사용할 수 없습니다.';
     return message || fallback;
 };
 
@@ -64,7 +64,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setWorkspace(await api.getWorkspace(classId));
         } catch (error) {
             setWorkspace(null);
-            setErrorMessage(getErrorMessage(error, '이웃 아지트 화면을 불러오지 못했습니다.'));
+            setErrorMessage(getErrorMessage(error, '모두의 아지트 화면을 불러오지 못했습니다.'));
         } finally {
             setLoading(false);
         }
@@ -121,7 +121,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             name: spaceForm.name.trim(),
             public_class_name: spaceForm.publicClassName.trim(),
             description: spaceForm.description.trim()
-        }, '이웃 아지트 공간을 만들었습니다.');
+        }, '모두의 아지트 공간을 만들었습니다.');
         if (result) setSpaceForm((current) => ({ ...current, name: '', description: '' }));
     };
 
@@ -265,7 +265,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return [
             {
                 id: 'space',
-                label: '이웃 아지트 만들기',
+                label: '모두의 아지트 만들기',
                 done: true,
                 hint: `참여 학급 ${joined}곳`
             },
@@ -306,14 +306,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     });
 
     if (loading) {
-        return <section className="neighbor-teacher-state">이웃 아지트 정보를 불러오는 중입니다…</section>;
+        return <section className="neighbor-teacher-state">모두의 아지트 정보를 불러오는 중입니다…</section>;
     }
 
     if (!workspace) {
         return (
             <section className="neighbor-teacher-state neighbor-teacher-state--closed">
                 <div aria-hidden="true">🤝</div>
-                <h1>이웃 아지트(제작 중)</h1>
+                <h1>모두의 아지트(제작 중)</h1>
                 <p>{errorMessage || '현재 선택한 학급에서는 아직 사용할 수 없습니다.'}</p>
             </section>
         );
@@ -324,7 +324,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             <header className="neighbor-teacher__header">
                 <div>
                     <span>선택 학급 제한 공개</span>
-                    <h1>🤝 이웃 아지트</h1>
+                    <h1>🤝 모두의 아지트</h1>
                     <p>{activeClass?.name}과 다른 학급이 하나의 글 피드에서 만납니다.</p>
                 </div>
                 <div className="neighbor-teacher__header-actions">
@@ -373,7 +373,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     {/* 만들기 → 초대하기 → 활동하기 세 단계를 **차례로 따라가는 길**로 보여 준다.
                         끝난 단계에는 ✓ 를 달아 지금 어디까지 왔는지 한눈에 보이게 한다.
                         글 검토·공개 글 관리는 활동의 뒷일이라 3단계 안에 둔다. */}
-                    <nav className="neighbor-teacher__steps" aria-label="이웃 아지트 준비 단계">
+                    <nav className="neighbor-teacher__steps" aria-label="모두의 아지트 준비 단계">
                         {steps.map((step, index) => (
                             <button
                                 type="button"
@@ -406,7 +406,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             </section>
                             <section className="neighbor-teacher-card">
                                 <div><span>우리 학급</span><h2>학생 공개</h2></div>
-                                <p>두 학급 이상 참여한 뒤 켜면 학생 홈에 이웃 아지트 카드가 나타납니다.</p>
+                                <p>두 학급 이상 참여한 뒤 켜면 학생 홈에 모두의 아지트 카드가 나타납니다.</p>
                                 <Button type="button" variant={workspace.space.student_access_enabled ? 'outline' : 'primary'} loading={busy === 'set_access'} disabled={Boolean(busy) || activeMemberships.length < 2} onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '학생 공개를 껐습니다.' : '학생 공개를 켰습니다.')}>{workspace.space.student_access_enabled ? '학생 공개 끄기' : '학생 공개 켜기'}</Button>
                             </section>
                             {workspace.space.my_role === 'host' ? (
