@@ -1,7 +1,7 @@
-export function normalizeGoogleBooksIsbn(value) {
-    const normalized = String(value ?? '').replace(/[^0-9X]/gi, '').toUpperCase()
-    return normalized.length === 10 || normalized.length === 13 ? normalized : ''
-}
+import { normalizeIsbn } from './isbn.js'
+
+// ISBN 규칙은 isbn.js 한 곳에만 둔다. 이 이름은 기존 호출부를 위해 남겨 둔 별칭이다.
+export const normalizeGoogleBooksIsbn = normalizeIsbn
 
 export function findExactGoogleBooksPageCount(payload, requestedIsbn) {
     const target = normalizeGoogleBooksIsbn(requestedIsbn)

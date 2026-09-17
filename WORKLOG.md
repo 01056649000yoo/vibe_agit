@@ -19,6 +19,36 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-17 — 책 쪽수 조회에 국립중앙도서관 서지정보 보완 연결 (Claude Opus 5)
+- **요청**: "국회도서관 API 키로 책 쪽수·서지 보강과 책 검색을 구글과 함께 보완."
+- **먼저 밝혀진 것**: 받은 키는 **국회도서관이 아니라 국립중앙도서관(NL)** 키였다.
+  국회도서관 OpenAPI(`apis.data.go.kr/9720000/...`)에는 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR` 로 거절당했고,
+  국립중앙도서관 서지정보 `https://www.nl.go.kr/seoji/SearchApi.do` 에서는 `cert_key` 로 정상 응답했다.
+- **실측(2026-09-17)**:
+  - seoji ISBN 조회는 `TITLE`·`AUTHOR`·`PUBLISHER`·`EA_ISBN`·`FORM`·`PAGE` 를 준다. **쪽수(`PAGE`)가 목적한 값**이다.
+  - `PAGE` 표기가 제각각이다: `"170 p."`, `"100"`, `"343 p. : 삽화 ; 23 cm"`, 전자책은 대체로 빈 값.
+  - ⚠️ 같은 키로 소장자료 검색 API(`/NL/search/openApi/search.do`)도 열리지만 **한글 검색어가 전달되지 않는다**.
+    ASCII(`python`)·ISBN 검색은 정상, 한글은 UTF-8·EUC-KR 인코딩 모두 결과 0 또는 엉뚱한 자료. 제목 검색에 쓰지 말 것.
+- **한 일**:
+  - `supabase/functions/book-search/isbn.js` 신설 — ISBN 정규화를 한 자리로 모으고 `googleBooks.js` 는 별칭만 남겼다.
+  - `supabase/functions/book-search/nlSeoji.js` 신설 — `parseSeojiPageCount`(표기 정리)·`findSeojiRecord`(요청 ISBN 정확 일치,
+    전자책·종이책이 갈리면 쪽수 있는 종이책 선택)·`fetchSeojiBookInfo`/`fetchSeojiPageCount`.
+  - `index.ts`: `lookupGooglePageCount` → `lookupPageCount` 로 바꾸고 **구글 → 국립중앙도서관** 순으로 묻는다.
+    찾은 곳을 `page_count_source`(`google`|`nl`)에 기록하고, 저장 조건의 `.or(...)` 에 `nl` 을 더했다.
+    `page_count_source` CHECK 제약에 `'nl'` 이 이미 있어(`20260930_reading_marathon.sql`) **마이그레이션은 필요 없다**.
+    교사 보정값(`teacher`)은 이전과 같이 자동 조회가 덮어쓰지 않는다.
+  - 검색 자체는 카카오 그대로 둔다(위 한글 검색 제약 때문). 쪽수 조회 시점도 그대로 — 학생이 책을 고른 뒤 1건만 조회한다.
+  - 테스트 `tests/nlSeojiPageCount.test.mjs` 8건. 일부러 파서를 되돌려 실패하는 것까지 확인했다.
+- **변경**: 위 신규 2파일 + `supabase/functions/book-search/googleBooks.js`·`index.ts`·`tests/nlSeojiPageCount.test.mjs`·
+  `ROADMAP.md`(결정 기록)·`WORKLOG.md`. DB 변경 없음.
+- **결과/검증**: `node --test tests/nlSeojiPageCount.test.mjs tests/googleBooksPageCount.test.mjs` 12/12 통과, ESLint 0.
+  실제 키로 seoji ISBN 조회 응답 확인(예: `9791192049380` → `PAGE="170 p."`).
+- **남은 것 / 다음 (서버 작업, 사용자 확인 필요)**:
+  1. ⚠️ **키 재발급 권장** — 이 키는 대화창에 평문으로 붙여넣어져 노출됐다. 국립중앙도서관에서 새로 발급받아 쓰는 편이 낫다.
+  2. 맥미니 `~/agit-supabase/secrets.agit.env` 에 `NL_SEOJI_API_KEY` 추가(값은 여기에 적지 않는다, 권한 600).
+  3. `book-search` 함수를 `~/agit-supabase/volumes/functions/` 에 다시 배포하고 컨테이너 재기동.
+  4. 키를 넣기 전까지는 동작이 예전과 같다(구글만 조회). 넣은 뒤 쪽수가 비던 국내 도서로 확인.
+
 ## 2026-09-17 — 다했니 연동 후속(공지·권한·로그 정리·처리방침) 커밋·푸시 및 적용 상태 대조 (Claude Opus 5)
 - **한 일**: 세 기기(윈도우 `jinnam`·맥미니·GitHub)의 커밋을 한 줄로 맞추고, 운영 DB 의 마이그레이션 적용 상태를 저장소와 전수 대조했다.
   - 윈도우 로컬을 `origin/main` 으로 fast-forward(7개 수신: `da2cf7f9`~`a867240c`).

@@ -1,10 +1,12 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { fetchGoogleBooksPageCount, normalizeGoogleBooksIsbn } from './googleBooks.js'
+import { fetchSeojiPageCount } from './nlSeoji.js'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 const KAKAO_REST_API_KEY = Deno.env.get('KAKAO_REST_API_KEY') ?? ''
 const GOOGLE_BOOKS_API_KEY = Deno.env.get('GOOGLE_BOOKS_API_KEY') ?? ''
+const NL_SEOJI_API_KEY = Deno.env.get('NL_SEOJI_API_KEY') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .split(',')
@@ -15,8 +17,9 @@ const lastRequestByUser = new Map<string, number>()
 const lastGoogleRequestByUser = new Map<string, number>()
 const MIN_REQUEST_INTERVAL_MS = 700
 const MIN_GOOGLE_REQUEST_INTERVAL_MS = 400
-const GOOGLE_PAGE_CACHE_MS = 24 * 60 * 60 * 1000
-const googlePageCache = new Map<string, { pageCount: number | null, expiresAt: number }>()
+const PAGE_CACHE_MS = 24 * 60 * 60 * 1000
+const pageCache = new Map<string, { pageCount: number | null, source: string | null, expiresAt: number }>()
+const PAGE_LOOKUP_TIMEOUT_MS = 5500
 
 function isAllowedOrigin(origin: string | null) {
     if (!origin) return true
@@ -63,34 +66,57 @@ function parseIsbn(rawValue: unknown) {
     }
 }
 
-async function lookupGooglePageCount(isbnValue: unknown) {
+function isPageCountConfigured() {
+    return Boolean(GOOGLE_BOOKS_API_KEY || NL_SEOJI_API_KEY)
+}
+
+/**
+ * 쪽수는 구글 북스를 먼저 묻고, 없으면 국립중앙도서관 서지정보에 묻는다.
+ * 국내 아동도서는 구글에 쪽수가 비어 있는 일이 잦아 그 자리를 도서관 납본 서지가 메운다.
+ */
+async function lookupPageCount(isbnValue: unknown) {
     const isbn = normalizeGoogleBooksIsbn(isbnValue)
-    if (!isbn || !GOOGLE_BOOKS_API_KEY) return null
+    if (!isbn || !isPageCountConfigured()) return { pageCount: null, source: null }
 
-    const cached = googlePageCache.get(isbn)
-    if (cached && cached.expiresAt > Date.now()) return cached.pageCount
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5500)
-    try {
-        const pageCount = await fetchGoogleBooksPageCount({
-            isbn,
-            apiKey: GOOGLE_BOOKS_API_KEY,
-            signal: controller.signal
-        })
-        googlePageCache.set(isbn, {
-            pageCount,
-            expiresAt: Date.now() + GOOGLE_PAGE_CACHE_MS
-        })
-        return pageCount
-    } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-            console.error('Google Books page lookup failed')
-        }
-        return null
-    } finally {
-        clearTimeout(timeoutId)
+    const cached = pageCache.get(isbn)
+    if (cached && cached.expiresAt > Date.now()) {
+        return { pageCount: cached.pageCount, source: cached.source }
     }
+
+    const providers: Array<{ source: string, run: (signal: AbortSignal) => Promise<number | null> }> = []
+    if (GOOGLE_BOOKS_API_KEY) {
+        providers.push({
+            source: 'google',
+            run: (signal) => fetchGoogleBooksPageCount({ isbn, apiKey: GOOGLE_BOOKS_API_KEY, signal })
+        })
+    }
+    if (NL_SEOJI_API_KEY) {
+        providers.push({
+            source: 'nl',
+            run: (signal) => fetchSeojiPageCount({ isbn, certKey: NL_SEOJI_API_KEY, signal })
+        })
+    }
+
+    for (const provider of providers) {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), PAGE_LOOKUP_TIMEOUT_MS)
+        try {
+            const pageCount = await provider.run(controller.signal)
+            if (pageCount) {
+                pageCache.set(isbn, { pageCount, source: provider.source, expiresAt: Date.now() + PAGE_CACHE_MS })
+                return { pageCount, source: provider.source }
+            }
+        } catch (error) {
+            if (!(error instanceof DOMException && error.name === 'AbortError')) {
+                console.error(`Page count lookup failed: ${provider.source}`)
+            }
+        } finally {
+            clearTimeout(timeoutId)
+        }
+    }
+
+    pageCache.set(isbn, { pageCount: null, source: null, expiresAt: Date.now() + PAGE_CACHE_MS })
+    return { pageCount: null, source: null }
 }
 
 Deno.serve(async (req) => {
@@ -170,8 +196,8 @@ Deno.serve(async (req) => {
         }
 
         const requestedIsbn = normalizeGoogleBooksIsbn(storedBook.isbn13 || storedBook.isbn10)
-        const pageCount = await lookupGooglePageCount(requestedIsbn)
-        if (!pageCount) {
+        const { pageCount, source } = await lookupPageCount(requestedIsbn)
+        if (!pageCount || !source) {
             return jsonResponse({ pageCount: null, pageCountSource: null }, 200, headers)
         }
 
@@ -179,11 +205,11 @@ Deno.serve(async (req) => {
             .from('book_catalog')
             .update({
                 page_count: pageCount,
-                page_count_source: 'google',
+                page_count_source: source,
                 page_count_updated_at: new Date().toISOString()
             })
             .eq('id', storedBook.id)
-            .or('page_count_source.is.null,page_count_source.eq.google')
+            .or('page_count_source.is.null,page_count_source.eq.google,page_count_source.eq.nl')
             .select('page_count,page_count_source')
             .maybeSingle()
         if (updateError) {
@@ -192,7 +218,7 @@ Deno.serve(async (req) => {
         }
         return jsonResponse({
             pageCount: updatedBook?.page_count ?? storedBook.page_count ?? pageCount,
-            pageCountSource: updatedBook?.page_count_source ?? storedBook.page_count_source ?? 'google'
+            pageCountSource: updatedBook?.page_count_source ?? storedBook.page_count_source ?? source
         }, 200, headers)
     }
 
@@ -204,11 +230,11 @@ Deno.serve(async (req) => {
             return jsonResponse({ error: '책을 천천히 선택해 주세요.' }, 429, headers)
         }
         lastGoogleRequestByUser.set(user.id, now)
-        const pageCount = await lookupGooglePageCount(requestedIsbn)
+        const { pageCount, source } = await lookupPageCount(requestedIsbn)
         return jsonResponse({
             pageCount,
-            pageCountSource: pageCount ? 'google' : null,
-            configured: Boolean(GOOGLE_BOOKS_API_KEY)
+            pageCountSource: pageCount ? source : null,
+            configured: isPageCountConfigured()
         }, 200, headers)
     }
 
