@@ -90,10 +90,38 @@ test('작업 로그는 통째로 읽어도 되는 크기로 유지한다', async
     // 옮긴 기록으로 가는 길이 파일 안에 남아 있어야 한다
     assert.match(worklog, /docs\/worklog\//);
 
-    // 되풀이하지 말 것 목록은 짧게 유지한다 — 길어지면 아무도 안 읽는다
+    /*
+     * 되풀이하지 말 것 목록은 짧게 유지한다 — 길어지면 아무도 안 읽는다.
+     *
+     * 2026-09-17: 예전에는 전체 줄 수(80)만 셌다. 그래서 이 파일이 자기 머리에 적어 둔 진짜 규칙
+     * ("갈래마다 다섯 줄")은 어겨도 검사는 통과했다 — `화면` 갈래가 혼자 18개까지 자라 DB·보안·운영
+     * 항목의 쓰레기통이 됐다. 숫자를 올리는 대신 **갈래마다** 센다. 넣을 자리가 없으면 그 갈래에서
+     * 낡은 것을 빼거나 갈래를 새로 만들게 되고, 그때 "어디에 넣지" 를 한 번 생각하게 된다.
+     */
+    const MAX_PER_SECTION = 5;
     const pitfalls = await read('docs/wiki/PITFALLS.md');
-    assert.ok(pitfalls.split('\n').length <= 80, 'PITFALLS.md 는 짧게 유지합니다(80줄 이내).');
     assert.match(pitfalls, /되풀이하지 말 것/);
+
+    let section = null;
+    const sections = [];
+    for (const line of pitfalls.split('\n')) {
+        if (line.startsWith('## ')) {
+            section = { name: line.slice(3).trim(), count: 0 };
+            sections.push(section);
+        } else if (section && line.startsWith('- ')) {
+            section.count += 1;
+        }
+    }
+
+    assert.ok(sections.length > 0, 'PITFALLS.md 에 갈래(## 제목)가 없습니다.');
+    const overflowing = sections.filter((entry) => entry.count > MAX_PER_SECTION);
+    assert.equal(
+        overflowing.length,
+        0,
+        `PITFALLS.md 의 갈래는 ${MAX_PER_SECTION}줄 안으로 유지합니다. 넘친 갈래: `
+        + overflowing.map((entry) => `${entry.name}(${entry.count})`).join(', ')
+        + '. 그 갈래에서 낡은 줄을 빼거나 갈래를 새로 만드세요.'
+    );
 
     // 세션 훅은 최근 작업 제목만 넣는다(본문을 넣으면 매 세션 비용이 된다)
     const hook = await read('.claude/hooks/session-start-context.sh');
