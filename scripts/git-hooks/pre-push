@@ -60,8 +60,14 @@ if ! npm run test:all --silent > /tmp/agit-pre-push-test.log 2>&1; then
     exit 1
 fi
 
-PASSED="$(grep -E '^# pass' /tmp/agit-pre-push-test.log | awk '{print $3}')"
-echo "${GREEN}✔ 검사 ${PASSED}개 통과.${OFF}"
+# node 판에 따라 "# pass 1200"(TAP) 이거나 "ℹ pass 1200" 이다. 둘 다 받는다.
+# 한쪽만 보다가 개수가 빈칸으로 찍혔다(2026-09-17). 못 읽으면 개수 없이 알린다.
+PASSED="$(grep -E '^(# |ℹ )pass [0-9]+$' /tmp/agit-pre-push-test.log | awk '{print $NF}' | tail -1)"
+if [ -n "$PASSED" ]; then
+    echo "${GREEN}✔ 검사 ${PASSED}개 통과.${OFF}"
+else
+    echo "${GREEN}✔ 검사 통과.${OFF}"
+fi
 
 # --- 3. 운영 DB에 안 넣은 마이그레이션 ---
 # 운영 DB 를 못 볼 때(다른 컴퓨터·도커 꺼짐)는 막지 않는다. 여기서 막으면 DB 가 없는 곳에서

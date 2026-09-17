@@ -1,4 +1,27 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git remote:*)",
+      "Bash(git blame:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run checklist:*)",
+      "Bash(npm run check:*)",
+      "Bash(npm run migrate:status)",
+      "Bash(npm run hooks:install)",
+      "Bash(node --test:*)",
+      "Bash(npx eslint:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(diff:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
