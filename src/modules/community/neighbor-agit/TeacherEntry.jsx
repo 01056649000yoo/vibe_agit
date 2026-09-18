@@ -731,6 +731,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => handleBlockedComment(comment.comment_id, 'delete')}>삭제</Button>
                                 </span>
                             </article>))}</div>}
+                    {(notif.blocked_comments || 0) > (workspace.blocked_comments || []).length
+                        && <p className="neighbor-teacher__inbox-note">막힌 댓글 {notif.blocked_comments}건 중 최신 {workspace.blocked_comments.length}건입니다. 처리하면 다음 것이 이어집니다.</p>}
                 </Modal>
             )}
 
