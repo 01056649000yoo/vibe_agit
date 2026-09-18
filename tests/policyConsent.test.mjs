@@ -95,3 +95,30 @@ test('새 학급은 만들 때 확인받아 관문이 다시 뜨지 않는다', 
     // 학급을 만든 뒤에 기록한다(학급 id 가 있어야 한다).
     assert.ok(classManager.indexOf(".from('classes')") < classManager.indexOf("rpc('confirm_class_student_consent_v1'"));
 });
+
+test('서비스 종료 조항은 약관과 처리방침이 같은 약속을 말한다', () => {
+    /*
+     * 2026-09-18 사용자 결정: 종료 시 최소 30일 전 공지 + 그 기간에 교사 본인 구글 계정으로 백업.
+     * 같은 약속이 약관 제7조와 처리방침 파기 조항 두 곳에 있어 한 곳만 고치면 어긋난다.
+     * 숫자와 연결 고리를 여기서 함께 본다.
+     */
+    const terms = read('src/components/layout/TermsOfService.jsx');
+
+    // 통지 기간은 두 문서가 같은 수를 말해야 한다.
+    assert.match(terms, /종료일로부터 최소 30일 전/);
+    assert.match(privacy, /최소 30일의 사전 공지/);
+
+    // 백업은 "교사 본인 구글 계정" 이 핵심이다 — 종료 뒤에도 남는 유일한 사본이다.
+    assert.match(terms, /선생님 본인의 구글 계정에 구글 문서로 저장/);
+    assert.match(terms, /서비스가 종료된 뒤에도 그대로 남습니다/);
+
+    // 학년말에 맞추려는 노력 조항.
+    assert.match(terms, /학기 중 종료를 피하고 학년말에 맞추도록/);
+
+    // 내보낸 자료의 책임 경계가 두 문서에 모두 있어야 한다.
+    assert.match(terms, /보관·공유·파기에 대한 책임은 이용자\(교사\)에게 있으며/);
+    assert.match(privacy, /이용자가 관리하는 자료/);
+
+    // 처리방침은 약관 제7조를 가리켜 두 문서가 끊기지 않게 한다.
+    assert.match(privacy, /이용약관 제7조에 따라/);
+});
