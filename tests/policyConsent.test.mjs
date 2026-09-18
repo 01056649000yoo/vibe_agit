@@ -104,13 +104,17 @@ test('서비스 종료 조항은 약관과 처리방침이 같은 약속을 말�
      */
     const terms = read('src/components/layout/TermsOfService.jsx');
 
-    // 통지 기간은 두 문서가 같은 수를 말해야 한다.
+    // 통지 기간(30일)과 자료 회수 기간(약 3개월)을 두 문서가 같이 말해야 한다.
     assert.match(terms, /종료일로부터 최소 30일 전/);
-    assert.match(privacy, /최소 30일의 사전 공지/);
+    assert.match(privacy, /종료일 최소 30일 전에 공지/);
+    assert.match(terms, /종료일 이후에도 약 3개월 동안/);
+    assert.match(privacy, /종료일 이후에도 약 3개월 동안/);
+    // 회수 기간이 끝난 뒤에 파기한다 — 종료일 즉시가 아니다.
+    assert.match(privacy, /기간이 끝나면 30일 이내에/);
 
     // 백업은 "교사 본인 구글 계정" 이 핵심이다 — 종료 뒤에도 남는 유일한 사본이다.
     assert.match(terms, /선생님 본인의 구글 계정에 구글 문서로 저장/);
-    assert.match(terms, /서비스가 종료된 뒤에도 그대로 남습니다/);
+    assert.match(terms, /서비스가 완전히 문을 닫은 뒤에도 그대로 남습니다/);
 
     // 학년말에 맞추려는 노력 조항.
     assert.match(terms, /학기 중 종료를 피하고 학년말에 맞추도록/);
