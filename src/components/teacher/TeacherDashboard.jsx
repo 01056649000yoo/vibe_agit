@@ -109,6 +109,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [feedbackReplyCount, setFeedbackReplyCount] = useState(0);
     // 모두의 아지트: 들어가기 전에도 처리할 것(검토·승인·참여신청)을 메뉴 배지로 알린다.
     const [neighborBadge, setNeighborBadge] = useState(0);
+    const [commentTodoBadge, setCommentTodoBadge] = useState(0);
 
     /*
      * 공지는 대시보드가 한 번만 읽어 머리말 버튼과 위쪽 띠에 함께 넘긴다.
@@ -215,6 +216,19 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     useEffect(() => {
         void loadNeighborBadge();
     }, [loadNeighborBadge]);
+
+    // 학생 댓글 처리할 것 배지 — 막혔거나 판정이 안 끝나 친구에게 안 보이는 댓글 수.
+    // 세는 기준은 [학급 운영 > 학생 댓글] 화면의 `처리할 것` 과 같다(서버에서 같은 조건).
+    const loadCommentBadge = useCallback(async () => {
+        if (!activeClass?.id) { setCommentTodoBadge(0); return; }
+        const { data, error } = await supabase.rpc('get_teacher_comment_todo_badge_v1', { p_class_id: activeClass.id });
+        if (error) { setCommentTodoBadge(0); return; }
+        setCommentTodoBadge(Number(data?.count ?? 0));
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        void loadCommentBadge();
+    }, [loadCommentBadge]);
 
     useEffect(() => {
         try {
@@ -547,6 +561,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             {group.id === 'neighbor-agit' && neighborBadge > 0 && (
                                 <span className="teacher-subtab__badge-new" aria-label={`모두의 아지트 처리할 일 ${neighborBadge}건`}>{neighborBadge}</span>
                             )}
+                            {group.id === 'operations' && commentTodoBadge > 0 && (
+                                <span className="teacher-subtab__badge-new" aria-label={`처리할 학생 댓글 ${commentTodoBadge}건`}>{commentTodoBadge}</span>
+                            )}
                         </button>
                     );
                 })}
@@ -607,6 +624,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                         )}
                                         {hasSubtabUnreviewed && (
                                             <span className="teacher-subtab__new-badge" aria-label="새 미확인 글 있음">NEW</span>
+                                        )}
+                                        {tab.id === 'comments' && commentTodoBadge > 0 && (
+                                            <span className="teacher-subtab__badge-new" aria-label={`처리할 학생 댓글 ${commentTodoBadge}건`}>
+                                                {commentTodoBadge}
+                                            </span>
                                         )}
                                     </button>
                                 </div>
@@ -709,6 +731,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 onNavigate={handleWorkspaceNavigate}
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
+                                onCommentTodoChange={setCommentTodoBadge}
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub

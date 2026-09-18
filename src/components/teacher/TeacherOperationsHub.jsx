@@ -26,7 +26,9 @@ const TeacherOperationsHub = ({
     setSelectedActivityPost,
     onNavigate,
     navigationTarget,
-    onNavigationHandled
+    onNavigationHandled,
+    // 교사가 댓글을 처리하면 메뉴 배지도 같이 줄어야 한다.
+    onCommentTodoChange
 }) => {
     const classId = activeClass?.id;
     if (!classId) return null;
@@ -35,7 +37,7 @@ const TeacherOperationsHub = ({
         return (
             <section role="tabpanel" aria-label="학생 댓글 관리" style={cardStyle(isMobile)}>
                 <Suspense fallback={<PanelLoading>학생 댓글을 모으는 중... 🗨️</PanelLoading>}>
-                    <TeacherCommentManager activeClass={activeClass} />
+                    <TeacherCommentManager activeClass={activeClass} onTodoCountChange={onCommentTodoChange} />
                 </Suspense>
             </section>
         );

@@ -129,6 +129,12 @@ export const neighborAgitApi = {
         if (data?.success !== true || !data?.comment_id || !['pending', 'visible', 'deleted'].includes(data?.status)) {
             throw new Error('지원하지 않는 이웃 댓글 응답입니다.');
         }
+        // 저장만으로는 검사가 돌지 않는다 — 학급 댓글과 똑같이 큐를 깨운다.
+        // 2026-09-17 에 이 한 줄이 없어 이웃 댓글이 pending 에 갇혔다. 실패해도 저장 자체는 끝났으므로
+        // 사용자에게 오류를 보이지 않는다(다음 저장이나 학급 댓글 검사 때 이어서 비워진다).
+        if (data.status === 'pending') {
+            supabase.functions.invoke('vibe-ai', { body: { type: 'COMMENT_QUEUE_DRAIN' } }).catch(() => {});
+        }
         return data;
     },
 

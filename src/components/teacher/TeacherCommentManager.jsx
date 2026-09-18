@@ -51,7 +51,7 @@ const formatWhen = (value) => (value
     ? new Date(value).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     : '');
 
-const TeacherCommentManager = ({ activeClass }) => {
+const TeacherCommentManager = ({ activeClass, onTodoCountChange }) => {
     const classId = activeClass?.id || null;
     const [view, setView] = useState('todo');
     const [days, setDays] = useState(7);
@@ -105,12 +105,14 @@ const TeacherCommentManager = ({ activeClass }) => {
             }
         } else {
             setCounts(data?.counts || {});
+            // 메뉴 배지는 이 화면이 센 수를 그대로 쓴다 — 두 곳이 따로 세면 갈린다.
+            onTodoCountChange?.(Number(data?.counts?.todo ?? 0));
             setItems(Array.isArray(data?.items) ? data.items : []);
             setTotal(Number(data?.total || 0));
         }
         setLoading(false);
         setRefreshing(false);
-    }, [classId, fetchPage]);
+    }, [classId, fetchPage, onTodoCountChange]);
 
     useEffect(() => {
         // 조건이 바뀌는 즉시 진행 중인 이전 조건의 요청을 무효화한다.

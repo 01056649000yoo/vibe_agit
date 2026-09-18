@@ -27,6 +27,30 @@ test('이웃으로 가는 댓글도 우리 반 댓글과 같은 검사를 지난
     assert.match(student, /댓글을 확인하는 중이에요/);
 });
 
+test('이웃 댓글을 저장하면 검사 큐를 깨운다 — 표 이름은 여전히 작업기 밖에 둔다', () => {
+    /*
+     * 2026-09-17 증상: 저장은 pending 으로 들어가는데 그 큐를 도는 드레인을 아무도 부르지 않아
+     * **학급 댓글 검사가 우연히 일어날 때까지 갇혀** 있었다(운영에서 실제로 2건).
+     * 고침: 학급 댓글과 대칭으로, 저장 뒤 표 이름 없는 일반 드레인을 부른다.
+     */
+    assert.match(api, /type: 'COMMENT_QUEUE_DRAIN'/, '이웃 댓글 저장이 검사 큐를 깨우지 않습니다.');
+    // pending 일 때만 깨운다 — 이미 끝난 저장·삭제로 AI 를 부르지 않는다.
+    const pendingGuard = api.indexOf("if (data.status === 'pending')");
+    const drainCall = api.indexOf("type: 'COMMENT_QUEUE_DRAIN'");
+    assert.ok(pendingGuard >= 0 && drainCall > pendingGuard && drainCall - pendingGuard < 220,
+        '드레인 호출이 pending 확인 안에 있어야 합니다.');
+    // 저장은 이미 끝났으므로 드레인 실패를 사용자 오류로 보이지 않는다.
+    assert.ok(api.slice(drainCall, drainCall + 140).includes('catch(() => {})'),
+        '드레인 실패가 사용자 오류로 올라갑니다.');
+
+    // 작업기는 이 요청을 받아 큐만 비운다. 여전히 표 이름을 몰라야 한다.
+    const workerBranch = worker.indexOf("type === 'COMMENT_QUEUE_DRAIN'");
+    assert.ok(workerBranch >= 0, '작업기에 큐 비우기 분기가 없습니다.');
+    assert.ok(worker.slice(workerBranch, workerBranch + 220).includes('drainCommentSafetyQueue'),
+        '큐 비우기 분기가 실제로 드레인을 부르지 않습니다.');
+    assert.doesNotMatch(worker, /neighbor_comments/);
+});
+
 test('상대 학급 글은 보관하지 않고, 내가 쓴 글만 우리 학급에 남는다', () => {
     // 선생님 결정(2026-09-07): 같은 주제로 쓴 글은 그 학급 학생 글만 보관한다.
     assert.match(noSave, /이웃 학급 글은 간직할 수 없습니다/);

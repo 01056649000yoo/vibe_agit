@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
         const { prompt, content, studentId, type, commentId, postId, question, candidates } = payload ?? {}
         const allowedTypes = new Set([
             'SAFETY_CHECK', 'AI_FEEDBACK', 'GENERAL', 'CONNECTION_TEST', 'DIAG', 'SPELLING_DRAFT', 'LAB_GENERAL',
-            'SPELL_CHECK', 'TEACHER_GUIDE_CHAT'
+            'SPELL_CHECK', 'TEACHER_GUIDE_CHAT', 'COMMENT_QUEUE_DRAIN'
         ])
         if (!allowedTypes.has(type)) throw new HttpError(400, '허용되지 않은 AI 요청입니다.')
 
@@ -274,6 +274,15 @@ Deno.serve(async (req) => {
             const { data: userData, error: userError } = await supabaseClient.auth.getUser()
             const user = userData?.user
             if (userError || !user) throw new HttpError(401, '로그인 정보를 확인할 수 없습니다.')
+
+            // 댓글 검사 큐 비우기. **어느 표의 댓글인지 알 필요가 없다** — 큐 RPC 가 정한다.
+            // 이웃(모두의 아지트) 댓글도 같은 큐를 쓰므로 작업기는 그 표 이름을 몰라도 된다
+            // (`tests/neighborSafety.test.mjs` 가 이 경계를 지킨다).
+            // 2026-09-17 증상: 이웃 댓글 저장이 이 드레인을 부르지 않아 pending 에 갇혔다.
+            if (type === 'COMMENT_QUEUE_DRAIN') {
+                EdgeRuntime.waitUntil(drainCommentSafetyQueue(supabaseAdmin))
+                return jsonResponse({ text: JSON.stringify({ queued: true }), queued: true }, 202, headers)
+            }
 
             if (user.is_anonymous) {
                 // 학생이 쓸 수 있는 AI 는 둘뿐이다 — 댓글 안전 확인, 내 글 맞춤법 검사.
