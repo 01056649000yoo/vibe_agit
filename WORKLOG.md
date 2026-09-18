@@ -40,6 +40,11 @@
   `src/components/teacher/{TeacherDashboard,TeacherOperationsHub,TeacherCommentManager}.jsx`,
   `supabase/migrations/20261312_teacher_comment_todo_badge.sql`,
   `tests/neighborSafety.test.mjs`, `tests/teacherCommentBadge.test.mjs`(신규).
+- **git 밖 인프라 변경(맥미니, 2026-09-18 실행 완료)**: `vibe-ai` 엣지 함수를
+  `~/agit-supabase/volumes/functions/vibe-ai/` 에 배포하고(옛 판 `.bak-*` 백업) 컨테이너를 재생성했다.
+  **앱 자동 배포에는 엣지 함수가 실리지 않는다** — 안 올렸으면 화면이 `COMMENT_QUEUE_DRAIN` 을 불러도
+  `400 허용되지 않은 AI 요청` 으로 조용히 떨어져 고친 효과가 없었다. 스모크: 무인증 호출이
+  `400` 이 아니라 `401 로그인이 필요합니다` 로 바뀐 것으로 새 요청이 받아들여진 것을 확인했다.
 - **결과/검증**: `npm run test:all` 1222/1222, lint 0. 네 가지를 일부러 되돌려 검사가 실제로 실패하는 것을 확인했다
   (pending 가드 제거·작업기 드레인 제거·배지가 다른 상태를 셈·처리 뒤 올려주기 제거).
 - **⚠️ 따로 발견 — 학급 댓글 108건이 두 달 넘게 멈춰 있다**: `post_comments` 의 `pending` 108건이
