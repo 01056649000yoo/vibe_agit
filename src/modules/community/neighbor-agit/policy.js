@@ -6,7 +6,7 @@ export const NEIGHBOR_AGIT_ROLLOUT_MODES = Object.freeze({
 });
 
 export const NEIGHBOR_AGIT_LIMITS = Object.freeze({
-    maxClassesPerSpace: 4,
+    maxClassesPerSpace: 10,
     maxActiveSpacesPerClass: 1,
     minimumActiveClasses: 2,
     inviteTtlHours: 24,

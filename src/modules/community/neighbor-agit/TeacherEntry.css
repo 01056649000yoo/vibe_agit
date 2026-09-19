@@ -286,7 +286,8 @@
 .neighbor-teacher__folder-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 8px; max-height: 570px; overflow: auto; padding: 2px; }
 .neighbor-teacher__folder { display: flex; align-items: stretch; gap: 8px; min-width: 0;
-    padding: 8px 10px; border: 1px solid #d9e2ec; border-radius: 12px; background: #fff; }
+    padding: 8px 10px; border: 1px solid #d9e2ec; border-left: 4px solid #d9e2ec; border-radius: 12px; background: #fff; }
+.neighbor-teacher__folder-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 7px; min-width: 0; }
 .neighbor-teacher__folder-open { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
     padding: 4px; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; border-radius: 8px; }
 .neighbor-teacher__folder-open:hover { background: #f0f9ff; }

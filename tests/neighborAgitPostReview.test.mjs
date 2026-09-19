@@ -3,10 +3,11 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { NEIGHBOR_AGIT_WRITING_BRIDGE } from '../src/modules/community/neighbor-agit/writingBridge.js';
 
-const [migration, smoke, manifest] = await Promise.all([
+const [migration, smoke, manifest, hideMigration] = await Promise.all([
     readFile('supabase/migrations/20261199_neighbor_agit_data_foundation.sql', 'utf8'),
     readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
-    readFile('src/modules/community/neighbor-agit/manifest.js', 'utf8')
+    readFile('src/modules/community/neighbor-agit/manifest.js', 'utf8'),
+    readFile('supabase/migrations/20261319_neighbor_hide_own_class_only.sql', 'utf8')
 ]);
 
 const STEP_3_RPCS = [
@@ -47,14 +48,16 @@ test('학생 공개는 실제 계정·학급 모듈 ON·학급 스위치·두 �
     assert.match(migration, /post\.is_submitted IS TRUE/);
 });
 
-test('원학급 교사만 공개·반려·복원하고 모든 실제 참여 교사는 긴급 숨김할 수 있다', () => {
-    assert.match(migration, /assert_neighbor_participating_teacher_v1\(p_space_id, v_shared\.class_id\)/);
+test('원학급 교사만 자기 반 글을 공개·반려·복원·비공개한다', () => {
+    // 2026-09-19: 긴급 숨김(다른 반 글 숨기기)을 없앴다. 숨김도 자기 학급 글만(20261319).
     assert.match(migration, /v_shared\.status <> 'hidden' OR v_shared\.class_id <> p_actor_class_id/);
     assert.match(migration, /hidden_by_class_id = p_actor_class_id/);
-    assert.match(migration, /p_action NOT IN \('hide', 'restore'\)/);
+    assert.match(hideMigration, /p_action NOT IN \('hide', 'restore'\)/);
+    // 숨김 분기가 "자기 학급이 공개한 글"로 좁혀졌다.
+    assert.match(hideMigration, /자기 학급이 공개한 글만 비공개로 돌릴 수 있습니다/);
+    assert.match(hideMigration, /IF v_shared\.class_id <> p_actor_class_id THEN\s*\n\s*RAISE EXCEPTION '자기 학급이 공개한 글만/);
     assert.match(smoke, /guest teacher reviewed another class post/);
     assert.match(smoke, /guest teacher restored another class post/);
-    assert.match(smoke, /participant teacher could not emergency-hide/);
 });
 
 test('기존 학생 글·댓글·반응의 RLS와 직접 권한은 Step 3에서 바꾸지 않는다', () => {

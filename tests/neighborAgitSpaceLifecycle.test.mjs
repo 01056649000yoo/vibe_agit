@@ -3,9 +3,10 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { NEIGHBOR_AGIT_LIMITS } from '../src/modules/community/neighbor-agit/policy.js';
 
-const [migration, smoke] = await Promise.all([
+const [migration, smoke, classLimitMigration] = await Promise.all([
     readFile('supabase/migrations/20261199_neighbor_agit_data_foundation.sql', 'utf8'),
-    readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8')
+    readFile('tests/sql/20261199_neighbor_agit_data_foundation.smoke.sql', 'utf8'),
+    readFile('supabase/migrations/20261318_neighbor_space_class_limit_10.sql', 'utf8')
 ]);
 
 const TEACHER_RPCS = [
@@ -71,6 +72,7 @@ test('신청·승인·호스트 이전·퇴장·종료 흐름과 최종 접근 �
     assert.match(smoke, /guest leave flow failed/);
     assert.match(smoke, /new host could not close the space/);
     assert.match(smoke, /closed neighbor space retained active access/);
-    assert.match(migration, /v_active_count >= 4/);
+    // 2026-09-19: 참여 학급 상한 4→10(20261318). 파운데이션 스모크는 격리된 옛 트리거(4) 검사.
+    assert.match(classLimitMigration, /v_active_count >= 10/);
     assert.match(smoke, /fifth active class must be blocked/);
 });

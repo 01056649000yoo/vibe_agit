@@ -23,7 +23,7 @@ test('이웃 아지트 공개 단계와 초기 제한은 한 원본에서 fail-c
     });
     // 기본은 가장 닫힌 단계여야 한다 — 설정을 못 읽었을 때 열리면 안 된다.
     assert.equal(NEIGHBOR_AGIT_DEFAULT_ROLLOUT_MODE, 'internal');
-    assert.equal(NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace, 4);
+    assert.equal(NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace, 10);
     assert.equal(NEIGHBOR_AGIT_LIMITS.maxActiveSpacesPerClass, 1);
     assert.equal(NEIGHBOR_AGIT_LIMITS.minimumActiveClasses, 2);
     assert.equal(NEIGHBOR_AGIT_LIMITS.inviteTtlHours, 24);

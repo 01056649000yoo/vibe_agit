@@ -301,7 +301,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     // 공개 글 관리에서 묶음 안 공개 중인 글을 한 번에 비공개로 돌린다.
     const bulkHideGroup = async (group) => {
-        const eligible = group.posts.filter((post) => post.status === 'published');
+        // 자기 학급이 공개한 글만 비공개로 돌릴 수 있다.
+        const eligible = group.posts.filter((post) => post.status === 'published' && post.is_own_class);
         if (eligible.length === 0 || busy) return;
         const scope = manageGroupBy === 'student' ? `${group.label} 학생` : `"${group.label}" 주제`;
         const ok = await ask({
@@ -508,6 +509,24 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'ko-KR'));
         })();
         const publishedCount = workspace.public_posts.filter((post) => post.status === 'published').length;
+        // 학급마다 고유 색을 준다(교사가 아니라 "학급" 단위로 구분). 우리 반은 청록으로 고정.
+        // 주제·학생 묶음은 각각 한 학급 소유이므로 묶음(폴더)도 그 학급 색으로 칠한다.
+        const OWN_COLOR = { bar: '#0f766e', bg: '#ccfbf1', ink: '#0f766e' };
+        const CLASS_PALETTE = [
+            { bar: '#2563eb', bg: '#dbeafe', ink: '#1e40af' },
+            { bar: '#d946ef', bg: '#fae8ff', ink: '#a21caf' },
+            { bar: '#f59e0b', bg: '#fef3c7', ink: '#92400e' },
+            { bar: '#059669', bg: '#d1fae5', ink: '#047857' },
+            { bar: '#ef4444', bg: '#fee2e2', ink: '#b91c1c' },
+            { bar: '#8b5cf6', bg: '#ede9fe', ink: '#6d28d9' },
+            { bar: '#0ea5e9', bg: '#e0f2fe', ink: '#0369a1' },
+            { bar: '#ec4899', bg: '#fce7f3', ink: '#be185d' }
+        ];
+        const otherClassNames = [...new Set(workspace.public_posts.filter((post) => !post.is_own_class).map((post) => post.class_name))]
+            .sort((a, b) => (a || '').localeCompare(b || '', 'ko-KR'));
+        const classColor = (post) => post.is_own_class
+            ? OWN_COLOR
+            : CLASS_PALETTE[Math.max(0, otherClassNames.indexOf(post.class_name)) % CLASS_PALETTE.length];
         return (
             <section className="neighbor-teacher-card neighbor-teacher__activity-panel">
                 {workspace.public_posts.length === 0 ? (
@@ -532,17 +551,21 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     <div className="neighbor-teacher__folder-list">
                                         {groups.map((group) => {
                                             const open = group.posts.filter((post) => post.status === 'published').length;
+                                            const owner = group.posts[0]; // 주제·학생 묶음은 한 학급 소유 → 대표 글로 학급을 정한다.
                                             return (
-                                                <div className="neighbor-teacher__folder" key={group.key}>
+                                                <div className={`neighbor-teacher__folder ${owner.is_own_class ? 'is-own' : 'is-other'}`} key={group.key} style={{ borderLeftColor: classColor(owner).bar, borderLeftWidth: owner.is_own_class ? '7px' : '4px', background: owner.is_own_class ? '#c7f2e3' : '#eceff3' }}>
                                                     <button type="button" className="neighbor-teacher__folder-open" onClick={() => setManageOpenGroup(group.key)}>
                                                         <span className="neighbor-teacher__folder-icon" aria-hidden="true">{manageGroupBy === 'student' ? '🙂' : '📘'}</span>
                                                         <span className="neighbor-teacher__folder-body">
                                                             <strong>{group.label}</strong>
-                                                            <small>{group.posts.length}편{open > 0 ? ` · ${open} 공개 중` : ' · 모두 숨김'}</small>
+                                                            <span className="neighbor-teacher__folder-line">
+                                                                <span className="neighbor-teacher__class-tag" style={{ background: classColor(owner).bar, color: '#fff' }}>{owner.is_own_class ? `⭐ 우리 반` : owner.class_name}</span>
+                                                                <small>{group.posts.length}편{open > 0 ? ` · ${open} 공개 중` : ' · 모두 숨김'}</small>
+                                                            </span>
                                                         </span>
                                                         <span className="neighbor-teacher__folder-arrow" aria-hidden="true">›</span>
                                                     </button>
-                                                    {open > 0 && (
+                                                    {open > 0 && owner.is_own_class && (
                                                         <Button type="button" size="sm" variant="outline" className="neighbor-teacher__folder-action"
                                                             loading={busy === 'hide_gallery_posts_bulk'} disabled={Boolean(busy)}
                                                             onClick={() => bulkHideGroup(group)}>
@@ -557,30 +580,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             }
                             // 드릴인: 이 묶음의 글만 편집한다.
                             const eligible = openGroup.posts.filter((post) => post.status === 'published');
-                            // 학급마다 고유 색을 준다(교사가 아니라 "학급" 단위로 구분). 우리 반은 청록으로 고정.
-                            const OWN_COLOR = { bar: '#0f766e', bg: '#ccfbf1', ink: '#0f766e' };
-                            const CLASS_PALETTE = [
-                                { bar: '#2563eb', bg: '#dbeafe', ink: '#1e40af' },
-                                { bar: '#d946ef', bg: '#fae8ff', ink: '#a21caf' },
-                                { bar: '#f59e0b', bg: '#fef3c7', ink: '#92400e' },
-                                { bar: '#059669', bg: '#d1fae5', ink: '#047857' },
-                                { bar: '#ef4444', bg: '#fee2e2', ink: '#b91c1c' },
-                                { bar: '#8b5cf6', bg: '#ede9fe', ink: '#6d28d9' },
-                                { bar: '#0ea5e9', bg: '#e0f2fe', ink: '#0369a1' },
-                                { bar: '#ec4899', bg: '#fce7f3', ink: '#be185d' }
-                            ];
-                            const otherClassNames = [...new Set(workspace.public_posts.filter((post) => !post.is_own_class).map((post) => post.class_name))]
-                                .sort((a, b) => (a || '').localeCompare(b || '', 'ko-KR'));
-                            const classColor = (post) => post.is_own_class
-                                ? OWN_COLOR
-                                : CLASS_PALETTE[Math.max(0, otherClassNames.indexOf(post.class_name)) % CLASS_PALETTE.length];
                             return (
                                 <section className="neighbor-teacher__candidate-group">
                                     <header className="neighbor-teacher__candidate-group-head">
                                         <Button type="button" size="sm" variant="ghost" onClick={() => setManageOpenGroup(null)}>← 목록</Button>
                                         <h3>{manageGroupBy === 'student' ? `🙂 ${openGroup.label}` : `📘 ${openGroup.label}`}</h3>
                                         <span>{openGroup.posts.length}편</span>
-                                        {eligible.length > 0 && (
+                                        {eligible.length > 0 && openGroup.posts[0]?.is_own_class && (
                                             <Button type="button" size="sm" variant="outline" className="neighbor-teacher__bulk-publish"
                                                 loading={busy === 'hide_gallery_posts_bulk'} disabled={Boolean(busy)}
                                                 onClick={() => bulkHideGroup(openGroup)}>
@@ -590,18 +596,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </header>
                                     <div className="neighbor-teacher__manage-list">
                                         {openGroup.posts.map((post) => (
-                                            <article key={post.shared_post_id} className={`neighbor-teacher__manage-card is-${post.status}`}
-                                                style={{ borderLeftColor: classColor(post).bar, background: post.status === 'hidden' ? '#f8fafc' : (post.is_own_class ? '#f0fdfa' : '#fff') }}>
+                                            <article key={post.shared_post_id} className={`neighbor-teacher__manage-card is-${post.status} ${post.is_own_class ? 'is-own' : 'is-other'}`}
+                                                style={{ borderLeftColor: classColor(post).bar, borderLeftWidth: post.is_own_class ? '7px' : '4px', background: post.status === 'hidden' ? '#e6e9ee' : (post.is_own_class ? '#c7f2e3' : '#eceff3') }}>
                                                 <div className="neighbor-teacher__manage-info">
-                                                    <span className="neighbor-teacher__class-tag" style={{ background: classColor(post).bg, color: classColor(post).ink }}>{post.is_own_class ? `우리 반 · ${post.class_name}` : post.class_name}</span>
+                                                    <span className="neighbor-teacher__class-tag" style={{ background: classColor(post).bar, color: '#fff' }}>{post.is_own_class ? `⭐ 우리 반` : post.class_name}</span>
                                                     <span className="neighbor-teacher__manage-author">{post.author_name}</span>
                                                     <span className="neighbor-teacher__manage-title">{post.title || '제목 없는 글'}</span>
                                                     {manageGroupBy === 'student' && <span className="neighbor-teacher__manage-sub">{post.mission_title || '자율 글'}</span>}
                                                     {post.status === 'hidden' && <span className={`neighbor-teacher__share-status is-${post.status}`}>{STATUS_LABELS[post.status]}</span>}
                                                 </div>
-                                                {post.status === 'published' && <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글을 공간에서 숨겼습니다.')}>비공개</Button>}
+                                                {post.status === 'published' && post.is_own_class && <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글을 공간에서 숨겼습니다.')}>비공개</Button>}
                                                 {post.status === 'hidden' && post.is_own_class && <Button type="button" size="sm" disabled={Boolean(busy)} onClick={() => runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.')}>다시 공개</Button>}
-                                                {post.status === 'hidden' && !post.is_own_class && <span className="neighbor-teacher__muted-note">다른 반 글</span>}
+                                                {!post.is_own_class && <span className="neighbor-teacher__muted-note">다른 반 글</span>}
                                             </article>
                                         ))}
                                     </div>
