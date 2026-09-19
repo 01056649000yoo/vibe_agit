@@ -121,6 +121,36 @@
 .neighbor-teacher__activity-tabs button > span { font-size: var(--ui-text-md); }
 .neighbor-teacher__activity-tabs button strong { font-weight: 900; }
 .neighbor-teacher__activity-tabs button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .12); }
+/* 함께 쓰는 주제: 주제 만들기는 모달로 열고, 화면은 활동 결과만 넓게. 머리 행에 만들기 버튼을 둔다. */
+.neighbor-teacher__activity-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.neighbor-teacher__activity-head strong { color: #243b53; font-size: var(--ui-text-md); }
+
+/* 탭 안 3스텝 본문. 스텝 바 아래 한 스텝을 전체 폭으로 보여 준다. */
+.neighbor-teacher__activity-body { display: grid; grid-column: 1 / -1; gap: 12px; }
+.neighbor-teacher__stepbar { display: flex; gap: 4px; width: fit-content; max-width: 100%; flex-wrap: wrap; padding: 4px; border: 1px solid #d9e2ec; border-radius: 11px; background: #f1f5f9; }
+.neighbor-teacher__stepbar button { min-height: 36px; padding: 6px 14px; border: 0; border-radius: 8px; background: transparent; color: #486581; font: inherit; font-weight: 800; cursor: pointer; }
+.neighbor-teacher__stepbar button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .12); }
+/* ③ 댓글·반응: 공개 글을 카드로 죽 늘어놓고 누르면 모달로 크게 본다. */
+.neighbor-teacher__engage-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.neighbor-teacher__engage-card { display: grid; gap: 6px; align-content: start; text-align: left; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; cursor: pointer; font: inherit; }
+.neighbor-teacher__engage-card:hover { border-color: #9db8d6; box-shadow: 0 4px 12px rgba(16, 42, 67, .08); }
+.neighbor-teacher__engage-meta { display: flex; align-items: baseline; gap: 6px; }
+.neighbor-teacher__engage-meta strong { color: #243b53; font-size: var(--ui-text-sm); }
+.neighbor-teacher__engage-meta small { color: #829ab1; font-size: var(--ui-text-xs); }
+.neighbor-teacher__engage-card h3 { margin: 0; color: #334155; font-size: var(--ui-text-md); }
+.neighbor-teacher__engage-counts { color: #627d98; font-size: var(--ui-text-sm); }
+/* 댓글·반응 모달 내부 */
+.neighbor-teacher__detail-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.neighbor-teacher__detail-meta strong { color: #243b53; }
+.neighbor-teacher__detail-meta span { color: #829ab1; font-size: var(--ui-text-sm); }
+.neighbor-teacher__detail-content { white-space: pre-wrap; color: #334155; line-height: 1.6; margin: 0 0 14px; }
+.neighbor-teacher__detail-comments { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.neighbor-teacher__detail-comments li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #eef2f7; border-radius: 10px; background: #f8fafc; }
+.neighbor-teacher__detail-comments li > div { min-width: 0; }
+.neighbor-teacher__detail-comments li span { display: flex; align-items: baseline; gap: 6px; }
+.neighbor-teacher__detail-comments li small { color: #829ab1; font-size: var(--ui-text-xs); }
+.neighbor-teacher__detail-comments li p { margin: 3px 0 0; color: #334155; font-size: var(--ui-text-sm); }
+
 .neighbor-teacher__activity-workspace { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); gap: 10px; align-items: start; }
 .neighbor-teacher__management-column { display: grid; gap: 10px; min-width: 0; }
 .neighbor-teacher__management-column .neighbor-teacher-card { padding: 13px; }
@@ -169,6 +199,30 @@
 /* 폼 안의 작은 단계 머리말. 1단계(글 종류) → 2단계(주제·안내) 순서를 눈으로 잇는다. */
 .neighbor-teacher__form-step { margin-top: 4px; padding-top: 14px; border-top: 1px dashed #d9e2ec; }
 .neighbor-teacher__form-step span { color: #0f766e; font-size: var(--ui-text-xs); font-weight: 900; }
+
+/* 주제 만들기 모달: 위→아래 세로 흐름. 칸을 넓고 크게 써서 좁아 보이지 않게 한다(2026-09-18). */
+.neighbor-teacher__composer-flow { display: grid; gap: 18px; }
+.neighbor-teacher__composer-flow .neighbor-teacher__form-step { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.neighbor-teacher__composer-flow .neighbor-teacher__form-step + .neighbor-teacher__form-step { padding-top: 16px; border-top: 1px dashed #d9e2ec; }
+.neighbor-teacher__composer-flow .neighbor-teacher__compact-heading h3 { font-size: var(--ui-text-lg); }
+.neighbor-teacher__composer-flow .neighbor-teacher__compact-heading .btn, .neighbor-teacher__composer-flow .neighbor-teacher__compact-heading button { margin-left: auto; }
+.neighbor-teacher__step-hint { margin: 0; color: #627d98; font-size: var(--ui-text-sm); }
+.neighbor-teacher__composer-flow .neighbor-teacher__questions { display: grid; gap: 10px; }
+.neighbor-teacher__composer-flow .neighbor-teacher__question { position: relative; }
+.neighbor-teacher__composer-flow .neighbor-teacher__question label { display: grid; gap: 5px; }
+.neighbor-teacher__composer-flow .neighbor-teacher__question label > span { font-size: var(--ui-text-sm); font-weight: 800; color: #486581; }
+.neighbor-teacher__composer-flow .neighbor-teacher__question textarea { width: 100%; box-sizing: border-box; min-height: 62px; padding: 11px 40px 11px 13px; background: #fff; border: 1px solid #cbd5e1; border-radius: 11px; font-size: var(--ui-text-md); line-height: 1.45; }
+.neighbor-teacher__composer-flow .neighbor-teacher__question-remove { top: 8px; }
+/* 완료 조건·포인트: 두 묶음을 세로로 쌓고, 각 묶음 안 필드를 균일 폭 그리드로 줄 맞춘다. */
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups fieldset,
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups fieldset:last-child { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 0; padding: 12px 14px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups legend { grid-column: 1 / -1; float: none; width: auto; margin: 0; padding: 0 0 2px; color: #334155; font-size: var(--ui-text-sm); font-weight: 900; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups label { display: grid; gap: 6px; align-content: start; min-width: 0; color: #486581; font-size: var(--ui-text-sm); font-weight: 700; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups input { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; font-size: var(--ui-text-md); text-align: left; }
+@media (max-width: 640px) {
+    .neighbor-teacher__composer-flow .neighbor-teacher__setting-groups fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .neighbor-teacher__form-step h3 { margin: 4px 0 0; color: #243b53; }
 
 /* 글 종류 고르기. 고르기 전에는 눌러야 할 자리로, 고른 뒤에는 정해진 내용을 보여 주는 카드로 바뀐다. */
@@ -209,13 +263,65 @@
 .neighbor-teacher__scope-choice label > span { display: grid; gap: 3px; }
 .neighbor-teacher__scope-choice small, .neighbor-teacher__scope-label { color: #627d98; font-weight: 600; }
 .neighbor-teacher__candidate-panel { display: grid; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
-.neighbor-teacher__candidate-toolbar { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(280px, 1.2fr); gap: 10px; }
+.neighbor-teacher__candidate-toolbar { display: grid; grid-template-columns: auto minmax(200px, .8fr) minmax(240px, 1fr); gap: 10px; align-items: end; }
 .neighbor-teacher__candidate-toolbar select { width: 100%; box-sizing: border-box; padding: 10px 34px 10px 12px;
     border: 1px solid #bcccdc; border-radius: 9px; background: #fff; color: #243b53; font: inherit; }
+.neighbor-teacher__group-toggle { display: inline-flex; align-self: flex-end; padding: 3px; gap: 2px;
+    border: 1px solid #bcccdc; border-radius: 10px; background: #f0f4f8; }
+.neighbor-teacher__group-toggle button { padding: 8px 16px; border: 0; border-radius: 8px; background: transparent;
+    color: #486581; font: inherit; font-weight: 600; cursor: pointer; }
+.neighbor-teacher__group-toggle button.is-active { background: #fff; color: #0f766e; box-shadow: 0 1px 3px rgba(15, 23, 42, .12); }
 .neighbor-teacher__candidate-summary { display: flex; align-items: baseline; gap: 7px; color: #627d98; font-size: var(--ui-text-sm); }
 .neighbor-teacher__candidate-summary strong { color: #0f766e; font-size: var(--ui-text-lg); }
-.neighbor-teacher__candidate-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
-    max-height: 570px; overflow: auto; padding: 2px; }
+.neighbor-teacher__candidate-groups { display: grid; gap: 16px; max-height: 570px; overflow: auto; padding: 2px; }
+.neighbor-teacher__candidate-group { display: grid; gap: 9px; }
+.neighbor-teacher__candidate-group-head { display: flex; align-items: baseline; gap: 8px;
+    padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
+.neighbor-teacher__candidate-group-head h3 { margin: 0; color: #243b53; font-size: var(--ui-text-md); }
+.neighbor-teacher__candidate-group-head span { color: #829ab1; font-size: var(--ui-text-sm); }
+.neighbor-teacher__bulk-publish { margin-left: auto; align-self: center; }
+.neighbor-teacher__muted-note { color: #829ab1; font-size: var(--ui-text-xs); line-height: 1.4; }
+
+/* 묶음 목록(폴더): 주제/학생만 보여 주고, 폴더째 일괄 동작하거나 눌러 들어가 하나씩 편집한다. */
+.neighbor-teacher__folder-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 8px; max-height: 570px; overflow: auto; padding: 2px; }
+.neighbor-teacher__folder { display: flex; align-items: stretch; gap: 8px; min-width: 0;
+    padding: 8px 10px; border: 1px solid #d9e2ec; border-radius: 12px; background: #fff; }
+.neighbor-teacher__folder-open { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+    padding: 4px; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; border-radius: 8px; }
+.neighbor-teacher__folder-open:hover { background: #f0f9ff; }
+.neighbor-teacher__folder-icon { flex: 0 0 auto; font-size: var(--ui-text-lg); }
+.neighbor-teacher__folder-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.neighbor-teacher__folder-body strong { color: #243b53; font-size: var(--ui-text-md); font-weight: 850;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; word-break: break-word; }
+.neighbor-teacher__folder-body small { color: #829ab1; font-size: var(--ui-text-xs); }
+.neighbor-teacher__folder-arrow { flex: 0 0 auto; align-self: center; color: #9fb3c8; font-size: var(--ui-text-lg); }
+.neighbor-teacher__folder-action { flex: 0 0 auto; align-self: center; }
+
+/* 공개 글 관리는 읽는 화면이 아니라 고르고 내리는 화면이라, 내용 미리보기는 빼고
+   글쓴이·제목만 크게 보이는 조밀한 행 카드로 둔다(글이 20~30개여도 한눈에 훑도록). */
+.neighbor-teacher__manage-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+/* 학급마다 왼쪽 띠·칩 색을 다르게 준다(색은 화면에서 학급별로 지정). */
+.neighbor-teacher__manage-card { display: flex; align-items: center; gap: 10px; min-width: 0;
+    padding: 10px 12px; border: 1px solid #d9e2ec; border-left: 4px solid #d9e2ec; border-radius: 11px; background: #fff; }
+.neighbor-teacher__manage-card.is-hidden { border-style: dashed; }
+.neighbor-teacher__class-tag { flex: 0 0 auto; padding: 2px 8px; border-radius: 999px;
+    font-size: var(--ui-text-xs); font-weight: 850; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 55%; }
+.neighbor-teacher__manage-info { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; min-width: 0; flex: 1; }
+.neighbor-teacher__manage-author { flex: 0 0 auto; max-width: 40%; color: #243b53; font-size: var(--ui-text-md);
+    font-weight: 850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.neighbor-teacher__manage-title { flex: 1 1 55%; min-width: 0; color: #334e68; font-size: var(--ui-text-md);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.neighbor-teacher__manage-card.is-hidden .neighbor-teacher__manage-title,
+.neighbor-teacher__manage-card.is-hidden .neighbor-teacher__manage-author { color: #829ab1; }
+.neighbor-teacher__manage-sub { flex: 0 0 auto; padding: 2px 7px; border-radius: 999px; background: #ecfeff;
+    color: #0e7490; font-size: var(--ui-text-xs); font-weight: 800; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.neighbor-teacher__manage-card .neighbor-teacher__share-status { flex: 0 0 auto; padding: 2px 7px;
+    border-radius: 999px; font-size: var(--ui-text-xs); font-weight: 850; }
+.neighbor-teacher__manage-card > button { flex: 0 0 auto; }
+.neighbor-teacher__candidate-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .neighbor-teacher__candidate-list article { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-width: 0;
     padding: 13px; border: 1px solid #d9e2ec; border-radius: 13px; background: #fff; }
 .neighbor-teacher__candidate-card-body { display: grid; align-content: start; gap: 7px; min-width: 0; }
@@ -282,7 +388,9 @@
     .neighbor-teacher__composer-main, .neighbor-teacher__composer-settings { padding: 10px; }
     .neighbor-teacher__composer-settings .neighbor-teacher__questions { grid-template-columns: 1fr; }
     .neighbor-teacher__setting-groups { grid-template-columns: 1fr; }
-    .neighbor-teacher__candidate-toolbar, .neighbor-teacher__candidate-list { grid-template-columns: 1fr; }
+    .neighbor-teacher__candidate-toolbar, .neighbor-teacher__candidate-list, .neighbor-teacher__manage-list, .neighbor-teacher__folder-list { grid-template-columns: 1fr; }
+    .neighbor-teacher__group-toggle { align-self: stretch; }
+    .neighbor-teacher__group-toggle button { flex: 1; }
     .neighbor-teacher__gallery-intro { align-items: stretch; flex-direction: column; }
 }
 

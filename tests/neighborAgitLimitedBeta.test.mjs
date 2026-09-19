@@ -82,25 +82,29 @@ test('교사 작업 공간은 한 번 읽고 행동도 한 번의 RPC 응답으�
     assert.match(action, /review_neighbor_shared_post_v1/);
     assert.match(action, /moderate_neighbor_item_v1/);
     assert.match(action, /'workspace', public\.get_neighbor_teacher_workspace_v1/);
-    // 2026-09-06에 글짝 명단 RPC 를 걷어내 호출이 6개에서 5개가 됐다.
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 7);
+    // 2026-09-06에 글짝 명단 RPC 를 걷어내 호출이 6개에서 5개가 됐고,
+    // 2026-09-19에 교사 활동 글 후보 조회를 더해 7→8이 됐다.
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 8);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.doesNotMatch(teacherApi, /get_neighbor_exchange_roster_v1/);
     assert.match(teacherEntry, /setWorkspace\(next\.workspace\)/);
     assert.doesNotMatch(`${teacherEntry}\n${teacherApi}`, /setInterval|postgres_changes|supabase\.from\(/);
 });
 
-test('학생의 내 글 목록은 버튼을 열 때만 최대 50편을 읽고 요청·회수는 행동당 RPC 한 번이다', () => {
-    const candidates = functionSource('get_neighbor_my_share_candidates_v1');
-    assert.match(candidates, /LEAST\(GREATEST\(COALESCE\(p_limit, 50\), 1\), 50\)/);
-    assert.match(candidates, /post\.class_id = v_class_id/);
-    assert.match(candidates, /post\.student_id = v_student_id/);
-    assert.match(candidates, /post\.is_submitted IS TRUE/);
-    assert.match(studentEntry, /공개할 내 글 고르기/);
-    assert.match(studentEntry, /getShareCandidates/);
-    assert.match(studentApi, /get_neighbor_my_share_candidates_v1/);
-    assert.match(studentApi, /request_neighbor_post_share_v1/);
-    assert.match(studentApi, /recall_my_neighbor_shared_post_v1/);
+test('학생 공개 요청 시스템은 제거되고, 글 공개는 교사가 직접 정한다', async () => {
+    // 2026-09-19: 학생이 "내 글 공개해 주세요"라고 요청하던 시스템을 없앴다.
+    const decide = await readFile('supabase/migrations/20261317_neighbor_teacher_decides_publishing.sql', 'utf8');
+    // 학생 화면·api 에서 요청·회수·후보 흐름이 사라졌다.
+    assert.doesNotMatch(studentEntry, /공개 요청|공개할 내 글 고르기|requestShare|recallShare|requestActivityShare/);
+    assert.doesNotMatch(studentApi, /request_neighbor_post_share_v1|recall_my_neighbor_shared_post_v1|get_neighbor_my_share_candidates_v1|request_neighbor_activity_post_v1/);
+    // 서버의 요청 계열 함수는 거절로 바뀌었다(권한/서명은 유지).
+    for (const fn of ['request_neighbor_post_share_v1', 'request_neighbor_activity_post_v1', 'recall_my_neighbor_shared_post_v1', 'get_neighbor_my_share_candidates_v1']) {
+        assert.match(decide, new RegExp(`FUNCTION public\\.${fn}[\\s\\S]*?RAISE EXCEPTION`), `${fn} 를 거절로 바꾸지 않았습니다.`);
+    }
+    // 교사가 직접 공개: 활동 글 후보 조회 + 직접 공개 함수.
+    assert.match(teacherApi, /get_neighbor_teacher_activity_candidates_v1/);
+    assert.match(decide, /publish_neighbor_activity_post_v1/);
+    assert.match(teacherEntry, /publish_activity_post/);
 });
 
 test('제한 공개의 직접 권한·요청 상한이 보안과 성능 정본에 기록된다', () => {

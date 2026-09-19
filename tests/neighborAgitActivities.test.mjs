@@ -54,8 +54,9 @@ test('모두의 아지트는 두 활동만 두고, 준비는 진행형 마법사
     assert.match(teacherEntry, /neighbor-teacher__bar/);
     assert.match(teacherEntry, /setReviewInboxOpen\(true\)/);
     assert.match(teacherEntry, /setManageOpen\(true\)/);
-    // 공개 글 관리는 글 나눔 오른쪽 열에 그대로.
-    assert.match(teacherEntry, /neighbor-teacher__management-column/);
+    // 각 탭은 3스텝(모으기/관리/반응)으로 나눠 스텝 바로 오간다.
+    assert.match(teacherEntry, /neighbor-teacher__stepbar/);
+    assert.match(teacherEntry, /renderStepBar/);
     // 옛 3단계 탭 모델(activeTab)은 없앴다.
     assert.doesNotMatch(teacherEntry, /activeTab === /);
 });
@@ -110,7 +111,9 @@ test('학생 활동 목록은 최초 피드 응답에 합치고 활동 글은 �
     assert.match(gallery, /'activities'/);
     assert.match(activityFeed, /LIMIT v_limit \+ 1/);
     assert.match(studentApi, /get_neighbor_activity_feed_v1/);
-    assert.match(studentApi, /request_neighbor_activity_post_v1/);
+    // 2026-09-19: 학생 공개 요청을 없앴다. 활동 글 공개는 교사가 직접 고른다.
+    assert.doesNotMatch(studentApi, /request_neighbor_activity_post_v1/);
+    assert.match(teacherApi, /get_neighbor_teacher_activity_candidates_v1/);
     assert.doesNotMatch(`${teacherEntry}\n${studentEntry}`, /setInterval|postgres_changes/);
     assert.match(performance, /이웃 아지트 활동/);
 });
@@ -121,5 +124,6 @@ test('교사 활동 생성·매칭안·승인·종료는 작업공간 RPC 한 �
     assert.match(action, /run_neighbor_teacher_action_core_20261238/);
     assert.match(teacherEntry, /close_activity/);
     assert.match(action, /get_neighbor_teacher_workspace_v1/);
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 7);
+    // 2026-09-19: 교사 활동 글 후보 조회(get_neighbor_teacher_activity_candidates_v1)를 더해 7→8.
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 8);
 });

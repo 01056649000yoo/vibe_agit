@@ -27,11 +27,6 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
     const [commentDraft, setCommentDraft] = useState('');
     // 댓글이 검사를 기다리는 중인지. 아이가 “댓글이 사라졌다”고 여기지 않도록 알려 준다.
     const [commentPending, setCommentPending] = useState(false);
-    const [sharePanelOpen, setSharePanelOpen] = useState(false);
-    const [shareCandidates, setShareCandidates] = useState(null);
-    const [shareLoading, setShareLoading] = useState(false);
-    const [shareBusy, setShareBusy] = useState('');
-    const [shareMessage, setShareMessage] = useState('');
     const [activeSection, setActiveSection] = useState('gallery');
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [activityFeed, setActivityFeed] = useState(null);
@@ -160,29 +155,6 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
         });
     };
 
-    const requestActivityShare = async (activity) => {
-        if (shareBusy) return;
-        setShareBusy(activity.id);
-        setActivityMessage('');
-        try {
-            const result = await neighborAgitApi.requestActivityPost({ spaceId, activityId: activity.id });
-            setFeed((current) => current ? {
-                ...current,
-                activities: current.activities.map((item) => item.id === activity.id
-                    ? { ...item, shared_post_id: result.shared_post_id, share_status: result.status }
-                    : item)
-            } : current);
-            setSelectedActivity((current) => current?.id === activity.id
-                ? { ...current, shared_post_id: result.shared_post_id, share_status: result.status }
-                : current);
-            setActivityMessage('선생님께 함께 쓴 글 공개 확인을 요청했어요.');
-        } catch {
-            setActivityMessage('공개를 요청하지 못했어요. 제출 상태를 확인해 주세요.');
-        } finally {
-            setShareBusy('');
-        }
-    };
-
     const toggleReaction = async () => {
         if (!detail || interactionBusy) return;
         setInteractionBusy('reaction');
@@ -262,58 +234,6 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
         }
     };
 
-    const openSharePanel = async () => {
-        const nextOpen = !sharePanelOpen;
-        setSharePanelOpen(nextOpen);
-        setShareMessage('');
-        if (!nextOpen || shareCandidates || shareLoading) return;
-        setShareLoading(true);
-        try {
-            setShareCandidates(await neighborAgitApi.getShareCandidates({ spaceId }));
-        } catch {
-            setShareMessage('내 글 목록을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
-        } finally {
-            setShareLoading(false);
-        }
-    };
-
-    const requestShare = async (post) => {
-        if (shareBusy) return;
-        setShareBusy(post.post_id);
-        setShareMessage('');
-        try {
-            const result = await neighborAgitApi.requestShare({ spaceId, postId: post.post_id });
-            setShareCandidates((current) => current.map((item) => item.post_id === post.post_id ? {
-                ...item,
-                shared_post_id: result.shared_post_id,
-                share_status: result.status,
-                review_note: ''
-            } : item));
-            setShareMessage('선생님께 이웃 공개 확인을 요청했어요.');
-        } catch {
-            setShareMessage('공개를 요청하지 못했어요. 현재 글 상태를 확인해 주세요.');
-        } finally {
-            setShareBusy('');
-        }
-    };
-
-    const recallShare = async (post) => {
-        if (!post.shared_post_id || shareBusy) return;
-        setShareBusy(post.post_id);
-        setShareMessage('');
-        try {
-            await neighborAgitApi.recallShare({ spaceId, sharedPostId: post.shared_post_id });
-            setShareCandidates((current) => current.map((item) => item.post_id === post.post_id ? {
-                ...item, share_status: 'recalled'
-            } : item));
-            setShareMessage('이웃 공개 요청을 회수했어요.');
-        } catch {
-            setShareMessage('공개 요청을 회수하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
-        } finally {
-            setShareBusy('');
-        }
-    };
-
     return (
         <main className="neighbor-student-page">
             <header className="neighbor-student-page__header">
@@ -341,35 +261,9 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
             {activeSection === 'gallery' && <section className="neighbor-share-panel">
                 <div>
                     <span>{getNeighborActivityLabel('gallery')}</span>
-                    <h2>내 아지트 글을 이웃에게 소개해요</h2>
-                    <p>이미 제출한 글 중 하나를 골라 선생님께 공개 확인을 요청할 수 있어요.</p>
+                    <h2>이웃 반 친구들의 글을 읽어요</h2>
+                    <p>내 글은 담임 선생님이 골라서 이웃 반에 소개해 주세요. 여기서는 공개된 글을 읽고 댓글·공감을 남길 수 있어요.</p>
                 </div>
-                <Button type="button" variant="outline" loading={shareLoading} onClick={openSharePanel}>
-                    {sharePanelOpen ? '내 글 목록 닫기' : '공개할 내 글 고르기'}
-                </Button>
-                {sharePanelOpen && (
-                    <div className="neighbor-share-panel__list">
-                        {shareMessage && <p className="neighbor-share-panel__message" role="status">{shareMessage}</p>}
-                        {shareLoading ? <p>내 글을 불러오고 있어요…</p> : (shareCandidates || []).length === 0 ? (
-                            <p>공개를 요청할 수 있는 제출 글이 아직 없어요.</p>
-                        ) : (shareCandidates || []).map((post) => (
-                            <article key={post.post_id}>
-                                <div>
-                                    <strong>{post.title || '제목 없는 글'}</strong>
-                                    <small>{post.share_status === 'pending' ? '선생님 확인 중'
-                                        : post.share_status === 'published' ? '이웃에게 공개 중'
-                                            : post.share_status === 'returned' ? `다시 확인 필요${post.review_note ? ` · ${post.review_note}` : ''}`
-                                                : '공개 요청 전'}</small>
-                                </div>
-                                {['pending', 'published'].includes(post.share_status) ? (
-                                    <Button type="button" variant="outline" loading={shareBusy === post.post_id} disabled={Boolean(shareBusy)} onClick={() => recallShare(post)}>공개 회수</Button>
-                                ) : (
-                                    <Button type="button" loading={shareBusy === post.post_id} disabled={Boolean(shareBusy)} onClick={() => requestShare(post)}>공개 요청</Button>
-                                )}
-                            </article>
-                        ))}
-                    </div>
-                )}
             </section>}
 
             {activeSection !== 'gallery' && !loading && (
@@ -392,12 +286,10 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                         <span>{activity.status === 'closed' ? '활동 종료' : '진행 중'}</span>
                                         <h3>{activity.title}</h3>
                                         <p>{activity.prompt}</p>
-                                        {activity.share_status === 'pending' && <small>담임 선생님이 공개 확인 중이에요.</small>}
-                                        {activity.share_status === 'returned' && <small>다시 확인해 주세요{activity.review_note ? ` · ${activity.review_note}` : ''}</small>}
+                                        {activity.is_submitted && <small>글을 냈어요. 선생님이 골라서 함께 읽도록 열어 주세요.</small>}
                                     </div>
                                     <div className="neighbor-activity-list__actions">
                                         {activity.status !== 'closed' && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
-                                        {activity.is_submitted && !['pending', 'published'].includes(activity.share_status) && <Button type="button" loading={shareBusy === activity.id} disabled={Boolean(shareBusy)} onClick={() => requestActivityShare(activity)}>나눔 요청</Button>}
                                         {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>활동 글 보기</Button>}
                                     </div>
                                 </article>

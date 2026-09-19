@@ -88,8 +88,22 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
-    async getShareCandidates({ spaceId, classId, limit = 100 }) {
-        const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 100);
+    // 교사가 한 활동(주제)의 우리 학급 제출 글을 직접 골라 공개하기 위한 후보.
+    async getActivityCandidates({ spaceId, classId, activityId }) {
+        const { data, error } = await supabase.rpc('get_neighbor_teacher_activity_candidates_v1', {
+            p_space_id: spaceId,
+            p_actor_class_id: classId,
+            p_activity_id: activityId
+        });
+        if (error) throw error;
+        if (Number(data?.version) !== 1 || data?.activity_id !== activityId || !Array.isArray(data?.items)) {
+            throw new Error('활동 글 목록 응답을 확인할 수 없습니다.');
+        }
+        return data.items;
+    },
+
+    async getShareCandidates({ spaceId, classId, limit = 500 }) {
+        const safeLimit = Math.min(Math.max(Number(limit) || 500, 1), 500);
         const { data, error } = await supabase.rpc('get_neighbor_teacher_share_candidates_v1', {
             p_space_id: spaceId,
             p_actor_class_id: classId,
@@ -97,9 +111,9 @@ export const neighborAgitTeacherApi = {
         });
         if (error) throw error;
         if (Number(data?.version) !== 1
-            || Number(data?.max_rows) !== 100
+            || Number(data?.max_rows) !== 500
             || !Array.isArray(data?.items)
-            || data.items.length > 100) {
+            || data.items.length > 500) {
             throw new Error('우리 학급 글 목록 응답을 확인할 수 없습니다.');
         }
         return data.items;

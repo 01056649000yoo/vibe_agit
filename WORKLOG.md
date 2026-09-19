@@ -19,6 +19,62 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-19 — 모두의 아지트: 학생 공개 요청 제거 → 공개는 교사 판단으로 + 학급별 색 구분 + 후보 상한 500 (Claude Opus 4.8)
+- **한 일**:
+  - **학생 "공개 요청" 시스템 전면 제거**(선생님 결정). 글 나눔·함께 쓰는 주제 모두 학생이 요청하지 않고,
+    교사가 학급 제출 글을 직접 골라 공개한다. StudentEntry 의 공유 패널·나눔 요청 버튼·요청/회수 핸들러,
+    api.js 의 requestShare·recallShare·requestActivityPost·getShareCandidates 를 없앴다.
+  - 서버(20261317): 요청 계열 4개 함수(request_post/activity, recall, get_my_candidates)를 **거절**로 바꾸고,
+    교사가 활동 글을 직접 공개하도록 `get_neighbor_teacher_activity_candidates_v1`(활동별 우리 반 후보)와
+    `publish_neighbor_activity_post_v1`(활동 id 를 심어 공개)을 새로 뒀다. 디스패처에 `publish_activity_post`·
+    `publish_activity_posts_bulk` 분기 추가. 활동 글 공개 UI 는 주제 탭의 활동 카드 "제출 글 공개하기" 모달.
+  - **공개 글 관리 학급 구분**: 카드에 반 정보가 없어 우리 반/다른 반이 안 구분됐다. **학급마다 고유 색**
+    (왼쪽 띠 + 칩)을 주고 우리 반은 청록 고정. 교사가 아니라 "학급" 단위로 구분된다.
+  - **글 모으기 후보 상한 100→500**(20261316): 최근 100편만 와서 자율 글이 최근분을 차지하면 다른 주제가
+    목록에서 사라지던 문제 해결(진남초 4학년 1반은 25개 주제·280여 편이 모두 뜬다). max_rows·화면 검증도 500.
+  - 활동 종료·활동 글 공개 확인창도 앱 안 확인 창(useConfirmDialog)으로.
+- **변경**: 커밋 예정. `20261316_neighbor_share_candidates_limit_500.sql`,
+  `20261317_neighbor_teacher_decides_publishing.sql`(운영 DB 적용, supabase_admin), `StudentEntry.jsx`,
+  `TeacherEntry.jsx/.css`, `api.js`, `teacherApi.js`, 계약 검사 5개 파일 갱신
+  (Activities·LimitedBeta·Interactions·StudentFeed rpc 수/요청 제거, teacherApi rpc 7→8, 학생 api 9→5).
+- **결과/검증**: lint·`npm run build` 통과. 전체 node 테스트 **1222건 통과**. `npm run deploy:local` 배포.
+  `smoke:neighbor-agit` 는 이번 변경과 무관한 기존 실패(stale foundation smoke)라 관문으로 보지 않았다.
+- **남은 것 / 다음**: 진남초 4학년 1반으로 교사 직접 공개(갤러리·활동) 실기 확인.
+
+## 2026-09-18 — 모두의 아지트 글 나눔: 주제별·학생별 묶어 보기 + 일괄 공개/비공개 + 인앱 확인 창 (Claude Opus 4.8)
+- **한 일**:
+  - **글 모으기**가 나열식이라 불편했다. 주제별/학생별 토글로 각 묶음의 전체 목록을 따로 본다.
+    `특정 주제만` 드롭다운(galleryMissionFilter 유지)·`글 찾기` 검색은 두 보기 모두에 적용.
+  - **일괄 공개**: 각 묶음 머리에 **이 묶음 N편 일괄 공개** 버튼(주제별→주제 단위, 학생별→학생 단위).
+    개별 "전문 확인 후 공유"도 그대로라 마지막 한 편씩 확인 공개 길도 남는다.
+  - **공개 글 관리도 같은 방식**으로 정리: 나열식→주제별/학생별 묶음 + **이 묶음 N편 일괄 비공개** 버튼.
+    한 편씩 "비공개로 돌리기/다시 공개"도 유지, 다른 반 글은 복원 불가 안내.
+  - **확인 창을 브라우저 기본창→앱 안 확인 창**(`useConfirmDialog`)으로. 크롬이 추가 대화상자를 막아
+    조용히 취소되던 문제·글자 잘림 해소. 일괄 공개/비공개 모두 이 창을 쓴다.
+  - 서버는 디스패처(run_neighbor_teacher_action_v1)에 두 동작만 추가하고 로직은 기존 단건 함수에 맡긴다:
+    `publish_gallery_posts_bulk`→ `publish_neighbor_class_post_v1` 반복,
+    `hide_gallery_posts_bulk`→ `moderate_neighbor_item_v1('hide')` 반복. 한 편이 막혀도 하위 블록으로 계속,
+    막힌 편수만 skipped 로 센다. teacherApi 는 기존 `runAction` 재사용 → rpc 호출 수 7 그대로.
+  - 주제별 묶음을 위해 `public_posts` 에 `mission_id`·`mission_title` 을 실었다(코어 빌더에 writing_missions LEFT JOIN).
+- **변경**: 커밋 예정.
+  `supabase/migrations/20261314_neighbor_bulk_publish.sql`(일괄 공개/비공개 두 동작),
+  `supabase/migrations/20261315_neighbor_public_posts_mission.sql`(public_posts 에 주제 정보),
+  `TeacherEntry.jsx`·`TeacherEntry.css`. 두 마이그레이션 모두 운영 DB에 이미 적용
+  (`docker exec -i agit-db psql -U supabase_admin` — 두 함수 소유자가 supabase_admin).
+  ※ 처음 20261310 으로 만들었다가 다른 세션의 20261310_blocked_count 와 번호가 겹쳐 20261314 로 옮김.
+- **결과/검증**: lint·`npm run build` 통과. 계약 검사 21건(neighborAgitTeacherSharingMatching·
+  neighborAgitActivities·neighborSafety) 통과. `npm run deploy:local` 배포. `smoke:neighbor-agit` 는
+  이번 변경과 무관한 기존 실패("grants incorrect", stale foundation smoke — 새 마이그레이션이 스모크 인자
+  목록에 없어 로드되지도 않음)라 이번 작업의 관문으로 보지 않았다.
+- **추가(같은 날 이어서)**: 두 스텝 모두 **주제/학생 폴더 목록 → 드릴인 편집**으로 통일(모든 글을 한 번에 펼치지
+  않는다). 폴더에서 바로 일괄 공개/비공개, 들어가면 한 편씩. 공개 글 관리 카드는 내용 미리보기를 빼고
+  글쓴이·제목만 크게(조밀한 행). 폴더 카드 폭 340px + 긴 주제명 2줄까지.
+- **git 밖(운영 DB) 변경**: 모두의 아지트 롤아웃이 `limited_beta` 라 실기 테스트용으로
+  **진남초 4학년 1반**(class a4b4512b…, 담당=오너 ADMIN 계정)을 `neighbor_limited_classes` 에 등록해 릴리스함
+  (`neighbor_limited_class_events` 에 enabled 감사 로그도 남김). 되돌리려면 그 행을 지운다.
+- **남은 것 / 다음**: 실제 데이터로 일괄 공개/비공개 end-to-end 확인(진남초 4학년 1반으로 실기 테스트 예정).
+  stale한 neighbor-agit foundation smoke 재정합은 여전히 별도 과제.
+
 ## 2026-09-18 — 이웃 댓글 검사 큐 깨우기 + 학급 운영 메뉴에 처리할 댓글 배지 (Claude Opus 5)
 - **요청**: ① 모두의 아지트 수정 진행 ② 학급 운영에도 검토할 것이 있으면 독서록·일기처럼 메뉴에 표시.
   (③ 최근 활동 2줄 정리는 요청 뒤 사용자가 "안 바꿔도 될 것 같다" 로 취소)

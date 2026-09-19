@@ -124,17 +124,20 @@ test('준비는 진행형 마법사로 안내하고, 운영은 요약 바 + 활�
     assert.match(css, /\.neighbor-teacher__wizard-steps \{ grid-template-columns: 1fr/);
 });
 
-test('주제 만들기는 넓은 화면에서 두 열로 모으고 질문만 내부 스크롤한다', () => {
+test('주제 만들기 모달은 위→아래 세로 흐름으로 크게 쓰고 AI 질문 추천을 쓴다', () => {
+    // 선생님 요청(2026-09-18): 모달이 좁아 두 열이 답답했다 → 세로 한 흐름으로, 질문 칸도 넓게.
+    // 길잡이 질문은 미션 만들기 모듈과 같은 방식으로 AI 추천을 붙인다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
 
-    assert.match(teacher, /neighbor-teacher__composer-grid/);
-    assert.match(teacher, /neighbor-teacher__composer-main/);
-    assert.match(teacher, /neighbor-teacher__composer-settings/);
+    assert.match(teacher, /neighbor-teacher__composer-flow/);
+    assert.match(teacher, /neighbor-teacher__form-step/);
     assert.match(teacher, /neighbor-teacher__setting-groups/);
-    assert.match(css, /\.neighbor-teacher__composer-grid\s*\{[^}]*grid-template-columns:/);
-    assert.match(css, /\.neighbor-teacher__composer-settings \.neighbor-teacher__questions\s*\{[^}]*max-height:[^}]*overflow-y: auto/);
-    assert.match(css, /@media \(max-width: 720px\)[\s\S]*\.neighbor-teacher__composer-settings \.neighbor-teacher__questions\s*\{\s*grid-template-columns: 1fr/);
+    assert.match(css, /\.neighbor-teacher__composer-flow\s*\{[^}]*display: grid/);
+    // AI 질문 추천(미션 모듈과 같은 callAI 경로 재사용).
+    assert.match(teacher, /generateGuideQuestions/);
+    assert.match(teacher, /callAI/);
+    assert.match(teacher, /AI 추천/);
 });
 
 test('활동 화면은 중복 머리말을 없애고 얇은 메뉴와 한 줄 도구막대를 쓴다', () => {
@@ -147,25 +150,40 @@ test('활동 화면은 중복 머리말을 없애고 얇은 메뉴와 한 줄 �
     assert.match(css, /neighbor-teacher__activity-panel[^}]*padding: 13px/);
 });
 
-test('두 활동은 데스크톱에서 주 작업과 관리·결과를 좌우로 함께 보여 준다', () => {
+test('두 활동은 각자 3스텝(모으기·관리·반응)으로 나뉘고 반응은 모달로 크게 본다', () => {
+    // 선생님 요청(2026-09-18): 불러오기/만들기 버튼 블록이 공간을 잡아먹었다 → 각 탭을 스텝 흐름으로,
+    // 댓글·반응은 모달로 크게. 좌우 2단 배치(activity-workspace)와 관리 열(management-column)은 없앴다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
 
-    assert.match(teacher, /neighbor-teacher__activity-workspace/);
-    assert.match(teacher, /neighbor-teacher__management-column/);
-    assert.match(css, /activity-workspace[^}]*grid-template-columns: minmax\(0, 1\.2fr\) minmax\(340px, \.8fr\)/);
-    assert.match(css, /@media \(max-width: 1050px\)[\s\S]*activity-workspace\s*\{\s*grid-template-columns: 1fr/);
-    assert.doesNotMatch(teacher, /topicView|setTopicView|neighbor-teacher__subtabs/);
-    assert.ok(teacher.indexOf('새 주제 제안') < teacher.indexOf('진행 현황'), '주제 만들기와 활동 결과 순서가 잘못됐습니다.');
+    assert.match(teacher, /neighbor-teacher__stepbar/);
+    assert.match(teacher, /renderStepBar/);
+    assert.match(teacher, /galleryStep === 'collect'/);
+    assert.match(teacher, /galleryStep === 'manage'/);
+    assert.match(teacher, /galleryStep === 'engage'/);
+    assert.match(teacher, /topicStep === 'topics'/);
+    // 댓글·반응은 공개 글을 눌러 모달로 크게 본다(공용 부품 재사용).
+    assert.match(teacher, /renderEngageStep/);
+    assert.match(teacher, /neighbor-teacher__engage-card/);
+    assert.match(css, /\.neighbor-teacher__engage-list\b/);
+    // 옛 좌우 2단·관리 열은 제거.
+    assert.doesNotMatch(teacher, /neighbor-teacher__activity-workspace|neighbor-teacher__management-column/);
 });
 
-test('함께 쓰는 주제는 만들기·결과를 함께 보이고 글 종류 칸이 화면에 녹아 있다', () => {
-    // 선생님 지적(2026-09-07): 글 종류 고르기를 모듈만 가져다 놓아 성의 없어 보였다.
-    // 실제로 `.neighbor-teacher__genre` 에 스타일이 하나도 없어 맨 요소가 그대로 나오고 있었다.
+test('함께 쓰는 주제는 만들기를 모달로 열고 화면은 활동 결과만 넓게 쓴다', () => {
+    // 선생님 요청(2026-09-18): 만들기와 결과가 한 화면에 같이 나와 좁았다 → 만들기는 모달,
+    // 화면은 활동 결과만. 머리 행의 "주제 만들기" 버튼으로 모달을 연다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     const css = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
 
-    // 주제를 내는 일과 결과 확인을 좌우에서 동시에 본다.
+    // 만들기는 모달(topicCreateOpen), 버튼으로 연다.
+    assert.match(teacher, /topicCreateOpen/);
+    assert.match(teacher, /setTopicCreateOpen\(true\)/);
+    assert.match(teacher, /<Modal isOpen=\{topicCreateOpen\}/);
+    assert.match(teacher, /neighbor-teacher__activity-head/);
+    assert.match(css, /\.neighbor-teacher__activity-head\b/);
+    // 하위 전환 탭은 더 두지 않는다(모달로 대체).
+    assert.doesNotMatch(teacher, /neighbor-teacher__subtabs/);
     assert.match(teacher, /주제 만들기/);
     assert.match(teacher, /진행 현황/);
 

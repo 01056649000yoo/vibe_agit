@@ -35,7 +35,8 @@ test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나�
     assert.match(publish, /status = 'published'/);
     assert.match(functionSource('run_neighbor_teacher_action_v1'), /publish_gallery_post/);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
-    assert.match(teacherEntry, /우리 학급 글 불러오기/);
+    // 글 모으기 스텝에서 우리 학급 제출 글을 (자동으로) 불러와 고른다.
+    assert.match(teacherEntry, /우리 학급의 제출 글을 골라/);
     assert.match(teacherEntry, /전문 확인 후 공유/);
 });
 
