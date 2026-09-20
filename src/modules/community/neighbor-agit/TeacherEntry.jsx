@@ -53,6 +53,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 각 탭 안의 3스텝. 글 나눔: 모으기→관리→반응 / 함께 쓰는 주제: 주제→관리→반응.
     const [galleryStep, setGalleryStep] = useState('collect'); // collect | manage | engage
     const [topicStep, setTopicStep] = useState('topics');      // topics | manage | engage
+    const [deadlineDrafts, setDeadlineDrafts] = useState({}); // 활동별 댓글 마감 datetime-local 입력값
     const [activityPublishFor, setActivityPublishFor] = useState(null); // 활동 글 공개 모달 대상 활동
     const [activityCandidates, setActivityCandidates] = useState(null);
     const [activityCandLoading, setActivityCandLoading] = useState(false);
@@ -322,6 +323,36 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     };
 
+    // ISO 시각 → datetime-local 입력값(YYYY-MM-DDTHH:mm, 로컬 시간). 없으면 빈 값.
+    const toLocalInput = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    // 함께 쓰는 주제의 댓글·반응 마감 시각을 정하거나(빈 값=마감 해제) 지운다.
+    const saveActivityDeadline = async (activityId, localValue) => {
+        if (busy) return;
+        setBusy('set_activity_deadline');
+        setMessage('');
+        setErrorMessage('');
+        try {
+            await api.setActivityDeadline({
+                spaceId: workspace.space.id, classId, activityId,
+                closeAt: localValue ? new Date(localValue).toISOString() : null
+            });
+            const next = await api.getWorkspace(classId);
+            setWorkspace(next);
+            setDeadlineDrafts((current) => { const copy = { ...current }; delete copy[activityId]; return copy; });
+            setMessage(localValue ? '댓글·반응 마감 시각을 정했습니다.' : '댓글·반응 마감을 해제했습니다.');
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error, '마감 시각을 정하지 못했습니다.'));
+        } finally {
+            setBusy('');
+        }
+    };
+
     // 교사가 한 활동의 우리 반 제출 글을 직접 골라 공개한다(학생 요청 없이).
     const openActivityPublish = async (activity) => {
         setActivityPublishFor(activity);
@@ -410,16 +441,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         () => workspace?.memberships?.filter((item) => item.status === 'active') || [],
         [workspace?.memberships]
     );
-    const pendingPosts = useMemo(
-        () => workspace?.review_posts?.filter((item) => item.status === 'pending') || [],
-        [workspace?.review_posts]
-    );
-    const pendingTotal = workspace?.review_total ?? pendingPosts.length;
     const activities = workspace?.activities || [];
     // 참여 학급 2곳 이상이면 준비 끝 → 운영 화면. 그 전(호스트 단독)은 진행형 마법사.
     const isReady = activeMemberships.length >= 2;
     // 알림 카운트(서버 계산). 배지로 보여 탭을 오가지 않아도 처리할 것을 안다.
     const notif = workspace?.notifications || {};
+    // 검토함에 올릴 것: 다른 학급이 낸 주제(활동) 제안 중 우리 반이 승인/거절할 것 + AI가 막은 우리 반 댓글.
+    const pendingApprovalActivities = activities.filter((activity) => activity.can_review);
+    const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0);
 
     // 운영 화면을 열면 "지금까지 봤음"을 남긴다(새 글/새 댓글 배지 기준선).
     useEffect(() => {
@@ -489,9 +518,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     // ② 공개 글 관리: 주제별/학생별로 묶어 보고, 묶음째 비공개로 돌리거나 한 편씩 숨김·복원.
     const renderManageStep = () => {
+        // 공개 글 관리는 "공개 중"인 글만 보여 준다(숨긴 글은 목록에서 빠진다).
+        const managePosts = workspace.public_posts.filter((post) => post.status === 'published');
         const groups = (() => {
             const map = new Map();
-            for (const post of workspace.public_posts) {
+            for (const post of managePosts) {
                 const key = manageGroupBy === 'student'
                     ? (post.author_name || '이름 없음')
                     : (post.mission_id || 'self');
@@ -508,7 +539,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             }
             return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'ko-KR'));
         })();
-        const publishedCount = workspace.public_posts.filter((post) => post.status === 'published').length;
+        const publishedCount = managePosts.length;
         // 학급마다 고유 색을 준다(교사가 아니라 "학급" 단위로 구분). 우리 반은 청록으로 고정.
         // 주제·학생 묶음은 각각 한 학급 소유이므로 묶음(폴더)도 그 학급 색으로 칠한다.
         const OWN_COLOR = { bar: '#0f766e', bg: '#ccfbf1', ink: '#0f766e' };
@@ -529,8 +560,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             : CLASS_PALETTE[Math.max(0, otherClassNames.indexOf(post.class_name)) % CLASS_PALETTE.length];
         return (
             <section className="neighbor-teacher-card neighbor-teacher__activity-panel">
-                {workspace.public_posts.length === 0 ? (
-                    <p className="neighbor-teacher__empty">공개된 글이 없습니다.</p>
+                {managePosts.length === 0 ? (
+                    <p className="neighbor-teacher__empty">공개 중인 글이 없습니다.</p>
                 ) : (
                     <div className="neighbor-teacher__candidate-panel">
                         <div className="neighbor-teacher__candidate-toolbar">
@@ -620,13 +651,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         );
     };
 
-    // ③ 댓글·반응: 공개 글을 눌러 크게(모달) 보고 댓글·공감을 확인·검열.
+    // ③ 댓글·반응: 우리 반이 공개한 글을 눌러 크게(모달) 보고, 거기 달린 댓글·공감을 확인·검열한다.
+    //    다른 반 글의 반응은 그 반 선생님이 본다(여기선 우리 반 글만).
     const renderEngageStep = () => {
-        const published = workspace.public_posts.filter((post) => post.status === 'published');
+        const published = workspace.public_posts.filter((post) => post.status === 'published' && post.is_own_class);
         return (
             <section className="neighbor-teacher-card">
                 {published.length === 0
-                    ? <p className="neighbor-teacher__empty">공개된 글이 없어요. 글을 공개하면 여기서 댓글·공감을 볼 수 있어요.</p>
+                    ? <p className="neighbor-teacher__empty">우리 반 공개 글이 없어요. 우리 반 글을 공개하면 여기서 댓글·공감을 볼 수 있어요.</p>
                     : <div className="neighbor-teacher__engage-list">{published.map((post) => (
                         <button type="button" key={post.shared_post_id} className="neighbor-teacher__engage-card" onClick={() => openPostDetail(post.shared_post_id)}>
                             <span className="neighbor-teacher__engage-meta"><strong>{post.author_name}</strong><small>{post.class_name}</small></span>
@@ -786,8 +818,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             >
                                 학생 공개 {workspace.space.student_access_enabled ? 'ON' : 'OFF'}
                             </button>
-                            <Button type="button" variant="outline" onClick={() => setReviewInboxOpen(true)}>
-                                🗂️ 검토{(pendingTotal + (notif.blocked_comments || 0)) > 0 && <span className="neighbor-teacher__badge">{pendingTotal + (notif.blocked_comments || 0)}</span>}
+                            <Button type="button" variant="outline" className={reviewInboxCount > 0 ? 'neighbor-teacher__review-btn is-new' : 'neighbor-teacher__review-btn'} onClick={() => setReviewInboxOpen(true)}>
+                                🗂️ 검토{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW</span><span className="neighbor-teacher__badge">{reviewInboxCount}</span></>}
                             </Button>
                             <Button type="button" variant="outline" onClick={() => setManageOpen(true)}>
                                 ⚙️ 공간 관리{notif.pending_joins > 0 && <span className="neighbor-teacher__badge">{notif.pending_joins}</span>}
@@ -910,15 +942,22 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                                         <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
                                                                         <strong className="neighbor-teacher__candidate-author">{post.student_name}</strong>
                                                                     </div>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant={post.share_status ? 'outline' : 'primary'}
-                                                                        loading={busy === 'publish_gallery_post'}
-                                                                        disabled={Boolean(busy) || ['published', 'hidden'].includes(post.share_status)}
-                                                                        onClick={() => setReviewSelection({ post, mode: 'gallery' })}
-                                                                    >
-                                                                        {post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공개 글 관리에서 복원' : '전문 확인 후 공유'}
-                                                                    </Button>
+                                                                    {post.share_status === 'hidden' ? (
+                                                                        <Button type="button" loading={busy === 'restore_post'} disabled={Boolean(busy)}
+                                                                            onClick={async () => { const r = await runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.'); if (r) setGalleryCandidates(null); }}>
+                                                                            숨김 해제·다시 공개
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant={post.share_status ? 'outline' : 'primary'}
+                                                                            loading={busy === 'publish_gallery_post'}
+                                                                            disabled={Boolean(busy) || post.share_status === 'published'}
+                                                                            onClick={() => setReviewSelection({ post, mode: 'gallery' })}
+                                                                        >
+                                                                            {post.share_status === 'published' ? '공개 중' : '전문 확인 후 공유'}
+                                                                        </Button>
+                                                                    )}
                                                                 </article>
                                                             ))}
                                                         </div>
@@ -1096,6 +1135,19 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                 )}
                                             </div>
                                         )}
+                                        {activity.status !== 'pending_approval' && (
+                                            <div className="neighbor-teacher__deadline">
+                                                <label>댓글·반응 마감
+                                                    <input type="datetime-local" disabled={Boolean(busy)}
+                                                        value={deadlineDrafts[activity.id] ?? toLocalInput(activity.comments_close_at)}
+                                                        onChange={(event) => setDeadlineDrafts((current) => ({ ...current, [activity.id]: event.target.value }))} />
+                                                </label>
+                                                <Button type="button" size="sm" loading={busy === 'set_activity_deadline'} disabled={Boolean(busy)}
+                                                    onClick={() => saveActivityDeadline(activity.id, deadlineDrafts[activity.id] ?? toLocalInput(activity.comments_close_at))}>저장</Button>
+                                                {activity.comments_close_at && <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => saveActivityDeadline(activity.id, '')}>마감 해제</Button>}
+                                                {activity.comments_close_at && <small className={new Date(activity.comments_close_at) <= new Date() ? 'neighbor-teacher__deadline-done' : ''}>{new Date(activity.comments_close_at) <= new Date() ? '마감됨' : `마감 예정: ${new Date(activity.comments_close_at).toLocaleString('ko-KR')}`}</small>}
+                                            </div>
+                                        )}
                                     </article>
                                         ))}
                                     </section>
@@ -1112,18 +1164,20 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             )}
             {/* 통합 검토함: 두 활동의 공개 대기 글을 한 곳에서 처리한다(어느 탭에서든 상단 검토 버튼으로 연다). */}
             {workspace?.space?.my_status === 'active' && isReady && (
-                <Modal isOpen={reviewInboxOpen} onClose={() => setReviewInboxOpen(false)} title="🗂️ 공개 요청 검토함" maxWidth="640px" showFooter={false}>
-                    <h3 className="neighbor-teacher__inbox-heading">공개 요청</h3>
-                    {pendingTotal > pendingPosts.length && <p className="neighbor-teacher__inbox-note">대기 {pendingTotal}편 중 먼저 신청한 {pendingPosts.length}편입니다. 검토를 마치면 다음 글이 이어집니다.</p>}
-                    {pendingPosts.length === 0
-                        ? <p className="neighbor-teacher__empty">검토를 기다리는 글이 없습니다.</p>
-                        : <div className="neighbor-teacher__post-list">{pendingPosts.map((post) => (
-                            <article key={post.shared_post_id}>
+                <Modal isOpen={reviewInboxOpen} onClose={() => setReviewInboxOpen(false)} title="🗂️ 검토함" maxWidth="640px" showFooter={false}>
+                    <h3 className="neighbor-teacher__inbox-heading">함께 쓰는 주제 제안</h3>
+                    {pendingApprovalActivities.length === 0
+                        ? <p className="neighbor-teacher__empty">승인할 주제 제안이 없습니다.</p>
+                        : <div className="neighbor-teacher__post-list">{pendingApprovalActivities.map((activity) => (
+                            <article key={activity.id}>
                                 <div>
-                                    <span><strong>{post.student_name}</strong><small>{post.activity_title ? `주제: ${post.activity_title}` : '글 나눔'}</small></span>
-                                    <h3>{post.title}</h3><p>{post.excerpt}</p>
+                                    <span><strong>{activity.title}</strong><small>{getNeighborActivityLabel(activity.type)} 제안</small></span>
+                                    {activity.prompt && <p>{activity.prompt}</p>}
                                 </div>
-                                <Button type="button" disabled={Boolean(busy)} onClick={() => { setReviewInboxOpen(false); setReviewSelection({ post, mode: 'review' }); }}>전문 검토하기</Button>
+                                <span className="neighbor-teacher__row-actions">
+                                    <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '주제 제안을 승인했습니다. 모든 학급이 승인하면 학생에게 열립니다.')}>승인</Button>
+                                    <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '주제 제안을 거절했습니다.')}>거절</Button>
+                                </span>
                             </article>))}</div>}
 
                     <h3 className="neighbor-teacher__inbox-heading">🚫 AI가 막은 우리 반 댓글</h3>
@@ -1236,12 +1290,19 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                 <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
                                                 <strong className="neighbor-teacher__candidate-author">{post.student_name}</strong>
                                             </div>
-                                            <Button type="button" variant={post.share_status ? 'outline' : 'primary'}
-                                                loading={busy === 'publish_activity_post'}
-                                                disabled={Boolean(busy) || ['published', 'hidden'].includes(post.share_status)}
-                                                onClick={() => publishActivityPost(activityPublishFor.id, post)}>
-                                                {post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공개 글 관리에서 복원' : '공개하기'}
-                                            </Button>
+                                            {post.share_status === 'hidden' ? (
+                                                <Button type="button" loading={busy === 'restore_post'} disabled={Boolean(busy)}
+                                                    onClick={async () => { const r = await runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.'); if (r) await reloadActivityCandidates(activityPublishFor.id); }}>
+                                                    숨김 해제·다시 공개
+                                                </Button>
+                                            ) : (
+                                                <Button type="button" variant={post.share_status ? 'outline' : 'primary'}
+                                                    loading={busy === 'publish_activity_post'}
+                                                    disabled={Boolean(busy) || post.share_status === 'published'}
+                                                    onClick={() => publishActivityPost(activityPublishFor.id, post)}>
+                                                    {post.share_status === 'published' ? '공개 중' : '공개하기'}
+                                                </Button>
+                                            )}
                                         </article>
                                     ))}
                                 </div>

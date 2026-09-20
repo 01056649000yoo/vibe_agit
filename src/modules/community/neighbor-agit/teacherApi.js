@@ -88,6 +88,18 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
+    // 함께 쓰는 주제의 댓글·반응 마감 시각을 정하거나(NULL=마감 없음) 지운다.
+    async setActivityDeadline({ spaceId, classId, activityId, closeAt }) {
+        const { data, error } = await supabase.rpc('set_neighbor_activity_deadline_v1', {
+            p_space_id: spaceId, p_actor_class_id: classId, p_activity_id: activityId, p_close_at: closeAt || null
+        });
+        if (error) throw error;
+        if (data?.success !== true || data?.activity_id !== activityId) {
+            throw new Error('마감 시각 설정 결과를 확인할 수 없습니다.');
+        }
+        return data;
+    },
+
     // 교사가 한 활동(주제)의 우리 학급 제출 글을 직접 골라 공개하기 위한 후보.
     async getActivityCandidates({ spaceId, classId, activityId }) {
         const { data, error } = await supabase.rpc('get_neighbor_teacher_activity_candidates_v1', {

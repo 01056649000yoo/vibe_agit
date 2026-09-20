@@ -57,6 +57,12 @@
 /* 배지: 처리할 것/새 것 수. 탭을 오가지 않아도 눈에 띈다. */
 .neighbor-teacher__badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: var(--ui-text-xs); font-weight: 800; }
 .neighbor-teacher__inbox-note { margin: 0 0 10px; color: #627d98; font-size: var(--ui-text-sm); }
+.neighbor-teacher__new-flag { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 6px;
+    border-radius: 6px; background: #ef4444; color: #fff; font-size: var(--ui-text-xs); font-weight: 900;
+    letter-spacing: 0.03em; animation: neighbor-new-pulse 1.4s ease-in-out infinite; }
+.neighbor-teacher__review-btn.is-new { box-shadow: 0 0 0 2px rgba(239, 68, 68, .35); }
+@keyframes neighbor-new-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .neighbor-teacher__new-flag { animation: none; } }
 .neighbor-teacher__inbox-heading { margin: 18px 0 8px; color: #243b53; font-size: var(--ui-text-md); }
 .neighbor-teacher__inbox-heading:first-child { margin-top: 0; }
 .neighbor-teacher__block-reason { display: block; margin-top: 4px; color: #b45309; font-size: var(--ui-text-xs); }
@@ -281,6 +287,12 @@
 .neighbor-teacher__candidate-group-head span { color: #829ab1; font-size: var(--ui-text-sm); }
 .neighbor-teacher__bulk-publish { margin-left: auto; align-self: center; }
 .neighbor-teacher__muted-note { color: #829ab1; font-size: var(--ui-text-xs); line-height: 1.4; }
+.neighbor-teacher__deadline { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+    padding-top: 8px; border-top: 1px dashed #e2e8f0; }
+.neighbor-teacher__deadline label { display: flex; flex-direction: column; gap: 3px; color: #486581; font-size: var(--ui-text-xs); font-weight: 700; }
+.neighbor-teacher__deadline input { padding: 7px 9px; border: 1px solid #bcccdc; border-radius: 8px; font: inherit; color: #243b53; }
+.neighbor-teacher__deadline small { color: #627d98; font-size: var(--ui-text-xs); }
+.neighbor-teacher__deadline-done { color: #b91c1c; font-weight: 800; }
 
 /* 묶음 목록(폴더): 주제/학생만 보여 주고, 폴더째 일괄 동작하거나 눌러 들어가 하나씩 편집한다. */
 .neighbor-teacher__folder-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));

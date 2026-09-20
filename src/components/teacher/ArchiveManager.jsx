@@ -311,11 +311,13 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
         }
     };
 
-    const handleDeleteMission = async (missionId, missionTitle) => {
+    const handleDeleteMission = async (missionId, missionTitle, isNeighborActivity = false) => {
         // 되돌릴 수 없고 학생 글까지 함께 사라진다 — 붉은 단추로 묻는다.
         if (!await ask({
             title: `‘${missionTitle}’ 과제를 영구 삭제할까요?`,
-            body: '학생들이 낸 글과 댓글이 함께 사라지고, 되돌릴 수 없습니다.',
+            body: isNeighborActivity
+                ? '이 과제는 모두의 아지트 ‘함께 쓰는 주제’에 쓰이고 있어요. 지우면 우리 반이 그 주제에서 빠지고, 학생들이 낸 글과 댓글도 함께 사라집니다. 되돌릴 수 없습니다.'
+                : '학생들이 낸 글과 댓글이 함께 사라지고, 되돌릴 수 없습니다.',
             confirmLabel: '영구 삭제하기 ⚠️',
             tone: 'danger'
         })) return;
@@ -661,7 +663,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                                 </Button>
                                 <Button
                                     size="sm"
-                                    onClick={() => handleDeleteMission(mission.id, mission.title)}
+                                    onClick={() => handleDeleteMission(mission.id, mission.title, Array.isArray(mission.tags) && mission.tags.includes('이웃 아지트'))}
                                     style={{
                                         width: '100%',
                                         background: '#FFF1F2',

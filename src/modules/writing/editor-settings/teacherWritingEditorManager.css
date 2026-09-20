@@ -44,7 +44,23 @@
 .writing-editor-manager__preview-placeholder > span { font-size:1.65rem; }
 .writing-editor-manager__preview-placeholder > strong { color:#1e3a8a; font-size:var(--ui-text-lg); }
 .writing-editor-manager__preview-placeholder > small { color:#475569; font-size:var(--ui-text-sm); }
-.writing-editor-preview-tool { display:inline-flex; margin-bottom:14px; padding:9px 12px; border:1px solid #bfdbfe; border-radius:11px; background:#eff6ff; color:#1d4ed8; font-size:.78rem; font-weight:900; }
+.writing-editor-preview-tool { display:inline-flex; align-items:center; gap:4px; padding:9px 12px; border:1px solid #bfdbfe; border-radius:11px; background:#eff6ff; color:#1d4ed8; font-size:.78rem; font-weight:900; font-family:inherit; }
+.writing-editor-preview-toolrow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.writing-editor-preview-tool.is-clickable { cursor:pointer; }
+.writing-editor-preview-tool.is-clickable:hover { background:#dbeafe; }
+.writing-editor-preview-tool.is-open { background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+.writing-editor-preview-tool.is-static { background:#f1f5f9; border-color:#e2e8f0; color:#475569; }
+.writing-editor-preview-sample { margin-bottom:14px; border:1px solid #bfdbfe; border-radius:12px; background:#f8fbff; overflow:hidden; }
+.writing-editor-preview-sample__head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; background:#eff6ff; color:#1d4ed8; font-size:.82rem; }
+.writing-editor-preview-sample__head button { border:0; background:transparent; color:#64748b; font-size:.9rem; cursor:pointer; }
+.writing-editor-preview-sample__body { padding:12px; display:grid; gap:8px; color:#334155; font-size:.82rem; line-height:1.5; }
+.writing-editor-preview-sample__body p { margin:0; }
+.writing-editor-preview-sample-row { padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; }
+.writing-editor-preview-reference { margin-bottom:12px; }
+.writing-editor-preview-reference__toggle { gap:6px; }
+.writing-editor-preview-reference__body { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; margin-left:14px;
+    padding:10px 12px; border-left:2px dashed #bfdbfe; }
+.writing-editor-preview-reference__empty { margin:0; color:#94a3b8; font-size:.8rem; }
 .writing-editor-preview-fields { display:grid; gap:14px; }
 .writing-editor-preview-fields > div { padding:16px; border:1px solid #dbeafe; border-radius:14px; background:#fff; }
 .writing-editor-preview-fields small, .writing-editor-preview-fields strong { display:block; }

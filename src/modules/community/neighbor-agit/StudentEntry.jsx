@@ -55,6 +55,10 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
     }, [loadFirstPage]);
 
     const visibleFeed = activeSection === 'gallery' ? feed : activityFeed;
+    // 함께 쓰는 주제의 댓글·반응 마감이 지났으면 새 댓글·공감을 막고 보기만 하게 한다.
+    const activityCommentsLocked = activeSection !== 'gallery'
+        && Boolean(activityFeed?.activity?.comments_close_at)
+        && new Date(activityFeed.activity.comments_close_at) <= new Date();
 
     const loadMore = async () => {
         if (!visibleFeed?.has_more || loadingMore) return;
@@ -376,7 +380,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                 type="button"
                                 variant={detail.my_reaction ? 'primary' : 'outline'}
                                 loading={interactionBusy === 'reaction'}
-                                disabled={Boolean(interactionBusy) && interactionBusy !== 'reaction'}
+                                disabled={(Boolean(interactionBusy) && interactionBusy !== 'reaction') || (activityCommentsLocked && !detail.my_reaction)}
                                 onClick={toggleReaction}
                             >
                                 💛 공감 {Number(detail.reaction_count) || 0}
@@ -388,6 +392,11 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                 <h3 id="neighbor-comments-title">한 줄 댓글</h3>
                                 <span>{Number(detail.comment_count) || 0}개</span>
                             </div>
+                            {activityCommentsLocked ? (
+                                <p className="neighbor-student-inline-notice" role="status">
+                                    🔒 이 주제는 댓글·반응이 마감됐어요. 이제 친구들의 글을 읽을 수만 있어요.
+                                </p>
+                            ) : (
                             <form className="neighbor-comment-form" onSubmit={saveComment}>
                                 <label htmlFor="neighbor-comment-input">
                                     {detail.comments?.some((comment) => comment.is_mine)
@@ -408,6 +417,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                                 </div>
                                 <span>{commentDraft.length}/300 · 한 글에 댓글 하나만 남길 수 있어요.</span>
                             </form>
+                            )}
 
                             {commentPending && !interactionError && (
                                 <p className="neighbor-student-inline-notice" role="status">

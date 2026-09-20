@@ -19,6 +19,136 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-20 — 백업·유지보수 점검 + 다했니 로그정리 cron 실패 수정 (Claude Opus 4.8)
+- **점검 결과(맥미니 실측)**:
+  - pg_cron 3개: `open-scheduled-missions`(매분) ✅, `dahandin-auto-sync`(10분) ✅,
+    `dahandin-prune-logs`(매일 03:00) ❌ — 매번 "[보안] 권한이 없습니다"로 실패 중이었음.
+  - 백업 ✅: 오늘 04:00 PASS(내장+암호화 Drive+암호화 외장SSD), `system_backup_app_results` 3개 앱
+    (agit 207객체·samlink·jarvis) db_ok·files_ok·backup_verified.
+  - 헬스 모니터 ✅: 5분 cron 정상(앱 200), `system_alert_events` 활성(open) 경보 없음(최근 backup_failed는 9/13 resolved).
+  - launchd(com.agit.backup·system-metrics·docker-guard 등) 최근 종료코드 0.
+- **수정**: `dahandin_prune_old_logs` 가드가 `current_setting('role')`(대개 'none')을 봐서 cron(supabase_admin)도
+  막혔다. SECURITY DEFINER에서 부른 쪽 실제 역할은 `session_user` 이므로 그걸로 판별하게 고침(20261328).
+  supabase_admin(=cron 역할)로 실행 성공(0건, 180일 초과 로그 아직 없음) 확인 → 다음 03:00부터 성공.
+- **변경**: `20261328_fix_dahandin_prune_cron_guard.sql`(운영 DB 적용·기록).
+- **미커밋 마이그레이션 누적(운영 DB엔 전부 적용됨)**: `20261320`~`20261328`
+  (20261326 활동미션 CASCADE, 20261327 활동 일관성 트리거, 20261328 prune cron 가드 포함).
+
+## 2026-09-20 — 모두의 아지트 활동 상태 일관성(경우의 수 전수) 마무리 (Claude Opus 4.8)
+- **배경**: 활동 과제 삭제/학급 이탈·삭제 시 남던 "어정쩡한 상태"를 정리(경우의 수 분석 후 2단계 수정).
+  0단계 확인: `student_posts.mission_id` = CASCADE(`confdeltype='c'`) → 활동 과제를 지우면 그 반 학생 글도
+  함께 삭제됨(문구 반영).
+- **한 일**:
+  - (1단계 UI) 보관(archive)에도 활동 과제 경고 추가(ArchiveConfirmModal — '함께 쓰는 주제'에 쓰이면 보관 시
+    그 반이 빠진다는 안내). MissionList 삭제 경고를 CASCADE 사실("학생 글도 함께 삭제됩니다")에 맞게 정정.
+  - (2단계 서버, 20261327) 트리거 2개:
+    · `guard_neighbor_space_collapse_v1`(neighbor_space_classes AFTER UPDATE OF status OR DELETE):
+      공간 활성 학급 < 2 면 남은 학급 학생 공개 OFF + open/pending_approval 활동 종료. 나가기(leave)와
+      학급 삭제(cascade) **두 경로 모두** 커버(leave RPC 는 학생 공개 OFF 만 했음).
+    · `reevaluate_neighbor_activity_after_class_drop_v1`(neighbor_activity_classes AFTER DELETE):
+      한 활동에서 학급이 빠지면 남은 학급 < 2 면 활동 종료, 승인 대기인데 남은 학급이 모두 승인했으면
+      open 으로 자동 전환(승인 재판정 누락 방지). 활동이 삭제 중이면(NOT FOUND) 건드리지 않음.
+  - topic 상태(pending_approval/open/closed)만 다뤄 CHECK 제약 안전. 실데이터 대상 **롤백 트랜잭션으로
+    두 트리거 동작 검증**(1학급 남으면 closed+closed_at, 공간 붕괴 시 남은 학급 공개 OFF — 위반/오류 없음).
+- **변경**: `20261327_neighbor_activity_consistency_triggers.sql`(운영 DB 적용·기록), `ArchiveConfirmModal.jsx`,
+  `MissionList.jsx`(문구), `ArchiveManager.jsx`(이미 경고 있음).
+- **결과/검증**: lint·build 통과, 전체 테스트 1222건 통과, 배포. (미커밋 목록에 20261327 추가.)
+
+## 2026-09-20 — 활동(함께 쓰는 주제) 과제 삭제·학급삭제·탈퇴 막힘 수정 (Claude Opus 4.8)
+- **문제**: 함께 쓰는 주제(활동)를 열면 참여 학급마다 과제가 자동 생성되는데, 그 과제가
+  `neighbor_activity_classes.mission_id → writing_missions` **ON DELETE RESTRICT** 로 잠겨 있어
+  ① 활동 과제를 지우면 FK 오류(보고됨), ② 링크 푸는 경로가 없어 영구히 못 지움,
+  ③ 그런 과제가 있으면 학급 삭제·교사 탈퇴(DELETE FROM classes)의 미션 CASCADE 가 RESTRICT(즉시 검사)에
+  걸려 작업 전체가 롤백될 위험. (시뮬레이션: 학생 소프트/하드 삭제·글 삭제·새 학생 합류는 모두 정상 —
+  학생 삭제는 CASCADE 라 미션을 안 건드림. 깨지는 건 위 ①②③.)
+- **한 일**: FK 를 **RESTRICT → ON DELETE CASCADE** 로 변경(20261326). 과제를 지우면 활동-학급 링크(및
+  승인행)가 함께 정리되고 학급삭제·탈퇴도 안 막힌다. 실수 방지로, 활동 과제(`tags`에 '이웃 아지트')를 지울 때
+  MissionList·ArchiveManager 삭제 확인에 "이 과제는 '함께 쓰는 주제'에 쓰이고 있어요. 지우면 우리 반이 그
+  주제에서 빠집니다" 전용 경고를 띄운다.
+- **변경**: `20261326_neighbor_activity_class_mission_cascade.sql`(운영 DB 적용·기록), `MissionList.jsx`,
+  `ArchiveManager.jsx`.
+- **결과/검증**: lint·build 통과, 전체 테스트 1222건 통과, 배포. (미커밋 목록에 20261326 추가됨.)
+
+## 2026-09-20 — 글쓰기 창 관리 미리보기 버그 수정 + 학생 대시보드 미리보기로 완전 통합 (Claude Opus 4.8)
+- **한 일**:
+  - 글쓰기 창 관리 하단 "학생 글쓰기 창 미리보기" 버그 수정: 도구 3개 중 **AI 맞춤법 검사**(surface `editor`)가
+    미리보기에 아예 안 뜨던 문제를 고쳐, 켠 도구 3개(맞춤법 찾아보기·AI 맞춤법 검사·연구소 결과 불러오기)를
+    모두 클릭 가능한 칩으로 표시. 칩을 누르면 그 도구의 예시 내용 패널이 열린다(정적 샘플).
+  - **글쓰기 창 관리를 설정에서 빼 학급 운영 → 학생 대시보드 미리보기로 완전 이동**(같은 성격 통합).
+    미리보기 상단에 `🏠 학생 홈 미리보기` / `✍️ 글쓰기 창 관리` 뷰 토글 추가, 후자는 기존
+    TeacherWritingEditorManager 를 lazy 로 렌더. 설정(TeacherSettingsHub)에서 writing-editor 항목·렌더·프리로드 제거.
+    가이드 라우팅(teacherGuideRegistry `settings:writing-editor`)을 새 탭으로 갱신(투어 앵커는 매니저에 그대로).
+  - 후속 다듬기(같은 날): ① 사이드 탭 라벨을 `word-break: keep-all`+line-height 1.45 로 2줄 허용(학생 대시보드
+    미리보기처럼 긴 이름 정렬). ② 미리보기 도구 배치를 실제(WritingToolHost)와 일치 — 도구 줄엔 `toolbar`만,
+    `editor`(AI 맞춤법 검사)·`reference`(연구소 결과)는 **글쓰기 참고함** 안으로. ③ 글쓰기 참고함을 접이식으로,
+    기본 펼침(누르면 접힘)으로 두어 안의 도구가 바로 보이게. ④ 홈:설명 비율 6:4.
+  - **공지 등록**: `20261325_announcement_student_dashboard_preview.sql`(교사 대상 팝업 — 미리보기 신설·통합 안내).
+- **변경**: `TeacherWritingEditorManager.jsx/.css`(미리보기 칩+샘플+참고함 접이식), `StudentDashboardPreview.jsx/.css`(뷰 토글),
+  `TeacherDashboard.jsx/.css`(isMobile 전달·탭 라벨 줄바꿈), `TeacherSettingsHub.jsx`(항목 제거), `teacherGuideRegistry.js`.
+- **결과/검증**: lint(경고만)·build 통과, 전체 테스트 1222건 통과(teacherTour 포함), `npm run deploy:local` 배포.
+- **⚠️ 미커밋 상태(2026-09-20 세션 끝)**: 아래 소스·마이그레이션이 아직 로컬에만 있음(최신 커밋 `fa40b140`).
+  - 소스(M): TeacherDashboard.jsx/.css, TeacherSettingsHub.jsx, teacherNav.js, teacherGuideRegistry.js,
+    neighbor-agit(StudentEntry.jsx, TeacherEntry.jsx/.css, teacherApi.js), editor-settings(관리 jsx/css),
+    tests(neighborAgitActivities·neighborAgitLimitedBeta), WORKLOG.md.
+  - 신규(??): StudentDashboardPreview.jsx/.css, 마이그레이션 `20261320`(숨김 글 자기 학급만),
+    `20261321`(주제 댓글 마감), `20261322~20261324`(학생 대시보드 미리보기 RPC v1~v3),
+    `20261325`(공지). **6개 마이그레이션 모두 운영 DB에는 `npm run migrate`로 적용·기록 완료** — 커밋만 남음.
+  - 다음 세션: 사용자 지시 시 `git add -A && commit && push`(푸시 훅이 migrate 확인 → 이미 적용됨).
+
+## 2026-09-19 — 학생 대시보드 미리보기: 실제 홈 컴포넌트 재사용 + 학급 현황 모아보기 (Claude Opus 4.8)
+- **한 일**: 미리보기 화면을 손수 만든 카드 대신 **실제 학생 홈 `DashboardMenu`** 를 그대로 렌더(합성
+  부트스트랩으로 조회 없이 초기값만) → 디자인 100% 동일·단일 소스. 좌(홈) 크게·우(설명) 작게로 비율 조정.
+  "학급 현황 모아보기" 버튼 줄 추가: 진행 중 전시·오늘 일기 제출·나의 아지트 설정·놀이터 설정·글쓰기 연구소.
+  RPC v3(get_teacher_student_home_preview_v1)에 class_agit 진행 전시(state=published)·오늘 일기 제출 학생을 추가.
+  놀이터/나의 아지트 "설정"은 켜진 모듈(module.playground/module.myAgit)로 화면에서 분류. 글쓰기 연구소
+  세션은 외부·학생 개인 세션이라 학급 조회 불가 → 안내로 대체.
+- **변경**: `20261324_teacher_student_home_preview_v3.sql`(운영 DB 적용), `StudentDashboardPreview.jsx/.css`.
+- **결과/검증**: lint(경고만)·build 통과, 전체 테스트 1222건 통과, 배포.
+
+## 2026-09-19 — 학생 대시보드 미리보기 2단계: 메뉴 클릭 드릴인(실제 내용) (Claude Opus 4.8)
+- **한 일**: 미리보기 카드를 눌러 오른쪽 상세에서 그 메뉴의 실제 학급 콘텐츠를 본다.
+  - 과제: 목록 + 상세(안내·기본 포인트·제출 인원). 친구 아지트: 반에 공개된 글 최신 20편(제목·글쓴이·종류).
+  - 독서록/일기: 메뉴 노출·하루 포인트 지급 설정. 개인 전용(나의 아지트·놀이터·모듈)은 열림/위치만 안내.
+  - 모두 교사 권한의 학급 스코프 조회(get_teacher_student_home_preview_v1 v2 확장). 학생 개인 데이터는 미포함.
+- **변경**: `20261323_teacher_student_home_preview_v2.sql`(RPC 확장, 운영 DB 적용), `StudentDashboardPreview.jsx/.css`.
+- **결과/검증**: lint·build 통과, 전체 테스트 1222건 통과, 배포. 
+- **남은 것**: 개인 전용 화면(나의 아지트·놀이터·모듈 내부)까지 특정 학생 기준 라이브로 보려면 학생별 조회를
+  교사 권한으로 재현하는 RPC가 더 필요(대표 학생 선택 방식). 필요 시 진행.
+
+## 2026-09-19 — 학급 운영: 학생 대시보드 미리보기(1단계) (Claude Opus 4.8)
+- **한 일**: 교사가 자기 학급 학생 홈을 미리 볼 메뉴를 학급 운영 탭에 추가(`학생 대시보드 미리보기`).
+  학생 앱은 익명 인증(auth.uid=학생)이라 교사가 라이브로 못 부른다 → 학급 단위 정보를 교사 권한으로
+  모아 주는 미리보기 RPC(`get_teacher_student_home_preview_v1`)로 **켜진 메뉴 구성 + 현재 과제**를 재현.
+  학생 홈 메뉴 카드(과제·모듈·독서록·일기·친구/나의 아지트·놀이터)를 실제와 같은 모양(휴대폰 틀, 읽기 전용)으로
+  그리고, 지금 학생에게 보이는 과제 목록·제출 인원을 함께 보여 준다. 포인트·오늘 현황 등 개인 데이터는 예시.
+- **변경**: `20261322_teacher_student_home_preview.sql`(운영 DB 적용), `StudentDashboardPreview.jsx/.css`(신규),
+  `teacherNav.js`(operations 탭 추가), `TeacherDashboard.jsx`(lazy 렌더 분기). 메뉴 해석은 학생 앱과 같은
+  registry `resolveEnabledModuleIds`·`getEnabledModules('student')` 재사용.
+- **결과/검증**: lint·build 통과, 전체 테스트 1222건 통과, `npm run deploy:local` 배포.
+- **남은 것 / 다음(2단계)**: 각 메뉴 진입 시 실제 학생 화면 내용까지 라이브로 보려면, 학생용 조회를
+  교사 권한으로 재현하는 미리보기 RPC 층이 더 필요(독서록·일기·모듈별). 선생님 요청 시 진행.
+
+## 2026-09-19 — 모두의 아지트: 검토함 개편 + 공개/댓글 범위 정리 + 주제 댓글 마감 시각 (Claude Opus 4.8)
+- **한 일**:
+  - **댓글·반응(③)**은 우리 반이 공개한 글만 보인다(다른 반 글의 반응은 그 반이 봄).
+  - **공개 글 관리**는 공개 중인 글만 보인다(숨긴 글은 목록에서 빠짐). 숨긴 글 되살리기는 **글 모으기**의
+    숨김 후보에 `숨김 해제·다시 공개` 버튼으로 옮겼다(활동 공개 모달도 동일).
+  - **비공개(숨김)한 글은 남의 목록에서 사라진다**: 교사 public_posts 를 published 는 모두에게, hidden 은
+    올린 학급에게만 보이도록 좁혔다(20261320, 코어 빌더 재정의).
+  - **검토함 개편**: 죽은 '학생 공개 요청' 섹션을 없애고, 다른 학급의 **주제(활동) 제안**을 검토함에서
+    바로 승인/거절하게 했다. 검토할 게 있으면 상단 검토 버튼에 **NEW 표시**(주제 제안+막힌 댓글 수).
+  - **주제 폴더 학급 구분**: 공개 글 관리 폴더도 학급 색·배지. 우리 반/다른 반 배경색 대비를 키우고
+    반 배지를 솔리드 색(⭐ 우리 반)으로.
+  - **함께 쓰는 주제 댓글·반응 마감 시각**(20261321): 활동에 `comments_close_at` 추가. 마감 뒤 새 댓글·공감을
+    **트리거로 차단**(guard_neighbor_comment/reaction_deadline). 교사는 활동 카드에서 마감 시각 지정/해제
+    (set_neighbor_activity_deadline_v1). 학생 화면은 마감되면 "🔒 보기만"으로 입력·공감을 잠근다.
+    활동 피드·교사 활동 목록에 comments_close_at 노출. 글쓰기 종료는 기존 '활동 종료'가 담당.
+- **변경**: 마이그레이션 20261320·20261321(운영 DB 적용·기록), `TeacherEntry.jsx/.css`, `StudentEntry.jsx`,
+  `teacherApi.js`(setActivityDeadline·getActivityCandidates 등, rpc 9). 계약 검사(Activities·LimitedBeta rpc 9,
+  PostReview 등) 갱신.
+- **결과/검증**: lint(경고만)·`npm run build` 통과, 전체 테스트 **1222건 통과**, `npm run deploy:local` 배포.
+- **남은 것 / 다음**: 시작 시각(open_at)은 보류. 진남초 4학년 1반으로 마감 동작 실기 확인.
+
 ## 2026-09-19 — 모두의 아지트: 학급 구분 강화 + 참여 상한 10 + 비공개도 자기 학급만 (Claude Opus 4.8)
 - **한 일**:
   - **공개 글 관리 학급 구분 강화**: 폴더(주제/학생)에도 학급 색·표시를 넣고(각 묶음=한 학급), 우리 반은

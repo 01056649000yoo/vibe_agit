@@ -8,8 +8,6 @@ import { sectionAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 
 const ClassManager = lazy(() => import('./ClassManager'));
 const DahandinIntegrationManager = lazy(() => import('./DahandinIntegrationManager'));
-const loadTeacherWritingEditorManager = () => import('../../modules/writing/editor-settings/TeacherWritingEditorManager');
-const TeacherWritingEditorManager = lazy(loadTeacherWritingEditorManager);
 
 // 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 메뉴마다 폭을 다시 정하지 않도록
 // 데스크톱 폭·항목 여백·모바일 최소 폭을 공통 호스트에서 고정한다.
@@ -31,7 +29,7 @@ const MODULE_SETTINGS_ITEMS = getAllModules()
 const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
     { id: 'ai-prompts', icon: '🤖', label: '피드백·평어 기준', description: 'AI 피드백과 평어 작성 기준' },
-    { id: 'writing-editor', icon: '✍️', label: '글쓰기 창 관리', description: '글쓰기 화면 설정' },
+    // 글쓰기 창 관리는 학급 운영 → 학생 대시보드 미리보기로 옮겼다(2026-09-20, 같은 성격이라 통합).
     ...MODULE_SETTINGS_ITEMS,
     // 다했니 연동은 설정 목록 맨 아래에 둔다(사용자 요청 2026-09-16).
     { id: 'dahandin', icon: '🍪', label: '다했니 연동', description: '다했니 쿠키를 포인트로 정산' }
@@ -59,16 +57,6 @@ const TeacherSettingsHub = ({
         onNavigationHandled?.(navigationTarget.requestId);
     }, [navigationTarget, onNavigationHandled]);
 
-    useEffect(() => {
-        const preload = () => void loadTeacherWritingEditorManager();
-        if ('requestIdleCallback' in window) {
-            const idleId = window.requestIdleCallback(preload, { timeout: 2500 });
-            return () => window.cancelIdleCallback(idleId);
-        }
-        const timerId = window.setTimeout(preload, 1200);
-        return () => window.clearTimeout(timerId);
-    }, []);
-
     return (
         <div style={{
             display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : `${SETTINGS_NAV_WIDTH} minmax(0, 1fr)`,
@@ -95,8 +83,6 @@ const TeacherSettingsHub = ({
                                 key={item.id}
                                 type="button"
                                 onClick={() => setSection(item.id)}
-                                onMouseEnter={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
-                                onFocus={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
                                 aria-current={active ? 'page' : undefined}
                                 {...tourAnchor(sectionAnchorId(item.id))}
                                 style={{
@@ -138,8 +124,6 @@ const TeacherSettingsHub = ({
                         fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
                         onNavigate={onNavigate}
                     />
-                ) : section === 'writing-editor' ? (
-                    <TeacherWritingEditorManager activeClass={activeClass} isMobile={isMobile} />
                 ) : section === 'dahandin' ? (
                     <React.Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>다했니 연동을 불러오는 중입니다...</div>}>
                         <DahandinIntegrationManager activeClass={activeClass} isMobile={isMobile} />

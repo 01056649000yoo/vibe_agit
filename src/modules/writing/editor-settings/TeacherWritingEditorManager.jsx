@@ -36,15 +36,57 @@ const WRITING_TOOL_OPTIONS = Object.freeze(getWritingToolManifests().map((tool) 
 
 // 관리 화면에서는 실제 학생 입력기·맞춤법 RPC를 실행하지 않는다. 설정의 모양만
 // 확인할 수 있는 정적 샘플이라 탭 진입과 미리보기 전환이 가볍다.
+// 미리보기는 정적 샘플이다(실제 RPC 없음). 도구를 누르면 학생이 보게 될 모양을 예시로 보여 준다.
+const renderToolSample = (toolId) => {
+    if (toolId === 'spelling-lookup') {
+        return (
+            <>
+                <p>궁금한 낱말을 넣으면 기본 자료에서 바른 표기와 예문을 보여주고, 무작위 5문제로 연습해요.</p>
+                <div className="writing-editor-preview-sample-row"><strong>마춤법</strong> → <strong>맞춤법</strong></div>
+                <div className="writing-editor-preview-sample-row">예문) 받아쓰기에서 <em>맞춤법</em>을 틀리지 않았어요.</div>
+            </>
+        );
+    }
+    if (toolId === 'ai-spell-check') {
+        return (
+            <>
+                <p>다 쓴 글을 AI가 한 번 훑어 맞춤법·띄어쓰기 오류만 짚어 줍니다(내용은 고치지 않아요).</p>
+                <div className="writing-editor-preview-sample-row">〰️ ‘마춤법’ → ‘맞춤법’</div>
+                <div className="writing-editor-preview-sample-row">〰️ 띄어쓰기 1곳: ‘재미있는이야기’ → ‘재미있는 이야기’</div>
+            </>
+        );
+    }
+    if (toolId === 'lab-results') {
+        return (
+            <>
+                <p>글쓰기 연구소에서 만든 개요·질문·문장을 지금 글에 참고하거나 넣을 수 있어요.</p>
+                <div className="writing-editor-preview-sample-row">📝 개요: 처음-가운데-끝</div>
+                <div className="writing-editor-preview-sample-row">❓ 질문: 그때 어떤 마음이었나요?</div>
+                <div className="writing-editor-preview-sample-row">✍️ 문장: 비가 와서 아쉬웠지만…</div>
+            </>
+        );
+    }
+    return null;
+};
+
 const StudentWritingPreview = ({ settings, compact }) => {
+    const [openTool, setOpenTool] = useState(null);
+    const [refOpen, setRefOpen] = useState(true); // 글쓰기 참고함: 기본은 펼친 상태(안의 도구가 바로 보이게)
     const searchEnabled = isWritingToolEnabled(settings, SPELLING_LOOKUP_TOOL_ID);
-    // 미리보기의 도구 줄에는 실제로 도구 줄에 뜨는 것만 그린다.
-    const enabledTools = WRITING_TOOL_OPTIONS.filter((tool) => (
-        tool.surface === 'toolbar' && isWritingToolEnabled(settings, tool.id)
-    ));
-    const referenceToolsEnabled = WRITING_TOOL_OPTIONS.some((tool) => (
-        tool.surface === 'reference' && isWritingToolEnabled(settings, tool.id)
-    ));
+    const enabledTools = WRITING_TOOL_OPTIONS.filter((tool) => isWritingToolEnabled(settings, tool.id));
+    // 도구 줄에는 surface 'toolbar' 만 뜬다. 나머지(reference·editor, 예: AI 맞춤법 검사)는
+    // 실제 학생 화면과 같게 '글쓰기 참고함' 안에서 열린다(WritingToolHost 규칙과 일치).
+    const toolbarTools = enabledTools.filter((tool) => tool.surface === 'toolbar');
+    const referenceTools = enabledTools.filter((tool) => tool.surface !== 'toolbar');
+    const activeTool = openTool && enabledTools.some((tool) => tool.id === openTool) ? openTool : null;
+    const activeMeta = activeTool ? enabledTools.find((tool) => tool.id === activeTool) : null;
+    const ToolChip = ({ tool }) => (
+        <button type="button"
+            className={`writing-editor-preview-tool is-clickable${activeTool === tool.id ? ' is-open' : ''}`}
+            onClick={() => setOpenTool((current) => (current === tool.id ? null : tool.id))}>
+            {tool.icon} {tool.label}
+        </button>
+    );
     return (
         <div className="writing-editor-preview-interaction-guard">
                 <WritingWorkspace tone="assignment" className="writing-editor-preview-workspace">
@@ -66,12 +108,35 @@ const StudentWritingPreview = ({ settings, compact }) => {
                             title="본격 글쓰기"
                             description="제목과 내용을 차근차근 적어보세요."
                         />
-                        {enabledTools.map((tool) => (
-                            <div key={tool.id} className="writing-editor-preview-tool">{tool.icon} {tool.label}</div>
-                        ))}
-                        <div className="writing-editor-preview-tool">
-                            📚 글쓰기 참고함{referenceToolsEnabled ? ' · 🧪 연구소 자료' : ''}
+                        {toolbarTools.length > 0 && (
+                            <div className="writing-editor-preview-toolrow">
+                                {toolbarTools.map((tool) => <ToolChip key={tool.id} tool={tool} />)}
+                            </div>
+                        )}
+                        <div className="writing-editor-preview-reference">
+                            <button type="button"
+                                className={`writing-editor-preview-tool is-clickable writing-editor-preview-reference__toggle${refOpen ? ' is-open' : ''}`}
+                                aria-expanded={refOpen}
+                                onClick={() => { if (refOpen) setOpenTool(null); setRefOpen((open) => !open); }}>
+                                📚 글쓰기 참고함 {referenceTools.length > 0 ? `(${referenceTools.length})` : ''} <span aria-hidden="true">{refOpen ? '▾' : '▸'}</span>
+                            </button>
+                            {refOpen && (
+                                <div className="writing-editor-preview-reference__body">
+                                    {referenceTools.length === 0
+                                        ? <p className="writing-editor-preview-reference__empty">지금 참고함에 켠 도구가 없어요.</p>
+                                        : referenceTools.map((tool) => <ToolChip key={tool.id} tool={tool} />)}
+                                </div>
+                            )}
                         </div>
+                        {activeMeta && (
+                            <div className="writing-editor-preview-sample">
+                                <div className="writing-editor-preview-sample__head">
+                                    <strong>{activeMeta.icon} {activeMeta.label}</strong>
+                                    <button type="button" onClick={() => setOpenTool(null)} aria-label="닫기">✕</button>
+                                </div>
+                                <div className="writing-editor-preview-sample__body">{renderToolSample(activeMeta.id)}</div>
+                            </div>
+                        )}
                         <div className={`writing-editor-preview-fields ${compact ? 'is-compact' : ''}`}>
                             <div>
                                 <small>글 제목</small>

@@ -14,6 +14,7 @@ const TeachingToolsHub = lazy(() => import('./TeachingToolsHub'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
 const TeacherOperationsHub = lazy(() => import('./TeacherOperationsHub'));
+const StudentDashboardPreview = lazy(() => import('./StudentDashboardPreview'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
 const TeacherGuideCenter = lazy(() => import('./TeacherGuideCenter'));
@@ -721,6 +722,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />
                         ) : visibleTab === 'neighbor-agit' ? (
                             <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
+                        ) : visibleTab === 'student-dashboard-preview' ? (
+                            <StudentDashboardPreview key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}

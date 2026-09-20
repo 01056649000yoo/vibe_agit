@@ -52,6 +52,7 @@ export const TEACHER_NAV_GROUPS = [
         secondaryShape: 'sidebar',
         tabs: [
             { id: 'operations', label: '운영 현황' },
+            { id: 'student-dashboard-preview', label: '학생 대시보드 미리보기' },
             { id: 'student-agits', label: '학생 아지트' },
             { id: 'recent-activity', label: '최근 활동' },
             { id: 'comments', label: '학생 댓글' }

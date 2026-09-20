@@ -10,7 +10,8 @@ import { TEACHER_GUIDES } from '../constants/teacherGuides.js';
 export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'settings:class': { tab: 'settings', section: 'class' },
     'settings:ai-prompts': { tab: 'settings', section: 'ai-prompts' },
-    'settings:writing-editor': { tab: 'settings', section: 'writing-editor' },
+    // 2026-09-20: 글쓰기 창 관리를 설정 → 학급 운영 '학생 대시보드 미리보기' 탭으로 옮겼다.
+    'settings:writing-editor': { tab: 'student-dashboard-preview' },
     'settings:dahandin': { tab: 'settings', section: 'dahandin' },
     'settings:module:spelling-learning': { tab: 'settings', section: 'module:spelling-learning' },
     // 연구소는 탭이 아니라 새 화면으로 여는 링크다. 탭으로 적으면 없는 탭으로 옮기려다 만다.
