@@ -19,6 +19,35 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-21 — 삭제 길목 RESTRICT 세 건: 운영 DB 실측 (Claude Opus 5)
+- **배경**: 2026-09-20 에 학생·학급 삭제를 막는 `ON DELETE RESTRICT` 세 건을 찾아 적어 두었다.
+  오늘 "그 부분은 맥미니에서 수정했다"는 말이 나와, **문서 대신 운영 DB 를 직접 확인**했다.
+- **실측(2026-09-21, `pg_constraint` 조회)**:
+  | 제약 | 지금 상태 |
+  |---|---|
+  | `neighbor_activity_classes_mission_id_fkey` | **CASCADE** — `20261326` 으로 고쳐짐 ✅ |
+  | `class_agit_books_owner_student_fkey` | RESTRICT (그대로) |
+  | `student_title_reward_claims_point_log_id_fkey` | RESTRICT (그대로) |
+  `applied_migrations` 에도 20261326 이후로는 20261327·20261328·20261329 뿐이다.
+  `purge_expired_students` 는 여전히 한 문장으로 지우고, `delete_student_immediately` 에 사전 정리는 없다.
+- **그런데 실제 피해는 0 이다** — 앞서 "지뢰"라고 쓴 것이 과했다. 세어 보니:
+  - 3일 지난 삭제 대기 학생 **23명**, 그중 개인 문집으로 막히는 학생 **0명**, 칭호 보상으로 막히는 학생 **0명**
+  - 개인 문집(`class_agit_books.book_type='personal'`)을 가진 **살아있는 학생도 0명** — 기능이 아직 안 쓰인다.
+    즉 문집 쪽 RESTRICT 는 **지금은 발화할 수 없다**.
+  - 칭호 보상을 받은 학생은 66명 → 이쪽은 **앞으로** 걸릴 수 있는 진짜 후보다.
+  - 트랜잭션 안에서 23명 실제 삭제를 시험하고 `ROLLBACK` — **DELETE 23, 막는 것 없음**.
+- **대신 눈에 걸린 것**: 3일 지난 23명이 **아직 안 지워지고 남아 있다**. `purge_expired_students` 는
+  교사가 그 학급의 `복구함` 을 열 때만 돈다. 아무도 안 열면 영영 안 돈다 — 개인정보처리방침의
+  "즉시 영구 삭제" 와 어긋난다. 급하진 않지만 **cron 으로 돌리는 게 맞다**.
+- **남은 것 / 다음** (급한 순):
+  1. `purge_expired_students` 를 pg_cron 으로 주기 실행(위 23명 문제). 겸사겸사 한 명씩 돌게 바꾸면
+     한 명 막혀도 반 전체가 묶이지 않는다.
+  2. `student_title_reward_claims_point_log_id_fkey` → `NO ACTION`(원장 보호는 유지하고 연쇄 삭제만 통과).
+     66명이 후보이므로 언젠가는 걸린다.
+  3. `class_agit_books_owner_student_fkey` — 개인 문집 기능이 실제로 쓰이기 시작하면 그때 정한다
+     (CASCADE 로 지울지, SET NULL 로 문집만 남길지). 지금 정하면 쓰이기도 전에 규칙만 굳는다.
+  4. 복구함이 정리 실패를 삼켜 "복구할 학생이 없어요" 로 보이는 것(`fetchDeletedStudents`).
+
 ## 2026-09-21 — 스크린 확대·축소 중 떨림: 배율 상태를 값으로 견주기 (Claude Opus 5)
 - **배경**: 교사 제보 — "확대하거나 축소하다 보면 떨림 현상이 생긴다".
 - **⚠️ 먼저 틀린 진단 하나**: 같은 제보를 처음에 급식 위젯의 **글씨 자동 맞춤 고리**로 보고
