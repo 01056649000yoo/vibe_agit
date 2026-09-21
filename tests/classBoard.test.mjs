@@ -147,7 +147,7 @@ const [mealWidget, mealSettings, mealManifest, noticeWidget, noticeSettings, not
 ]);
 
 const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seoulDate, mealEngine,
-  designSystem, mealFitHook, mealColumnsMigration, mealColumnsSmoke, mealColumnsChecksumReconciliation] = await Promise.all([
+  designSystem, mealFitHook, sharedFitHook, mealColumnsMigration, mealColumnsSmoke, mealColumnsChecksumReconciliation] = await Promise.all([
     read('src/modules/tool/class-board/widgets/notice-board/NoticeComposer.jsx'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeBoardApi.js'),
     read('src/modules/tool/class-board/widgets/notice-board/noticeStore.js'),
@@ -157,6 +157,7 @@ const [noticeComposer, noticeApi, noticeStore, noticeMigration, noticeSmoke, seo
     read('src/modules/tool/meal-board/mealBoardEngine.js'),
     read('src/styles/design-system.css'),
     read('src/modules/tool/class-board/widgets/meal-board/useFittedMealDishes.js'),
+    read('src/modules/tool/class-board/widgets/useFittedWidgetBox.js'),
     read('supabase/migrations/20261229_class_board_meal_columns.sql'),
     read('tests/sql/20261229_class_board_meal_columns.smoke.sql'),
     read('supabase/migrations/20261277_class_board_meal_columns_checksum_reconciliation.sql'),
@@ -313,13 +314,16 @@ test('식단표는 급식 이름을 고른 열 수로 세우고 남은 자리에
   assert.match(mealSettings, /MEAL_COLUMN_CHOICES\.map/);
 
   // 글씨는 위젯 크기 비례가 아니라 실제로 그려 본 뒤 넘치지 않는 가장 큰 크기로 맞춘다.
-  assert.match(mealFitHook, /findLargestFittingTextSize/);
-  assert.match(mealFitHook, /scrollWidth <= element\.clientWidth[\s\S]*scrollHeight <= element\.clientHeight/);
-  assert.match(mealFitHook, /new ResizeObserver\(scheduleFit\)/);
-  assert.match(mealFitHook, /requestAnimationFrame\(fitDishes\)[\s\S]*resizeObserver\?\.disconnect\(\)/);
+  // 2026-09-21: 맞추는 일 자체는 공용 훅으로 옮겼다 — 이 파일이 제 손으로 ResizeObserver 를
+  // 달았다가 자기가 크기를 바꾸는 요소를 자기가 감시해 화면이 떨렸다(classBoardFitLoop.test.mjs).
+  assert.match(mealFitHook, /from '\.\.\/useFittedWidgetBox'/);
+  assert.match(sharedFitHook, /findLargestFittingTextSize/);
+  assert.match(sharedFitHook, /scrollWidth <= element\.clientWidth[\s\S]*scrollHeight <= element\.clientHeight/);
+  assert.match(sharedFitHook, /new ResizeObserver\(/);
+  assert.match(sharedFitHook, /requestAnimationFrame\(fit\)[\s\S]*resizeObserver\?\.disconnect\(\)/);
   // 디자인 가이드의 글자 바닥(0.8rem) 아래로는 줄이지 않는다.
   assert.match(mealFitHook, /MIN_DISH_SIZE_PX = 12\.8/);
-  assert.doesNotMatch(mealFitHook, /setInterval|window\.addEventListener\('resize'/);
+  assert.doesNotMatch(sharedFitHook, /setInterval|window\.addEventListener\('resize'/);
 
   // 급식 한 가지는 이름 한 줄과 그 아래 알레르기 한 줄로 세운다(전체화면 급식판과 같은 모양).
   assert.match(styles, /\.class-board-meal__meals article span\s*\{[^}]*flex-direction:column[^}]*text-align:center/);
@@ -1250,18 +1254,23 @@ test('스크린 배치 위젯은 상자를 채우고 글씨에 상한을 두지 
  */
 test('자리·역할 배치표는 상자에 들어가는 가장 큰 크기를 찾아 맞춘다', async () => {
     const { readFile } = await import('node:fs/promises');
-    const [hook, widget] = await Promise.all([
+    // 2026-09-21: 맞추는 일 자체는 공용 훅(`widgets/useFittedWidgetBox.js`)으로 옮겼다.
+    // 급식 위젯이 이 로직을 베끼며 고리 차단기를 빠뜨려 화면이 떨렸기 때문이다.
+    // 그래서 아래 확인도 원본이 있는 곳을 본다(떨림 자체는 classBoardFitLoop.test.mjs).
+    const [hook, shared, widget] = await Promise.all([
         readFile('src/modules/tool/class-board/widgets/arrangement-board/useFittedArrangement.js', 'utf8'),
+        readFile('src/modules/tool/class-board/widgets/useFittedWidgetBox.js', 'utf8'),
         readFile('src/modules/tool/class-board/widgets/arrangement-board/ArrangementBoardWidget.jsx', 'utf8')
     ]);
 
-    assert.match(hook, /from '\.\.\/text\/textScale'/);
-    assert.match(hook, /findLargestFittingTextSize\(/);
+    assert.match(hook, /from '\.\.\/useFittedWidgetBox'/);
+    assert.match(shared, /from '\.\/text\/textScale'/);
+    assert.match(shared, /findLargestFittingTextSize\(/);
     // 넘쳤는지는 짐작이 아니라 실제로 그려 본 크기로 판단한다.
-    assert.match(hook, /scrollWidth <= element\.clientWidth/);
-    assert.match(hook, /scrollHeight <= element\.clientHeight/);
+    assert.match(shared, /scrollWidth <= element\.clientWidth/);
+    assert.match(shared, /scrollHeight <= element\.clientHeight/);
     // 상자 크기가 바뀌면 다시 맞춘다.
-    assert.match(hook, /new ResizeObserver\(schedule\)/);
+    assert.match(shared, /new ResizeObserver\(/);
     // 글자 바닥(0.8rem = 12.8px)보다 작게 뭉개지 않는다.
     assert.match(hook, /MIN_UNIT_PX = 12\.8/);
 
