@@ -13,6 +13,8 @@ import {
   calculateClassBoardStageTransform,
   CLASS_BOARD_STAGE_HEIGHT,
   CLASS_BOARD_STAGE_WIDTH,
+  isSameClassBoardStageTransform,
+  measureClassBoardStageSize,
 } from '../src/modules/tool/class-board/host/boardStage.js';
 import { updateClassBoardWidgetPlacement } from '../src/modules/tool/class-board/host/widgetPlacement.js';
 import {
@@ -877,6 +879,37 @@ test('편집 화면과 전체화면은 같은 1600×900 논리 캔버스를 균�
   assert.match(styles, /\.class-board-viewport__surface\s*\{[^}]*width:1600px; height:900px[^}]*transform-origin:top left/);
   assert.match(styles, /\.class-board-presentation-page \.class-board-viewport\s*\{[^}]*width:100%; height:100%; aspect-ratio:auto/);
   assert.doesNotMatch(styles, /class-board-presentation-page \.class-board-canvas[^}]*padding:0/);
+});
+
+/*
+ * 2026-09-21 교사 제보: "화면을 확대하거나 축소하다 보면 떨림 현상이 생긴다".
+ *
+ * 원인은 배율을 잴 때마다 **새 객체**를 상태에 넣은 것이었다. 값이 같아도 참조가 달라
+ * React 가 스크린 전체(위젯 전부)를 다시 그렸다. 확대·축소 중에는
+ * `getBoundingClientRect()` 가 1234.4999… 같은 소수를 주고 그 값이 미세하게 흔들리므로,
+ * ResizeObserver → 다시 그림 → 또 알림 이 이어지며 눈에 보이는 떨림이 된다.
+ */
+test('확대·축소 중 배율이 그대로면 스크린을 다시 그리지 않는다', () => {
+  // 소수점 흔들림은 재는 자리에서 정수로 끊는다.
+  assert.deepEqual(measureClassBoardStageSize({ width: 1234.4999, height: 694.5001 }),
+    { width: 1234, height: 695 });
+  assert.deepEqual(measureClassBoardStageSize({ width: 1233.51, height: 694.49 }),
+    { width: 1234, height: 694 });
+  // 값이 없을 때도 터지지 않는다(처음 그릴 때 rect 가 비어 있을 수 있다).
+  assert.deepEqual(measureClassBoardStageSize(null), { width: 0, height: 0 });
+
+  // 끊고 나면 같은 크기는 같은 배율이 되고, 그때는 상태를 갈아 끼우지 않는다.
+  const a = calculateClassBoardStageTransform(1234, 694);
+  const b = calculateClassBoardStageTransform(1234, 694);
+  assert.notEqual(a, b, '계산은 새 객체를 준다 — 그래서 값으로 견줘야 한다.');
+  assert.ok(isSameClassBoardStageTransform(a, b), '같은 크기인데 다르다고 봅니다.');
+  assert.ok(!isSameClassBoardStageTransform(a, calculateClassBoardStageTransform(1235, 694)),
+    '진짜로 크기가 달라졌는데 같다고 봅니다 — 이러면 확대·축소가 화면에 반영되지 않습니다.');
+  assert.ok(!isSameClassBoardStageTransform(null, a));
+
+  // 화면 쪽도 값으로 견주고 같으면 이전 것을 그대로 돌려줘야 한다.
+  assert.match(canvas, /measureClassBoardStageSize\(viewport\.getBoundingClientRect\(\)\)/);
+  assert.match(canvas, /isSameClassBoardStageTransform\(previous, next\) \? previous : next/);
 });
 
 test('자유 배치 계산은 이동·크기 조절 모두 화면 경계와 최소 크기를 지킨다', () => {

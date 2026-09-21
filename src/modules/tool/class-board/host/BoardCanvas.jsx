@@ -5,6 +5,8 @@ import {
   calculateClassBoardStageTransform,
   CLASS_BOARD_STAGE_HEIGHT,
   CLASS_BOARD_STAGE_WIDTH,
+  isSameClassBoardStageTransform,
+  measureClassBoardStageSize,
 } from './boardStage';
 import InteractiveWidgetFrame from './InteractiveWidgetFrame';
 import { WidgetHost } from './WidgetHost';
@@ -52,8 +54,13 @@ export default function BoardCanvas({
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
     const measure = () => {
-      const bounds = viewport.getBoundingClientRect();
-      setStageTransform(calculateClassBoardStageTransform(bounds.width, bounds.height));
+      // 소수점 흔들림을 먼저 끊고, 값이 그대로면 상태를 갈아 끼우지 않는다.
+      // 새 객체를 그냥 넣으면 값이 같아도 스크린 전체가 다시 그려져 확대·축소 중에 떨린다.
+      const { width, height } = measureClassBoardStageSize(viewport.getBoundingClientRect());
+      const next = calculateClassBoardStageTransform(width, height);
+      setStageTransform((previous) => (
+        isSameClassBoardStageTransform(previous, next) ? previous : next
+      ));
     };
     measure();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
