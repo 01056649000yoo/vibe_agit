@@ -19,6 +19,48 @@
 > - **남은 것 / 다음**: …
 > ```
 
+## 2026-09-21 — 독서마라톤 쪽수 미확인 책: 거리 되계산 + 두 곳 배지 (Claude Opus 5)
+- **배경**: 교사가 "쪽수가 확인되지 않은 책이 있어도 알기 어렵다"고 요청. 알림을 붙이려 들여다보니
+  고치는 화면은 이미 있었고(독서록 > 독서록 이벤트 > 쪽수 확인이 필요한 책) **그보다 큰 고장 둘**이 먼저 있었다.
+- **한 일**:
+  1. **쪽수를 고쳐도 거리가 붙지 않던 것**(핵심). `set_teacher_reading_book_page_count` 가
+     `book_catalog.page_count` 만 적고 끝냈다. 거리는 전적으로 `reading_marathon_contributions` 에서
+     나오는데 그 표에 줄이 생기지 않으니, 교사 화면에선 그 책이 목록에서 사라져 **고쳐진 것처럼 보이지만**
+     학생 거리는 0m 그대로였다. 20260930 이후 한 번도 고친 적이 없어, 그간 교사가 보정한 책
+     (`page_count_source='teacher'`)은 모두 이 상태였을 수 있다. → 저장 뒤 그 책을 읽은 **그 학급 독서록 전부**에
+     대해 `record_reading_marathon_contribution` 를 다시 부른다(한 권을 여러 학생이 읽으므로 학급 단위).
+     지난 보정분 일회성 되살리기도 같은 마이그레이션에 넣었다.
+  2. **상한 초과 책(전집·세트)이 교사 목록에 안 뜨던 것**. 20261259 가 쪽수 상한을 넣으면서
+     `get_reading_marathon_snapshot`(v1)의 `pending_rows` 만 고치고 **화면이 실제로 쓰는 v2 를 빠뜨렸다**.
+     그래서 v2 는 여전히 `page_count IS NULL` 만 띄웠고, 화면의 `전집·세트로 보입니다` 가지는 닿지 않는
+     죽은 코드였다(`page_count` 자체를 안 내려보냈다). 덤으로 `pending_book_count` 가 목록의 `LIMIT 20` 을
+     세고 있어 21권째부터 없는 것처럼 보였다. → v2 에 상한·`page_count`·`reason` 을 넣고, 세기는
+     상한 없는 `pending_all` 로 분리.
+  3. **배지 두 곳**(요청 사항). `학생 독서록`(1차 메뉴)과 `🏃 독서록 이벤트`(안쪽 탭). 3층 깊이라
+     한 곳만으로는 길이 끊긴다. 대시보드가 **세기 전용 RPC 로 한 번만** 세서 안쪽으로 물려주고,
+     마라톤 화면이 다시 셀 때마다 그 수를 위로 올린다(고치면 배지가 바로 줄어든다).
+     무거운 스냅샷을 배지가 부르지 않게 한 것은 대시보드를 모든 교사가 매번 열기 때문.
+- **변경**:
+  - `supabase/migrations/20261329_reading_marathon_page_fix_recount_and_badge.sql` (신규)
+  - `src/components/teacher/TeacherDashboard.jsx`, `TeacherWritingHub.jsx`
+  - `src/modules/writing/reading-log/teacher/TeacherReadingLogManager.jsx`
+  - `src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx`
+  - `tests/readingMarathonPendingBooksBadge.test.mjs` (신규, 10건)
+- **결과/검증**: `npm run test:all` 1,232건 통과, 바뀐 파일 eslint 0.
+  새 검사는 **일부러 되돌려 실제로 실패하는 것까지 확인**(되계산 제거 → 실패, `pending_all` → `pending_rows` → 실패).
+- **남은 것 / 다음**:
+  - ⚠️ **맥미니에서 `npm run migrate` 아직 안 했다.** 적용 뒤 지난 보정분이 실제로 되살아났는지
+    (`reading_marathon_contributions` 증가분) 확인 필요.
+  - ⚠️ **브라우저 확인 안 했다.** `학생 독서록` 버튼에는 이미 `NEW` 표가 붙어서, 글자+NEW+숫자 셋이
+    한 버튼에 들어간다. 태블릿 가로폭에서 줄바꿈으로 밀리지 않는지 눈으로 봐야 한다.
+  - 구멍 둘(이번에 손대지 않음): ① 캠페인 기간 **밖**에 쓴 독서록의 쪽수 미상 책은 목록·배지 모두에서
+    빠진다(새 마라톤을 시작하면 이전 것이 묻힌다). ② 캠페인이 아예 없는 학급은 세지 않는다.
+    실제로 몇 권이 묻혀 있는지 맥미니에서 세어 본 뒤 판단하기로 함.
+  - 2026-09-20 에 찾은 **삭제 길목 RESTRICT 지뢰 셋 중 둘이 아직 남아 있다**(이번 작업과 무관하지만 미해결):
+    `class_agit_books.owner_student_id`, `student_title_reward_claims.point_log_id`,
+    그리고 `purge_expired_students` 가 한 문장으로 지워 한 명이 막히면 학급 전체가 묶이는 것,
+    복구함이 그 실패를 삼켜 "복구할 학생이 없어요"로 보이는 것.
+
 ## 2026-09-20 — 백업·유지보수 점검 + 다했니 로그정리 cron 실패 수정 (Claude Opus 4.8)
 - **점검 결과(맥미니 실측)**:
   - pg_cron 3개: `open-scheduled-missions`(매분) ✅, `dahandin-auto-sync`(10분) ✅,

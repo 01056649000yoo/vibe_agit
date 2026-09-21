@@ -111,6 +111,9 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     // 모두의 아지트: 들어가기 전에도 처리할 것(검토·승인·참여신청)을 메뉴 배지로 알린다.
     const [neighborBadge, setNeighborBadge] = useState(0);
     const [commentTodoBadge, setCommentTodoBadge] = useState(0);
+    // 독서마라톤: 쪽수를 몰라 달린 거리에 넣지 못한 책 수. 고치는 화면이 3층 깊이라
+    // 배지가 없으면 교사가 알 길이 없다. 대시보드가 한 번만 세서 안쪽 화면으로 물려준다.
+    const [readingPendingBooks, setReadingPendingBooks] = useState(0);
 
     /*
      * 공지는 대시보드가 한 번만 읽어 머리말 버튼과 위쪽 띠에 함께 넘긴다.
@@ -230,6 +233,20 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     useEffect(() => {
         void loadCommentBadge();
     }, [loadCommentBadge]);
+
+    // 쪽수 확인이 필요한 책 배지 — 쪽수를 모르거나 상한을 넘어 거리에 못 넣은 책 수.
+    // 세는 기준은 [독서록 > 독서록 이벤트] 화면 목록과 같다(서버에서 같은 조건).
+    // 무거운 스냅샷 RPC 대신 세기 전용 RPC 를 쓴다 — 이 화면은 모든 교사가 매번 연다.
+    const loadReadingPendingBooks = useCallback(async () => {
+        if (!activeClass?.id) { setReadingPendingBooks(0); return; }
+        const { data, error } = await supabase.rpc('get_teacher_reading_pending_books_badge_v1', { p_class_id: activeClass.id });
+        if (error) { setReadingPendingBooks(0); return; }
+        setReadingPendingBooks(Number(data?.count ?? 0));
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        void loadReadingPendingBooks();
+    }, [loadReadingPendingBooks]);
 
     useEffect(() => {
         try {
@@ -631,6 +648,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                                 {commentTodoBadge}
                                             </span>
                                         )}
+                                        {tab.id === 'reading-logs' && readingPendingBooks > 0 && (
+                                            <span className="teacher-subtab__badge-new" aria-label={`쪽수 확인이 필요한 책 ${readingPendingBooks}권`}>
+                                                {readingPendingBooks}
+                                            </span>
+                                        )}
                                     </button>
                                 </div>
                             );
@@ -717,6 +739,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
                                 onPendingCountChange={setMissionPendingTotal}
+                                readingPendingBooks={readingPendingBooks}
+                                onReadingPendingBooksChange={setReadingPendingBooks}
                             />
                         ) : ['class-agit', 'class-agit-books'].includes(visibleTab) ? (
                             <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />

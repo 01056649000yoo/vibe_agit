@@ -48,7 +48,12 @@ const formatDate = (value) => {
     }).format(new Date(value));
 };
 
-const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
+const TeacherReadingLogManager = ({
+    activeClass, isMobile, navigationTarget, onNavigationHandled,
+    // 쪽수 확인이 필요한 책 수. 대시보드가 세서 내려주고, 마라톤 화면이 다시 셀 때마다
+    // onPendingBooksChange 로 올려 보낸다(고치면 배지가 바로 줄어든다).
+    pendingBooks = 0, onPendingBooksChange
+}) => {
     const classId = activeClass?.id;
     const handledNavigationRef = useRef(null);
     const [section, setSection] = useState('reviews'); // 'reviews' | 'policy' | 'events'
@@ -632,6 +637,9 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     onClick={() => changeSection('events')}
                 >
                     <span>🏃 독서록 이벤트</span>
+                    {pendingBooks > 0 && (
+                        <strong aria-label={`쪽수 확인이 필요한 책 ${pendingBooks}권`}>{pendingBooks}</strong>
+                    )}
                 </button>
             </nav>
 
@@ -650,7 +658,11 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             ) : section === 'events' ? (
                 <div className="teacher-reading-event-panel" role="tabpanel" aria-label="독서록 이벤트 설정">
                     <Suspense fallback={<div className="reading-marathon-settings__loading">독서마라톤 설정을 준비하는 중... 🏃</div>}>
-                        <ReadingMarathonTeacherSettings classId={classId} className={activeClass?.name} />
+                        <ReadingMarathonTeacherSettings
+                            classId={classId}
+                            className={activeClass?.name}
+                            onPendingBooksChange={onPendingBooksChange}
+                        />
                     </Suspense>
                 </div>
             ) : (<>

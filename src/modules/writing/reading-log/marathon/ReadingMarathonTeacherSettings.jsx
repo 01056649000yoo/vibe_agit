@@ -44,7 +44,7 @@ const MARATHON_TABS = Object.freeze([
     { id: 'history', label: '지난 기록' }
 ]);
 
-const ReadingMarathonTeacherSettings = ({ classId, className }) => {
+const ReadingMarathonTeacherSettings = ({ classId, className, onPendingBooksChange }) => {
     const { ask, confirmDialog } = useConfirmDialog();
     const { notify, notice } = useNotice();
     const [snapshot, setSnapshot] = useState(null);
@@ -76,6 +76,9 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const applySnapshot = useCallback((data) => {
         const normalized = normalizeMarathonSnapshot(data);
         setSnapshot(normalized);
+        // 쪽수를 고칠 때마다 이 화면이 다시 세므로, 그 수를 메뉴 배지로 올려 보낸다.
+        // 올리지 않으면 다 고친 뒤에도 배지가 남아 교사가 또 들어온다.
+        onPendingBooksChange?.(Number(normalized.summary?.pendingBookCount) || 0);
         if (normalized.campaign) {
             const teams = normalized.teams.map((team) => ({
                 key: team.id,
@@ -105,7 +108,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 endsOn: ''
             });
         }
-    }, [className]);
+    }, [className, onPendingBooksChange]);
 
     useEffect(() => {
         if (!classId) return undefined;

@@ -9,7 +9,7 @@ const TeacherWritingHub = ({
     activeClass, isMobile, section = 'missions', missionCardSize, onMissionCardSizeChange,
     missionWorkspaceView, onMissionWorkspaceViewChange,
     navigationTarget, onNavigationHandled, bootstrapProfile,
-    onPendingCountChange
+    onPendingCountChange, readingPendingBooks = 0, onReadingPendingBooksChange
 }) => {
     return (
         <div style={{ width: '100%' }}>
@@ -37,6 +37,8 @@ const TeacherWritingHub = ({
                         isMobile={isMobile}
                         navigationTarget={navigationTarget}
                         onNavigationHandled={onNavigationHandled}
+                        pendingBooks={readingPendingBooks}
+                        onPendingBooksChange={onReadingPendingBooksChange}
                     />
                 </Suspense>
             )}
