@@ -50,7 +50,8 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     const [projects, setProjects] = useState(null);
     const [creatingPersonal, setCreatingPersonal] = useState(false);
     const [newOwnerId, setNewOwnerId] = useState('');
-    const [googleDocTarget, setGoogleDocTarget] = useState(null);
+    const [exportTarget, setExportTarget] = useState(null);
+    const [exportFormat, setExportFormat] = useState('excel');
     const [usePageBreak, setUsePageBreak] = useState(true);
     const busyRef = useRef(false);
     const createId = useRef(null);
@@ -130,10 +131,35 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     });
     // 구글 문서는 표지·여는 글·목차·본문·판권지를 한 문서로 옮긴다. 쪽수와 목차 쪽번호는
     // Docs API 가 넣어 줄 수 없어(요청 자체가 없다) 문서 첫머리 안내로 대신한다 — googleDocExport.js 참고.
-    const openGoogleDocModal = (edition = null) => {
-        setGoogleDocTarget({ edition, isDraft: !edition });
+    const openExportModal = (edition = null) => {
+        setExportTarget({ edition, isDraft: !edition });
+        setExportFormat('excel');
         setUsePageBreak(true);
     };
+
+    const exportEditionToExcel = (edition = null) => run(async () => {
+        const [{ exportObjectsToExcel }, snapshot] = await Promise.all([
+            import('../../../lib/excelExport.js'),
+            edition ? api.getEdition(classId, edition.id) : api.getBookPreview(classId, book.id, book.revision)
+        ]);
+        const works = snapshot?.book?.works || [];
+        if (!works.length) {
+            throw new Error('내보낼 작품이 없습니다.');
+        }
+        const rows = works.map((work, index) => ({
+            번호: index + 1,
+            제목: work.title || '',
+            글쓴이: work.author || '',
+            주제: work.group || '',
+            내용: Array.isArray(work.blocks) ? work.blocks.join('\n\n') : (work.blocks || '')
+        }));
+        const label = snapshot.draft ? '초안' : `${snapshot.number || 1}판`;
+        const fileName = `${snapshot.book.title || '문집'} (${label} 글 모음)`;
+        await exportObjectsToExcel(rows, fileName, { sheetName: '문집' });
+        setMessage('엑셀 파일을 저장했습니다.');
+        setExportTarget(null);
+    });
+
     const exportEditionToGoogleDoc = (edition = null, layoutMode = 'page_per_work') => run(async () => {
         const accessToken = await authorizeGoogleExport();
         const [{ exportAnthologyToGoogleDoc }, snapshot] = await Promise.all([
@@ -143,8 +169,16 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         const created = await exportAnthologyToGoogleDoc(snapshot, accessToken, { layoutMode });
         window.open(created.url, '_blank', 'noopener');
         setMessage('구글 문서를 만들었습니다. 문서에서 `삽입 → 목차`와 `삽입 → 페이지 번호`를 누르면 쪽수가 채워집니다.');
-        setGoogleDocTarget(null);
+        setExportTarget(null);
     });
+
+    const handleExportConfirm = () => {
+        if (exportFormat === 'excel') {
+            exportEditionToExcel(exportTarget?.edition);
+        } else {
+            exportEditionToGoogleDoc(exportTarget?.edition, usePageBreak ? 'page_per_work' : 'continuous');
+        }
+    };
     const selected = new Set(book?.items.map((item) => item.studentId));
     const ownerStudent = book?.book_type === 'personal' && book.owner_student_id ? workspace?.students.find((student) => student.id === book.owner_student_id) || { id: book.owner_student_id, name: book.owner_student_name } : null;
     const locked = busy || book?.archived;
@@ -335,13 +369,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                     {getBookPageLayout(book.page_layout).id === 'continuous' && (
                         <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => openTuner()}>쪽 다듬기</Button>
                     )}
-                    <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived || !isGapiLoaded} onClick={() => openGoogleDocModal()}>초안 구글 문서로 보내기</Button>
+                    <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => openExportModal()}>초안 내보내기</Button>
                     <Button variant="primary" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</Button></div>
                 {dirty && <p>편집 내용을 먼저 저장하면 미리보기와 확정을 할 수 있습니다.</p>}
                 {!book.items.length && <p>3단계에서 작품을 담으면 확정할 수 있습니다.</p>}
-                <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다. 구글 문서로 보내면 표지 · 여는 글 · 목차 · 본문 · 판권지가 한 문서로 만들어지며, 문서에서 <strong>삽입 → 목차</strong>와 <strong>삽입 → 페이지 번호</strong>를 누르면 쪽수가 채워집니다. 한글(hwp)로 옮기려면 구글 문서에서 <strong>파일 → 다운로드 → Microsoft Word(.docx)</strong>로 내려받아 한글에서 열면 됩니다.</p>
+                <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다. 구글 문서나 엑셀로 내보내어 인쇄 및 데이터 보관에 활용할 수 있습니다. 구글 문서로 보내면 표지 · 여는 글 · 목차 · 본문 · 판권지가 한 문서로 만들어지며, 문서에서 <strong>삽입 → 목차</strong>와 <strong>삽입 → 페이지 번호</strong>를 누르면 쪽수가 채워집니다. 한글(hwp)로 옮기려면 구글 문서에서 <strong>파일 → 다운로드 → Microsoft Word(.docx)</strong>로 내려받아 한글에서 열면 됩니다.</p>
                 <p>학생 서가는 <strong>글꽃 전시관 → 1 기본 설정 → 학급 학생 공개 켜기</strong>가 켜져 있어야 학생 화면에 나타납니다.</p>
-                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || !isGapiLoaded} onClick={() => openGoogleDocModal(edition)}>구글 문서로 보내기</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
+                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy} onClick={() => openExportModal(edition)}>내보내기</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
                 {!book.editions.length && <p className="class-agit-empty">아직 확정한 판이 없습니다.</p>}
                 <details className="class-agit-exhibition-management"><summary>문집 관리</summary><div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => run(async () => receive(await api.getBooks(classId, book.id))))}>최신 문집 불러오기</Button>
@@ -361,13 +395,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         {tuner && <PageTuner edition={tuner} breaks={normalizeBookPageBreaks(book.page_breaks, book.items)} saving={busy} onToggle={toggleTunerBreak} onClose={() => setTuner(null)} />}
         {confirmDialog}
         <AnimatePresence>
-            {googleDocTarget && (
+            {exportTarget && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     zIndex: 9999, backdropFilter: 'blur(3px)'
-                }} onClick={() => setGoogleDocTarget(null)}>
+                }} onClick={() => setExportTarget(null)}>
                     <motion.div
                         role="dialog"
                         aria-modal="true"
@@ -385,66 +419,116 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                             borderRadius: '24px',
                             textAlign: 'center'
                         }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📝</div>
+                            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📤</div>
                             <h3 id="export-select-title" style={{ margin: '0 0 8px 0', color: '#2C3E50', fontWeight: '900' }}>
-                                구글 문서로 내보내기
+                                데이터 내보내기
                             </h3>
                             <p style={{ color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '24px' }}>
-                                <strong>{book?.title || '문집'}</strong>의 글을 구글 문서로 내보냅니다.
+                                <strong>{book?.title || '문집'}</strong>의 글을 어떤 형식으로 저장할까요?
                             </p>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                                <div
+                                {/* 엑셀 선택 */}
+                                <button
+                                    type="button"
+                                    onClick={() => setExportFormat('excel')}
                                     style={{
-                                        padding: '16px', borderRadius: '16px', border: '2px solid #4285F4',
-                                        background: '#E3F2FD', color: '#1565C0',
+                                        padding: '16px', borderRadius: '16px', border: '2px solid',
+                                        borderColor: exportFormat === 'excel' ? '#27AE60' : '#E9ECEF',
+                                        background: exportFormat === 'excel' ? '#F1F8E9' : 'white',
+                                        color: exportFormat === 'excel' ? '#2E7D32' : '#495057',
                                         display: 'flex', alignItems: 'center', gap: '12px',
-                                        textAlign: 'left'
+                                        cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left'
                                     }}
                                 >
-                                    <span style={{ fontSize: '1.5rem' }}>📝</span>
+                                    <span style={{ fontSize: '1.5rem' }}>📊</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>엑셀 파일 (.xlsx)</div>
+                                        <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>데이터 분석 및 보관용</div>
+                                    </div>
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '50%',
+                                        border: '2px solid', borderColor: exportFormat === 'excel' ? '#27AE60' : '#ADB5BD',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        {exportFormat === 'excel' && <div style={{ width: '10px', height: '10px', background: '#27AE60', borderRadius: '50%' }} />}
+                                    </div>
+                                </button>
+
+                                {/* 구글 문서 선택 */}
+                                <button
+                                    type="button"
+                                    onClick={() => isGapiLoaded && setExportFormat('googleDoc')}
+                                    disabled={!isGapiLoaded}
+                                    style={{
+                                        padding: '16px', borderRadius: '16px', border: '2px solid',
+                                        borderColor: exportFormat === 'googleDoc' ? '#4285F4' : '#E9ECEF',
+                                        background: exportFormat === 'googleDoc' ? '#E3F2FD' : (isGapiLoaded ? 'white' : '#F8F9FA'),
+                                        color: isGapiLoaded ? (exportFormat === 'googleDoc' ? '#1565C0' : '#495057') : '#ADB5BD',
+                                        display: 'flex', alignItems: 'center', gap: '12px',
+                                        cursor: isGapiLoaded ? 'pointer' : 'not-allowed',
+                                        transition: 'all 0.2s', textAlign: 'left',
+                                        position: 'relative', overflow: 'hidden'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.5rem', filter: !isGapiLoaded ? 'grayscale(100%)' : undefined }}>📝</span>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>구글 문서 (Google Docs)</div>
                                         <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>인쇄 및 편집용 (목차 포함)</div>
                                     </div>
                                     <div style={{
                                         width: '20px', height: '20px', borderRadius: '50%',
-                                        border: '2px solid #4285F4',
+                                        border: '2px solid', borderColor: exportFormat === 'googleDoc' ? '#4285F4' : '#ADB5BD',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                                     }}>
-                                        <div style={{ width: '10px', height: '10px', background: '#4285F4', borderRadius: '50%' }} />
+                                        {exportFormat === 'googleDoc' && <div style={{ width: '10px', height: '10px', background: '#4285F4', borderRadius: '50%' }} />}
                                     </div>
-                                </div>
+                                    {!isGapiLoaded && <div style={{ position: 'absolute', right: 10, top: 10, fontSize: '0.7rem', color: '#E74C3C' }}>APILoading...</div>}
+                                </button>
 
-                                <div style={{ padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input
-                                        type="checkbox"
-                                        id="anthologyPageBreak"
-                                        checked={usePageBreak}
-                                        onChange={(e) => setUsePageBreak(e.target.checked)}
-                                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4285F4' }}
-                                    />
-                                    <label htmlFor="anthologyPageBreak" style={{ fontSize: '0.9rem', color: '#546E7A', cursor: 'pointer', fontWeight: 'bold' }}>
-                                        글마다 페이지 나누기 (권장)
-                                    </label>
-                                </div>
+                                {/* 옵션: 페이지 나누기 (구글 문서 선택 시만 노출) */}
+                                <AnimatePresence>
+                                    {exportFormat === 'googleDoc' && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            style={{ overflow: 'hidden' }}
+                                        >
+                                            <div style={{ padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    id="anthologyPageBreak"
+                                                    checked={usePageBreak}
+                                                    onChange={(e) => setUsePageBreak(e.target.checked)}
+                                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4285F4' }}
+                                                />
+                                                <label htmlFor="anthologyPageBreak" style={{ fontSize: '0.9rem', color: '#546E7A', cursor: 'pointer', fontWeight: 'bold' }}>
+                                                    글마다 페이지 나누기 (권장)
+                                                </label>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button variant="ghost" onClick={() => setGoogleDocTarget(null)} style={{ flex: 1 }}>
+                                <Button variant="ghost" onClick={() => setExportTarget(null)} style={{ flex: 1 }}>
                                     취소
                                 </Button>
                                 <Button
-                                    disabled={busy}
-                                    onClick={() => exportEditionToGoogleDoc(googleDocTarget.edition, usePageBreak ? 'page_per_work' : 'continuous')}
+                                    disabled={busy || (exportFormat === 'googleDoc' && !isGapiLoaded)}
+                                    onClick={handleExportConfirm}
                                     style={{
                                         flex: 2,
-                                        backgroundColor: '#4285F4',
+                                        backgroundColor: exportFormat === 'excel' ? '#27AE60' : '#4285F4',
                                         color: 'white', fontWeight: 'bold',
-                                        boxShadow: '0 4px 12px rgba(66, 133, 244, 0.3)'
+                                        boxShadow: exportFormat === 'excel'
+                                            ? '0 4px 12px rgba(39, 174, 96, 0.3)'
+                                            : '0 4px 12px rgba(66, 133, 244, 0.3)'
                                     }}
                                 >
-                                    {busy ? '생성 중...' : '내보내기'}
+                                    {busy ? '내보내는 중...' : '내보내기'}
                                 </Button>
                             </div>
                         </Card>
