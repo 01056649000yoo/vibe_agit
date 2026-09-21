@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
+import Modal from '../../../components/common/Modal.jsx';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
@@ -48,6 +49,8 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     const [projects, setProjects] = useState(null);
     const [creatingPersonal, setCreatingPersonal] = useState(false);
     const [newOwnerId, setNewOwnerId] = useState('');
+    const [googleDocTarget, setGoogleDocTarget] = useState(null);
+    const [googleDocLayoutMode, setGoogleDocLayoutMode] = useState('page_per_work');
     const busyRef = useRef(false);
     const createId = useRef(null);
     const tabs = useRef(new Map());
@@ -126,15 +129,20 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     });
     // 구글 문서는 표지·여는 글·목차·본문·판권지를 한 문서로 옮긴다. 쪽수와 목차 쪽번호는
     // Docs API 가 넣어 줄 수 없어(요청 자체가 없다) 문서 첫머리 안내로 대신한다 — googleDocExport.js 참고.
-    const exportEditionToGoogleDoc = (edition = null) => run(async () => {
+    const openGoogleDocModal = (edition = null) => {
+        setGoogleDocTarget({ edition, isDraft: !edition });
+        setGoogleDocLayoutMode('page_per_work');
+    };
+    const exportEditionToGoogleDoc = (edition = null, layoutMode = 'page_per_work') => run(async () => {
         const accessToken = await authorizeGoogleExport();
         const [{ exportAnthologyToGoogleDoc }, snapshot] = await Promise.all([
             import('./googleDocExport.js'),
             edition ? api.getEdition(classId, edition.id) : api.getBookPreview(classId, book.id, book.revision)
         ]);
-        const created = await exportAnthologyToGoogleDoc(snapshot, accessToken);
+        const created = await exportAnthologyToGoogleDoc(snapshot, accessToken, { layoutMode });
         window.open(created.url, '_blank', 'noopener');
         setMessage('구글 문서를 만들었습니다. 문서에서 `삽입 → 목차`와 `삽입 → 페이지 번호`를 누르면 쪽수가 채워집니다.');
+        setGoogleDocTarget(null);
     });
     const selected = new Set(book?.items.map((item) => item.studentId));
     const ownerStudent = book?.book_type === 'personal' && book.owner_student_id ? workspace?.students.find((student) => student.id === book.owner_student_id) || { id: book.owner_student_id, name: book.owner_student_name } : null;
@@ -326,13 +334,13 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                     {getBookPageLayout(book.page_layout).id === 'continuous' && (
                         <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => openTuner()}>쪽 다듬기</Button>
                     )}
-                    <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived || !isGapiLoaded} onClick={() => exportEditionToGoogleDoc()}>초안 구글 문서로 보내기</Button>
+                    <Button variant="outline" type="button" disabled={busy || dirty || !book.items.length || book.archived || !isGapiLoaded} onClick={() => openGoogleDocModal()}>초안 구글 문서로 보내기</Button>
                     <Button variant="primary" type="button" disabled={busy || dirty || !book.items.length || book.archived} onClick={() => act('finalize')}>새 판 확정</Button></div>
                 {dirty && <p>편집 내용을 먼저 저장하면 미리보기와 확정을 할 수 있습니다.</p>}
                 {!book.items.length && <p>3단계에서 작품을 담으면 확정할 수 있습니다.</p>}
                 <h3>확정판 보관함</h3><p>확정판의 내용과 설정을 보관합니다. PDF 파일은 인쇄 창에서 직접 저장합니다. 구글 문서로 보내면 표지 · 여는 글 · 목차 · 본문 · 판권지가 한 문서로 만들어지며, 문서에서 <strong>삽입 → 목차</strong>와 <strong>삽입 → 페이지 번호</strong>를 누르면 쪽수가 채워집니다. 한글(hwp)로 옮기려면 구글 문서에서 <strong>파일 → 다운로드 → Microsoft Word(.docx)</strong>로 내려받아 한글에서 열면 됩니다.</p>
                 <p>학생 서가는 <strong>글꽃 전시관 → 1 기본 설정 → 학급 학생 공개 켜기</strong>가 켜져 있어야 학생 화면에 나타납니다.</p>
-                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || !isGapiLoaded} onClick={() => exportEditionToGoogleDoc(edition)}>구글 문서로 보내기</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
+                <ul className="class-agit-projects">{book.editions.map((edition) => <li key={edition.id}><div><strong>{edition.number}판 · {edition.title}</strong><p>{edition.student_visible ? '학생 서가 공개 중' : '교사 보관'} · {new Date(edition.created_at).toLocaleDateString('ko-KR')}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => printEdition(edition)}>{getBookPaper(edition.print?.paper).label} 미리보기 · PDF 저장</Button><Button variant="outline" type="button" disabled={busy || !isGapiLoaded} onClick={() => openGoogleDocModal(edition)}>구글 문서로 보내기</Button><Button variant="outline" type="button" disabled={busy || dirty || book.archived} onClick={() => act(edition.student_visible ? 'hide' : 'show', { edition_id: edition.id })}>{edition.student_visible ? '학생 서가에서 숨기기' : '학생 서가에 공개'}</Button></div></li>)}</ul>
                 {!book.editions.length && <p className="class-agit-empty">아직 확정한 판이 없습니다.</p>}
                 <details className="class-agit-exhibition-management"><summary>문집 관리</summary><div className="class-agit-header-actions">
                     <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => run(async () => receive(await api.getBooks(classId, book.id))))}>최신 문집 불러오기</Button>
@@ -351,5 +359,98 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         {source && <ArtworkReader work={source} onClose={() => setSource(null)} footer={source.refreshing ? <Button variant="primary" type="button" onClick={() => { edit({ ...book, items: book.items.map((item) => item.sourceId === source.sourceId ? { ...source, itemId: item.itemId } : item) }); setSource(null); }}>이 내용으로 반영</Button> : <Button variant="outline" type="button" onClick={() => setSource(null)}>읽기 닫기</Button>} />}
         {tuner && <PageTuner edition={tuner} breaks={normalizeBookPageBreaks(book.page_breaks, book.items)} saving={busy} onToggle={toggleTunerBreak} onClose={() => setTuner(null)} />}
         {confirmDialog}
+        {googleDocTarget && (
+            <Modal
+                isOpen={Boolean(googleDocTarget)}
+                onClose={() => setGoogleDocTarget(null)}
+                title="구글 문서로 보내기"
+                maxWidth="480px"
+                showFooter={false}
+            >
+                <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <p style={{ margin: 0, fontSize: '0.92rem', color: '#4A5568', lineHeight: 1.5 }}>
+                        구글 문서에 글을 넣을 때 작품 배치 방식을 선택해 주세요.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <label
+                            style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '12px',
+                                padding: '12px 14px',
+                                borderRadius: '10px',
+                                border: `1.5px solid ${googleDocLayoutMode === 'page_per_work' ? '#3182CE' : '#E2E8F0'}`,
+                                backgroundColor: googleDocLayoutMode === 'page_per_work' ? '#EBF8FF' : '#FFFFFF',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                        >
+                            <input
+                                type="radio"
+                                name="googleDocLayoutMode"
+                                value="page_per_work"
+                                checked={googleDocLayoutMode === 'page_per_work'}
+                                onChange={() => setGoogleDocLayoutMode('page_per_work')}
+                                style={{ marginTop: '3px' }}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <strong style={{ fontSize: '0.93rem', color: '#2D3748' }}>
+                                    📄 한 페이지에 한 개 글 (기본)
+                                </strong>
+                                <span style={{ fontSize: '0.82rem', color: '#718096', lineHeight: 1.4 }}>
+                                    각 작품마다 페이지를 나누어 새 페이지에서 시작합니다. (시집·단편 모음용)
+                                </span>
+                            </div>
+                        </label>
+
+                        <label
+                            style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '12px',
+                                padding: '12px 14px',
+                                borderRadius: '10px',
+                                border: `1.5px solid ${googleDocLayoutMode === 'continuous' ? '#3182CE' : '#E2E8F0'}`,
+                                backgroundColor: googleDocLayoutMode === 'continuous' ? '#EBF8FF' : '#FFFFFF',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                        >
+                            <input
+                                type="radio"
+                                name="googleDocLayoutMode"
+                                value="continuous"
+                                checked={googleDocLayoutMode === 'continuous'}
+                                onChange={() => setGoogleDocLayoutMode('continuous')}
+                                style={{ marginTop: '3px' }}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <strong style={{ fontSize: '0.93rem', color: '#2D3748' }}>
+                                    📜 이어붙이기
+                                </strong>
+                                <span style={{ fontSize: '0.82rem', color: '#718096', lineHeight: 1.4 }}>
+                                    작품 사이에 페이지 나눔 없이 여백만 두고 이어서 배치합니다. (긴 글 모음·종이 절약용)
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                        <Button variant="outline" type="button" onClick={() => setGoogleDocTarget(null)}>
+                            취소
+                        </Button>
+                        <Button
+                            variant="primary"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => exportEditionToGoogleDoc(googleDocTarget.edition, googleDocLayoutMode)}
+                        >
+                            {busy ? '문서 생성 중...' : '구글 문서 만들기'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+        )}
     </section>;
 }

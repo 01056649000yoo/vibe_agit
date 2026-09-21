@@ -103,6 +103,21 @@ test('여는 글이 없으면 그 부분과 쪽 나눔을 통째로 뺀다', () 
     assert.equal(requests.filter((request) => request.insertPageBreak).length, 4);
 });
 
+test('이어붙이기 모드는 작품 사이에 쪽 나눔 대신 줄바꿈 여백으로 잇는다', () => {
+    const defaultMode = buildAnthologyDocRequests(edition());
+    const continuousMode = buildAnthologyDocRequests(edition(), { layoutMode: 'continuous' });
+
+    // 기본(한 페이지에 한 개 글): 표지(1) + 여는글(1) + 목차(1) + 작품1뒤(1) + 본문끝(1) = 5
+    assert.equal(defaultMode.requests.filter((r) => r.insertPageBreak).length, 5);
+    // 이어붙이기: 작품1 뒤의 쪽 나눔이 빠져 4개
+    assert.equal(continuousMode.requests.filter((r) => r.insertPageBreak).length, 4);
+
+    const text = insertedText(continuousMode.requests);
+    assert.ok(text.includes('작품 1'));
+    assert.ok(text.includes('작품 2'));
+    assert.ok(text.indexOf('작품 2') > text.indexOf('작품 1'));
+});
+
 test('확정판 계약을 어긴 자료는 문서를 만들기 전에 막는다', () => {
     assert.throws(() => buildAnthologyDocRequests({ ...edition(), version: 2 }));
     assert.throws(() => buildAnthologyDocRequests({ ...edition(), book: { ...book, works: [] } }));

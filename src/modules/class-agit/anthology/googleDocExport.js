@@ -34,7 +34,7 @@ const documentTitle = (edition) => {
  * 요청은 **앞에서부터 차례로** 적용되므로 `cursor` 를 직접 옮기며 쌓는다.
  * 삽입 위치를 뒤에서부터 계산하는 방식으로 바꾸지 않는다 — 순서가 곧 문서 내용이다.
  */
-export function buildAnthologyDocRequests(edition) {
+export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work' } = {}) {
     assertBookEdition(edition);
     const book = edition.book;
     const personal = book.book_type === 'personal';
@@ -100,7 +100,13 @@ export function buildAnthologyDocRequests(edition) {
 
     // ── 본문 ──────────────────────────────────────────────────────────────
     book.works.forEach((work, index) => {
-        if (index > 0) pageBreak();
+        if (index > 0) {
+            if (layoutMode === 'continuous') {
+                write('\n\n');
+            } else {
+                pageBreak();
+            }
+        }
         // 자동 목차가 잡는 것은 이 `HEADING_1` 뿐이다.
         write(`${work.title}\n`, { style: 'HEADING_1' });
         const byline = [personal ? null : work.author, work.group].filter(Boolean).join(' · ');
@@ -124,8 +130,8 @@ export function buildAnthologyDocRequests(edition) {
 }
 
 /** 실제 전송. 토큰은 화면 훅(`useDataExport`)이 얻어서 넘긴다. */
-export async function exportAnthologyToGoogleDoc(edition, accessToken) {
-    const { title, requests } = buildAnthologyDocRequests(edition);
+export async function exportAnthologyToGoogleDoc(edition, accessToken, options = {}) {
+    const { title, requests } = buildAnthologyDocRequests(edition, options);
     const documentId = await createGoogleDocument(title, accessToken);
     await applyGoogleDocRequests(documentId, requests, accessToken);
     return { documentId, title, url: googleDocEditUrl(documentId) };

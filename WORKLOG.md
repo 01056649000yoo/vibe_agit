@@ -18,6 +18,21 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-21 — 글꽃 책방 구글 문서 내보내기 시 본문 배치 선택(한 페이지에 한 개 글 vs 이어붙이기) (Gemini 3.8 Flash)
+- **배경**: 교사 요청("현재 글꽃 책방에서 최종만들어진 초안 구글문서로 보내기를 할때 현재 한 작품은 무조건 한페이지로 보내지는데 한페이지에 한개글, 이어붙이기 둘중에 하나 고르게 해줘").
+- **변경**:
+  - `src/modules/class-agit/anthology/googleDocExport.js`:
+    - `buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work' })` 및 `exportAnthologyToGoogleDoc(edition, accessToken, options)`에 `layoutMode` 매개변수 지원.
+    - `layoutMode === 'continuous'`(이어붙이기)일 때는 작품 간 `insertPageBreak` 대신 줄바꿈 여백(`\n\n`)으로 본문을 이어서 배치하고, `page_per_work`(기본)일 때는 기존처럼 작품마다 쪽 나눔 유지.
+  - `src/modules/class-agit/anthology/AnthologyManager.jsx`:
+    - 초안 및 확정판 '구글 문서로 보내기' 버튼 클릭 시 `Modal` 다이얼로그로 `📄 한 페이지에 한 개 글 (기본)`과 `📜 이어붙이기`를 선택할 수 있는 팝업 제공.
+  - `tests/classAgitGoogleDocExport.test.mjs`:
+    - `continuous` 모드에서 작품 간 쪽 나눔 없이 여백으로 이어지는 계약 검증 테스트 추가.
+- **결과/검증**:
+  - `tests/classAgitGoogleDocExport.test.mjs` (8/8 통과) 및 `tests/classAgit*.test.mjs` (111/111 통과).
+  - ESLint 0오류 통과, Vite 빌드 통과.
+- **남은 것 / 다음**: 없음 (운영 배포).
+
 ## 2026-09-21 — 관리자 활동 교사 기준에 방학 고려 누적 글 작성 교사 포함 (Gemini 3.8 Flash)
 - **배경**: 사용자 지적("방학이 중간에 껴 있었거든? 한번 글을 써본 교사는 활동중으로 넣는게 어때?").
   학교 학사 일정상 7~8월은 여름방학이고 9월 개학 후 3주 차 시점이라, 1학기 말(6~7월)까지 80~100편씩 글을
