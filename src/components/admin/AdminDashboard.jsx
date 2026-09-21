@@ -368,7 +368,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             tone: 'usage',
             items: [
                 { id: 'teachers', label: '가입 선생님', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.teacher_total}명` : '확인 중', color: '#2D3748', icon: '👩‍🏫', onOpen: () => setCurrentTab('usage') },
-                { id: 'active-teachers', label: '활동 교사', basis: `최근 ${usage.activityDays}일 학생 글 있음`, value: usage.overview ? `${usage.overview.teacher_active}명` : '확인 중', color: '#2F855A', icon: '🟢', onOpen: () => setCurrentTab('usage') },
+                { id: 'active-teachers', label: '활동 교사', basis: '학생 글 작성 이력 있음', value: usage.overview ? `${usage.overview.teacher_active}명` : '확인 중', color: '#2F855A', icon: '🟢', onOpen: () => setCurrentTab('usage') },
                 { id: 'classes', label: '운영 학급', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.class_total}개` : '확인 중', color: '#2B6CB0', icon: '🏫', onOpen: () => setCurrentTab('usage') },
                 { id: 'students', label: '등록 학생', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.student_total}명` : '확인 중', color: '#2B6CB0', icon: '🧒', onOpen: () => setCurrentTab('students') },
                 { id: 'writing-students', label: '글쓰기 학생', basis: `최근 ${usage.activityDays}일`, value: usage.overview ? `${usage.overview.student_active}명` : '확인 중', color: '#2F855A', icon: '✍️', onOpen: () => setCurrentTab('students') },

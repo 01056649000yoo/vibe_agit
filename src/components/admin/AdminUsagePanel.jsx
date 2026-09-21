@@ -81,7 +81,7 @@ const AdminUsagePanel = ({
             <SectionCard>
                 <PanelHeader
                     title="📊 선생님별 사용량"
-                    description={`학급 개설·학생 등록·미션·학생 글까지 한 줄로 봅니다. 활동 여부는 최근 ${activityDays}일, 장기 미접속은 ${dormantDays}일, 휴면계정은 ${dormantAccountDays}일 기준입니다.`}
+                    description={`학급 개설·학생 등록·미션·학생 글까지 한 줄로 봅니다. 활동 여부는 학생 글 작성 이력(방학 고려) 또는 최근 ${activityDays}일 활동, 장기 미접속은 ${dormantDays}일, 휴면계정은 ${dormantAccountDays}일 기준입니다.`}
                     right={(
                         <>
                             <DayRangeSelect
