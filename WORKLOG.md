@@ -25,7 +25,7 @@
     - `buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work' })` 및 `exportAnthologyToGoogleDoc(edition, accessToken, options)`에 `layoutMode` 매개변수 지원.
     - `layoutMode === 'continuous'`(이어붙이기)일 때는 작품 간 `insertPageBreak` 대신 줄바꿈 여백(`\n\n`)으로 본문을 이어서 배치하고, `page_per_work`(기본)일 때는 기존처럼 작품마다 쪽 나눔 유지.
   - `src/modules/class-agit/anthology/AnthologyManager.jsx`:
-    - 초안 및 확정판 '구글 문서로 보내기' 버튼 클릭 시 `Modal` 다이얼로그로 `📄 한 페이지에 한 개 글 (기본)`과 `📜 이어붙이기`를 선택할 수 있는 팝업 제공.
+    - 기존 `ExportSelectModal`과 동일한 카드 사이즈(360px), 둥근 모서리(24px), 블러 백드롭, 3rem 아이콘과 함께 `글마다 페이지 나누기 (권장)` 체크박스(기본 자동선택) 구조를 적용하여 UI 일관성 확보.
   - `tests/classAgitGoogleDocExport.test.mjs`:
     - `continuous` 모드에서 작품 간 쪽 나눔 없이 여백으로 이어지는 계약 검증 테스트 추가.
 - **결과/검증**:

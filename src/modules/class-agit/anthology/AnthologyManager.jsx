@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
-import Modal from '../../../components/common/Modal.jsx';
+import Card from '../../../components/common/Card.jsx';
+import { motion, AnimatePresence } from 'framer-motion';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
@@ -50,7 +51,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     const [creatingPersonal, setCreatingPersonal] = useState(false);
     const [newOwnerId, setNewOwnerId] = useState('');
     const [googleDocTarget, setGoogleDocTarget] = useState(null);
-    const [googleDocLayoutMode, setGoogleDocLayoutMode] = useState('page_per_work');
+    const [usePageBreak, setUsePageBreak] = useState(true);
     const busyRef = useRef(false);
     const createId = useRef(null);
     const tabs = useRef(new Map());
@@ -131,7 +132,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     // Docs API 가 넣어 줄 수 없어(요청 자체가 없다) 문서 첫머리 안내로 대신한다 — googleDocExport.js 참고.
     const openGoogleDocModal = (edition = null) => {
         setGoogleDocTarget({ edition, isDraft: !edition });
-        setGoogleDocLayoutMode('page_per_work');
+        setUsePageBreak(true);
     };
     const exportEditionToGoogleDoc = (edition = null, layoutMode = 'page_per_work') => run(async () => {
         const accessToken = await authorizeGoogleExport();
@@ -359,98 +360,97 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         {source && <ArtworkReader work={source} onClose={() => setSource(null)} footer={source.refreshing ? <Button variant="primary" type="button" onClick={() => { edit({ ...book, items: book.items.map((item) => item.sourceId === source.sourceId ? { ...source, itemId: item.itemId } : item) }); setSource(null); }}>이 내용으로 반영</Button> : <Button variant="outline" type="button" onClick={() => setSource(null)}>읽기 닫기</Button>} />}
         {tuner && <PageTuner edition={tuner} breaks={normalizeBookPageBreaks(book.page_breaks, book.items)} saving={busy} onToggle={toggleTunerBreak} onClose={() => setTuner(null)} />}
         {confirmDialog}
-        {googleDocTarget && (
-            <Modal
-                isOpen={Boolean(googleDocTarget)}
-                onClose={() => setGoogleDocTarget(null)}
-                title="구글 문서로 보내기"
-                maxWidth="480px"
-                showFooter={false}
-            >
-                <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <p style={{ margin: 0, fontSize: '0.92rem', color: '#4A5568', lineHeight: 1.5 }}>
-                        구글 문서에 글을 넣을 때 작품 배치 방식을 선택해 주세요.
-                    </p>
+        <AnimatePresence>
+            {googleDocTarget && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 9999, backdropFilter: 'blur(3px)'
+                }} onClick={() => setGoogleDocTarget(null)}>
+                    <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="export-select-title"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Card style={{
+                            width: 'min(360px, calc(100vw - 32px))',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            padding: '24px',
+                            borderRadius: '24px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📝</div>
+                            <h3 id="export-select-title" style={{ margin: '0 0 8px 0', color: '#2C3E50', fontWeight: '900' }}>
+                                구글 문서로 내보내기
+                            </h3>
+                            <p style={{ color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '24px' }}>
+                                <strong>{book?.title || '문집'}</strong>의 글을 구글 문서로 내보냅니다.
+                            </p>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <label
-                            style={{
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '12px',
-                                padding: '12px 14px',
-                                borderRadius: '10px',
-                                border: `1.5px solid ${googleDocLayoutMode === 'page_per_work' ? '#3182CE' : '#E2E8F0'}`,
-                                backgroundColor: googleDocLayoutMode === 'page_per_work' ? '#EBF8FF' : '#FFFFFF',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s ease'
-                            }}
-                        >
-                            <input
-                                type="radio"
-                                name="googleDocLayoutMode"
-                                value="page_per_work"
-                                checked={googleDocLayoutMode === 'page_per_work'}
-                                onChange={() => setGoogleDocLayoutMode('page_per_work')}
-                                style={{ marginTop: '3px' }}
-                            />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <strong style={{ fontSize: '0.93rem', color: '#2D3748' }}>
-                                    📄 한 페이지에 한 개 글 (기본)
-                                </strong>
-                                <span style={{ fontSize: '0.82rem', color: '#718096', lineHeight: 1.4 }}>
-                                    각 작품마다 페이지를 나누어 새 페이지에서 시작합니다. (시집·단편 모음용)
-                                </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                                <div
+                                    style={{
+                                        padding: '16px', borderRadius: '16px', border: '2px solid #4285F4',
+                                        background: '#E3F2FD', color: '#1565C0',
+                                        display: 'flex', alignItems: 'center', gap: '12px',
+                                        textAlign: 'left'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>📝</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>구글 문서 (Google Docs)</div>
+                                        <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>인쇄 및 편집용 (목차 포함)</div>
+                                    </div>
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '50%',
+                                        border: '2px solid #4285F4',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        <div style={{ width: '10px', height: '10px', background: '#4285F4', borderRadius: '50%' }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        id="anthologyPageBreak"
+                                        checked={usePageBreak}
+                                        onChange={(e) => setUsePageBreak(e.target.checked)}
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4285F4' }}
+                                    />
+                                    <label htmlFor="anthologyPageBreak" style={{ fontSize: '0.9rem', color: '#546E7A', cursor: 'pointer', fontWeight: 'bold' }}>
+                                        글마다 페이지 나누기 (권장)
+                                    </label>
+                                </div>
                             </div>
-                        </label>
 
-                        <label
-                            style={{
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '12px',
-                                padding: '12px 14px',
-                                borderRadius: '10px',
-                                border: `1.5px solid ${googleDocLayoutMode === 'continuous' ? '#3182CE' : '#E2E8F0'}`,
-                                backgroundColor: googleDocLayoutMode === 'continuous' ? '#EBF8FF' : '#FFFFFF',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s ease'
-                            }}
-                        >
-                            <input
-                                type="radio"
-                                name="googleDocLayoutMode"
-                                value="continuous"
-                                checked={googleDocLayoutMode === 'continuous'}
-                                onChange={() => setGoogleDocLayoutMode('continuous')}
-                                style={{ marginTop: '3px' }}
-                            />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <strong style={{ fontSize: '0.93rem', color: '#2D3748' }}>
-                                    📜 이어붙이기
-                                </strong>
-                                <span style={{ fontSize: '0.82rem', color: '#718096', lineHeight: 1.4 }}>
-                                    작품 사이에 페이지 나눔 없이 여백만 두고 이어서 배치합니다. (긴 글 모음·종이 절약용)
-                                </span>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <Button variant="ghost" onClick={() => setGoogleDocTarget(null)} style={{ flex: 1 }}>
+                                    취소
+                                </Button>
+                                <Button
+                                    disabled={busy}
+                                    onClick={() => exportEditionToGoogleDoc(googleDocTarget.edition, usePageBreak ? 'page_per_work' : 'continuous')}
+                                    style={{
+                                        flex: 2,
+                                        backgroundColor: '#4285F4',
+                                        color: 'white', fontWeight: 'bold',
+                                        boxShadow: '0 4px 12px rgba(66, 133, 244, 0.3)'
+                                    }}
+                                >
+                                    {busy ? '생성 중...' : '내보내기'}
+                                </Button>
                             </div>
-                        </label>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
-                        <Button variant="outline" type="button" onClick={() => setGoogleDocTarget(null)}>
-                            취소
-                        </Button>
-                        <Button
-                            variant="primary"
-                            type="button"
-                            disabled={busy}
-                            onClick={() => exportEditionToGoogleDoc(googleDocTarget.edition, googleDocLayoutMode)}
-                        >
-                            {busy ? '문서 생성 중...' : '구글 문서 만들기'}
-                        </Button>
-                    </div>
+                        </Card>
+                    </motion.div>
                 </div>
-            </Modal>
-        )}
+            )}
+        </AnimatePresence>
     </section>;
 }
