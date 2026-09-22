@@ -100,7 +100,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
             body: { isbn13: book.isbn13 || '', isbn10: book.isbn10 || '' }
         });
         if (error || !data?.pageCount) return book;
-        return { ...book, pageCount: Number(data.pageCount), pageCountSource: 'google' };
+        return { ...book, pageCount: Number(data.pageCount), pageCountSource: data.pageCountSource || '' };
     };
 
     const selectBookWithPageCount = async (book, key) => {
@@ -108,7 +108,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
         try {
             onSelectBook(await resolvePageCount(book));
         } catch {
-            // Google 조회 실패가 책 선택 자체를 막으면 안 된다.
+            // 외부 서지 조회 실패가 책 선택 자체를 막으면 안 된다.
             onSelectBook(book);
         } finally {
             setResolvingBookKey('');
@@ -228,7 +228,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                                     <span>
                                         <strong>{book.title}</strong>
                                         <em>{book.authors?.join(', ') || '지은이 정보 없음'}</em>
-                                        <small>{resolving ? 'Google Books에서 쪽수 확인 중…' : [book.publisher, book.publishedDate?.slice(0, 4)].filter(Boolean).join(' · ')}</small>
+                                        <small>{resolving ? '책 쪽수 확인 중…' : [book.publisher, book.publishedDate?.slice(0, 4)].filter(Boolean).join(' · ')}</small>
                                     </span>
                                 </button>
                                 );

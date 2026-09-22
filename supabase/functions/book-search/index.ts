@@ -71,8 +71,8 @@ function isPageCountConfigured() {
 }
 
 /**
- * 쪽수는 구글 북스를 먼저 묻고, 없으면 국립중앙도서관 서지정보에 묻는다.
- * 국내 아동도서는 구글에 쪽수가 비어 있는 일이 잦아 그 자리를 도서관 납본 서지가 메운다.
+ * 쪽수는 국립중앙도서관 서지정보를 먼저 묻고, 없으면 구글 북스에 묻는다.
+ * 국내 아동도서의 납본 서지를 우선 사용하고, 없는 판본은 구글이 보완한다.
  */
 async function lookupPageCount(isbnValue: unknown) {
     const isbn = normalizeGoogleBooksIsbn(isbnValue)
@@ -84,16 +84,16 @@ async function lookupPageCount(isbnValue: unknown) {
     }
 
     const providers: Array<{ source: string, run: (signal: AbortSignal) => Promise<number | null> }> = []
-    if (GOOGLE_BOOKS_API_KEY) {
-        providers.push({
-            source: 'google',
-            run: (signal) => fetchGoogleBooksPageCount({ isbn, apiKey: GOOGLE_BOOKS_API_KEY, signal })
-        })
-    }
     if (NL_SEOJI_API_KEY) {
         providers.push({
             source: 'nl',
             run: (signal) => fetchSeojiPageCount({ isbn, certKey: NL_SEOJI_API_KEY, signal })
+        })
+    }
+    if (GOOGLE_BOOKS_API_KEY) {
+        providers.push({
+            source: 'google',
+            run: (signal) => fetchGoogleBooksPageCount({ isbn, apiKey: GOOGLE_BOOKS_API_KEY, signal })
         })
     }
 
@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
             .select('page_count,page_count_source')
             .maybeSingle()
         if (updateError) {
-            console.error('Google Books page count save failed')
+            console.error('Book page count save failed')
             return jsonResponse({ error: '페이지 정보를 저장하지 못했습니다.' }, 500, headers)
         }
         return jsonResponse({

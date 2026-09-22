@@ -507,7 +507,7 @@ const ReadingLogEditor = ({
 
         const savedBookId = result.data?.book_id;
         if (savedBookId && (form.selectedBook?.isbn13 || form.selectedBook?.isbn10)) {
-            // 클라이언트의 쪽수는 신뢰하지 않는다. 저장된 내 책의 ISBN을 서버가 Google Books에서
+            // 클라이언트의 쪽수는 신뢰하지 않는다. 저장된 내 책의 ISBN을 서버가 서지 서비스에서
             // 다시 확인한 뒤 book_catalog에 기록하고, DB 트리거가 마라톤 거리를 갱신한다.
             try {
                 await supabase.functions.invoke('book-search', { body: { bookId: savedBookId } });
