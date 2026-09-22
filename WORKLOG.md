@@ -42,6 +42,7 @@
   - 전체 단위 테스트 1,247개 통과 (`npm run test:all`, `tests/classAgitDesigns.test.mjs` 포함).
   - ESLint 0오류 (`npm run lint`), 프로덕션 빌드 정상 완료 (`npm run build`).
   - Edge function `book-search` 배포 볼륨 일치 확인 (`diff -r`) 및 컨테이너 재시동 정상 확인.
+  - 교사 공지사항 등록: `announcements` 테이블에 팝업 공지사항 등록 완료 (`[업데이트] 글꽃 전시관 테마 8종 확장 · 학급 문집 표지 리디자인 🎨📖`).
 - **남은 것 / 다음**: 없음.
 
 ## 2026-09-21 — 글꽃 책방 문집 내보내기 시 엑셀 및 구글 문서 통합 선택 지원 (Gemini 3.8 Flash)
