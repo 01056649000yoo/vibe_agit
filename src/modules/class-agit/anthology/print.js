@@ -47,8 +47,9 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 .anthology-page-number{position:absolute;bottom:9mm;left:${paper.marginX}mm;right:${paper.marginX}mm;text-align:center;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt}
 .anthology-page h1{font-size:24pt;line-height:1.45;margin:0 0 8mm;overflow-wrap:anywhere}
 .anthology-page p{font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 5mm}
-.anthology-cover{background:#f5f2e8}.anthology-cover [data-cover]{height:100%;border:1mm double #476755;padding:15mm 10mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10mm}
-.anthology-cover [data-compact=true]{gap:5mm;padding:10mm}.anthology-cover [data-compact=true] h1{font-size:24pt}.anthology-cover h1{font-size:30pt;margin:0}.anthology-cover .cover-mark{font-size:44pt;color:#476755}.anthology-cover p{margin:0}
+.anthology-cover [data-cover]{position:relative;height:100%;padding:18mm 13mm;display:flex;flex-direction:column;align-items:stretch;justify-content:center;text-align:left;gap:7mm;overflow:hidden}
+.anthology-cover [data-cover]::before{content:'';position:absolute;top:0;left:0;right:0;height:2mm;background:currentColor;opacity:.85}
+.anthology-cover [data-compact=true]{gap:4mm;padding:9mm}.anthology-cover [data-compact=true] h1{font-size:24pt}.anthology-cover h1{font-size:30pt;line-height:1.3;letter-spacing:-.04em;margin:0}.anthology-cover .cover-mark{font:700 12pt/1 sans-serif;letter-spacing:.16em;padding-top:3mm;border-top:.3mm solid currentColor}.anthology-cover p{margin:0}
 [data-toc-row]{display:flex;gap:5mm;align-items:baseline;border-bottom:.2mm solid #ddd;padding:2.5mm 0;font-size:${ANTHOLOGY_PRINT_SETTINGS.body_pt}pt;overflow-wrap:anywhere}
 [data-toc-row] span:first-child{flex:1;min-width:0}[data-toc-row] [data-page]{width:14mm;text-align:right;flex:none}
 /* 이어붙이기 목차: 주제 줄은 굵게, 그 아래 작품은 들여쓴다 — 어디가 묶음인지 한눈에 보인다. */
@@ -74,20 +75,22 @@ html,body{margin:0;background:#e9e7e2;color:#24362f;font-size:${ANTHOLOGY_PRINT_
 ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{display:none}
 .anthology-colophon [data-colophon]{padding-top:${small ? 20 : 40}mm;border-top:.4mm solid #476755}
 .anthology-cover{background:${design.paper};color:${design.ink};print-color-adjust:exact;-webkit-print-color-adjust:exact}
-.anthology-cover [data-cover]{border-color:${design.accent};border-style:${design.border};padding:${small ? 7 : 12}mm ${small ? 4 : 8}mm;gap:${small ? 5 : 8}mm}
-.anthology-cover .cover-mark{color:${design.accent};font-size:${small ? 28 : 40}pt}
+.anthology-cover [data-cover]{padding:${small ? 10 : 16}mm ${small ? 7 : 12}mm;gap:${small ? 4 : 7}mm}
+.anthology-cover [data-cover]::before{background:${design.accent}}
+.anthology-cover .cover-mark{color:${design.accent};font-size:12pt}
 .anthology-cover h1{font-size:${small ? 24 : 30}pt}
 .anthology-cover [data-compact=true]{gap:${small ? 2 : 4}mm;padding:${small ? 4 : 8}mm}
 .anthology-cover [data-compact=true] h1{font-size:${small ? 18 : 22}pt;line-height:1.4}
-.anthology-cover [data-compact=true] .cover-mark{font-size:24pt;line-height:1}
-.anthology-cover[data-design="editorial"] [data-cover]{border:0;border-top:6mm solid ${design.accent};border-bottom:1.5mm solid ${design.accent};text-align:left;align-items:stretch}
-.anthology-cover[data-design="notebook"] [data-cover]{border:.3mm solid #adc3d4;border-left:2mm solid ${design.accent};background:repeating-linear-gradient(0deg,transparent 0 7mm,#32648118 7.1mm 7.3mm)}
-.anthology-cover[data-design="constellation"]{background-image:radial-gradient(circle at 15% 20%,#d6b577 0 .3mm,transparent .5mm),radial-gradient(circle at 90% 70%,#d6b577 0 .3mm,transparent .5mm);background-size:23mm 29mm,31mm 37mm}
-.anthology-cover[data-design="storybook"] [data-cover]{border-radius:45% 45% 3mm 3mm;box-shadow:inset 0 0 0 1mm #fff8}
-.anthology-cover[data-design="ocean"]{background-image:radial-gradient(ellipse at 15% 92%,#fff8 0 9%,transparent 10%),radial-gradient(ellipse at 52% 96%,#fff7 0 13%,transparent 14%),linear-gradient(#eafaff,#94d7e7)}
-.anthology-cover[data-design="ocean"] [data-cover]{border:0;border-bottom:5mm solid ${design.accent}}
-.anthology-cover[data-design="modern"] [data-cover]{border:0;border-left:10mm solid ${design.accent};text-align:left;align-items:stretch}
-.anthology-cover[data-design="hanji"]{background-image:repeating-linear-gradient(8deg,#ffffff10 0 .5mm,#684f3610 .7mm 1mm)}
+.anthology-cover [data-compact=true] .cover-mark{font-size:12pt;line-height:1}
+.anthology-cover[data-design="botanical"]{background-image:linear-gradient(140deg,#ffffff8c,transparent 55%)}
+.anthology-cover[data-design="editorial"]{background-image:linear-gradient(90deg,${design.accent} 0 3mm,transparent 3mm)}
+.anthology-cover[data-design="editorial"] [data-cover]{padding-left:${small ? 13 : 19}mm}
+.anthology-cover[data-design="notebook"]{background-image:linear-gradient(90deg,transparent 49.7%,#456f9a26 50%,transparent 50.3%),linear-gradient(0deg,transparent 49.7%,#456f9a26 50%,transparent 50.3%);background-size:12mm 12mm}
+.anthology-cover[data-design="constellation"]{background-image:linear-gradient(155deg,#ffffff0d,transparent 58%)}
+.anthology-cover[data-design="storybook"]{background-image:radial-gradient(circle at 90% 12%,#fff8f27a 0 27%,transparent 27.5%)}
+.anthology-cover[data-design="ocean"]{background-image:linear-gradient(180deg,transparent 0 67%,#3279852e 67% 68%,transparent 68%)}
+.anthology-cover[data-design="modern"]{background-image:linear-gradient(135deg,transparent 0 73%,${design.accent} 73% 100%)}
+.anthology-cover[data-design="hanji"]{background-image:repeating-linear-gradient(90deg,#ffffff25 0 .3mm,transparent .3mm 1.5mm)}
 .anthology-personal .pdf-entry__author,.anthology-personal .poem-sheet__author{display:none}
 .anthology-page:not(.anthology-cover) h1{color:${design.id === 'constellation' ? '#3b4b68' : design.accent}}
 .anthology-page:not(.anthology-cover) .pdf-entry__rule{border-color:${design.id === 'constellation' ? '#8c784e' : design.accent}}

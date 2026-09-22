@@ -16,6 +16,7 @@ const StudentConsentGatePreview = lazy(() => import('./StudentConsentGatePreview
 const ClassAgitPreview = lazy(() => import('./ClassAgitPreview.jsx'))
 const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePreview.jsx'))
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
+const ClassAgitDesignPreview = lazy(() => import('./ClassAgitDesignPreview.jsx'))
 const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
@@ -36,6 +37,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
   }),
   Object.freeze({ id: 'class-agit-selection', icon: '🏡', title: '우리반 아지트 작품 찾기', description: '66개 미션·1,040편 합성 글로 검색·일괄 담기·120편 순서를 점검한다', Component: ClassAgitSelectionPreview }),
   Object.freeze({ id: 'class-agit-release', icon: '🏡', title: '우리반 아지트 문집·외부 공유', description: '문집 확정판·100편 출력·학생 서가·공유 해지/만료와 시범 학급을 한 흐름으로 점검한다', Component: ClassAgitReleasePreview }),
+  Object.freeze({ id: 'class-agit-designs', icon: '🎨', title: '전시관·문집 디자인 8종', description: '전시실과 문집 표지 8종을 실제 컴포넌트로 비교한다', Component: ClassAgitDesignPreview }),
   Object.freeze({
     id: 'class-agit-student',
     icon: '🏡',

@@ -1,9 +1,13 @@
 // 저장값은 이 목록의 ID만 허용한다. 화면과 인쇄가 같은 판형·디자인을 사용한다.
 export const GALLERY_THEMES = Object.freeze([
-    { id: 'garden', label: '햇살 정원', description: '따뜻한 나무 바닥과 초록 식물', wall: '#eeeee3', floor: '#cfb28b', accent: '#597553' },
-    { id: 'museum', label: '하얀 미술관', description: '밝은 회벽과 돌 바닥의 차분한 공간', wall: '#fafafa', floor: '#d7dce2', accent: '#475569' },
-    { id: 'library', label: '이야기 서재', description: '나무 패널과 책장, 깊은 초록 벽', wall: '#35594e', floor: '#98724e', accent: '#ddbd83' },
-    { id: 'night', label: '별빛 전시실', description: '별이 빛나는 남색 벽과 은빛 액자', wall: '#202d4c', floor: '#44516b', accent: '#c7d5fc' },
+    { id: 'garden', label: '세이지 갤러리', description: '옅은 세이지와 자연광', wall: '#e9eee8', floor: '#cbd5c9', accent: '#3e6657', ink: '#234439' },
+    { id: 'museum', label: '화이트 큐브', description: '백색 벽과 석재 톤', wall: '#f5f5f2', floor: '#dce0e1', accent: '#344352', ink: '#263442' },
+    { id: 'library', label: '딥 그린', description: '짙은 녹색과 황동 포인트', wall: '#29483d', floor: '#577064', accent: '#e2c999', ink: '#f4f3e9' },
+    { id: 'night', label: '미드나잇 블루', description: '남색 벽과 은은한 조명', wall: '#1d2941', floor: '#35425b', accent: '#bdccef', ink: '#f4f6ff' },
+    { id: 'atelier', label: '크림 아틀리에', description: '따뜻한 크림과 잉크 블루', wall: '#f4efe5', floor: '#d9d2c3', accent: '#395e79', ink: '#273f50' },
+    { id: 'terracotta', label: '테라코타', description: '흙빛 벽과 부드러운 대비', wall: '#dcb8a4', floor: '#b88b79', accent: '#623d38', ink: '#4a2e2c' },
+    { id: 'ink', label: '차콜 스튜디오', description: '먹빛 공간과 또렷한 액자', wall: '#303538', floor: '#505659', accent: '#e6dfd0', ink: '#f5f1e9' },
+    { id: 'lilac', label: '라일락 룸', description: '옅은 보랏빛과 차분한 회색', wall: '#eeebf2', floor: '#d6d0df', accent: '#6c5d84', ink: '#453954' },
 ]);
 export const BOOK_PAPERS = Object.freeze([
     { id: 'A4', label: 'A4', width: 210, height: 297, marginX: 18, marginTop: 18, marginBottom: 20, description: '넉넉한 본문 · 학교 프린터' },
@@ -11,14 +15,14 @@ export const BOOK_PAPERS = Object.freeze([
     { id: 'B5', label: 'B5 (JIS)', width: 182, height: 257, marginX: 16, marginTop: 16, marginBottom: 19, description: '읽기 편한 중간 크기' },
 ]);
 export const BOOK_DESIGNS = Object.freeze([
-    { id: 'botanical', label: '초록 문집', description: '차분한 이중 테두리와 풀빛 표지', paper: '#f5f2e8', ink: '#304b3a', accent: '#476755', mark: '✦', border: 'double' },
-    { id: 'editorial', label: '우리 반 매거진', description: '큰 제목과 선명한 주황 띠', paper: '#fff7ed', ink: '#2d343b', accent: '#b84920', mark: '—', border: 'solid' },
-    { id: 'notebook', label: '이야기 노트', description: '푸른 줄과 손글씨 공책의 분위기', paper: '#f2f7fb', ink: '#29475e', accent: '#326481', mark: '〰', border: 'solid' },
-    { id: 'constellation', label: '별을 모은 책', description: '짙은 남색 표지와 별빛 장식', paper: '#22304a', ink: '#fff8e8', accent: '#d6b577', mark: '✧', border: 'solid' },
-    { id: 'storybook', label: '동화책', description: '포근한 살구빛과 둥근 액자 장식', paper: '#fff1e6', ink: '#623d35', accent: '#d4775b', mark: '❦', border: 'solid' },
-    { id: 'ocean', label: '푸른 바다', description: '시원한 물결과 깊어지는 푸른빛', paper: '#e9f7fb', ink: '#163f59', accent: '#2186a6', mark: '≈', border: 'solid' },
-    { id: 'modern', label: '모던 블록', description: '선명한 색면과 간결한 타이포그래피', paper: '#f7f5ef', ink: '#222222', accent: '#e0b12d', mark: '■', border: 'solid' },
-    { id: 'hanji', label: '한지 문집', description: '담백한 종이결과 전통 인장 장식', paper: '#f3ecda', ink: '#392f29', accent: '#9b3d34', mark: '書', border: 'double' },
+    { id: 'botanical', label: '세이지 에디션', description: '여백이 넉넉한 세이지 그린', paper: '#edf1e9', ink: '#20392f', accent: '#467160', mark: '01', border: 'solid' },
+    { id: 'editorial', label: '에디토리얼', description: '오프화이트와 버밀리언 타이포', paper: '#f7f4ed', ink: '#25282a', accent: '#bd503f', mark: '02', border: 'solid' },
+    { id: 'notebook', label: '블루 그리드', description: '코발트 선과 정돈된 격자', paper: '#ecf2f8', ink: '#1f354c', accent: '#456f9a', mark: '03', border: 'solid' },
+    { id: 'constellation', label: '미드나잇', description: '깊은 남색과 절제된 은빛', paper: '#202c40', ink: '#f6f4ec', accent: '#c7d3e9', mark: '04', border: 'solid' },
+    { id: 'storybook', label: '소프트 코랄', description: '살구빛과 부드러운 곡선', paper: '#f8e9e2', ink: '#573b3e', accent: '#c97168', mark: '05', border: 'solid' },
+    { id: 'ocean', label: '딥 티얼', description: '짙은 청록과 수평선', paper: '#dfece9', ink: '#163b43', accent: '#327985', mark: '06', border: 'solid' },
+    { id: 'modern', label: '모노 블록', description: '대담한 검정과 시트러스', paper: '#f1f0e9', ink: '#202224', accent: '#a3aa43', mark: '07', border: 'solid' },
+    { id: 'hanji', label: '뉴트럴 페이퍼', description: '따뜻한 종이색과 붉은 인장', paper: '#efe8db', ink: '#3d3831', accent: '#a45949', mark: '08', border: 'solid' },
 ]);
 export const getGalleryTheme = (id) => GALLERY_THEMES.find((item) => item.id === id) || GALLERY_THEMES[0];
 export const getBookPaper = (id) => BOOK_PAPERS.find((item) => item.id === id) || BOOK_PAPERS[0];
@@ -28,12 +32,11 @@ export function bookCoverStyle(designId, paperId) {
     return { '--book-paper': design.paper, '--book-ink': design.ink, '--book-accent': design.accent,
         '--book-border': design.border, aspectRatio: `${paper.width} / ${paper.height}` };
 }
-// 전시관 표지도 문집 표지와 같은 자리·같은 종이 비율로 세운다. 어두운 벽 테마는 글자를 밝게 쓴다.
-const GALLERY_COVER_INK = Object.freeze({ garden: '#2f4133', museum: '#334155', library: '#f5efe2', night: '#eef2ff' });
+// 전시관 표지도 문집 표지와 같은 자리·같은 종이 비율로 세운다.
 export function galleryCoverStyle(themeId) {
     const theme = getGalleryTheme(themeId);
     return { '--gallery-wall': theme.wall, '--gallery-floor': theme.floor, '--gallery-accent': theme.accent,
-        '--gallery-ink': Reflect.get(GALLERY_COVER_INK, theme.id), aspectRatio: `${BOOK_PAPERS[0].width} / ${BOOK_PAPERS[0].height}` };
+        '--gallery-ink': theme.ink, aspectRatio: `${BOOK_PAPERS[0].width} / ${BOOK_PAPERS[0].height}` };
 }
 /*
  * 쪽 배치 — `work-per-page` 는 작품마다 새 쪽에서 시작(지금까지의 모양),
@@ -88,9 +91,35 @@ const ROOM_VARIANTS = Object.freeze({
         { label: '새벽 바다', wall: '#386b7c', glow: '#142f45', side: '#1b3d50', floor: '#4e7180' },
         { label: '노을 별자리', wall: '#79516b', glow: '#381f3f', side: '#4b2d48', floor: '#806477' },
     ],
+    atelier: [
+        { label: '크림', wall: '#f4efe5', glow: '#fffdf8', side: '#ded6c7', floor: '#d9d2c3' },
+        { label: '오트', wall: '#e7dece', glow: '#faf5eb', side: '#cfc4b1', floor: '#c9bda9' },
+        { label: '아이스 블루', wall: '#dde8ec', glow: '#f5fbfc', side: '#c5d5d9', floor: '#cbd8db' },
+        { label: '웜 그레이', wall: '#e3e0da', glow: '#f8f7f2', side: '#cecbc5', floor: '#d0ccc5' },
+    ],
+    terracotta: [
+        { label: '테라코타', wall: '#dcb8a4', glow: '#f4ddd0', side: '#c59b88', floor: '#b88b79' },
+        { label: '코랄', wall: '#e8c5b6', glow: '#fff0e8', side: '#d5a99c', floor: '#c49d90' },
+        { label: '로즈 브라운', wall: '#bc948c', glow: '#e1c1b8', side: '#a97f78', floor: '#9e776f' },
+        { label: '클레이', wall: '#d6bda9', glow: '#f0e1d1', side: '#bea38f', floor: '#b29683' },
+    ],
+    ink: [
+        { label: '차콜', wall: '#303538', glow: '#555c5e', side: '#252b2e', floor: '#505659' },
+        { label: '슬레이트', wall: '#39464d', glow: '#5c6970', side: '#2d383e', floor: '#59656b' },
+        { label: '잉크 블루', wall: '#2c3847', glow: '#4c5b6c', side: '#222d3a', floor: '#4b5867' },
+        { label: '흑갈색', wall: '#443d38', glow: '#635a54', side: '#342f2b', floor: '#5d554f' },
+    ],
+    lilac: [
+        { label: '라일락', wall: '#eeebf2', glow: '#fcfaff', side: '#d9d4e2', floor: '#d6d0df' },
+        { label: '페일 블루', wall: '#e7ecf6', glow: '#f9fbff', side: '#d3dbea', floor: '#d1dbe9' },
+        { label: '쿨 핑크', wall: '#f3e9ed', glow: '#fffafb', side: '#e2d2d9', floor: '#ded0d7' },
+        { label: '모브', wall: '#ddd4e2', glow: '#f4edf6', side: '#c7bbcd', floor: '#c5bbc9' },
+    ],
 });
 export const getRoomVariants = (theme) => Reflect.get(ROOM_VARIANTS, getGalleryTheme(theme).id);
 export function roomVariantStyle(theme, index) {
-    const variant = getRoomVariants(theme).at(Number.isInteger(index) && index >= 0 && index <= 3 ? index : 0);
-    return { '--variant-wall': variant.wall, '--variant-glow': variant.glow, '--variant-side': variant.side, '--variant-floor': variant.floor };
+    const selectedTheme = getGalleryTheme(theme);
+    const variant = getRoomVariants(selectedTheme.id).at(Number.isInteger(index) && index >= 0 && index <= 3 ? index : 0);
+    return { '--variant-wall': variant.wall, '--variant-glow': variant.glow, '--variant-side': variant.side,
+        '--variant-floor': variant.floor, '--variant-accent': selectedTheme.accent, '--variant-ink': selectedTheme.ink };
 }

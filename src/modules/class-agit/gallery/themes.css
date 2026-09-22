@@ -28,3 +28,22 @@
 .class-agit-room[data-variant="1"] .class-agit-room__plant { right:auto;left:1%;transform:scaleX(-1); }
 .class-agit-room[data-variant="2"] .class-agit-room__lights { left:14%;right:30%; }
 .class-agit-room[data-variant="3"] .class-agit-room__bench { left:22%; }
+
+/* 여덟 공간은 같은 전시 동선과 액자 구조를 쓰고, 재료·빛·타이포 톤으로 구분한다. */
+.class-agit-room[data-theme] { background:var(--variant-side);box-shadow:inset 0 0 0 1px #00000012,0 18px 44px #1b293019; }
+.class-agit-room[data-theme] .class-agit-room__back { background:linear-gradient(145deg,var(--variant-glow),var(--variant-wall) 75%);box-shadow:inset 0 0 0 1px #ffffff34,0 12px 28px #17202a12; }
+.class-agit-room[data-theme] :is(.class-agit-room__left,.class-agit-room__right) { background:var(--variant-side); }
+.class-agit-room[data-theme] .class-agit-room__floor { background:linear-gradient(160deg,var(--variant-floor),var(--variant-side));box-shadow:inset 0 1px #ffffff50; }
+.class-agit-room[data-theme] .class-agit-room__sign { color:var(--variant-ink);opacity:.72;font-weight:750; }
+.class-agit-room[data-theme] .class-agit-room__lights i { background:var(--variant-accent);opacity:.75; }
+.class-agit-room[data-theme] .class-agit-room__lights i::after { background:linear-gradient(#ffffff50,transparent); }
+.class-agit-room[data-theme] .class-agit-room__bench { background:var(--variant-accent);opacity:.72;border-radius:2px;box-shadow:0 12px 18px #0002; }
+.class-agit-room[data-theme] .class-agit-room__bench::before,.class-agit-room[data-theme] .class-agit-room__bench::after { background:var(--variant-accent); }
+.class-agit-room[data-theme] .class-agit-room__plant { display:none; }
+.class-agit-room[data-theme] .class-agit-frame > button { background:var(--variant-accent);border:1px solid var(--variant-accent);border-radius:2px;box-shadow:0 7px 20px #10192035; }
+.class-agit-room[data-theme] .class-agit-frame__paper { background:#fdfcf8;box-shadow:none; }
+.class-agit-room[data-theme] .class-agit-frame__paper[data-format='poem'] { background:#f7f6f1; }
+.class-agit-room[data-theme] .class-agit-room__empty :is(h3,p,span) { color:var(--variant-ink); }
+.class-agit-room[data-theme][data-variant="1"] .class-agit-room__lights { left:16%;right:27%; }
+.class-agit-room[data-theme][data-variant="2"] .class-agit-room__bench { left:27%; }
+.class-agit-room[data-theme][data-variant="3"] .class-agit-room__lights { left:30%;right:15%; }

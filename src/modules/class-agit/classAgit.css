@@ -28,6 +28,10 @@
 .class-agit-exhibition-card small { font-size: 12px; opacity: .8; }
 .class-agit-exhibition-card .class-agit-cover-mark { font-size: 32px; color: var(--gallery-accent, #8a9965); }
 .class-agit-exhibition-card strong { font-size: 13px; }
+.class-agit-exhibition-card { position:relative;align-items:stretch;justify-content:center;text-align:left;gap:14px;padding:30px;background:linear-gradient(145deg,#ffffff18,transparent 58%),var(--gallery-wall);border:1px solid #00000012;border-bottom:0;border-radius:3px;box-shadow:5px 7px 0 #182b2220;overflow:hidden; }
+.class-agit-exhibition-card::before { content:'';position:absolute;top:0;left:0;right:0;height:9px;background:var(--gallery-accent); }
+.class-agit-exhibition-card h3 { font-size:clamp(20px,2vw,28px);line-height:1.32;letter-spacing:-.05em; }
+.class-agit-exhibition-card .class-agit-cover-mark { color:var(--gallery-accent);font:700 13px/1 var(--font-family,'Pretendard',sans-serif);letter-spacing:.16em;border-top:1px solid currentColor;padding-top:10px; }
 .class-agit-lobby-art { min-height: 340px; border-radius: 50% 50% 15px 15px; background: linear-gradient(160deg, #e1e6d5, #f5f2e5); border: 12px solid #e7e6d6; display: grid; align-content: center; justify-items: center; gap: 25px; text-align: center; padding: 25px; }
 .class-agit-lobby-art span { font-size: 70px; color: #7d8c57; }.class-agit-lobby-art p { font-size: 23px; color: #4e6044; line-height: 1.8; }.class-agit-lobby-art i { width: 60%; height: 12px; border-radius: 3px; background: #c4aa82; box-shadow: 0 12px 22px #89826438; }
 .class-agit-live-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 15px 0; font-size: 13px; }

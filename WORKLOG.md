@@ -18,6 +18,32 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-22 — 글꽃 2.5D 전시관 테마 8종 확장·문집 표지 리디자인 및 독서 쪽수 1순위 국립중앙도서관 적용 (Gemini 3.8 Flash & Codex)
+- **배경**:
+  - 교사/학생 경험 개선: 우리 반 글 2.5D 전시관 테마 및 학급 문집 표지 디자인을 다양화하고 완성도를 높이기 위해 테마와 표지를 각각 4종에서 8종으로 확장.
+  - 사용자 문의/피드백: 독서마라톤에서 국내 아동도서의 쪽수 미확인이 자주 발생하는 문제 해결(Google Books에 국내 아동도서 쪽수가 누락된 경우가 많아, 납본 데이터가 확실한 국립중앙도서관 서지정보가 1순위여야 함).
+- **변경**:
+  - `src/modules/class-agit/designs.js`:
+    - `GALLERY_THEMES` 8종 확장: 기존 4종(`garden`, `museum`, `library`, `night`) + 신규 4종(`atelier` 모던 아틀리에, `terracotta` 테라코타 룸, `ink` 차콜 스튜디오, `lilac` 라일락 룸). 테마별 4개 방(`ROOM_VARIANTS`) 벽·바닥·빛·조명·벤치·잉크 색상 세트 정의.
+    - `BOOK_DESIGNS` 표지 8종 전면 리디자인: 세이지 에디션(`botanical`), 에디토리얼(`editorial`), 블루 그리드(`notebook`), 미드나잇(`constellation`), 소프트 코랄(`storybook`), 딥 티얼(`ocean`), 모노 블록(`modern`), 뉴트럴 페이퍼(`hanji`).
+  - `src/modules/class-agit/gallery/themes.css`, `src/modules/class-agit/anthology/cover.css`, `src/modules/class-agit/anthology/print.js`:
+    - 2.5D 전시관 8개 테마 스타일 및 8개 문집 표지의 화면·학생 서가·인쇄(`print.js`) 스타일 전면 동기화.
+  - `src/dev/ClassAgitDesignPreview.jsx`, `src/dev/devLabRegistry.js`:
+    - DB 없이 8개 전시관 테마와 8개 문집 표지를 한눈에 비교·검토할 수 있는 개발용 미리보기 도구 신설.
+  - `supabase/migrations/20261332_class_agit_eight_gallery_themes.sql`:
+    - `class_agit_exhibitions`, `class_agit_external_shares`, `class_agit_publication_catalog` 테이블의 테마 체크 제약조건을 8종으로 확장하고 `run_class_agit_action_v1` 함수 갱신. `npm run migrate`로 운영 DB 적용 완료.
+  - `supabase/functions/book-search/index.ts`:
+    - 독서록 도서 쪽수(`lookupPageCount`) 조회 시, 국내 아동도서 등록률과 납본 쪽수 정확도가 높은 **국립중앙도서관 서지정보(`NL_SEOJI_API_KEY`)를 1순위**로, Google Books를 2순위로 호출 순서 변경.
+    - 맥미니 호스트 볼륨 `~/agit-supabase/volumes/functions/book-search/index.ts`에 동기화 반영 및 `agit-edge-functions` 컨테이너 재시작 완료.
+  - `tests/classAgitDesigns.test.mjs`:
+    - 8개 테마 및 8개 문집 표지 디자인 일관성, DB 제약조건 일치 검증.
+- **결과/검증**:
+  - `npm run migrate:check` 통과 (롤백 검증 성공) 및 `npm run migrate`로 마이그레이션 `20261332` 운영 DB 적용 완료.
+  - 전체 단위 테스트 1,247개 통과 (`npm run test:all`, `tests/classAgitDesigns.test.mjs` 포함).
+  - ESLint 0오류 (`npm run lint`), 프로덕션 빌드 정상 완료 (`npm run build`).
+  - Edge function `book-search` 배포 볼륨 일치 확인 (`diff -r`) 및 컨테이너 재시동 정상 확인.
+- **남은 것 / 다음**: 없음.
+
 ## 2026-09-21 — 글꽃 책방 문집 내보내기 시 엑셀 및 구글 문서 통합 선택 지원 (Gemini 3.8 Flash)
 - **배경**: 사용자 요청("방금 바뀐 모달창의 디자인이 좀 이질적인데? 데이터 내보내기 기존 컴포넌트가 있는데 그 모달창의 사이즈와 디자인을 적용해줘. 거기에는 엑셀과 구글 문서중 선택 가능하고 구글 문서는 기본값이 이어붙이기고 글마다 페이지나누기는 자동선택으로 시작하게 되어 있어. 확인해봐. 엑셀로도 내보내기 가능하도록 기존 모듈 넣어줘").
 - **변경**:

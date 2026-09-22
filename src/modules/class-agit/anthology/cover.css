@@ -1,14 +1,20 @@
-.class-agit .class-agit-book-cover[data-design] { min-height:0;width:100%;padding:24px;gap:12px;background:var(--book-paper);color:var(--book-ink);border:5px var(--book-border) var(--book-accent);display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-wrap:anywhere; }
-.class-agit .class-agit-book-cover[data-design] :is(h2,h3,p,small,span,strong) { color:inherit;margin:0; }
-.class-agit .class-agit-book-cover[data-design] :is(h2,h3) { font-size:clamp(16px,1.8vw,24px);line-height:1.45; }
-.class-agit .class-agit-book-cover[data-design] p { font-size:13px; }
-.class-agit .class-agit-book-cover[data-design] .class-agit-cover-mark { font-size:32px;color:var(--book-accent); }
-.class-agit .class-agit-book-cover[data-design="editorial"] { border:0;border-top:24px solid var(--book-accent);border-bottom:7px solid var(--book-accent);text-align:left;align-items:stretch; }
-.class-agit .class-agit-book-cover[data-design="notebook"] { border:1px solid #adc3d4;border-left:12px solid var(--book-accent);background-image:repeating-linear-gradient(0deg,transparent 0 23px,#32648118 24px 25px); }
-.class-agit .class-agit-book-cover[data-design="constellation"] { border:1px solid var(--book-accent);background-image:radial-gradient(circle at 15% 20%,#d6b577 0 1px,transparent 2px),radial-gradient(circle at 90% 70%,#d6b577 0 1px,transparent 2px);background-size:53px 67px,79px 97px; }
-.class-agit .class-agit-book-cover[data-design="storybook"] { border-radius:45% 45% 12px 12px;border-width:7px;box-shadow:inset 0 0 0 3px #fff8; }
-.class-agit .class-agit-book-cover[data-design="ocean"] { border:0;border-bottom:18px solid var(--book-accent);background-image:radial-gradient(ellipse at 15% 92%,#fff8 0 9%,transparent 10%),radial-gradient(ellipse at 52% 96%,#fff7 0 13%,transparent 14%),linear-gradient(#eafaff,#94d7e7); }
-.class-agit .class-agit-book-cover[data-design="modern"] { border:0;border-left:36px solid var(--book-accent);text-align:left;align-items:stretch; }
-.class-agit .class-agit-book-cover[data-design="hanji"] { background-image:repeating-linear-gradient(8deg,#ffffff10 0 2px,#684f3610 3px 4px); }
+/* 표지는 화면·학생 서가·인쇄에서 같은 팔레트와 구성 요소를 쓴다. */
+.class-agit .class-agit-book-cover[data-design] { position:relative;min-height:0;width:100%;padding:clamp(20px,3vw,34px);gap:12px;justify-content:center;align-items:stretch;text-align:left;overflow:hidden;overflow-wrap:anywhere;background:var(--book-paper);color:var(--book-ink);border:0;border-radius:3px;box-shadow:inset 0 0 0 1px #00000014,5px 7px 0 #182b2220; }
+.class-agit .class-agit-book-cover[data-design]::before { content:'';position:absolute;top:0;left:0;right:0;height:9px;background:var(--book-accent); }
+.class-agit .class-agit-book-cover[data-design] :is(h2,h3,p,small,span,strong) { color:inherit;margin:0;position:relative;z-index:1; }
+.class-agit .class-agit-book-cover[data-design] :is(h2,h3) { font-size:clamp(20px,2vw,28px);line-height:1.33;letter-spacing:-.05em;font-weight:780; }
+.class-agit .class-agit-book-cover[data-design] p { font-size:12px;line-height:1.6; }
+.class-agit .class-agit-book-cover[data-design] :is(span:first-child,small) { font-size:10px;font-weight:700;letter-spacing:.12em; }
+.class-agit .class-agit-book-cover[data-design] .class-agit-cover-mark { color:var(--book-accent);font:700 13px/1 var(--font-family,'Pretendard',sans-serif);letter-spacing:.16em;padding-top:9px;border-top:1px solid currentColor; }
+.class-agit .class-agit-book-cover[data-design="botanical"] { background-image:linear-gradient(140deg,#ffffff8c,transparent 55%); }
+.class-agit .class-agit-book-cover[data-design="editorial"] { background-image:linear-gradient(90deg,var(--book-accent) 0 12px,transparent 12px);padding-left:38px; }
+.class-agit .class-agit-book-cover[data-design="notebook"] { background-image:linear-gradient(90deg,transparent 49.7%,#456f9a26 50%,transparent 50.3%),linear-gradient(0deg,transparent 49.7%,#456f9a26 50%,transparent 50.3%);background-size:44px 44px; }
+.class-agit .class-agit-book-cover[data-design="constellation"] { background-image:linear-gradient(155deg,#ffffff0d,transparent 58%); }
+.class-agit .class-agit-book-cover[data-design="storybook"] { background-image:radial-gradient(circle at 90% 12%,#fff8f27a 0 27%,transparent 27.5%); }
+.class-agit .class-agit-book-cover[data-design="ocean"] { background-image:linear-gradient(180deg,transparent 0 67%,#3279852e 67% 68%,transparent 68%); }
+.class-agit .class-agit-book-cover[data-design="modern"] { background-image:linear-gradient(135deg,transparent 0 73%,var(--book-accent) 73% 100%); }
+.class-agit .class-agit-book-cover[data-design="hanji"] { background-image:repeating-linear-gradient(90deg,#ffffff25 0 1px,transparent 1px 5px); }
+.class-agit .class-agit-book-cover[data-design="editorial"]::before,.class-agit .class-agit-book-cover[data-design="modern"]::before { height:5px; }
+.class-agit .class-agit-book-cover[data-design="storybook"]::before,.class-agit .class-agit-book-cover[data-design="ocean"]::before { height:3px; }
 .class-agit-student-exhibitions:has(> .class-agit-book-cover) { grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); }
 .class-agit-student-exhibitions > .class-agit-book-cover[data-design] { max-width:280px; }

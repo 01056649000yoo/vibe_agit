@@ -14,6 +14,7 @@ import GalleryRoom from '../gallery/GalleryRoom.jsx';
 import StudentBooks from '../anthology/StudentBooks.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import '../classAgit.css';
+import '../anthology/cover.css';
 
 export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, onBack, api = classAgitStudentApi, releaseApi = classAgitReleaseApi }) {
     const route = normalizeClassAgitParams(params);
