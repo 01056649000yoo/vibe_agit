@@ -10,13 +10,14 @@
 
 ## 배포·운영
 
+- **정적 서버의 SPA 폴백은 `/assets/` 에 걸면 안 된다.** 사라진 옛 조각에 index.html 을 immutable 로 돌려줘
+  배포 직후 열린 탭이 `Importing a module script failed` 로 죽었다. Caddy `try_files` 는 조건을 받지 않으니(검증은 통과한다)
+  실제 컨테이너로 요청해 확인한다. (2026-09-23)
 - **마이그레이션을 앱보다 먼저 적용한다.** 순서가 바뀌면 화면에는 기능이 보이는데 저장이 거절된다.
   `npm run migrate` → 배포. (2026-09-02)
 - **시크릿을 넣은 뒤 `docker restart` 로 끝내지 않는다.** 엣지 함수는 `docker-compose.agit.yml` 의
   `env_file` 로 값을 받는데 이건 **컨테이너를 만들 때만** 읽힌다. `up -d --force-recreate --no-deps functions`
   로 다시 만들고(`--dry-run` 먼저), `docker inspect` 로 이름만 확인한다. (2026-09-17)
-- **도커의 한도는 맥 디스크가 아니다.** 데이터는 외장 SSD 위 `Docker.raw`(상한 32GB) 안에 있다.
-  맥이 93GB 남아도 도커는 찰 수 있다. 관문·정리는 `scripts/trim-docker-cache.sh` 가 도커 안쪽을 본다. (2026-09-02)
 - **맥미니에 마이그레이션을 직접 보낼 땐 `git show HEAD:<경로>` 로 보낸다.** 체크섬은 파일 바이트라
   작업본이 CRLF 면 저장본(LF)과 원장이 어긋난다. `*.sql` 은 `.gitattributes` 로 LF 고정. (2026-09-14)
 - **이 앱의 주소는 `끄적끄적아지트.site`(xn--vz0ba242ncqcba79xhwx) 다.** `끄적끄적.kr` 은 샘링크,

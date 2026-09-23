@@ -18,6 +18,23 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-23 — 배포 뒤 "TypeError: Importing a module script failed" (학생 모두의 아지트 진입) 수정 (Claude Opus 5.5)
+- **증상**: 학생 대시보드에서 모두의 아지트에 들어가면 위 오류(사파리 문구).
+- **원인(확인함)**: 로컬 배포 직후 푸시로 자동 배포가 한 번 더 돌아 화면 조각 파일 이름이 바뀌었다. 배포 전에 열어 둔 탭이
+  사라진 옛 조각(예: `books-Cdm2cyui.js`)을 부르면 컨테이너 Caddy 의 SPA 폴백(`try_files {path} /index.html`)이
+  **index.html 을 200 으로**, 그것도 해시 파일명 규칙 때문에 **`immutable` 1년 캐시**로 돌려줬다 → 자바스크립트 대신 HTML →
+  모듈 로드 실패. 앱에는 청크 실패를 복구하는 처리가 없었다.
+- **고침**:
+  - `Caddyfile.container`: `/assets/*` 는 폴백하지 않는다(없으면 404). 1년 캐시는 **실제로 있는 파일**에만(`file` 조건).
+    ⚠️ `try_files` 는 조건(@matcher)을 받지 않는다 — 처음 `try_files @spa …` 로 썼더니 `caddy validate` 는 통과하고
+    `@spa` 를 파일 이름으로 취급했다. 실제 Caddy 컨테이너로 요청해 보고 알았다 → `@spa { not path /assets/*; not file }` + `rewrite`.
+  - 앱: `src/utils/chunkReload.js` — 청크 오류(사파리·크롬·파이어폭스 문구)를 알아보고 **30초 안에 한 번만** 새로고침.
+    `main.jsx` 의 `vite:preloadError` 와 전역 `ErrorBoundary` 에 연결(청크 오류면 "새 버전이 나왔어요" 안내).
+- **검증**: 실제 Caddy 이미지로 있는 조각 200+immutable / 없는 조각 **404** / 앱 경로 index.html 확인, 운영 주소에서도
+  옛 `books-Cdm2cyui.js` → 404 확인. `chunkReload.test.mjs`(4), `deploymentArchitecture` 규칙 갱신(일부러 되돌려 실패 확인),
+  test:all 1276/1276, lint 0, build, deploy:local.
+- **주의**: 이 수정은 푸시해야 자동 배포가 되돌리지 않는다(자동 배포는 원격 코드로 컨테이너를 다시 만든다).
+
 ## 2026-09-23 — 모두의 아지트 세 공간을 "따로 있는 방" 으로: 학생 로비·교사 공간 카드 (Claude Opus 5.5)
 - **요청**: 글 나눔 공간·함께 쓰는 주제·문집 나눔 탭이 작고 볼품없다 → 각 공간이 분리된 공간처럼. 선생님 결정: **학생은 로비형, 교사는 큰 카드 탭**.
 - **한 일**:

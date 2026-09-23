@@ -80,7 +80,12 @@ test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬
     assert.doesNotMatch(dockerignore, /^scripts\/\*/m);
     assert.doesNotMatch(dockerignore, /^\*\.md$/m);
     assert.match(dockerfile, /FROM caddy:2-alpine AS runner/);
-    assert.match(caddy, /try_files \{path\} \/index\.html/);
+    // SPA 폴백: 없는 경로는 index.html. 단 사라진 옛 화면 조각(/assets/)에는 돌려주지 않는다 —
+    // 사파리 "Importing a module script failed"(2026-09-23). try_files 는 조건을 받지 않아 rewrite 로 쓴다.
+    assert.match(caddy, /@spa \{\s*not path \/assets\/\*\s*not file\s*\}\s*rewrite @spa \/index\.html/);
+    assert.doesNotMatch(caddy, /try_files @/);
+    // 1년 캐시는 실제로 있는 파일에만.
+    assert.match(caddy, /@hashed \{\n\s*path_regexp [^\n]*\n\s*file\n\s*\}/);
 });
 
 test('러너는 배포 뒤 빌드 캐시를 상한 안으로만 정리한다', () => {

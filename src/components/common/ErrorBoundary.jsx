@@ -1,4 +1,5 @@
 import React from 'react';
+import { isChunkLoadError, reloadOnceForNewDeploy } from '../../utils/chunkReload.js';
 
 /**
  * 전역 에러 방어막 (Error Boundary)
@@ -18,9 +19,23 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // 에러 리포팅 서비스에 에러를 기록할 수 있습니다.
     console.error("🚨 [ErrorBoundary] 컴포넌트 에러 포착:", error, errorInfo);
+    // 새 배포 뒤 옛 화면 조각을 못 받은 것이면 한 번 새로고침해 새 판을 받는다.
+    if (isChunkLoadError(error)) reloadOnceForNewDeploy();
   }
 
   render() {
+    if (this.state.hasError && isChunkLoadError(this.state.error)) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', padding: '20px', textAlign: 'center' }}>
+          <span style={{ fontSize: '3rem', marginBottom: '15px' }}>✨</span>
+          <h2 style={{ marginBottom: '10px' }}>새 버전이 나왔어요</h2>
+          <p style={{ color: '#666', lineHeight: '1.5', marginBottom: '20px' }}>화면을 새로 불러오고 있어요. 그대로 있으면 새로고침 버튼을 눌러 주세요.</p>
+          <button onClick={() => window.location.reload()} style={{ padding: '10px 24px', background: '#1565C0', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+            🔄 새로고침
+          </button>
+        </div>
+      );
+    }
     if (this.state.hasError) {
       // 커스텀 폴백 UI를 렌더링합니다.
       return (
