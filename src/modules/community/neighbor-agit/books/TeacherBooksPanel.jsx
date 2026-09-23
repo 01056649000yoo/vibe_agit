@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
-import '../../../class-agit/anthology/cover.css';
 import { neighborBooksApi } from './booksApi';
 import './books.css';
 
@@ -124,11 +123,12 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     const design = getBookDesign(book.design);
                     return (
                         <li key={book.book_id} className={`neighbor-books__book-card${reason ? ' is-blocked' : ''}`}>
-                            <div className="class-agit neighbor-books__mini-cover-frame" aria-hidden="true">
-                                <span className="class-agit-book-cover neighbor-books__mini-cover" data-design={design.id} style={bookCoverStyle(book.design, book.paper)}>
-                                    <span className="class-agit-cover-mark">{design.mark}</span>
-                                </span>
-                            </div>
+                            {/* 작은 표지는 우리 클래스만 쓴다. 글꽃 책방의 .class-agit·.class-agit-book-cover 를 빌리면
+                                그 스타일이 늦게 읽힐 때(메뉴를 연 순서에 따라) 여백·가운데 정렬이 붙어 표지가 글을 덮었다(2026-09-23).
+                                색·비율만 bookCoverStyle 의 변수로 받는다. */}
+                            <span className="neighbor-books__mini-cover" data-design={design.id} style={bookCoverStyle(book.design, book.paper)} aria-hidden="true">
+                                <span>{design.mark}</span>
+                            </span>
                             <div className="neighbor-books__book-body">
                                 <strong>{book.title}</strong>
                                 <small>{book.latest_edition_id ? `${book.latest_number}판 · 작품 ${book.work_count}편` : book.any_edition_number ? `${book.any_edition_number}판 확정 · 학생에게 가림` : '확정 전'}</small>

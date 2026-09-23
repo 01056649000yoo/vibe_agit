@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import ArtworkReader from '../../../class-agit/gallery/ArtworkReader.jsx';
+import BookPreviewFrame from '../../../class-agit/anthology/BookPreviewFrame.jsx';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
 import '../../../class-agit/classAgit.css';
 import '../../../class-agit/anthology/cover.css';
@@ -29,6 +30,8 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     const [saving, setSaving] = useState(false);
     const [notice, setNotice] = useState('');
     const openedInitial = useRef(null);
+    const [bookView, setBookView] = useState(false);
+    const loadPrint = useCallback(() => api.getSharedBookPrint({ spaceId, sharedBookId: openId }), [api, spaceId, openId]);
 
     const loadBooks = useCallback(async () => {
         setError('');
@@ -64,6 +67,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     }, [initialSharedBookId, openBook]);
 
     const closeBook = () => {
+        setBookView(false);
         setOpenId(null);
         setBook(null);
         setWork(null);
@@ -118,6 +122,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                             <h2>{book.book.title}</h2>
                             {book.book.subtitle && <p>{book.book.subtitle}</p>}
                             {book.book.introduction && <div className="class-agit-book-introduction">{book.book.introduction}</div>}
+                            <button type="button" className="class-agit-book-open" onClick={() => setBookView(true)} disabled={!book.works.length}>📖 책으로 펼쳐 읽기</button>
                             <h3>차례 · {book.works.length}편</h3>
                             <ol className="class-agit-book-items">{book.works.map((item) => (
                                 <li key={item.id}><button type="button" onClick={() => readWork(item.id)}>{item.title} · {item.author}</button></li>
@@ -148,6 +153,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                         </section>
                     </>
                 )}
+                {bookView && <BookPreviewFrame load={loadPrint} title={book?.book?.title || '문집'} onClose={() => setBookView(false)} />}
                 {work && <ArtworkReader work={workLoading ? null : work} loading={workLoading} roomTitle={book?.book?.title}
                     onClose={() => setWork(null)} footer={<button type="button" onClick={() => setWork(null)}>차례로</button>} />}
             </section>

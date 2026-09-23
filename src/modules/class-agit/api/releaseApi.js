@@ -26,4 +26,6 @@ export const classAgitReleaseApi = {
     },
     shareAction: (classId, exhibitionId, action, payload) => call('run_class_agit_share_action_v1', { p_class_id: classId, p_exhibition_id: exhibitionId, p_action: action, p_payload: payload }),
     getStudentBooks: (editionId = null, workId = null) => call('get_my_class_agit_books_v1', { p_edition_id: editionId, p_work_id: workId }),
+    // 학생 "책으로 보기": 교사 미리보기와 같은 확정판 전체(원글 id 는 빠져 온다, 20261338).
+    getStudentBookPrint: (editionId) => call('get_my_class_agit_book_print_v1', { p_edition_id: editionId }),
 };

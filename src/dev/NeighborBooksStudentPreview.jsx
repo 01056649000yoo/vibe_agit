@@ -30,6 +30,13 @@ export function createNeighborBooksPreviewApi() {
         guestbook: { entries, mine, owner_class_name: '햇살반' },
       }
     },
+    async getSharedBookPrint() {
+      return {
+        version: 1, id: 'ed-1', number: 2, created_at: new Date().toISOString(),
+        book: { ...bookInfo, owner_student_name: null, print: { paper: 'A4', design: 'storybook', layout: 'work-per-page', body_pt: 12, poem_pt: 14, version: 2 },
+          works: works.map((work) => ({ ...work, sourceId: work.id })) },
+      }
+    },
     async saveGuestbook({ content, action }) {
       mine = action === 'delete' ? null : { entry_id: 'mine', content, status: 'pending' }
       return { success: true }

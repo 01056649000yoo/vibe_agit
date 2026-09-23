@@ -1,0 +1,6 @@
+/* 학생 "책으로 보기" 창. 화면을 거의 다 쓰고, 안쪽 틀에 교사 미리보기와 같은 쪽들이 그려진다. */
+.book-preview-frame { position: fixed; inset: 0; z-index: 3000; display: grid; grid-template-rows: auto minmax(0, 1fr); background: rgba(15, 23, 42, .72); padding: clamp(8px, 2vw, 24px); gap: 8px; }
+.book-preview-frame__bar { display: flex; align-items: center; gap: var(--ui-space-3); padding: 8px 12px; border-radius: var(--ui-radius-lg); background: var(--ui-surface); color: var(--ui-ink-strong); }
+.book-preview-frame__bar strong { font-size: var(--ui-text-lg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-preview-frame__bar span { flex: 1; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.book-preview-frame__page { width: 100%; height: 100%; border: 0; border-radius: var(--ui-radius-lg); background: #e7e5df; }

@@ -65,6 +65,10 @@ export const neighborBooksApi = {
         assertStudentBooks(book, book.id, workId);
         return { ...book, guestbook: workId ? null : assertGuestbook(guestbook) };
     },
+    // "책으로 보기": 교사 미리보기와 같은 확정판 전체(원글 id 는 빠져 온다, 20261338). 모양 검사는 보는 창이 한다.
+    async getSharedBookPrint({ spaceId, sharedBookId }) {
+        return call('get_neighbor_shared_book_print_v1', { p_space_id: spaceId, p_shared_book_id: sharedBookId });
+    },
     async saveGuestbook({ spaceId, sharedBookId, content, action = 'save' }) {
         const data = await call('save_neighbor_guestbook_v1', { p_space_id: spaceId, p_shared_book_id: sharedBookId, p_content: content, p_action: action });
         if (data?.success !== true) throw new Error('방문록을 저장하지 못했어요.');
