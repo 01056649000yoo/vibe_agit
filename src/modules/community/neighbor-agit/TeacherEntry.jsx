@@ -19,6 +19,8 @@ import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityType
 import { neighborAgitTeacherApi } from './teacherApi';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import TeacherPostReview from './TeacherPostReview';
+import TeacherBooksPanel from './books/TeacherBooksPanel';
+import { neighborBooksApi } from './books/booksApi';
 import './TeacherEntry.css';
 
 const STATUS_LABELS = Object.freeze({
@@ -47,7 +49,7 @@ const formatDeadline = (value) => new Date(value).toLocaleString('ko-KR', {
     month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit'
 });
 
-const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi, onTodoCountChange }) => {
+const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi, booksApi = neighborBooksApi, onTodoCountChange }) => {
     const classId = activeClass?.id;
     const [workspace, setWorkspace] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -106,6 +108,31 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setLoading(false);
         }
     }, [api, classId]);
+
+    // 화면을 비우지 않고 작업 공간만 다시 읽는다(문집 나눔·검토함에서 처리한 뒤 숫자를 맞출 때).
+    const refreshWorkspace = useCallback(async () => {
+        if (!classId) return;
+        try {
+            setWorkspace(await api.getWorkspace(classId));
+        } catch { /* 다음 새로고침 때 다시 읽는다 */ }
+    }, [api, classId]);
+
+    // 검토함에서 방문록을 올리거나 올리지 않는다(문집 주인 반 교사).
+    const reviewGuestbookEntry = async (entry, action) => {
+        if (busy) return;
+        setBusy(`guestbook_${entry.entry_id}`);
+        setMessage('');
+        setErrorMessage('');
+        try {
+            await booksApi.reviewGuestbook({ spaceId: workspace.space.id, classId, entryId: entry.entry_id, action });
+            await refreshWorkspace();
+            setMessage(action === 'approve' ? '방문록을 올렸습니다. 쓴 학생과 문집에 글이 실린 학생들에게 알림이 갑니다.' : '방문록을 올리지 않았습니다.');
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error, '방문록을 처리하지 못했습니다.'));
+        } finally {
+            setBusy('');
+        }
+    };
 
     useEffect(() => {
         setWorkspace(null);
@@ -534,9 +561,12 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 알림 카운트(서버 계산). 배지로 보여 탭을 오가지 않아도 처리할 것을 안다.
     const notif = workspace?.notifications || {};
     // 검토함에 올릴 것: 다른 학급이 낸 주제(활동) 제안 중 우리 반이 승인/거절할 것 + AI가 막은 우리 반 댓글
-    // + (호스트) 참여 신청. 메뉴 배지(get_neighbor_teacher_badge_v1)와 같은 셋을 센다 — 둘이 다른 수를 말하면 안 된다.
+    // + (호스트) 참여 신청 + 우리 반 문집에 들어온 방문록. 메뉴 배지(get_neighbor_teacher_badge_v1)와 같은 셋을
+    // 센다 — 둘이 다른 수를 말하면 안 된다.
     const pendingApprovalActivities = activities.filter((activity) => activity.can_review);
-    const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0);
+    const pendingGuestbook = workspace?.pending_guestbook || [];
+    const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0)
+        + (notif.pending_guestbook || 0);
 
     // 처리할 일 수를 메뉴 배지로 올린다. 메뉴는 학급을 바꿀 때만 세므로, 여기서 처리하는 즉시 줄어들게 한다.
     useEffect(() => {
@@ -950,7 +980,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         <div className="neighbor-teacher__activity-layout">
                             <nav className="neighbor-teacher__activity-tabs" aria-label="활동 전환" role="tablist">
                                 {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => {
-                                    const tabBadge = id === 'gallery' ? notif.new_posts : id === 'topic' ? notif.pending_approvals : 0;
+                                    const tabBadge = id === 'gallery' ? notif.new_posts : id === 'topic' ? notif.pending_approvals : id === 'books' ? notif.pending_guestbook : 0;
                                     return (
                                         <button type="button" role="tab" key={id} className={activeActivityTab === id ? 'is-active' : ''} aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
                                             <span aria-hidden="true">{icon}</span>
@@ -1090,6 +1120,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
                                 {galleryStep === 'manage' && renderManageStep()}
                                 {galleryStep === 'engage' && renderEngageStep()}
+                                </div>
+                            ) : activeActivityTab === 'books' ? (
+                                <div className="neighbor-teacher__activity-body">
+                                    <TeacherBooksPanel spaceId={workspace.space.id} classId={classId} pendingEntries={pendingGuestbook}
+                                        ask={ask} onChanged={refreshWorkspace} api={booksApi} />
                                 </div>
                             ) : (
                                 <>
@@ -1309,6 +1344,25 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('review_join', { space_id: workspace.space.id, target_class_id: membership.class_id, approve: false }, '참여 신청을 거절했습니다.')}>거절</Button>
                                         </span>
                                     </article>))}</div>}
+                        </>
+                    )}
+
+                    {pendingGuestbook.length > 0 && (
+                        <>
+                            <h3 className="neighbor-teacher__inbox-heading">📚 우리 반 문집 방문록</h3>
+                            <div className="neighbor-teacher__post-list">{pendingGuestbook.map((entry) => (
+                                <article key={entry.entry_id}>
+                                    <div>
+                                        <span><strong>{entry.class_name} {entry.student_name}</strong><small>{entry.book_title}</small></span>
+                                        <p>{entry.content}</p>
+                                    </div>
+                                    <span className="neighbor-teacher__row-actions">
+                                        <Button type="button" disabled={Boolean(busy)} onClick={() => reviewGuestbookEntry(entry, 'approve')}>올리기</Button>
+                                        <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => reviewGuestbookEntry(entry, 'reject')}>올리지 않기</Button>
+                                    </span>
+                                </article>))}</div>
+                            {(notif.pending_guestbook || 0) > pendingGuestbook.length
+                                && <p className="neighbor-teacher__inbox-note">방문록 {notif.pending_guestbook}건 중 오래된 {pendingGuestbook.length}건입니다. 처리하면 다음 것이 이어집니다.</p>}
                         </>
                     )}
 

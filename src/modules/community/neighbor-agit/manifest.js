@@ -44,6 +44,30 @@ export const neighborAgitManifest = {
             },
             action: 'post',
             actionLabel: '확인'
+        },
+        // 📚 문집 나눔 방문록(SQL 20261335). 활동 알림 갈래(module 'neighbor-agit')로 간다.
+        {
+            eventType: 'neighbor.guestbook_approved',
+            icon: '📚',
+            tone: 'positive',
+            title: '내 방문록이 올라갔어요',
+            message: (payload) => `${payload.owner_class_name || '이웃 반'} 선생님이 ‘${payload.book_title || '문집'}’에 남긴 내 방문록을 올려 주었어요.`,
+            action: 'custom',
+            actionLabel: '문집 보러 가기',
+            handleAction: ({ event, onNavigate }) => onNavigate?.('neighbor_agit', { section: 'books', sharedBookId: event?.payload?.shared_book_id })
+        },
+        {
+            eventType: 'neighbor.guestbook_received',
+            icon: '📚',
+            tone: 'positive',
+            title: '우리 문집에 방문록이 달렸어요',
+            message: (payload) => {
+                const excerpt = payload.excerpt ? ` “${payload.excerpt}”` : '';
+                return `${payload.actor_class_name || '이웃 반'} ${payload.actor_name || '친구'} 친구가 ‘${payload.book_title || '우리 문집'}’에 방문록을 남겼어요.${excerpt}`;
+            },
+            action: 'custom',
+            actionLabel: '문집 보러 가기',
+            handleAction: ({ event, onNavigate }) => onNavigate?.('neighbor_agit', { section: 'books', sharedBookId: event?.payload?.shared_book_id })
         }
     ],
     performance: {

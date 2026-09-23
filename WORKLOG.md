@@ -18,6 +18,29 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-23 — 모두의 아지트 📚 문집 나눔 + 방문록(문집 주인 반 교사 승인·승인 알림) (Claude Opus 5.5)
+- **결정(선생님)**: 온라인 전시관은 기존 공유 링크로 충분 → 이번엔 **문집만**. 방문록은 댓글이 아니라 **문집 주인 반 교사가
+  승인해야** 모두에게 보이고, AI 검사는 거치지 않는다. 승인되면 알림을 보낸다.
+- **서버 `20261335`**(운영 적용): 표 `neighbor_shared_books`(공간·반·책·확정판, published/withdrawn)·`neighbor_book_guestbook`
+  (한 학생이 책마다 한 줄 200자, pending/approved/rejected). 둘 다 RLS·직접 접근 없음.
+  교사 RPC `get_neighbor_teacher_books_v1`·`share_neighbor_book_v1`(학생에게 보이는 최신 판, 다시 부르면 새 판으로 바꿈)·
+  `withdraw_neighbor_book_v1`·`review_neighbor_guestbook_v1`. 학생 RPC `get_neighbor_space_books_v1`·`get_neighbor_shared_book_v1`
+  (우리 반 서가와 같은 응답 모양, 읽을 때마다 `class_agit_book_visible_works_v1` 로 **철회 작품 제외**, 학생 id 제거)·
+  `save_neighbor_guestbook_v1`(고쳐 쓰면 다시 대기·올라간 알림 회수). 작업 공간 notifications 에 `pending_guestbook`+목록,
+  메뉴 배지에도 더해 **검토함 = 메뉴 숫자** 유지.
+  알림(module `neighbor-agit`, 활동 알림 갈래): 쓴 학생 `neighbor.guestbook_approved`(방문록마다), 글이 실린 학생
+  `neighbor.guestbook_received`(책마다 하루 1건 — event_key 에 날짜). 거절하면 쓴 학생 알림 회수. 알림 실패는 경고만.
+- **화면**: 모듈 안 `books/` 폴더(booksApi·TeacherBooksPanel·StudentBooksPanel·books.css)로 따로 두어 교사 화면이 더 커지지 않게 함.
+  세 번째 탭 `📚 문집 나눔`(활동 탭 목록 한 곳). 교사: 확인할 방문록·우리 반 문집 소개하기/새 판으로 바꾸기/내리기·소개된 문집·
+  올라간 방문록 내리기, 검토함에 `📚 우리 반 문집 방문록`. 학생: 표지 서가(글꽃 책방 표지 부품)→책 펼치기(차례)→작품 읽기
+  (`ArtworkReader`)→방문록(상태: 확인 중/올라감/올리지 않음). 알림을 누르면 그 책이 바로 열린다. 도움말 갱신.
+  dev-lab `neighbor-books-student` 신규, 교사 미리보기에 문집 목 API.
+- **결과/검증**: 시뮬레이션에 문집 22단계(B0~B22: 소개·가린 판/다른 반 거절·읽기·방문록 대기·주인 아닌 교사 거절·검토함=메뉴·
+  승인 후 공개·알림 1+3·거절·고쳐 쓰기·철회 반영·비참여 거절·내리기·다시 소개) 추가 → **운영 스키마에서 90/90**, 가상 자료 0건.
+  `neighborAgitBooks.test.mjs` 8건(일부러 망가뜨려 실패 확인), test:all 1271/1271, lint 0, build, dev-lab 교사·학생·모바일 렌더 확인(콘솔 오류 없음),
+  `migrate` → `deploy:local`, 번들 확인.
+- **남은 것**: 실제 교사 계정으로 확정 문집 소개 실기 확인. 커밋은 이 항목과 함께.
+
 ## 2026-09-23 — 모두의 아지트 전체 흐름 시뮬레이션 67단계 + 초대키 실패를 성공으로 알리던 버그 수정 (Claude Opus 5.5)
 - **한 일**: `npm run simulate:neighbor-agit`(신규, `scripts/run-neighbor-simulation.sh` + `tests/sql/neighbor_agit_simulation.sql`).
   가상 교사 4·학급 4(참여 3 + 공개 대상 아님 1)·학생 10을 만들고, 화면이 부르는 RPC 를 실제 역할(교사·학생·

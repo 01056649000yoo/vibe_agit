@@ -2,7 +2,8 @@ import { supabase } from '../../../lib/supabaseClient';
 
 // 알림 카운트 기본값. 서버가 안 내려줘도(옛 배포) 화면이 깨지지 않게 0으로 채운다.
 const EMPTY_NOTIFICATIONS = Object.freeze({
-    pending_reviews: 0, pending_approvals: 0, pending_joins: 0, new_posts: 0, new_comments: 0, blocked_comments: 0
+    pending_reviews: 0, pending_approvals: 0, pending_joins: 0, new_posts: 0, new_comments: 0, blocked_comments: 0,
+    pending_guestbook: 0
 });
 
 const assertWorkspace = (data) => {
@@ -17,7 +18,9 @@ const assertWorkspace = (data) => {
     return {
         ...data,
         notifications: { ...EMPTY_NOTIFICATIONS, ...(data.notifications || {}) },
-        blocked_comments: Array.isArray(data.blocked_comments) ? data.blocked_comments : []
+        blocked_comments: Array.isArray(data.blocked_comments) ? data.blocked_comments : [],
+        // 우리 반 문집에 들어온, 확인할 방문록(20261335)
+        pending_guestbook: Array.isArray(data.pending_guestbook) ? data.pending_guestbook : []
     };
 };
 

@@ -27,8 +27,11 @@ const initialWorkspace = {
     { class_id: classTwo, class_name: '바다반', matchable_student_count: 3, role: 'guest', status: 'active', student_access_enabled: true },
     { class_id: classThree, class_name: '별빛반', matchable_student_count: 0, role: 'guest', status: 'pending', student_access_enabled: false },
   ],
-  notifications: { pending_approvals: 1, pending_joins: 1, blocked_comments: 0, new_posts: 0, new_comments: 0 },
+  notifications: { pending_approvals: 1, pending_joins: 1, blocked_comments: 0, new_posts: 0, new_comments: 0, pending_guestbook: 1 },
   blocked_comments: [],
+  pending_guestbook: [
+    { entry_id: 'gb-1', shared_book_id: 'sb-1', book_title: '햇살반 동네 이야기', student_name: '박바다', class_name: '바다반', content: '느티나무 이야기가 제일 좋았어요! 우리 동네에도 큰 나무가 있어요.', created_at: new Date().toISOString() },
+  ],
   activities: [{
     id: activityId,
     type: 'topic',
@@ -116,13 +119,45 @@ function createPreviewApi() {
   }
 }
 
+function createBooksPreviewApi() {
+  let data = {
+    version: 1,
+    my_books: [
+      { book_id: 'book-1', title: '햇살반 동네 이야기', latest_edition_id: 'ed-2', latest_number: 2, work_count: 24, shared_book_id: 'sb-1', shared_status: 'published', shared_number: 1 },
+      { book_id: 'book-2', title: '가을 시 모음', latest_edition_id: 'ed-3', latest_number: 1, work_count: 12, shared_book_id: null, shared_status: null, shared_number: null },
+      { book_id: 'book-3', title: '아직 확정 전 문집', latest_edition_id: null, latest_number: null, work_count: 0, shared_book_id: null, shared_status: null, shared_number: null },
+    ],
+    shared_books: [
+      { shared_book_id: 'sb-1', class_name: '햇살반', is_own_class: true, title: '햇살반 동네 이야기', number: 1, approved_count: 3, pending_count: 1 },
+      { shared_book_id: 'sb-2', class_name: '바다반', is_own_class: false, title: '바다반 여름 일기', number: 2, approved_count: 5, pending_count: 0 },
+    ],
+    approved_entries: [
+      { entry_id: 'gb-0', shared_book_id: 'sb-1', book_title: '햇살반 동네 이야기', student_name: '김별빛', class_name: '별빛반', content: '표지가 정말 예뻐요.' },
+    ],
+  }
+  return {
+    async getTeacherBooks() { return data },
+    async shareBook({ bookId }) {
+      data = { ...data, my_books: data.my_books.map((book) => book.book_id === bookId ? { ...book, shared_book_id: book.shared_book_id || 'sb-new', shared_status: 'published', shared_number: book.latest_number } : book) }
+      return { success: true }
+    },
+    async withdrawBook({ sharedBookId }) {
+      data = { ...data, my_books: data.my_books.map((book) => book.shared_book_id === sharedBookId ? { ...book, shared_status: 'withdrawn' } : book) }
+      return { success: true }
+    },
+    async reviewGuestbook({ entryId }) { return { success: true, entry_id: entryId } },
+  }
+}
+
 export default function NeighborAgitTeacherPreview() {
   const [previewApi] = useState(createPreviewApi)
+  const [booksApi] = useState(createBooksPreviewApi)
   return (
     <div style={{ padding: 20 }}>
       <NeighborAgitTeacherEntry
         activeClass={{ id: classOne, name: '햇살반' }}
         api={previewApi}
+        booksApi={booksApi}
       />
     </div>
   )

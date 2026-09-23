@@ -8,6 +8,7 @@ const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
+const NeighborBooksStudentPreview = lazy(() => import('./NeighborBooksStudentPreview.jsx'))
 const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
 const MyShelfPreview = lazy(() => import('./MyShelfPreview.jsx'))
@@ -58,6 +59,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '모두의 아지트 교사 활동',
     description: '교사 직접 글 전시와 활동 화면을 DB 없이 확인한다',
     Component: NeighborAgitTeacherPreview,
+  }),
+  Object.freeze({
+    id: 'neighbor-books-student',
+    icon: '📚',
+    title: '모두의 아지트 문집 나눔(학생)',
+    description: '이웃 반 문집 표지·책 펼치기·작품 읽기·방문록 보내기를 DB 없이 확인한다',
+    Component: NeighborBooksStudentPreview,
   }),
   Object.freeze({
     id: 'class-agit',

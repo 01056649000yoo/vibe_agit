@@ -4,6 +4,7 @@ import Modal from '../../../components/common/Modal';
 import StudentBackButton from '../../../components/student/StudentBackButton';
 import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
 import { neighborAgitApi } from './api';
+import StudentBooksPanel from './books/StudentBooksPanel';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import './StudentEntry.css';
 
@@ -35,7 +36,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
     const [commentDraft, setCommentDraft] = useState('');
     // 댓글이 검사를 기다리는 중인지. 아이가 “댓글이 사라졌다”고 여기지 않도록 알려 준다.
     const [commentPending, setCommentPending] = useState(false);
-    const [activeSection, setActiveSection] = useState('gallery');
+    // 방문록 알림을 눌러 들어오면 문집 나눔 칸에서 시작한다.
+    const [activeSection, setActiveSection] = useState(params?.section === 'books' ? 'books' : 'gallery');
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [activityFeed, setActivityFeed] = useState(null);
     const [activityLoading, setActivityLoading] = useState(false);
@@ -289,7 +291,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
                 </div>
             </section>}
 
-            {activeSection !== 'gallery' && !loading && (
+            {activeSection === 'topic' && !loading && (
                 <section className="neighbor-activity-space">
                     <header>
                         <span>{getNeighborActivityLabel(activeSection)}</span>
@@ -331,7 +333,9 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
                 </section>
             )}
 
-            {loading ? (
+            {activeSection === 'books' ? (
+                <StudentBooksPanel spaceId={spaceId} initialSharedBookId={params?.section === 'books' ? params?.sharedBookId : null} />
+            ) : loading ? (
                 <section className="neighbor-student-state" aria-live="polite">이웃 글을 불러오고 있어요…</section>
             ) : errorMessage && !feed ? (
                 <section className="neighbor-student-state neighbor-student-state--error">

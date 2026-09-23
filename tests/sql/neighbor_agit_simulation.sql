@@ -591,6 +591,187 @@ SELECT public.zz_sim_login('t_b');
 SELECT public.zz_sim_check('56 닫힌 제안은 다른 반 메뉴 숫자에 남지 않는다', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count')::INT = 0,
     '메뉴 ' || (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count'));
 
+-- ───────────────────────── 4-2. 📚 문집 나눔 · 방문록 ─────────────────────────
+-- 햇살반이 글꽃 책방에서 확정한 학급 문집(학생에게 보이는 판)과, 아직 학생에게 가린 문집 하나를 만든다.
+RESET ROLE;
+DO $$
+DECLARE v_book UUID; v_hidden UUID; v_works JSONB := '[]'::JSONB; v_item UUID; v_post RECORD; v_pos INT := 0;
+BEGIN
+    -- 문집에는 교사가 승인한 글만 실린다(글꽃 책방 규칙).
+    UPDATE public.student_posts post SET is_confirmed = TRUE
+    FROM public.writing_missions m
+    WHERE m.id = post.mission_id AND m.title = '우리 동네 자랑' AND post.class_id = public.zz_sim('c_a');
+    INSERT INTO public.class_agit_books (id, class_id, title, subtitle) VALUES (gen_random_uuid(), public.zz_sim('c_a'), '햇살반 동네 이야기', '우리가 사는 곳')
+    RETURNING id INTO v_book;
+    FOR v_post IN
+        SELECT post.id, post.student_id, post.title, post.content, s.name FROM public.student_posts post
+        JOIN public.writing_missions m ON m.id = post.mission_id AND m.title = '우리 동네 자랑'
+        JOIN public.students s ON s.id = post.student_id
+        WHERE post.class_id = public.zz_sim('c_a') ORDER BY s.name
+    LOOP
+        v_pos := v_pos + 1;
+        INSERT INTO public.class_agit_book_items (class_id, book_id, post_id, student_id, position, source_revision, snapshot)
+        VALUES (public.zz_sim('c_a'), v_book, v_post.id, v_post.student_id, v_pos, repeat('a', 64), jsonb_build_object('title', v_post.title))
+        RETURNING id INTO v_item;
+        v_works := v_works || jsonb_build_array(jsonb_build_object(
+            'itemId', v_item, 'consentId', (SELECT consent_id FROM public.class_agit_book_items WHERE id = v_item),
+            'title', v_post.title, 'author', v_post.name, 'blocks', jsonb_build_array(v_post.content),
+            'format', 'prose', 'kindLabel', '글', 'excerpt', left(v_post.content, 40), 'group', '우리 동네'));
+    END LOOP;
+    INSERT INTO public.class_agit_book_editions (class_id, book_id, number, snapshot, student_visible)
+    VALUES (public.zz_sim('c_a'), v_book, 1, jsonb_build_object('title', '햇살반 동네 이야기', 'subtitle', '우리가 사는 곳',
+        'introduction', '우리 동네 자랑을 모았어요.', 'class_label', '햇살반', 'term', '2학기', 'issue_date', '2026-09-23',
+        'grouping', 'custom', 'book_type', 'class', 'cover_kicker', '우리 반의 이야기', 'page_breaks', '[]'::JSONB,
+        'owner_student_id', NULL, 'owner_student_name', NULL, 'print', jsonb_build_object('design', 'storybook', 'paper', 'A4'),
+        'works', v_works), TRUE);
+    PERFORM set_config('sim.book', v_book::TEXT, TRUE);
+
+    INSERT INTO public.class_agit_books (id, class_id, title) VALUES (gen_random_uuid(), public.zz_sim('c_a'), '아직 가린 문집') RETURNING id INTO v_hidden;
+    INSERT INTO public.class_agit_book_editions (class_id, book_id, number, snapshot, student_visible)
+    VALUES (public.zz_sim('c_a'), v_hidden, 1, jsonb_build_object('title', '아직 가린 문집', 'works', '[]'::JSONB), FALSE);
+    PERFORM set_config('sim.book_hidden', v_hidden::TEXT, TRUE);
+    PERFORM public.zz_sim_check('B0 준비: 햇살반 학급 문집(3편, 학생에게 보임) + 가린 문집', v_pos = 3, v_pos || '편');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B0 문집 준비', FALSE, SQLERRM);
+END $$;
+SET LOCAL ROLE authenticated;
+
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE r JSONB; m JSONB;
+BEGIN
+    r := public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'));
+    SELECT x INTO m FROM jsonb_array_elements(r->'my_books') x WHERE (x->>'book_id')::UUID = public.zz_sim('book');
+    PERFORM public.zz_sim_check('B1 교사가 소개할 수 있는 우리 반 문집을 본다(1판·3편)',
+        (m->>'latest_number')::INT = 1 AND (m->>'work_count')::INT = 3 AND m->>'shared_book_id' IS NULL, m::TEXT);
+    r := public.share_neighbor_book_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('book'));
+    PERFORM set_config('sim.shared_book', r->>'shared_book_id', TRUE);
+    PERFORM public.zz_sim_check('B2 문집을 모두의 아지트에 소개', public.zz_sim('shared_book') IS NOT NULL);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B1~B2 문집 소개', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_expect_denied('B3 학생에게 가린 판은 소개할 수 없다',
+    format($q$SELECT public.share_neighbor_book_v1(%L, %L, %L)$q$, public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('book_hidden')));
+SELECT public.zz_sim_login('t_b');
+SELECT public.zz_sim_expect_denied('B4 다른 반(바다반) 교사는 햇살반 문집을 소개할 수 없다',
+    format($q$SELECT public.share_neighbor_book_v1(%L, %L, %L)$q$, public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('book')));
+
+SELECT public.zz_sim_login('u_b1');
+DO $$
+DECLARE l JSONB; b JSONB; w JSONB;
+BEGIN
+    l := public.get_neighbor_space_books_v1(public.zz_sim('space'));
+    PERFORM public.zz_sim_check('B5 바다반 학생이 소개된 문집을 본다', jsonb_array_length(l->'books') = 1 AND l->'books'->0->>'class_name' = '햇살반',
+        COALESCE(l->'books'->0->>'title', '') || ' · ' || COALESCE(l->'books'->0->>'design', ''));
+    b := public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL);
+    PERFORM public.zz_sim_check('B6 책을 펼치면 차례 3편 · 방문록 0 · 학생 id 는 응답에 없다',
+        jsonb_array_length(b->'works') = 3 AND jsonb_array_length(b#>'{guestbook,entries}') = 0
+        AND NOT (b->'book' ? 'owner_student_id') AND position('itemId' in b::TEXT) = 0, b->'book'->>'title');
+    w := public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), b->'works'->0->>'id');
+    PERFORM public.zz_sim_check('B7 작품 한 편을 읽는다', jsonb_array_length(w->'work'->'blocks') >= 1, w->'work'->>'title');
+    PERFORM set_config('sim.gb_b1', (public.save_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('shared_book'), '느티나무 이야기가 제일 좋았어요!', 'save'))->>'entry_id', TRUE);
+    b := public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL);
+    PERFORM public.zz_sim_check('B8 방문록을 쓰면 "선생님 확인 중"(본인만 보임)', b#>>'{guestbook,mine,status}' = 'pending'
+        AND jsonb_array_length(b#>'{guestbook,entries}') = 0);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B5~B8 학생 문집 읽기·방문록', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_c1');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('B9 승인 전에는 다른 학생에게 안 보인다',
+        jsonb_array_length(public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL)#>'{guestbook,entries}') = 0);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B 단계 오류', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_b');
+SELECT public.zz_sim_expect_denied('B10 문집 주인이 아닌 반(바다반) 교사는 승인할 수 없다',
+    format($q$SELECT public.review_neighbor_guestbook_v1(%L, %L, %L, 'approve')$q$, public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('gb_b1')));
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE w JSONB; v_inbox INT;
+BEGIN
+    w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_a'));
+    v_inbox := (w#>>'{notifications,pending_approvals}')::INT + (w#>>'{notifications,blocked_comments}')::INT
+        + (w#>>'{notifications,pending_joins}')::INT + (w#>>'{notifications,pending_guestbook}')::INT;
+    PERFORM public.zz_sim_check('B11 햇살반 검토함에 방문록 1 · 메뉴 숫자와 같다',
+        jsonb_array_length(w->'pending_guestbook') = 1 AND v_inbox = (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT,
+        format('검토함 %s · 메뉴 %s · "%s"', v_inbox, public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count', w->'pending_guestbook'->0->>'content'));
+    PERFORM public.review_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('gb_b1'), 'approve');
+    PERFORM public.zz_sim_check('B12 승인하면 메뉴 숫자가 준다', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT = v_inbox - 1);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B11~B12 방문록 승인', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_c1');
+DO $$
+DECLARE b JSONB;
+BEGIN
+    b := public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL);
+    PERFORM public.zz_sim_check('B13 승인된 방문록은 모든 반 학생에게 보인다', jsonb_array_length(b#>'{guestbook,entries}') = 1,
+        (b#>'{guestbook,entries}'->0->>'class_name') || ' ' || (b#>'{guestbook,entries}'->0->>'student_name'));
+    PERFORM set_config('sim.gb_c1', (public.save_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('shared_book'), '별로야', 'save'))->>'entry_id', TRUE);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B13 방문록 보기', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('B14 승인되면 쓴 학생에게 "방문록이 올라갔어요" 알림',
+    EXISTS (SELECT 1 FROM public.student_notification_events WHERE student_id = public.zz_sim('s_b1') AND event_type = 'neighbor.guestbook_approved'));
+SELECT public.zz_sim_check('B15 문집에 글이 실린 햇살반 학생 3명에게 "우리 문집에 방문록" 알림',
+    (SELECT count(*) FROM public.student_notification_events e JOIN public.students s ON s.id = e.student_id
+     WHERE e.event_type = 'neighbor.guestbook_received' AND s.class_id = public.zz_sim('c_a')) = 3,
+    (SELECT count(*) FROM public.student_notification_events WHERE event_type = 'neighbor.guestbook_received') || '건');
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_a');
+DO $$ BEGIN
+    PERFORM public.review_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('gb_c1'), 'reject');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B16 거절', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_c1');
+DO $$
+DECLARE b JSONB;
+BEGIN
+    b := public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL);
+    PERFORM public.zz_sim_check('B16 거절한 방문록은 올라가지 않고, 쓴 학생은 "거절" 상태를 본다',
+        jsonb_array_length(b#>'{guestbook,entries}') = 1 AND b#>>'{guestbook,mine,status}' = 'rejected');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B 단계 오류', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.save_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('shared_book'), '다시 읽어도 좋아요!', 'save');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B 단계 오류', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('B17 고쳐 쓰면 다시 확인 대기가 되고, 올라갔다는 알림은 거둬진다',
+    (SELECT status FROM public.neighbor_book_guestbook WHERE id = public.zz_sim('gb_b1')) = 'pending'
+    AND NOT EXISTS (SELECT 1 FROM public.student_notification_events WHERE student_id = public.zz_sim('s_b1') AND event_type = 'neighbor.guestbook_approved'));
+-- 학생이 자기 작품을 문집에서 철회하면 이웃에게서도 빠진다.
+UPDATE public.class_agit_book_items SET revoked_at = NOW()
+WHERE id = (SELECT id FROM public.class_agit_book_items WHERE book_id = public.zz_sim('book') ORDER BY position LIMIT 1);
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b2');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('B18 작품이 철회되면 이웃 반 차례에서도 빠진다(3→2)',
+        jsonb_array_length(public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL)->'works') = 2);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B18 철회 반영', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_d1');
+SELECT public.zz_sim_expect_denied('B19 참여하지 않은 학급 학생은 문집을 못 연다',
+    format($q$SELECT public.get_neighbor_shared_book_v1(%L, %L, NULL)$q$, public.zz_sim('space'), public.zz_sim('shared_book')));
+SELECT public.zz_sim_login('t_a');
+DO $$ BEGIN
+    PERFORM public.withdraw_neighbor_book_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book'));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B20 소개 내리기', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('B20 소개를 내리면 학생 목록에서 사라진다',
+        jsonb_array_length(public.get_neighbor_space_books_v1(public.zz_sim('space'))->'books') = 0);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B 단계 오류', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_expect_denied('B21 내린 문집은 열 수 없다',
+    format($q$SELECT public.get_neighbor_shared_book_v1(%L, %L, NULL)$q$, public.zz_sim('space'), public.zz_sim('shared_book')));
+SELECT public.zz_sim_login('t_a');
+DO $$ BEGIN
+    PERFORM public.share_neighbor_book_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('book'));
+    PERFORM public.zz_sim_check('B22 다시 소개하면 방문록이 이어진다',
+        (public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'))->'shared_books'->0->>'approved_count')::INT = 0
+        AND (public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'))->'shared_books'->0->>'pending_count')::INT = 1);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B22 다시 소개', FALSE, SQLERRM);
+END $$;
+
 -- ───────────────────────── 5. 나가기·종료 ─────────────────────────
 SELECT public.zz_sim_login('t_c');
 DO $$ BEGIN
