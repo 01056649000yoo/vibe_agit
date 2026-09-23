@@ -44,7 +44,6 @@ test('교사 미리보기와 같은 렌더러를 앱 안 틀에 그린다(새 �
     assert.match(releaseApi, /call\('get_my_class_agit_book_print_v1'/);
     assert.match(booksApi, /call\('get_neighbor_shared_book_print_v1'/);
     for (const screen of [studentBooks, neighborPanel]) {
-        assert.match(screen, /📖 책으로 펼쳐 읽기/);
-        assert.match(screen, /<BookPreviewFrame /);
+        assert.match(screen, /<StudentBookReader /);
     }
 });

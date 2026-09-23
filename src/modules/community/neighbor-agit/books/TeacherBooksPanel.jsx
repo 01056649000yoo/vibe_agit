@@ -80,6 +80,16 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
         () => api.reviewGuestbook({ spaceId, classId, entryId: entry.entry_id, action }),
         action === 'approve' ? '방문록을 올렸습니다. 쓴 학생과 문집에 글이 실린 학생들에게 알림이 갑니다.' : '방문록을 올리지 않았습니다.');
 
+    // 방문록 한 장: 쓴 반·학생 → 문집 제목 → 방문록 한 줄(따옴표) → 단추. 가로로 길게 늘어지지 않게 카드로 놓는다.
+    const renderEntryCard = (entry, actions, tone) => (
+        <li key={entry.entry_id} className={`neighbor-books__guestcard ${tone}`}>
+            <span className="neighbor-books__guestcard-who"><em>{entry.class_name}</em><strong>{entry.student_name}</strong></span>
+            <small>📚 {entry.book_title}</small>
+            <blockquote>{entry.content}</blockquote>
+            <span className="neighbor-books__actions">{actions}</span>
+        </li>
+    );
+
     const myBooks = data?.my_books || [];
     const sharedBooks = data?.shared_books || [];
     const approved = data?.approved_entries || [];
@@ -94,14 +104,12 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     <p>우리 반 문집에 남겨진 방문록이에요. 올려야 모든 반 학생에게 보여요.</p></header>
                 {pendingEntries.length === 0
                     ? <p className="neighbor-books__empty">확인할 방문록이 없어요.</p>
-                    : <ul className="neighbor-books__entries">{pendingEntries.map((entry) => (
-                        <li key={entry.entry_id}>
-                            <div><strong>{entry.class_name} {entry.student_name}</strong><small>📚 {entry.book_title}</small><p>{entry.content}</p></div>
-                            <span className="neighbor-books__actions">
-                                <Button type="button" size="sm" disabled={Boolean(busy)} onClick={() => review(entry, 'approve')}>올리기</Button>
-                                <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => review(entry, 'reject')}>올리지 않기</Button>
-                            </span>
-                        </li>))}</ul>}
+                    : <ul className="neighbor-books__guestcards">{pendingEntries.map((entry) => renderEntryCard(entry, (
+                        <>
+                            <Button type="button" size="sm" disabled={Boolean(busy)} onClick={() => review(entry, 'approve')}>올리기</Button>
+                            <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => review(entry, 'reject')}>올리지 않기</Button>
+                        </>
+                    ), 'is-pending'))}</ul>}
             </section>
 
             <section className="neighbor-books__card">
@@ -122,7 +130,8 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     const hiddenNewer = !reason && Number(book.any_edition_number) > Number(book.latest_number);
                     const design = getBookDesign(book.design);
                     return (
-                        <li key={book.book_id} className={`neighbor-books__book-card${reason ? ' is-blocked' : ''}`}>
+                        <li key={book.book_id} className={`neighbor-books__book-card${reason ? ' is-blocked' : ''}${shared ? ' is-shared' : ''}`}>
+                            {shared && <span className="neighbor-books__ribbon" aria-hidden="true">📢 공개 중</span>}
                             {/* 작은 표지는 우리 클래스만 쓴다. 글꽃 책방의 .class-agit·.class-agit-book-cover 를 빌리면
                                 그 스타일이 늦게 읽힐 때(메뉴를 연 순서에 따라) 여백·가운데 정렬이 붙어 표지가 글을 덮었다(2026-09-23).
                                 색·비율만 bookCoverStyle 의 변수로 받는다. */}
@@ -132,7 +141,7 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                             <div className="neighbor-books__book-body">
                                 <strong>{book.title}</strong>
                                 <small>{book.latest_edition_id ? `${book.latest_number}판 · 작품 ${book.work_count}편` : book.any_edition_number ? `${book.any_edition_number}판 확정 · 학생에게 가림` : '확정 전'}</small>
-                                {shared && <span className="neighbor-books__badge">소개 중 · {book.shared_number}판</span>}
+                                {shared && <span className="neighbor-books__badge">이웃 반에 소개 중 · {book.shared_number}판</span>}
                                 {reason && (
                                     <div className="neighbor-books__reason" role="note">
                                         <p><strong>{reason.text}</strong> {reason.hint}</p>
@@ -166,13 +175,9 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
             {approved.length > 0 && (
                 <section className="neighbor-books__card">
                     <header><h3>✅ 우리 반 문집에 올라간 방문록</h3><p>문제가 있으면 내릴 수 있어요.</p></header>
-                    <ul className="neighbor-books__entries">{approved.map((entry) => (
-                        <li key={entry.entry_id}>
-                            <div><strong>{entry.class_name} {entry.student_name}</strong><small>📚 {entry.book_title}</small><p>{entry.content}</p></div>
-                            <span className="neighbor-books__actions">
-                                <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => review(entry, 'reject')}>내리기</Button>
-                            </span>
-                        </li>))}</ul>
+                    <ul className="neighbor-books__guestcards">{approved.map((entry) => renderEntryCard(entry, (
+                        <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => review(entry, 'reject')}>내리기</Button>
+                    ), 'is-approved'))}</ul>
                 </section>
             )}
         </div>

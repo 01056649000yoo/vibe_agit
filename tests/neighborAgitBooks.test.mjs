@@ -89,7 +89,7 @@ test('화면: 세 번째 탭과 학생·교사 칸, 알림으로 들어오면 �
     assert.match(studentEntry, /params\?\.section === 'books'/);
     // 책 응답은 우리 반 서가와 같은 검사를 쓴다.
     assert.match(booksApi, /assertStudentBooks\(book, book\.id, workId\)/);
-    assert.match(studentPanel, /ArtworkReader/);
+    assert.match(studentPanel, /StudentBookReader/);
     assert.match(teacherPanel, /소개 내리기/);
     assert.match(guides, /문집 나눔/);
 });
@@ -112,4 +112,15 @@ test('소개하기가 꺼진 문집은 까닭과 글꽃 책방으로 가는 단�
     assert.match(teacherPanel, /‘새 판 확정’/);
     assert.match(teacherEntry, /onOpenBooks=\{onNavigateTab \? \(\) => onNavigateTab\('class-agit-books'\) : undefined\}/);
     assert.match(dashboard, /<TeacherNeighborAgit [^>]*onNavigateTab=\{handleTabChange\}/);
+});
+
+test('방문록은 학생마다 카드 한 장, 소개 중인 문집은 테두리·띠로 눈에 띈다(2026-09-23)', async () => {
+    const css = await readFile('src/modules/community/neighbor-agit/books/books.css', 'utf8');
+    assert.match(teacherPanel, /className="neighbor-books__guestcards">\{pendingEntries\.map/);
+    assert.match(teacherPanel, /className="neighbor-books__guestcards">\{approved\.map/);
+    assert.match(studentPanel, /className="neighbor-books__guestcards">\{entries\.map/);
+    assert.match(teacherPanel, /\$\{shared \? ' is-shared' : ''\}/);
+    assert.match(teacherPanel, /📢 공개 중/);
+    assert.match(css, /\.neighbor-books__book-card\.is-shared \{ border: 2px solid var\(--space-accent/);
+    assert.doesNotMatch(css, /neighbor-books__entries/);
 });

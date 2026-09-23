@@ -13,7 +13,11 @@ const bookInfo = {
 
 export function createNeighborBooksPreviewApi() {
   let mine = null
-  const entries = [{ entry_id: 'e1', student_name: '박바다', class_name: '바다반', content: '느티나무 이야기가 제일 좋았어요!', is_mine: false }]
+  const entries = [
+    { entry_id: 'e1', student_name: '박바다', class_name: '바다반', content: '느티나무 이야기가 제일 좋았어요!', is_mine: false },
+    { entry_id: 'e2', student_name: '김별빛', class_name: '별빛반', content: '골목 시장 이야기를 읽으니 떡볶이가 먹고 싶어졌어요. 다음에 우리 동네 시장도 소개해 줄게요!', is_mine: false },
+    { entry_id: 'e3', student_name: '이바다', class_name: '바다반', content: '표지 색이 정말 예뻐요.', is_mine: true },
+  ]
   return {
     async getSpaceBooks() {
       return [

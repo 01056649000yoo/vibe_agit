@@ -9,14 +9,9 @@
 .neighbor-books__message--error { background: #fef2f2; color: #991b1b; }
 .neighbor-books__actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); flex-shrink: 0; }
 
-.neighbor-books__mine, .neighbor-books__shared, .neighbor-books__entries { display: grid; gap: var(--ui-space-2); margin: 0; padding: 0; list-style: none; }
-.neighbor-books__entries li { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-3); padding: 10px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
-.neighbor-books__entries li > div { display: grid; gap: 2px; min-width: 0; }
-.neighbor-books__mine strong, .neighbor-books__entries strong { color: var(--ui-ink-strong); font-size: var(--ui-text-md); }
-.neighbor-books__mine small, .neighbor-books__entries small, .neighbor-books__shared small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
-.neighbor-books__entries p { margin: 2px 0 0; color: var(--ui-ink); font-size: var(--ui-text-sm); line-height: 1.6; overflow-wrap: anywhere; }
-.neighbor-books__entries li.is-mine { border-color: #0f766e; background: #f0fdfa; }
-.neighbor-books__entries em { color: #0f766e; font-style: normal; font-size: var(--ui-text-xs); }
+.neighbor-books__mine, .neighbor-books__shared { display: grid; gap: var(--ui-space-2); margin: 0; padding: 0; list-style: none; }
+.neighbor-books__mine strong { color: var(--ui-ink-strong); font-size: var(--ui-text-md); }
+.neighbor-books__mine small, .neighbor-books__shared small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
 .neighbor-books__badge { justify-self: start; padding: 2px 8px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: var(--ui-text-xs); font-weight: 800; }
 .neighbor-books__shared { grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); }
 .neighbor-books__shared li { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--ui-border); border-left: 4px solid #94a3b8; border-radius: var(--ui-radius-md); }
@@ -39,9 +34,6 @@
 .neighbor-books__status.is-rejected { background: #fef2f2; color: #991b1b; }
 .neighbor-books__notice { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
 
-@media (max-width: 640px) {
-    .neighbor-books__entries li { flex-direction: column; align-items: stretch; }
-}
 
 /* 전역 button:hover 파란 바탕을 막는다(index.css). */
 .neighbor-books__back:hover { background: var(--ui-surface); color: var(--ui-ink-strong); box-shadow: none; }
@@ -61,6 +53,27 @@
 .neighbor-books__reason p { margin: 0; color: #78350f; font-size: var(--ui-text-sm); line-height: 1.5; }
 .neighbor-books__reason strong { color: #92400e; }
 .neighbor-books__hint { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); line-height: 1.5; }
+
+/* 소개 중인 문집: 문집 나눔 색(보라, spaces.css) 굵은 테두리 + 옅은 바탕 + "공개 중" 띠로 한눈에 보이게. */
+.neighbor-books__book-card { position: relative; }
+.neighbor-books__book-card.is-shared { border: 2px solid var(--space-accent, #6d28d9); background: var(--space-soft, #f3edff); box-shadow: 0 6px 16px rgba(109, 40, 217, .14); }
+.neighbor-books__ribbon { position: absolute; top: -10px; right: 12px; padding: 3px 10px; border-radius: 999px; background: var(--space-accent, #6d28d9); color: #fff; font-size: var(--ui-text-xs); font-weight: 900; box-shadow: 0 2px 6px rgba(15, 23, 42, .18); }
+.neighbor-books__book-card.is-shared .neighbor-books__badge { background: var(--ui-surface); color: var(--space-ink, #4c1d95); border: 1px solid var(--space-accent, #6d28d9); }
+
+/* 방문록 카드(확인할 방문록·올라간 방문록). */
+.neighbor-books__guestcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: var(--ui-space-3); margin: 0; padding: 0; list-style: none; }
+.neighbor-books__guestcard { display: grid; align-content: start; gap: 6px; padding: 12px 14px; border: 1px solid var(--ui-border); border-top: 4px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); }
+.neighbor-books__guestcard.is-pending { border-top-color: #f59e0b; }
+.neighbor-books__guestcard.is-approved { border-top-color: #10b981; }
+.neighbor-books__guestcard-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.neighbor-books__guestcard-who em { padding: 1px 8px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: var(--ui-text-xs); font-style: normal; font-weight: 800; }
+.neighbor-books__guestcard-who strong { color: var(--ui-ink-strong); font-size: var(--ui-text-md); }
+.neighbor-books__guestcard > small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); overflow-wrap: anywhere; }
+.neighbor-books__guestcard blockquote { margin: 2px 0 4px; padding: 8px 10px; border-left: 3px solid var(--space-accent, #6d28d9); border-radius: 0 8px 8px 0; background: #fafaf9; color: var(--ui-ink); font-size: var(--ui-text-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.neighbor-books__guestcard .neighbor-books__actions { justify-content: flex-end; }
+
+.neighbor-books__guestcard.is-mine { border-color: #0f766e; background: #f0fdfa; }
+.neighbor-books__mine-tag { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: #0f766e; color: #fff; font-size: var(--ui-text-xs); font-weight: 800; }
 
 /* 좁은 화면: 표지를 줄여 글자 칸을 넓힌다. 위의 카드 기본 규칙보다 뒤에 있어야 이긴다. */
 @media (max-width: 640px) {

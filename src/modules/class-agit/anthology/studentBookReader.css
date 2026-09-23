@@ -1,0 +1,30 @@
+.student-book-reader { margin: 20px 0; color: #243d34; }
+.student-book-reader button { font: inherit; cursor: pointer; }
+.student-book-reader__modes { display: flex; gap: 6px; padding: 5px; width: fit-content; max-width: 100%; border-radius: 14px; background: #e8eee8; margin-bottom: 16px; }
+.student-book-reader__modes button { border: 0; border-radius: 10px; padding: 10px 16px; background: transparent; color: #38574a; font-weight: 700; }
+.student-book-reader__modes button[aria-pressed="true"], .student-book-reader__modes button:hover { background: #267b62; color: white; }
+.student-book-reader__layout { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); border: 1px solid #dce3d9; border-radius: 16px; overflow: hidden; background: #fffef9; }
+.student-book-reader__toc { padding: 16px; background: #f3f5ee; max-height: 75vh; overflow-y: auto; }
+.student-book-reader__toc h3 { margin: 0 0 12px; }
+.student-book-reader__toc small { font-size: 12px; font-weight: 400; color: #63786d; }
+.student-book-reader__toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.student-book-reader__toc button { display: flex; gap: 10px; width: 100%; padding: 10px; border: 1px solid transparent; border-radius: 9px; text-align: left; background: transparent; color: #314c40; }
+.student-book-reader__toc button strong { font-size: 14px; overflow-wrap: anywhere; }
+.student-book-reader__toc button small { display: block; margin-top: 4px; }
+.student-book-reader__toc button:hover, .student-book-reader__toc button[aria-current] { background: #e0ede3; border-color: #abc8b4; color: #174d37; }
+.student-book-reader__group { display: block; padding: 10px; }
+.student-book-reader__content { min-width: 0; }
+.student-book-reader__toolbar, .student-book-reader__pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 20px; }
+.student-book-reader__toolbar button, .student-book-reader__pager button { border: 1px solid #cddbcc; border-radius: 8px; background: #fff; color: #315641; padding: 8px 12px; }
+.student-book-reader__toolbar button:hover, .student-book-reader__pager button:hover { background: #e0ede3; color: #174d37; }
+.student-book-reader button:disabled { opacity: .4; cursor: default; }
+.student-book-reader button:focus-visible { outline: 3px solid #267b62; outline-offset: -3px; }
+.student-book-reader__work { padding: 16px clamp(20px, 4vw, 52px) 32px; min-height: 350px; line-height: 1.9; }
+.student-book-reader__work h2 { font-size: 1.35em; line-height: 1.5; overflow-wrap: anywhere; }
+.student-book-reader__work p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.student-book-reader__author { color: #63786d; font-size: .85em; margin-bottom: 28px; }
+@media (max-width: 700px) {
+ .student-book-reader__layout { grid-template-columns: minmax(0, 1fr); }
+ .student-book-reader__toc { max-height: 190px; border-bottom: 1px solid #dce3d9; }
+ .student-book-reader__modes button { padding: 10px; font-size: 14px; }
+}

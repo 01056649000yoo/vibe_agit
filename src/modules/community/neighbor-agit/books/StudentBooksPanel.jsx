@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
-import ArtworkReader from '../../../class-agit/gallery/ArtworkReader.jsx';
-import BookPreviewFrame from '../../../class-agit/anthology/BookPreviewFrame.jsx';
+import StudentBookReader from '../../../class-agit/anthology/StudentBookReader.jsx';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
 import '../../../class-agit/classAgit.css';
 import '../../../class-agit/anthology/cover.css';
@@ -24,13 +23,10 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     const [openId, setOpenId] = useState(null);
     const [book, setBook] = useState(null);
     const [bookLoading, setBookLoading] = useState(false);
-    const [work, setWork] = useState(null);
-    const [workLoading, setWorkLoading] = useState(false);
     const [draft, setDraft] = useState('');
     const [saving, setSaving] = useState(false);
     const [notice, setNotice] = useState('');
     const openedInitial = useRef(null);
-    const [bookView, setBookView] = useState(false);
     const loadPrint = useCallback(() => api.getSharedBookPrint({ spaceId, sharedBookId: openId }), [api, spaceId, openId]);
 
     const loadBooks = useCallback(async () => {
@@ -67,27 +63,16 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     }, [initialSharedBookId, openBook]);
 
     const closeBook = () => {
-        setBookView(false);
         setOpenId(null);
         setBook(null);
-        setWork(null);
         setNotice('');
         void loadBooks();
     };
 
-    const readWork = async (workId) => {
-        setWork({ id: workId });
-        setWorkLoading(true);
-        try {
-            const next = await api.getSharedBook({ spaceId, sharedBookId: openId, workId });
-            setWork(next.work);
-        } catch {
-            setWork(null);
-            setNotice('이 작품은 지금 읽을 수 없어요.');
-        } finally {
-            setWorkLoading(false);
-        }
-    };
+    const loadWork = useCallback(async (workId) => {
+        const next = await api.getSharedBook({ spaceId, sharedBookId: openId, workId });
+        return next.work;
+    }, [api, spaceId, openId]);
 
     const saveEntry = async (action) => {
         const content = draft.replace(/\s+/g, ' ').trim();
@@ -122,12 +107,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                             <h2>{book.book.title}</h2>
                             {book.book.subtitle && <p>{book.book.subtitle}</p>}
                             {book.book.introduction && <div className="class-agit-book-introduction">{book.book.introduction}</div>}
-                            <button type="button" className="class-agit-book-open" onClick={() => setBookView(true)} disabled={!book.works.length}>📖 책으로 펼쳐 읽기</button>
-                            <h3>차례 · {book.works.length}편</h3>
-                            <ol className="class-agit-book-items">{book.works.map((item) => (
-                                <li key={item.id}><button type="button" onClick={() => readWork(item.id)}>{item.title} · {item.author}</button></li>
-                            ))}</ol>
-                            {book.works.length === 0 && <p>지금 읽을 수 있는 작품이 없어요.</p>}
+                            <StudentBookReader key={openId} book={book.book} works={book.works} loadPrint={loadPrint} loadWork={loadWork} />
                         </div>
 
                         <section className="neighbor-books__card neighbor-books__guestbook" aria-labelledby="neighbor-guestbook-title">
@@ -146,16 +126,18 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                             </div>
                             {entries.length === 0
                                 ? <p className="neighbor-books__empty">아직 올라간 방문록이 없어요. 첫 방문록을 남겨 보세요!</p>
-                                : <ul className="neighbor-books__entries">{entries.map((entry) => (
-                                    <li key={entry.entry_id} className={entry.is_mine ? 'is-mine' : ''}>
-                                        <div><strong>{entry.class_name} {entry.student_name}{entry.is_mine && <em> · 내 방문록</em>}</strong><p>{entry.content}</p></div>
+                                : <ul className="neighbor-books__guestcards">{entries.map((entry) => (
+                                    /* 학생마다 한 장씩 — 방명록 종이처럼 카드로 남는다. */
+                                    <li key={entry.entry_id} className={`neighbor-books__guestcard is-approved${entry.is_mine ? ' is-mine' : ''}`}>
+                                        <span className="neighbor-books__guestcard-who">
+                                            <em>{entry.class_name}</em><strong>{entry.student_name}</strong>
+                                            {entry.is_mine && <span className="neighbor-books__mine-tag">내 방문록</span>}
+                                        </span>
+                                        <blockquote>{entry.content}</blockquote>
                                     </li>))}</ul>}
                         </section>
                     </>
                 )}
-                {bookView && <BookPreviewFrame load={loadPrint} title={book?.book?.title || '문집'} onClose={() => setBookView(false)} />}
-                {work && <ArtworkReader work={workLoading ? null : work} loading={workLoading} roomTitle={book?.book?.title}
-                    onClose={() => setWork(null)} footer={<button type="button" onClick={() => setWork(null)}>차례로</button>} />}
             </section>
         );
     }
