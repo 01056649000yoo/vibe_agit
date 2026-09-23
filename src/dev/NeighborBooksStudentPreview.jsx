@@ -11,7 +11,7 @@ const bookInfo = {
   class_label: '햇살반', term: '2학기', issue_date: '2026-09-23', grouping: 'custom', design: 'storybook', paper: 'A4', book_type: 'class', page_breaks: [],
 }
 
-function createApi() {
+export function createNeighborBooksPreviewApi() {
   let mine = null
   const entries = [{ entry_id: 'e1', student_name: '박바다', class_name: '바다반', content: '느티나무 이야기가 제일 좋았어요!', is_mine: false }]
   return {
@@ -38,7 +38,7 @@ function createApi() {
 }
 
 export default function NeighborBooksStudentPreview() {
-  const [api] = useState(createApi)
+  const [api] = useState(createNeighborBooksPreviewApi)
   return (
     <div style={{ padding: 20, maxWidth: 980 }}>
       <StudentBooksPanel spaceId="preview-space" api={api} />

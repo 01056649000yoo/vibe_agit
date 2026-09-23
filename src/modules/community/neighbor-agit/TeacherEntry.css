@@ -122,17 +122,29 @@
 .neighbor-teacher__detail li { align-items: flex-start; flex-direction: column; }
 .neighbor-teacher__detail li p { color: #334e68; }
 /* 활동은 `글 나눔 공간`·`함께 쓰는 주제` 둘뿐이다(글짝 교환은 61254 에서 뺐다). 3칸으로 두면 한 칸이 빈다. */
-.neighbor-teacher__activity-tabs { display: flex; grid-column: 1 / -1; gap: 4px; width: fit-content; padding: 4px; border: 1px solid #d9e2ec; border-radius: 11px; background: #f1f5f9; }
-.neighbor-teacher__activity-tabs button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 6px 13px; border: 0; border-radius: 8px; background: transparent; color: #486581; font: inherit; cursor: pointer; }
-.neighbor-teacher__activity-tabs button > span { font-size: var(--ui-text-md); }
-.neighbor-teacher__activity-tabs button strong { font-weight: 900; }
-.neighbor-teacher__activity-tabs button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .12); }
 /* 함께 쓰는 주제: 주제 만들기는 모달로 열고, 화면은 활동 결과만 넓게. 머리 행에 만들기 버튼을 둔다. */
 .neighbor-teacher__activity-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .neighbor-teacher__activity-head strong { color: #243b53; font-size: var(--ui-text-md); }
 
 /* 탭 안 3스텝 본문. 스텝 바 아래 한 스텝을 전체 폭으로 보여 준다. */
 .neighbor-teacher__activity-body { display: grid; grid-column: 1 / -1; gap: 12px; }
+
+/* 공간 카드: 세 공간을 따로 있는 방처럼. 색은 spaces.css 의 [data-space] 변수만 쓴다. */
+.neighbor-teacher__spaces { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ui-space-3); }
+.neighbor-teacher__space-card { position: relative; display: grid; align-content: start; gap: 4px; min-height: 124px; padding: var(--ui-space-4); border: 2px solid var(--ui-border); border-top: 6px solid var(--space-accent); border-radius: var(--ui-radius-lg); background: var(--ui-surface); color: var(--ui-ink); font: inherit; text-align: left; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.neighbor-teacher__space-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15, 23, 42, .08); }
+.neighbor-teacher__space-card.is-active { border-color: var(--space-accent); background: var(--space-soft); box-shadow: 0 8px 20px rgba(15, 23, 42, .1); }
+.neighbor-teacher__space-mark { font-size: 1.6rem; line-height: 1; }
+.neighbor-teacher__space-card strong { color: var(--space-ink); font-size: var(--ui-text-lg); font-weight: 900; word-break: keep-all; }
+.neighbor-teacher__space-card small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); line-height: 1.45; }
+.neighbor-teacher__space-stats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.neighbor-teacher__space-stats span { padding: 2px 8px; border-radius: 999px; background: var(--ui-surface); border: 1px solid var(--ui-border); color: var(--space-ink); font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-teacher__space-card > .neighbor-teacher__badge { position: absolute; top: 10px; right: 10px; }
+.neighbor-teacher__space-room { display: grid; grid-column: 1 / -1; gap: 12px; padding: var(--ui-space-4); border: 2px solid var(--space-accent); border-radius: var(--ui-radius-lg); background: linear-gradient(180deg, var(--space-soft), var(--ui-surface) 120px); }
+.neighbor-teacher__space-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin: 0; }
+.neighbor-teacher__space-heading > span { font-size: 1.4rem; }
+.neighbor-teacher__space-heading strong { color: var(--space-ink); font-size: var(--ui-text-xl); font-weight: 900; }
+.neighbor-teacher__space-heading small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
 .neighbor-teacher__stepbar { display: flex; gap: 4px; width: fit-content; max-width: 100%; flex-wrap: wrap; padding: 4px; border: 1px solid #d9e2ec; border-radius: 11px; background: #f1f5f9; }
 .neighbor-teacher__stepbar button { min-height: 36px; padding: 6px 14px; border: 0; border-radius: 8px; background: transparent; color: #486581; font: inherit; font-weight: 800; cursor: pointer; }
 .neighbor-teacher__stepbar button.is-active { background: #fff; color: #115e59; box-shadow: 0 1px 4px rgba(16, 42, 67, .12); }
@@ -403,8 +415,12 @@
     .neighbor-teacher__header, .neighbor-teacher__overview, .neighbor-teacher__post-list article { align-items: stretch; flex-direction: column; }
     .neighbor-teacher__start-grid, .neighbor-teacher__space-grid, .neighbor-teacher__feed-layout, .neighbor-teacher__activity-layout, .neighbor-teacher__start-choice { grid-template-columns: 1fr; }
     .neighbor-teacher__activity-list > article { align-items: stretch; flex-direction: column; }
-    .neighbor-teacher__activity-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; box-sizing: border-box; }
-    .neighbor-teacher__activity-tabs button { min-height: 36px; }
+    /* 휴대폰: 세 칸을 한 줄로 작게(표시·이름만). 소개·현황은 선택한 방 머리말이 대신 말한다. */
+    .neighbor-teacher__spaces { gap: var(--ui-space-2); }
+    .neighbor-teacher__space-card { min-height: 0; padding: 10px 8px; justify-items: center; text-align: center; }
+    .neighbor-teacher__space-card strong { font-size: var(--ui-text-sm); }
+    .neighbor-teacher__space-card small, .neighbor-teacher__space-stats { display: none; }
+    .neighbor-teacher__space-room { padding: var(--ui-space-3); }
     .neighbor-teacher__genre { flex-wrap: wrap; }
     .neighbor-teacher__genre-body { flex-basis: 100%; }
     .neighbor-teacher__reward-grid { grid-template-columns: 1fr; }

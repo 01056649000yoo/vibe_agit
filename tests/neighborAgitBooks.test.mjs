@@ -85,7 +85,7 @@ test('검토함·메뉴 숫자에 확인할 방문록이 함께 들어간다', (
 test('화면: 세 번째 탭과 학생·교사 칸, 알림으로 들어오면 그 책을 연다', () => {
     assert.match(tabs, /id: 'books', icon: '📚', label: '문집 나눔'/);
     assert.match(teacherEntry, /<TeacherBooksPanel /);
-    assert.match(studentEntry, /<StudentBooksPanel spaceId=\{spaceId\} initialSharedBookId=/);
+    assert.match(studentEntry, /<StudentBooksPanel spaceId=\{spaceId\} api=\{booksApi\} initialSharedBookId=/);
     assert.match(studentEntry, /params\?\.section === 'books'/);
     // 책 응답은 우리 반 서가와 같은 검사를 쓴다.
     assert.match(booksApi, /assertStudentBooks\(book, book\.id, workId\)/);

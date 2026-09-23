@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../components/common/Button';
 import Modal from '../../../components/common/Modal';
 import StudentBackButton from '../../../components/student/StudentBackButton';
-import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
+import { getNeighborActivityLabel, getNeighborSpace, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
+import { neighborBooksApi } from './books/booksApi';
+import './spaces.css';
 import { neighborAgitApi } from './api';
 import StudentBooksPanel from './books/StudentBooksPanel';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
@@ -23,7 +25,7 @@ const formatDeadline = (value) => new Intl.DateTimeFormat('ko-KR', {
 const isWritingClosed = (activity) => activity.status === 'closed'
     || Boolean(activity.writing_close_at && new Date(activity.writing_close_at) <= new Date());
 
-const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
+const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = neighborAgitApi, booksApi = neighborBooksApi }) => {
     const [feed, setFeed] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -36,8 +38,12 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
     const [commentDraft, setCommentDraft] = useState('');
     // 댓글이 검사를 기다리는 중인지. 아이가 “댓글이 사라졌다”고 여기지 않도록 알려 준다.
     const [commentPending, setCommentPending] = useState(false);
-    // 방문록 알림을 눌러 들어오면 문집 나눔 칸에서 시작한다.
-    const [activeSection, setActiveSection] = useState(params?.section === 'books' ? 'books' : 'gallery');
+    // 처음에는 세 공간의 입구(로비)를 보여 준다(null). 알림을 눌러 들어오면 그 공간에서 바로 시작한다
+    // — 방문록 알림은 문집 나눔, 이웃 댓글 알림은 글 나눔 공간.
+    const [activeSection, setActiveSection] = useState(
+        params?.section === 'books' ? 'books' : params?.sharedPostId ? 'gallery' : null
+    );
+    const [bookCount, setBookCount] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [activityFeed, setActivityFeed] = useState(null);
     const [activityLoading, setActivityLoading] = useState(false);
@@ -48,7 +54,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setLoading(true);
         setErrorMessage('');
         try {
-            const data = await neighborAgitApi.getFeed({
+            const data = await api.getFeed({
                 spaceId,
                 limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows
             });
@@ -58,11 +64,31 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         } finally {
             setLoading(false);
         }
-    }, [spaceId]);
+    }, [api, spaceId]);
 
     useEffect(() => {
         void loadFirstPage();
     }, [loadFirstPage]);
+
+    // 로비에서만 문집 수를 가볍게 한 번 읽는다(문집 나눔 칸은 들어갈 때 자기 목록을 읽는다).
+    useEffect(() => {
+        if (activeSection !== null || !spaceId || bookCount !== null) return;
+        booksApi.getSpaceBooks(spaceId).then((books) => setBookCount(books.length)).catch(() => setBookCount(-1));
+    }, [activeSection, spaceId, bookCount, booksApi]);
+
+    const topicActivities = (feed?.activities || []).filter((activity) => activity.type === 'topic');
+    const openTopics = topicActivities.filter((activity) => activity.status !== 'closed'
+        && !(activity.writing_close_at && new Date(activity.writing_close_at) <= new Date()));
+    const lobbyStat = (spaceKey) => {
+        if (spaceKey === 'books') return bookCount === null ? '불러오는 중…' : bookCount < 0 ? '문집 보러 가기' : `문집 ${bookCount}권`;
+        if (loading) return '불러오는 중…';
+        if (spaceKey === 'topic') {
+            return openTopics.some((activity) => !activity.is_submitted)
+                ? `✏️ 쓸 주제가 있어요 (${openTopics.length})`
+                : `진행 중인 주제 ${openTopics.length}`;
+        }
+        return `공개된 글 ${feed?.items?.length || 0}편${feed?.has_more ? '+' : ''}`;
+    };
 
     const visibleFeed = activeSection === 'gallery' ? feed : activityFeed;
     // 함께 쓰는 주제의 댓글·반응 마감이 지났으면 새 댓글·공감을 막고 보기만 하게 한다.
@@ -75,8 +101,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setLoadingMore(true);
         try {
             const request = activeSection === 'gallery'
-                ? neighborAgitApi.getFeed
-                : neighborAgitApi.getActivityFeed;
+                ? api.getFeed
+                : api.getActivityFeed;
             const next = await request({
                 spaceId, activityId: selectedActivity?.id,
                 limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows,
@@ -102,7 +128,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setCommentDraft('');
         setDetailLoading(true);
         try {
-            const nextDetail = await neighborAgitApi.getDetail({ spaceId, sharedPostId });
+            const nextDetail = await api.getDetail({ spaceId, sharedPostId });
             setDetail(nextDetail);
             setCommentDraft(nextDetail.comments?.find((comment) => comment.is_mine)?.content || '');
         } catch {
@@ -149,6 +175,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
 
     const selectSection = (section) => {
         setActiveSection(section);
+        if (section === null) setBookCount(null); // 로비로 돌아오면 문집 수를 다시 센다
         setSelectedActivity(null);
         setActivityFeed(null);
         setActivityMessage('');
@@ -161,7 +188,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setActivityMessage('');
         setActivityLoading(true);
         try {
-            setActivityFeed(await neighborAgitApi.getActivityFeed({
+            setActivityFeed(await api.getActivityFeed({
                 spaceId, activityId: activity.id, limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows
             }));
         } catch {
@@ -185,7 +212,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setInteractionBusy('reaction');
         setInteractionError('');
         try {
-            const result = await neighborAgitApi.toggleReaction({
+            const result = await api.toggleReaction({
                 spaceId, sharedPostId: detail.shared_post_id
             });
             const patch = { my_reaction: result.active, reaction_count: result.reaction_count };
@@ -211,7 +238,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setInteractionError('');
         setCommentPending(false);
         try {
-            const result = await neighborAgitApi.saveComment({
+            const result = await api.saveComment({
                 spaceId, sharedPostId: detail.shared_post_id, content, action: 'save'
             });
             // 검사를 기다리는 동안에는 목록에 넣지 않는다. 아직 아무에게도 보이지 않는 상태다.
@@ -242,7 +269,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
         setInteractionBusy('comment-delete');
         setInteractionError('');
         try {
-            const result = await neighborAgitApi.saveComment({
+            const result = await api.saveComment({
                 spaceId, sharedPostId: detail.shared_post_id, action: 'delete'
             });
             setDetail((current) => ({
@@ -275,28 +302,42 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
                 )}
             </header>
 
-            <nav className="neighbor-student-activities" aria-label="모두의 아지트 활동">
-                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => (
-                    <button type="button" key={id} className={activeSection === id ? 'is-active' : ''} aria-pressed={activeSection === id} onClick={() => selectSection(id)}>
-                        <span aria-hidden="true">{icon}</span><strong>{label}</strong>
-                    </button>
-                ))}
-            </nav>
-
-            {activeSection === 'gallery' && <section className="neighbor-share-panel">
-                <div>
-                    <span>{getNeighborActivityLabel('gallery')}</span>
-                    <h2>이웃 반 친구들의 글을 읽어요</h2>
-                    <p>내 글은 담임 선생님이 골라 이웃 반에 소개해 줘요. 여기서는 공개된 글을 읽고 댓글·공감을 남길 수 있어요.</p>
-                </div>
-            </section>}
+            {activeSection === null ? (
+                /* 로비: 세 공간의 입구. 방에 들어간다는 느낌이 아이들에게 가장 쉽다. 숫자는 이미 받은 피드에서 센다. */
+                <nav className="neighbor-student-lobby" aria-label="모두의 아지트 공간 고르기">
+                    {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label, studentSummary }) => (
+                        <button type="button" key={id} data-space={id} className="neighbor-student-lobby__door" onClick={() => selectSection(id)}>
+                            <span className="neighbor-student-lobby__mark" aria-hidden="true">{icon}</span>
+                            <strong>{label}</strong>
+                            <small>{studentSummary}</small>
+                            <span className="neighbor-student-lobby__stat">{lobbyStat(id)}</span>
+                            <span className="neighbor-student-lobby__enter">들어가기 →</span>
+                        </button>
+                    ))}
+                </nav>
+            ) : (
+                /* 방 머리띠: 지금 어느 공간인지 색으로 말하고, 로비나 다른 방으로 바로 간다. */
+                <section className="neighbor-student-room" data-space={activeSection}>
+                    <button type="button" className="neighbor-student-room__lobby" onClick={() => selectSection(null)}>← 로비로</button>
+                    <div className="neighbor-student-room__title">
+                        <span aria-hidden="true">{getNeighborSpace(activeSection)?.icon}</span>
+                        <h2>{getNeighborActivityLabel(activeSection)}</h2>
+                    </div>
+                    <p>{activeSection === 'gallery'
+                        ? '내 글은 담임 선생님이 골라 이웃 반에 소개해 줘요. 공개된 글을 읽고 댓글·공감을 남겨요.'
+                        : getNeighborSpace(activeSection)?.studentSummary}</p>
+                    <nav className="neighbor-student-room__switch" aria-label="다른 공간으로">
+                        {NEIGHBOR_ACTIVITY_TABS.filter(({ id }) => id !== activeSection).map(({ id, icon, label }) => (
+                            <button type="button" key={id} data-space={id} onClick={() => selectSection(id)}>
+                                <span aria-hidden="true">{icon}</span> {label}
+                            </button>
+                        ))}
+                    </nav>
+                </section>
+            )}
 
             {activeSection === 'topic' && !loading && (
                 <section className="neighbor-activity-space">
-                    <header>
-                        <span>{getNeighborActivityLabel(activeSection)}</span>
-                        <h2>같은 생각거리로 쓰고 함께 읽어요</h2>
-                    </header>
                     {(feed?.activities || []).filter((activity) => activity.type === activeSection).length === 0 ? (
                         <div className="neighbor-student-state">
                             <span aria-hidden="true">🌱</span>
@@ -333,8 +374,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
                 </section>
             )}
 
-            {activeSection === 'books' ? (
-                <StudentBooksPanel spaceId={spaceId} initialSharedBookId={params?.section === 'books' ? params?.sharedBookId : null} />
+            {activeSection === null ? null : activeSection === 'books' ? (
+                <StudentBooksPanel spaceId={spaceId} api={booksApi} initialSharedBookId={params?.section === 'books' ? params?.sharedBookId : null} />
             ) : loading ? (
                 <section className="neighbor-student-state" aria-live="polite">이웃 글을 불러오고 있어요…</section>
             ) : errorMessage && !feed ? (

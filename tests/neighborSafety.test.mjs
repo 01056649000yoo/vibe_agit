@@ -115,10 +115,16 @@ test('준비는 진행형 마법사로 안내하고, 운영은 요약 바 + 활�
     // 운영: 얇은 요약 바로 학생 공개·검토함·공간 관리를 어느 탭에서든 연다.
     assert.match(teacher, /neighbor-teacher__bar/);
 
-    // 활동은 둘뿐이라 내용 폭만 쓰는 얇은 전환 바로 둔다.
-    const activityTabRule = css.slice(css.indexOf('.neighbor-teacher__activity-tabs {'));
-    assert.match(activityTabRule.slice(0, 260), /width: fit-content/);
-    assert.match(css, /activity-tabs button[^}]*min-height: 36px/);
+    // 2026-09-23: 공간이 셋이 되며 얇은 전환 바를 버렸다. 공간마다 색(data-space)을 가진 큰 카드로 고르고,
+    // 선택한 공간의 작업판이 같은 색 테두리로 이어져 따로 있는 방처럼 보인다.
+    assert.doesNotMatch(css, /neighbor-teacher__activity-tabs/);
+    assert.match(teacher, /className=\{`neighbor-teacher__space-card/);
+    assert.match(teacher, /<div className="neighbor-teacher__space-room" data-space=\{activeActivityTab\}>/);
+    assert.match(css, /\.neighbor-teacher__space-room \{[^}]*border: 2px solid var\(--space-accent\)/);
+    const spaces = readFileSync('src/modules/community/neighbor-agit/spaces.css', 'utf8');
+    for (const id of ['gallery', 'topic', 'books']) {
+        assert.match(spaces, new RegExp(`\\[data-space="${id}"\\][^}]*--space-accent`), `${id} 공간 색이 없습니다.`);
+    }
 
     // 좁은 화면에서는 마법사 단계가 한 열로 접힌다.
     assert.match(css, /\.neighbor-teacher__wizard-steps \{ grid-template-columns: 1fr/);
@@ -209,4 +215,19 @@ test('함께 쓰는 주제는 만들기를 모달로 열고 화면은 활동 결
         '__preset-notice', '__form-step']) {
         assert.ok(css.includes(`.neighbor-teacher${name}`), `neighbor-teacher${name} 스타일이 없습니다.`);
     }
+});
+
+test('학생 화면은 로비(세 공간의 입구)에서 시작하고, 방마다 색 머리띠로 어디인지 말한다', () => {
+    const student = readFileSync('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8');
+    const css = readFileSync('src/modules/community/neighbor-agit/StudentEntry.css', 'utf8');
+    const types = readFileSync('src/modules/community/neighbor-agit/activityTypes.js', 'utf8');
+    // 처음엔 로비(null). 알림으로 들어오면 그 공간에서 바로 시작한다.
+    assert.match(student, /params\?\.section === 'books' \? 'books' : params\?\.sharedPostId \? 'gallery' : null/);
+    assert.match(student, /className="neighbor-student-lobby__door" onClick=\{\(\) => selectSection\(id\)\}/);
+    assert.match(student, /<section className="neighbor-student-room" data-space=\{activeSection\}>/);
+    assert.match(student, /onClick=\{\(\) => selectSection\(null\)\}>← 로비로/);
+    // 공간 목록·소개의 원본은 activityTypes 하나, 색은 spaces.css 하나.
+    assert.match(types, /studentSummary:/);
+    assert.match(css, /\.neighbor-student-lobby__door \{[^}]*var\(--space-accent\)/);
+    assert.doesNotMatch(css, /neighbor-student-activities|neighbor-share-panel/);
 });

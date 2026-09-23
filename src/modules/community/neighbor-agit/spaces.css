@@ -1,0 +1,7 @@
+/* 모두의 아지트 세 공간의 색. 교사·학생 화면이 모두 [data-space] 로 이 변수만 쓴다(값은 여기 한 곳).
+ *   --space-accent : 머리띠·선택 테두리·버튼 강조
+ *   --space-soft   : 카드·머리띠 바탕
+ *   --space-ink    : 바탕 위 글자 */
+[data-space="gallery"] { --space-accent: #0f766e; --space-soft: #e6f7f4; --space-ink: #134e4a; }
+[data-space="topic"]   { --space-accent: #c2410c; --space-soft: #fff1e6; --space-ink: #7c2d12; }
+[data-space="books"]   { --space-accent: #6d28d9; --space-soft: #f3edff; --space-ink: #4c1d95; }

@@ -15,7 +15,8 @@ import { callAI } from '../../../lib/openai';
 const genreIdForMissionType = (missionTypeId) => (
     getGenreEntries().find((entry) => entry.missionTypeId === missionTypeId)?.id || '기타'
 );
-import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
+import { getNeighborActivityLabel, getNeighborSpace, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
+import './spaces.css';
 import { neighborAgitTeacherApi } from './teacherApi';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import TeacherPostReview from './TeacherPostReview';
@@ -568,6 +569,15 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0)
         + (notif.pending_guestbook || 0);
 
+    // 공간 카드에 보일 현황(이미 받은 작업 공간에서 센다 — 추가 조회 없음).
+    const ownPublished = (workspace?.public_posts || []).filter((post) => post.is_own_class && post.status === 'published').length;
+    const openTopics = activities.filter((activity) => activity.status === 'open').length;
+    const spaceStats = (spaceKey) => {
+        if (spaceKey === 'gallery') return [`우리 반 공개 ${ownPublished}편`, notif.new_posts > 0 ? `새 이웃 글 ${notif.new_posts}` : '새 이웃 글 없음'];
+        if (spaceKey === 'topic') return [`진행 중 ${openTopics}`, notif.pending_approvals > 0 ? `승인할 제안 ${notif.pending_approvals}` : '승인할 제안 없음'];
+        return [notif.pending_guestbook > 0 ? `확인할 방문록 ${notif.pending_guestbook}` : '확인할 방문록 없음'];
+    };
+
     // 처리할 일 수를 메뉴 배지로 올린다. 메뉴는 학급을 바꿀 때만 세므로, 여기서 처리하는 즉시 줄어들게 한다.
     useEffect(() => {
         if (workspace) onTodoCountChange?.(reviewInboxCount);
@@ -978,19 +988,32 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
                     {(
                         <div className="neighbor-teacher__activity-layout">
-                            <nav className="neighbor-teacher__activity-tabs" aria-label="활동 전환" role="tablist">
-                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => {
-                                    const tabBadge = id === 'gallery' ? notif.new_posts : id === 'topic' ? notif.pending_approvals : id === 'books' ? notif.pending_guestbook : 0;
+                            {/* 세 공간을 필터가 아니라 따로 있는 방처럼: 공간마다 색(spaces.css)·소개·현황 숫자.
+                                선택한 카드와 아래 작업판이 같은 색 테두리로 이어진다. 숫자는 이미 받은 작업 공간에서 센다. */}
+                            <nav className="neighbor-teacher__spaces" aria-label="공간 고르기" role="tablist">
+                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label, teacherSummary }) => {
+                                    const stats = spaceStats(id);
+                                    const todo = id === 'topic' ? notif.pending_approvals : id === 'books' ? notif.pending_guestbook : 0;
                                     return (
-                                        <button type="button" role="tab" key={id} className={activeActivityTab === id ? 'is-active' : ''} aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
-                                            <span aria-hidden="true">{icon}</span>
+                                        <button type="button" role="tab" key={id} data-space={id}
+                                            className={`neighbor-teacher__space-card${activeActivityTab === id ? ' is-active' : ''}`}
+                                            aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
+                                            <span className="neighbor-teacher__space-mark" aria-hidden="true">{icon}</span>
                                             <strong>{label}</strong>
-                                            {tabBadge > 0 && <span className="neighbor-teacher__badge">{tabBadge}</span>}
+                                            <small>{teacherSummary}</small>
+                                            <span className="neighbor-teacher__space-stats">{stats.map((item) => <span key={item}>{item}</span>)}</span>
+                                            {todo > 0 && <span className="neighbor-teacher__badge" aria-label={`처리할 일 ${todo}건`}>{todo}</span>}
                                         </button>
                                     );
                                 })}
                             </nav>
 
+                            <div className="neighbor-teacher__space-room" data-space={activeActivityTab}>
+                            <p className="neighbor-teacher__space-heading">
+                                <span aria-hidden="true">{getNeighborSpace(activeActivityTab)?.icon}</span>
+                                <strong>{getNeighborSpace(activeActivityTab)?.label}</strong>
+                                <small>{getNeighborSpace(activeActivityTab)?.teacherSummary}</small>
+                            </p>
                             {activeActivityTab === 'gallery' ? (
                                 <div className="neighbor-teacher__activity-body">
                                 {renderStepBar([
@@ -1324,6 +1347,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </div>
                                 </>
                             )}
+                            </div>
                         </div>
                     )}
                 </>
