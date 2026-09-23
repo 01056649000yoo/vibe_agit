@@ -193,11 +193,19 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         const result = await runAction('join_space', {
             invite_key: joinForm.inviteKey.trim(),
             public_class_name: joinForm.publicClassName.trim()
-        }, '참여를 신청했습니다. 호스트 교사의 승인을 기다려 주세요.');
-        if (result) {
-            setJoinForm((current) => ({ ...current, inviteKey: '' }));
-            setStartChoice(null);
+        }, '');
+        if (!result) return;
+        // 틀린·쓴·만료된 키는 오류가 아니라 success:false 로 돌아온다(시도 횟수 제한 때문).
+        // 예전에는 이것을 성공으로 알리고 창을 닫아, 선생님이 신청된 줄 알고 기다렸다(2026-09-23 시뮬레이션).
+        if (result.success === false) {
+            setErrorMessage(result.error === 'rate_limited'
+                ? `초대키를 여러 번 잘못 넣어 잠시 막혔어요. ${Math.ceil((Number(result.retry_after_seconds) || 60) / 60)}분 뒤 다시 해 주세요.`
+                : '초대키가 맞지 않거나, 이미 쓰였거나, 만료됐어요. 호스트 선생님께 새 초대키를 받아 주세요.');
+            return;
         }
+        setMessage('참여를 신청했습니다. 호스트 교사의 승인을 기다려 주세요.');
+        setJoinForm((current) => ({ ...current, inviteKey: '' }));
+        setStartChoice(null);
     };
 
     const createInvite = async () => {

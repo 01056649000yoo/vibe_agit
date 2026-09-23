@@ -127,3 +127,12 @@ test('도움말이 새 흐름을 말한다', () => {
     assert.match(guide, /학생 입장/);
     assert.doesNotMatch(guide, /공개 요청을 승인/);
 });
+
+test('틀린·쓴·만료된 초대키는 성공으로 알리지 않는다(2026-09-23 시뮬레이션에서 발견)', () => {
+    const join = entry.slice(entry.indexOf('const joinSpace = async'), entry.indexOf('const createInvite = async'));
+    assert.match(join, /result\.success === false/);
+    assert.match(join, /rate_limited/);
+    // 성공 문구는 실패를 거른 뒤에만 띄운다.
+    assert.ok(join.indexOf('result.success === false') < join.indexOf("setMessage('참여를 신청했습니다"),
+        '실패를 거르기 전에 성공 문구를 띄우면 안 됩니다.');
+});
