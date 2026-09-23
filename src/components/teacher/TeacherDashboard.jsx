@@ -746,7 +746,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         ) : ['class-agit', 'class-agit-books'].includes(visibleTab) ? (
                             <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />
                         ) : visibleTab === 'neighbor-agit' ? (
-                            <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} onTodoCountChange={setNeighborBadge} />
+                            <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} onTodoCountChange={setNeighborBadge} onNavigateTab={handleTabChange} />
                         ) : visibleTab === 'student-dashboard-preview' ? (
                             <StudentDashboardPreview key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (

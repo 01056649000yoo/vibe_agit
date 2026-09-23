@@ -51,7 +51,7 @@ const formatDeadline = (value) => new Date(value).toLocaleString('ko-KR', {
     month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit'
 });
 
-const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi, booksApi = neighborBooksApi, onTodoCountChange }) => {
+const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi, booksApi = neighborBooksApi, onTodoCountChange, onNavigateTab }) => {
     const classId = activeClass?.id;
     const [workspace, setWorkspace] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -1141,7 +1141,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             ) : activeActivityTab === 'books' ? (
                                 <div className="neighbor-teacher__activity-body">
                                     <TeacherBooksPanel spaceId={workspace.space.id} classId={classId} pendingEntries={pendingGuestbook}
-                                        ask={ask} onChanged={refreshWorkspace} api={booksApi} />
+                                        ask={ask} onChanged={refreshWorkspace} api={booksApi}
+                                        onOpenBooks={onNavigateTab ? () => onNavigateTab('class-agit-books') : undefined} />
                                 </div>
                             ) : (
                                 <>

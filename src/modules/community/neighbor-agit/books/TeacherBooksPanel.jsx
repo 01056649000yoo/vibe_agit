@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
+import '../../../class-agit/anthology/cover.css';
 import { neighborBooksApi } from './booksApi';
 import './books.css';
 
@@ -10,7 +12,24 @@ import './books.css';
  *   ③ 공간에 소개된 문집 / 우리 반 문집에 올라간 방문록(내리기)
  * 확인할 방문록 목록은 작업 공간(workspace.pending_guestbook)이 이미 들고 있어 검토함과 같은 원본을 쓴다.
  */
-export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [], ask, onChanged, api = neighborBooksApi }) {
+/**
+ * 소개하기가 꺼진 까닭과 할 일. 글꽃 책방의 실제 단추 이름으로 안내한다.
+ * @returns {null | { text: string, hint: string, action: string }}
+ */
+const blockedReason = (book) => {
+    if (!book.any_edition_number) {
+        return { text: '아직 확정한 판이 없어요.', hint: '글꽃 책방 5단계에서 ‘새 판 확정’을 누르면 소개할 수 있어요.', action: '글꽃 책방에서 확정하기' };
+    }
+    if (!book.latest_edition_id) {
+        return { text: `확정한 ${book.any_edition_number}판이 학생에게 가려져 있어요.`, hint: '글꽃 책방 ‘확정판 보관함’에서 ‘학생 서가에 공개’를 눌러 주세요.', action: '학생 서가에 공개하러 가기' };
+    }
+    if (Number(book.work_count) === 0) {
+        return { text: '지금 읽을 수 있는 작품이 없어요.', hint: '작품이 모두 수록 철회됐어요. 글꽃 책방에서 작품을 다시 담아 새 판을 확정해 주세요.', action: '글꽃 책방에서 확인하기' };
+    }
+    return null;
+};
+
+export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [], ask, onChanged, onOpenBooks, api = neighborBooksApi }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [busy, setBusy] = useState('');
@@ -88,25 +107,45 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
 
             <section className="neighbor-books__card">
                 <header><h3>📚 우리 반 문집 소개하기</h3>
-                    <p>글꽃 책방에서 확정하고 <strong>학생에게 보이게 한</strong> 학급 문집을 참여한 모든 반에 소개해요.</p></header>
+                    <p>글꽃 책방에서 확정하고 <strong>학생 서가에 공개한</strong> 학급 문집을 참여한 모든 반에 소개해요.</p></header>
                 {loading && !data && <p className="neighbor-books__empty">문집을 불러오는 중…</p>}
-                {data && myBooks.length === 0 && <p className="neighbor-books__empty">소개할 수 있는 학급 문집이 없어요. 글꽃 책방에서 문집을 확정하고 ‘학생에게 보이기’를 켜 주세요.</p>}
+                {data && myBooks.length === 0 && (
+                    <div className="neighbor-books__reason">
+                        <p><strong>아직 우리 반 학급 문집이 없어요.</strong> 글꽃 책방에서 학급 문집을 만들고 새 판을 확정한 뒤 ‘학생 서가에 공개’를 누르면 여기서 소개할 수 있어요. (개인 문집은 소개하지 않아요.)</p>
+                        {onOpenBooks && <Button type="button" size="sm" variant="outline" onClick={onOpenBooks}>📚 글꽃 책방으로 가기 →</Button>}
+                    </div>
+                )}
+                {/* 문집마다 작은 표지 카드. 소개할 수 없으면 까닭과 글꽃 책방으로 가는 단추를 카드 안에 둔다. */}
                 <ul className="neighbor-books__mine">{myBooks.map((book) => {
                     const shared = book.shared_status === 'published';
-                    const canShare = Boolean(book.latest_edition_id) && Number(book.work_count) > 0;
+                    const reason = blockedReason(book);
                     const outdated = shared && Number(book.shared_number) < Number(book.latest_number);
+                    const hiddenNewer = !reason && Number(book.any_edition_number) > Number(book.latest_number);
+                    const design = getBookDesign(book.design);
                     return (
-                        <li key={book.book_id}>
-                            <div>
-                                <strong>{book.title}</strong>
-                                <small>{book.latest_edition_id ? `${book.latest_number}판 · 작품 ${book.work_count}편` : '학생에게 보이는 판이 없어요'}</small>
-                                {shared && <span className="neighbor-books__badge">소개 중 · {book.shared_number}판</span>}
+                        <li key={book.book_id} className={`neighbor-books__book-card${reason ? ' is-blocked' : ''}`}>
+                            <div className="class-agit neighbor-books__mini-cover-frame" aria-hidden="true">
+                                <span className="class-agit-book-cover neighbor-books__mini-cover" data-design={design.id} style={bookCoverStyle(book.design, book.paper)}>
+                                    <span className="class-agit-cover-mark">{design.mark}</span>
+                                </span>
                             </div>
-                            <span className="neighbor-books__actions">
-                                {!shared && <Button type="button" size="sm" disabled={Boolean(busy) || !canShare} onClick={() => share(book)}>소개하기</Button>}
-                                {outdated && <Button type="button" size="sm" disabled={Boolean(busy) || !canShare} onClick={() => share(book)}>{book.latest_number}판으로 바꾸기</Button>}
-                                {shared && <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => withdraw(book)}>소개 내리기</Button>}
-                            </span>
+                            <div className="neighbor-books__book-body">
+                                <strong>{book.title}</strong>
+                                <small>{book.latest_edition_id ? `${book.latest_number}판 · 작품 ${book.work_count}편` : book.any_edition_number ? `${book.any_edition_number}판 확정 · 학생에게 가림` : '확정 전'}</small>
+                                {shared && <span className="neighbor-books__badge">소개 중 · {book.shared_number}판</span>}
+                                {reason && (
+                                    <div className="neighbor-books__reason" role="note">
+                                        <p><strong>{reason.text}</strong> {reason.hint}</p>
+                                        {onOpenBooks && <Button type="button" size="sm" variant="outline" onClick={onOpenBooks}>📚 {reason.action} →</Button>}
+                                    </div>
+                                )}
+                                {hiddenNewer && <p className="neighbor-books__hint">새로 확정한 {book.any_edition_number}판은 아직 학생에게 가려져 있어요. 공개하면 그 판으로 바꿀 수 있어요.</p>}
+                                <span className="neighbor-books__actions">
+                                    {!shared && !reason && <Button type="button" size="sm" disabled={Boolean(busy)} onClick={() => share(book)}>소개하기</Button>}
+                                    {outdated && <Button type="button" size="sm" disabled={Boolean(busy)} onClick={() => share(book)}>{book.latest_number}판으로 바꾸기</Button>}
+                                    {shared && <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)} onClick={() => withdraw(book)}>소개 내리기</Button>}
+                                </span>
+                            </div>
                         </li>
                     );
                 })}</ul>

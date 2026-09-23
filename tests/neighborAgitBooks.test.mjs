@@ -99,3 +99,17 @@ test('시뮬레이션이 문집 흐름을 돈다', () => {
         assert.ok(simulation.includes(step), `시뮬레이션에 "${step}" 단계가 없습니다.`);
     }
 });
+
+test('소개하기가 꺼진 문집은 까닭과 글꽃 책방으로 가는 단추를 보여 준다(2026-09-23 `20261337`)', async () => {
+    const reasonSql = await readFile('supabase/migrations/20261337_neighbor_teacher_books_reason.sql', 'utf8');
+    const dashboard = await readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8');
+    assert.match(reasonSql, /'any_edition_number', \(SELECT max\(edition\.number\)/);
+    assert.match(reasonSql, /'design', book\.design_id/);
+    // 확정 전 / 확정했지만 가림 / 읽을 작품 없음 — 세 까닭을 글꽃 책방의 실제 단추 이름으로 안내한다.
+    assert.match(teacherPanel, /if \(!book\.any_edition_number\)/);
+    assert.match(teacherPanel, /if \(!book\.latest_edition_id\)/);
+    assert.match(teacherPanel, /‘학생 서가에 공개’를 눌러 주세요/);
+    assert.match(teacherPanel, /‘새 판 확정’/);
+    assert.match(teacherEntry, /onOpenBooks=\{onNavigateTab \? \(\) => onNavigateTab\('class-agit-books'\) : undefined\}/);
+    assert.match(dashboard, /<TeacherNeighborAgit [^>]*onNavigateTab=\{handleTabChange\}/);
+});

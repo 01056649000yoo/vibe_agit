@@ -132,9 +132,10 @@ function createBooksPreviewApi() {
   let data = {
     version: 1,
     my_books: [
-      { book_id: 'book-1', title: '햇살반 동네 이야기', latest_edition_id: 'ed-2', latest_number: 2, work_count: 24, shared_book_id: 'sb-1', shared_status: 'published', shared_number: 1 },
-      { book_id: 'book-2', title: '가을 시 모음', latest_edition_id: 'ed-3', latest_number: 1, work_count: 12, shared_book_id: null, shared_status: null, shared_number: null },
-      { book_id: 'book-3', title: '아직 확정 전 문집', latest_edition_id: null, latest_number: null, work_count: 0, shared_book_id: null, shared_status: null, shared_number: null },
+      { book_id: 'book-1', title: '햇살반 동네 이야기', latest_edition_id: 'ed-2', latest_number: 2, any_edition_number: 2, work_count: 24, shared_book_id: 'sb-1', shared_status: 'published', shared_number: 1, design: 'storybook', paper: 'A4' },
+      { book_id: 'book-2', title: '가을 시 모음', latest_edition_id: 'ed-3', latest_number: 1, any_edition_number: 2, work_count: 12, shared_book_id: null, shared_status: null, shared_number: null, design: 'constellation', paper: 'A5' },
+      { book_id: 'book-3', title: '우리들의 문집', latest_edition_id: null, latest_number: null, any_edition_number: null, work_count: 0, shared_book_id: null, shared_status: null, shared_number: null, design: 'botanical', paper: 'A4' },
+      { book_id: 'book-4', title: '여름 방학 이야기', latest_edition_id: null, latest_number: null, any_edition_number: 1, work_count: 0, shared_book_id: null, shared_status: null, shared_number: null, design: 'ocean', paper: 'A4' },
     ],
     shared_books: [
       { shared_book_id: 'sb-1', class_name: '햇살반', is_own_class: true, title: '햇살반 동네 이야기', number: 1, approved_count: 3, pending_count: 1 },
@@ -167,6 +168,7 @@ export default function NeighborAgitTeacherPreview() {
         activeClass={{ id: classOne, name: '햇살반' }}
         api={previewApi}
         booksApi={booksApi}
+        onNavigateTab={(tab) => window.alert(`교사 메뉴 이동: ${tab}`)}
       />
     </div>
   )
