@@ -293,6 +293,22 @@
 .neighbor-teacher__deadline input { padding: 7px 9px; border: 1px solid #bcccdc; border-radius: 8px; font: inherit; color: #243b53; }
 .neighbor-teacher__deadline small { color: #627d98; font-size: var(--ui-text-xs); }
 .neighbor-teacher__deadline-done { color: #b91c1c; font-weight: 800; }
+.neighbor-teacher__deadlines { margin-top: 8px; }
+.neighbor-teacher__deadlines > .neighbor-teacher__deadline { margin-top: 0; }
+.neighbor-teacher__deadlines > p.neighbor-teacher__deadline { align-items: baseline; margin-bottom: 0; }
+.neighbor-teacher__deadlines strong { color: #486581; font-size: var(--ui-text-xs); }
+.neighbor-teacher__proposal-schedule { display: block; margin-top: 4px; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+.neighbor-teacher__compact-heading h3 small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 600; }
+.neighbor-teacher__setting-groups fieldset > small { grid-column: 1 / -1; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); line-height: 1.5; }
+/* 기한 칸은 한 줄로 길게 — 좁은 격자 칸에 넣으면 날짜만 보이고 시각이 잘린다. */
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups fieldset.neighbor-teacher__deadline-field { grid-template-columns: minmax(0, 1fr); }
+.neighbor-teacher__deadline-field input[type="datetime-local"] { width: 100%; max-width: 280px; }
+
+/* 활동 종료 방법 고르기: 두 갈래를 큰 단추로. 단추 안 작은 글씨가 무엇이 달라지는지 말한다. */
+.neighbor-teacher__close-choice { display: grid; gap: var(--ui-space-3); }
+.neighbor-teacher__close-choice p { margin: 0 0 var(--ui-space-2); color: var(--ui-ink-muted); font-size: var(--ui-text-md); line-height: 1.6; }
+.neighbor-teacher__close-choice .btn, .neighbor-teacher__close-choice button { display: flex; flex-direction: column; align-items: center; gap: 2px; height: auto; padding-block: 10px; }
+.neighbor-teacher__close-choice button small { font-size: var(--ui-text-xs); font-weight: 600; opacity: 0.85; }
 
 /* 묶음 목록(폴더): 주제/학생만 보여 주고, 폴더째 일괄 동작하거나 눌러 들어가 하나씩 편집한다. */
 .neighbor-teacher__folder-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));

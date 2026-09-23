@@ -17,6 +17,7 @@ const genreIdForMissionType = (missionTypeId) => (
 );
 import { getNeighborActivityLabel, NEIGHBOR_ACTIVITY_TABS } from './activityTypes';
 import { neighborAgitTeacherApi } from './teacherApi';
+import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import TeacherPostReview from './TeacherPostReview';
 import './TeacherEntry.css';
 
@@ -34,7 +35,19 @@ const getErrorMessage = (error, fallback) => {
     return message || fallback;
 };
 
-const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi }) => {
+/** datetime-local 입력값(현지 시각)을 서버에 보낼 ISO 로 바꾼다. 빈 값은 null(기한 없음). */
+const localInputToIso = (value) => (value ? new Date(value).toISOString() : null);
+
+/** 기한 종류는 둘뿐이다: 글쓰기 마감(writing_close_at)·댓글·반응 마감(comments_close_at). */
+const deadlineLabel = (key) => (key === 'writing_close_at' ? '글쓰기 마감' : '댓글·반응 마감');
+const deadlineValue = (activity, key) => (key === 'writing_close_at' ? activity.writing_close_at : activity.comments_close_at);
+
+/** 기한을 사람이 읽는 한 줄로. */
+const formatDeadline = (value) => new Date(value).toLocaleString('ko-KR', {
+    month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit'
+});
+
+const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTeacherApi, onTodoCountChange }) => {
     const classId = activeClass?.id;
     const [workspace, setWorkspace] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -53,7 +66,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 각 탭 안의 3스텝. 글 나눔: 모으기→관리→반응 / 함께 쓰는 주제: 주제→관리→반응.
     const [galleryStep, setGalleryStep] = useState('collect'); // collect | manage | engage
     const [topicStep, setTopicStep] = useState('topics');      // topics | manage | engage
-    const [deadlineDrafts, setDeadlineDrafts] = useState({}); // 활동별 댓글 마감 datetime-local 입력값
+    const [deadlineDrafts, setDeadlineDrafts] = useState({}); // `${활동id}:${기한 종류}` → datetime-local 입력값
+    const [closeActivityFor, setCloseActivityFor] = useState(null); // 활동 종료 방법을 고르는 창의 대상 활동
     const [activityPublishFor, setActivityPublishFor] = useState(null); // 활동 글 공개 모달 대상 활동
     const [activityCandidates, setActivityCandidates] = useState(null);
     const [activityCandLoading, setActivityCandLoading] = useState(false);
@@ -65,6 +79,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const { ask, confirmDialog } = useConfirmDialog(); // 브라우저 기본창 대신 앱 안 확인 창
     // 학급 과제와 같은 칸을 쓴다(`genreCatalog` 의 preset 이 채우는 이름 그대로).
     const [activityForm, setActivityForm] = useState(createNeighborTopicDraft);
+    // 주제를 낼 때 함께 정하는 기한(datetime-local 입력값, 빈 값 = 기한 없음). 승인하는 교사들도 본다.
+    const [topicSchedule, setTopicSchedule] = useState({ writing_close_at: '', comments_close_at: '' });
     const [genrePickerOpen, setGenrePickerOpen] = useState(false);
     const [presetNotice, setPresetNotice] = useState('');
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
@@ -140,6 +156,23 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         } finally {
             setBusy('');
         }
+    };
+
+    const leaveSpace = async () => {
+        const ok = await ask({
+            title: '이 공간에서 나갈까요?',
+            body: '우리 반 글은 학급에 그대로 남습니다.\n이 공간에서 주고받은 댓글·공감은 더 이상 볼 수 없어요.',
+            confirmLabel: '공간 나가기', cancelLabel: '그만두기', tone: 'danger'
+        });
+        if (ok) await runAction('leave_space', { space_id: workspace.space.id }, '공간에서 나갔습니다.');
+    };
+    const closeSpace = async () => {
+        const ok = await ask({
+            title: '공간을 종료할까요?',
+            body: '모든 반의 학생 입장이 바로 끝나고 되돌릴 수 없습니다.\n각 반 글은 그 반에 그대로 남고, 이 공간에서 주고받은 댓글·공감은 더 이상 볼 수 없어요.',
+            confirmLabel: '공간 종료', cancelLabel: '그만두기', tone: 'danger'
+        });
+        if (ok) await runAction('close_space', { space_id: workspace.space.id }, '공간을 종료했습니다.');
     };
 
     const createSpace = async (event) => {
@@ -223,14 +256,39 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     const createActivity = async (event) => {
         event.preventDefault();
+        const { writing_close_at: writingAt, comments_close_at: commentsAt } = topicSchedule;
+        const now = Date.now();
+        if ((writingAt && new Date(writingAt).getTime() <= now) || (commentsAt && new Date(commentsAt).getTime() <= now)) {
+            setErrorMessage('기한은 지금 이후로 정해 주세요.');
+            return;
+        }
+        if (writingAt && commentsAt && new Date(commentsAt) < new Date(writingAt)) {
+            setErrorMessage('댓글·반응 마감은 글쓰기 마감과 같거나 그 뒤로 정해 주세요.');
+            return;
+        }
         const result = await runAction(
             'create_activity',
             toNeighborTopicProposal({ spaceId: workspace.space.id, draft: activityForm }),
             '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
         );
-        if (result) {
-            setActivityForm(createNeighborTopicDraft());
-            setPresetNotice('');
+        if (!result) return;
+        setActivityForm(createNeighborTopicDraft());
+        setTopicSchedule({ writing_close_at: '', comments_close_at: '' });
+        setPresetNotice('');
+        setTopicCreateOpen(false);
+        if ((!writingAt && !commentsAt) || !result.activity_id) return;
+        try {
+            // 제안과 같은 순간에 기한을 붙인다. 승인 전이라 다른 교사들은 기한까지 보고 승인한다.
+            await api.setActivitySchedule({
+                spaceId: workspace.space.id, classId, activityId: result.activity_id,
+                changes: {
+                    ...(writingAt ? { writing_close_at: localInputToIso(writingAt) } : {}),
+                    ...(commentsAt ? { comments_close_at: localInputToIso(commentsAt) } : {})
+                }
+            });
+            setWorkspace(await api.getWorkspace(classId));
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error, '주제는 제안했지만 기한을 저장하지 못했습니다. 주제 카드에서 다시 정해 주세요.'));
         }
     };
 
@@ -332,24 +390,45 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     };
 
     // 함께 쓰는 주제의 댓글·반응 마감 시각을 정하거나(빈 값=마감 해제) 지운다.
-    const saveActivityDeadline = async (activityId, localValue) => {
+    // 주제 카드에서 기한 하나(글쓰기 또는 댓글·반응)를 정하거나 지운다.
+    const saveActivitySchedule = async (activityId, key, localValue) => {
         if (busy) return;
-        setBusy('set_activity_deadline');
+        setBusy('set_activity_schedule');
         setMessage('');
         setErrorMessage('');
         try {
-            await api.setActivityDeadline({
+            await api.setActivitySchedule({
                 spaceId: workspace.space.id, classId, activityId,
-                closeAt: localValue ? new Date(localValue).toISOString() : null
+                changes: key === 'writing_close_at'
+                    ? { writing_close_at: localInputToIso(localValue) }
+                    : { comments_close_at: localInputToIso(localValue) }
             });
-            const next = await api.getWorkspace(classId);
-            setWorkspace(next);
-            setDeadlineDrafts((current) => { const copy = { ...current }; delete copy[activityId]; return copy; });
-            setMessage(localValue ? '댓글·반응 마감 시각을 정했습니다.' : '댓글·반응 마감을 해제했습니다.');
+            setWorkspace(await api.getWorkspace(classId));
+            setDeadlineDrafts((current) => { const copy = { ...current }; delete copy[`${activityId}:${key}`]; return copy; });
+            setMessage(localValue ? `${deadlineLabel(key)}을 정했습니다.` : `${deadlineLabel(key)}을 해제했습니다.`);
         } catch (error) {
-            setErrorMessage(getErrorMessage(error, '마감 시각을 정하지 못했습니다.'));
+            setErrorMessage(getErrorMessage(error, '기한을 정하지 못했습니다.'));
         } finally {
             setBusy('');
+        }
+    };
+
+    // 활동 종료: 글쓰기만 마칠지, 댓글·반응까지 함께 닫을지 고른다.
+    const closeActivity = async (activity, alsoCloseComments) => {
+        setCloseActivityFor(null);
+        const closed = await runAction('close_activity', { space_id: workspace.space.id, activity_id: activity.id },
+            alsoCloseComments ? '글쓰기와 댓글·반응을 모두 마쳤습니다.' : '글쓰기를 마쳤습니다. 댓글·반응은 계속 열려 있어요.');
+        if (!closed || !alsoCloseComments) return;
+        try {
+            // 지난 시각을 주면 서버가 "지금 마감" 으로 받는다.
+            await api.setActivitySchedule({
+                spaceId: workspace.space.id, classId, activityId: activity.id,
+                changes: { comments_close_at: new Date().toISOString() }
+            });
+            setWorkspace(await api.getWorkspace(classId));
+        } catch (error) {
+            setMessage('');
+            setErrorMessage(getErrorMessage(error, '글쓰기는 마쳤지만 댓글·반응을 닫지 못했습니다. 주제 카드에서 마감을 다시 정해 주세요.'));
         }
     };
 
@@ -446,9 +525,15 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const isReady = activeMemberships.length >= 2;
     // 알림 카운트(서버 계산). 배지로 보여 탭을 오가지 않아도 처리할 것을 안다.
     const notif = workspace?.notifications || {};
-    // 검토함에 올릴 것: 다른 학급이 낸 주제(활동) 제안 중 우리 반이 승인/거절할 것 + AI가 막은 우리 반 댓글.
+    // 검토함에 올릴 것: 다른 학급이 낸 주제(활동) 제안 중 우리 반이 승인/거절할 것 + AI가 막은 우리 반 댓글
+    // + (호스트) 참여 신청. 메뉴 배지(get_neighbor_teacher_badge_v1)와 같은 셋을 센다 — 둘이 다른 수를 말하면 안 된다.
     const pendingApprovalActivities = activities.filter((activity) => activity.can_review);
-    const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0);
+    const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0);
+
+    // 처리할 일 수를 메뉴 배지로 올린다. 메뉴는 학급을 바꿀 때만 세므로, 여기서 처리하는 즉시 줄어들게 한다.
+    useEffect(() => {
+        if (workspace) onTodoCountChange?.(reviewInboxCount);
+    }, [workspace, reviewInboxCount, onTodoCountChange]);
 
     // 운영 화면을 열면 "지금까지 봤음"을 남긴다(새 글/새 댓글 배지 기준선).
     useEffect(() => {
@@ -517,6 +602,32 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     );
 
     // ② 공개 글 관리: 주제별/학생별로 묶어 보고, 묶음째 비공개로 돌리거나 한 편씩 숨김·복원.
+    // 주제 카드의 기한 한 줄(글쓰기 마감·댓글·반응 마감). 고칠 수 없으면 정해진 값만 보여 준다.
+    const renderDeadlineRow = (activity, key, editable) => {
+        const saved = deadlineValue(activity, key);
+        const passed = saved && new Date(saved) <= new Date();
+        const draftKey = `${activity.id}:${key}`;
+        const status = saved
+            ? <small className={passed ? 'neighbor-teacher__deadline-done' : ''}>{passed ? '마감됨' : `${formatDeadline(saved)}까지`}</small>
+            : <small>기한 없음</small>;
+        if (!editable) {
+            return <p className="neighbor-teacher__deadline" key={key}><strong>{deadlineLabel(key)}</strong>{status}</p>;
+        }
+        const value = deadlineDrafts[draftKey] ?? toLocalInput(saved);
+        return (
+            <div className="neighbor-teacher__deadline" key={key}>
+                <label>{deadlineLabel(key)}
+                    <input type="datetime-local" disabled={Boolean(busy)} value={value}
+                        onChange={(event) => setDeadlineDrafts((current) => ({ ...current, [draftKey]: event.target.value }))} />
+                </label>
+                <Button type="button" size="sm" loading={busy === 'set_activity_schedule'} disabled={Boolean(busy) || !value}
+                    onClick={() => saveActivitySchedule(activity.id, key, value)}>저장</Button>
+                {saved && <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => saveActivitySchedule(activity.id, key, '')}>마감 해제</Button>}
+                {status}
+            </div>
+        );
+    };
+
     const renderManageStep = () => {
         // 공개 글 관리는 "공개 중"인 글만 보여 준다(숨긴 글은 목록에서 빠진다).
         const managePosts = workspace.public_posts.filter((post) => post.status === 'published');
@@ -687,7 +798,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         <section className={`neighbor-teacher ${isMobile ? 'is-mobile' : ''}`}>
             <header className="neighbor-teacher__header">
                 <div>
-                    <span>선택 학급 제한 공개</span>
+                    <span>여러 학급이 함께 쓰는 글 공간</span>
                     <h1>🤝 모두의 아지트</h1>
                     <p>{activeClass?.name}과 다른 학급이 하나의 글 피드에서 만납니다.</p>
                 </div>
@@ -796,13 +907,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         <section className="neighbor-teacher-card">
                             <div><span>게스트</span><h3>이웃 반을 기다리는 중</h3></div>
                             <p>호스트 선생님이 다른 반을 더 초대하면 활동이 열려요.</p>
-                            <Button type="button" variant="outline" loading={busy === 'leave_space'} disabled={Boolean(busy)} onClick={() => window.confirm('이 공간에서 나갈까요?') && runAction('leave_space', { space_id: workspace.space.id }, '공간에서 나갔습니다.')}>공간 나가기</Button>
+                            <Button type="button" variant="outline" loading={busy === 'leave_space'} disabled={Boolean(busy)} onClick={leaveSpace}>공간 나가기</Button>
                         </section>
                     )}
                 </section>
             ) : (
                 <>
-                    {/* 운영 요약 바: 얇게 한 줄. 학생 공개·검토함·공간 관리를 어느 탭에서든 바로 연다. */}
+                    {/* 운영 요약 바: 얇게 한 줄. 학생 입장·검토함·공간 관리를 어느 탭에서든 바로 연다. */}
                     <section className="neighbor-teacher__bar">
                         <div className="neighbor-teacher__bar-title">
                             <span>{workspace.space.my_role === 'host' ? '호스트' : '게스트'}</span>
@@ -814,9 +925,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 type="button"
                                 className={`neighbor-teacher__access-toggle${workspace.space.student_access_enabled ? ' is-on' : ''}`}
                                 disabled={Boolean(busy)}
-                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '학생 공개를 껐습니다.' : '학생 공개를 켰습니다.')}
+                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생 입장을 닫았습니다.' : '우리 반 학생 입장을 열었습니다.')}
                             >
-                                학생 공개 {workspace.space.student_access_enabled ? 'ON' : 'OFF'}
+                                학생 입장 {workspace.space.student_access_enabled ? '열림' : '닫힘'}
                             </button>
                             <Button type="button" variant="outline" className={reviewInboxCount > 0 ? 'neighbor-teacher__review-btn is-new' : 'neighbor-teacher__review-btn'} onClick={() => setReviewInboxOpen(true)}>
                                 🗂️ 검토{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW</span><span className="neighbor-teacher__badge">{reviewInboxCount}</span></>}
@@ -936,7 +1047,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                                     <div className="neighbor-teacher__candidate-card-body">
                                                                         <div className="neighbor-teacher__candidate-meta">
                                                                             <span className="neighbor-teacher__mission-chip">{post.mission_title || '자율 글'}</span>
-                                                                            <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : post.share_status === 'pending' ? '학생 요청 대기' : '공유 전'}</span>
+                                                                            <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : '공유 전'}</span>
                                                                         </div>
                                                                         <h3>{post.title || '제목 없는 글'}</h3>
                                                                         <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
@@ -1070,6 +1181,24 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                 </div>
                                             </section>
 
+                                            <section className="neighbor-teacher__form-step">
+                                                <div className="neighbor-teacher__compact-heading"><span>5</span><h3>기한 <small>(선택)</small></h3></div>
+                                                <div className="neighbor-teacher__setting-groups">
+                                                    <fieldset className="neighbor-teacher__deadline-field">
+                                                        <legend>글쓰기 마감</legend>
+                                                        <label>이때까지 글을 써요<input type="datetime-local" value={topicSchedule.writing_close_at}
+                                                            onChange={(event) => setTopicSchedule((current) => ({ ...current, writing_close_at: event.target.value }))} /></label>
+                                                        <small>지나면 주제가 저절로 종료돼요. 비워 두면 주제 카드의 ‘활동 종료’로 직접 마쳐요.</small>
+                                                    </fieldset>
+                                                    <fieldset className="neighbor-teacher__deadline-field">
+                                                        <legend>댓글·반응 마감</legend>
+                                                        <label>이때까지 댓글·공감을 남겨요<input type="datetime-local" value={topicSchedule.comments_close_at}
+                                                            onChange={(event) => setTopicSchedule((current) => ({ ...current, comments_close_at: event.target.value }))} /></label>
+                                                        <small>지나면 글은 읽기만 돼요. 비워 두면 공간이 열려 있는 동안 계속 남길 수 있어요.</small>
+                                                    </fieldset>
+                                                </div>
+                                            </section>
+
                                             <Button className="neighbor-teacher__submit-topic" type="submit" loading={busy === 'create_activity'} disabled={Boolean(busy)}>{getNeighborActivityLabel(activeActivityTab)} 제안하기</Button>
                                         </div>
                                     </form>
@@ -1119,7 +1248,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <h3>{activity.title}</h3>
                                             <p>{activity.prompt}</p>
                                             {activity.approvals?.length > 0 && <ul className="neighbor-teacher__approvals">{activity.approvals.map((approval) => <li key={approval.class_id} data-status={approval.status}>{approval.class_name} · {approval.is_proposer ? '제안함' : approval.status === 'approved' ? '승인' : approval.status === 'rejected' ? '거절' : approval.status === 'cancelled' ? '종료' : '확인 전'}</li>)}</ul>}
-                                            <ul>{activity.class_stats.map((item) => <li key={item.class_id}>{item.class_name} · 제출 {item.submitted_count} · 검토 {item.review_count} · 공개 {item.published_count}</li>)}</ul>
+                                            <ul>{activity.class_stats.map((item) => <li key={item.class_id}>{item.class_name} · 제출 {item.submitted_count} · 공개 {item.published_count}</li>)}</ul>
                                         </div>
                                         {activity.can_review && (
                                             <div className="neighbor-teacher__row-actions">
@@ -1131,23 +1260,17 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <div className="neighbor-teacher__row-actions">
                                                 <Button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}>제출 글 공개하기</Button>
                                                 {activity.can_manage && activity.status !== 'closed' && (
-                                                    <Button type="button" variant="outline" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={async () => { if (await ask({ title: '이 활동의 새 글쓰기를 마칠까요?', body: '공개된 글은 그대로 남습니다.', confirmLabel: '활동 종료', cancelLabel: '그만두기', tone: 'danger' })) runAction('close_activity', { space_id: workspace.space.id, activity_id: activity.id }, '활동을 마쳤습니다.'); }}>활동 종료</Button>
+                                                    <Button type="button" variant="outline" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => setCloseActivityFor(activity)}>활동 종료</Button>
                                                 )}
                                             </div>
                                         )}
-                                        {activity.status !== 'pending_approval' && (
-                                            <div className="neighbor-teacher__deadline">
-                                                <label>댓글·반응 마감
-                                                    <input type="datetime-local" disabled={Boolean(busy)}
-                                                        value={deadlineDrafts[activity.id] ?? toLocalInput(activity.comments_close_at)}
-                                                        onChange={(event) => setDeadlineDrafts((current) => ({ ...current, [activity.id]: event.target.value }))} />
-                                                </label>
-                                                <Button type="button" size="sm" loading={busy === 'set_activity_deadline'} disabled={Boolean(busy)}
-                                                    onClick={() => saveActivityDeadline(activity.id, deadlineDrafts[activity.id] ?? toLocalInput(activity.comments_close_at))}>저장</Button>
-                                                {activity.comments_close_at && <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => saveActivityDeadline(activity.id, '')}>마감 해제</Button>}
-                                                {activity.comments_close_at && <small className={new Date(activity.comments_close_at) <= new Date() ? 'neighbor-teacher__deadline-done' : ''}>{new Date(activity.comments_close_at) <= new Date() ? '마감됨' : `마감 예정: ${new Date(activity.comments_close_at).toLocaleString('ko-KR')}`}</small>}
-                                            </div>
-                                        )}
+                                        <div className="neighbor-teacher__deadlines">
+                                            {activity.status === 'closed'
+                                                ? <p className="neighbor-teacher__deadline"><strong>글쓰기 마감</strong><small className="neighbor-teacher__deadline-done">마감됨</small></p>
+                                                : renderDeadlineRow(activity, 'writing_close_at', activity.can_manage
+                                                    || activity.approvals?.some((approval) => approval.is_proposer && approval.class_id === classId))}
+                                            {renderDeadlineRow(activity, 'comments_close_at', true)}
+                                        </div>
                                     </article>
                                         ))}
                                     </section>
@@ -1165,6 +1288,22 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             {/* 통합 검토함: 두 활동의 공개 대기 글을 한 곳에서 처리한다(어느 탭에서든 상단 검토 버튼으로 연다). */}
             {workspace?.space?.my_status === 'active' && isReady && (
                 <Modal isOpen={reviewInboxOpen} onClose={() => setReviewInboxOpen(false)} title="🗂️ 검토함" maxWidth="640px" showFooter={false}>
+                    {workspace.space.my_role === 'host' && (
+                        <>
+                            <h3 className="neighbor-teacher__inbox-heading">🚪 참여 신청</h3>
+                            {pendingMemberships.length === 0
+                                ? <p className="neighbor-teacher__empty">새 참여 신청이 없습니다.</p>
+                                : <div className="neighbor-teacher__post-list">{pendingMemberships.map((membership) => (
+                                    <article key={membership.class_id}>
+                                        <div><span><strong>{membership.class_name}</strong><small>우리 공간에 들어오려고 해요</small></span></div>
+                                        <span className="neighbor-teacher__row-actions">
+                                            <Button type="button" disabled={Boolean(busy)} onClick={() => runAction('review_join', { space_id: workspace.space.id, target_class_id: membership.class_id, approve: true }, '참여 학급을 승인했습니다.')}>승인</Button>
+                                            <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('review_join', { space_id: workspace.space.id, target_class_id: membership.class_id, approve: false }, '참여 신청을 거절했습니다.')}>거절</Button>
+                                        </span>
+                                    </article>))}</div>}
+                        </>
+                    )}
+
                     <h3 className="neighbor-teacher__inbox-heading">함께 쓰는 주제 제안</h3>
                     {pendingApprovalActivities.length === 0
                         ? <p className="neighbor-teacher__empty">승인할 주제 제안이 없습니다.</p>
@@ -1173,6 +1312,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 <div>
                                     <span><strong>{activity.title}</strong><small>{getNeighborActivityLabel(activity.type)} 제안</small></span>
                                     {activity.prompt && <p>{activity.prompt}</p>}
+                                    <small className="neighbor-teacher__proposal-schedule">
+                                        글쓰기 마감 {activity.writing_close_at ? formatDeadline(activity.writing_close_at) : '없음'} · 댓글·반응 마감 {activity.comments_close_at ? formatDeadline(activity.comments_close_at) : '없음'}
+                                    </small>
                                 </div>
                                 <span className="neighbor-teacher__row-actions">
                                     <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '주제 제안을 승인했습니다. 모든 학급이 승인하면 학생에게 열립니다.')}>승인</Button>
@@ -1200,12 +1342,12 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                 </Modal>
             )}
 
-            {/* 공간 관리: 참여 학급·초대·학생 공개·종료/나가기 등 가끔 쓰는 것 모음(역할별). */}
+            {/* 공간 관리: 참여 학급·초대·학생 입장·종료/나가기 등 가끔 쓰는 것 모음(역할별). */}
             {workspace?.space?.my_status === 'active' && isReady && (
                 <Modal isOpen={manageOpen} onClose={() => { if (!busy) setManageOpen(false); }} title="⚙️ 공간 관리" maxWidth="640px" showFooter={false}>
                     <div className="neighbor-teacher__manage">
                         <section>
-                            <h3>참여 학급 {activeMemberships.length}/4</h3>
+                            <h3>참여 학급 {activeMemberships.length}/{NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace}</h3>
                             <ul className="neighbor-teacher__members">
                                 {workspace.memberships.map((membership) => (
                                     <li key={membership.class_id}>
@@ -1224,14 +1366,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             </section>
                         )}
                         <section>
-                            <h3>학생 공개</h3>
-                            <p>켜면 참여 학급 학생 홈에 모두의 아지트 카드가 나타납니다.</p>
-                            <Button type="button" variant={workspace.space.student_access_enabled ? 'outline' : 'primary'} loading={busy === 'set_access'} disabled={Boolean(busy) || activeMemberships.length < 2} onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '학생 공개를 껐습니다.' : '학생 공개를 켰습니다.')}>{workspace.space.student_access_enabled ? '학생 공개 끄기' : '학생 공개 켜기'}</Button>
+                            <h3>우리 반 학생 입장</h3>
+                            <p>열면 우리 반 학생 홈에 모두의 아지트 카드가 나타납니다. 다른 반은 그 반 선생님이 엽니다.</p>
+                            <Button type="button" variant={workspace.space.student_access_enabled ? 'outline' : 'primary'} loading={busy === 'set_access'} disabled={Boolean(busy) || activeMemberships.length < 2} onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생 입장을 닫았습니다.' : '우리 반 학생 입장을 열었습니다.')}>{workspace.space.student_access_enabled ? '학생 입장 닫기' : '학생 입장 열기'}</Button>
                         </section>
                         <section>
                             {workspace.space.my_role === 'host'
-                                ? <><h3>공간 종료</h3><p>종료하면 학생 접근이 즉시 끝납니다. 이미 공개된 글은 남습니다.</p><Button type="button" variant="outline" loading={busy === 'close_space'} disabled={Boolean(busy)} onClick={() => window.confirm('공간을 종료하면 학생 접근이 즉시 끝납니다. 종료할까요?') && runAction('close_space', { space_id: workspace.space.id }, '공간을 종료했습니다.')}>공간 종료</Button></>
-                                : <><h3>공간 나가기</h3><p>원래 학급의 글은 보존되고 이웃 공간 연결만 끝납니다.</p><Button type="button" variant="outline" loading={busy === 'leave_space'} disabled={Boolean(busy)} onClick={() => window.confirm('이 공간에서 나갈까요?') && runAction('leave_space', { space_id: workspace.space.id }, '공간에서 나갔습니다.')}>공간 나가기</Button></>}
+                                ? <><h3>공간 종료</h3><p>모든 반의 학생 입장이 바로 끝납니다. 우리 반 글은 학급에 그대로 남고, 이 공간에서 주고받은 댓글·공감은 더 이상 볼 수 없어요.</p><Button type="button" variant="outline" loading={busy === 'close_space'} disabled={Boolean(busy)} onClick={closeSpace}>공간 종료</Button></>
+                                : <><h3>공간 나가기</h3><p>우리 반 글은 학급에 그대로 남고, 이 공간에서 주고받은 댓글·공감은 더 이상 볼 수 없어요.</p><Button type="button" variant="outline" loading={busy === 'leave_space'} disabled={Boolean(busy)} onClick={leaveSpace}>공간 나가기</Button></>}
                         </section>
                     </div>
                 </Modal>
@@ -1284,7 +1426,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         <article key={post.post_id}>
                                             <div className="neighbor-teacher__candidate-card-body">
                                                 <div className="neighbor-teacher__candidate-meta">
-                                                    <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : post.share_status === 'pending' ? '요청 대기' : '공개 전'}</span>
+                                                    <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : '공개 전'}</span>
                                                 </div>
                                                 <h3>{post.title || '제목 없는 글'}</h3>
                                                 <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
@@ -1311,6 +1453,21 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     </div>
                 </Modal>
             )}
+            {/* 활동 종료: 글쓰기만 마칠지, 댓글·반응까지 함께 닫을지 고른다.
+                글쓰기와 댓글 마감은 따로 움직이므로 "종료했는데 왜 댓글이 달리지?" 가 생기지 않게 여기서 묻는다. */}
+            <Modal isOpen={Boolean(closeActivityFor)} onClose={() => setCloseActivityFor(null)} title="이 주제를 어떻게 마칠까요?" maxWidth="520px" showFooter={false}>
+                {closeActivityFor && (
+                    <div className="neighbor-teacher__close-choice">
+                        <p><strong>{closeActivityFor.title}</strong> — 새 글쓰기는 끝나고, 공개된 글은 그대로 남아요.</p>
+                        <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => closeActivity(closeActivityFor, false)}>
+                            글쓰기만 마치기 <small>댓글·공감은 계속 남길 수 있어요</small>
+                        </Button>
+                        <Button type="button" variant="danger" disabled={Boolean(busy)} onClick={() => closeActivity(closeActivityFor, true)}>
+                            댓글·반응까지 함께 마치기 <small>이제 읽기만 돼요</small>
+                        </Button>
+                    </div>
+                )}
+            </Modal>
             {confirmDialog}
         </section>
     );

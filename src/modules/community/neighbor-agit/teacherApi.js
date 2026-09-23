@@ -88,14 +88,16 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
-    // 함께 쓰는 주제의 댓글·반응 마감 시각을 정하거나(NULL=마감 없음) 지운다.
-    async setActivityDeadline({ spaceId, classId, activityId, closeAt }) {
-        const { data, error } = await supabase.rpc('set_neighbor_activity_deadline_v1', {
-            p_space_id: spaceId, p_actor_class_id: classId, p_activity_id: activityId, p_close_at: closeAt || null
+    // 함께 쓰는 주제의 기한을 정한다. changes 에 넣은 키만 바뀐다(값 null = 기한 없음).
+    //   writing_close_at  : 글쓰기 마감 — 지나면 서버가 활동을 저절로 종료한다(호스트·제안 학급만).
+    //   comments_close_at : 댓글·반응 마감 — 지난 시각을 주면 "지금 마감" 이다.
+    async setActivitySchedule({ spaceId, classId, activityId, changes }) {
+        const { data, error } = await supabase.rpc('set_neighbor_activity_schedule_v1', {
+            p_space_id: spaceId, p_actor_class_id: classId, p_activity_id: activityId, p_changes: changes
         });
         if (error) throw error;
         if (data?.success !== true || data?.activity_id !== activityId) {
-            throw new Error('마감 시각 설정 결과를 확인할 수 없습니다.');
+            throw new Error('기한 설정 결과를 확인할 수 없습니다.');
         }
         return data;
     },

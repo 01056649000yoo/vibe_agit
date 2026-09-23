@@ -5,6 +5,9 @@ const classOne = '11111111-1111-4111-8111-111111111111'
 const classTwo = '22222222-2222-4222-8222-222222222222'
 const spaceId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const activityId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+const proposalId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+const classThree = '33333333-3333-4333-8333-333333333333'
+const inDays = (days) => new Date(Date.now() + days * 86400000).toISOString()
 
 const initialWorkspace = {
   version: 1,
@@ -22,13 +25,18 @@ const initialWorkspace = {
   memberships: [
     { class_id: classOne, class_name: '햇살반', matchable_student_count: 4, role: 'host', status: 'active', student_access_enabled: true },
     { class_id: classTwo, class_name: '바다반', matchable_student_count: 3, role: 'guest', status: 'active', student_access_enabled: true },
+    { class_id: classThree, class_name: '별빛반', matchable_student_count: 0, role: 'guest', status: 'pending', student_access_enabled: false },
   ],
+  notifications: { pending_approvals: 1, pending_joins: 1, blocked_comments: 0, new_posts: 0, new_comments: 0 },
+  blocked_comments: [],
   activities: [{
     id: activityId,
     type: 'topic',
     title: '내가 좋아하는 장소를 소개하는 편지',
     prompt: '장소의 모습과 그곳에서 느낀 마음이 잘 드러나게 써 봅시다.',
     status: 'open',
+    writing_close_at: inDays(3),
+    comments_close_at: inDays(10),
     can_manage: true,
     can_review: false,
     approvals: [
@@ -39,6 +47,22 @@ const initialWorkspace = {
       { class_id: classOne, class_name: '햇살반', submitted_count: 0, review_count: 0, published_count: 0 },
       { class_id: classTwo, class_name: '바다반', submitted_count: 0, review_count: 0, published_count: 0 },
     ],
+    match_pairs: [],
+  }, {
+    id: proposalId,
+    type: 'topic',
+    title: '가을 운동회에서 가장 기억에 남는 순간',
+    prompt: '그때의 소리·표정·마음을 떠올려 한 장면을 자세히 써 봅시다.',
+    status: 'pending_approval',
+    writing_close_at: inDays(7),
+    comments_close_at: null,
+    can_manage: true,
+    can_review: true,
+    approvals: [
+      { class_id: classTwo, class_name: '바다반', status: 'approved', is_proposer: true },
+      { class_id: classOne, class_name: '햇살반', status: 'pending', is_proposer: false },
+    ],
+    class_stats: [],
     match_pairs: [],
   }],
   review_total: 1,
@@ -53,6 +77,13 @@ function createPreviewApi() {
   return {
   async getWorkspace() {
     return workspace
+  },
+  async markSeen() {
+    return { success: true }
+  },
+  async setActivitySchedule({ activityId: id, changes }) {
+    workspace = { ...workspace, activities: workspace.activities.map((activity) => activity.id === id ? { ...activity, ...changes } : activity) }
+    return { success: true, activity_id: id }
   },
   async runAction(_classId, action, payload) {
     if (action === 'review_post') {

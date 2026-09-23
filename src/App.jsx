@@ -683,6 +683,7 @@ function App() {
               {studentPageName === 'neighbor_agit' && neighborAgitAvailable && (
                 <NeighborAgitStudentEntry
                     spaceId={studentHomeBootstrap.home.neighbor_agit_space_id}
+                    params={internalPage.params}
                     onNavigate={setInternalPage}
                     onBack={handleCurrentStudentBack}
                 />

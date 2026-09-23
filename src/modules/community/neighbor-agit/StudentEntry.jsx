@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../components/common/Button';
 import Modal from '../../../components/common/Modal';
 import StudentBackButton from '../../../components/student/StudentBackButton';
@@ -14,7 +14,15 @@ const formatPublishedAt = (value) => {
     }).format(new Date(value));
 };
 
-const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
+const formatDeadline = (value) => new Intl.DateTimeFormat('ko-KR', {
+    month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit'
+}).format(new Date(value));
+
+// 글쓰기 마감이 지났으면 서버가 몇 분 안에 활동을 닫는다. 그 사이에도 글쓰기 단추가 보이지 않게 시각으로도 본다.
+const isWritingClosed = (activity) => activity.status === 'closed'
+    || Boolean(activity.writing_close_at && new Date(activity.writing_close_at) <= new Date());
+
+const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate }) => {
     const [feed, setFeed] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -101,6 +109,17 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
             setDetailLoading(false);
         }
     };
+
+    // "내 글 소식" 의 이웃 댓글 알림을 눌러 들어오면 그 글을 바로 연다(한 번만).
+    const openedFromNotice = useRef(null);
+    const noticePostId = params?.sharedPostId || null;
+    useEffect(() => {
+        if (!noticePostId || !spaceId || openedFromNotice.current === noticePostId) return;
+        openedFromNotice.current = noticePostId;
+        void openDetail(noticePostId);
+        // openDetail 은 렌더마다 새로 만들어지지만 위 ref 가 두 번 열지 않게 막는다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [noticePostId, spaceId]);
 
     const closeDetail = () => {
         setDetail(null);
@@ -266,7 +285,7 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                 <div>
                     <span>{getNeighborActivityLabel('gallery')}</span>
                     <h2>이웃 반 친구들의 글을 읽어요</h2>
-                    <p>내 글은 담임 선생님이 골라서 이웃 반에 소개해 주세요. 여기서는 공개된 글을 읽고 댓글·공감을 남길 수 있어요.</p>
+                    <p>내 글은 담임 선생님이 골라 이웃 반에 소개해 줘요. 여기서는 공개된 글을 읽고 댓글·공감을 남길 수 있어요.</p>
                 </div>
             </section>}
 
@@ -280,20 +299,28 @@ const NeighborAgitStudentEntry = ({ spaceId, onBack, onNavigate }) => {
                         <div className="neighbor-student-state">
                             <span aria-hidden="true">🌱</span>
                             <h2>지금 진행 중인 활동이 없어요</h2>
-                            <p>호스트 선생님이 활동을 열면 이곳에 나타나요.</p>
+                            <p>선생님들이 함께 주제를 정하면 이곳에 나타나요.</p>
                         </div>
                     ) : (
                         <div className="neighbor-activity-list">
                             {(feed?.activities || []).filter((activity) => activity.type === activeSection).map((activity) => (
                                 <article key={activity.id} className={selectedActivity?.id === activity.id ? 'is-selected' : ''}>
                                     <div>
-                                        <span>{activity.status === 'closed' ? '활동 종료' : '진행 중'}</span>
+                                        <span>{isWritingClosed(activity) ? '글쓰기 끝' : '글 쓰는 중'}</span>
                                         <h3>{activity.title}</h3>
                                         <p>{activity.prompt}</p>
-                                        {activity.is_submitted && <small>글을 냈어요. 선생님이 골라서 함께 읽도록 열어 주세요.</small>}
+                                        {(activity.writing_close_at || activity.comments_close_at) && (
+                                            <ul className="neighbor-activity-list__deadlines">
+                                                {activity.writing_close_at && !isWritingClosed(activity) && <li>✏️ {formatDeadline(activity.writing_close_at)}까지 써요</li>}
+                                                {activity.comments_close_at && (new Date(activity.comments_close_at) > new Date()
+                                                    ? <li>💬 {formatDeadline(activity.comments_close_at)}까지 댓글·공감을 남겨요</li>
+                                                    : <li>🔒 댓글·공감은 마감됐어요. 읽을 수는 있어요</li>)}
+                                            </ul>
+                                        )}
+                                        {activity.is_submitted && <small>글을 냈어요. 선생님이 확인하고 이웃 반에 소개해 줄 거예요.</small>}
                                     </div>
                                     <div className="neighbor-activity-list__actions">
-                                        {activity.status !== 'closed' && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
+                                        {!isWritingClosed(activity) && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
                                         {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>활동 글 보기</Button>}
                                     </div>
                                 </article>

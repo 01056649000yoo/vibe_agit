@@ -18,6 +18,50 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-23 — 모두의 아지트: 내 글에 달린 이웃 반 댓글을 "내 글 소식"으로 알림 (Claude Opus 5.5)
+- **배경**: 우리 반 댓글은 알림이 오는데 모두의 아지트 댓글은 알림 장치가 없어, 학생이 직접 들어가 💬 숫자를 봐야 알았다.
+  선생님 결정: **댓글만 알리고 공감은 알리지 않는다**(반이 많으면 알림이 넘친다).
+- **한 일**:
+  - `20261334`: `neighbor_comments` 에 `trg_neighbor_comment_notification_v1`(AFTER INSERT/DELETE/UPDATE OF status).
+    `status='visible'` 이 된 순간 글쓴이에게 `notification_emit_v1(module 'feedback', 'feedback.neighbor_comment_received')`.
+    검사 대기·막힘·숨김·삭제로 안 보이게 되면 알림을 거둔다(우리 반 댓글과 같은 규칙). 자기 댓글 제외, event_key
+    `neighbor-comment:<id>` 로 한 건, actor_student_id 로 이름 고치기 연동. 알림 실패는 경고만(댓글·AI 검사를 막지 않음). 소급 없음.
+  - 화면: 모듈 매니페스트에 표시 정의(🤝 "이웃 반 친구가 댓글을 남겼어요", 반 이름·이름·댓글 앞부분). 내 글 소식 창의 `댓글` 탭이
+    두 종류를 함께 보여 주고, 이웃 댓글을 누르면 `neighbor_agit` 로 가서 그 글 상세를 바로 연다(App → `params`, StudentEntry 가 한 번 연다).
+- **변경**: `supabase/migrations/20261334_neighbor_comment_notification.sql`(운영 적용), `neighbor-agit/manifest.js`,
+  `StudentEntry.jsx`, `StudentFeedbackModal.jsx`, `App.jsx`, `tests/neighborAgitCommentNotification.test.mjs`(신규 4건).
+- **결과/검증**: 롤백 트랜잭션에서 실제 댓글로 대기 0건 → 보임 1건(반 이름·쓴 학생 id 정확) → 재전환 중복 없음 → 숨김 0건 확인.
+  새 검사 두 곳을 일부러 망가뜨려 실패 확인. `test:all` 1262/1262, lint 오류 0, `migrate:check`·build 통과, `migrate` → `deploy:local`,
+  번들에 새 알림 종류 포함 확인. **학생 화면(내 글 소식 창·알림 눌러 이동)은 미리보기가 없어 눈으로 확인 못 함** — 실기 확인 필요.
+
+## 2026-09-23 — 모두의 아지트: 주제 기한·활동 종료 선택·검토함/메뉴 배지 한 기준·작은 오류 정리 (Claude Opus 5.5)
+- **요청**: 기능 분석 뒤 선생님이 고른 수정사항 모두 반영. 흔적 보존안은 **하지 않기로 결정**(공간 종료·나가기 뒤 댓글·공감은 지금처럼 안 보임).
+- **한 일**:
+  - **함께 쓰는 주제 기한**(`20261333`): `neighbor_activities.writing_close_at` 추가. 주제 만들기 창에 `⑤ 기한(선택)` —
+    글쓰기 마감·댓글·반응 마감. 제안 직후 같은 활동에 기한을 붙여 승인하는 교사도 본다(검토함 제안 카드에 표시).
+    글쓰기 마감이 지나면 cron `neighbor-close-due-activities`(5분마다)가 `close_due_neighbor_activities_v1` 로
+    활동 종료와 같은 일(closed + 반별 과제 보관)을 하고, 승인 전 제안이면 남은 승인 대기를 cancelled 로 돌린다.
+  - 기한 함수 통합: `set_neighbor_activity_deadline_v1` 삭제 → `set_neighbor_activity_schedule_v1(p_changes JSONB)`.
+    키가 든 것만 바꾼다. 글쓰기 마감은 호스트·제안 학급만, 앞으로의 시각만. 댓글 마감은 지난 시각 = 지금 마감.
+  - **활동 종료 선택 창**: `글쓰기만 마치기` / `댓글·반응까지 함께 마치기`(뒤쪽은 종료 뒤 댓글 마감을 지금으로).
+  - **검토함 = 메뉴 배지**: 메뉴 배지에서 없앤 학생 공개 요청 수(`v_reviews`) 제거, 검토함에 `🚪 참여 신청`(호스트) 칸 추가,
+    검토함 수에 참여 신청 포함. 화면이 `onTodoCountChange` 로 수를 올려 **처리 즉시 메뉴 숫자가 준다**(예전엔 학급 바꿀 때만).
+  - 작은 정리: 참여 학급 `/4` 고정 → 정본 상수(10), 없앤 요청 흔적 문구(`학생 요청 대기`·`요청 대기`·`검토 N`) 제거,
+    `window.confirm` 3곳 → 앱 안 확인 창, 머리말 `선택 학급 제한 공개` → `여러 학급이 함께 쓰는 글 공간`,
+    `학생 공개 ON/OFF` → `학생 입장 열림/닫힘`(글 '공개'와 말이 겹쳐서), 종료·나가기 안내에 "댓글·공감은 더 이상 볼 수 없음" 명시.
+  - 학생 화면: 주제 카드에 기한 표시, 글쓰기 마감이 지나면 글쓰기 단추 숨김(cron 전 몇 분 틈도), 틀린 안내 두 곳 고침
+    ("호스트 선생님이 활동을 열면" → 교사들이 함께 정하면, "소개해 주세요" 말투).
+  - 도움말(`teacherGuides.js` neighbor-agit) 현재 흐름으로 다시 씀(옛 학생 요청·글 검토 설명 제거). dev-lab 미리보기 목에 새 함수·자료 추가.
+- **변경**: `supabase/migrations/20261333_neighbor_topic_schedule_and_badge.sql`(운영 DB 적용·기록),
+  `TeacherEntry.jsx/.css`, `StudentEntry.jsx/.css`, `teacherApi.js`, `TeacherDashboard.jsx`, `teacherGuides.js`,
+  `src/dev/NeighborAgitTeacherPreview.jsx`, `tests/neighborAgitTopicSchedule.test.mjs`(신규 11건), `tests/neighborAgitBlockedComments.test.mjs`.
+- **결과/검증**: `migrate:check` 통과. 롤백 트랜잭션에서 실데이터로 cron 종료(1건 닫힘·과제 보관·재실행 0건)와 기한 함수(호스트 교사
+  권한으로 지금 마감·키 보존·과거 글쓰기 마감 거절·브라우저 역할의 cron 함수 호출 거절) 확인. 새 검사 네 군데를 일부러 망가뜨려 실패 확인.
+  `test:all` 1258/1258, lint 오류 0, build 통과. dev-lab 로 교사 화면(주제 카드·종료 선택 창·검토함·만들기 5단계·모바일) 렌더링 확인,
+  콘솔 오류 없음. **학생 화면은 미리보기가 없어 눈으로는 못 봤다**(검사로만 확인). `npm run migrate` → `npm run deploy:local`,
+  `agit-app` 번들에 새 함수 이름 있음·옛 함수 이름 없음 확인.
+- **남은 것 / 다음**: 커밋·푸시 안 함(지시 시). 운영에 활성 공간이 없어 실제 교사 계정으로 실기 확인 필요.
+  분석에서 나온 큰 개선(여러 반이 쓰는 초대 코드, 주제 승인 방식, 공개 경로 통합, 학생 "내 글 소식")은 미착수.
 ## 2026-09-23 — 개요 질문 선택 행 높이 고정 (Codex)
 - **한 일**: `개요에 넣기`를 누를 때마다 행 아래에 붙던 `가운데에 담긴 뒤 순서를 편집해요` 문장을 제거했다.
   버튼 자체가 `+ 개요에 넣기`에서 `✓ 개요에 담김`으로 바뀌게 해 `학생에게 보임`과 같은 한 줄 상태 표시를 사용하고,

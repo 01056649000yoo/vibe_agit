@@ -14,11 +14,13 @@ import { resolveActivityNotification } from '../../modules/notifications/registr
  * 전체 탭에서 소식을 다 보고 닫은 학생에게는 배지가 그대로 남아 "눌러도 안 사라진다"가 됐다.
  * 이제 항목마다 `확인`을 눌러 하나씩 정리하고, 한 번에 끝내려면 `모두 확인`을 쓴다.
  */
-// eventType 이 null 인 탭은 거르지 않고 전부 보여 준다.
+// eventTypes 가 null 인 탭은 거르지 않고 전부 보여 준다.
+// 댓글 탭에는 우리 반 댓글과 모두의 아지트(이웃 반) 댓글이 함께 들어간다(2026-09-23).
+const NEIGHBOR_COMMENT_EVENT = 'feedback.neighbor_comment_received';
 const TABS = Object.freeze([
-    { id: 0, label: '전체', emoji: '🌈', eventType: null },
-    { id: 1, label: '친구들 반응', emoji: '❤️', eventType: 'feedback.reaction_received' },
-    { id: 2, label: '댓글', emoji: '💬', eventType: 'feedback.comment_received' }
+    { id: 0, label: '전체', emoji: '🌈', eventTypes: null },
+    { id: 1, label: '친구들 반응', emoji: '❤️', eventTypes: ['feedback.reaction_received'] },
+    { id: 2, label: '댓글', emoji: '💬', eventTypes: ['feedback.comment_received', NEIGHBOR_COMMENT_EVENT] }
 ]);
 
 const StudentFeedbackModal = ({
@@ -45,9 +47,9 @@ const StudentFeedbackModal = ({
     }, [initialTab, isOpen]);
 
     const filteredFeedbacks = React.useMemo(() => {
-        const wanted = TABS.find((tab) => tab.id === activeTab)?.eventType || null;
+        const wanted = TABS.find((tab) => tab.id === activeTab)?.eventTypes || null;
         if (!wanted) return feedbacks;
-        return feedbacks.filter((item) => item.event_type === wanted);
+        return feedbacks.filter((item) => wanted.includes(item.event_type));
     }, [activeTab, feedbacks]);
 
     const handleConfirm = async (event, item) => {
@@ -71,6 +73,14 @@ const StudentFeedbackModal = ({
     };
 
     const handleGoToPost = (item) => {
+        // 이웃 반 댓글은 친구 아지트가 아니라 모두의 아지트의 그 글로 간다.
+        if (item.event_type === NEIGHBOR_COMMENT_EVENT) {
+            const sharedPostId = item.payload?.shared_post_id || item.entity_id;
+            if (!sharedPostId) return;
+            onNavigate('neighbor_agit', { sharedPostId });
+            onClose();
+            return;
+        }
         const postId = item.payload?.post_id || item.entity_id;
         if (!postId) return;
         onNavigate('friends_hideout', { initialPostId: postId });

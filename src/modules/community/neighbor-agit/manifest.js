@@ -30,6 +30,22 @@ export const neighborAgitManifest = {
         maxActiveSpacesPerClass: NEIGHBOR_AGIT_LIMITS.maxActiveSpacesPerClass
     },
     writingBridge: NEIGHBOR_AGIT_WRITING_BRIDGE,
+    // 내 글에 이웃 반 댓글이 달리면 "내 글 소식"(module_id='feedback')으로 알린다(SQL 20261334).
+    // 공감은 알리지 않는다(반이 많으면 알림이 넘친다). 누르면 내 글 소식 창이 모두의 아지트의 그 글을 연다.
+    notifications: [
+        {
+            eventType: 'feedback.neighbor_comment_received',
+            icon: '🤝',
+            tone: 'default',
+            title: '이웃 반 친구가 댓글을 남겼어요',
+            message: (payload) => {
+                const excerpt = payload.excerpt ? ` “${payload.excerpt}”` : '';
+                return `${payload.actor_class_name || '이웃 반'} ${payload.actor_name || '친구'} 친구가 모두의 아지트의 ‘${payload.post_title || '내 글'}’에 댓글을 남겼어요.${excerpt}`;
+            },
+            action: 'post',
+            actionLabel: '확인'
+        }
+    ],
     performance: {
         home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 20
     }

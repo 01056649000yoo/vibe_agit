@@ -9,7 +9,8 @@ import test from 'node:test';
  */
 const [review, badge, order, readSide, teacherApi, entry] = await Promise.all([
     readFile('supabase/migrations/20261308_neighbor_blocked_comment_review.sql', 'utf8'),
-    readFile('supabase/migrations/20261309_neighbor_badge_includes_blocked.sql', 'utf8'),
+    // 메뉴 배지의 최신 판. 2026-09-23 에 옛 학생 공개 요청 수를 빼고 검토함과 같은 셋만 센다.
+    readFile('supabase/migrations/20261333_neighbor_topic_schedule_and_badge.sql', 'utf8'),
     readFile('supabase/migrations/20261310_neighbor_blocked_count_and_order.sql', 'utf8'),
     readFile('supabase/migrations/20261240_neighbor_publication_matching_hardening.sql', 'utf8'),
     readFile('src/modules/community/neighbor-agit/teacherApi.js', 'utf8'),
@@ -50,7 +51,7 @@ test('배지 수는 자르기 전 전체를 센다 — 메뉴와 검토함이 �
 
     // 메뉴 배지: 막힌 댓글 전체를 세어 처리할 일 수에 더한다.
     assert.match(menu, /INTO v_blocked[\s\S]*?comment\.status = 'blocked'/);
-    assert.match(menu, /v_reviews \+ v_approvals \+ v_joins \+ v_blocked/);
+    assert.match(menu, /v_approvals \+ v_joins \+ v_blocked/);
 
     // 검토함 배지: 세는 문장이 LIMIT 100 **앞**에 있어야 한다.
     const countAt = workspace.indexOf('INTO v_blocked_count');

@@ -209,7 +209,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         void loadFeedbackReplyCount();
     }, [loadFeedbackReplyCount]);
 
-    // 모두의 아지트 메뉴 배지 — 학급이 바뀔 때 한 번만 싸게 센다(자격 없으면 0).
+    // 모두의 아지트 메뉴 배지 — 학급이 바뀔 때 한 번 싸게 세고(자격 없으면 0), 화면 안에서 처리하면
+    // 그 화면이 `onTodoCountChange` 로 새 수를 올려 준다(처리해도 숫자가 남던 문제, 2026-09-23).
     const loadNeighborBadge = useCallback(async () => {
         if (!activeClass?.id) { setNeighborBadge(0); return; }
         const { data, error } = await supabase.rpc('get_neighbor_teacher_badge_v1', { p_class_id: activeClass.id });
@@ -745,7 +746,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         ) : ['class-agit', 'class-agit-books'].includes(visibleTab) ? (
                             <TeacherClassAgitHub activeClass={activeClass} allowInternal={isAdmin} section={visibleTab === 'class-agit-books' ? 'books' : 'exhibitions'} />
                         ) : visibleTab === 'neighbor-agit' ? (
-                            <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
+                            <TeacherNeighborAgit key={activeClass.id} activeClass={activeClass} isMobile={isMobile} onTodoCountChange={setNeighborBadge} />
                         ) : visibleTab === 'student-dashboard-preview' ? (
                             <StudentDashboardPreview key={activeClass.id} activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
