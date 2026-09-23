@@ -81,6 +81,15 @@ function createPreviewApi() {
   async getWorkspace() {
     return workspace
   },
+  async getEngagement({ kind }) {
+    const post = (id, title, topic, c, r) => ({ shared_post_id: id, title, author_name: '김햇살', class_name: '햇살반', topic, published_at: new Date().toISOString(), comment_count: c, reaction_count: r })
+    return [
+      { class_key: 'k-sun', class_name: '햇살반', is_own_class: true, post_count: 3, comment_total: 4, reaction_total: 6,
+        posts: kind === 'topic' ? [] : [post('e1', '느티나무 그늘', '우리 동네 자랑', 2, 3), post('e2', '골목 시장', '우리 동네 자랑', 1, 2), post('e3', '이어달리기', '가을 운동회', 1, 1)] },
+      { class_key: 'k-sea', class_name: '바다반', is_own_class: false, post_count: 2, comment_total: 1, reaction_total: 5,
+        posts: kind === 'topic' ? [] : [post('e4', '조개 줍기', '여름 방학', 1, 3), post('e5', '파도 소리', '여름 방학', 0, 2)] },
+    ]
+  },
   async markSeen() {
     return { success: true }
   },

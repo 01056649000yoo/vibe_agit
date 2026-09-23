@@ -42,3 +42,6 @@
 @media (max-width: 640px) {
     .neighbor-books__mine li, .neighbor-books__entries li { flex-direction: column; align-items: stretch; }
 }
+
+/* 전역 button:hover 파란 바탕을 막는다(index.css). */
+.neighbor-books__back:hover { background: var(--ui-surface); color: var(--ui-ink-strong); box-shadow: none; }

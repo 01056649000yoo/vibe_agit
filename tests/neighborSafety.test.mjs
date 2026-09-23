@@ -170,7 +170,9 @@ test('두 활동은 각자 3스텝(모으기·관리·반응)으로 나뉘고 �
     assert.match(teacher, /topicStep === 'topics'/);
     // 댓글·반응은 공개 글을 눌러 모달로 크게 본다(공용 부품 재사용).
     assert.match(teacher, /renderEngageStep/);
-    assert.match(teacher, /neighbor-teacher__engage-card/);
+    // 2026-09-23: ③ 은 반별 구조로 옮겨 카드는 TeacherEngagementPanel 에 있다.
+    assert.match(teacher, /<TeacherEngagementPanel /);
+    assert.match(readFileSync('src/modules/community/neighbor-agit/gallery/TeacherEngagementPanel.jsx', 'utf8'), /neighbor-teacher__engage-card/);
     assert.match(css, /\.neighbor-teacher__engage-list\b/);
     // 옛 좌우 2단·관리 열은 제거.
     assert.doesNotMatch(teacher, /neighbor-teacher__activity-workspace|neighbor-teacher__management-column/);

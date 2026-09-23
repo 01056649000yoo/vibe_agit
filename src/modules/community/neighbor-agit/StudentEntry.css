@@ -211,3 +211,8 @@
     .neighbor-student-room { grid-template-columns: 1fr; }
     .neighbor-student-room__switch { flex-wrap: wrap; grid-column: 1; grid-row: auto; justify-self: start; }
 }
+
+/* 전역 button:hover(파란 바탕, index.css)가 카드·단추 바탕을 덮지 않게 이 화면의 단추는 hover 바탕을 스스로 정한다(2026-09-23). */
+.neighbor-post-card:hover { background: var(--ui-surface); color: inherit; }
+.neighbor-student-lobby__door:hover { background: linear-gradient(160deg, var(--space-soft), var(--ui-surface) 70%); color: var(--space-ink); }
+.neighbor-student-room__lobby:hover, .neighbor-student-room__switch button:hover { background: var(--space-soft); color: var(--space-ink); box-shadow: none; }

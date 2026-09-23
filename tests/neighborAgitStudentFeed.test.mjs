@@ -69,7 +69,8 @@ test('피드는 요약만, 전문은 글을 누를 때 전용 RPC 한 번으로 
     assert.doesNotMatch(detailJson, /'student_id'|'class_id'|'post_id'/);
     // 2026-09-07: 상대 학급 글 `간직하기` 를 뺐다(선생님 결정). 10 → 9.
     // 2026-09-19: 학생 공개 요청·회수·후보 4개를 없앴다. 9 → 5.
-    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 5);
+    // 2026-09-23: 글 나눔 반 고르기·한 반 글 두 개를 더했다. 5 → 7.
+    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 7);
     assert.match(api, /get_neighbor_space_feed_v1/);
     assert.match(api, /get_neighbor_shared_post_v1/);
     assert.match(entry, /onClick=\{\(\) => openDetail\(item\.shared_post_id\)\}/);

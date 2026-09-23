@@ -25,6 +25,25 @@ const assertActivityFeedResponse = (data, activityId) => {
 };
 
 export const neighborAgitApi = {
+    // 글 나눔 공간 반 고르기: 반별 글 수·지난 방문 뒤 새 글 수(20261336). 반 열쇠는 원본 학급 id 가 아니다.
+    async getGalleryClasses({ spaceId }) {
+        const { data, error } = await supabase.rpc('get_neighbor_gallery_classes_v1', { p_space_id: spaceId });
+        if (error) throw error;
+        if (Number(data?.version) !== 1 || !Array.isArray(data?.classes)) throw new Error('반 목록 응답을 확인할 수 없습니다.');
+        return data.classes;
+    },
+
+    // 한 반의 글 나눔 글(요약·주제 이름). 화면이 주제별로 묶는다. 최대 300편.
+    async getClassGallery({ spaceId, classKey }) {
+        const { data, error } = await supabase.rpc('get_neighbor_class_gallery_v1', { p_space_id: spaceId, p_class_key: classKey });
+        if (error) throw error;
+        if (Number(data?.version) !== 1 || data?.class_key !== classKey || !Array.isArray(data?.items)
+            || data.items.length > Number(data?.max_rows || 0)) {
+            throw new Error('반 글 목록 응답을 확인할 수 없습니다.');
+        }
+        return data;
+    },
+
     async getFeed({ spaceId, limit = NEIGHBOR_AGIT_LIMITS.initialFeedRows, cursor = null }) {
         const safeLimit = Math.min(
             Math.max(Number(limit) || NEIGHBOR_AGIT_LIMITS.initialFeedRows, 1),

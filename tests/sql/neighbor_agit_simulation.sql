@@ -377,6 +377,64 @@ RESET ROLE;
 SELECT public.zz_sim_check('33 공감으로는 알림이 가지 않는다(댓글 알림 1건 그대로)',
     (SELECT count(*) FROM public.student_notification_events WHERE student_id = public.zz_sim('owner_a1') AND module_id = 'feedback') = 1);
 
+-- 반별 글 나눔(학생: 반 고르기 → 주제별 묶음, 교사: ③ 댓글·반응 반별)
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b1');
+DO $$
+DECLARE c JSONB; g JSONB; sun JSONB;
+BEGIN
+    c := public.get_neighbor_gallery_classes_v1(public.zz_sim('space'));
+    PERFORM public.zz_sim_check('G1 반 고르기: 참여 3반 · 우리 반(바다반)이 맨 앞 · 햇살반 3편',
+        jsonb_array_length(c->'classes') = 3 AND c->'classes'->0->>'class_name' = '바다반' AND (c->'classes'->0->>'is_own_class')::BOOLEAN
+        AND EXISTS (SELECT 1 FROM jsonb_array_elements(c->'classes') x WHERE x->>'class_name' = '햇살반' AND (x->>'post_count')::INT = 3),
+        (SELECT string_agg((x->>'class_name') || ' ' || (x->>'post_count') || '편', ', ') FROM jsonb_array_elements(c->'classes') x));
+    SELECT x INTO sun FROM jsonb_array_elements(c->'classes') x WHERE x->>'class_name' = '햇살반';
+    PERFORM set_config('sim.key_sun', sun->>'class_key', TRUE);
+    PERFORM public.zz_sim_check('G2 반 열쇠는 원본 학급 id 가 아니다', public.zz_sim('key_sun') <> public.zz_sim('c_a'));
+    g := public.get_neighbor_class_gallery_v1(public.zz_sim('space'), public.zz_sim('key_sun'));
+    PERFORM public.zz_sim_check('G3 햇살반에 들어가면 3편 · 주제 이름이 붙어 온다',
+        jsonb_array_length(g->'items') = 3 AND g->'items'->0->>'topic' = '우리 동네 자랑' AND (g->>'total')::INT = 3,
+        g->'items'->0->>'topic');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G1~G3 반별 글 나눔', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_expect_denied('G4 참여하지 않는 반 열쇠로는 못 연다',
+    format($q$SELECT public.get_neighbor_class_gallery_v1(%L, %L)$q$, public.zz_sim('space'), gen_random_uuid()));
+-- 지난 방문이 한 시간 전이었다면 → 그 뒤 올라온 글이 "새 글" 이다.
+RESET ROLE;
+UPDATE public.neighbor_feed_visits SET last_seen_at = NOW() - INTERVAL '2 hours'
+WHERE space_id = public.zz_sim('space') AND student_id = public.zz_sim('s_b1');
+UPDATE public.neighbor_feed_visits SET last_seen_at = NOW() - INTERVAL '1 hour'
+WHERE space_id = public.zz_sim('space') AND student_id = public.zz_sim('s_b1');
+SELECT public.zz_sim_check('G5 피드를 다시 열어도 지난 방문 시각이 남는다(트리거)',
+    (SELECT previous_seen_at < last_seen_at FROM public.neighbor_feed_visits
+     WHERE space_id = public.zz_sim('space') AND student_id = public.zz_sim('s_b1')));
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b1');
+DO $$
+DECLARE c JSONB;
+BEGIN
+    c := public.get_neighbor_gallery_classes_v1(public.zz_sim('space'));
+    PERFORM public.zz_sim_check('G6 지난 방문 뒤 올라온 글이 반마다 "새 글" 로 센다(햇살반 3)',
+        EXISTS (SELECT 1 FROM jsonb_array_elements(c->'classes') x WHERE x->>'class_name' = '햇살반' AND (x->>'new_count')::INT = 3));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G6 새 글 수', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_c');
+DO $$
+DECLARE e JSONB; sun JSONB;
+BEGIN
+    e := public.get_neighbor_teacher_engagement_v1(public.zz_sim('space'), public.zz_sim('c_c'), 'gallery');
+    SELECT x INTO sun FROM jsonb_array_elements(e->'classes') x WHERE x->>'class_name' = '햇살반';
+    PERFORM public.zz_sim_check('G7 교사 ③ 댓글·반응: 반별로 글 수·댓글·공감 합계(햇살반 3편 · 댓글 1 · 공감 1)',
+        jsonb_array_length(e->'classes') = 3 AND (e->'classes'->0->>'is_own_class')::BOOLEAN
+        AND (sun->>'post_count')::INT = 3 AND (sun->>'comment_total')::INT = 1 AND (sun->>'reaction_total')::INT = 1,
+        format('%s편 · 댓글 %s · 공감 %s', sun->>'post_count', sun->>'comment_total', sun->>'reaction_total'));
+    e := public.get_neighbor_teacher_engagement_v1(public.zz_sim('space'), public.zz_sim('c_c'), 'topic');
+    PERFORM public.zz_sim_check('G8 함께 쓰는 주제 쪽은 따로 센다(아직 0편)',
+        NOT EXISTS (SELECT 1 FROM jsonb_array_elements(e->'classes') x WHERE (x->>'post_count')::INT > 0));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G7~G8 교사 반별 댓글·반응', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+
 -- 교사가 댓글을 숨기면 알림도 사라진다
 SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('t_a');

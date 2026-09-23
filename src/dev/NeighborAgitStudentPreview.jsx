@@ -21,6 +21,24 @@ function createFeedApi() {
       return { version: 1, max_rows: 50, activity: activities[0], items, has_more: false }
     },
     async getDetail() { throw new Error('미리보기에서는 상세를 열지 않아요.') },
+    async getGalleryClasses() {
+      return [
+        { class_key: 'k-sea', class_name: '바다반', is_own_class: true, post_count: 12, new_count: 0 },
+        { class_key: 'k-sun', class_name: '햇살반', is_own_class: false, post_count: 18, new_count: 3 },
+        { class_key: 'k-star', class_name: '별빛반', is_own_class: false, post_count: 9, new_count: 0 },
+        { class_key: 'k-moon', class_name: '달님반', is_own_class: false, post_count: 0, new_count: 0 },
+      ]
+    },
+    async getClassGallery({ classKey }) {
+      const topics = ['우리 동네 자랑', '가을 운동회', '자율 글']
+      const items = Array.from({ length: 18 }, (_, index) => ({
+        shared_post_id: `g${index}`, title: `${['느티나무', '시장 골목', '달리기', '줄다리기', '가을 하늘', '내 동생'][index % 6]} 이야기 ${index + 1}`,
+        excerpt: '짧은 미리보기 문장이 여기에 들어가요. 글을 눌러 끝까지 읽어 보세요.', author_name: ['김햇살', '이구름', '박노을'][index % 3],
+        class_name: '햇살반', topic: topics[index % 3], published_at: new Date(now - index * 3600e3).toISOString(),
+        is_mine: false, comment_count: index % 4, reaction_count: index % 5,
+      }))
+      return { version: 1, class_key: classKey, class_name: '햇살반', is_own_class: false, total: items.length, max_rows: 300, items }
+    },
   }
 }
 

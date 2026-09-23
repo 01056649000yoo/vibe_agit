@@ -64,7 +64,8 @@ test('상세는 보이는 댓글 최대 100개와 현재 합계·내 상태만 �
 test('학생 화면은 쓰기 RPC 응답으로 댓글·공감·간직하기를 갱신하고 추가 목록 재조회하지 않는다', () => {
     // 2026-09-07: 상대 학급 글 `간직하기` 를 뺐다(선생님 결정). 10 → 9.
     // 2026-09-19: 학생 공개 요청·회수·후보(요청·requestActivity·recall·getShareCandidates 4개)를 없앴다. 9 → 5.
-    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 5);
+    // 2026-09-23: 글 나눔 반 고르기·한 반 글 두 개를 더했다. 5 → 7.
+    assert.equal((api.match(/supabase\.rpc\(/g) || []).length, 7);
     assert.match(api, /save_neighbor_comment_v1/);
     assert.match(api, /toggle_neighbor_reaction_v1/);
     assert.doesNotMatch(api, /toggle_neighbor_save_v1/, '상대 학급 글은 보관하지 않는다.');

@@ -7,6 +7,7 @@ import { neighborBooksApi } from './books/booksApi';
 import './spaces.css';
 import { neighborAgitApi } from './api';
 import StudentBooksPanel from './books/StudentBooksPanel';
+import StudentGalleryPanel from './gallery/StudentGalleryPanel';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import './StudentEntry.css';
 
@@ -44,6 +45,10 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
         params?.section === 'books' ? 'books' : params?.sharedPostId ? 'gallery' : null
     );
     const [bookCount, setBookCount] = useState(null);
+    // 글 나눔 공간 안: null = 반 고르기, 'latest' = 🆕 새 글 모아보기(최신순 피드), 그 밖 = 고른 반 열쇠.
+    const [galleryView, setGalleryView] = useState(null);
+    // 상세 창을 닫으면 올린다 — 반별 목록이 댓글·공감 수를 다시 맞춘다.
+    const [detailRefresh, setDetailRefresh] = useState(0);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [activityFeed, setActivityFeed] = useState(null);
     const [activityLoading, setActivityLoading] = useState(false);
@@ -150,6 +155,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     }, [noticePostId, spaceId]);
 
     const closeDetail = () => {
+        setDetailRefresh((value) => value + 1);
         setDetail(null);
         setDetailError('');
         setDetailLoading(false);
@@ -175,6 +181,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
 
     const selectSection = (section) => {
         setActiveSection(section);
+        setGalleryView(null);
         if (section === null) setBookCount(null); // 로비로 돌아오면 문집 수를 다시 센다
         setSelectedActivity(null);
         setActivityFeed(null);
@@ -374,8 +381,18 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 </section>
             )}
 
+            {activeSection === 'gallery' && galleryView === 'latest' && (
+                <div className="neighbor-gallery__head" data-space="gallery">
+                    <button type="button" className="neighbor-gallery__back" onClick={() => setGalleryView(null)}>← 반 고르기</button>
+                    <h2>🆕 새 글 모아보기 <small>모든 반의 최근 글</small></h2>
+                </div>
+            )}
+
             {activeSection === null ? null : activeSection === 'books' ? (
                 <StudentBooksPanel spaceId={spaceId} api={booksApi} initialSharedBookId={params?.section === 'books' ? params?.sharedBookId : null} />
+            ) : activeSection === 'gallery' && galleryView !== 'latest' ? (
+                <StudentGalleryPanel spaceId={spaceId} api={api} view={galleryView} onSelect={setGalleryView}
+                    onOpenPost={openDetail} refreshToken={detailRefresh} />
             ) : loading ? (
                 <section className="neighbor-student-state" aria-live="polite">이웃 글을 불러오고 있어요…</section>
             ) : errorMessage && !feed ? (

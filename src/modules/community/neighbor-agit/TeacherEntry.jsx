@@ -21,6 +21,7 @@ import { neighborAgitTeacherApi } from './teacherApi';
 import { NEIGHBOR_AGIT_LIMITS } from './policy';
 import TeacherPostReview from './TeacherPostReview';
 import TeacherBooksPanel from './books/TeacherBooksPanel';
+import TeacherEngagementPanel from './gallery/TeacherEngagementPanel';
 import { neighborBooksApi } from './books/booksApi';
 import './TeacherEntry.css';
 
@@ -71,6 +72,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [topicStep, setTopicStep] = useState('topics');      // topics | manage | engage
     const [deadlineDrafts, setDeadlineDrafts] = useState({}); // `${활동id}:${기한 종류}` → datetime-local 입력값
     const [closeActivityFor, setCloseActivityFor] = useState(null); // 활동 종료 방법을 고르는 창의 대상 활동
+    const [engageRefresh, setEngageRefresh] = useState(0); // 상세 창을 닫으면 ③ 댓글·반응 반별 목록이 숫자를 다시 맞춘다
     const [activityPublishFor, setActivityPublishFor] = useState(null); // 활동 글 공개 모달 대상 활동
     const [activityCandidates, setActivityCandidates] = useState(null);
     const [activityCandLoading, setActivityCandLoading] = useState(false);
@@ -529,7 +531,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     };
 
-    const closePostDetail = () => { setPostDetail(null); setDetailBusy(false); };
+    const closePostDetail = () => { setPostDetail(null); setDetailBusy(false); setEngageRefresh((value) => value + 1); };
 
     // AI가 막은 우리 반 이웃 댓글 처리(되살리기/삭제) → 워크스페이스 다시 읽어 배지·목록 갱신.
     const handleBlockedComment = async (commentId, action) => {
@@ -812,21 +814,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     // ③ 댓글·반응: 우리 반이 공개한 글을 눌러 크게(모달) 보고, 거기 달린 댓글·공감을 확인·검열한다.
     //    다른 반 글의 반응은 그 반 선생님이 본다(여기선 우리 반 글만).
-    const renderEngageStep = () => {
-        const published = workspace.public_posts.filter((post) => post.status === 'published' && post.is_own_class);
-        return (
-            <section className="neighbor-teacher-card">
-                {published.length === 0
-                    ? <p className="neighbor-teacher__empty">우리 반 공개 글이 없어요. 우리 반 글을 공개하면 여기서 댓글·공감을 볼 수 있어요.</p>
-                    : <div className="neighbor-teacher__engage-list">{published.map((post) => (
-                        <button type="button" key={post.shared_post_id} className="neighbor-teacher__engage-card" onClick={() => openPostDetail(post.shared_post_id)}>
-                            <span className="neighbor-teacher__engage-meta"><strong>{post.author_name}</strong><small>{post.class_name}</small></span>
-                            <h3>{post.title}</h3>
-                            <span className="neighbor-teacher__engage-counts">💛 {post.reaction_count || 0} · 💬 {post.comment_count || 0}</span>
-                        </button>))}</div>}
-            </section>
-        );
-    };
+    // ③ 댓글·반응: 학생 글 나눔과 같은 반별 구조(반 고르기 → 주제별 묶음). 작업 공간의 public_posts 는
+    // 50편 상한이라 반별로 모으기엔 모자라 전용 조회를 쓴다(20261336).
+    const renderEngageStep = () => (
+        <TeacherEngagementPanel spaceId={workspace.space.id} classId={classId}
+            kind={activeActivityTab === 'topic' ? 'topic' : 'gallery'} onOpenPost={openPostDetail}
+            refreshToken={engageRefresh} api={api} />
+    );
 
     if (loading) {
         return <section className="neighbor-teacher-state">모두의 아지트 정보를 불러오는 중입니다…</section>;

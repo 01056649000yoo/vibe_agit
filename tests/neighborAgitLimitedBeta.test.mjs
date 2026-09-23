@@ -84,7 +84,8 @@ test('교사 작업 공간은 한 번 읽고 행동도 한 번의 RPC 응답으�
     assert.match(action, /'workspace', public\.get_neighbor_teacher_workspace_v1/);
     // 2026-09-06에 글짝 명단 RPC 를 걷어내 호출이 6개에서 5개가 됐고,
     // 2026-09-19에 교사 활동 글 후보 조회를 더해 7→8이 됐다.
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 9);
+    // 2026-09-23: ③ 댓글·반응 반별 조회(get_neighbor_teacher_engagement_v1) 하나를 더했다. 9 → 10.
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 10);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.doesNotMatch(teacherApi, /get_neighbor_exchange_roster_v1/);
     assert.match(teacherEntry, /setWorkspace\(next\.workspace\)/);

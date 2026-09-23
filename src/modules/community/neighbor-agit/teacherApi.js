@@ -105,6 +105,18 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
+    // ③ 댓글·반응을 반별로: 공간의 공개 글(kind 'gallery' | 'topic')을 반마다 묶어 댓글·공감 수와 함께(20261336).
+    async getEngagement({ spaceId, classId, kind }) {
+        const { data, error } = await supabase.rpc('get_neighbor_teacher_engagement_v1', {
+            p_space_id: spaceId, p_actor_class_id: classId, p_kind: kind
+        });
+        if (error) throw error;
+        if (Number(data?.version) !== 1 || data?.kind !== kind || !Array.isArray(data?.classes)) {
+            throw new Error('반별 댓글·반응 응답을 확인할 수 없습니다.');
+        }
+        return data.classes;
+    },
+
     // 교사가 한 활동(주제)의 우리 학급 제출 글을 직접 골라 공개하기 위한 후보.
     async getActivityCandidates({ spaceId, classId, activityId }) {
         const { data, error } = await supabase.rpc('get_neighbor_teacher_activity_candidates_v1', {

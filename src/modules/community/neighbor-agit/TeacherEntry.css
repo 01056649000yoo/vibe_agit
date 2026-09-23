@@ -448,3 +448,8 @@
 .neighbor-teacher__question { display: flex; align-items: flex-end; gap: 10px; }
 .neighbor-teacher__question label { display: grid; gap: 8px; flex: 1; min-width: 0; }
 .neighbor-teacher__question textarea { width: 100%; box-sizing: border-box; min-height: 76px; padding: 12px; border: 1px solid #bcccdc; border-radius: 9px; font: inherit; resize: vertical; }
+
+/* 전역 button:hover 파란 바탕을 막는다(index.css) — 카드 글자가 파란 바탕에 묻혔다(2026-09-23). */
+.neighbor-teacher__engage-card:hover { background: #fff; color: inherit; }
+.neighbor-teacher__space-card:hover { background: var(--ui-surface); color: var(--ui-ink); }
+.neighbor-teacher__space-card.is-active:hover { background: var(--space-soft); }
