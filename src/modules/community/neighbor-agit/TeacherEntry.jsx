@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../components/common/Button';
 import Modal from '../../../components/common/Modal';
 import useConfirmDialog from '../../../components/common/useConfirmDialog';
@@ -23,6 +23,7 @@ import TeacherPostReview from './TeacherPostReview';
 import TeacherBooksPanel from './books/TeacherBooksPanel';
 import TeacherEngagementPanel from './gallery/TeacherEngagementPanel';
 import { neighborBooksApi } from './books/booksApi';
+import { useTeacherWorkspacePoll } from './useTeacherWorkspacePoll';
 import './TeacherEntry.css';
 
 const STATUS_LABELS = Object.freeze({
@@ -73,6 +74,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [deadlineDrafts, setDeadlineDrafts] = useState({}); // `${활동id}:${기한 종류}` → datetime-local 입력값
     const [closeActivityFor, setCloseActivityFor] = useState(null); // 활동 종료 방법을 고르는 창의 대상 활동
     const [engageRefresh, setEngageRefresh] = useState(0); // 상세 창을 닫으면 ③ 댓글·반응 반별 목록이 숫자를 다시 맞춘다
+    const [liveNotice, setLiveNotice] = useState('');
     const [activityPublishFor, setActivityPublishFor] = useState(null); // 활동 글 공개 모달 대상 활동
     const [activityCandidates, setActivityCandidates] = useState(null);
     const [activityCandLoading, setActivityCandLoading] = useState(false);
@@ -115,9 +117,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 화면을 비우지 않고 작업 공간만 다시 읽는다(문집 나눔·검토함에서 처리한 뒤 숫자를 맞출 때).
     const refreshWorkspace = useCallback(async () => {
         if (!classId) return;
-        try {
-            setWorkspace(await api.getWorkspace(classId));
-        } catch { /* 다음 새로고침 때 다시 읽는다 */ }
+        const next = await api.getWorkspace(classId);
+        setWorkspace(next);
     }, [api, classId]);
 
     // 검토함에서 방문록을 올리거나 올리지 않는다(문집 주인 반 교사).
@@ -571,11 +572,33 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0)
         + (notif.pending_guestbook || 0);
 
+    // 화면을 실제로 보고 있는 교사만 12초 간격으로 한 번 읽는다. 학생 쪽 연결·폴링은 만들지 않는다.
+    useTeacherWorkspacePoll({ enabled: Boolean(isReady && workspace?.space?.id), refresh: refreshWorkspace });
+
+    // 대기 방문록·AI 차단 댓글·새로 보이는 이웃 댓글이 늘면, 배지와 함께 눈에 보이는 갱신 안내를 남긴다.
+    const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}`;
+    const lastLiveCounts = useRef({ value: liveCounts, ready: false, classId: null });
+    useEffect(() => {
+        if (!lastLiveCounts.current.ready || lastLiveCounts.current.classId !== classId) {
+            lastLiveCounts.current = { value: liveCounts, ready: true, classId };
+            setLiveNotice('');
+            return;
+        }
+        const [beforeGuestbook, beforeBlocked, beforeComments] = lastLiveCounts.current.value.split(':').map(Number);
+        const [nextGuestbook, nextBlocked, nextComments] = liveCounts.split(':').map(Number);
+        lastLiveCounts.current.value = liveCounts;
+        const updates = [];
+        if (nextGuestbook > beforeGuestbook) updates.push(`새 방문록 ${nextGuestbook - beforeGuestbook}건`);
+        if (nextBlocked > beforeBlocked) updates.push(`확인할 댓글 ${nextBlocked - beforeBlocked}건`);
+        if (nextComments > beforeComments) updates.push(`새 이웃 댓글 ${nextComments - beforeComments}건`);
+        if (updates.length) setLiveNotice(`${updates.join(' · ')}이 도착했어요.`);
+    }, [classId, liveCounts]);
+
     // 공간 카드에 보일 현황(이미 받은 작업 공간에서 센다 — 추가 조회 없음).
     const ownPublished = (workspace?.public_posts || []).filter((post) => post.is_own_class && post.status === 'published').length;
     const openTopics = activities.filter((activity) => activity.status === 'open').length;
     const spaceStats = (spaceKey) => {
-        if (spaceKey === 'gallery') return [`우리 반 공개 ${ownPublished}편`, notif.new_posts > 0 ? `새 이웃 글 ${notif.new_posts}` : '새 이웃 글 없음'];
+        if (spaceKey === 'gallery') return [`우리 반 공개 ${ownPublished}편`, notif.new_posts > 0 ? `새 이웃 글 ${notif.new_posts}` : '새 이웃 글 없음', notif.new_comments > 0 ? `새 댓글 ${notif.new_comments}` : '새 댓글 없음'];
         if (spaceKey === 'topic') return [`진행 중 ${openTopics}`, notif.pending_approvals > 0 ? `승인할 제안 ${notif.pending_approvals}` : '승인할 제안 없음'];
         return [notif.pending_guestbook > 0 ? `확인할 방문록 ${notif.pending_guestbook}` : '확인할 방문록 없음'];
     };
@@ -979,6 +1002,10 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             </Button>
                         </div>
                     </section>
+                    <p className="neighbor-teacher__live-status" role="status" aria-live="polite">
+                        <span aria-hidden="true">📡</span> 12초마다 새 방문록·댓글을 자동 확인합니다.
+                        {liveNotice && <strong>{liveNotice}</strong>}
+                    </p>
 
                     {(
                         <div className="neighbor-teacher__activity-layout">
