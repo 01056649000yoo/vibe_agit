@@ -36,6 +36,9 @@
 
 ## 🧭 현재 위치
 
+- [x] **KISA 기준 앱 전체 보안 점검** (2026-09-24). 고침 9건 운영 반영, 보고서 [docs/security-audits/2026-09-24.md](docs/security-audits/2026-09-24.md).
+  **결정**: 보안 점검은 날짜별 파일로 기록. 남은 결정 4건(관리자 비밀번호·이메일 가입·Kong CORS·배포 스크립트 함수 동기화).
+
 - [x] **모두의 아지트 보안 3건·세 공간 새 이름(🌳 이웃 글 마당·🎪 같이 쓰기 광장·🏛️ 문집 도서관)** (2026-09-24).
   숨긴 글 상세 누수 차단, 학생 댓글 AI 검사 요청 10분 20번 제한(우리 반·이웃 합산), `20261340` 운영 적용.
   **결정**: 공간 이름은 마을 장소 이름으로 통일, 옛 이름은 검사로 막는다.
@@ -340,7 +343,7 @@
 > rclone crypt로 전환했다. 운영 이미지 CVE 전수 검사는 끝났고, 남은 핵심은 Tailscale SSH 공개키 전환,
 > 내부 디스크 위험 수용, Supabase 공식 묶음 정상화다. 다음 자동 일정은 **2026-08-30 05:00 이후
 > 백업 2일차 대조**다.
-> 상세 증거는 [보안 감사 보고서](docs/SECURITY_AUDIT_20260829.md)와 [WORKLOG.md](WORKLOG.md) 최상단에 있다.
+> 상세 증거는 [보안 감사 보고서](docs/security-audits/2026-08-29.md)와 [WORKLOG.md](WORKLOG.md) 최상단에 있다.
 > Supabase v0.8.0+Kong 격리 복원 예행연습은 8월 29일 PASS했고, 8월 30일 04:00 백업·05:00 판정이
 > 모두 PASS일 때만 05:30 자동 반영하도록 예약했다. 실패하면 운영은 변경하지 않는다.
 
@@ -469,7 +472,7 @@
 - [x] 급식 이름을 남는 자리에 가득 차게 자동 확대(736×414에서 26.5px → 41.75px)하고 `2열`·`3열`을 교사가 선택
 - [x] 급식 한 가지를 `이름 한 줄 + 그 아래 알레르기 한 줄`로 세우고 열량을 급식 종류 줄에 붙여 전체화면 급식판과 같은 모양으로 통일(낱말 가운데 자르기 없음, 한 줄 안 이름 높이 맞춤)
 - [x] `4a2b60c` 운영 자동 배포 성공 (`33700826801`) — DB 변경 없음, 내부 HTTP 200·Caddy 로컬 해석 HTTPS 200
-- [x] **보안 P1**: `notification_emit_v1` 의 PUBLIC·anon·authenticated EXECUTE 회수 — `20261272` 운영 적용(316/316·대기 0). 같은 공격 호출이 401 `permission denied` 로 막히고, 내부 알림 발행은 정상인 것을 확인 ([감사 문서](docs/SECURITY_AUDIT_20260909.md))
+- [x] **보안 P1**: `notification_emit_v1` 의 PUBLIC·anon·authenticated EXECUTE 회수 — `20261272` 운영 적용(316/316·대기 0). 같은 공격 호출이 401 `permission denied` 로 막히고, 내부 알림 발행은 정상인 것을 확인 ([감사 문서](docs/security-audits/2026-09-09.md))
 - [x] **보안 P2**: 공개 git 이력(`c548220a`)의 Google API 키 — 사용자가 Google Cloud 에서 **삭제**(2026-09-09). 이력 문자열은 남지만 더는 쓸 수 없다
 - [x] **보안 P2**: `learning_engine_retry_gate_v1`·`vocab_tower_v2_summit_status_v1`(+`vocab_tower_v2_retry_breakdown_v1`) — 앱이 부르지 않는 내부 전용이라 소유 검사 대신 클라이언트 EXECUTE 를 회수(`20261273`, 적용 대기)
 - [x] **보안 P2**: `agit-app` 컨테이너 굳히기 — `scripts/run-agit-app.sh` 로 실행 자리를 하나로 모으고 비root·read-only·cap drop·NNP·256MB 적용. 포트 80→8080(비root). **다음 배포부터 반영**
@@ -610,7 +613,7 @@
 - [ ] 관리자 화면에서 **12개 항목 판정·완료** → 완료 시각 + 3개월이 다음 점검일
       근거: [docs/SERVICE_REVIEW_20260830.md](docs/SERVICE_REVIEW_20260830.md)
 - **이미지 검사 결과**: [docs/DOCKER_CVE_SCAN_20260829.md](docs/DOCKER_CVE_SCAN_20260829.md)
-- **보고서**: [docs/SECURITY_AUDIT_20260829.md](docs/SECURITY_AUDIT_20260829.md)
+- **보고서**: [docs/security-audits/2026-08-29.md](docs/security-audits/2026-08-29.md)
 
 ### 자비스 개인 대시보드 1차 개편 (2026-08-29 분석 → 오픈클로 관점으로 재수립)
 

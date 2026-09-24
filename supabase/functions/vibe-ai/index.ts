@@ -27,6 +27,9 @@ const corsHeaders = (origin: string | null) => ({
     'Vary': 'Origin'
 })
 
+// DB 함수가 사용자에게 보이려고 RAISE 한 코드(메시지가 한국어 안내다).
+const CLIENT_SAFE_DB_CODES = new Set(['22023', '42501', '55000', 'P0001', 'P0002', 'PT429'])
+
 class HttpError extends Error {
     status: number
     constructor(status: number, message: string) {
@@ -654,6 +657,12 @@ Deno.serve(async (req) => {
         const status = error instanceof HttpError ? error.status : 400
         const message = error instanceof Error ? error.message : 'AI 요청을 처리하지 못했습니다.'
         console.error(`[vibe-ai] ${status}: ${message}`)
-        return jsonResponse({ error: message }, status, headers)
+        // 내부 오류 문구(DB·외부 API 세부)는 사용자에게 보내지 않는다(KISA 에러처리: 오류 메시지 정보 노출).
+        // 우리가 정한 HttpError 와, DB 함수가 일부러 올린 한국어 안내(RAISE 코드)만 그대로 보낸다.
+        const raisedCode = String((error as { code?: unknown } | null)?.code ?? '')
+        const clientMessage = error instanceof HttpError || CLIENT_SAFE_DB_CODES.has(raisedCode)
+            ? message
+            : 'AI 요청을 처리하지 못했습니다. 잠시 뒤 다시 해 주세요.'
+        return jsonResponse({ error: clientMessage }, status, headers)
     }
 })

@@ -24,6 +24,7 @@
 | 여러 학급 이웃 아지트·초대·공용 글 피드 | [NEIGHBOR_AGIT_PLAN.md](../../NEIGHBOR_AGIT_PLAN.md) | ROADMAP·SECURITY_HARNESS |
 | 학생 홈·목록·쓰기·1,000명 성능 | [PERFORMANCE_HARNESS.md](../../PERFORMANCE_HARNESS.md) | AGENTS의 현재 확장 규칙 |
 | RLS·인증·RPC·Edge 함수·외부 API | [SECURITY_HARNESS.md](../../SECURITY_HARNESS.md) | AGENTS의 DB 마이그레이션 규칙 |
+| 보안 점검(날짜별 기록) | [docs/security-audits/](../security-audits/README.md) | SECURITY_HARNESS(정본 규칙) |
 | 맥미니 내부 장애 점검 화면 | [OUTAGE_PLAN.md](../OUTAGE_PLAN.md) | 운영 Caddy·상태 기록 스크립트 |
 | 백업·복구·자동 리허설 | [backup.md](../../backup.md) | git 밖 변경도 WORKLOG에 기록 |
 | 브라우저 실기기 검증 | [MANUAL_ACCEPTANCE_CHECKLIST.md](../../MANUAL_ACCEPTANCE_CHECKLIST.md) | 관련 WORKLOG 항목 |

@@ -18,6 +18,22 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-24 — KISA 시큐어코딩 기준 앱 전체 보안 점검 + 고침 9건 (Claude Opus 5.5)
+- **요청**: KISA 시큐어 코드 룰로 취약점·SQL 인젝션·세션 탈취 포함 전체 점검. 앞으로 보안 점검은 날짜별 파일로.
+- **보고서**: [docs/security-audits/2026-09-24.md](docs/security-audits/2026-09-24.md). 옛 감사 두 개도 `docs/security-audits/`로 옮김(링크 갱신).
+  AGENTS.md 보안 규칙·위키 목록에 "날짜별 파일" 규칙 등록.
+- **안전 확인**: SQL 인젝션(동적 SQL 0), XSS(이스케이프·CSP), SSRF·오픈 리다이렉트(고정 주소), 업로드(비공개 버킷·MIME·크기).
+- **고침**: 학생 코드 `crypto.getRandomValues`, 학생 코드 반복 대입 10분 10번 잠금+한국어 오류(`20261341`), 정의자 트리거 함수 3개
+  search_path 고정, `vibe-ai`·`verify-admin-mode` 내부 오류 문구 비노출, 관리자 비밀번호 일정 시간 비교·CORS 규칙, 개발 의존성 14건.
+- **git 밖 변경**: `~/agit-supabase/volumes/functions/verify-admin-mode/index.ts` 를 저장소 판으로 손 복사(로컬 배포 스크립트가
+  이 함수를 옮기지 않음). `vibe-ai` 는 deploy:local 이 옮김.
+- **정정**: 점검 중 "ALLOWED_ORIGINS 비어 있음" 이라 판단했으나 변수 이름을 잘못 본 것 — 실제 이름 `ALLOWED_ORIGIN` 은 설정돼 있다.
+  응답의 `*` 는 게이트웨이(Kong) 기본 CORS.
+- **결과/검증**: test:all 1299/1299, test:security:static 351/351(새 검사 옛 코드에서 4/4 실패), 롤백 탐침(11번째 잠김·정상 코드 로그인),
+  lint 새 경고 0, build, migrate:check, rpc-surface, npm audit 0 → migrate → deploy:local → 함수 운영 호출 확인.
+- **남은 것 / 다음(선생님 결정)**: 관리자 모드 비밀번호 4자리→12자 이상, 인증 서버 이메일·전화 가입 끄기, Kong CORS(유지 가능),
+  로컬 배포가 모든 엣지 함수를 동기화하게.
+
 ## 2026-09-24 — 모두의 아지트 보안 3건 + 세 공간 새 이름 + 도움말·안내서 맞춤 (Claude Opus 5.5)
 - **보안 ①** 다른 반이 숨긴 글을 교사 글 상세 RPC(`get_neighbor_teacher_post_detail_v1`)로 계속 열 수 있었다(09-19 결정이
   목록에만 걸림) → hidden 은 자기 학급만. **②** 댓글을 쓰거나 고칠 때마다 AI 검사가 다시 돌아 비용 증폭 가능 →
