@@ -24,6 +24,11 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
                 id: 'diaries', icon: '📔', title: '일기',
                 description: '오늘 있었던 일과 내 마음을 적어요. 처음에는 나만 볼 수 있어요.',
                 ctaLabel: '일기 쓰기', destination: Object.freeze({ type: 'route', pageName: 'diaries' })
+            }),
+            Object.freeze({
+                id: 'lab-activities', icon: '🧪', title: '글쓰기 연구소',
+                description: '선생님이 연 활동에서 질문을 만들고 개요를 짜요.',
+                ctaLabel: '연구소 가기', destination: Object.freeze({ type: 'route', pageName: 'lab_activities' })
             })
         ])
     }),
@@ -44,9 +49,15 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
             }),
             Object.freeze({
                 id: 'class-agit', icon: '🏡', title: '우리반 아지트',
-                description: '우리 반의 글 전시와 문집을 읽어요. 액자나 문집 차례에서 작품을 골라 보세요.',
+                description: '글꽃 전시관의 전시와 글꽃 책방의 문집을 읽어요.',
                 visibilityKey: 'class_agit_available', moduleId: 'class-agit',
                 ctaLabel: '전시 보러 가기', destination: Object.freeze({ type: 'route', pageName: 'class_agit' })
+            }),
+            Object.freeze({
+                id: 'neighbor-agit', icon: '🤝', title: '모두의 아지트',
+                description: '다른 반 친구들과 글을 읽고, 같이 쓰고, 문집도 나눠요.',
+                visibilityKey: 'neighbor_agit_available', moduleId: 'neighbor-agit',
+                ctaLabel: '이웃 글 보기', destination: Object.freeze({ type: 'route', pageName: 'neighbor_agit' })
             }),
             Object.freeze({
                 id: 'playground', icon: '🎡', title: '아지트 놀이터',

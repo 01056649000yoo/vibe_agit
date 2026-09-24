@@ -13,8 +13,8 @@ const [modal, dashboard, header] = await Promise.all([
 test('학생 사용법은 글쓰기·아지트·소식 흐름을 짧은 문장으로 안내한다', () => {
     assert.deepEqual(STUDENT_GUIDE_SECTIONS.map((section) => section.id), ['writing', 'agit', 'news']);
     assert.deepEqual(STUDENT_GUIDE_ITEMS.map((item) => item.id), [
-        'missions', 'reading-logs', 'diaries', 'my-agit',
-        'friends-hideout', 'class-agit', 'playground', 'feedback', 'activity', 'footprint'
+        'missions', 'reading-logs', 'diaries', 'lab-activities', 'my-agit',
+        'friends-hideout', 'class-agit', 'neighbor-agit', 'playground', 'feedback', 'activity', 'footprint'
     ]);
     for (const item of STUDENT_GUIDE_ITEMS) {
         assert.ok(item.description.length <= 44, `${item.title} 설명이 초등학생용으로 너무 깁니다.`);
@@ -27,7 +27,7 @@ test('학생 사용법의 바로 가기는 실제 하단 메뉴·학생 페이�
     for (const item of STUDENT_GUIDE_ITEMS) {
         const destination = item.destination;
         if (destination.type === 'tab') assert.ok(tabIds.has(destination.tabId), `${item.title}의 하단 메뉴가 없습니다.`);
-        if (destination.type === 'route') assert.ok(['diaries', 'class_agit'].includes(destination.pageName));
+        if (destination.type === 'route') assert.ok(['diaries', 'class_agit', 'lab_activities', 'neighbor_agit'].includes(destination.pageName));
         if (destination.type === 'dashboard-action') assert.ok(['feedback', 'activity', 'footprint'].includes(destination.action));
     }
     assert.match(dashboard, /getStudentBottomNavDestination\(destination\.tabId\)/);

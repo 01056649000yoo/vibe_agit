@@ -7,6 +7,7 @@
 
 | 알고 싶은 것 | 정본 |
 |---|---|
+| 지금 있는 기능 전체(v1 지도) | [FEATURE_MAP.md](../../FEATURE_MAP.md) |
 | 세션의 최소 활성 정보 | [SESSION_CONTEXT.md](../../SESSION_CONTEXT.md) |
 | 작업 방법과 절대 규칙 | [AGENTS.md](../../AGENTS.md) |
 | 현재 위치와 앞으로 할 일 | [ROADMAP.md](../../ROADMAP.md) |

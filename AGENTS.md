@@ -8,6 +8,7 @@
 | 문서 | 뭐가 있나 |
 |---|---|
 | **AGENTS.md**(이 파일) | 어떻게 작업할지 — 읽는 순서, 절대 규칙, 운영 함정, 검증 명령 |
+| **[FEATURE_MAP.md](FEATURE_MAP.md)** | **지금 있는 기능 전체 지도(v1, 2026-09-24~)** — 메뉴별 기능·상태·도움말 키, 변경 기록(v1.x) |
 | **[ROADMAP.md](ROADMAP.md)** | 앞으로 할 일만 — 현재 위치, 스테이지별 계획, 결정 기록. 지난 작업 서술은 없다 |
 | **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — 최근치만 둔다(2,500줄 한도, 검사가 막는다). 지난 달치는 [docs/worklog/](docs/worklog/) |
 | **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** | 되풀이하지 말 것 — 작업 시작 전 3초 훑기 |
@@ -89,6 +90,9 @@
   교사 메뉴별 사용법은 이 버튼을 포함한 `TeacherGuideButton`과 `constants/teacherGuides.js`를 사용한다.
   전체 교사 활용 안내서는 상세 내용을 복사하지 않고 `src/guides/teacherGuideJourneys.js`에서 `guideRef`로만
   연결한다. 새 도움말은 `src/guides/README.md` 순서대로 실제 화면 이동 대상과 큰 흐름을 함께 등록한다.
+- **기능을 더하거나 바꾸거나 빼면 [FEATURE_MAP.md](FEATURE_MAP.md) 의 그 줄과 `변경 기록`(v1.x)을 같은 커밋에서 고친다.**
+  도움말(`teacherGuides.js`·`studentGuide.js`)과 활용 안내서(`teacherGuideJourneys.js`)도 함께 맞춘다(2026-09-24 선생님 결정).
+  `tests/featureMap.test.mjs`·`tests/guideLabelsExist.test.mjs` 가 메뉴·도움말 키·단추 이름 어긋남을 막는다.
 - **한 곳만 고치고 끝내지 않는다.** 같은 값을 두 군데 이상에서 쓰면 **원본을 한 곳으로 모은다**
   (`writerLevels.js`·`feedbackCategories.js` 처럼). 성격이 달라 못 모으면 **그 곳들을 한꺼번에 보는**
   **검사를 하나** 만든다 — 검사를 쪼개면 반쪽 수정을 못 잡는다.

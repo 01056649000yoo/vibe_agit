@@ -151,7 +151,7 @@ test('독서록 이벤트 탭은 독서마라톤 운영 내용을 모아 안내�
     assert.match(text, /선택 상자로 학생을 직접 옮길/);
     assert.match(text, /균등 재배정 \/ 랜덤 배정 \/ 직접 배정/);
     assert.match(text, /크게 보기.*배정 결과를 함께 확인/);
-    assert.match(text, /우리 모둠 거리.*모둠 순위.*자기 기여 거리/);
+    assert.match(text, /우리 모둠 현황.*모둠 순위.*자기 기여 거리/);
     assert.match(text, /초안 저장하기.*학생 배정 확인하고 시작하기/);
     assert.match(text, /첫 독서 기록이 반영된 뒤.*배정이 고정/);
     assert.match(text, /팀이 목표를 완주하고 학생이 교사가 정한 개인 최소 요건까지 충족/);
