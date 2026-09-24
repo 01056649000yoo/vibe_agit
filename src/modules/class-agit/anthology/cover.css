@@ -18,7 +18,7 @@
 .class-agit .class-agit-book-cover[data-design="storybook"]::before,.class-agit .class-agit-book-cover[data-design="ocean"]::before { height:3px; }
 .class-agit-student-exhibitions:has(> .class-agit-book-cover) { grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); }
 .class-agit-student-exhibitions > .class-agit-book-cover[data-design] { max-width:280px; }
-/* 학생 "책으로 펼쳐 읽기" 단추(우리 반 서가·모두의 아지트 문집 나눔). 전역 button:hover 파란 바탕을 스스로 막는다. */
+/* 학생 "책으로 펼쳐 읽기" 단추(우리 반 서가·모두의 아지트 문집 도서관). 전역 button:hover 파란 바탕을 스스로 막는다. */
 .class-agit .class-agit-book-open { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; margin: 12px 0 4px; padding: 0 20px; border: 0; border-radius: 999px; background: #2c8065; color: #fff; font-weight: 900; font-size: 1rem; cursor: pointer; }
 .class-agit .class-agit-book-open:hover:not(:disabled) { background: #236b54; color: #fff; }
 .class-agit .class-agit-book-open:disabled { opacity: .5; cursor: default; }

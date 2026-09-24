@@ -43,13 +43,16 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     // 저장 뒤 딱 한 번만 결과를 다시 본다. 학생 화면은 폴링하지 않는다(PERFORMANCE_HARNESS).
     const commentRecheckTimer = useRef(null);
     const openDetailId = useRef(null);
+    // `결과 확인` 을 연달아 눌러도 요청은 하나씩, 3초에 한 번만 보낸다.
+    const [rechecking, setRechecking] = useState(false);
+    const lastRecheckAt = useRef(0);
     // 처음에는 세 공간의 입구(로비)를 보여 준다(null). 알림을 눌러 들어오면 그 공간에서 바로 시작한다
-    // — 방문록 알림은 문집 나눔, 이웃 댓글 알림은 글 나눔 공간.
+    // — 방문록 알림은 문집 도서관, 이웃 댓글 알림은 이웃 글 마당.
     const [activeSection, setActiveSection] = useState(
         params?.section === 'books' ? 'books' : params?.sharedPostId ? 'gallery' : null
     );
     const [bookCount, setBookCount] = useState(null);
-    // 글 나눔 공간 안: null = 반 고르기, 'latest' = 🆕 새 글 모아보기(최신순 피드), 그 밖 = 고른 반 열쇠.
+    // 이웃 글 마당 안: null = 반 고르기, 'latest' = 🆕 새 글 모아보기(최신순 피드), 그 밖 = 고른 반 열쇠.
     const [galleryView, setGalleryView] = useState(null);
     // 상세 창을 닫으면 올린다 — 반별 목록이 댓글·공감 수를 다시 맞춘다.
     const [detailRefresh, setDetailRefresh] = useState(0);
@@ -79,7 +82,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
         void loadFirstPage();
     }, [loadFirstPage]);
 
-    // 로비에서만 문집 수를 가볍게 한 번 읽는다(문집 나눔 칸은 들어갈 때 자기 목록을 읽는다).
+    // 로비에서만 문집 수를 가볍게 한 번 읽는다(문집 도서관 칸은 들어갈 때 자기 목록을 읽는다).
     useEffect(() => {
         if (activeSection !== null || !spaceId || bookCount !== null) return;
         booksApi.getSpaceBooks(spaceId).then((books) => setBookCount(books.length)).catch(() => setBookCount(-1));
@@ -100,7 +103,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     };
 
     const visibleFeed = activeSection === 'gallery' ? feed : activityFeed;
-    // 함께 쓰는 주제의 댓글·반응 마감이 지났으면 새 댓글·공감을 막고 보기만 하게 한다.
+    // 같이 쓰기 광장의 댓글·반응 마감이 지났으면 새 댓글·공감을 막고 보기만 하게 한다.
     const activityCommentsLocked = activeSection !== 'gallery'
         && Boolean(activityFeed?.activity?.comments_close_at)
         && new Date(activityFeed.activity.comments_close_at) <= new Date();
@@ -207,6 +210,9 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     // 검사 결과만 다시 읽는다(입력 중인 글은 건드리지 않는다). 그새 다른 글을 열었으면 버린다.
     const recheckMyComment = async (sharedPostId) => {
         clearCommentRecheck();
+        if (rechecking || Date.now() - lastRecheckAt.current < 3000) return;
+        lastRecheckAt.current = Date.now();
+        setRechecking(true);
         try {
             const nextDetail = await api.getDetail({ spaceId, sharedPostId });
             if (openDetailId.current !== sharedPostId) return;
@@ -214,6 +220,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
             updateFeedItem(sharedPostId, { comment_count: nextDetail.comment_count });
         } catch {
             // 결과 확인은 덤이다 — 실패해도 저장은 끝났으니 조용히 둔다.
+        } finally {
+            setRechecking(false);
         }
     };
 
@@ -307,8 +315,11 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 const sharedPostId = detail.shared_post_id;
                 commentRecheckTimer.current = window.setTimeout(() => { void recheckMyComment(sharedPostId); }, 8000);
             }
-        } catch {
-            setInteractionError('댓글을 저장하지 못했어요. 숨김 상태이거나 공개가 끝났을 수 있어요.');
+        } catch (error) {
+            // PT429: 10분에 20번 넘게 쓰거나 고쳤다(20261340). 서버 문구를 그대로 보인다.
+            setInteractionError(error?.code === 'PT429' && error?.message
+                ? error.message
+                : '댓글을 저장하지 못했어요. 숨김 상태이거나 공개가 끝났을 수 있어요.');
         } finally {
             setInteractionBusy('');
         }
@@ -559,7 +570,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                                 <p className="neighbor-student-inline-notice" role="status">
                                     🕐 댓글을 확인하는 중이에요. 확인이 끝나면 이웃 학급에 보여요.
                                     <button type="button" className="neighbor-student-inline-notice__action"
-                                        disabled={Boolean(interactionBusy)}
+                                        disabled={Boolean(interactionBusy) || rechecking}
                                         onClick={() => { void recheckMyComment(detail.shared_post_id); }}>
                                         결과 확인
                                     </button>

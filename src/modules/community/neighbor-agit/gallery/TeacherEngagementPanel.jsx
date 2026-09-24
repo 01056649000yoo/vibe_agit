@@ -5,9 +5,9 @@ import { groupByTopic } from './groupByTopic.js';
 import './gallery.css';
 
 /*
- * ③ 댓글·반응 — 교사. 학생 글 나눔 공간과 같은 구조: 반을 고르고 그 반 글을 주제별로 묶어 본다.
+ * ③ 댓글·반응 — 교사. 학생 이웃 글 마당과 같은 구조: 반을 고르고 그 반 글을 주제별로 묶어 본다.
  * 반 카드에는 글 수·댓글·공감 합계. 글을 누르면 기존 상세 창(댓글 숨기기·복원)이 열린다.
- * kind: 'gallery'(글 나눔 공간) | 'topic'(함께 쓰는 주제) — 두 탭이 같은 부품을 쓴다.
+ * kind: 'gallery'(이웃 글 마당) | 'topic'(같이 쓰기 광장) — 두 탭이 같은 부품을 쓴다.
  */
 export default function TeacherEngagementPanel({ spaceId, classId, kind, onOpenPost, refreshToken = 0, api = neighborAgitTeacherApi }) {
     const [classes, setClasses] = useState(null);

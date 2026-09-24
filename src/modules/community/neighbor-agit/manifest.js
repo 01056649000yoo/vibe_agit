@@ -45,7 +45,7 @@ export const neighborAgitManifest = {
             action: 'post',
             actionLabel: '확인'
         },
-        // 📚 문집 나눔 방문록(SQL 20261335). 활동 알림 갈래(module 'neighbor-agit')로 간다.
+        // 🏛️ 문집 도서관 방문록(SQL 20261335). 활동 알림 갈래(module 'neighbor-agit')로 간다.
         {
             eventType: 'neighbor.guestbook_approved',
             icon: '📚',

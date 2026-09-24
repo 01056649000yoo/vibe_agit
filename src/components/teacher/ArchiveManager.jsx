@@ -316,7 +316,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
         if (!await ask({
             title: `‘${missionTitle}’ 과제를 영구 삭제할까요?`,
             body: isNeighborActivity
-                ? '이 과제는 모두의 아지트 ‘함께 쓰는 주제’에 쓰이고 있어요. 지우면 우리 반이 그 주제에서 빠지고, 학생들이 낸 글과 댓글도 함께 사라집니다. 되돌릴 수 없습니다.'
+                ? '이 과제는 모두의 아지트 ‘같이 쓰기 광장’에 쓰이고 있어요. 지우면 우리 반이 그 주제에서 빠지고, 학생들이 낸 글과 댓글도 함께 사라집니다. 되돌릴 수 없습니다.'
                 : '학생들이 낸 글과 댓글이 함께 사라지고, 되돌릴 수 없습니다.',
             confirmLabel: '영구 삭제하기 ⚠️',
             tone: 'danger'

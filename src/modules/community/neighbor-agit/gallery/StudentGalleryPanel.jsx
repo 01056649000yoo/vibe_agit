@@ -6,7 +6,7 @@ import './gallery.css';
 const formatDate = (value) => (value ? new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric' }).format(new Date(value)) : '');
 
 /*
- * 글 나눔 공간 — 학생. 글이 많아도 찾기 쉽게 "어느 반 글을 볼까요?" 에서 반을 고르고, 그 반 글을 주제별로 묶어 본다.
+ * 이웃 글 마당 — 학생. 글이 많아도 찾기 쉽게 "어느 반 글을 볼까요?" 에서 반을 고르고, 그 반 글을 주제별로 묶어 본다.
  *   view === null      : 반 고르기(우리 반 먼저, 반마다 글 수·지난 방문 뒤 새 글) + 🆕 새 글 모아보기
  *   view === <반 열쇠> : 그 반 글을 주제별 묶음으로(주제 칩으로 좁히기)
  * "새 글 모아보기"(view === 'latest')는 바깥(StudentEntry)이 기존 최신순 피드로 그린다.

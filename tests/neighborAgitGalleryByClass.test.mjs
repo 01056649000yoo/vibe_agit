@@ -4,7 +4,7 @@ import test from 'node:test';
 import { groupByTopic } from '../src/modules/community/neighbor-agit/gallery/groupByTopic.js';
 
 /*
- * 글 나눔 공간 반별 보기(학생) · ③ 댓글·반응 반별 보기(교사) — 2026-09-23 `20261336`.
+ * 이웃 글 마당 반별 보기(학생) · ③ 댓글·반응 반별 보기(교사) — 2026-09-23 `20261336`.
  * 동작은 `npm run simulate:neighbor-agit` G1~G8 이 실제 역할로 확인한다.
  */
 const [sql, studentEntry, teacherEntry, studentPanel, teacherPanel, api, teacherApi, studentCss, teacherCss] = await Promise.all([
@@ -41,7 +41,7 @@ test('새 글은 지난 방문 뒤 — 피드가 방문 시각을 바꾸기 직�
     assert.match(sql, /CASE WHEN v_since IS NULL THEN 0/);
 });
 
-test('교사 반별 조회는 작업 공간의 50편 상한을 쓰지 않고 따로 읽는다(글 나눔/주제 구분)', () => {
+test('교사 반별 조회는 작업 공간의 50편 상한을 쓰지 않고 따로 읽는다(이웃 글 마당/주제 구분)', () => {
     assert.match(sql, /\(p_kind = 'gallery' AND shared\.activity_id IS NULL\) OR \(p_kind = 'topic' AND shared\.activity_id IS NOT NULL\)/);
     assert.match(sql, /LIMIT 500/);
     assert.match(teacherApi, /rpc\('get_neighbor_teacher_engagement_v1'/);

@@ -13,7 +13,8 @@ const LOW_EFFORT_COMMENTS = new Set([
 // RPC 가 직접 올린 안내는 이미 아이가 읽을 수 있는 말이라 그대로 보여 준다.
 // 그 밖의 실패(통신 끊김 등)는 원인을 숨기고 다시 해 보라고만 알린다.
 // 이게 없으면 저장이 실패해도 화면에 아무 말도 뜨지 않아 아이는 왜 안 되는지 알 수 없다.
-const RAISED_BY_RPC = new Set(['22023', '42501', '55000', 'P0001', 'P0002']);
+// PT429: 학생 한 명의 AI 검사 요청이 10분에 20번을 넘었다(20261340) — 서버 문구를 그대로 보인다.
+const RAISED_BY_RPC = new Set(['22023', '42501', '55000', 'P0001', 'P0002', 'PT429']);
 
 const commentErrorMessage = (error) => {
     if (RAISED_BY_RPC.has(String(error?.code || '')) && error?.message) return error.message;

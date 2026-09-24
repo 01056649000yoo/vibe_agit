@@ -14,7 +14,7 @@ const STATUS_TEXT = Object.freeze({
 });
 
 /*
- * 📚 문집 나눔 — 학생 칸. 이웃 반 문집 표지 → 책 펼치기(차례) → 작품 읽기, 그리고 방문록.
+ * 🏛️ 문집 도서관 — 학생 칸. 이웃 반 문집 표지 → 책 펼치기(차례) → 작품 읽기, 그리고 방문록.
  * 표지·작품 읽기 창은 우리 반 서가(글꽃 책방)와 같은 부품을 쓴다.
  */
 export default function StudentBooksPanel({ spaceId, initialSharedBookId = null, api = neighborBooksApi }) {
@@ -143,7 +143,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     }
 
     return (
-        <section className="neighbor-books-student" aria-label="문집 나눔">
+        <section className="neighbor-books-student" aria-label="문집 도서관">
             <div className="neighbor-books__intro">
                 <h2>여러 반 친구들의 문집을 읽어요</h2>
                 <p>표지를 누르면 책이 펼쳐져요. 다 읽고 방문록을 남겨 보세요.</p>

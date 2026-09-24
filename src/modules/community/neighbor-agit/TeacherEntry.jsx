@@ -64,11 +64,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const [invite, setInvite] = useState(null);
     // 진입 시 역할 선택(호스트/게스트). 고르면 모달로 진행한다.
     const [startChoice, setStartChoice] = useState(null); // null | 'host' | 'guest'
-    // 운영 화면의 최상위 탭: 글 나눔(gallery) / 함께 쓰는 주제(topic).
+    // 운영 화면의 최상위 탭: 이웃 글 마당(gallery) / 같이 쓰기 광장(topic).
     const [activeActivityTab, setActiveActivityTab] = useState('gallery');
-    // 함께 쓰는 주제: 주제 만들기는 모달로, 화면은 활동 결과만 넓게 본다.
+    // 같이 쓰기 광장: 주제 만들기는 모달로, 화면은 활동 결과만 넓게 본다.
     const [topicCreateOpen, setTopicCreateOpen] = useState(false);
-    // 각 탭 안의 3스텝. 글 나눔: 모으기→관리→반응 / 함께 쓰는 주제: 주제→관리→반응.
+    // 각 탭 안의 3스텝. 이웃 글 마당: 모으기→관리→반응 / 같이 쓰기 광장: 주제→관리→반응.
     const [galleryStep, setGalleryStep] = useState('collect'); // collect | manage | engage
     const [topicStep, setTopicStep] = useState('topics');      // topics | manage | engage
     const [deadlineDrafts, setDeadlineDrafts] = useState({}); // `${활동id}:${기한 종류}` → datetime-local 입력값
@@ -114,7 +114,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     }, [api, classId]);
 
-    // 화면을 비우지 않고 작업 공간만 다시 읽는다(문집 나눔·검토함에서 처리한 뒤 숫자를 맞출 때).
+    // 화면을 비우지 않고 작업 공간만 다시 읽는다(문집 도서관·검토함에서 처리한 뒤 숫자를 맞출 때).
     const refreshWorkspace = useCallback(async () => {
         if (!classId) return;
         const next = await api.getWorkspace(classId);
@@ -308,7 +308,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         const result = await runAction(
             'create_activity',
             toNeighborTopicProposal({ spaceId: workspace.space.id, draft: activityForm }),
-            '함께 쓰는 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
+            '같이 쓰기 광장에 주제를 제안했습니다. 다른 학급 교사의 승인을 기다려 주세요.'
         );
         if (!result) return;
         setActivityForm(createNeighborTopicDraft());
@@ -428,7 +428,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
 
-    // 함께 쓰는 주제의 댓글·반응 마감 시각을 정하거나(빈 값=마감 해제) 지운다.
+    // 같이 쓰기 광장의 댓글·반응 마감 시각을 정하거나(빈 값=마감 해제) 지운다.
     // 주제 카드에서 기한 하나(글쓰기 또는 댓글·반응)를 정하거나 지운다.
     const saveActivitySchedule = async (activityId, key, localValue) => {
         if (busy) return;
@@ -618,7 +618,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (isReady && classId) void api.markSeen(classId).catch(() => {});
     }, [isReady, classId, api]);
 
-    // 글 나눔 "글 모으기" 스텝에 들어가면 우리 반 글을 자동으로 불러온다(큰 버튼 없이).
+    // 이웃 글 마당 "글 모으기" 스텝에 들어가면 우리 반 글을 자동으로 불러온다(큰 버튼 없이).
     useEffect(() => {
         if (isReady && activeActivityTab === 'gallery' && galleryStep === 'collect'
             && workspace?.space?.id && !galleryCandidates && !galleryLoading) {
@@ -667,7 +667,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'ko-KR'));
     }, [visibleGalleryCandidates, collectGroupBy]);
 
-    // 스텝 바(탭 안 3스텝). 공용으로 글 나눔·함께 쓰는 주제 모두 쓴다.
+    // 스텝 바(탭 안 3스텝). 공용으로 이웃 글 마당·같이 쓰기 광장 모두 쓴다.
     const renderStepBar = (steps, current, onSelect) => (
         <nav className="neighbor-teacher__stepbar" role="tablist" aria-label="단계 이동">
             {steps.map((step) => (
@@ -842,7 +842,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     // ③ 댓글·반응: 우리 반이 공개한 글을 눌러 크게(모달) 보고, 거기 달린 댓글·공감을 확인·검열한다.
     //    다른 반 글의 반응은 그 반 선생님이 본다(여기선 우리 반 글만).
-    // ③ 댓글·반응: 학생 글 나눔과 같은 반별 구조(반 고르기 → 주제별 묶음). 작업 공간의 public_posts 는
+    // ③ 댓글·반응: 학생 이웃 글 마당과 같은 반별 구조(반 고르기 → 주제별 묶음). 작업 공간의 public_posts 는
     // 50편 상한이라 반별로 모으기엔 모자라 전용 조회를 쓴다(20261336).
     const renderEngageStep = () => (
         <TeacherEngagementPanel spaceId={workspace.space.id} classId={classId}
@@ -1417,7 +1417,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         </>
                     )}
 
-                    <h3 className="neighbor-teacher__inbox-heading">함께 쓰는 주제 제안</h3>
+                    <h3 className="neighbor-teacher__inbox-heading">같이 쓰기 광장 제안</h3>
                     {pendingApprovalActivities.length === 0
                         ? <p className="neighbor-teacher__empty">승인할 주제 제안이 없습니다.</p>
                         : <div className="neighbor-teacher__post-list">{pendingApprovalActivities.map((activity) => (

@@ -1,6 +1,6 @@
 /**
  * 글을 주제(과제·활동 이름)별로 묶는다. 최근에 글이 올라온 주제가 앞에 온다. 주제가 없으면 '자율 글'.
- * 학생 반별 글 나눔과 교사 ③ 댓글·반응이 같은 묶음 규칙을 쓴다.
+ * 학생 반별 이웃 글 마당과 교사 ③ 댓글·반응이 같은 묶음 규칙을 쓴다.
  * @param {Array<{topic?: string, published_at?: string}>} posts
  * @returns {Array<{topic: string, posts: Array}>}
  */

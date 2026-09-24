@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 /*
- * 📚 문집 나눔 + 방문록(교사 승인) — 2026-09-23 `20261335`.
+ * 🏛️ 문집 도서관 + 방문록(교사 승인) — 2026-09-23 `20261335`.
  * 동작 전체는 `npm run simulate:neighbor-agit`(B0~B22)가 실제 역할로 확인한다. 여기서는 계약이 조용히
  * 풀리지 않게 핵심 문장을 지킨다.
  */
@@ -83,7 +83,7 @@ test('검토함·메뉴 숫자에 확인할 방문록이 함께 들어간다', (
 });
 
 test('화면: 세 번째 탭과 학생·교사 칸, 알림으로 들어오면 그 책을 연다', () => {
-    assert.match(tabs, /id: 'books', icon: '📚', label: '문집 나눔'/);
+    assert.match(tabs, /id: 'books', icon: '🏛️', label: '문집 도서관'/);
     assert.match(teacherEntry, /<TeacherBooksPanel /);
     assert.match(studentEntry, /<StudentBooksPanel spaceId=\{spaceId\} api=\{booksApi\} initialSharedBookId=/);
     assert.match(studentEntry, /params\?\.section === 'books'/);
@@ -91,7 +91,7 @@ test('화면: 세 번째 탭과 학생·교사 칸, 알림으로 들어오면 �
     assert.match(booksApi, /assertStudentBooks\(book, book\.id, workId\)/);
     assert.match(studentPanel, /StudentBookReader/);
     assert.match(teacherPanel, /소개 내리기/);
-    assert.match(guides, /문집 나눔/);
+    assert.match(guides, /문집 도서관/);
 });
 
 test('시뮬레이션이 문집 흐름을 돈다', () => {

@@ -124,8 +124,8 @@
 .neighbor-teacher__detail-content { max-height: 280px; overflow: auto; padding: 14px; border-radius: 11px; background: #f8fafc; color: #334e68 !important; white-space: pre-wrap; }
 .neighbor-teacher__detail li { align-items: flex-start; flex-direction: column; }
 .neighbor-teacher__detail li p { color: #334e68; }
-/* 활동은 `글 나눔 공간`·`함께 쓰는 주제` 둘뿐이다(글짝 교환은 61254 에서 뺐다). 3칸으로 두면 한 칸이 빈다. */
-/* 함께 쓰는 주제: 주제 만들기는 모달로 열고, 화면은 활동 결과만 넓게. 머리 행에 만들기 버튼을 둔다. */
+/* 활동은 `이웃 글 마당`·`같이 쓰기 광장` 둘뿐이다(글짝 교환은 61254 에서 뺐다). 3칸으로 두면 한 칸이 빈다. */
+/* 같이 쓰기 광장: 주제 만들기는 모달로 열고, 화면은 활동 결과만 넓게. 머리 행에 만들기 버튼을 둔다. */
 .neighbor-teacher__activity-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .neighbor-teacher__activity-head strong { color: #243b53; font-size: var(--ui-text-md); }
 

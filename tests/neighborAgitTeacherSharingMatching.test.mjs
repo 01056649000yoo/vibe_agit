@@ -23,7 +23,7 @@ const functionSource = (name) => {
     return migration.slice(start, next < 0 ? migration.length : next);
 };
 
-test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나눔 공간에 직접 공개한다', () => {
+test('교사는 자기 학급의 제출 완료 일반 글만 불러와 이웃 글 마당에 직접 공개한다', () => {
     const candidates = functionSource('get_neighbor_teacher_share_candidates_v1');
     const publish = functionSource('publish_neighbor_class_post_v1');
     for (const source of [candidates, publish]) {
@@ -40,7 +40,7 @@ test('교사는 자기 학급의 제출 완료 일반 글만 불러와 글 나�
     assert.match(teacherEntry, /전문 확인 후 공유/);
 });
 
-test('글 나눔 후보는 과제 주제를 함께 받아 필터 가능한 카드로 보여 준다', () => {
+test('이웃 글 마당 후보는 과제 주제를 함께 받아 필터 가능한 카드로 보여 준다', () => {
     assert.match(candidateGrouping, /'mission_id', post\.mission_id/);
     assert.match(candidateGrouping, /'mission_title', COALESCE\(mission\.title, '자율 글'\)/);
     assert.match(candidateGrouping, /mission\.id = post\.mission_id AND mission\.class_id = post\.class_id/);

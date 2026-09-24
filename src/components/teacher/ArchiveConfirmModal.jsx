@@ -41,7 +41,7 @@ const ArchiveConfirmModal = ({ archiveModal, setArchiveModal, handleFinalArchive
                         </p>
                         {Array.isArray(archiveModal.mission?.tags) && archiveModal.mission.tags.includes('이웃 아지트') && (
                             <p style={{ margin: '-12px 0 24px 0', padding: '10px 12px', borderRadius: '12px', background: '#FFF7ED', color: '#9A3412', lineHeight: '1.6', fontSize: '0.9rem', fontWeight: 700 }}>
-                                🤝 이 과제는 모두의 아지트 ‘함께 쓰는 주제’에 쓰이고 있어요. 보관하면 우리 반 학생이 더는 이 주제에 글을 쓸 수 없어 그 주제에서 사실상 빠집니다.
+                                🤝 이 과제는 모두의 아지트 ‘같이 쓰기 광장’에 쓰이고 있어요. 보관하면 우리 반 학생이 더는 이 주제에 글을 쓸 수 없어 그 주제에서 사실상 빠집니다.
                             </p>
                         )}
                         <div style={{ display: 'flex', gap: '12px' }}>

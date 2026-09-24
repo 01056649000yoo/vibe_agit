@@ -1,5 +1,5 @@
 -- 합성 자료만 사용. 실행기가 전체를 ROLLBACK하거나 격리 DB를 제거한다.
--- 함께 쓰는 주제가 고른 글 종류·양식 그대로 두 학급 과제를 만드는지 본다.
+-- 같이 쓰기 광장이 고른 글 종류·양식 그대로 두 학급 과제를 만드는지 본다.
 DO $$
 DECLARE
     ht UUID:=gen_random_uuid(); gt UUID:=gen_random_uuid();
@@ -68,7 +68,7 @@ BEGIN
     IF got <> '시/poem/poem' THEN RAISE EXCEPTION '전용 틀이 과제에 안 들어갔습니다: %', got; END IF;
     UPDATE public.neighbor_activities SET status='closed', closed_at=now() WHERE space_id=sp;
 
-    RAISE NOTICE '함께 쓰는 주제: 글 종류·길잡이 질문·분량·전용 틀이 두 학급 과제에 그대로 들어간다';
+    RAISE NOTICE '같이 쓰기 광장: 글 종류·길잡이 질문·분량·전용 틀이 두 학급 과제에 그대로 들어간다';
 END; $$;
 
 -- 3) 값을 안 보내면 예전과 똑같이 만들어진다(옛 화면이 남아 있어도 깨지지 않는다).
@@ -85,5 +85,5 @@ BEGIN
       FROM public.writing_missions m WHERE m.class_id=c AND m.title='옛 화면 주제';
     IF got <> '글쓰기/글쓰기/freeform/50'
     THEN RAISE EXCEPTION '값을 안 보냈을 때 예전 기본값이 아닙니다: %', got; END IF;
-    RAISE NOTICE '함께 쓰는 주제: 값을 안 보내면 예전 기본값 그대로';
+    RAISE NOTICE '같이 쓰기 광장: 값을 안 보내면 예전 기본값 그대로';
 END; $$;

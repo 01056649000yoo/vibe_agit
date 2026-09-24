@@ -25,7 +25,7 @@ const assertActivityFeedResponse = (data, activityId) => {
 };
 
 export const neighborAgitApi = {
-    // 글 나눔 공간 반 고르기: 반별 글 수·지난 방문 뒤 새 글 수(20261336). 반 열쇠는 원본 학급 id 가 아니다.
+    // 이웃 글 마당 반 고르기: 반별 글 수·지난 방문 뒤 새 글 수(20261336). 반 열쇠는 원본 학급 id 가 아니다.
     async getGalleryClasses({ spaceId }) {
         const { data, error } = await supabase.rpc('get_neighbor_gallery_classes_v1', { p_space_id: spaceId });
         if (error) throw error;
@@ -33,7 +33,7 @@ export const neighborAgitApi = {
         return data.classes;
     },
 
-    // 한 반의 글 나눔 글(요약·주제 이름). 화면이 주제별로 묶는다. 최대 300편.
+    // 한 반의 이웃 글 마당 글(요약·주제 이름). 화면이 주제별로 묶는다. 최대 300편.
     async getClassGallery({ spaceId, classKey }) {
         const { data, error } = await supabase.rpc('get_neighbor_class_gallery_v1', { p_space_id: spaceId, p_class_key: classKey });
         if (error) throw error;

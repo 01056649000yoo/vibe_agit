@@ -141,10 +141,10 @@ const MissionItem = memo(({
                     </button>
                     <button onClick={async (e) => {
                         e.stopPropagation();
-                        // 모두의 아지트 '함께 쓰는 주제'로 만들어진 과제는 지우면 그 활동에서 우리 반이 빠진다.
+                        // 모두의 아지트 '같이 쓰기 광장'으로 만들어진 과제는 지우면 그 활동에서 우리 반이 빠진다.
                         const isNeighborActivity = Array.isArray(mission.tags) && mission.tags.includes('이웃 아지트');
                         const message = isNeighborActivity
-                            ? '이 과제는 모두의 아지트 ‘함께 쓰는 주제’에 쓰이고 있어요. 🗑️\n지우면 우리 반이 그 주제에서 빠지고, 학생들이 쓴 글도 함께 삭제됩니다(되돌릴 수 없음). 삭제할까요?'
+                            ? '이 과제는 모두의 아지트 ‘같이 쓰기 광장’에 쓰이고 있어요. 🗑️\n지우면 우리 반이 그 주제에서 빠지고, 학생들이 쓴 글도 함께 삭제됩니다(되돌릴 수 없음). 삭제할까요?'
                             : '이 글쓰기 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.';
                         if (confirm(message)) {
                             // [수정] 인라인 삭제 대신 훅의 전용 함수 사용 (캐시 무효화 포함)

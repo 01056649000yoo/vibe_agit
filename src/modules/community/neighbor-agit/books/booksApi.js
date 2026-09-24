@@ -2,7 +2,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import { assertStudentBooks } from '../../../class-agit/anthology/studentContract.js';
 
 /*
- * 📚 문집 나눔 — 교사가 우리 반 학급 문집(글꽃 책방 확정판)을 소개하고, 학생은 읽고 방문록을 남긴다.
+ * 🏛️ 문집 도서관 — 교사가 우리 반 학급 문집(글꽃 책방 확정판)을 소개하고, 학생은 읽고 방문록을 남긴다.
  * 방문록은 문집 주인 반 교사가 승인해야 모두에게 보인다(SQL 20261335).
  *
  * 책 응답은 우리 반 서가(get_my_class_agit_books_v1)와 같은 모양이라 같은 검사(assertStudentBooks)를 쓴다.
@@ -30,7 +30,7 @@ export const neighborBooksApi = {
         const data = await call('get_neighbor_teacher_books_v1', { p_space_id: spaceId, p_actor_class_id: classId });
         if (Number(data?.version) !== 1 || !Array.isArray(data?.my_books) || !Array.isArray(data?.shared_books)
             || !Array.isArray(data?.approved_entries)) {
-            throw new Error('문집 나눔 응답을 확인하지 못했습니다.');
+            throw new Error('문집 도서관 응답을 확인하지 못했습니다.');
         }
         return data;
     },

@@ -34,8 +34,8 @@ const functionSource = (name) => {
 test('모두의 아지트는 두 활동만 두고, 준비는 진행형 마법사·운영은 요약바+탭 2개다', () => {
     // 2026-09-06: 글짝 교환 활동을 제품에서 뺐다(SQL 61254).
     // 2026-09-17: 3단계 탭을 걷어내고, 준비(참여 2학급 전)는 진행형 마법사로, 운영은
-    //             얇은 요약 바 + 최상위 탭 2개(글 나눔/함께 쓰는 주제)로 재구성했다.
-    for (const label of ['글 나눔 공간', '함께 쓰는 주제']) {
+    //             얇은 요약 바 + 최상위 탭 2개(이웃 글 마당/같이 쓰기 광장)로 재구성했다.
+    for (const label of ['이웃 글 마당', '같이 쓰기 광장']) {
         assert.ok(activityTypes.includes(label), `공용 활동 이름에 ${label} 표시가 없습니다.`);
     }
     assert.ok(!activityTypes.includes("id: 'exchange'"), '글짝 교환 항목이 남아 있습니다.');
@@ -80,7 +80,7 @@ test('공동 주제와 글짝 글쓰기는 학급별 기존 과제를 만들어 
     assert.match(missionSubmit, /params\?\.returnTo === 'neighbor_agit'/);
 });
 
-test('함께 쓰는 주제는 공용 미션 초안을 이웃 제안 어댑터로만 변환한다', () => {
+test('같이 쓰기 광장은 공용 미션 초안을 이웃 제안 어댑터로만 변환한다', () => {
     assert.match(missionDraft, /createMissionDraft/);
     assert.match(missionDraft, /applyGenreToMissionDraft/);
     assert.match(missionForm, /applyGenreToMissionDraft/);

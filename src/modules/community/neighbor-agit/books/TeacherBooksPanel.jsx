@@ -5,7 +5,7 @@ import { neighborBooksApi } from './booksApi';
 import './books.css';
 
 /*
- * 📚 문집 나눔 — 교사 칸.
+ * 🏛️ 문집 도서관 — 교사 칸.
  *   ① 우리 반 문집 소개하기(글꽃 책방에서 확정하고 학생에게 보이게 한 학급 문집만)
  *   ② 확인할 방문록(우리 반 문집에 남겨진 것) — 승인해야 모두에게 보인다
  *   ③ 공간에 소개된 문집 / 우리 반 문집에 올라간 방문록(내리기)
@@ -42,7 +42,7 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
         try {
             setData(await api.getTeacherBooks({ spaceId, classId }));
         } catch (loadError) {
-            setError(loadError?.message || '문집 나눔을 불러오지 못했습니다.');
+            setError(loadError?.message || '문집 도서관을 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }

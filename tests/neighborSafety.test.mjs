@@ -67,7 +67,7 @@ test('이웃 아지트는 실명 기준이며 옛 필명 기준을 되살리지 
     assert.match(student, /author_name/);
 });
 
-test('함께 쓰는 주제는 과제 만들기 모듈을 그대로 쓴다', () => {
+test('같이 쓰기 광장은 과제 만들기 모듈을 그대로 쓴다', () => {
     // 선생님 요청(2026-09-07): 글쓰기 양식을 불러와 미션을 만드는 방식으로 맞춘다.
     // 화면은 새 목록을 만들지 않고 `genreCatalog`·`MissionTypePicker` 를 그대로 쓴다 — 목록을 두 곳에
     // 두면 새 글 종류를 넣을 때 한쪽만 고쳐 갈라진다.
@@ -178,7 +178,7 @@ test('두 활동은 각자 3스텝(모으기·관리·반응)으로 나뉘고 �
     assert.doesNotMatch(teacher, /neighbor-teacher__activity-workspace|neighbor-teacher__management-column/);
 });
 
-test('함께 쓰는 주제는 만들기를 모달로 열고 화면은 활동 결과만 넓게 쓴다', () => {
+test('같이 쓰기 광장은 만들기를 모달로 열고 화면은 활동 결과만 넓게 쓴다', () => {
     // 선생님 요청(2026-09-18): 만들기와 결과가 한 화면에 같이 나와 좁았다 → 만들기는 모달,
     // 화면은 활동 결과만. 머리 행의 "주제 만들기" 버튼으로 모달을 연다.
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');

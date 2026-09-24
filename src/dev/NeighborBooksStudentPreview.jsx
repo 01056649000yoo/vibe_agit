@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import StudentBooksPanel from '../modules/community/neighbor-agit/books/StudentBooksPanel'
 
-// 📚 문집 나눔 학생 칸을 DB 없이 본다. 방문록 보내기 → "선생님 확인 중" 상태까지 메모리로 흉내 낸다.
+// 🏛️ 문집 도서관 학생 칸을 DB 없이 본다. 방문록 보내기 → "선생님 확인 중" 상태까지 메모리로 흉내 낸다.
 const works = [
   { id: 'chapter-1', title: '느티나무 그늘', author: '김햇살', group: '우리 동네', format: 'prose', kindLabel: '글', excerpt: '우리 동네에는', blocks: ['우리 동네에는 커다란 느티나무가 있어요.', '여름이면 그늘 아래에서 친구들과 놀아요.'] },
   { id: 'chapter-2', title: '골목 시장', author: '이구름', group: '우리 동네', format: 'prose', kindLabel: '글', excerpt: '시장에 가면', blocks: ['시장에 가면 떡볶이 냄새가 나요.'] },

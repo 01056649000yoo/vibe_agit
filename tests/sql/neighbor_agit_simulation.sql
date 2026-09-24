@@ -104,7 +104,7 @@ BEGIN
         PERFORM set_config('sim.t_' || v_item.k, v_teacher::TEXT, TRUE);
         PERFORM set_config('sim.c_' || v_item.k, v_class::TEXT, TRUE);
 
-        -- 우리 반 과제 하나(글 나눔에 쓸 제출 글이 이 과제에 달린다).
+        -- 우리 반 과제 하나(이웃 글 마당에 쓸 제출 글이 이 과제에 달린다).
         INSERT INTO public.writing_missions (class_id, teacher_id, title, guide, min_chars, min_paragraphs)
         VALUES (v_class, v_teacher, '우리 동네 자랑', '우리 동네의 좋은 점을 소개해요.', 10, 1)
         RETURNING id INTO v_mission;
@@ -240,7 +240,7 @@ SELECT public.zz_sim_check('13 세 반 모두 학생 입장 열기',
     (SELECT count(*) FROM public.neighbor_space_classes WHERE space_id = public.zz_sim('space') AND status = 'active' AND student_access_enabled) = 3);
 SET LOCAL ROLE authenticated;
 
--- ───────────────────────── 3. 글 나눔 공간 ─────────────────────────
+-- ───────────────────────── 3. 이웃 글 마당 ─────────────────────────
 SELECT public.zz_sim_login('t_a');
 DO $$
 DECLARE v_items JSONB; v_src JSONB; r JSONB; v_first UUID; v_rest JSONB;
@@ -460,7 +460,47 @@ EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F9 비참여 배지', FA
 END $$;
 RESET ROLE;
 
--- 반별 글 나눔(학생: 반 고르기 → 주제별 묶음, 교사: ③ 댓글·반응 반별)
+-- AI 검사 요청은 학생 한 명이 10분에 20번까지(우리 반·이웃 댓글 합산, 20261340).
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b2');
+DO $$
+DECLARE v_ok INT := 0; v_denied TEXT;
+BEGIN
+    FOR i IN 1..20 LOOP
+        PERFORM public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '고쳐 쓰기 ' || i, 'save');
+        v_ok := v_ok + 1;
+    END LOOP;
+    BEGIN
+        PERFORM public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '스물한 번째', 'save');
+    EXCEPTION WHEN OTHERS THEN v_denied := SQLSTATE || ' ' || SQLERRM;
+    END;
+    PERFORM public.zz_sim_check('Q1 댓글 고쳐 쓰기 20번까지는 되고 21번째는 PT429 로 막힌다',
+        v_ok = 20 AND v_denied LIKE 'PT429%', COALESCE(v_denied, '막히지 않음'));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('Q1 요청 횟수', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('Q2 막힌 저장은 되돌려져 댓글 내용이 20번째 그대로다',
+    (SELECT content FROM public.neighbor_comments WHERE shared_post_id = public.zz_sim('shared_a1') AND student_id = public.zz_sim('s_b2')) = '고쳐 쓰기 20',
+    (SELECT content FROM public.neighbor_comments WHERE shared_post_id = public.zz_sim('shared_a1') AND student_id = public.zz_sim('s_b2')));
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b2');
+DO $$ BEGIN
+    PERFORM public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '', 'delete');
+    PERFORM public.zz_sim_check('Q3 삭제는 AI 검사가 없어 횟수와 상관없이 된다', TRUE);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('Q3 삭제', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('Q4 요청 기록 표는 학생·교사 역할이 직접 못 읽는다',
+    to_regclass('public.comment_review_submissions') IS NOT NULL
+    AND NOT has_table_privilege('authenticated', 'public.comment_review_submissions', 'SELECT')
+    AND NOT has_function_privilege('authenticated', 'public.consume_comment_review_quota_v1(uuid)', 'EXECUTE'));
+DO $$ BEGIN
+    IF to_regclass('public.comment_review_submissions') IS NOT NULL THEN
+        EXECUTE format('DELETE FROM public.comment_review_submissions WHERE student_id = %L', public.zz_sim('s_b2'));
+    END IF;
+END $$;
+
+-- 반별 이웃 글 마당(학생: 반 고르기 → 주제별 묶음, 교사: ③ 댓글·반응 반별)
 SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('u_b1');
 DO $$
@@ -478,7 +518,7 @@ BEGIN
     PERFORM public.zz_sim_check('G3 햇살반에 들어가면 3편 · 주제 이름이 붙어 온다',
         jsonb_array_length(g->'items') = 3 AND g->'items'->0->>'topic' = '우리 동네 자랑' AND (g->>'total')::INT = 3,
         g->'items'->0->>'topic');
-EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G1~G3 반별 글 나눔', FALSE, SQLERRM);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G1~G3 반별 이웃 글 마당', FALSE, SQLERRM);
 END $$;
 SELECT public.zz_sim_expect_denied('G4 참여하지 않는 반 열쇠로는 못 연다',
     format($q$SELECT public.get_neighbor_class_gallery_v1(%L, %L)$q$, public.zz_sim('space'), gen_random_uuid()));
@@ -512,7 +552,7 @@ BEGIN
         AND (sun->>'post_count')::INT = 3 AND (sun->>'comment_total')::INT = 1 AND (sun->>'reaction_total')::INT = 1,
         format('%s편 · 댓글 %s · 공감 %s', sun->>'post_count', sun->>'comment_total', sun->>'reaction_total'));
     e := public.get_neighbor_teacher_engagement_v1(public.zz_sim('space'), public.zz_sim('c_c'), 'topic');
-    PERFORM public.zz_sim_check('G8 함께 쓰는 주제 쪽은 따로 센다(아직 0편)',
+    PERFORM public.zz_sim_check('G8 같이 쓰기 광장 쪽은 따로 센다(아직 0편)',
         NOT EXISTS (SELECT 1 FROM jsonb_array_elements(e->'classes') x WHERE (x->>'post_count')::INT > 0));
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('G7~G8 교사 반별 댓글·반응', FALSE, SQLERRM);
 END $$;
@@ -550,7 +590,16 @@ BEGIN
     f := public.get_neighbor_space_feed_v1(public.zz_sim('space'), 20, NULL, NULL);
     PERFORM public.zz_sim_check('36 비공개한 글은 학생 피드에서 빠진다(4→3)', jsonb_array_length(f->'items') = 3, jsonb_array_length(f->'items') || '편');
 END $$;
+-- 숨긴 글은 올린 학급 교사만 연다(2026-09-19 결정, 20261340 에서 글 상세까지).
+SELECT public.zz_sim_login('t_b');
+SELECT public.zz_sim_expect_denied('36-1 다른 반(바다반) 교사는 햇살반이 숨긴 글 상세를 못 연다',
+    format($q$SELECT public.get_neighbor_teacher_post_detail_v1(%L, %L, %L)$q$, public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('shared_a1')));
 SELECT public.zz_sim_login('t_a');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('36-2 숨긴 반(햇살반) 교사는 다시 공개하려고 상세를 연다',
+        public.get_neighbor_teacher_post_detail_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_a1'))->>'status' = 'hidden');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('36-2 숨긴 글 자기 반 상세', FALSE, SQLERRM);
+END $$;
 DO $$ BEGIN
     PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_a'), 'restore_post',
         jsonb_build_object('space_id', public.zz_sim('space'), 'item_id', public.zz_sim('shared_a1'), 'reason', ''));
@@ -558,7 +607,7 @@ DO $$ BEGIN
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('37 다시 공개', FALSE, SQLERRM);
 END $$;
 
--- ───────────────────────── 4. 함께 쓰는 주제 ─────────────────────────
+-- ───────────────────────── 4. 같이 쓰기 광장 ─────────────────────────
 SELECT public.zz_sim_login('t_b');
 DO $$
 DECLARE r JSONB;
@@ -732,7 +781,7 @@ SELECT public.zz_sim_login('t_b');
 SELECT public.zz_sim_check('56 닫힌 제안은 다른 반 메뉴 숫자에 남지 않는다', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count')::INT = 0,
     '메뉴 ' || (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count'));
 
--- ───────────────────────── 4-2. 📚 문집 나눔 · 방문록 ─────────────────────────
+-- ───────────────────────── 4-2. 🏛️ 문집 도서관 · 방문록 ─────────────────────────
 -- 햇살반이 글꽃 책방에서 확정한 학급 문집(학생에게 보이는 판)과, 아직 학생에게 가린 문집 하나를 만든다.
 RESET ROLE;
 DO $$

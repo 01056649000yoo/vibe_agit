@@ -103,7 +103,7 @@ test('일반 미션과 이웃 공동 활동은 같은 주제·안내 제시틀�
 });
 
 test('세 활동의 현재 이름과 기존 미션 재사용 설명을 한 계약으로 유지한다', () => {
-    for (const label of ['글 나눔 공간', '함께 쓰는 주제', '글짝 교환 활동']) {
+    for (const label of ['이웃 글 마당', '같이 쓰기 광장', '글짝 교환 활동']) {
         assert.ok(activityTypes.includes(label));
     }
     assert.match(teacherEntry, /getNeighborActivityLabel/);

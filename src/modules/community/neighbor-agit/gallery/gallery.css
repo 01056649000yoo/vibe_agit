@@ -1,4 +1,4 @@
-/* 글 나눔 공간 반별 보기(학생)·③ 댓글·반응 반별 보기(교사). 색은 spaces.css 의 [data-space] 변수, 나머지는 --ui-* 토큰. */
+/* 이웃 글 마당 반별 보기(학생)·③ 댓글·반응 반별 보기(교사). 색은 spaces.css 의 [data-space] 변수, 나머지는 --ui-* 토큰. */
 .neighbor-gallery, .neighbor-engage { display: grid; gap: var(--ui-space-3); }
 .neighbor-gallery__question { margin: 0; font-size: var(--ui-text-xl); color: var(--ui-ink-strong); }
 .neighbor-gallery__empty { margin: 0; padding: var(--ui-space-3); color: var(--ui-ink-muted); font-size: var(--ui-text-sm); text-align: center; }

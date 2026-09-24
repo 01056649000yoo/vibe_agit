@@ -1,4 +1,4 @@
-/* 📚 문집 나눔 — 교사·학생 칸. 색·글자·간격은 --ui-* 토큰(글자 바닥 0.8rem). */
+/* 🏛️ 문집 도서관 — 교사·학생 칸. 색·글자·간격은 --ui-* 토큰(글자 바닥 0.8rem). */
 .neighbor-books-teacher, .neighbor-books-student { display: grid; gap: var(--ui-space-4); }
 .neighbor-books__card { display: grid; gap: var(--ui-space-3); padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); }
 .neighbor-books__card > header h3 { display: flex; align-items: center; gap: var(--ui-space-2); margin: 0; font-size: var(--ui-text-lg); color: var(--ui-ink-strong); }
@@ -54,7 +54,7 @@
 .neighbor-books__reason strong { color: #92400e; }
 .neighbor-books__hint { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); line-height: 1.5; }
 
-/* 소개 중인 문집: 문집 나눔 색(보라, spaces.css) 굵은 테두리 + 옅은 바탕 + "공개 중" 띠로 한눈에 보이게. */
+/* 소개 중인 문집: 문집 도서관 색(보라, spaces.css) 굵은 테두리 + 옅은 바탕 + "공개 중" 띠로 한눈에 보이게. */
 .neighbor-books__book-card { position: relative; }
 .neighbor-books__book-card.is-shared { border: 2px solid var(--space-accent, #6d28d9); background: var(--space-soft, #f3edff); box-shadow: 0 6px 16px rgba(109, 40, 217, .14); }
 .neighbor-books__ribbon { position: absolute; top: -10px; right: 12px; padding: 3px 10px; border-radius: 999px; background: var(--space-accent, #6d28d9); color: #fff; font-size: var(--ui-text-xs); font-weight: 900; box-shadow: 0 2px 6px rgba(15, 23, 42, .18); }

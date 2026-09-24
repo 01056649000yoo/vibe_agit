@@ -91,7 +91,7 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
-    // 함께 쓰는 주제의 기한을 정한다. changes 에 넣은 키만 바뀐다(값 null = 기한 없음).
+    // 같이 쓰기 광장의 기한을 정한다. changes 에 넣은 키만 바뀐다(값 null = 기한 없음).
     //   writing_close_at  : 글쓰기 마감 — 지나면 서버가 활동을 저절로 종료한다(호스트·제안 학급만).
     //   comments_close_at : 댓글·반응 마감 — 지난 시각을 주면 "지금 마감" 이다.
     async setActivitySchedule({ spaceId, classId, activityId, changes }) {

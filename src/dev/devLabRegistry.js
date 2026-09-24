@@ -71,7 +71,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
   Object.freeze({
     id: 'neighbor-books-student',
     icon: '📚',
-    title: '모두의 아지트 문집 나눔(학생)',
+    title: '모두의 아지트 문집 도서관(학생)',
     description: '이웃 반 문집 표지·책 펼치기·작품 읽기·방문록 보내기를 DB 없이 확인한다',
     Component: NeighborBooksStudentPreview,
   }),

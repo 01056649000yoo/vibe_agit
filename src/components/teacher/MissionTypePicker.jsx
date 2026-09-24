@@ -22,7 +22,7 @@ const entryIcon = (entry) => (
  *
  * 기본은 **그 자리에 펼쳐지는 판**이다(과제 만들기 화면이 이렇게 쓴다).
  * `embedded` 를 주면 자기 머리말·테두리를 그리지 않는다 — 창 안에 넣을 때 제목과 닫기 단추가
- * 두 번 나오는 것을 막는다(모두의 아지트의 `함께 쓰는 주제`가 이렇게 쓴다).
+ * 두 번 나오는 것을 막는다(모두의 아지트의 `같이 쓰기 광장`이 이렇게 쓴다).
  */
 const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose, embedded = false }) => {
     const choices = getGenreCategories().flatMap((category) => (
