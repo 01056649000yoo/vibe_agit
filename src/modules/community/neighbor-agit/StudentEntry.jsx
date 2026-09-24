@@ -37,8 +37,12 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     const [interactionBusy, setInteractionBusy] = useState('');
     const [interactionError, setInteractionError] = useState('');
     const [commentDraft, setCommentDraft] = useState('');
-    // 댓글이 검사를 기다리는 중인지. 아이가 “댓글이 사라졌다”고 여기지 않도록 알려 준다.
-    const [commentPending, setCommentPending] = useState(false);
+    // 열린 글에서 내 댓글이 아직/더는 보이지 않는 까닭: 'pending'(검사 중)·'blocked'(선생님 확인 중)·'hidden'(선생님이 숨김).
+    // 글마다 서버가 알려 주는 값(my_comment)이라 다른 글을 열면 따라오지 않는다(점검표 D2, 2026-09-24).
+    const [myCommentStatus, setMyCommentStatus] = useState(null);
+    // 저장 뒤 딱 한 번만 결과를 다시 본다. 학생 화면은 폴링하지 않는다(PERFORMANCE_HARNESS).
+    const commentRecheckTimer = useRef(null);
+    const openDetailId = useRef(null);
     // 처음에는 세 공간의 입구(로비)를 보여 준다(null). 알림을 눌러 들어오면 그 공간에서 바로 시작한다
     // — 방문록 알림은 문집 나눔, 이웃 댓글 알림은 글 나눔 공간.
     const [activeSection, setActiveSection] = useState(
@@ -126,20 +130,38 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
         }
     };
 
+    const clearCommentRecheck = () => {
+        if (commentRecheckTimer.current) window.clearTimeout(commentRecheckTimer.current);
+        commentRecheckTimer.current = null;
+    };
+    useEffect(() => clearCommentRecheck, []);
+
+    const applyDetail = (nextDetail) => {
+        setDetail(nextDetail);
+        setMyCommentStatus(nextDetail.my_comment?.status || null);
+    };
+
     const openDetail = async (sharedPostId) => {
+        clearCommentRecheck();
+        openDetailId.current = sharedPostId;
         setDetail(null);
+        setMyCommentStatus(null);
         setDetailError('');
         setInteractionError('');
         setCommentDraft('');
         setDetailLoading(true);
         try {
             const nextDetail = await api.getDetail({ spaceId, sharedPostId });
-            setDetail(nextDetail);
-            setCommentDraft(nextDetail.comments?.find((comment) => comment.is_mine)?.content || '');
+            if (openDetailId.current !== sharedPostId) return;
+            applyDetail(nextDetail);
+            setCommentDraft(nextDetail.comments?.find((comment) => comment.is_mine)?.content
+                || nextDetail.my_comment?.content || '');
         } catch {
-            setDetailError('현재 공개 중인 글을 찾지 못했어요. 선생님이 잠시 숨겼을 수 있어요.');
+            if (openDetailId.current === sharedPostId) {
+                setDetailError('현재 공개 중인 글을 찾지 못했어요. 선생님이 잠시 숨겼을 수 있어요.');
+            }
         } finally {
-            setDetailLoading(false);
+            if (openDetailId.current === sharedPostId) setDetailLoading(false);
         }
     };
 
@@ -155,8 +177,11 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     }, [noticePostId, spaceId]);
 
     const closeDetail = () => {
+        clearCommentRecheck();
+        openDetailId.current = null;
         setDetailRefresh((value) => value + 1);
         setDetail(null);
+        setMyCommentStatus(null);
         setDetailError('');
         setDetailLoading(false);
         setInteractionBusy('');
@@ -177,6 +202,19 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 item.shared_post_id === sharedPostId ? { ...item, ...patch } : item
             ))
         } : current);
+    };
+
+    // 검사 결과만 다시 읽는다(입력 중인 글은 건드리지 않는다). 그새 다른 글을 열었으면 버린다.
+    const recheckMyComment = async (sharedPostId) => {
+        clearCommentRecheck();
+        try {
+            const nextDetail = await api.getDetail({ spaceId, sharedPostId });
+            if (openDetailId.current !== sharedPostId) return;
+            applyDetail(nextDetail);
+            updateFeedItem(sharedPostId, { comment_count: nextDetail.comment_count });
+        } catch {
+            // 결과 확인은 덤이다 — 실패해도 저장은 끝났으니 조용히 둔다.
+        }
     };
 
     const selectSection = (section) => {
@@ -243,7 +281,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
         }
         setInteractionBusy('comment');
         setInteractionError('');
-        setCommentPending(false);
+        clearCommentRecheck();
         try {
             const result = await api.saveComment({
                 spaceId, sharedPostId: detail.shared_post_id, content, action: 'save'
@@ -262,8 +300,13 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 };
             });
             setCommentDraft(result.comment ? result.comment.content : content);
-            setCommentPending(Boolean(result.pending_review));
+            setMyCommentStatus(result.pending_review ? 'pending' : null);
             updateFeedItem(detail.shared_post_id, { comment_count: result.comment_count });
+            if (result.pending_review) {
+                // 검사는 보통 몇 초 안에 끝난다. 창이 열려 있으면 한 번만 결과를 맞춘다.
+                const sharedPostId = detail.shared_post_id;
+                commentRecheckTimer.current = window.setTimeout(() => { void recheckMyComment(sharedPostId); }, 8000);
+            }
         } catch {
             setInteractionError('댓글을 저장하지 못했어요. 숨김 상태이거나 공개가 끝났을 수 있어요.');
         } finally {
@@ -285,6 +328,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 comments: (current.comments || []).filter((comment) => !comment.is_mine)
             }));
             setCommentDraft('');
+            setMyCommentStatus(null);
+            clearCommentRecheck();
             updateFeedItem(detail.shared_post_id, { comment_count: result.comment_count });
         } catch {
             setInteractionError('댓글을 삭제하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
@@ -292,6 +337,9 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
             setInteractionBusy('');
         }
     };
+
+    // 보이는 내 댓글이 있거나, 검사·확인 중인 내 댓글이 있으면 "고치기"다(한 글에 댓글 하나).
+    const hasMyComment = Boolean(detail?.comments?.some((comment) => comment.is_mine) || myCommentStatus);
 
     return (
         <main className="neighbor-student-page">
@@ -488,8 +536,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                             ) : (
                             <form className="neighbor-comment-form" onSubmit={saveComment}>
                                 <label htmlFor="neighbor-comment-input">
-                                    {detail.comments?.some((comment) => comment.is_mine)
-                                        ? '내 댓글 고치기' : '따뜻한 한 줄 남기기'}
+                                    {hasMyComment ? '내 댓글 고치기' : '따뜻한 한 줄 남기기'}
                                 </label>
                                 <div>
                                     <input
@@ -501,16 +548,31 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                                         placeholder="글에서 좋았던 점을 한 줄로 적어 보세요"
                                     />
                                     <Button type="submit" loading={interactionBusy === 'comment'} disabled={Boolean(interactionBusy)}>
-                                        {detail.comments?.some((comment) => comment.is_mine) ? '고치기' : '남기기'}
+                                        {hasMyComment ? '고치기' : '남기기'}
                                     </Button>
                                 </div>
                                 <span>{commentDraft.length}/300 · 한 글에 댓글 하나만 남길 수 있어요.</span>
                             </form>
                             )}
 
-                            {commentPending && !interactionError && (
+                            {myCommentStatus === 'pending' && !interactionError && (
                                 <p className="neighbor-student-inline-notice" role="status">
                                     🕐 댓글을 확인하는 중이에요. 확인이 끝나면 이웃 학급에 보여요.
+                                    <button type="button" className="neighbor-student-inline-notice__action"
+                                        disabled={Boolean(interactionBusy)}
+                                        onClick={() => { void recheckMyComment(detail.shared_post_id); }}>
+                                        결과 확인
+                                    </button>
+                                </p>
+                            )}
+                            {myCommentStatus === 'blocked' && !interactionError && (
+                                <p className="neighbor-student-inline-notice" role="status">
+                                    🙋 이 댓글은 선생님이 한 번 더 확인하고 있어요. 고쳐 쓰면 처음부터 다시 확인해요.
+                                </p>
+                            )}
+                            {myCommentStatus === 'hidden' && !interactionError && (
+                                <p className="neighbor-student-inline-notice" role="status">
+                                    선생님이 이 댓글을 숨겼어요. 궁금한 점은 선생님께 여쭤 보세요.
                                 </p>
                             )}
                             {interactionError && <p className="neighbor-student-inline-error" role="status">{interactionError}</p>}

@@ -58,6 +58,7 @@ import {
     normalizeMissionWorkspaceView
 } from '../../modules/writing/mission-workspace/missionWorkspaceView';
 import { useTeacherUnreviewedWriting } from '../../hooks/useTeacherUnreviewedWriting';
+import { useTeacherWorkspacePoll } from '../../modules/community/neighbor-agit/useTeacherWorkspacePoll';
 import './TeacherDashboard.css';
 
 const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
@@ -110,6 +111,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [feedbackReplyCount, setFeedbackReplyCount] = useState(0);
     // 모두의 아지트: 들어가기 전에도 처리할 것(검토·승인·참여신청)을 메뉴 배지로 알린다.
     const [neighborBadge, setNeighborBadge] = useState(0);
+    const [neighborActive, setNeighborActive] = useState(false);
     const [commentTodoBadge, setCommentTodoBadge] = useState(0);
     // 독서마라톤: 쪽수를 몰라 달린 거리에 넣지 못한 책 수. 고치는 화면이 3층 깊이라
     // 배지가 없으면 교사가 알 길이 없다. 대시보드가 한 번만 세서 안쪽 화면으로 물려준다.
@@ -209,18 +211,33 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         void loadFeedbackReplyCount();
     }, [loadFeedbackReplyCount]);
 
-    // 모두의 아지트 메뉴 배지 — 학급이 바뀔 때 한 번 싸게 세고(자격 없으면 0), 화면 안에서 처리하면
-    // 그 화면이 `onTodoCountChange` 로 새 수를 올려 준다(처리해도 숫자가 남던 문제, 2026-09-23).
+    // 모두의 아지트 메뉴 배지 — 학급이 바뀔 때 한 번 싸게 센다(자격 없으면 0). 모두의 아지트 화면 안에서는
+    // 그 화면이 12초마다 작업 공간을 읽어 `onTodoCountChange` 로 새 수를 올려 준다(2026-09-23).
+    // 다른 메뉴에 있을 때는 참여 중인 학급만 같은 12초 규칙으로 배지 수만 센다 — 방문록·검사 실패 댓글이
+    // 모두의 아지트를 열어야만 보이던 문제(점검표 D3, 2026-09-24). 학급을 바꾸는 사이 늦게 온 옛 학급
+    // 응답은 버린다.
+    const neighborBadgeClassId = useRef(activeClass?.id || null);
+    neighborBadgeClassId.current = activeClass?.id || null;
     const loadNeighborBadge = useCallback(async () => {
-        if (!activeClass?.id) { setNeighborBadge(0); return; }
-        const { data, error } = await supabase.rpc('get_neighbor_teacher_badge_v1', { p_class_id: activeClass.id });
-        if (error) { setNeighborBadge(0); return; }
+        const classId = activeClass?.id;
+        if (!classId) { setNeighborBadge(0); setNeighborActive(false); return; }
+        const { data, error } = await supabase.rpc('get_neighbor_teacher_badge_v1', { p_class_id: classId });
+        if (neighborBadgeClassId.current !== classId) return;
+        if (error) throw error;
         setNeighborBadge(Number(data?.count ?? 0));
+        setNeighborActive(data?.active === true);
     }, [activeClass?.id]);
 
     useEffect(() => {
-        void loadNeighborBadge();
+        setNeighborBadge(0);
+        setNeighborActive(false);
+        loadNeighborBadge().catch(() => setNeighborBadge(0));
     }, [loadNeighborBadge]);
+
+    useTeacherWorkspacePoll({
+        enabled: neighborActive && currentTab !== 'neighbor-agit',
+        refresh: loadNeighborBadge
+    });
 
     // 학생 댓글 처리할 것 배지 — 막혔거나 판정이 안 끝나 친구에게 안 보이는 댓글 수.
     // 세는 기준은 [학급 운영 > 학생 댓글] 화면의 `처리할 것` 과 같다(서버에서 같은 조건).

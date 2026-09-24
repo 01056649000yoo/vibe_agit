@@ -377,6 +377,89 @@ RESET ROLE;
 SELECT public.zz_sim_check('33 공감으로는 알림이 가지 않는다(댓글 알림 1건 그대로)',
     (SELECT count(*) FROM public.student_notification_events WHERE student_id = public.zz_sim('owner_a1') AND module_id = 'feedback') = 1);
 
+-- AI 검사가 두 번 다 실패한 댓글 → 교사 확인으로 넘어간다(20261339, 점검표 D1·D2).
+-- 실제 검사 슬롯은 건드리지 않고, 두 번째 시도를 잡은 상태만 댓글에 꾸며 실제 실패 보고 함수를 부른다.
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b3');
+DO $$
+DECLARE r JSONB; d JSONB;
+BEGIN
+    r := public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '그림이 떠오르는 글이에요!', 'save');
+    PERFORM set_config('sim.cmt_b3', r->>'comment_id', TRUE);
+    d := public.get_neighbor_shared_post_v1(public.zz_sim('space'), public.zz_sim('shared_a1'));
+    PERFORM public.zz_sim_check('F1 다시 열어도 내 댓글이 "검사 중" 임을 안다(my_comment)',
+        d#>>'{my_comment,status}' = 'pending' AND d#>>'{my_comment,content}' = '그림이 떠오르는 글이에요!'
+        AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements(d->'comments') c WHERE (c->>'is_mine')::BOOLEAN),
+        d->>'my_comment');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F1 검사 중 댓글 상세', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('F2 남의 검사 중 댓글은 my_comment 로 안 보인다',
+        public.get_neighbor_shared_post_v1(public.zz_sim('space'), public.zz_sim('shared_a1'))->'my_comment' = 'null'::JSONB);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F2 남의 댓글 상태', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT set_config('sim.cmt_b3_token', gen_random_uuid()::TEXT, TRUE);
+UPDATE public.neighbor_comments SET ai_review_attempts = 2,
+    ai_review_token = public.zz_sim('cmt_b3_token'), ai_review_lease_until = NOW() + INTERVAL '2 minutes'
+WHERE id = public.zz_sim('cmt_b3');
+SET LOCAL ROLE service_role;
+SELECT public.zz_sim_login('admin', 'service_role');
+SELECT public.fail_comment_ai_review_v2(public.zz_sim('cmt_b3'), public.zz_sim('cmt_b3_token'), 'timeout') AS fail_b3 \gset
+RESET ROLE;
+SELECT public.zz_sim_check('F3 두 번째 검사도 실패 → 다시 시도하지 않고 교사 확인(blocked)으로 넘긴다',
+    (:'fail_b3'::JSONB->>'will_retry')::BOOLEAN IS FALSE
+    AND (SELECT status = 'blocked' AND moderated_by = 'ai_failed' AND ai_review_next_at IS NULL
+         FROM public.neighbor_comments WHERE id = public.zz_sim('cmt_b3')),
+    (SELECT status || ' · ' || COALESCE(moderated_by, '-') FROM public.neighbor_comments WHERE id = public.zz_sim('cmt_b3')));
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b3');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('F4 학생 상세의 내 댓글 상태도 "선생님 확인 중"(blocked)',
+        public.get_neighbor_shared_post_v1(public.zz_sim('space'), public.zz_sim('shared_a1'))#>>'{my_comment,status}' = 'blocked');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F4 학생 상세', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_b');
+DO $$
+DECLARE w JSONB; b JSONB; item JSONB;
+BEGIN
+    w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_b'));
+    b := public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'));
+    SELECT x INTO item FROM jsonb_array_elements(w->'blocked_comments') x WHERE x->>'comment_id' = public.zz_sim('cmt_b3')::TEXT;
+    PERFORM public.zz_sim_check('F5 쓴 학생의 담임(바다반) 검토함·메뉴 숫자에 올라온다 · 참여 중(active)',
+        item IS NOT NULL AND (b->>'count')::INT = 1 AND (b->>'active')::BOOLEAN,
+        format('메뉴 %s · 사유 %s', b->>'count', item->>'reason'));
+    PERFORM public.review_neighbor_blocked_comment_v1(public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('cmt_b3'), 'restore');
+    PERFORM public.zz_sim_check('F6 교사가 되살리면 메뉴 숫자 0', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count')::INT = 0);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F5~F6 검사 실패 댓글 처리', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('F7 되살린 댓글은 보이고 글쓴이에게 알림이 간다',
+    (SELECT status FROM public.neighbor_comments WHERE id = public.zz_sim('cmt_b3')) = 'visible'
+    AND EXISTS (SELECT 1 FROM public.student_notification_events
+        WHERE student_id = public.zz_sim('owner_a1') AND event_key = 'neighbor-comment:' || public.zz_sim('cmt_b3')));
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b3');
+DO $$
+DECLARE d JSONB;
+BEGIN
+    d := public.get_neighbor_shared_post_v1(public.zz_sim('space'), public.zz_sim('shared_a1'));
+    PERFORM public.zz_sim_check('F8 보이게 된 내 댓글은 목록에 있고 my_comment 는 비었다',
+        d->'my_comment' = 'null'::JSONB
+        AND EXISTS (SELECT 1 FROM jsonb_array_elements(d->'comments') c WHERE (c->>'is_mine')::BOOLEAN));
+    -- 뒤 단계(공감 알림 수 등)를 흔들지 않게 이 댓글은 거둔다.
+    PERFORM public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '', 'delete');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F8 보이는 내 댓글', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_d');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('F9 참여하지 않은 학급의 메뉴 배지는 active=false(다른 메뉴 12초 확인을 켜지 않음)',
+        (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_d'))->>'active')::BOOLEAN IS FALSE);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F9 비참여 배지', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+
 -- 반별 글 나눔(학생: 반 고르기 → 주제별 묶음, 교사: ③ 댓글·반응 반별)
 SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('u_b1');
@@ -831,12 +914,27 @@ EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B22 다시 소개', FALS
 END $$;
 
 -- ───────────────────────── 5. 나가기·종료 ─────────────────────────
+-- 나가는 반 학생도 받은 이웃 알림이 있어야 57-1 이 헛돌지 않는다(시뮬레이션에서는 별빛반 글에 댓글이 없어 직접 남긴다).
+RESET ROLE;
+INSERT INTO public.student_notification_events (class_id, student_id, module_id, event_type, entity_type, entity_id, payload, event_key)
+VALUES (public.zz_sim('c_c'), public.zz_sim('s_c1'), 'feedback', 'feedback.neighbor_comment_received', 'neighbor_shared_post',
+    public.zz_sim('shared_a1'), jsonb_build_object('space_id', public.zz_sim('space'), 'shared_post_id', public.zz_sim('shared_a1')),
+    'neighbor-comment:' || gen_random_uuid());
+SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('t_c');
 DO $$ BEGIN
     PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'leave_space', jsonb_build_object('space_id', public.zz_sim('space')));
     PERFORM public.zz_sim_check('57 별빛반이 공간에서 나간다', TRUE);
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('57 별빛반 나가기', FALSE, SQLERRM);
 END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('57-1 나간 반 학생의 이웃 댓글·방문록 알림은 거둔다',
+    NOT EXISTS (SELECT 1 FROM public.student_notification_events e
+        WHERE e.class_id = public.zz_sim('c_c') AND e.module_id = 'feedback'
+          AND (e.event_key LIKE 'neighbor-comment:%' OR e.event_key LIKE 'neighbor-guestbook%')),
+    (SELECT count(*) || '건 남음' FROM public.student_notification_events e
+        WHERE e.class_id = public.zz_sim('c_c') AND e.event_key LIKE 'neighbor-%'));
+SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('u_c1');
 SELECT public.zz_sim_expect_denied('58 나간 반 학생은 더 이상 못 들어온다',
     format($q$SELECT public.get_neighbor_space_feed_v1(%L, 20, NULL, NULL)$q$, public.zz_sim('space')));
@@ -874,11 +972,35 @@ RESET ROLE;
 SELECT public.zz_sim_check('64 종료 뒤: 우리 반 원글은 그대로 남는다',
     (SELECT count(*) FROM public.student_posts WHERE class_id IN (public.zz_sim('c_a'), public.zz_sim('c_b'), public.zz_sim('c_c'))) = 18,
     (SELECT count(*) FROM public.student_posts WHERE class_id IN (public.zz_sim('c_a'), public.zz_sim('c_b'), public.zz_sim('c_c'))) || '편');
-SELECT public.zz_sim_check('65 [관찰] 종료 뒤 댓글 알림은 학생 "내 글 소식"에 남아 있다(누르면 갈 곳이 없음)',
-    TRUE,
+SELECT public.zz_sim_check('65 종료 뒤 이웃 댓글·방문록 알림은 거둔다(눌러도 갈 곳이 없으므로)',
+    NOT EXISTS (SELECT 1 FROM public.student_notification_events e JOIN public.students s ON s.id = e.student_id
+        WHERE s.student_code LIKE 'SIM%' AND e.module_id = 'feedback'
+          AND (e.event_key LIKE 'neighbor-comment:%' OR e.event_key LIKE 'neighbor-guestbook%')),
     '남은 이웃 댓글 알림 ' || (SELECT count(*) FROM public.student_notification_events e JOIN public.students s ON s.id = e.student_id
         WHERE s.student_code LIKE 'SIM%' AND e.event_type = 'feedback.neighbor_comment_received') || '건');
 
+
+-- 두 번째 시도 중 작업기가 멈춤(임대 만료) → 다음 claim 이 교사 확인으로 넘긴다.
+-- 운영 슬롯 하나를 이 트랜잭션 안에서만 잠깐 빌린다(끝에 ROLLBACK). 작업기는 SKIP LOCKED 라 기다리지 않는다.
+RESET ROLE;
+INSERT INTO public.neighbor_comments (shared_post_id, space_id, class_id, student_id, content, status,
+    ai_review_attempts, ai_review_enqueued_at, ai_review_next_at, ai_review_token, ai_review_lease_until)
+SELECT shared.id, shared.space_id, public.zz_sim('c_a'), public.zz_sim('s_a2'), '임대 만료 시험 댓글', 'pending',
+    2, NOW(), NULL, 'aaaaaaaa-0000-4000-8000-000000000001'::UUID, NOW() - INTERVAL '1 second'
+FROM public.neighbor_shared_posts shared WHERE shared.id = public.zz_sim('shared_a1')
+RETURNING set_config('sim.lease_cmt', id::TEXT, TRUE) \gset
+UPDATE public.comment_ai_review_slots SET comment_id = public.zz_sim('lease_cmt'),
+    review_token = 'aaaaaaaa-0000-4000-8000-000000000001'::UUID, leased_at = NOW() - INTERVAL '3 minutes',
+    lease_until = NOW() - INTERVAL '1 second'
+WHERE slot_no = (SELECT min(slot_no) FROM public.comment_ai_review_slots WHERE comment_id IS NULL);
+SET LOCAL ROLE service_role;
+SELECT public.zz_sim_login('admin', 'service_role');
+SELECT public.claim_next_comment_ai_review_v2() AS lease_claim \gset
+RESET ROLE;
+SELECT public.zz_sim_check('L1 두 번째 시도의 작업기가 멈추면 다음 claim 이 교사 확인(blocked)으로 넘기고 슬롯을 비운다',
+    (SELECT status = 'blocked' AND moderated_by = 'ai_failed' AND ai_review_token IS NULL FROM public.neighbor_comments WHERE id = public.zz_sim('lease_cmt'))
+    AND NOT EXISTS (SELECT 1 FROM public.comment_ai_review_slots WHERE comment_id = public.zz_sim('lease_cmt')),
+    :'lease_claim');
 -- ───────────────────────── 결과 ─────────────────────────
 \echo
 \echo '===== 모두의 아지트 시뮬레이션 결과 ====='

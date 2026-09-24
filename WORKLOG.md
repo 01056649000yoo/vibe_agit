@@ -18,6 +18,27 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-24 — 모두의 아지트 기능 점검 이어받아 결함 D1~D5 고침 + 재점검 (Claude Opus 5.5)
+- **요청**: GPT(Codex)가 하던 기능 점검(커밋 안 된 `docs/NEIGHBOR_AGIT_FUNCTIONAL_CHECKLIST.md`)을 마무리하고 다시 꼼꼼히 점검.
+- **D1 (AI 검사 실패 댓글이 영영 “확인 중”)**: `fail_comment_ai_review_v2` 는 두 번째 실패 뒤 `pending`·`next_at NULL` 로 두고,
+  이웃 검토함·배지는 `blocked` 만 세서 아무도 못 봤다. 두 번째 시도의 작업기가 멈춘 경우(`claim` 의 임대 만료 회수)도 같았다.
+  → 이웃 댓글은 재시도가 끝나면 `blocked`·`moderated_by='ai_failed'`·사유 "AI 검사를 끝내지 못했어요". 되살리면 기존 트리거가
+  글쓴이에게 알림. 우리 반 댓글(`post_comments`)은 학급 댓글 관리가 `pending` 을 이미 "처리할 것"으로 세므로 그대로.
+- **D2 (학생 대기 문구)**: 상세 RPC 가 `visible` 만 돌려줘 다시 열면 내 댓글 상태를 몰랐고, `commentPending` 은 열기·닫기에서
+  안 지워져 다른 글로 따라갔다. → `get_neighbor_shared_post_v1` 에 `my_comment`(pending/blocked/hidden 일 때만),
+  화면은 글마다 그 값으로 맞춤·늦게 온 옛 글 응답 버림. 학생 폴링 금지라 저장 뒤 8초 **1회** 확인 + `결과 확인` 단추.
+- **D3/D4**: 메뉴 배지 RPC 에 `active` → 참여 학급이면 다른 메뉴에서도 같은 12초 훅으로 배지만 센다(학급 전환 중 옛 응답 버림).
+  새 이웃 댓글이 오면 ③ 댓글·반응 목록 재조회. 참여 신청·승인 대기 화면에도 12초 확인(예전엔 2학급 이상일 때만).
+- **D5**: 공간 `closed`·학급 `left` 때 그 공간의 이웃 댓글·방문록 알림을 거두는 트리거. 기존 잔여 1건 정리(15→14건).
+- **시뮬레이션**: F1~F9·L1(임대 만료)·57-1 추가, 관찰만 하던 65를 실제 검사로. 실행기는 `ON_ERROR_STOP=1`·실패 시 종료 코드 1
+  (예전엔 파이프 때문에 늘 0). 새 검사는 마이그레이션 없이 10개 실패/있으면 통과, 57-1 이 헛돌아 가짜 알림을 넣어 고침.
+- **변경**: `20261339_neighbor_comment_review_recovery.sql`, `StudentEntry.jsx/.css`, `TeacherEntry.jsx`, `TeacherDashboard.jsx`,
+  `teacherGuides.js`, `PERFORMANCE_HARNESS.md`, dev-lab 학생 미리보기(상세·댓글 상태 흉내), `neighborAgitTeacherPoll` 검사 3건,
+  `run-neighbor-simulation.sh`, 점검표 문서(재점검 결과 표).
+- **결과/검증**: test:all 1292/1292, test:neighbor-agit 117/117, 시뮬레이션 109/109(운영 DB, 롤백), 새 계약 검사는 옛 코드에서 4/5 실패 확인,
+  lint 오류 0, build, migrate:check, rpc-surface, dev-lab Playwright(PC·390px, 콘솔 오류 0) → migrate → deploy:local, 번들에 새 코드 확인.
+- **남은 것 / 다음**: 실제 교사·학생 로그인 브라우저 인수(점검표 `[ ]`) — 특히 실제 AI 오류 시 검토함 도착, 다른 메뉴 배지 12초.
+
 ## 2026-09-23 — 모두의 아지트 댓글 “확인 중”·검토함 운영 점검 (Codex)
 - **제보**: 글 나눔 공간에서 댓글을 쓴 뒤 `확인 중`에 머물고 교사 검토함에도 보이지 않는 것으로 보임.
 - **운영 확인**: 최근 해당 이웃 댓글은 저장 4초 뒤 `pending`에서 `blocked`로 판정됐다. `neighbor_comments` 대기 행 0건, AI 검사 슬롯 3개 모두 비어 있어 작업기·대기열이 멈춘 상태는 아니었다. 댓글을 쓴 학생의 담당 교사 권한으로 `get_neighbor_teacher_workspace_v1`과 메뉴 배지 RPC를 읽은 결과, 차단 댓글 1건·검토함 목록 1건·메뉴 배지 1건이 모두 반환됐다.

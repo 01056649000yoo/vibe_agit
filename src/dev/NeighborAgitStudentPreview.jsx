@@ -12,15 +12,50 @@ const activities = [
   { id: 'a1', type: 'topic', title: '가을 운동회에서 기억에 남는 순간', prompt: '한 장면을 자세히 써 봐요.', status: 'open', is_submitted: false, published_count: 4, writing_close_at: new Date(now + 3 * 86400e3).toISOString(), comments_close_at: new Date(now + 5 * 86400e3).toISOString() },
 ]
 
+// 댓글 상태 흉내: g1 은 선생님 확인 중(blocked), 새로 남긴 댓글은 한 번 다시 볼 때 보이게 된다.
+function createDetailMock() {
+  const mine = new Map([['g1', { status: 'blocked', content: '이 부분 진짜 웃겼어 ㅋㅋ' }]])
+  const detail = (id) => {
+    const my = mine.get(id)
+    const others = [{ comment_id: `${id}-c1`, content: '느티나무 그늘에 가 보고 싶어요!', author_name: '이구름', class_name: '햇살반', is_mine: false, created_at: new Date(now - 1800e3).toISOString() }]
+    const visibleMine = my?.status === 'visible'
+      ? [{ comment_id: `${id}-mine`, content: my.content, author_name: '박바다', class_name: '바다반', is_mine: true, created_at: new Date().toISOString() }]
+      : []
+    return {
+      version: 1, shared_post_id: id, title: '우리 동네 느티나무', content: '우리 동네에는 커다란 느티나무가 있어요. 여름이면 그늘 아래에서 친구들과 놀아요.',
+      author_name: '김햇살', class_name: '햇살반', published_at: new Date(now - 3600e3).toISOString(), is_mine: false,
+      comments: [...others, ...visibleMine], comment_count: 1 + visibleMine.length, comments_truncated: false,
+      reaction_count: 2, my_reaction: false, my_saved: false,
+      my_comment: my && my.status !== 'visible' ? { comment_id: `${id}-mine`, status: my.status, content: my.content } : null,
+    }
+  }
+  return {
+    async getDetail({ sharedPostId }) {
+      const my = mine.get(sharedPostId)
+      if (my?.status === 'pending') {
+        if (my.checked) my.status = 'visible'
+        else my.checked = true
+      }
+      return detail(sharedPostId)
+    },
+    async saveComment({ sharedPostId, content, action }) {
+      if (action === 'delete') { mine.delete(sharedPostId); return { success: true, status: 'deleted', comment_id: 'x', comment_count: 1, pending_review: false, comment: null } }
+      mine.set(sharedPostId, { status: 'pending', content, checked: true })
+      return { success: true, status: 'pending', comment_id: `${sharedPostId}-mine`, comment_count: 1, pending_review: true, comment: null }
+    },
+    async toggleReaction() { return { reacted: true, reaction_count: 3 } },
+  }
+}
+
 function createFeedApi() {
   return {
+    ...createDetailMock(),
     async getFeed() {
       return { version: 1, max_rows: 50, space: { id: 'space', name: '햇살·바다·별빛 글마을', active_class_count: 3 }, activities, items, has_more: false }
     },
     async getActivityFeed() {
       return { version: 1, max_rows: 50, activity: activities[0], items, has_more: false }
     },
-    async getDetail() { throw new Error('미리보기에서는 상세를 열지 않아요.') },
     async getGalleryClasses() {
       return [
         { class_key: 'k-sea', class_name: '바다반', is_own_class: true, post_count: 12, new_count: 0 },

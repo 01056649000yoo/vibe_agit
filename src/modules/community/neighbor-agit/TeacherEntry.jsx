@@ -573,7 +573,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         + (notif.pending_guestbook || 0);
 
     // 화면을 실제로 보고 있는 교사만 12초 간격으로 한 번 읽는다. 학생 쪽 연결·폴링은 만들지 않는다.
-    useTeacherWorkspacePoll({ enabled: Boolean(isReady && workspace?.space?.id), refresh: refreshWorkspace });
+    // 준비 전(참여 신청을 기다리는 호스트·승인을 기다리는 게스트)도 포함한다 — 신청·승인이 새로고침 없이 보이게(2026-09-24).
+    useTeacherWorkspacePoll({ enabled: Boolean(workspace?.space?.id), refresh: refreshWorkspace });
 
     // 대기 방문록·AI 차단 댓글·새로 보이는 이웃 댓글이 늘면, 배지와 함께 눈에 보이는 갱신 안내를 남긴다.
     const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}`;
@@ -590,7 +591,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         const updates = [];
         if (nextGuestbook > beforeGuestbook) updates.push(`새 방문록 ${nextGuestbook - beforeGuestbook}건`);
         if (nextBlocked > beforeBlocked) updates.push(`확인할 댓글 ${nextBlocked - beforeBlocked}건`);
-        if (nextComments > beforeComments) updates.push(`새 이웃 댓글 ${nextComments - beforeComments}건`);
+        if (nextComments > beforeComments) {
+            updates.push(`새 이웃 댓글 ${nextComments - beforeComments}건`);
+            // ③ 댓글·반응 반별 목록은 따로 읽으므로, 새 댓글이 왔을 때만 한 번 다시 맞춘다(점검표 D4).
+            setEngageRefresh((value) => value + 1);
+        }
         if (updates.length) setLiveNotice(`${updates.join(' · ')}이 도착했어요.`);
     }, [classId, liveCounts]);
 
