@@ -32,13 +32,13 @@ const walk = (dir) => readdirSync(dir).flatMap((name) => {
     
     // 화면이 심는 자리: 손으로 적은 것 + 만들어 붙이는 것(tabAnchorId 등)
     const literal = new Set([...sources.matchAll(/tourAnchor\('([^']+)'\)/g)].map((m) => m[1]));
-    const helpers = new Set([...sources.matchAll(/tourAnchor\((tabAnchorId|toolAnchorId|moduleAnchorId|launchAnchorId|sectionAnchorId)\(/g)].map((m) => m[1]));
+    const helpers = new Set([...sources.matchAll(/tourAnchor\((tabAnchorId|toolAnchorId|moduleAnchorId|launchAnchorId|sectionAnchorId|neighborSpaceAnchorId)\(/g)].map((m) => m[1]));
     const constants = new Set([...sources.matchAll(/tourAnchor\(TEACHER_TOUR_ANCHORS\.([A-Z_]+)\)/g)].map((m) => m[1]));
     
     constants.forEach((name) => literal.add(TEACHER_TOUR_ANCHORS[name]));
     
     const kindOf = (anchor) => anchor.includes(':') ? anchor.split(':')[0] : 'literal';
-    const helperFor = { tab: 'tabAnchorId', tool: 'toolAnchorId', module: 'moduleAnchorId', launch: 'launchAnchorId', section: 'sectionAnchorId' };
+    const helperFor = { tab: 'tabAnchorId', tool: 'toolAnchorId', module: 'moduleAnchorId', launch: 'launchAnchorId', section: 'sectionAnchorId', 'neighbor-space': 'neighborSpaceAnchorId' };
     
     const missing = [...anchors].filter((anchor) => {
         const kind = kindOf(anchor);

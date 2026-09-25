@@ -22,8 +22,9 @@ const toolsSource = readFileSync('src/components/teacher/TeachingToolsHub.jsx', 
 const gamesSource = readFileSync('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8');
 const registrySource = readFileSync('src/modules/registry.js', 'utf8');
 
-test('활용 안내서는 교사의 목적에 따른 여덟 개 큰 흐름을 제공한다', () => {
-    assert.equal(TEACHER_GUIDE_JOURNEYS.length, 8);
+test('활용 안내서는 교사의 목적에 따른 아홉 개 큰 흐름을 제공한다', () => {
+    // 2026-09-25 에 8 → 9: 모두의 아지트를 학급 운영 흐름에서 떼어 자기 흐름으로 옮겼다.
+    assert.equal(TEACHER_GUIDE_JOURNEYS.length, 9);
     assert.deepEqual(
         TEACHER_GUIDE_JOURNEYS.map(({ id }) => id),
         [
@@ -32,6 +33,7 @@ test('활용 안내서는 교사의 목적에 따른 여덟 개 큰 흐름을 �
             'self-writing',
             'spelling-and-ai',
             'class-operations',
+            'neighbor-sharing',
             'motivation',
             'evaluation-records',
             'term-closing'
@@ -50,6 +52,8 @@ test('활용 안내서는 교사의 목적에 따른 여덟 개 큰 흐름을 �
             stepIds.add(journeyStep.id);
             assert.ok(journeyStep.title?.trim(), `${journey.id}/${journeyStep.id}: 단계 제목이 없다`);
             assert.ok(journeyStep.purpose?.trim(), `${journey.id}/${journeyStep.id}: 큰 목적 설명이 없다`);
+            // 안내서는 설명을 글자 그대로 그린다 — 백틱을 쓰면 화면에 ` 가 보인다(2026-09-25).
+            assert.doesNotMatch(journeyStep.purpose, /`/, `${journey.id}/${journeyStep.id}: 설명에 백틱이 보인다`);
             assert.ok(TEACHER_GUIDES[journeyStep.guideRef], `${journey.id}/${journeyStep.id}: 존재하지 않는 도움말 참조`);
             assert.deepEqual(journeyStep.target, TEACHER_GUIDE_TARGETS[journeyStep.guideRef]);
             assert.equal(journeyStep.steps, undefined, `${journey.id}/${journeyStep.id}: 상세 순서를 안내서에 복사하면 안 된다`);

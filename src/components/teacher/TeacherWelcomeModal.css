@@ -58,6 +58,8 @@
     text-align: left;
 }
 
+/* 흐름이 홀수(9개)면 마지막 줄 하나를 두 칸에 걸친다. */
+.teacher-welcome__journeys li:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .teacher-welcome__journeys li {
     display: flex;
     align-items: center;

@@ -8,7 +8,7 @@
 - `teacherGuideRegistry.js`: 도움말 ID와 실제 교사 화면 이동 대상 연결
 - `teacherGuideJourneys.js`: 교사의 목적에 따른 큰 흐름과 도움말 참조만 정의
 - `TeacherGuideContent.jsx`: 탭 도움말과 전체 안내서가 함께 사용하는 상세 렌더러
-- `TeacherGuideCenter.jsx`: 여덟 개 큰 흐름을 보여 주는 전체 화면 안내서
+- `TeacherGuideCenter.jsx`: 아홉 개 큰 흐름을 보여 주는 전체 화면 안내서
 
 ## 도움말을 바꿀 때
 

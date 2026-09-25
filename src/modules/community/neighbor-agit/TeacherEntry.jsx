@@ -4,6 +4,7 @@ import Modal from '../../../components/common/Modal';
 import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import ModalPortal from '../../../components/common/ModalPortal';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import { TEACHER_TOUR_ANCHORS, neighborSpaceAnchorId, tourAnchor } from '../../../guides/teacherTour.js';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
 import { describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
@@ -1116,13 +1117,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             <span className="neighbor-teacher__bar-metric">참여 {activeMemberships.length}학급</span>
                             <button
                                 type="button"
+                                {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_ACCESS)}
                                 className={`neighbor-teacher__access-toggle${workspace.space.student_access_enabled ? ' is-on' : ''}`}
                                 disabled={Boolean(busy)}
                                 onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생 입장을 닫았습니다.' : '우리 반 학생 입장을 열었습니다.')}
                             >
                                 학생 입장 {workspace.space.student_access_enabled ? '열림' : '닫힘'}
                             </button>
-                            <Button type="button" variant="outline" className={reviewInboxCount > 0 ? 'neighbor-teacher__review-btn is-new' : 'neighbor-teacher__review-btn'} onClick={() => setReviewInboxOpen(true)}>
+                            <Button type="button" variant="outline" {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW)} className={reviewInboxCount > 0 ? 'neighbor-teacher__review-btn is-new' : 'neighbor-teacher__review-btn'} onClick={() => setReviewInboxOpen(true)}>
                                 🗂️ 검토{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW</span><span className="neighbor-teacher__badge">{reviewInboxCount}</span></>}
                             </Button>
                             <Button type="button" variant="outline" onClick={() => setManageOpen(true)}>
@@ -1152,7 +1154,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     const stats = spaceStats(id);
                                     const todo = id === 'topic' ? notif.pending_approvals : id === 'books' ? notif.pending_guestbook : 0;
                                     return (
-                                        <button type="button" role="tab" key={id} data-space={id}
+                                        <button type="button" role="tab" key={id} data-space={id} {...tourAnchor(neighborSpaceAnchorId(id))}
                                             className={`neighbor-teacher__space-card${activeActivityTab === id ? ' is-active' : ''}`}
                                             aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
                                             <span className="neighbor-teacher__space-mark" aria-hidden="true">{icon}</span>

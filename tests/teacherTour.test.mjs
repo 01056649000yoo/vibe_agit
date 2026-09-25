@@ -37,6 +37,8 @@ const ANCHOR_HOSTS = Object.freeze([
     'src/components/teacher/StudentManagerHeader.jsx',
     'src/modules/writing/editor-settings/TeacherWritingEditorManager.jsx',
     'src/components/teacher/MissionManager.jsx',
+    // 모두의 아지트 흐름(2026-09-25): 학생 입장 단추·검토 단추.
+    'src/modules/community/neighbor-agit/TeacherEntry.jsx',
     // 본문 영역(둘러보는 단계가 가리키는 자리)은 대시보드가 붙인다.
     'src/components/teacher/TeacherDashboard.jsx'
 ]);
@@ -47,7 +49,8 @@ const DERIVED_ANCHOR_HOSTS = Object.freeze([
     ['launch', 'src/components/teacher/TeacherDashboard.jsx', 'launchAnchorId'],
     ['section', 'src/components/teacher/TeacherSettingsHub.jsx', 'sectionAnchorId'],
     ['tool', 'src/components/teacher/TeachingToolsHub.jsx', 'toolAnchorId'],
-    ['module', 'src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'moduleAnchorId']
+    ['module', 'src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'moduleAnchorId'],
+    ['neighbor-space', 'src/modules/community/neighbor-agit/TeacherEntry.jsx', 'neighborSpaceAnchorId']
 ]);
 
 const anchorSources = ANCHOR_HOSTS.map((file) => ({ file, body: read(file) }));
@@ -420,7 +423,9 @@ test('둘러보는 단계는 메뉴를 짚고, 열리면 조용해진다', () =>
     const menus = steps.filter((step) => step.spotlight === TOUR_SPOTLIGHT_MENU);
 
     assert.deepEqual(dimmed.map((step) => step.stepId).sort(),
-        ['class-board', 'create-mission', 'invite-students', 'prepare-class', 'prepare-editor', 'writing-lab'],
+        // 모두의 아지트 흐름은 한 메뉴 안의 자리(학생 입장·세 공간 카드·검토)를 하나씩 짚는다(2026-09-25).
+        ['class-board', 'create-mission', 'invite-students', 'neighbor-books', 'neighbor-gallery', 'neighbor-open',
+            'neighbor-review', 'neighbor-topic', 'prepare-class', 'prepare-editor', 'writing-lab'],
         '직접 눌러야 하는 단계 목록이 달라졌습니다.');
     assert.ok(menus.length > 0);
     menus.forEach((step) => {
@@ -620,6 +625,7 @@ test('모든 단계의 이름표가 실제로 그려지는 곳을 가리킨다',
     const nav = read('src/constants/teacherNav.js');
     const settings = read('src/components/teacher/TeacherSettingsHub.jsx');
     const registry = read('src/modules/registry.js');
+    const neighborSpaces = read('src/modules/community/neighbor-agit/activityTypes.js');
     const handWritten = new Set(Object.values(TEACHER_TOUR_ANCHORS));
 
     const resolves = (anchor) => {
@@ -635,6 +641,8 @@ test('모든 단계의 이름표가 실제로 그려지는 곳을 가리킨다',
                 || (id.startsWith('module:') && registry.includes(`/${id.slice('module:'.length)}/manifest`));
         }
         if (kind === 'tool' || kind === 'module') return registry.includes(`/${id}/manifest`);
+        // 모두의 아지트 세 공간 카드는 공간 목록(activityTypes)의 id 로 그린다.
+        if (kind === 'neighbor-space') return neighborSpaces.includes(`id: '${id}'`);
         return false;
     };
 

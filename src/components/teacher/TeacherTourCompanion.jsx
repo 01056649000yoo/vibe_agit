@@ -174,7 +174,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                     <p className="teacher-tour__hint">
                         {nextJourneyTitle
                             ? `이어서 「${nextJourneyTitle}」도 같이 둘러볼까요? 나중에 활용 안내서에서 언제든 이어서 하실 수 있습니다.`
-                            : '여덟 흐름을 모두 둘러보셨습니다. 다시 보고 싶은 흐름은 활용 안내서에서 골라 언제든 처음부터 따라 하실 수 있습니다.'}
+                            : '모든 흐름을 둘러보셨습니다. 다시 보고 싶은 흐름은 활용 안내서에서 골라 언제든 처음부터 따라 하실 수 있습니다.'}
                     </p>
                     <div className="teacher-tour__actions">
                         {tour.nextTourId ? (

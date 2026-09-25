@@ -80,8 +80,22 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('class-board', '우리 반 스크린 띄우기', '수업별 화면을 탭으로 준비하고 기본 스크린을 전체화면으로 열어 안내 자료와 오늘의 글쓰기 현황을 함께 보여 줍니다.', 'class-board'),
             step('class-notice', '알림장 남기기', '날짜마다 우리 반 알림을 적고 지난 알림을 다시 찾아봅니다. 스크린에 올려 두면 교실 화면에도 함께 나옵니다.', 'class-notice'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
-            step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat'),
-            step('neighbor-agit', '이웃 학급과 글 나누기', '`새 모임 만들기`로 모임을 열고 초대 하나를 이웃 반들에 보내(`안내문 복사`, 7일·여러 반) 연결한 뒤, 우리 반 입장을 열고 🌳 이웃 글 마당·🎪 같이 쓰기 광장·🏛️ 문집 도서관 세 곳과 `🗂️ 검토`(방문록·주제 제안·확인할 댓글)를 관리합니다.', 'neighbor-agit')
+            step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat')
+        ]
+    },
+    {
+        id: 'neighbor-sharing',
+        icon: '🤝',
+        title: '모두의 아지트로 이웃 반과 함께하기',
+        summary: '이웃 반들과 모임을 열어 서로의 글을 읽고, 같은 주제로 쓰고, 학급 문집을 나눕니다.',
+        estimatedTime: '이웃 반과 함께할 때',
+        steps: [
+            step('neighbor-invite', '모임 열고 이웃 반 초대하기', '‘새 모임 만들기’로 모임을 열고 ‘안내문 복사’로 초대를 보냅니다(7일·여러 반). 이웃 반이 신청하면 호스트가 승인합니다.', 'neighbor-agit'),
+            step('neighbor-open', '우리 반 입장 열기', '두 반 이상 모이면 반마다 입장을 열어야 아이들 홈에 모두의 아지트 카드가 나타납니다.', 'neighbor-agit'),
+            step('neighbor-gallery', '🌳 이웃 글 마당', '우리 반 글을 골라 이웃 반에 공개하고, 반별로 글과 댓글·반응을 살핍니다.', 'neighbor-agit'),
+            step('neighbor-topic', '🎪 같이 쓰기 광장', '공동 주제를 제안해 다른 반의 승인을 받고, 기한과 진행 현황 카드로 모인 글을 공개합니다.', 'neighbor-agit'),
+            step('neighbor-books', '🏛️ 문집 도서관', '확정한 학급 문집을 소개하고 게시 기한·방문록 기준을 정한 뒤, 들어온 방문록을 올립니다.', 'neighbor-agit'),
+            step('neighbor-review', '🗂️ 검토와 새 소식', '참여 신청·주제 제안·방문록·막힌 댓글을 한곳에서 처리하고, 메뉴 숫자로 이웃 반 새 소식을 봅니다.', 'neighbor-agit')
         ]
     },
     {

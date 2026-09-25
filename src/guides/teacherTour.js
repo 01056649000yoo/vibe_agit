@@ -29,7 +29,10 @@ export const TEACHER_TOUR_ANCHORS = Object.freeze({
     // 화면 본문 전체. "이 화면을 둘러보세요" 단계가 가리키는 자리다.
     WORKSPACE: 'workspace',
     // 머리말의 `우리 반 스크린` 단추. 교실에 띄우는 화면은 눌러 봐야 안다.
-    CLASS_BOARD_OPEN: 'class-board-open'
+    CLASS_BOARD_OPEN: 'class-board-open',
+    // 모두의 아지트 안쪽(2026-09-25). 참여 중인 모임이 있어야 보이고, 없으면 `화면 열기` 로 넘어간다.
+    NEIGHBOR_ACCESS: 'neighbor-access',
+    NEIGHBOR_REVIEW: 'neighbor-review'
 });
 
 /** `<Button {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_CREATE)}>` 처럼 펼쳐 쓴다. */
@@ -50,6 +53,7 @@ export const toolAnchorId = (toolId) => `tool:${toolId}`;
 export const moduleAnchorId = (moduleId) => `module:${moduleId}`;
 export const launchAnchorId = (groupId) => `launch:${groupId}`;
 export const sectionAnchorId = (sectionId) => `section:${sectionId}`;
+export const neighborSpaceAnchorId = (spaceId) => `neighbor-space:${spaceId}`;
 
 const deriveAnchor = (target) => {
     if (!target) return null;
@@ -141,6 +145,18 @@ const STEP_RULES = Object.freeze({
          * 읽은 뒤 `확인했어요` 로 넘어가게 한다(2026-09-13 제보).
          */
         hint: '연구소는 여기 있습니다. **지금 누르면 새 화면으로 옮겨 가 동행 모드가 끊기니**, 아래 설명을 읽고 `확인했어요`로 넘어간 뒤 수업 준비할 때 열어 보세요.'
+    }),
+    // 모두의 아지트 흐름: 여섯 단계가 모두 한 메뉴라, 안쪽 자리를 하나씩 짚는다.
+    'neighbor-open': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.NEIGHBOR_ACCESS,
+        hint: '이 단추가 `학생 입장 닫힘`이면 우리 반 아이들 홈에 모두의 아지트가 아직 보이지 않습니다. 두 반 이상 모였을 때 눌러 여세요.'
+    }),
+    'neighbor-gallery': Object.freeze({ anchor: neighborSpaceAnchorId('gallery'), hint: '카드를 누르면 아래에 이웃 글 마당 작업판이 열립니다.' }),
+    'neighbor-topic': Object.freeze({ anchor: neighborSpaceAnchorId('topic'), hint: '카드를 누르면 주제 제안과 진행 현황이 열립니다.' }),
+    'neighbor-books': Object.freeze({ anchor: neighborSpaceAnchorId('books'), hint: '카드를 누르면 우리 반 문집·방문록·둘러보기 탭이 열립니다.' }),
+    'neighbor-review': Object.freeze({
+        anchor: TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW,
+        hint: '처리할 일이 있으면 `NEW`와 숫자가 붙습니다. 눌러서 한곳에서 처리하세요.'
     }),
     'class-board': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN,

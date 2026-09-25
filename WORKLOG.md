@@ -18,6 +18,19 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-25 — 활용 안내서 목적 9개: 모두의 아지트 흐름 분리 (Claude Opus 5.5)
+- **요청**: 모두의 아지트 안내가 `학급 운영과 수업 도구` 흐름 안에 있다 → 탭을 새로 만들어 목적 9개로.
+- **한 일**: `teacherGuideJourneys.js` 에 `neighbor-sharing`(🤝 모두의 아지트로 이웃 반과 함께하기, 6단계: 모임 열고 초대·우리 반 입장·
+  이웃 글 마당·같이 쓰기 광장·문집 도서관·검토와 새 소식)을 학급 운영 다음에 두고, 학급 운영 흐름에서 모두의 아지트 단계를 뺐다.
+  동행 모드는 여섯 단계가 한 메뉴를 짚어 구분이 안 되므로(검사가 막음) 모두의 아지트 안에 자리를 붙였다: 학생 입장 단추(`neighbor-access`),
+  세 공간 카드(`neighborSpaceAnchorId`), 검토 단추(`neighbor-review`). 참여 중인 모임이 없으면 `화면 열기` 로 넘어간다.
+  환영 창 목록은 홀수면 마지막 줄을 두 칸에 걸치게, "여덟 흐름" 문구를 고쳤다.
+  렌더링에서 안내서 설명의 백틱이 글자 그대로 보이는 것을 발견 → 따옴표로 바꾸고 백틱 금지 검사 추가.
+- **변경**: teacherGuideJourneys·teacherTour·TeacherEntry·TeacherWelcomeModal.css·TeacherTourCompanion·guides/README·devLabRegistry,
+  검사 teacherGuideCenter(9개·순서·백틱)·teacherTour(자리 목록)·teacherTourAnchorsPresent. 버전 1.6.1.
+- **결과/검증**: test:all 1324/1324, lint·build 통과, dev-lab 환영 창(9개 흐름 42단계)·활용 안내서 화면 캡처 확인, 로컬 배포.
+- **남은 것 / 다음**: 없음. 푸시는 선생님 지시 뒤.
+
 ## 2026-09-25 — 모두의 아지트 쓰기 쉽게: 화면 정리 + 초대 흐름 (Claude Opus 5.5)
 - **요청**: 기능은 다 됐으니 화면을 더 직관적으로. 코드를 만들고 상대가 넣는 과정도 어렵다 → 분석 뒤 다섯 단계 모두 "변경하자".
 - **한 일**:
