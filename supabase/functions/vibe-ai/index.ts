@@ -70,9 +70,38 @@ const LOW_EFFORT_COMMENTS = new Set([
     'ㅋㅋ', 'ㅎㅎ', '^^', '👍', '👏', '❤️', '😆', '😍', '😊', '와!', '오!'
 ])
 
+// AI 호출 비용 절감을 위해 명백한 비속어·욕설·비하 표현은 로컬에서 선제 차단한다.
+const INAPPROPRIATE_WORDS = [
+    '시발', '씨발', '시빨', '씨빨', '시바', '씨바', '시벌', '씨벌', '시부랄', '시뱔', '씨뱔',
+    '지랄', '지럴', '염병', '옘병', '썅', '존나', '졸라', '좆', '씹새', '씹창',
+    '개새끼', '개세끼', '개자식', '개같은', '개좆', '개지랄', '개색기', '개샛기', '개섀끼', '개쉑',
+    '새끼야', '이새끼', '저새끼', '미친새끼', '미친놈', '미친년', '미쳤냐', '닥쳐', '꺼져', '아가리',
+    '병신', '등신', '병쉰', '찐따', '호로새끼',
+    '느금마', '느검마', '느개미', '니기미', '니애미', '니애비', '엠창', '엄창',
+    '장애인', '정신병자', '정박아', '틀딱', '한남충', '맘충',
+    '보지', '자지', '창녀', '걸레', '성폭행', '딸딸이',
+    '죽여버', '뒈져', '뒤져라', '디져라', '패버린다', '자살해',
+    'ㅅㅂ', 'ㅆㅂ', 'ㅈㄴ', 'ㅈㄹ', 'ㅂㅅ', 'ㅁㅊㄴ', 'ㅁㅊㄹ'
+]
+
+const containsInappropriateWords = (text: string): boolean => {
+    const normalized = text.replace(/[\s.,!?~@#$%^&*()_+=\-[\]{}|\\;:'"<>/`]/g, '').toLowerCase()
+    return INAPPROPRIATE_WORDS.some(word => normalized.includes(word))
+}
+
 const commentLocalRejectionReason = (content: string): string | null => {
-    const compact = content.trim().replace(/\s+/g, '')
-    if (compact.length < 8 || LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
+    const trimmed = content.trim()
+    if (containsInappropriateWords(trimmed)) {
+        return '친구에게 상처를 주는 말 대신 따뜻하고 고운 말을 써 주세요.'
+    }
+    const compact = trimmed.replace(/\s+/g, '')
+    if (compact.length < 8) {
+        return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
+    }
+    if (trimmed.length > 200) {
+        return '댓글은 200자 이내로 간결하고 다정하게 적어 주세요.'
+    }
+    if (LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
         return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
     }
     if (/^(.)\1{7,}$/u.test(compact) || /(.{1,8})\1{3,}/u.test(compact) || looksLikeGibberish(content)) {
@@ -122,7 +151,7 @@ const drainCommentSafetyQueue = async (supabaseAdmin: ReturnType<typeof createCl
         const reviewToken = String(claim.review_token ?? '')
 
         try {
-            const content = String(claim.content ?? '').trim().slice(0, 1000)
+            const content = String(claim.content ?? '').trim().slice(0, 200)
             const localReason = commentLocalRejectionReason(content)
             if (localReason) {
                 const { error: completeError } = await supabaseAdmin.rpc('complete_comment_ai_review_v2', {

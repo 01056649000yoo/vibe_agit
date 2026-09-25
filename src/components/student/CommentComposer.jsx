@@ -71,7 +71,7 @@ const CommentComposer = ({
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                maxLength={1000}
+                maxLength={200}
                 aria-label={editing ? '수정할 댓글' : '새 댓글'}
             />
             {editing && (

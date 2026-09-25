@@ -18,6 +18,21 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-25 — 댓글 200자 상한 축소, 사전 로컬 비속어 필터링, 기술·방법론 사전(TECH_GLOSSARY.md) 구축 (Antigravity)
+- **요청**: 댓글 1000자 상한은 너무 길어 200자 이내로 축소, AI 호출 증가에 따른 비용 추가 절감 아이디어 적용, 배포 전 욕설 및 변형 필터링 시뮬레이션, 앱 전체 기술 스택 및 코딩 방법론 단어 사전 작성 및 자동 추가 체계 구축.
+- **변경**:
+  - `20261351_comment_max_chars_200.sql`: `create_my_post_comment_v1`, `update_my_post_comment_v1`에서 댓글 길이 8~200자 엄격 검증(22023 에러).
+  - 프론트엔드: `CommentComposer.jsx`에 `maxLength={200}` 적용, `usePostInteractions.js`에서 200자 초과 친절 안내 메시지 반환.
+  - Edge Function(`vibe-ai/index.ts`): 대기열 슬라이스를 `slice(0, 200)`으로 축소. 명백한 비속어, 욕설, 혐오 표현 및 초성 욕설(`INAPPROPRIATE_WORDS`)을 로컬에서 선제 탐지하여 OpenAI 호출 없이 0원(local_rule)으로 즉시 차단 및 다정한 피드백 제공.
+  - 시뮬레이션: `scripts/simulate-comment-safety.mjs` 작성(`npm run simulate:comments`). 정상 댓글, 글자수 경계, 직설 욕설, 공백/특수문자/초성 변형 우회 등 32건 전원 100% 필터링 검증.
+  - 기술 사전: `docs/TECH_GLOSSARY.md` 생성(인프라, 백엔드, 프론트엔드, 보안, 성능, AI, 테스트, 바이브 코딩 원칙 등 40여 개 핵심 개념 해설 수록). `scripts/sync-tech-glossary.mjs` 및 npm 스크립트(`glossary:sync`, `glossary:check`), 단위 테스트(`tests/techGlossary.test.mjs`) 구축.
+- **결과/검증**:
+  - DB 마이그레이션 `20261351` 운영 DB(`agit-db`) 적용 완료 (397/397).
+  - 롤백 검증 `npm run migrate:check` 통과.
+  - 전체 단위 테스트 `npm run test:all` 통과 (1,335개 테스트 전원 통과).
+  - `npm run lint` 통과 (0 errors), `npm run build` 통과.
+  - 댓글 안전 시뮬레이션 32건 전원 통과.
+
 ## 2026-09-25 — 같이 쓰기 광장 종료·모임 해체 시 학급 과제 자동 보관 (Codex)
 - **원인**: 모임 참여 감소/해체 트리거는 주제만 종료하고 학급 과제 보관을 누락했다. 수동 종료·마감·삭제도 보관 날짜를 남기지 않아 보관함 하단으로 밀렸다.
 - **변경**: `20261350`에서 주제 종료 공통 트리거로 각 학급 과제의 보관 상태·날짜를 함께 기록한다. 모임 종료와 주제 삭제에도 연결하고, 이미 종료된 주제의 연결 과제 누락을 보정한다. 학생 원글은 복제/삭제하지 않는다. 이미 주제가 삭제돼 연결이 없는 옛 과제의 날짜는 추정해 바꾸지 않는다.

@@ -13,6 +13,7 @@
 | **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — 최근치만 둔다(2,500줄 한도, 검사가 막는다). 지난 달치는 [docs/worklog/](docs/worklog/) |
 | **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** | 되풀이하지 말 것 — 작업 시작 전 3초 훑기 |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | 이 시스템이 왜 이렇게 생겼는지 — 목표 아키텍처, 핵심 설계 불변식, 맥미니 인프라 상식 |
+| **[docs/TECH_GLOSSARY.md](docs/TECH_GLOSSARY.md)** | **기술·방법론 단어 사전** — 전체 기술 스택, 아키텍처, 코딩 및 보안 방법론 해설과 자동 동기화 |
 | **[PERFORMANCE_HARNESS.md](PERFORMANCE_HARNESS.md)** | 성능 설계 원칙·1,000명 합격선·측정 기록표 |
 | **[SECURITY_HARNESS.md](SECURITY_HARNESS.md)** | 보안 설계 원칙·검사 명령 |
 | **[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md)** | 맥미니 이관(Stage 1)의 상세 절차·검증 사실 |

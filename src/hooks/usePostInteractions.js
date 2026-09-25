@@ -29,6 +29,10 @@ const validateCommentQuality = (content) => {
         return '댓글은 공백을 빼고 8자 이상으로 써야 해요.\n친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 적어 볼까요?';
     }
 
+    if (trimmed.length > 200) {
+        return '댓글은 200자 이내로 적어 주세요.';
+    }
+
     if (LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
         return '감탄만 있는 짧은 댓글보다는\n친구 글의 좋은 점이나 느낀 점을 함께 써 주세요!';
     }

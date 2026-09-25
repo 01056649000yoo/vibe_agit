@@ -66,7 +66,7 @@ test('브라우저 안내와 서버 차단은 같은 짧은 댓글 기준을 쓴
     assert.deepEqual(extractLowEffortComments(interactions), extractLowEffortComments(edge));
     assert.match(interactions, /compact\.length < 8/);
     assert.match(edge, /compact\.length < 8/);
-    assert.match(edge, /slice\(0, 1000\)/);
+    assert.match(edge, /slice\(0, 200\)/);
 });
 
 test('댓글 AI 대기열은 전역 3칸·2회 시도·만료 회수를 DB에서 보장한다', () => {
