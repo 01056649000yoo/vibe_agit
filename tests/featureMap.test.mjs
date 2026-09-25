@@ -11,7 +11,7 @@ const map = await readFile('FEATURE_MAP.md', 'utf8');
 
 test('교사 메뉴의 모든 화면이 기능 지도에 있다', () => {
     const missing = TEACHER_NAV_GROUPS.flatMap((group) => group.tabs)
-        .map((tab) => tab.label.replace(/\(제작 중\)/, '').trim())
+        .map((tab) => tab.label.replace(/\((제작 중|Beta)\)/, '').trim())
         .filter((label) => !map.includes(label));
     assert.deepEqual(missing, []);
 });

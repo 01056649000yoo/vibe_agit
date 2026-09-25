@@ -974,7 +974,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return (
             <section className="neighbor-teacher-state neighbor-teacher-state--closed">
                 <div aria-hidden="true">🤝</div>
-                <h1>모두의 아지트(제작 중)</h1>
+                <h1>모두의 아지트(Beta)</h1>
                 <p>{errorMessage || '현재 선택한 학급에서는 아직 사용할 수 없습니다.'}</p>
             </section>
         );

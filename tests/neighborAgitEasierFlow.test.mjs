@@ -74,3 +74,11 @@ test('학생: 방 안에서는 머리글 한 줄, 활동 글은 친구 글 읽�
     assert.match(student, />친구 글 읽기<\/Button>/);
     assert.doesNotMatch(student, /활동 글 보기/);
 });
+
+test('머리글 줄이기가 도움말 단추 글자를 숨기지 않는다(2026-09-25 제보: 빈 네모)', async () => {
+    const css = await readFile('src/modules/community/neighbor-agit/TeacherEntry.css', 'utf8');
+    // 머리글 안 모든 span 을 건드리면 GuideInfoButton 안의 💡·도움말 글자까지 숨겨지거나 색이 바뀐다.
+    assert.doesNotMatch(css, /\.neighbor-teacher__header(\.is-compact)? span/);
+    assert.match(css, /\.neighbor-teacher__header\.is-compact > div:first-child > span/);
+    assert.match(entry, /<TeacherGuideButton tabId="neighbor-agit" variant="help" \/>/);
+});

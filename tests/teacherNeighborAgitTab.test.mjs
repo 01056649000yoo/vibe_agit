@@ -11,13 +11,13 @@ const [teacherNav, dashboard, manifest, entry, teacherApi, guideRegistry] = awai
     readFile('src/guides/teacherGuideRegistry.js', 'utf8')
 ]);
 
-test('모두의 아지트 제작 중 메뉴는 학급운영도구 오른쪽과 설정 왼쪽의 독립 메뉴다', () => {
+test('모두의 아지트(Beta) 메뉴는 학급운영도구 오른쪽과 설정 왼쪽의 독립 메뉴다', () => {
     const toolsIndex = teacherNav.indexOf("id: 'tools'");
     const neighborIndex = teacherNav.indexOf("id: 'neighbor-agit'");
     const settingsIndex = teacherNav.indexOf("id: 'settings'");
 
     assert.ok(toolsIndex > -1 && toolsIndex < neighborIndex && neighborIndex < settingsIndex);
-    assert.match(teacherNav, /id: 'neighbor-agit'[\s\S]*label: '모두의 아지트\(제작 중\)'[\s\S]*defaultTab: 'neighbor-agit'/);
+    assert.match(teacherNav, /id: 'neighbor-agit'[\s\S]*label: '모두의 아지트\(Beta\)'[\s\S]*defaultTab: 'neighbor-agit'/);
     assert.doesNotMatch(teacherNav.slice(neighborIndex, settingsIndex), /badge: 'BETA'/);
     assert.match(dashboard, /const TeacherNeighborAgit = lazy\(getModule\('neighbor-agit'\)\.teacherEntry\)/);
     assert.match(dashboard, /visibleTab === 'neighbor-agit'[\s\S]*<TeacherNeighborAgit key=\{activeClass.id\} activeClass=\{activeClass\} isMobile=\{isMobile\}/);

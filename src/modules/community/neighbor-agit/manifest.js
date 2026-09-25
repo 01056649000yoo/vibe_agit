@@ -6,7 +6,7 @@ import { NEIGHBOR_AGIT_WRITING_BRIDGE } from './writingBridge';
 
 export const neighborAgitManifest = {
     id: 'neighbor-agit',
-    name: '모두의 아지트(제작 중)',
+    name: '모두의 아지트(Beta)',
     description: '다른 학급과 글을 나누는 독립 공간',
     icon: '🤝',
     part: 'community',
