@@ -2,6 +2,10 @@
 .neighbor-teacher__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px; border: 1px solid #ccfbf1; border-radius: 20px; background: linear-gradient(145deg, #fff, #f0fdfa); }
 .neighbor-teacher__header span, .neighbor-teacher-card > div > span, .neighbor-teacher__overview > div > span { color: #0f766e; font-size: var(--ui-text-xs); font-weight: 900; }
 .neighbor-teacher__header h1 { margin: 6px 0; color: #164e63; font-size: var(--ui-text-2xl); }
+/* 운영 중에는 머리를 한 줄로(2026-09-25): 설명은 모임을 준비할 때만. 공간 이름·할 일은 아래 운영 막대에 있다. */
+.neighbor-teacher__header.is-compact { align-items: center; padding: 10px 16px; border-radius: 14px; }
+.neighbor-teacher__header.is-compact span, .neighbor-teacher__header.is-compact p { display: none; }
+.neighbor-teacher__header.is-compact h1 { margin: 0; font-size: var(--ui-text-lg); }
 .neighbor-teacher__header p, .neighbor-teacher-card p, .neighbor-teacher__overview p { margin: 0; color: #627d98; line-height: 1.6; }
 .neighbor-teacher__header-actions, .neighbor-teacher__row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .neighbor-teacher__message { margin: 0; padding: 12px 15px; border-radius: 11px; background: #ecfdf5; color: #047857; }
@@ -548,3 +552,17 @@
 .neighbor-teacher__space-card:hover { background: var(--ui-surface); color: var(--ui-ink); }
 .neighbor-teacher__space-card.is-active:hover { background: var(--space-soft); }
 .neighbor-teacher__submission:has(.neighbor-teacher__new-flag) strong { padding-right: 38px; }
+
+/* 학생 입장이 꺼져 있을 때의 안내(승인 뒤 숨은 단계, 2026-09-25). */
+.neighbor-teacher__access-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2);
+  padding: 10px 14px; border: 1px solid var(--ui-warning); border-radius: var(--ui-radius-sm); background: var(--ui-warning-soft);
+  color: var(--ui-ink); font-size: var(--ui-text-sm); }
+/* 초대 코드 상자(준비 화면·공간 관리 창 공용). */
+.neighbor-invite-box { display: grid; gap: 6px; padding: 14px; border: 1px dashed var(--ui-primary-border); border-radius: var(--ui-radius-sm);
+  background: var(--ui-primary-soft); }
+.neighbor-invite-box__code { color: var(--ui-primary); font-size: var(--ui-text-xl); letter-spacing: 0.08em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.neighbor-invite-box small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+.neighbor-invite-box__actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); }
+.neighbor-invite-box .neighbor-invite-box__warn { color: var(--ui-danger); }
+.neighbor-teacher__start-form label small, .neighbor-teacher__start-hint { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 600; }
+

@@ -10,6 +10,7 @@ import { describePresetResult, getGenreEntries } from '../../writing/mission-typ
 import { applyGenreToMissionDraft } from '../../writing/mission-form/missionDraft';
 import { createNeighborTopicDraft, NEIGHBOR_TOPIC_DEFAULTS, toNeighborTopicProposal } from './topicProposalAdapter';
 import { defaultDeadlineInput } from './deadlineDefaults.js';
+import InviteCodeBox from './InviteCodeBox';
 import { callAI } from '../../../lib/openai';
 
 /** 전용 틀 id(`poem` 등)로 카탈로그의 글 종류 이름(`시`)을 찾는다. 목록의 정본은 카탈로그 하나다. */
@@ -233,11 +234,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         // 예전에는 이것을 성공으로 알리고 창을 닫아, 선생님이 신청된 줄 알고 기다렸다(2026-09-23 시뮬레이션).
         if (result.success === false) {
             setErrorMessage(result.error === 'rate_limited'
-                ? `초대키를 여러 번 잘못 넣어 잠시 막혔어요. ${Math.ceil((Number(result.retry_after_seconds) || 60) / 60)}분 뒤 다시 해 주세요.`
-                : '초대키가 맞지 않거나, 이미 쓰였거나, 만료됐어요. 호스트 선생님께 새 초대키를 받아 주세요.');
+                ? `초대 코드를 여러 번 잘못 넣어 잠시 막혔어요. ${Math.ceil((Number(result.retry_after_seconds) || 60) / 60)}분 뒤 다시 해 주세요.`
+                : '초대 코드가 맞지 않거나, 기한이 지났거나, 새 코드로 바뀌었어요. 모임을 연 선생님께 코드를 다시 받아 주세요.');
             return;
         }
-        setMessage('참여를 신청했습니다. 호스트 교사의 승인을 기다려 주세요.');
+        setMessage('참여를 신청했습니다. 모임을 연 선생님이 승인하면 이 화면이 저절로 바뀌어요.');
         setJoinForm((current) => ({ ...current, inviteKey: '' }));
         setStartChoice(null);
     };
@@ -245,7 +246,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const createInvite = async () => {
         const result = await runAction('create_invite', {
             space_id: workspace.space.id
-        }, '새 초대키를 만들었습니다.');
+        }, '초대 코드를 만들었습니다. 복사해서 이웃 반 선생님들께 보내 주세요.');
         if (result?.invite_key) setInvite(result);
     };
 
@@ -980,11 +981,12 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
 
     return (
         <section className={`neighbor-teacher ${isMobile ? 'is-mobile' : ''}`}>
-            <header className="neighbor-teacher__header">
+            {/* 모임을 준비할 때만 설명을 크게, 운영 중에는 한 줄로(2026-09-25 — 위쪽 겹침 정리). */}
+            <header className={`neighbor-teacher__header${isReady && workspace?.space?.my_status === 'active' ? ' is-compact' : ''}`}>
                 <div>
-                    <span>여러 학급이 함께 쓰는 글 공간</span>
+                    <span>여러 반이 함께 글을 나누는 마을</span>
                     <h1>🤝 모두의 아지트</h1>
-                    <p>{activeClass?.name}과 다른 학급이 하나의 글 피드에서 만납니다.</p>
+                    <p>🌳 이웃 글 마당에서 서로의 글을 읽고, 🎪 같이 쓰기 광장에서 같은 주제로 쓰고, 🏛️ 문집 도서관에서 반 문집을 나눠요.</p>
                 </div>
                 <div className="neighbor-teacher__header-actions">
                     <TeacherGuideButton tabId="neighbor-agit" variant="help" />
@@ -1002,13 +1004,13 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     <div className="neighbor-teacher__start-choice">
                         <button type="button" className="neighbor-teacher__choice" onClick={() => setStartChoice('host')}>
                             <span className="neighbor-teacher__choice-mark" aria-hidden="true">🏠</span>
-                            <strong>호스트로 시작</strong>
-                            <small>새 공간을 열고 이웃 반을 초대해요</small>
+                            <strong>새 모임 만들기</strong>
+                            <small>우리 반이 모임을 열고 이웃 반 선생님께 초대 코드를 보내요</small>
                         </button>
                         <button type="button" className="neighbor-teacher__choice" onClick={() => setStartChoice('guest')}>
                             <span className="neighbor-teacher__choice-mark" aria-hidden="true">🚪</span>
-                            <strong>게스트로 참여</strong>
-                            <small>받은 초대키로 공간에 들어가요</small>
+                            <strong>받은 초대 코드로 들어가기</strong>
+                            <small>다른 반 선생님께 받은 코드를 넣고 참여를 신청해요</small>
                         </button>
                     </div>
 
@@ -1017,13 +1019,16 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     <Modal
                         isOpen={startChoice === 'host'}
                         onClose={() => { if (!busy) setStartChoice(null); }}
-                        title="🏠 새 공간 만들기"
+                        title="🏠 새 모임 만들기"
                         maxWidth="520px"
                         showFooter={false}
                     >
                         <form className="neighbor-teacher__start-form" onSubmit={createSpace}>
-                            <label>공간 이름<input value={spaceForm.name} maxLength={60} required onChange={(event) => setSpaceForm({ ...spaceForm, name: event.target.value })} /></label>
-                            <label>공개 학급 이름<input value={spaceForm.publicClassName} maxLength={40} required onChange={(event) => setSpaceForm({ ...spaceForm, publicClassName: event.target.value })} /></label>
+                            <label>모임 이름<input value={spaceForm.name} maxLength={60} required placeholder="예: 4학년 글쓰기 모임"
+                                onChange={(event) => setSpaceForm({ ...spaceForm, name: event.target.value })} /></label>
+                            <label>다른 반에 보일 우리 반 이름<input value={spaceForm.publicClassName} maxLength={40} required placeholder="예: 진남초 4-1"
+                                onChange={(event) => setSpaceForm({ ...spaceForm, publicClassName: event.target.value })} />
+                                <small>학생 글과 댓글 옆에 이 이름이 붙어요.</small></label>
                             <label>공간 소개<textarea value={spaceForm.description} maxLength={240} onChange={(event) => setSpaceForm({ ...spaceForm, description: event.target.value })} /></label>
                             <Button type="submit" loading={busy === 'create_space'} disabled={Boolean(busy)}>공간 만들기</Button>
                         </form>
@@ -1031,14 +1036,19 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     <Modal
                         isOpen={startChoice === 'guest'}
                         onClose={() => { if (!busy) setStartChoice(null); }}
-                        title="🚪 초대키로 참여하기"
+                        title="🚪 받은 초대 코드로 들어가기"
                         maxWidth="520px"
                         showFooter={false}
                     >
                         <form className="neighbor-teacher__start-form" onSubmit={joinSpace}>
-                            <label>초대키<input value={joinForm.inviteKey} maxLength={24} required autoComplete="off" onChange={(event) => setJoinForm({ ...joinForm, inviteKey: event.target.value })} /></label>
-                            <label>공개 학급 이름<input value={joinForm.publicClassName} maxLength={40} required onChange={(event) => setJoinForm({ ...joinForm, publicClassName: event.target.value })} /></label>
-                            <Button type="submit" loading={busy === 'join_space'} disabled={Boolean(busy)}>참여 신청</Button>
+                            <label>받은 초대 코드<input value={joinForm.inviteKey} maxLength={24} required autoComplete="off" placeholder="예: ABCD-EFGH-JKMN-PQRS"
+                                onChange={(event) => setJoinForm({ ...joinForm, inviteKey: event.target.value })} />
+                                <small>띄어쓰기·하이픈은 있어도 없어도 돼요.</small></label>
+                            <label>다른 반에 보일 우리 반 이름<input value={joinForm.publicClassName} maxLength={40} required placeholder="예: 진남초 4-2"
+                                onChange={(event) => setJoinForm({ ...joinForm, publicClassName: event.target.value })} />
+                                <small>학생 글과 댓글 옆에 이 이름이 붙어요.</small></label>
+                            <Button type="submit" loading={busy === 'join_space'} disabled={Boolean(busy)}>참여 신청하기</Button>
+                            <small className="neighbor-teacher__start-hint">신청하면 모임을 연 선생님이 승인해요. 승인되면 이 화면이 12초 안에 저절로 바뀌어요.</small>
                         </form>
                     </Modal>
                 </>
@@ -1046,7 +1056,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                 <section className="neighbor-teacher-state">
                     <div aria-hidden="true">⏳</div>
                     <h2>{workspace.space.name}</h2>
-                    <p>참여 신청을 보냈습니다. 호스트 교사가 승인하면 공간 관리가 열립니다.</p>
+                    <p>참여 신청을 보냈어요. <strong>모임을 연 선생님께 승인을 부탁해 주세요.</strong><br />승인되면 이 화면이 12초 안에 저절로 바뀌어요.</p>
                     <Button type="button" variant="outline" loading={busy === 'leave_space'} onClick={() => runAction('leave_space', { space_id: workspace.space.id }, '참여 신청을 취소했습니다.')}>신청 취소</Button>
                 </section>
             ) : !isReady ? (
@@ -1059,24 +1069,23 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     </div>
                     <ol className="neighbor-teacher__wizard-steps">
                         <li className="is-done"><span aria-hidden="true">✓</span><div><strong>공간 만들기</strong><small>{workspace.space.name}</small></div></li>
-                        <li className={pendingMemberships.length === 0 ? 'is-current' : ''}><span aria-hidden="true">2</span><div><strong>이웃 반 초대</strong><small>초대키를 만들어 옆 반 선생님께 전해요</small></div></li>
+                        <li className={pendingMemberships.length === 0 ? 'is-current' : ''}><span aria-hidden="true">2</span><div><strong>이웃 반 초대</strong><small>초대 코드 하나를 여러 반 선생님께 보내요</small></div></li>
                         <li className={pendingMemberships.length > 0 ? 'is-current' : ''}><span aria-hidden="true">3</span><div><strong>참여 확인</strong><small>{pendingMemberships.length > 0 ? `승인 대기 ${pendingMemberships.length}곳` : '들어온 반을 승인해요'}</small></div></li>
                     </ol>
 
                     {workspace.space.my_role === 'host' ? (
                         <div className="neighbor-teacher__wizard-body">
                             <section className="neighbor-teacher-card">
-                                <div><span>2단계</span><h3>이웃 반 초대키</h3></div>
+                                <div><span>2단계</span><h3>이웃 반 초대 코드</h3></div>
                                 {invite
-                                    ? <div className="neighbor-teacher__invite"><strong>{invite.invite_key}</strong><small>{new Date(invite.expires_at).toLocaleString('ko-KR')}까지 · 한 번만 사용</small></div>
-                                    : <p>옆 반 선생님께 전달할 일회용 초대키를 만들어요. 상대 교사가 이 키로 신청하면 아래에서 승인합니다.</p>}
-                                <Button type="button" loading={busy === 'create_invite'} disabled={Boolean(busy) || pendingMemberships.length > 0} onClick={createInvite}>새 초대키 만들기</Button>
-                                {pendingMemberships.length > 0 && <p className="neighbor-teacher__empty">승인 대기 중인 신청이 있어 새 초대키를 만들 수 없어요. 아래에서 먼저 처리해 주세요.</p>}
+                                    ? <InviteCodeBox invite={invite} spaceName={workspace.space.name} />
+                                    : <p>초대 코드를 만들어 이웃 반 선생님들께 보내요. <strong>코드 하나로 여러 반</strong>이 7일 동안 신청할 수 있고, 들어온 신청은 아래에서 승인해요.</p>}
+                                <Button type="button" variant={invite ? 'outline' : 'primary'} loading={busy === 'create_invite'} disabled={Boolean(busy)} onClick={createInvite}>{invite ? '새 초대 코드로 바꾸기' : '초대 코드 만들기'}</Button>
                             </section>
                             <section className="neighbor-teacher-card">
                                 <div><span>3단계</span><h3>참여 신청</h3></div>
                                 {pendingMemberships.length === 0
-                                    ? <p className="neighbor-teacher__empty">아직 들어온 반이 없어요. 초대키를 전달해 주세요.</p>
+                                    ? <p className="neighbor-teacher__empty">아직 들어온 반이 없어요. 초대 코드를 보내 주세요. 신청이 오면 12초 안에 여기 나타나요.</p>
                                     : <ul className="neighbor-teacher__members">{pendingMemberships.map((membership) => (
                                         <li key={membership.class_id}>
                                             <span><strong>{membership.class_name}</strong><small>승인 대기</small></span>
@@ -1100,7 +1109,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     {/* 운영 요약 바: 얇게 한 줄. 학생 입장·검토함·공간 관리를 어느 탭에서든 바로 연다. */}
                     <section className="neighbor-teacher__bar">
                         <div className="neighbor-teacher__bar-title">
-                            <span>{workspace.space.my_role === 'host' ? '호스트' : '게스트'}</span>
+                            <span>{workspace.space.my_role === 'host' ? '우리 반이 연 모임' : '참여 중인 모임'}</span>
                             <h2>{workspace.space.name}</h2>
                         </div>
                         <div className="neighbor-teacher__bar-actions">
@@ -1117,10 +1126,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 🗂️ 검토{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW</span><span className="neighbor-teacher__badge">{reviewInboxCount}</span></>}
                             </Button>
                             <Button type="button" variant="outline" onClick={() => setManageOpen(true)}>
-                                ⚙️ 공간 관리{notif.pending_joins > 0 && <span className="neighbor-teacher__badge">{notif.pending_joins}</span>}
+                                ⚙️ 공간 관리
                             </Button>
                         </div>
                     </section>
+                    {!workspace.space.student_access_enabled && activeMemberships.length >= 2 && (
+                        /* 승인된 뒤에도 각 반이 학생 입장을 따로 켜야 학생 홈에 보인다 — 숨은 단계라 여기서 알려 준다. */
+                        <div className="neighbor-teacher__access-callout" role="status">
+                            <span>🔒 <strong>우리 반 학생에게는 아직 모두의 아지트가 보이지 않아요.</strong> 학생 입장을 열면 학생 홈에 카드가 나타나요.</span>
+                            <Button type="button" size="sm" loading={busy === 'set_access'} disabled={Boolean(busy)}
+                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: true }, '우리 반 학생 입장을 열었습니다.')}>학생 입장 열기</Button>
+                        </div>
+                    )}
                     <p className="neighbor-teacher__live-status" role="status" aria-live="polite">
                         <span aria-hidden="true">📡</span> 12초마다 새 방문록·댓글을 자동 확인합니다.
                         {liveNotice && <strong>{liveNotice}</strong>}
@@ -1131,7 +1148,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             {/* 세 공간을 필터가 아니라 따로 있는 방처럼: 공간마다 색(spaces.css)·소개·현황 숫자.
                                 선택한 카드와 아래 작업판이 같은 색 테두리로 이어진다. 숫자는 이미 받은 작업 공간에서 센다. */}
                             <nav className="neighbor-teacher__spaces" aria-label="공간 고르기" role="tablist">
-                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label, teacherSummary }) => {
+                                {NEIGHBOR_ACTIVITY_TABS.map(({ id, icon, label }) => {
                                     const stats = spaceStats(id);
                                     const todo = id === 'topic' ? notif.pending_approvals : id === 'books' ? notif.pending_guestbook : 0;
                                     return (
@@ -1140,7 +1157,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             aria-selected={activeActivityTab === id} onClick={() => selectActivityTab(id)}>
                                             <span className="neighbor-teacher__space-mark" aria-hidden="true">{icon}</span>
                                             <strong>{label}</strong>
-                                            <small>{teacherSummary}</small>
                                             <span className="neighbor-teacher__space-stats">{stats.map((item) => <span key={item}>{item}</span>)}</span>
                                             {todo > 0 && <span className="neighbor-teacher__badge" aria-label={`처리할 일 ${todo}건`}>{todo}</span>}
                                         </button>
@@ -1157,9 +1173,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             {activeActivityTab === 'gallery' ? (
                                 <div className="neighbor-teacher__activity-body">
                                 {renderStepBar([
-                                    { id: 'collect', label: '① 글 모으기' },
-                                    { id: 'manage', label: '② 공개 글 관리' },
-                                    { id: 'engage', label: '③ 댓글·반응' }
+                                    { id: 'collect', label: '글 고르기' },
+                                    { id: 'manage', label: '공개한 글' },
+                                    { id: 'engage', label: '댓글·반응' }
                                 ], galleryStep, setGalleryStep)}
 
                                 {galleryStep === 'collect' && (
@@ -1457,8 +1473,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     {/* 공개·비공개는 주제마다 자세히 보기 → 제출 글 공개 창에서 한다(2026-09-25). 예전 ② 공개 글 관리는
                                         이웃 글 마당과 같은 화면이라 모든 공간 글이 섞여 나와 이 공간에서는 뺐다. */}
                                     {renderStepBar([
-                                        { id: 'topics', label: '① 주제' },
-                                        { id: 'engage', label: '② 댓글·반응' }
+                                        { id: 'topics', label: '주제' },
+                                        { id: 'engage', label: '댓글·반응' }
                                     ], topicStep, setTopicStep)}
 
                                     {topicStep === 'topics' && (
@@ -1607,9 +1623,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         {workspace.space.my_role === 'host' && (
                             <section>
                                 <h3>이웃 반 초대</h3>
-                                {invite ? <div className="neighbor-teacher__invite"><strong>{invite.invite_key}</strong><small>{new Date(invite.expires_at).toLocaleString('ko-KR')}까지 · 한 번만 사용</small></div> : <p>다른 학급 교사에게 전달할 일회용 초대키를 만듭니다.</p>}
-                                <Button type="button" loading={busy === 'create_invite'} disabled={Boolean(busy) || activeMemberships.length >= 4 || pendingMemberships.length > 0} onClick={createInvite}>새 초대키 만들기</Button>
-                                {activeMemberships.length >= 4 && <p className="neighbor-teacher__empty">참여 학급이 4개로 가득 찼습니다.</p>}
+                                {invite ? <InviteCodeBox invite={invite} spaceName={workspace.space.name} /> : <p>초대 코드 하나로 여러 반이 7일 동안 신청할 수 있어요.</p>}
+                                <Button type="button" variant={invite ? 'outline' : 'primary'} loading={busy === 'create_invite'} disabled={Boolean(busy) || activeMemberships.length >= NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace} onClick={createInvite}>{invite ? '새 초대 코드로 바꾸기' : '초대 코드 만들기'}</Button>
+                                {activeMemberships.length >= NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace && <p className="neighbor-teacher__empty">참여 학급이 {NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace}개로 가득 찼습니다.</p>}
                             </section>
                         )}
                         <section>

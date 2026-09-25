@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import Modal from '../../../../components/common/Modal';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
 import { neighborBooksApi } from './booksApi';
 import './books.css';
 import { defaultDeadlineInput, isoToDeadlineInput } from '../deadlineDefaults.js';
 
 /*
- * 🏛️ 문집 도서관 — 교사 칸.
- *   ① 우리 반 문집 소개하기(글꽃 책방에서 확정하고 학생에게 보이게 한 학급 문집만)
- *   ② 확인할 방문록(우리 반 문집에 남겨진 것) — 승인해야 모두에게 보인다
- *   ③ 공간에 소개된 문집 / 우리 반 문집에 올라간 방문록(내리기)
+ * 🏛️ 문집 도서관 — 교사 칸. 세 칸으로 나눈다(2026-09-25, 한 화면이 너무 길었다):
+ *   📚 우리 반 문집 — 소개하기(글꽃 책방에서 확정하고 학생에게 보이게 한 학급 문집만). 게시 기한·방문록 최소 글자는 ⚙️ 설정 창
+ *   ✍️ 방문록 — 확인할 방문록(승인해야 모두에게 보인다) / 올라간 방문록(내리기)
+ *   🏫 둘러보기 — 공간에 소개된 문집
  * 확인할 방문록 목록은 작업 공간(workspace.pending_guestbook)이 이미 들고 있어 검토함과 같은 원본을 쓴다.
  */
 /**
@@ -39,6 +40,10 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
     const [minDrafts, setMinDrafts] = useState({});
     // 문집마다 게시 기한 입력값(저장 전). '' = 기한 없음. key = shared_book_id
     const [untilDrafts, setUntilDrafts] = useState({});
+    // 한 화면이 너무 길어 세 칸으로 나눈다(2026-09-25): 우리 반 문집 | 방문록 | 둘러보기.
+    const [booksView, setBooksView] = useState('mine');
+    // ⚙️ 설정 창을 연 문집(게시 기한·방문록 최소 글자).
+    const [settingsFor, setSettingsFor] = useState(null);
 
     const load = useCallback(async () => {
         if (!spaceId || !classId) return;
@@ -124,12 +129,22 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
     const myBooks = data?.my_books || [];
     const sharedBooks = data?.shared_books || [];
     const approved = data?.approved_entries || [];
+    const settingsBook = settingsFor ? (myBooks.find((item) => item.shared_book_id === settingsFor.shared_book_id) || settingsFor) : null;
 
     return (
         <div className="neighbor-books-teacher" role="tabpanel">
             {message && <p className="neighbor-books__message" role="status">{message}</p>}
             {error && <p className="neighbor-books__message neighbor-books__message--error" role="alert">{error}</p>}
 
+            <div className="neighbor-books__views" role="tablist" aria-label="문집 도서관">
+                {[['mine', '📚 우리 반 문집'], ['guestbook', `✍️ 방문록${pendingEntries.length > 0 ? ` (${pendingEntries.length})` : ''}`], ['browse', '🏫 둘러보기']].map(([id, label]) => (
+                    <button type="button" role="tab" key={id} aria-selected={booksView === id}
+                        className={`neighbor-books__view${booksView === id ? ' is-active' : ''}${id === 'guestbook' && pendingEntries.length > 0 ? ' has-todo' : ''}`}
+                        onClick={() => setBooksView(id)}>{label}</button>
+                ))}
+            </div>
+
+            {booksView === 'guestbook' && (
             <section className="neighbor-books__card">
                 <header><h3>📥 확인할 방문록 {pendingEntries.length > 0 && <span className="neighbor-books__count">{pendingEntries.length}</span>}</h3>
                     <p>우리 반 문집에 남겨진 방문록이에요. 올려야 모든 반 학생에게 보여요.</p></header>
@@ -143,6 +158,9 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     ), 'is-pending'))}</ul>}
             </section>
 
+            )}
+
+            {booksView === 'mine' && (
             <section className="neighbor-books__card">
                 <header><h3>📚 우리 반 문집 소개하기</h3>
                     <p>글꽃 책방에서 확정하고 <strong>학생 서가에 공개한</strong> 학급 문집을 참여한 모든 반에 소개해요.</p></header>
@@ -180,35 +198,12 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                                     </div>
                                 )}
                                 {shared && (
-                                    /* 게시 기한: 기본은 없음, 켜면 7일 뒤 오후 5시. 지나면 학생이 바로 못 열고 5분 안에 소개가 내려간다. */
-                                    <div className="neighbor-books__until">
-                                        <label className="neighbor-books__until-toggle">
-                                            <input type="checkbox" disabled={Boolean(busy)} checked={Boolean(untilDraftOf(book))}
-                                                onChange={(event) => setUntilDrafts((current) => ({ ...current,
-                                                    [book.shared_book_id]: event.target.checked ? defaultDeadlineInput() : '' }))} />
-                                            📅 게시 기한 정하기
-                                        </label>
-                                        {untilDraftOf(book) && (
-                                            <input type="datetime-local" disabled={Boolean(busy)} value={untilDraftOf(book)}
-                                                onChange={(event) => setUntilDrafts((current) => ({ ...current, [book.shared_book_id]: event.target.value }))} />
-                                        )}
-                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy) || untilDraftOf(book) === isoToDeadlineInput(book.shared_until)}
-                                            onClick={() => saveSharedUntil(book)}>저장</Button>
-                                        <small>{book.shared_until ? `${new Date(book.shared_until).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' })}까지 게시` : '기한 없이 게시 중'}</small>
-                                    </div>
-                                )}
-                                {shared && (
-                                    /* 이 문집에 남기는 방문록의 최소 글자 수(기본 100). 이미 쓴 방문록은 그대로, 고쳐 쓸 때부터 적용. */
-                                    <label className="neighbor-books__min-chars">
-                                        <span>✍️ 방문록 최소</span>
-                                        <input type="number" min="1" max="200" disabled={Boolean(busy)}
-                                            value={minDrafts[book.shared_book_id] ?? book.guestbook_min_chars ?? 100}
-                                            onChange={(event) => setMinDrafts((current) => ({ ...current, [book.shared_book_id]: event.target.value }))} />
-                                        <span>자 이상</span>
-                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)
-                                            || String(minDrafts[book.shared_book_id] ?? book.guestbook_min_chars) === String(book.guestbook_min_chars)}
-                                            onClick={() => saveMinChars(book)}>저장</Button>
-                                    </label>
+                                    /* 설정은 한 줄 요약만 카드에, 바꾸는 것은 ⚙️ 설정 창에서. */
+                                    <p className="neighbor-books__settings-line">
+                                        <span>📅 {book.shared_until ? `${new Date(book.shared_until).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지 게시` : '기한 없이 게시'}</span>
+                                        <span>✍️ 방문록 {book.guestbook_min_chars ?? 100}자 이상</span>
+                                        <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => setSettingsFor(book)}>⚙️ 설정</Button>
+                                    </p>
                                 )}
                                 {hiddenNewer && <p className="neighbor-books__hint">새로 확정한 {book.any_edition_number}판은 아직 학생에게 가려져 있어요. 공개하면 그 판으로 바꿀 수 있어요.</p>}
                                 <span className="neighbor-books__actions">
@@ -221,7 +216,9 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     );
                 })}</ul>
             </section>
+            )}
 
+            {booksView === 'browse' && (
             <section className="neighbor-books__card">
                 <header><h3>🏫 공간에 소개된 문집 {sharedBooks.length > 0 && `(${sharedBooks.length})`}</h3></header>
                 {sharedBooks.length === 0
@@ -233,8 +230,9 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                             <small>{book.number}판 · 방문록 {book.approved_count}{book.is_own_class && Number(book.pending_count) > 0 ? ` · 확인 대기 ${book.pending_count}` : ''}</small>
                         </li>))}</ul>}
             </section>
+            )}
 
-            {approved.length > 0 && (
+            {booksView === 'guestbook' && approved.length > 0 && (
                 <section className="neighbor-books__card">
                     <header><h3>✅ 우리 반 문집에 올라간 방문록</h3><p>문제가 있으면 내릴 수 있어요.</p></header>
                     <ul className="neighbor-books__guestcards">{approved.map((entry) => renderEntryCard(entry, (
@@ -242,6 +240,45 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                     ), 'is-approved'))}</ul>
                 </section>
             )}
+
+            <Modal isOpen={Boolean(settingsBook)} onClose={() => { if (!busy) setSettingsFor(null); }}
+                title={settingsBook ? `⚙️ ‘${settingsBook.title}’ 설정` : ''} maxWidth="520px" showFooter={false}>
+                {settingsBook && (
+                    <div className="neighbor-books__settings">
+                                {(
+                                    /* 게시 기한: 기본은 없음, 켜면 7일 뒤 오후 5시. 지나면 학생이 바로 못 열고 5분 안에 소개가 내려간다. */
+                                    <div className="neighbor-books__until">
+                                        <label className="neighbor-books__until-toggle">
+                                            <input type="checkbox" disabled={Boolean(busy)} checked={Boolean(untilDraftOf(settingsBook))}
+                                                onChange={(event) => setUntilDrafts((current) => ({ ...current,
+                                                    [settingsBook.shared_book_id]: event.target.checked ? defaultDeadlineInput() : '' }))} />
+                                            📅 게시 기한 정하기
+                                        </label>
+                                        {untilDraftOf(settingsBook) && (
+                                            <input type="datetime-local" disabled={Boolean(busy)} value={untilDraftOf(settingsBook)}
+                                                onChange={(event) => setUntilDrafts((current) => ({ ...current, [settingsBook.shared_book_id]: event.target.value }))} />
+                                        )}
+                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy) || untilDraftOf(settingsBook) === isoToDeadlineInput(settingsBook.shared_until)}
+                                            onClick={() => saveSharedUntil(settingsBook)}>저장</Button>
+                                        <small>{settingsBook.shared_until ? `${new Date(settingsBook.shared_until).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' })}까지 게시` : '기한 없이 게시 중'}</small>
+                                    </div>
+                                )}
+                                {(
+                                    /* 이 문집에 남기는 방문록의 최소 글자 수(기본 100). 이미 쓴 방문록은 그대로, 고쳐 쓸 때부터 적용. */
+                                    <label className="neighbor-books__min-chars">
+                                        <span>✍️ 방문록 최소</span>
+                                        <input type="number" min="1" max="200" disabled={Boolean(busy)}
+                                            value={minDrafts[settingsBook.shared_book_id] ?? settingsBook.guestbook_min_chars ?? 100}
+                                            onChange={(event) => setMinDrafts((current) => ({ ...current, [settingsBook.shared_book_id]: event.target.value }))} />
+                                        <span>자 이상</span>
+                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)
+                                            || String(minDrafts[settingsBook.shared_book_id] ?? settingsBook.guestbook_min_chars) === String(settingsBook.guestbook_min_chars)}
+                                            onClick={() => saveMinChars(settingsBook)}>저장</Button>
+                                    </label>
+                                )}
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 }

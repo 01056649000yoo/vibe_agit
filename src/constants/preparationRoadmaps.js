@@ -36,7 +36,7 @@ export const NEIGHBOR_AGIT_PREPARATION_ROADMAP = {
     items: [
         {
             title: '초대로 학급 참여',
-            description: '호스트 교사의 만료되는 초대 키와 승인을 거쳐 최대 열 학급이 안전하게 참여합니다.'
+            description: '호스트 교사가 건넨 7일짜리 초대 코드와 승인을 거쳐 최대 열 학급이 안전하게 참여합니다.'
         },
         {
             title: '나눌 글 확인하기',

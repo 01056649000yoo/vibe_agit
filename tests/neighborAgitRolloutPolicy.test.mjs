@@ -26,7 +26,7 @@ test('이웃 아지트 공개 단계와 초기 제한은 한 원본에서 fail-c
     assert.equal(NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace, 10);
     assert.equal(NEIGHBOR_AGIT_LIMITS.maxActiveSpacesPerClass, 1);
     assert.equal(NEIGHBOR_AGIT_LIMITS.minimumActiveClasses, 2);
-    assert.equal(NEIGHBOR_AGIT_LIMITS.inviteTtlHours, 24);
+    assert.equal(NEIGHBOR_AGIT_LIMITS.inviteTtlHours, 168);
     assert.equal(NEIGHBOR_AGIT_LIMITS.initialFeedRows, 20);
     assert.equal(NEIGHBOR_AGIT_LIMITS.maximumFeedRows, 50);
 });

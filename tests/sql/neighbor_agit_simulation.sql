@@ -161,13 +161,21 @@ SELECT public.zz_sim_login('t_c');
 DO $$
 DECLARE r JSONB;
 BEGIN
-    -- 틀린·쓴 키는 오류가 아니라 action_result.success = false 로 돌아온다(시도 횟수 제한).
+    -- 틀린 코드는 오류가 아니라 action_result.success = false 로 돌아온다(시도 횟수 제한).
     r := public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'join_space',
-        jsonb_build_object('invite_key', current_setting('sim.invite1'), 'public_class_name', '별빛반'));
-    PERFORM public.zz_sim_check('4 쓴 초대키로는 참여 신청이 안 된다(별빛반)',
+        jsonb_build_object('invite_key', 'ABCD-EFGH-JKMN-PQRS', 'public_class_name', '별빛반'));
+    PERFORM public.zz_sim_check('4 틀린 초대 코드로는 참여 신청이 안 된다(별빛반)',
         (r#>>'{action_result,success}')::BOOLEAN IS FALSE AND r#>>'{workspace,space,id}' IS NULL, r->>'action_result');
-EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('4 쓴 초대키로는 참여 신청이 안 된다', TRUE, '막힘: ' || SQLERRM);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('4 틀린 초대 코드로는 참여 신청이 안 된다', TRUE, '막힘: ' || SQLERRM);
 END $$;
+RESET ROLE;
+-- 20261348: 코드 하나로 남은 자리만큼(10반 − 참여·대기 반) 신청을 받는다. 7일 유효.
+SELECT public.zz_sim_check('4-1 첫 초대 코드는 한 반이 쓴 뒤에도 남은 자리만큼 살아 있다(7일)',
+    (SELECT status = 'active' AND use_count = 1 AND max_uses = 9 AND expires_at > NOW() + INTERVAL '6 days'
+     FROM public.neighbor_invites WHERE space_id = public.zz_sim('space') ORDER BY created_at DESC LIMIT 1),
+    (SELECT format('%s · %s/%s', status, use_count, max_uses) FROM public.neighbor_invites WHERE space_id = public.zz_sim('space') ORDER BY created_at DESC LIMIT 1));
+DELETE FROM public.neighbor_invite_attempts WHERE user_id = public.zz_sim('t_c');
+SET LOCAL ROLE authenticated;
 
 SELECT public.zz_sim_login('t_a');
 DO $$
@@ -188,6 +196,19 @@ BEGIN
     PERFORM public.zz_sim_check('7 두 번째 초대키', length(w#>>'{action_result,invite_key}') > 0);
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('5~7 승인·두 번째 초대', FALSE, SQLERRM);
 END $$;
+SELECT public.zz_sim_login('t_c');
+DO $$
+DECLARE r JSONB;
+BEGIN
+    r := public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'join_space',
+        jsonb_build_object('invite_key', current_setting('sim.invite1'), 'public_class_name', '별빛반'));
+    PERFORM public.zz_sim_check('7-1 새 코드를 만들면 이전 코드는 멈춘다',
+        (r#>>'{action_result,success}')::BOOLEAN IS FALSE, r->>'action_result');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('7-1 이전 코드', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+DELETE FROM public.neighbor_invite_attempts WHERE user_id = public.zz_sim('t_c');
+SET LOCAL ROLE authenticated;
 
 SELECT public.zz_sim_login('t_c');
 DO $$

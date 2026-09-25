@@ -18,6 +18,10 @@
     background: linear-gradient(135deg, #f0fdfa, #f8fafc);
     box-shadow: var(--ui-shadow-xs);
 }
+.neighbor-student-page__header.is-compact { align-items: center; margin-bottom: 14px; padding: 12px 18px; }
+.neighbor-student-page__header.is-compact h1 { margin: 0; font-size: var(--ui-text-lg); }
+.neighbor-student-page__header.is-compact .neighbor-student-page__eyebrow,
+.neighbor-student-page__header.is-compact p { display: none; }
 .neighbor-student-page__eyebrow { color: #0f766e; font-size: var(--ui-text-sm); font-weight: 900; }
 .neighbor-student-page__header h1 { margin: 5px 0 4px; font-size: var(--ui-text-2xl); font-weight: 950; }
 .neighbor-student-page__header p { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); line-height: 1.55; }

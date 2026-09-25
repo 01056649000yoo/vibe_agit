@@ -114,9 +114,9 @@ test('모두의 아지트에서는 내 글에 댓글을 달 수 없다(서버·�
 });
 
 test('같이 쓰기 광장에는 공개 글 관리 탭이 없고, 주제 공개 창에서 공개·비공개를 모두 한다', () => {
-    // 이웃 글 마당은 ① 글 모으기·② 공개 글 관리·③ 댓글·반응 그대로.
-    assert.equal((entry.match(/\{ id: 'manage', label: '② 공개 글 관리' \}/g) || []).length, 1);
-    assert.match(entry, /\{ id: 'topics', label: '① 주제' \},\s*\{ id: 'engage', label: '② 댓글·반응' \}/);
+    // 이웃 글 마당은 글 고르기·공개한 글·댓글·반응 그대로(2026-09-25 탭 번호를 뺐다).
+    assert.equal((entry.match(/\{ id: 'manage', label: '공개한 글' \}/g) || []).length, 1);
+    assert.match(entry, /\{ id: 'topics', label: '주제' \},\s*\{ id: 'engage', label: '댓글·반응' \}/);
     assert.doesNotMatch(entry, /topicStep === 'manage'/);
     assert.match(entry, /runAction\('hide_post', \{ space_id: workspace\.space\.id, item_id: post\.shared_post_id, reason: '교사 확인' \}, '글을 비공개로 돌렸습니다\.'\); if \(r\) await reloadActivityCandidates\(activityPublishFor\.id\);/);
     assert.match(entry, />\s*비공개로 돌리기\s*</);

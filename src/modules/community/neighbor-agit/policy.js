@@ -9,7 +9,8 @@ export const NEIGHBOR_AGIT_LIMITS = Object.freeze({
     maxClassesPerSpace: 10,
     maxActiveSpacesPerClass: 1,
     minimumActiveClasses: 2,
-    inviteTtlHours: 24,
+    // 2026-09-25(20261348): 초대 코드는 7일, 남은 자리만큼 여러 반이 쓴다.
+    inviteTtlHours: 168,
     initialFeedRows: 20,
     maximumFeedRows: 50
 });

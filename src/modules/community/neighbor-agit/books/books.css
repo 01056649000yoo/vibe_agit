@@ -100,3 +100,13 @@
   font: inherit; font-size: var(--ui-text-sm); color: var(--ui-ink); }
 .neighbor-books__until small { flex-basis: 100%; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
 
+/* 교사 문집 도서관 세 칸(2026-09-25). */
+.neighbor-books__views { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: var(--ui-radius-sm); background: var(--ui-surface-muted); }
+.neighbor-books__view { padding: 8px 14px; border: 0; border-radius: var(--ui-radius-xs); background: none; color: var(--ui-ink-muted);
+  font: inherit; font-size: var(--ui-text-sm); font-weight: 800; cursor: pointer; }
+.neighbor-books__view.is-active { background: var(--ui-surface); color: var(--ui-ink); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.neighbor-books__view.has-todo { color: var(--ui-danger); }
+.neighbor-books__settings-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: var(--ui-space-2) 0 0;
+  color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
+.neighbor-books__settings { display: grid; gap: var(--ui-space-3); }
+

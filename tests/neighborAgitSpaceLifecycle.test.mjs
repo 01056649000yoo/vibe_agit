@@ -44,7 +44,8 @@ test('권한은 실제 프로필 승인과 담당 학급을 확인하고 JWT 관
 });
 
 test('초대키는 혼동 문자 없는 일회성 원문 응답과 SHA-256 해시·24시간 만료를 사용한다', () => {
-    assert.equal(NEIGHBOR_AGIT_LIMITS.inviteTtlHours, 24);
+    // 처음(24시간·일회성) 판의 해시·문자 규칙은 그대로이고, 기한은 20261348 에서 7일로 늘었다.
+    assert.equal(NEIGHBOR_AGIT_LIMITS.inviteTtlHours, 168);
     assert.match(migration, /v_alphabet CONSTANT TEXT := '23456789ABCDEFGHJKMNPQRSTUVWXYZ'/);
     assert.match(migration, /extensions\.gen_random_bytes\(16\)/);
     assert.match(migration, /extensions\.digest\(convert_to\(v_normalized, 'UTF8'\), 'sha256'\)/);

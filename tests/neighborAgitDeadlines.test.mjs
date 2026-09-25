@@ -34,7 +34,7 @@ test('문집 도서관 게시 기한: 소개한 반 교사가 정하거나 비�
     assert.match(sql, /REVOKE ALL ON FUNCTION public\.withdraw_due_neighbor_books_v1\(\) FROM PUBLIC, anon, authenticated, service_role;/);
     assert.match(sql, /OR neighbor_shared_books\.shared_until <= NOW\(\) THEN NULL/);
     assert.match(api, /call\('set_neighbor_book_shared_until_v1'/);
-    assert.match(teacher, /\[book\.shared_book_id\]: event\.target\.checked \? defaultDeadlineInput\(\) : ''/);
+    assert.match(teacher, /\[settingsBook\.shared_book_id\]: event\.target\.checked \? defaultDeadlineInput\(\) : ''/);
     assert.match(teacher, /sharedUntil: value \? new Date\(value\)\.toISOString\(\) : null/);
     assert.match(student, /item\.shared_until && /);
 });

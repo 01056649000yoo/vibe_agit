@@ -354,7 +354,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
 
     return (
         <main className="neighbor-student-page">
-            <header className="neighbor-student-page__header">
+            {/* 방 안에서는 머리띠가 공간을 말하므로 큰 머리글을 한 줄로 줄인다(2026-09-25). */}
+            <header className={`neighbor-student-page__header${activeSection === null ? '' : ' is-compact'}`}>
                 <StudentBackButton onClick={onBack} />
                 <div>
                     <span className="neighbor-student-page__eyebrow">여러 학급이 함께 읽는 공간</span>
@@ -430,7 +431,7 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                                     </div>
                                     <div className="neighbor-activity-list__actions">
                                         {!isWritingClosed(activity) && !activity.is_submitted && <Button type="button" onClick={() => startActivityWriting(activity)}>이 주제로 글쓰기</Button>}
-                                        {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>활동 글 보기</Button>}
+                                        {(activity.published_count > 0 || activity.share_status === 'published') && <Button type="button" variant="outline" loading={activityLoading && selectedActivity?.id === activity.id} onClick={() => openActivity(activity)}>친구 글 읽기</Button>}
                                     </div>
                                 </article>
                             ))}

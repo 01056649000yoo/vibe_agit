@@ -32,8 +32,8 @@ test('모두의 아지트는 설정 진입점을 남기지 않고 메인 메뉴�
 
 test('제한 공개 교사 화면은 공간·초대·승인·학생 공개·글 검토를 전용 RPC로 운영한다', () => {
     assert.match(entry, /TeacherGuideButton tabId="neighbor-agit"/);
-    assert.match(entry, /새 공간 만들기/);
-    assert.match(entry, /초대키로 참여하기/);
+    assert.match(entry, /새 모임 만들기/);
+    assert.match(entry, /받은 초대 코드로 들어가기/);
     assert.match(entry, /review_join/);
     assert.match(entry, /set_access/);
     assert.match(entry, /review_post/);
