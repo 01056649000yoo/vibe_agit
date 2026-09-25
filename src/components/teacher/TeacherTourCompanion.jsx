@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ModalPortal from '../common/ModalPortal';
 import { TEACHER_TOUR_ANCHOR_SELECTOR, TOUR_SPOTLIGHT_MENU, TOUR_SPOTLIGHT_TARGET } from '../../guides/teacherTour.js';
 import { getStepDetail } from '../../guides/teacherTourDetail.js';
+import { choosePanelPlacement } from '../../guides/tourPanelPlacement.js';
 import { renderEmphasis } from './guideEmphasis.jsx';
 import './TeacherTourCompanion.css';
 
@@ -127,6 +128,18 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
     const navigatedStepRef = useRef(null);
     // 패널이 화면 오른쪽 아래를 늘 차지해 그 뒤 내용을 못 본다는 제보(2026-09-13).
     const [collapsed, setCollapsed] = useState(readCollapsed);
+    const panelRef = useRef(null);
+
+    /*
+     * 짚은 자리가 바뀔 때마다(스크롤·크기 변경 포함) 패널 자리를 다시 고른다. 접힌 알약도 같은 자리를 따른다.
+     * 상태로 두면 재고 → 다시 그리고 → 또 재는 고리가 생기므로, 잰 결과를 그 요소의 속성에 바로 적는다.
+     */
+    useLayoutEffect(() => {
+        const element = panelRef.current;
+        if (!element) return;
+        const next = choosePanelPlacement(rect, element.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight });
+        if (element.dataset.placement !== next) element.dataset.placement = next;
+    });
 
     const toggleCollapsed = (next) => {
         setCollapsed(next);
@@ -214,10 +227,20 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
      * 접었는데도 화면이 어두우면 접은 뜻이 없다.
      */
     if (collapsed) {
+        /*
+         * 덮개는 걷되 **테두리는 남긴다** — 접자마자 어디를 누르라는지 사라지면 접을 수가 없다
+         * (2026-09-25 제보). 메뉴를 이미 열었으면 테두리도 없다(펼친 때와 같다).
+         */
+        const keepRing = rect && !(step.spotlight === TOUR_SPOTLIGHT_MENU && rect.opened);
         return (
             <ModalPortal>
+                {keepRing && (
+                    <div className="teacher-tour__ring" aria-hidden="true"
+                        style={{ top: `${rect.top}px`, left: `${rect.left}px`, width: `${rect.width}px`, height: `${rect.height}px` }} />
+                )}
                 <button
                     type="button"
+                    ref={panelRef}
                     className="teacher-tour__pill"
                     onClick={() => toggleCollapsed(false)}
                 >
@@ -293,6 +316,7 @@ const TeacherTourCompanion = ({ tour, journeyTitle, nextJourneyTitle, onNavigate
                 );
             })()}
             <section
+                ref={panelRef}
                 className="teacher-tour__panel"
                 role="status"
                 aria-live="polite"

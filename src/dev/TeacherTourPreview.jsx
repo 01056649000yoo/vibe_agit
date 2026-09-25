@@ -17,6 +17,7 @@ import {
     reduceTourState,
     launchAnchorId,
     moduleAnchorId,
+    neighborSpaceAnchorId,
     sectionAnchorId,
     tabAnchorId,
     toolAnchorId,
@@ -141,6 +142,16 @@ export default function TeacherTourPreview() {
                     ➕ 미션 만들기 (가짜)
                 </button>
             </section>
+            {/* 모두의 아지트 안쪽 자리(가짜). 문집 도서관 카드가 오른쪽 끝이라 패널이 비키는지 본다. */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <span {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_ACCESS)} style={{ padding: '8px 12px', border: '1px solid var(--ui-border)' }}>학생 입장 닫힘</span>
+                <span {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW)} style={{ padding: '8px 12px', border: '1px solid var(--ui-border)' }}>🗂️ 검토</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16, width: '100%' }}>
+                {['gallery', 'topic', 'books'].map((id) => (
+                    <button type="button" key={id} {...tourAnchor(neighborSpaceAnchorId(id))} style={{ minHeight: 110 }}>{id}</button>
+                ))}
+            </div>
 
             {guideOpen && (
                 <TeacherGuideCenter

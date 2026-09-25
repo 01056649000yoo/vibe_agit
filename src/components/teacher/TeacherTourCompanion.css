@@ -205,6 +205,19 @@
     }
 }
 
+/* 짚은 자리를 가리면 비킨다(choosePanelPlacement). 패널과 접힌 알약이 같은 규칙을 쓴다. */
+.teacher-tour__panel[data-placement$='left'],
+.teacher-tour__pill[data-placement$='left'] { right: auto; left: var(--ui-space-5); }
+.teacher-tour__panel[data-placement^='top'],
+.teacher-tour__pill[data-placement^='top'] { bottom: auto; top: var(--ui-space-5); }
+@media (max-width: 640px) {
+    /* 좁은 화면에서 패널은 양옆을 다 쓴다 — 위·아래로만 비킨다. */
+    .teacher-tour__panel[data-placement] { left: var(--ui-space-2); right: var(--ui-space-2); }
+    .teacher-tour__panel[data-placement^='top'],
+    .teacher-tour__pill[data-placement^='top'] { top: var(--ui-space-2); }
+    .teacher-tour__pill[data-placement$='left'] { left: var(--ui-space-2); }
+}
+
 /* 다시 보기 중임을 알린다 — 실제로 또 만들라는 뜻이 아니라는 표시다. */
 .teacher-tour__replay {
     margin-right: var(--ui-space-2);

@@ -94,7 +94,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('neighbor-open', '우리 반 입장 열기', '두 반 이상 모이면 반마다 입장을 열어야 아이들 홈에 모두의 아지트 카드가 나타납니다.', 'neighbor-agit'),
             step('neighbor-gallery', '🌳 이웃 글 마당', '우리 반 글을 골라 이웃 반에 공개하고, 반별로 글과 댓글·반응을 살핍니다.', 'neighbor-agit'),
             step('neighbor-topic', '🎪 같이 쓰기 광장', '공동 주제를 제안해 다른 반의 승인을 받고, 기한과 진행 현황 카드로 모인 글을 공개합니다.', 'neighbor-agit'),
-            step('neighbor-books', '🏛️ 문집 도서관', '확정한 학급 문집을 소개하고 게시 기한·방문록 기준을 정한 뒤, 들어온 방문록을 올립니다.', 'neighbor-agit'),
+            step('neighbor-books', '🏛️ 문집 도서관', '글꽃 책방에서 확정한 문집을 소개하고, 문집마다 게시 날짜·방문록 글자 수를 고른 뒤 들어온 방문록을 올립니다.', 'neighbor-agit'),
             step('neighbor-review', '🗂️ 검토와 새 소식', '참여 신청·주제 제안·방문록·막힌 댓글을 한곳에서 처리하고, 메뉴 숫자로 이웃 반 새 소식을 봅니다.', 'neighbor-agit')
         ]
     },
