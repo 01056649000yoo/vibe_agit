@@ -236,29 +236,60 @@ SELECT public.zz_sim_expect_denied('10 게스트(바다반)는 초대키를 못 
     format($q$SELECT public.run_neighbor_teacher_action_v1(%L, 'create_invite', jsonb_build_object('space_id', %L))$q$, public.zz_sim('c_b'), public.zz_sim('space')));
 SELECT public.zz_sim_expect_denied('11 게스트(바다반)는 공간을 못 닫는다',
     format($q$SELECT public.run_neighbor_teacher_action_v1(%L, 'close_space', jsonb_build_object('space_id', %L))$q$, public.zz_sim('c_b'), public.zz_sim('space')));
+-- 공개 단계는 운영 값을 따르지 않고 두 경우를 모두 본다(2026-09-25 정상 공개로 바뀐 뒤 12번이 운영 값에 흔들렸다).
+RESET ROLE;
+SELECT set_config('sim.rollout_mode', (SELECT mode FROM public.neighbor_rollout_state WHERE singleton), TRUE);
+UPDATE public.neighbor_rollout_state SET mode = 'limited_beta' WHERE singleton;
+SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('t_d');
-SELECT public.zz_sim_expect_denied('12 공개 대상이 아닌 학급(외부반) 교사는 못 들어온다',
+SELECT public.zz_sim_expect_denied('12 제한 공개에서는 공개 대상이 아닌 학급(외부반) 교사는 못 들어온다',
     format($q$SELECT public.get_neighbor_teacher_workspace_v1(%L)$q$, public.zz_sim('c_d')));
+RESET ROLE;
+UPDATE public.neighbor_rollout_state SET mode = 'public_beta' WHERE singleton;
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_d');
+DO $$
+DECLARE w JSONB;
+BEGIN
+    w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_d'));
+    PERFORM public.zz_sim_check('12-1 정상 공개(Beta)에서는 외부반 교사도 들어와 새 모임을 만들 수 있다', w IS NOT NULL);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('12-1 정상 공개에서 외부반 교사', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+UPDATE public.neighbor_rollout_state SET mode = current_setting('sim.rollout_mode') WHERE singleton;
+SET LOCAL ROLE authenticated;
 
--- 각 반 교사가 우리 반 학생 입장을 연다.
-SELECT public.zz_sim_login('t_a');
+-- 학생 입장은 두 반 이상이 되면 저절로 열린다(20261349). 교사가 닫으면 닫힌 채로 두고, 다시 열 수 있다.
+RESET ROLE;
+SELECT public.zz_sim_check('13 승인만으로 세 반 모두 학생 입장이 열려 있다(기본값)',
+    (SELECT count(*) FROM public.neighbor_space_classes WHERE space_id = public.zz_sim('space') AND status = 'active' AND student_access_enabled) = 3);
+SELECT public.zz_sim_check('13-0 학급 모듈에도 모두의 아지트가 켜졌다',
+    (SELECT count(*) FROM public.classes WHERE id IN (public.zz_sim('c_a'), public.zz_sim('c_b'), public.zz_sim('c_c'))
+        AND 'neighbor-agit' = ANY(enabled_modules)) = 3);
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_c');
 DO $$ BEGIN
-    PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_a'), 'set_access', jsonb_build_object('space_id', public.zz_sim('space'), 'enabled', TRUE));
-EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('13 햇살반 학생 입장 열기', FALSE, SQLERRM);
+    PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'set_access', jsonb_build_object('space_id', public.zz_sim('space'), 'enabled', FALSE));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('13-1 별빛반 학생 입장 닫기', FALSE, SQLERRM);
 END $$;
-SELECT public.zz_sim_login('t_b');
-DO $$ BEGIN
-    PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_b'), 'set_access', jsonb_build_object('space_id', public.zz_sim('space'), 'enabled', TRUE));
-EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('13 바다반 학생 입장 열기', FALSE, SQLERRM);
-END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('13-1 교사가 닫으면 닫힌 채로, 닫았다는 기록이 남는다',
+    (SELECT NOT student_access_enabled AND student_access_closed FROM public.neighbor_space_classes
+     WHERE space_id = public.zz_sim('space') AND class_id = public.zz_sim('c_c')));
+-- 다른 반이 새로 들어와도(기본 열기가 다시 돌아도) 닫은 반은 열리지 않는다.
+SELECT public.open_neighbor_default_access_v1(public.zz_sim('space'));
+SELECT public.zz_sim_check('13-2 기본 열기가 다시 돌아도 닫은 반은 그대로',
+    (SELECT NOT student_access_enabled FROM public.neighbor_space_classes
+     WHERE space_id = public.zz_sim('space') AND class_id = public.zz_sim('c_c')));
+SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('t_c');
 DO $$ BEGIN
     PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'set_access', jsonb_build_object('space_id', public.zz_sim('space'), 'enabled', TRUE));
-EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('13 별빛반 학생 입장 열기', FALSE, SQLERRM);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('13-3 별빛반 학생 입장 다시 열기', FALSE, SQLERRM);
 END $$;
 RESET ROLE;
 SELECT public.zz_sim_check('13 세 반 모두 학생 입장 열기',
-    (SELECT count(*) FROM public.neighbor_space_classes WHERE space_id = public.zz_sim('space') AND status = 'active' AND student_access_enabled) = 3);
+    (SELECT count(*) FROM public.neighbor_space_classes WHERE space_id = public.zz_sim('space') AND status = 'active' AND student_access_enabled AND NOT student_access_closed) = 3);
 SET LOCAL ROLE authenticated;
 
 -- ───────────────────────── 3. 이웃 글 마당 ─────────────────────────

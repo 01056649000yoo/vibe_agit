@@ -82,3 +82,20 @@ test('머리글 줄이기가 도움말 단추 글자를 숨기지 않는다(2026
     assert.match(css, /\.neighbor-teacher__header\.is-compact > div:first-child > span/);
     assert.match(entry, /<TeacherGuideButton tabId="neighbor-agit" variant="help" \/>/);
 });
+
+test('학생 입장은 두 반이 모이면 저절로 열리고, 교사가 닫은 반만 닫힌 채로 둔다(20261349)', async () => {
+    const sql = await readFile('supabase/migrations/20261349_neighbor_student_access_default_open.sql', 'utf8');
+    assert.match(sql, /ADD COLUMN IF NOT EXISTS student_access_closed BOOLEAN NOT NULL DEFAULT FALSE/);
+    // 기본 열기: 두 반 이상·활성 공간, 닫은 기록이 없는 반만, 학급 모듈까지.
+    assert.match(sql, /membership\.student_access_closed IS NOT TRUE/);
+    assert.match(sql, /array_append\(COALESCE\(class\.enabled_modules, ARRAY\[\]::TEXT\[\]\), 'neighbor-agit'\)/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public\.open_neighbor_default_access_v1\(uuid\) FROM PUBLIC, anon, authenticated, service_role;/);
+    // 승인하면 연다, 새로 승인된 반은 닫은 기록 없이.
+    assert.match(sql, /student_access_closed = FALSE\s+WHERE space_id = p_space_id\s+AND class_id = p_class_id\s+AND role = 'guest'/);
+    assert.match(sql, /IF p_approve THEN\s+PERFORM public\.open_neighbor_default_access_v1\(p_space_id\);/);
+    // 교사가 닫으면 기록, 열면 지운다.
+    assert.match(sql, /student_access_closed = NOT v_enabled/);
+    // 닫아 둔 반만 위쪽에 다시 열 곳을 보여 준다.
+    assert.match(entry, /우리 반 학생 입장을 닫아 두었어요/);
+    assert.doesNotMatch(entry, /다른 반은 그 반 선생님이 엽니다/);
+});

@@ -149,7 +149,7 @@ const STEP_RULES = Object.freeze({
     // 모두의 아지트 흐름: 여섯 단계가 모두 한 메뉴라, 안쪽 자리를 하나씩 짚는다.
     'neighbor-open': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.NEIGHBOR_ACCESS,
-        hint: '이 단추가 `학생 입장 닫힘`이면 우리 반 아이들 홈에 모두의 아지트가 아직 보이지 않습니다. 두 반 이상 모였을 때 눌러 여세요.'
+        hint: '두 반 이상 모이면 저절로 `학생 입장 열림`이 됩니다. 우리 반 아이들에게만 감추고 싶을 때 이 단추를 눌러 닫습니다.'
     }),
     'neighbor-gallery': Object.freeze({ anchor: neighborSpaceAnchorId('gallery'), hint: '카드를 누르면 아래에 이웃 글 마당 작업판이 열립니다.' }),
     'neighbor-topic': Object.freeze({ anchor: neighborSpaceAnchorId('topic'), hint: '카드를 누르면 주제 제안과 진행 현황이 열립니다.' }),

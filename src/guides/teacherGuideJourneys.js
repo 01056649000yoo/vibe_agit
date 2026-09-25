@@ -91,7 +91,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         estimatedTime: '이웃 반과 함께할 때',
         steps: [
             step('neighbor-invite', '모임 열고 이웃 반 초대하기', '‘새 모임 만들기’로 모임을 열고 ‘안내문 복사’로 초대를 보냅니다(7일·여러 반). 이웃 반이 신청하면 호스트가 승인합니다.', 'neighbor-agit'),
-            step('neighbor-open', '우리 반 입장 열기', '두 반 이상 모이면 반마다 입장을 열어야 아이들 홈에 모두의 아지트 카드가 나타납니다.', 'neighbor-agit'),
+            step('neighbor-open', '우리 반 입장 살피기', '두 반 이상 모이면 참여한 반 아이들 홈에 모두의 아지트 카드가 저절로 나타납니다. 우리 반만 감추려면 입장 단추로 닫습니다.', 'neighbor-agit'),
             step('neighbor-gallery', '🌳 이웃 글 마당', '우리 반 글을 골라 이웃 반에 공개하고, 반별로 글과 댓글·반응을 살핍니다.', 'neighbor-agit'),
             step('neighbor-topic', '🎪 같이 쓰기 광장', '공동 주제를 제안해 다른 반의 승인을 받고, 기한과 진행 현황 카드로 모인 글을 공개합니다.', 'neighbor-agit'),
             step('neighbor-books', '🏛️ 문집 도서관', '글꽃 책방에서 확정한 문집을 소개하고, 문집마다 게시 날짜·방문록 글자 수를 고른 뒤 들어온 방문록을 올립니다.', 'neighbor-agit'),
