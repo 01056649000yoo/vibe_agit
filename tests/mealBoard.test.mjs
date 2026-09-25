@@ -280,7 +280,8 @@ test('학생 비고는 선택적 최소 수집이며 담당 교사 RPC로만 읽
 });
 
 test('나이스 함수는 운영 동기화와 무인증 401 검증 대상이다', () => {
-  assert.match(deployment, /volumes\/functions\/neis-meal/);
+  // 모든 함수를 맞추는 스크립트가 나이스 함수도 올린다(2026-09-25). 마지막 확인은 워크플로 Verify 에 남아 있다.
+  assert.match(deployment, /bash scripts\/sync-edge-functions\.sh/);
   assert.match(deployment, /functions\/v1\/neis-meal/);
   assert.match(deployment, /neis_edge_code" = "401"/);
 });

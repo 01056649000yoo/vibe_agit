@@ -12,7 +12,7 @@ import test from 'node:test';
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- 호출부는 이 파일의 고정된 배포 파일 경로 8개뿐이다.
 const readText = async (path) => (await readFile(path, 'utf8')).split('\r\n').join('\n');
 
-const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp, buildApp, syncShared] = await Promise.all([
+const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCache, trimPlist, runApp, buildApp, syncShared, syncFunctions] = await Promise.all([
     readText('.github/workflows/deploy.yml'),
     readText('Dockerfile'),
     readText('.dockerignore'),
@@ -23,32 +23,35 @@ const [workflow, dockerfile, dockerignore, caddy, localDeploy, preflight, trimCa
     readText('ops/launchd/com.agit.docker-cache-trim.plist'),
     readText('scripts/run-agit-app.sh'),
     readText('scripts/build-agit-app.sh'),
-    readText('scripts/sync-edge-shared.sh')
+    readText('scripts/sync-edge-shared.sh'),
+    readText('scripts/sync-edge-functions.sh')
 ]);
 
-test('로컬 배포도 CI와 같은 일을 한다 — 앱과 Edge 함수를 함께 맞춘다', () => {
-    // `vibe-ai` 는 앱 이미지 밖(맥미니 폴더)에서 돌기 때문에 따로 복사해야 반영된다.
-    // 로컬 배포에만 이 단계가 없으면 "앱은 새것, 함수는 옛것"이 되고 200이 떠서 성공처럼 보인다.
-    assert.match(localDeploy, /volumes\/functions\/vibe-ai\/index\.ts/);
-    assert.match(localDeploy, /cmp -s "\$FN_SRC" "\$FN_DST"/);
-    assert.match(localDeploy, /install -m 0644 "\$FN_SRC" "\$FN_DST"/);
-    // 바꾼 뒤에는 컨테이너 상태와 응답까지 본다(CI 의 Verify 와 같은 기준).
-    assert.match(localDeploy, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
-    assert.match(localDeploy, /functions\/v1\/vibe-ai/);
-    assert.match(localDeploy, /EDGE_CODE" = "400"/);
+test('로컬 배포도 CI와 같은 일을 한다 — 앱과 모든 Edge 함수를 함께 맞춘다', () => {
+    // Edge 함수는 앱 이미지 밖(맥미니 폴더)에서 돌기 때문에 따로 복사해야 반영된다. 예전에는 세 함수만
+    // 배포 경로마다 따로 적어 나머지(verify-admin-mode 등)는 손으로 옮겨야 했다(2026-09-25).
+    // 이제 두 경로가 같은 스크립트 하나를 부른다.
+    for (const [name, text] of [['자동 배포', workflow], ['로컬 배포', localDeploy]]) {
+        assert.match(text, /bash scripts\/sync-edge-functions\.sh/, `${name}가 Edge 함수를 맞추지 않는다`);
+        assert.doesNotMatch(text, /install -m 0644 (?:"\$FN_SRC"|supabase\/functions\/)/, `${name}에 함수별 복사가 남아 있다`);
+    }
+    // 폴더째 **모든 파일**을 본다 — 파일이 여럿인 함수(spelling-weekly-review·book-search)도 함께 올라간다.
+    assert.match(syncFunctions, /for fn_dir in "\$src_root"\/\*\/; do/);
+    assert.match(syncFunctions, /for src_file in "\$fn_dir"\*; do/);
+    assert.match(syncFunctions, /cmp -s "\$src_file" "\$dst_file"/);
+    assert.match(syncFunctions, /install -m 0644 "\$src_file" "\$dst_file"/);
     // 되돌릴 사본을 남긴다 — 이 폴더는 git 밖이라 복구 수단이 사본뿐이다.
-    assert.match(localDeploy, /cp "\$FN_DST" "\$FN_DST\.bak-/);
-    assert.match(localDeploy, /volumes\/functions\/neis-meal/);
-    assert.match(localDeploy, /cmp -s "\$NEIS_FN_SRC" "\$NEIS_FN_DST"/);
-    assert.match(localDeploy, /install -m 0644 "\$NEIS_FN_SRC" "\$NEIS_FN_DST"/);
-    assert.match(localDeploy, /functions\/v1\/neis-meal/);
-    assert.match(localDeploy, /NEIS_EDGE_CODE" = "401"/);
-    // 파일이 둘인 함수는 하나만 맞으면 지시문과 판정 버전이 어긋난다. 자동 배포에만 있고
-    // 로컬 배포에 없어서 손으로 올리면 옛 판이 남았다(2026-08-28).
-    assert.match(localDeploy, /volumes\/functions\/spelling-weekly-review/);
-    assert.match(localDeploy, /for FILE in index\.ts reviewCore\.js/);
-    assert.match(localDeploy, /functions\/v1\/spelling-weekly-review/);
-    assert.match(localDeploy, /WEEKLY_EDGE_CODE" = "401"/);
+    assert.match(syncFunctions, /cp "\$dst_file" "\$dst_file\.bak-\$stamp"/);
+    // 비밀 값은 만들 때만 들어가므로 restart 가 아니라 recreate, 그리고 한 번만.
+    assert.equal((syncFunctions.match(/docker compose up -d --no-deps --force-recreate functions/g) || []).length, 1);
+    // 바꾼 뒤에는 컨테이너 상태와 **모든 함수**의 응답까지 본다. vibe-ai 는 400, 나머지는 로그인 없으면 401.
+    assert.match(syncFunctions, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
+    assert.match(syncFunctions, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/\$fn/);
+    assert.match(syncFunctions, /vibe-ai\) echo 400 ;;/);
+    assert.match(syncFunctions, /\*\) echo 401 ;;/);
+    assert.match(syncFunctions, /exit 1/);
+    // macOS 기본 bash 3.2 는 set -u 에서 빈 배열을 unbound 로 본다 — 배열을 쓰지 않는다.
+    assert.doesNotMatch(syncFunctions, /\+=\(|\$\{#[a-z_]+\[@\]\}/);
 });
 
 test('main 푸시는 맥미니 self-hosted 러너의 단일 배포 작업을 시작한다', () => {
@@ -68,12 +71,9 @@ test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬
     assert.match(runApp, /--name "\$NAME"[\s\S]*--restart unless-stopped/);
     assert.match(runApp, /HOST_PORT="\$\{2:-8300\}"/);
     assert.match(workflow, /curl[\s\S]*http:\/\/127\.0\.0\.1:8300\//);
-    assert.match(workflow, /docker compose up -d --no-deps --force-recreate functions/);
     assert.match(workflow, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
     assert.match(workflow, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/vibe-ai/);
     assert.match(workflow, /\[ "\$edge_code" = "400" \]/);
-    assert.match(workflow, /volumes\/functions\/neis-meal/);
-    assert.match(workflow, /install -m 0644 supabase\/functions\/neis-meal\/index\.ts/);
     assert.match(workflow, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/neis-meal/);
     assert.match(workflow, /\[ "\$neis_edge_code" = "401" \]/);
     assert.match(dockerfile, /npm run test:all/);
@@ -200,7 +200,7 @@ test('함수들이 함께 쓰는 파일은 각 함수보다 먼저, 두 경로�
     for (const [name, text] of [['자동 배포', workflow], ['로컬 배포', localDeploy]]) {
         assert.match(text, /bash scripts\/sync-edge-shared\.sh/, `${name}가 공유 파일을 올리지 않는다`);
         // 함수 본체보다 **먼저** 올라가야 한다. 순서가 뒤집히면 한 번은 깨진 채로 뜬다.
-        assert.ok(text.indexOf('sync-edge-shared.sh') < text.indexOf('vibe-ai/index.ts'),
+        assert.ok(text.indexOf('sync-edge-shared.sh') < text.indexOf('sync-edge-functions.sh'),
             `${name}에서 공유 파일이 함수보다 나중에 올라간다`);
     }
 

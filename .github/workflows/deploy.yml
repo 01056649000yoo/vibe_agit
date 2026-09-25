@@ -55,46 +55,10 @@ jobs:
           # 함수들이 함께 쓰는 파일을 먼저 올린다(AI 모델 이름 등). 로컬 배포도 같은 것을 부른다.
           bash scripts/sync-edge-shared.sh
 
-      - name: Sync AI edge function
-        run: |
-          target="$HOME/agit-supabase/volumes/functions/vibe-ai/index.ts"
-          if cmp -s supabase/functions/vibe-ai/index.ts "$target"; then
-            echo "vibe-ai already current"
-            exit 0
-          fi
-          install -m 0644 supabase/functions/vibe-ai/index.ts "$target"
-          cd "$HOME/agit-supabase"
-          docker compose up -d --no-deps --force-recreate functions
-
-      - name: Sync NEIS meal edge function
-        run: |
-          target_dir="$HOME/agit-supabase/volumes/functions/neis-meal"
-          target="$target_dir/index.ts"
-          if [ -f "$target" ] && cmp -s supabase/functions/neis-meal/index.ts "$target"; then
-            echo "neis-meal already current"
-            exit 0
-          fi
-          mkdir -p "$target_dir"
-          install -m 0644 supabase/functions/neis-meal/index.ts "$target"
-          cd "$HOME/agit-supabase"
-          docker compose up -d --no-deps --force-recreate functions
-
-      # 이 함수만 파일이 둘이다 — index.ts 와, 되돌림 스크립트와 함께 쓰는 계산 원본 reviewCore.js.
-      # 하나만 올리면 함수가 import 에서 죽으므로 둘을 함께 보고 함께 올린다.
-      - name: Sync spelling weekly review edge function
-        run: |
-          target_dir="$HOME/agit-supabase/volumes/functions/spelling-weekly-review"
-          if [ -f "$target_dir/index.ts" ] \
-            && cmp -s supabase/functions/spelling-weekly-review/index.ts "$target_dir/index.ts" \
-            && cmp -s supabase/functions/spelling-weekly-review/reviewCore.js "$target_dir/reviewCore.js"; then
-            echo "spelling-weekly-review already current"
-            exit 0
-          fi
-          mkdir -p "$target_dir"
-          install -m 0644 supabase/functions/spelling-weekly-review/index.ts "$target_dir/index.ts"
-          install -m 0644 supabase/functions/spelling-weekly-review/reviewCore.js "$target_dir/reviewCore.js"
-          cd "$HOME/agit-supabase"
-          docker compose up -d --no-deps --force-recreate functions
+      # 모든 Edge 함수를 폴더째 맞추고 함수마다 응답을 확인한다. 로컬 배포도 같은 스크립트를 부른다(2026-09-25).
+      # 파일이 여럿인 함수(spelling-weekly-review 의 index.ts·reviewCore.js, book-search 등)도 함께 올라간다.
+      - name: Sync edge functions
+        run: bash scripts/sync-edge-functions.sh
 
       - name: Sync class exhibition public reader
         run: bash scripts/sync-class-agit-public-read.sh

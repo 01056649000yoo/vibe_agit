@@ -18,6 +18,20 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-25 — 보안 점검 결정 처리: 이메일·전화 가입 끔 + Edge 함수 배포 통일 (Claude Opus 5.5)
+- **선생님 결정**: 관리자 모드 비밀번호 4자리 유지(본인 계정에서만 열림), 이메일·전화 가입 끄기, 배포 스크립트 고치기,
+  **모두의 아지트는 전체 교사에게 열지 않고 더 시험**(메뉴의 `(제작 중)` 유지).
+- **git 밖 변경(맥미니)**: `~/agit-supabase/docker-compose.agit.yml` auth `environment` 에 `GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"`,
+  `GOTRUE_EXTERNAL_PHONE_ENABLED: "false"` 추가(백업 `compose-backups/docker-compose.agit.yml.bak-20260925`). `--dry-run` 으로 auth 하나만
+  다시 만드는 것을 본 뒤 `up -d --force-recreate --no-deps auth`. 공용 `.env` 는 건드리지 않음(업그레이드 때 덮이지 않게 앱 전용 파일에).
+  확인: 운영 `/auth/v1/settings` email·phone false, google·anonymous true, 이메일 가입 400 `email_provider_disabled`, 익명 세션 생성 정상
+  (확인용 익명 계정 1개는 학생 연결 없음 확인 후 삭제). 이메일 로그인·가입을 쓰는 코드·스크립트 없음, 기존 이메일 계정 1개는 로그인 이력 없음.
+- **배포 스크립트**: `scripts/sync-edge-functions.sh` 새로 — `supabase/functions/*` 전부를 폴더째(모든 파일) 비교·백업·복사, 컨테이너는 한 번만
+  다시 만들고, **모든 함수**에 빈 요청을 보내 기대 응답(vibe-ai 400, 나머지 401) 확인, bash 3.2 호환(배열 없음). 로컬 배포의 함수별 블록 3개와
+  자동 배포의 함수별 단계 3개를 이 한 줄로 바꿈. 옛 단계를 글자로 고정하던 검사 3곳(deploymentArchitecture·mealBoard·weeklySpellingReview)을
+  같은 뜻으로 옮김(옛 스크립트에서 2 실패 확인). 운영에 대고 실행: 9개 함수 모두 기대 응답.
+- **문서**: 보안 보고서 결정 필요 A~D 결과, 기능 지도 v1.0.1.
+
 ## 2026-09-24 — 끄적끄적 아지트 v1 확정: 기능 지도 + 도움말·활용 안내서·학생 도움말 전체 대조 (Claude Opus 5.5)
 - **요청**: 지금까지의 기능을 v1로 이름 붙여 총정리하고, 앞으로는 그 지도를 고쳐 가며 전체 맵을 유지. v1에 맞춰 도움말·활용 안내서 전부 대조.
 - **v1**: [FEATURE_MAP.md](FEATURE_MAP.md)(교사 메뉴 11갈래·학생·관리자·플랫폼, 상태·도움말 키, 변경 기록), `package.json` 1.0.0, git 태그 `v1.0.0`.

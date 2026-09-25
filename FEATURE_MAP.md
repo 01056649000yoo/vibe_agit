@@ -96,11 +96,11 @@
 
 | 영역 | 내용 | 원본 |
 |---|---|---|
-| 인증 | 교사 구글 로그인(관리자 승인), 학생 코드 로그인, 관리자 모드 두 번째 잠금 | `SECURITY_HARNESS.md` |
+| 인증 | 교사 구글 로그인(관리자 승인), 학생 코드 로그인(익명 세션), 관리자 모드 두 번째 잠금. 이메일·전화 가입은 꺼 둠(2026-09-25) | `SECURITY_HARNESS.md` |
 | 권한 | 모든 표 RLS, 쓰기는 `SECURITY DEFINER` RPC, `check:rpc-surface` 로 공개 범위 관리 | `SECURITY_HARNESS.md` |
 | AI | 댓글 안전 검사 대기열(동시 3개), 맞춤법·피드백·평어·도움말 비서(엣지 함수 `vibe-ai`), 학생 요청 10분 20번 | `supabase/functions/vibe-ai` |
 | 성능 | 학생 홈 한 번의 RPC, 폴링은 정해진 예외만(교사 12초, 학생 반려·승인 배너 12초) | `PERFORMANCE_HARNESS.md` |
-| 배포 | `npm run deploy:local`(로컬 배포), `git push` 자동 배포, 마이그레이션 먼저 | `AGENTS.md` |
+| 배포 | `npm run deploy:local`(로컬 배포), `git push` 자동 배포, 마이그레이션 먼저. Edge 함수는 두 경로 모두 `scripts/sync-edge-functions.sh` 로 전부 맞추고 응답 확인 | `AGENTS.md` |
 | 백업·감시 | 자동 백업·복구 리허설, 서버 상태 기록·경보 | `backup.md`, `docs/OUTAGE_PLAN.md` |
 | 보안 점검 | 날짜별 기록 | `docs/security-audits/` |
 
@@ -108,4 +108,5 @@
 
 | 버전 | 날짜 | 바뀐 것 |
 |---|---|---|
+| v1.0.1 | 2026-09-25 | 인증 서버 이메일·전화 가입 끔, Edge 함수 배포를 모든 함수 동기화로 통일. 모두의 아지트는 제한 공개 유지(더 시험한 뒤 공개) |
 | v1.0 | 2026-09-24 | 첫 기능 지도. 모두의 아지트 세 공간 이름 확정(이웃 글 마당·같이 쓰기 광장·문집 도서관), KISA 기준 보안 점검 반영, 도움말·활용 안내서·학생 도움말 전체 대조 |

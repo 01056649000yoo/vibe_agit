@@ -176,10 +176,11 @@ test('관리자 화면은 쌓인 양을 보여 주고 관리자가 눌러야 AI�
     assert.doesNotMatch(panel, /매주 월요일 05:10에 첫 결과가/);
 });
 
-test('배포가 엣지 함수의 두 파일을 함께 올린다', () => {
+test('배포가 엣지 함수의 두 파일을 함께 올린다', async () => {
     // index.ts 만 올리면 reviewCore.js 를 import 하다가 함수가 죽는다.
-    assert.match(deployWorkflow, /spelling-weekly-review\/index\.ts/);
-    assert.match(deployWorkflow, /spelling-weekly-review\/reviewCore\.js/);
+    // 2026-09-25 부터 모든 함수를 폴더째(모든 파일) 올리는 스크립트 하나로 맞춘다.
+    assert.match(deployWorkflow, /bash scripts\/sync-edge-functions\.sh/);
+    assert.match(await readFile('scripts/sync-edge-functions.sh', 'utf8'), /for src_file in "\$fn_dir"\*; do/);
 });
 
 test('원자료 목록은 관리자 전용 읽기이고 실행 함수와 같은 기준으로 고른다', () => {
