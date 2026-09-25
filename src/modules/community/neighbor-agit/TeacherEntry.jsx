@@ -1435,10 +1435,11 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </ModalPortal>
 
                                     <div className="neighbor-teacher__activity-body">
+                                    {/* 공개·비공개는 주제마다 자세히 보기 → 제출 글 공개 창에서 한다(2026-09-25). 예전 ② 공개 글 관리는
+                                        이웃 글 마당과 같은 화면이라 모든 공간 글이 섞여 나와 이 공간에서는 뺐다. */}
                                     {renderStepBar([
                                         { id: 'topics', label: '① 주제' },
-                                        { id: 'manage', label: '② 공개 글 관리' },
-                                        { id: 'engage', label: '③ 댓글·반응' }
+                                        { id: 'engage', label: '② 댓글·반응' }
                                     ], topicStep, setTopicStep)}
 
                                     {topicStep === 'topics' && (
@@ -1470,7 +1471,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                     </section>
                                     )}
 
-                                    {topicStep === 'manage' && renderManageStep()}
                                     {topicStep === 'engage' && renderEngageStep()}
                                     </div>
                                 </>
@@ -1634,7 +1634,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                 <Modal isOpen onClose={() => { if (!busy) { setActivityPublishFor(null); setActivityCandidates(null); } }}
                     title={`✏️ "${activityPublishFor.title}" 제출 글 공개`} maxWidth="880px" showFooter={false}>
                     <div className="neighbor-teacher__candidate-panel">
-                        <p className="neighbor-teacher__gallery-intro"><span>우리 반 제출 글을 골라 이웃 반에 공개합니다. 공개는 선생님이 정합니다.</span></p>
+                        <p className="neighbor-teacher__gallery-intro"><span>우리 반 제출 글을 골라 이웃 반에 공개합니다. 공개는 선생님이 정하고, 공개한 글은 여기서 다시 비공개로 돌릴 수 있습니다.</span></p>
                         {activityCandLoading && !activityCandidates && <p className="neighbor-teacher__empty">활동 글을 불러오는 중…</p>}
                         {activityCandidates && (activityCandidates.length === 0 ? (
                             <p className="neighbor-teacher__empty">아직 제출한 활동 글이 없습니다.</p>
@@ -1665,12 +1665,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                     onClick={async () => { const r = await runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.'); if (r) await reloadActivityCandidates(activityPublishFor.id); }}>
                                                     숨김 해제·다시 공개
                                                 </Button>
+                                            ) : post.share_status === 'published' ? (
+                                                // 공개한 주제 글은 여기서 다시 비공개로 돌린다(예전 ② 공개 글 관리의 일, 2026-09-25).
+                                                <Button type="button" variant="outline" loading={busy === 'hide_post'} disabled={Boolean(busy)}
+                                                    onClick={async () => { const r = await runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글을 비공개로 돌렸습니다.'); if (r) await reloadActivityCandidates(activityPublishFor.id); }}>
+                                                    비공개로 돌리기
+                                                </Button>
                                             ) : (
-                                                <Button type="button" variant={post.share_status ? 'outline' : 'primary'}
+                                                <Button type="button" variant="primary"
                                                     loading={busy === 'publish_activity_post'}
-                                                    disabled={Boolean(busy) || post.share_status === 'published'}
+                                                    disabled={Boolean(busy)}
                                                     onClick={() => publishActivityPost(activityPublishFor.id, post)}>
-                                                    {post.share_status === 'published' ? '공개 중' : '공개하기'}
+                                                    공개하기
                                                 </Button>
                                             )}
                                         </article>

@@ -764,6 +764,25 @@ BEGIN
     PERFORM set_config('sim.cmt_c2', public.save_neighbor_comment_v1(public.zz_sim('space'), v_target, '바통 받을 때 나도 떨렸어!', 'save')->>'comment_id', TRUE);
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('48~49 주제 글 읽기·댓글', FALSE, SQLERRM);
 END $$;
+-- 같이 쓰기 광장 공개 창의 `비공개로 돌리기`(2026-09-25): 바다반 교사가 자기 반 주제 글을 숨겼다가 다시 공개한다.
+SELECT public.zz_sim_login('t_b');
+DO $$
+DECLARE f JSONB;
+BEGIN
+    PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_b'), 'hide_post',
+        jsonb_build_object('space_id', public.zz_sim('space'), 'item_id', public.zz_sim('topic_post_b'), 'reason', '교사 확인'));
+    PERFORM public.zz_sim_check('48-1 교사가 우리 반 주제 글을 비공개로 돌린다',
+        (SELECT x->>'share_status' FROM jsonb_array_elements(public.get_neighbor_teacher_activity_candidates_v1(
+            public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('topic'))->'items') x
+         WHERE x->>'shared_post_id' = public.zz_sim('topic_post_b')::TEXT) = 'hidden');
+    PERFORM public.run_neighbor_teacher_action_v1(public.zz_sim('c_b'), 'restore_post',
+        jsonb_build_object('space_id', public.zz_sim('space'), 'item_id', public.zz_sim('topic_post_b'), 'reason', ''));
+    PERFORM public.zz_sim_check('48-2 숨긴 주제 글을 다시 공개한다',
+        (SELECT x->>'share_status' FROM jsonb_array_elements(public.get_neighbor_teacher_activity_candidates_v1(
+            public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('topic'))->'items') x
+         WHERE x->>'shared_post_id' = public.zz_sim('topic_post_b')::TEXT) = 'published');
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('48-1~2 주제 글 비공개·다시 공개', FALSE, SQLERRM);
+END $$;
 RESET ROLE;
 SET LOCAL ROLE service_role;
 SELECT public.zz_sim_login('admin', 'service_role');
