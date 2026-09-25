@@ -1029,6 +1029,64 @@ SELECT public.zz_sim_check('N4 들어오기만 해서는 같이 쓰기 광장 �
      WHERE space_id = public.zz_sim('space') AND class_id = public.zz_sim('c_b')));
 SET LOCAL ROLE authenticated;
 
+-- 같이 쓰기 광장 주제 삭제(20261344): 공개 글·댓글은 사라지고, 각 반 과제와 학생 원글은 보관함에 남는다.
+RESET ROLE;
+SELECT set_config('sim.topic_posts_before', (SELECT count(*) FROM public.student_posts post
+    JOIN public.neighbor_activity_classes link ON link.mission_id = post.mission_id
+    WHERE link.activity_id = public.zz_sim('topic'))::TEXT, TRUE);
+SELECT set_config('sim.topic_missions', (SELECT string_agg(link.mission_id::TEXT, ',') FROM public.neighbor_activity_classes link
+    WHERE link.activity_id = public.zz_sim('topic')), TRUE);
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_c');
+-- 어떤 오류든 "막힘" 으로 치지 않고, 권한 오류(42501)일 때만 통과시킨다(함수가 없어서 난 오류로 통과하지 않게).
+DO $$ BEGIN
+    PERFORM public.delete_neighbor_activity_v1(public.zz_sim('space'), public.zz_sim('c_c'), public.zz_sim('topic'));
+    PERFORM public.zz_sim_check('X1 제안하지도 않고 호스트도 아닌 반(별빛반)은 주제를 지울 수 없다', FALSE, '막혀야 하는데 지워졌습니다');
+EXCEPTION
+    WHEN insufficient_privilege THEN
+        PERFORM public.zz_sim_check('X1 제안하지도 않고 호스트도 아닌 반(별빛반)은 주제를 지울 수 없다', TRUE, '막힘(42501): ' || SQLERRM);
+    WHEN OTHERS THEN
+        PERFORM public.zz_sim_check('X1 제안하지도 않고 호스트도 아닌 반(별빛반)은 주제를 지울 수 없다', FALSE, SQLSTATE || ' ' || SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE r JSONB;
+BEGIN
+    r := public.delete_neighbor_activity_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('topic'));
+    PERFORM public.zz_sim_check('X2 호스트(햇살반)는 다른 반(바다반)이 낸 주제를 지울 수 있다 · 공개 글 6편이 함께 빠진다',
+        (r->>'success')::BOOLEAN AND (r->>'removed_posts')::INT = 6 AND (r->>'kept_missions')::INT = 3, r::TEXT);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('X2 주제 삭제', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('X3 주제·공개 글·댓글·댓글 알림이 모두의 아지트에서 사라진다',
+    NOT EXISTS (SELECT 1 FROM public.neighbor_activities WHERE id = public.zz_sim('topic'))
+    AND NOT EXISTS (SELECT 1 FROM public.neighbor_shared_posts WHERE activity_id = public.zz_sim('topic'))
+    AND NOT EXISTS (SELECT 1 FROM public.neighbor_comments WHERE id = public.zz_sim('cmt_c2'))
+    AND NOT EXISTS (SELECT 1 FROM public.student_notification_events WHERE event_key = 'neighbor-comment:' || public.zz_sim('cmt_c2')));
+SELECT public.zz_sim_check('X4 각 반 과제와 학생 원글은 남고, 과제는 보관함으로·이웃 태그는 떨어진다',
+    (SELECT count(*) FROM public.student_posts post
+     WHERE post.mission_id::TEXT = ANY(string_to_array(current_setting('sim.topic_missions'), ',')))::TEXT = current_setting('sim.topic_posts_before')
+    AND NOT EXISTS (SELECT 1 FROM public.writing_missions mission
+        WHERE mission.id::TEXT = ANY(string_to_array(current_setting('sim.topic_missions'), ','))
+          AND (mission.is_archived IS NOT TRUE OR mission.tags ? '이웃 아지트')),
+    '원글 ' || current_setting('sim.topic_posts_before') || '편 · 과제 ' || array_length(string_to_array(current_setting('sim.topic_missions'), ','), 1) || '개');
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_c');
+DO $$
+DECLARE r JSONB; v_topic3 UUID;
+BEGIN
+    r := public.run_neighbor_teacher_action_v1(public.zz_sim('c_c'), 'create_activity', jsonb_build_object(
+        'space_id', public.zz_sim('space'), 'type', 'topic', 'title', '별빛반이 낸 주제', 'prompt', '지워 볼 주제예요.',
+        'min_chars', 300, 'min_paragraphs', 1, 'base_reward', 100, 'bonus_threshold', 0, 'bonus_reward', 0));
+    v_topic3 := (r#>>'{action_result,activity_id}')::UUID;
+    PERFORM public.delete_neighbor_activity_v1(public.zz_sim('space'), public.zz_sim('c_c'), v_topic3);
+    PERFORM public.zz_sim_check('X5 제안한 반(별빛반)은 승인 대기 중인 자기 제안을 거둘 수 있다',
+        NOT EXISTS (SELECT 1 FROM jsonb_array_elements(public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_c'))->'activities') x
+            WHERE x->>'id' = v_topic3::TEXT));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('X5 제안한 반 삭제', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+
 -- ───────────────────────── 5. 나가기·종료 ─────────────────────────
 -- 나가는 반 학생도 받은 이웃 알림이 있어야 57-1 이 헛돌지 않는다(시뮬레이션에서는 별빛반 글에 댓글이 없어 직접 남긴다).
 RESET ROLE;

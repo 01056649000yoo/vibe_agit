@@ -127,5 +127,6 @@ test('교사 활동 생성·매칭안·승인·종료는 작업공간 RPC 한 �
     // 2026-09-19: 교사 활동 글 후보 조회(get_neighbor_teacher_activity_candidates_v1)를 더해 7→8.
     // 2026-09-23: ③ 댓글·반응 반별 조회(get_neighbor_teacher_engagement_v1) 하나를 더했다. 9 → 10.
     // 2026-09-25: 같이 쓰기 광장 진행 현황을 봤다고 남기는 mark_neighbor_topic_seen_v1 하나를 더했다. 10 → 11.
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 11);
+    // 2026-09-25: 같이 쓰기 광장 주제 삭제(delete_neighbor_activity_v1) 하나를 더했다. 11 → 12.
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 12);
 });

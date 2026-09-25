@@ -110,6 +110,10 @@ function createPreviewApi() {
       shared_post_id: submission.share_status ? `shared-${submission.post_id}` : null, share_status: submission.share_status,
     }))
   },
+  async deleteActivity({ activityId: id }) {
+    workspace = { ...workspace, activities: workspace.activities.filter((activity) => activity.id !== id) }
+    return { success: true, activity_id: id }
+  },
   async markTopicSeen() {
     workspace = {
       ...workspace,

@@ -313,20 +313,34 @@
 .neighbor-teacher__deadlines > p.neighbor-teacher__deadline { align-items: baseline; margin-bottom: 0; }
 .neighbor-teacher__deadlines strong { color: #486581; font-size: var(--ui-text-xs); }
 
-/* 같이 쓰기 광장 진행 현황 카드(2026-09-25 배치 정리): 머리(상태·제목·안내 | 단추) → 기한 두 칸 → 참여 반 → 우리 반 제출 글.
-   예전 주제 카드 규칙(.neighbor-teacher__activity-list > article 의 가로 flex, article ul/li/span 의 알약·청록 글자)이
-   새 카드에 번지지 않게 모두 `> article.neighbor-topic-card` 아래로 한정한다. */
-.neighbor-teacher__activity-list > article.neighbor-topic-card { display: flex; flex-direction: column; align-items: stretch;
-  gap: var(--ui-space-3); padding: var(--ui-space-4); }
+/* 같이 쓰기 광장 주제(2026-09-25): 진행 현황은 주제 카드(타일) 목록, 누르면 모달에서 자세히
+   (머리: 상태·제목·안내 | 단추 → 기한 두 칸 → 참여 반 → 우리 반 제출 글 → 주제 지우기).
+   자세히 보기는 모달 안에 그려져 예전 `.neighbor-teacher__activity-list article` 규칙이 닿지 않는다. */
+.neighbor-topic-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--ui-space-3); }
+.neighbor-topic-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 140px;
+  padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); background: var(--ui-surface);
+  color: var(--ui-ink); font: inherit; text-align: left; cursor: pointer; }
+.neighbor-topic-tile:hover { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
+.neighbor-topic-tile[data-status="closed"] { background: var(--ui-surface-muted); }
+.neighbor-topic-tile__top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.neighbor-topic-tile__top .neighbor-teacher__new-flag { margin-left: 0; }
+.neighbor-topic-tile__title { font-size: var(--ui-text-md); line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.neighbor-topic-tile__meta { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 600; }
+.neighbor-topic-tile__meta:last-child { margin-top: auto; }
+.neighbor-topic-card__danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2);
+  padding-top: var(--ui-space-3); border-top: 1px solid var(--ui-border); }
+.neighbor-topic-card__danger small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+.neighbor-topic-card { display: flex; flex-direction: column; align-items: stretch; gap: var(--ui-space-3); }
 .neighbor-topic-card[data-status="closed"] { background: var(--ui-surface-muted); }
 .neighbor-topic-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ui-space-3); }
 .neighbor-topic-card__title { min-width: 0; }
 .neighbor-topic-card__title h3 { margin: 6px 0 4px; color: var(--ui-ink); font-size: var(--ui-text-lg); line-height: 1.35; overflow-wrap: anywhere; }
 .neighbor-topic-card__title p { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); line-height: 1.5; overflow-wrap: anywhere; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__status { display: inline-flex; padding: 3px 10px; border-radius: 999px;
+.neighbor-topic-card__status { display: inline-flex; padding: 3px 10px; border-radius: 999px;
   background: var(--ui-success-soft); color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 800; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__status[data-status="pending_approval"] { background: var(--ui-warning-soft); color: var(--ui-warning); }
-.neighbor-teacher__activity-list article .neighbor-topic-card__status[data-status="closed"] { background: var(--ui-border); color: var(--ui-ink-muted); }
+.neighbor-topic-card__status[data-status="pending_approval"] { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.neighbor-topic-card__status[data-status="closed"] { background: var(--ui-border); color: var(--ui-ink-muted); }
 .neighbor-topic-card__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--ui-space-2); flex: 0 0 auto; }
 
 .neighbor-topic-card__deadlines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-2); margin: 0; }
@@ -336,22 +350,22 @@
   color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
 .neighbor-topic-card__deadline em { padding: 1px 8px; border-radius: 999px; background: var(--ui-primary-soft); color: var(--ui-primary);
   font-size: var(--ui-text-xs); font-style: normal; font-weight: 800; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__deadline dd span { color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__deadline[data-closed="true"] dd span { color: var(--ui-ink-muted); text-decoration: line-through; }
+.neighbor-topic-card .neighbor-topic-card__deadline dd span { color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
+.neighbor-topic-card .neighbor-topic-card__deadline[data-closed="true"] dd span { color: var(--ui-ink-muted); text-decoration: line-through; }
 .neighbor-topic-card__deadline[data-closed="true"] em { background: var(--ui-border); color: var(--ui-ink-muted); }
 
-.neighbor-teacher__activity-list article ul.neighbor-topic-card__classes { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin: 0; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__classes li { display: inline-flex; flex-wrap: wrap; align-items: center;
+.neighbor-topic-card ul.neighbor-topic-card__classes { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin: 0; padding: 0; list-style: none; }
+.neighbor-topic-card .neighbor-topic-card__classes li { display: inline-flex; flex-wrap: wrap; align-items: center;
   gap: 2px 8px; padding: 6px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); background: var(--ui-surface); color: var(--ui-ink); }
 /* 좁은 화면에서 낱말 가운데가 잘리지 않게 조각마다 한 덩어리로 둔다(칩 안에서만 줄바꿈). */
 .neighbor-topic-card__classes li > * { white-space: nowrap; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__classes li.is-own { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
+.neighbor-topic-card .neighbor-topic-card__classes li.is-own { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
 .neighbor-topic-card__classes strong { font-size: var(--ui-text-xs); }
 .neighbor-topic-card__classes strong small { color: var(--ui-ink-muted); font-weight: 600; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__approval { color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 800; }
-.neighbor-teacher__activity-list article .neighbor-topic-card__classes li[data-status="pending"] .neighbor-topic-card__approval { color: var(--ui-warning); }
-.neighbor-teacher__activity-list article .neighbor-topic-card__classes li[data-status="rejected"] .neighbor-topic-card__approval { color: var(--ui-danger); }
-.neighbor-teacher__activity-list article .neighbor-topic-card__counts { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
+.neighbor-topic-card .neighbor-topic-card__approval { color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-topic-card .neighbor-topic-card__classes li[data-status="pending"] .neighbor-topic-card__approval { color: var(--ui-warning); }
+.neighbor-topic-card .neighbor-topic-card__classes li[data-status="rejected"] .neighbor-topic-card__approval { color: var(--ui-danger); }
+.neighbor-topic-card .neighbor-topic-card__counts { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
 
 @media (max-width: 640px) {
   .neighbor-topic-card__head { flex-direction: column; }
@@ -360,9 +374,9 @@
 }
 
 /* 우리 반 제출 글 카드. 누르면 공개할 글 고르기 창. */
-.neighbor-teacher__activity-list article ul.neighbor-teacher__submission-grid { display: grid; margin: 0; }
-.neighbor-teacher__activity-list article .neighbor-teacher__submission-grid li { padding: 0; border-radius: 0; background: none; }
-.neighbor-teacher__activity-list article .neighbor-teacher__submission .neighbor-teacher__new-flag { color: #fff; }
+.neighbor-topic-card ul.neighbor-teacher__submission-grid { display: grid; margin: 0; }
+.neighbor-topic-card .neighbor-teacher__submission-grid li { padding: 0; border-radius: 0; background: none; }
+.neighbor-topic-card .neighbor-teacher__submission .neighbor-teacher__new-flag { color: #fff; }
 .neighbor-teacher__submissions { padding-top: var(--ui-space-3); border-top: 1px dashed var(--ui-border); }
 .neighbor-teacher__submissions-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ui-space-2); margin: 0 0 var(--ui-space-2);
   color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }

@@ -52,6 +52,15 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
+    // 같이 쓰기 광장 주제를 지운다(제안한 반·호스트만, 20261344). 각 반 과제·학생 글은 보관함에 남는다.
+    async deleteActivity({ spaceId, classId, activityId }) {
+        const { data, error } = await supabase.rpc('delete_neighbor_activity_v1', {
+            p_space_id: spaceId, p_actor_class_id: classId, p_activity_id: activityId
+        });
+        if (error) throw error;
+        return data;
+    },
+
     // 같이 쓰기 광장 진행 현황을 봤다고 남긴다("새 제출 글" 기준선, 20261342). 이웃 글 마당의 새 글 기준선과 따로다.
     async markTopicSeen(classId) {
         const { data, error } = await supabase.rpc('mark_neighbor_topic_seen_v1', {

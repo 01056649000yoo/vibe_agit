@@ -88,7 +88,8 @@ test('처리하면 메뉴 숫자가 바로 줄어든다', () => {
 });
 
 test('활동 종료는 글쓰기만/댓글·반응까지를 고르고, 뒤쪽은 댓글 마감을 지금으로 둔다', () => {
-    assert.match(entry, /onClick=\{\(\) => setCloseActivityFor\(activity\)\}>활동 종료/);
+    // 2026-09-25: 자세히 보기 모달 안에서 누르면 모달을 먼저 닫고 종료 방법 창을 연다.
+    assert.match(entry, /onClick=\{\(\) => \{ setTopicDetailId\(null\); setCloseActivityFor\(activity\); \}\}>활동 종료/);
     assert.match(entry, /글쓰기만 마치기/);
     assert.match(entry, /댓글·반응까지 함께 마치기/);
     const closeAt = entry.indexOf('const closeActivity = async');

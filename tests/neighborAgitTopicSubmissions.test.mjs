@@ -25,11 +25,11 @@ test('진행 현황 카드는 기한을 보여 주기만 하고, 우리 반 제�
     assert.doesNotMatch(entry, /saveActivitySchedule|deadlineDrafts/);
     assert.match(entry, /renderDeadlineTile\(activity, 'writing_close_at'\)/);
     assert.match(entry, /topicClassRows\(activity\)\.map/);
-    assert.match(entry, /onClick=\{\(\) => setCloseActivityFor\(activity\)\}>활동 종료/);
+    assert.match(entry, /onClick=\{\(\) => \{ setTopicDetailId\(null\); setCloseActivityFor\(activity\); \}\}>활동 종료/);
     // 카드: 제목·글쓴이, 누르면 공개할 글 고르기 창.
     assert.match(entry, /activity\.my_submissions\.map\(\(submission\) =>/);
     assert.match(entry, /<strong>\{submission\.title \|\| '제목 없음'\}<\/strong>\s*<small>\{submission\.student_name\}<\/small>/);
-    assert.match(entry, /onClick=\{\(\) => openActivityPublish\(activity\)\}\s*className=\{`neighbor-teacher__submission/);
+    assert.match(entry, /onClick=\{\(\) => \{ setTopicDetailId\(null\); openActivityPublish\(activity\); \}\}\s*className=\{`neighbor-teacher__submission/);
     assert.match(css, /\.neighbor-teacher__submission-grid \{ display: grid;/);
 });
 
@@ -73,5 +73,31 @@ test('모두의 아지트 새 소식(새 이웃 글·댓글·문집)도 메뉴 �
 test('제출 글 카드는 넓은 화면에서 5열(20명이 5×4)로 놓인다', () => {
     assert.match(css, /\.neighbor-teacher__submission-grid \{ display: grid; grid-template-columns: repeat\(5, minmax\(0, 1fr\)\);/);
     assert.match(css, /min-height: 92px/);
+});
+
+test('진행 현황은 주제 카드 목록이고, 누르면 모달에서 자세히 본다', () => {
+    assert.match(entry, /className="neighbor-topic-tile" data-status=\{activity\.status\}\s*onClick=\{\(\) => setTopicDetailId\(activity\.id\)\}/);
+    assert.match(entry, /<Modal isOpen=\{Boolean\(topicDetail\)\} onClose=\{\(\) => setTopicDetailId\(null\)\}/);
+    assert.match(entry, /\{topicDetail && renderTopicDetail\(topicDetail\)\}/);
+    assert.match(css, /\.neighbor-topic-tiles \{ display: grid;/);
+});
+
+test('주제 삭제: 제안한 반·호스트만, 앱 안 확인 창, 각 반 과제·학생 글은 보관함에 남긴다(20261344)', async () => {
+    const del = await readFile('supabase/migrations/20261344_neighbor_topic_delete.sql', 'utf8');
+    assert.match(del, /space\.host_class_id = p_actor_class_id/);
+    assert.match(del, /approval\.is_proposer/);
+    assert.match(del, /ERRCODE = '42501'/);
+    // 주제를 먼저 지운 뒤(연결이 사라져 과제 보호 트리거가 막지 않음) 과제를 보관·태그 정리. 학생 글은 지우지 않는다.
+    assert.ok(del.indexOf('DELETE FROM public.neighbor_activities') < del.indexOf('UPDATE public.writing_missions mission'));
+    assert.match(del, /SET is_archived = TRUE,/);
+    assert.doesNotMatch(del, /DELETE FROM public\.student_posts|DELETE FROM public\.writing_missions/);
+    assert.match(del, /GRANT EXECUTE ON FUNCTION public\.delete_neighbor_activity_v1\(UUID, UUID, UUID\) TO authenticated;/);
+    assert.match(api, /rpc\('delete_neighbor_activity_v1'/);
+    assert.match(entry, /const canDeleteTopic = \(activity\) => Boolean\(activity\.can_manage\s*\|\| activity\.approvals\?\.some\(\(approval\) => approval\.is_proposer && approval\.class_id === classId\)\)/);
+    const deleteAt = entry.indexOf('const deleteTopic = async');
+    const deleteFn = entry.slice(deleteAt, entry.indexOf('\n    };\n', deleteAt));
+    assert.match(deleteFn, /await ask\(\{/);
+    assert.match(deleteFn, /tone: 'danger'/);
+    assert.doesNotMatch(entry, /window\.confirm\(/);
 });
 

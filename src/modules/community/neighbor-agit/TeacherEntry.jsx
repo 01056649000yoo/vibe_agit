@@ -74,6 +74,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 같이 쓰기 광장 진행 현황에서 이번에 본 "새 제출 글" — 기준선을 옮긴 뒤에도 보는 동안 NEW 를 남긴다.
     const [seenNewSubmissionIds, setSeenNewSubmissionIds] = useState(() => new Set());
     const [closeActivityFor, setCloseActivityFor] = useState(null); // 활동 종료 방법을 고르는 창의 대상 활동
+    const [topicDetailId, setTopicDetailId] = useState(null); // 진행 현황에서 눌러 연 주제(자세히 보기 모달)
     const [engageRefresh, setEngageRefresh] = useState(0); // 상세 창을 닫으면 ③ 댓글·반응 반별 목록이 숫자를 다시 맞춘다
     const [liveNotice, setLiveNotice] = useState('');
     const [activityPublishFor, setActivityPublishFor] = useState(null); // 활동 글 공개 모달 대상 활동
@@ -705,6 +706,119 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return [...rows.values()].sort((left, right) => Number(right.class_id === classId) - Number(left.class_id === classId));
     };
 
+    // 진행 현황 목록 카드의 기한 한 줄: 가장 가까운 열린 기한.
+    const topicTileDeadline = (activity) => {
+        if (activity.status === 'closed') return '마감됨';
+        const next = [['글쓰기', activity.writing_close_at], ['댓글·반응', activity.comments_close_at]]
+            .filter(([, value]) => value && new Date(value) > new Date())[0];
+        if (!next) return '기한 없음';
+        const days = Math.ceil((new Date(next[1]).getTime() - Date.now()) / 86400000);
+        return `${next[0]} 마감 ${days <= 1 ? '오늘·내일' : `D-${days}`}`;
+    };
+
+    // 주제를 지울 수 있는 사람: 제안한 반 교사 또는 호스트(서버도 같은 규칙으로 막는다, 20261344).
+    const canDeleteTopic = (activity) => Boolean(activity.can_manage
+        || activity.approvals?.some((approval) => approval.is_proposer && approval.class_id === classId));
+
+    const deleteTopic = async (activity) => {
+        const published = (activity.class_stats || []).reduce((sum, stat) => sum + (Number(stat.published_count) || 0), 0);
+        const ok = await ask({
+            title: '이 주제를 지울까요?',
+            body: `모두의 아지트에서 이 주제와 공개된 글 ${published}편, 그 댓글·공감이 사라집니다.\n`
+                + '각 반의 과제와 학생이 쓴 글은 지우지 않고 그 반 보관함으로 옮겨 둡니다.\n지운 주제는 되돌릴 수 없어요.',
+            confirmLabel: '주제 지우기', cancelLabel: '그만두기', tone: 'danger'
+        });
+        if (!ok) return;
+        setBusy('delete_activity');
+        setMessage('');
+        setErrorMessage('');
+        try {
+            await api.deleteActivity({ spaceId: workspace.space.id, classId, activityId: activity.id });
+            setTopicDetailId(null);
+            await refreshWorkspace();
+            setMessage('주제를 지웠습니다. 각 반 과제와 학생 글은 그 반 보관함에 남아 있어요.');
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error, '주제를 지우지 못했습니다.'));
+        } finally {
+            setBusy('');
+        }
+    };
+
+    // 진행 현황 카드를 누르면 여는 자세히 보기(머리·기한·참여 반·제출 글 카드·삭제).
+    const renderTopicDetail = (activity) => (
+                                    <article className="neighbor-topic-card" data-status={activity.status}>
+                                        {/* 머리: 무엇에 대한 주제인지(왼쪽)와 할 수 있는 일(오른쪽 위)을 한눈에 — 2026-09-25 배치 정리 */}
+                                        <header className="neighbor-topic-card__head">
+                                            <div className="neighbor-topic-card__title">
+                                                <span className="neighbor-topic-card__status" data-status={activity.status}>
+                                                    {activity.status === 'pending_approval' ? '⏳ 승인 대기' : activity.status === 'closed' ? '🔒 종료' : '✏️ 글 쓰는 중'}
+                                                </span>
+                                                <h3>{activity.title}</h3>
+                                                {activity.prompt && <p>{activity.prompt}</p>}
+                                            </div>
+                                            <div className="neighbor-topic-card__actions">
+                                                {activity.can_review && (
+                                                    <>
+                                                        <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '활동 제안을 승인했습니다. 모든 교사가 승인하면 학생에게 열립니다.')}>활동 승인</Button>
+                                                        <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
+                                                    </>
+                                                )}
+                                                {activity.status !== 'pending_approval' && (
+                                                    <Button type="button" disabled={Boolean(busy)} onClick={() => { setTopicDetailId(null); openActivityPublish(activity); }}>제출 글 공개하기</Button>
+                                                )}
+                                                {activity.status !== 'pending_approval' && activity.can_manage && activity.status !== 'closed' && (
+                                                    <Button type="button" variant="ghost" size="sm" className="neighbor-topic-card__close" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => { setTopicDetailId(null); setCloseActivityFor(activity); }}>활동 종료</Button>
+                                                )}
+                                            </div>
+                                        </header>
+
+                                        {/* 기한 두 칸: 날짜와 남은 기간. 기한은 주제를 만들 때 정하고 여기서는 보여 주기만 한다. */}
+                                        <dl className="neighbor-topic-card__deadlines">
+                                            {renderDeadlineTile(activity, 'writing_close_at')}
+                                            {renderDeadlineTile(activity, 'comments_close_at')}
+                                        </dl>
+
+                                        {/* 참여 반: 반마다 한 줄로 승인 상태·제출·공개 수를 함께. */}
+                                        <ul className="neighbor-topic-card__classes">
+                                            {topicClassRows(activity).map((row) => (
+                                                <li key={row.class_id} data-status={row.approvalStatus} className={row.class_id === classId ? 'is-own' : ''}>
+                                                    <strong>{row.class_name}{row.class_id === classId && <small> (우리 반)</small>}</strong>
+                                                    {row.approvalLabel && <span className="neighbor-topic-card__approval">{row.approvalLabel}</span>}
+                                                    {row.hasStats && <span className="neighbor-topic-card__counts">제출 {row.submitted} · 공개 {row.published}</span>}
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        {activity.status !== 'pending_approval' && (
+                                            <div className="neighbor-teacher__submissions">
+                                                <p className="neighbor-teacher__submissions-head">
+                                                    우리 반 제출 글 <strong>{activity.my_submissions?.length || 0}</strong>편
+                                                    {(activity.my_submissions?.length || 0) > 0 && <small>카드를 누르면 공개할 글을 고를 수 있어요</small>}
+                                                </p>
+                                                {(activity.my_submissions || []).length === 0
+                                                    ? <p className="neighbor-teacher__empty">아직 글을 낸 학생이 없어요.</p>
+                                                    : <ul className="neighbor-teacher__submission-grid">{activity.my_submissions.map((submission) => (
+                                                        <li key={submission.post_id}>
+                                                            <button type="button" disabled={Boolean(busy)} onClick={() => { setTopicDetailId(null); openActivityPublish(activity); }}
+                                                                className={`neighbor-teacher__submission${submission.share_status === 'published' ? ' is-published' : ''}`}
+                                                                aria-label={`${submission.student_name}의 글 ${submission.title || '제목 없음'}${submission.share_status === 'published' ? ', 공개 중' : ''}`}>
+                                                                {(submission.is_new || seenNewSubmissionIds.has(submission.post_id)) && <span className="neighbor-teacher__new-flag">NEW</span>}
+                                                                <strong>{submission.title || '제목 없음'}</strong>
+                                                                <small>{submission.student_name}</small>
+                                                            </button>
+                                                        </li>))}</ul>}
+                                            </div>
+                                        )}
+                                        {canDeleteTopic(activity) && (
+                                            <footer className="neighbor-topic-card__danger">
+                                                <small>주제를 지우면 공개된 글과 댓글이 모두의 아지트에서 사라집니다. 각 반 과제와 학생 글은 그 반 보관함에 남아요.</small>
+                                                <Button type="button" variant="danger" size="sm" className="neighbor-topic-card__delete" loading={busy === 'delete_activity'}
+                                                    disabled={Boolean(busy)} onClick={() => deleteTopic(activity)}>🗑️ 주제 지우기</Button>
+                                            </footer>
+                                        )}
+                                    </article>
+    );
+
     const renderManageStep = () => {
         // 공개 글 관리는 "공개 중"인 글만 보여 준다(숨긴 글은 목록에서 빠진다).
         const managePosts = workspace.public_posts.filter((post) => post.status === 'published');
@@ -1333,72 +1447,26 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <strong>📊 진행 현황 {selectedActivities.length > 0 ? `(${selectedActivities.length})` : ''}</strong>
                                             <Button type="button" onClick={() => setTopicCreateOpen(true)}>✏️ 주제 만들기</Button>
                                         </div>
-                                        {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 주제가 없습니다. `주제 만들기` 에서 첫 주제를 내 보세요.</p> : selectedActivities.map((activity) => (
-                                    <article key={activity.id} className="neighbor-topic-card" data-status={activity.status}>
-                                        {/* 머리: 무엇에 대한 주제인지(왼쪽)와 할 수 있는 일(오른쪽 위)을 한눈에 — 2026-09-25 배치 정리 */}
-                                        <header className="neighbor-topic-card__head">
-                                            <div className="neighbor-topic-card__title">
-                                                <span className="neighbor-topic-card__status" data-status={activity.status}>
-                                                    {activity.status === 'pending_approval' ? '⏳ 승인 대기' : activity.status === 'closed' ? '🔒 종료' : '✏️ 글 쓰는 중'}
-                                                </span>
-                                                <h3>{activity.title}</h3>
-                                                {activity.prompt && <p>{activity.prompt}</p>}
-                                            </div>
-                                            <div className="neighbor-topic-card__actions">
-                                                {activity.can_review && (
-                                                    <>
-                                                        <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '활동 제안을 승인했습니다. 모든 교사가 승인하면 학생에게 열립니다.')}>활동 승인</Button>
-                                                        <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
-                                                    </>
-                                                )}
-                                                {activity.status !== 'pending_approval' && (
-                                                    <Button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}>제출 글 공개하기</Button>
-                                                )}
-                                                {activity.status !== 'pending_approval' && activity.can_manage && activity.status !== 'closed' && (
-                                                    <Button type="button" variant="ghost" size="sm" className="neighbor-topic-card__close" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => setCloseActivityFor(activity)}>활동 종료</Button>
-                                                )}
-                                            </div>
-                                        </header>
-
-                                        {/* 기한 두 칸: 날짜와 남은 기간. 기한은 주제를 만들 때 정하고 여기서는 보여 주기만 한다. */}
-                                        <dl className="neighbor-topic-card__deadlines">
-                                            {renderDeadlineTile(activity, 'writing_close_at')}
-                                            {renderDeadlineTile(activity, 'comments_close_at')}
-                                        </dl>
-
-                                        {/* 참여 반: 반마다 한 줄로 승인 상태·제출·공개 수를 함께. */}
-                                        <ul className="neighbor-topic-card__classes">
-                                            {topicClassRows(activity).map((row) => (
-                                                <li key={row.class_id} data-status={row.approvalStatus} className={row.class_id === classId ? 'is-own' : ''}>
-                                                    <strong>{row.class_name}{row.class_id === classId && <small> (우리 반)</small>}</strong>
-                                                    {row.approvalLabel && <span className="neighbor-topic-card__approval">{row.approvalLabel}</span>}
-                                                    {row.hasStats && <span className="neighbor-topic-card__counts">제출 {row.submitted} · 공개 {row.published}</span>}
-                                                </li>
-                                            ))}
-                                        </ul>
-
-                                        {activity.status !== 'pending_approval' && (
-                                            <div className="neighbor-teacher__submissions">
-                                                <p className="neighbor-teacher__submissions-head">
-                                                    우리 반 제출 글 <strong>{activity.my_submissions?.length || 0}</strong>편
-                                                    {(activity.my_submissions?.length || 0) > 0 && <small>카드를 누르면 공개할 글을 고를 수 있어요</small>}
-                                                </p>
-                                                {(activity.my_submissions || []).length === 0
-                                                    ? <p className="neighbor-teacher__empty">아직 글을 낸 학생이 없어요.</p>
-                                                    : <ul className="neighbor-teacher__submission-grid">{activity.my_submissions.map((submission) => (
-                                                        <li key={submission.post_id}>
-                                                            <button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}
-                                                                className={`neighbor-teacher__submission${submission.share_status === 'published' ? ' is-published' : ''}`}
-                                                                aria-label={`${submission.student_name}의 글 ${submission.title || '제목 없음'}${submission.share_status === 'published' ? ', 공개 중' : ''}`}>
-                                                                {(submission.is_new || seenNewSubmissionIds.has(submission.post_id)) && <span className="neighbor-teacher__new-flag">NEW</span>}
-                                                                <strong>{submission.title || '제목 없음'}</strong>
-                                                                <small>{submission.student_name}</small>
-                                                            </button>
-                                                        </li>))}</ul>}
-                                            </div>
-                                        )}
-                                    </article>
-                                        ))}
+                                        {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 주제가 없습니다. `주제 만들기` 에서 첫 주제를 내 보세요.</p> : <div className="neighbor-topic-tiles">{selectedActivities.map((activity) => (
+                                    <button type="button" key={activity.id} className="neighbor-topic-tile" data-status={activity.status}
+                                        onClick={() => setTopicDetailId(activity.id)} aria-label={`${activity.title} 자세히 보기`}>
+                                        <span className="neighbor-topic-tile__top">
+                                            <span className="neighbor-topic-card__status" data-status={activity.status}>
+                                                {activity.status === 'pending_approval' ? '⏳ 승인 대기' : activity.status === 'closed' ? '🔒 종료' : '✏️ 글 쓰는 중'}
+                                            </span>
+                                            {activity.can_review && <span className="neighbor-teacher__new-flag">승인할 제안</span>}
+                                            {(activity.my_submissions || []).some((submission) => submission.is_new || seenNewSubmissionIds.has(submission.post_id))
+                                                && <span className="neighbor-teacher__new-flag">NEW</span>}
+                                        </span>
+                                        <strong className="neighbor-topic-tile__title">{activity.title}</strong>
+                                        <span className="neighbor-topic-tile__meta">{topicTileDeadline(activity)}</span>
+                                        <span className="neighbor-topic-tile__meta">
+                                            {activity.status === 'pending_approval'
+                                                ? `참여 반 ${(activity.approvals || []).length}곳 · 승인 ${(activity.approvals || []).filter((approval) => approval.is_proposer || approval.status === 'approved').length}곳`
+                                                : `우리 반 제출 ${activity.my_submissions?.length || 0}편 · 공개 ${(activity.my_submissions || []).filter((submission) => submission.share_status === 'published').length}편`}
+                                        </span>
+                                    </button>
+                                        ))}</div>}
                                     </section>
                                     )}
 
@@ -1615,6 +1683,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             )}
             {/* 활동 종료: 글쓰기만 마칠지, 댓글·반응까지 함께 닫을지 고른다.
                 글쓰기와 댓글 마감은 따로 움직이므로 "종료했는데 왜 댓글이 달리지?" 가 생기지 않게 여기서 묻는다. */}
+            {(() => {
+                const topicDetail = topicDetailId ? activities.find((activity) => activity.id === topicDetailId) : null;
+                return (
+                    <Modal isOpen={Boolean(topicDetail)} onClose={() => setTopicDetailId(null)} title="🎪 같이 쓰기 광장 주제" maxWidth="1100px" showFooter={false}>
+                        {topicDetail && renderTopicDetail(topicDetail)}
+                    </Modal>
+                );
+            })()}
             <Modal isOpen={Boolean(closeActivityFor)} onClose={() => setCloseActivityFor(null)} title="이 주제를 어떻게 마칠까요?" maxWidth="520px" showFooter={false}>
                 {closeActivityFor && (
                     <div className="neighbor-teacher__close-choice">

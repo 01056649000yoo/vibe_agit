@@ -86,7 +86,8 @@ test('교사 작업 공간은 한 번 읽고 행동도 한 번의 RPC 응답으�
     // 2026-09-19에 교사 활동 글 후보 조회를 더해 7→8이 됐다.
     // 2026-09-23: ③ 댓글·반응 반별 조회(get_neighbor_teacher_engagement_v1) 하나를 더했다. 9 → 10.
     // 2026-09-25: 같이 쓰기 광장 진행 현황을 봤다고 남기는 mark_neighbor_topic_seen_v1 하나를 더했다. 10 → 11.
-    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 11);
+    // 2026-09-25: 같이 쓰기 광장 주제 삭제(delete_neighbor_activity_v1) 하나를 더했다. 11 → 12.
+    assert.equal((teacherApi.match(/supabase\.rpc\(/g) || []).length, 12);
     assert.match(teacherApi, /get_neighbor_teacher_share_candidates_v1/);
     assert.doesNotMatch(teacherApi, /get_neighbor_exchange_roster_v1/);
     assert.match(teacherEntry, /setWorkspace\(next\.workspace\)/);
