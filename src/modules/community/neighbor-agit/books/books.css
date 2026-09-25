@@ -28,6 +28,16 @@
 .neighbor-books__book h3 { margin: 18px 0 8px; }
 .neighbor-books__form { display: grid; gap: var(--ui-space-2); }
 .neighbor-books__form input { min-height: 44px; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: var(--ui-radius-md); font: inherit; font-size: var(--ui-text-md); }
+/* 방문록은 최소 글자 수(기본 100)가 있어 여러 줄 높이로 쓴다(줄바꿈은 받지 않음, 2026-09-25). */
+.neighbor-books__form textarea { min-height: 96px; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: var(--ui-radius-md);
+  font: inherit; font-size: var(--ui-text-md); line-height: 1.6; resize: vertical; }
+.neighbor-books__count-line { color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 700; }
+.neighbor-books__count-line.is-short { color: var(--ui-ink-muted); }
+/* 교사: 소개 중인 문집 카드 안의 방문록 최소 글자 수 한 줄. */
+.neighbor-books__min-chars { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: var(--ui-space-2);
+  color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
+.neighbor-books__min-chars input { width: 72px; padding: 5px 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-xs);
+  font: inherit; font-size: var(--ui-text-sm); color: var(--ui-ink); }
 .neighbor-books__status { margin: 0; padding: 8px 12px; border-radius: var(--ui-radius-md); font-size: var(--ui-text-sm); font-weight: 700; }
 .neighbor-books__status.is-pending { background: #fffbeb; color: #92400e; }
 .neighbor-books__status.is-approved { background: #ecfdf5; color: #065f46; }

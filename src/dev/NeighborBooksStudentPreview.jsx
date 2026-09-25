@@ -31,7 +31,7 @@ export function createNeighborBooksPreviewApi() {
       return {
         version: 1, id: 'ed-1', number: 2, book: bookInfo, work: null,
         works: works.map(({ id, title, author, group }) => ({ id, title, author, group })),
-        guestbook: { entries, mine, owner_class_name: '햇살반' },
+        guestbook: { entries, mine, owner_class_name: '햇살반', min_chars: 100 },
       }
     },
     async getSharedBookPrint() {

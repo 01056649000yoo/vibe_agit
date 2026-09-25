@@ -34,6 +34,8 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
     const [busy, setBusy] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    // 문집마다 방문록 최소 글자 수 입력값(저장 전). key = shared_book_id
+    const [minDrafts, setMinDrafts] = useState({});
 
     const load = useCallback(async () => {
         if (!spaceId || !classId) return;
@@ -64,6 +66,16 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
         } finally {
             setBusy('');
         }
+    };
+
+    const saveMinChars = (book) => {
+        const value = Number(minDrafts[book.shared_book_id] ?? book.guestbook_min_chars ?? 100);
+        if (!Number.isInteger(value) || value < 1 || value > 200) {
+            setError('방문록 최소 글자 수는 1~200자로 정해 주세요.');
+            return;
+        }
+        return run(`min:${book.shared_book_id}`, () => api.setGuestbookMinChars({ spaceId, classId, sharedBookId: book.shared_book_id, minChars: value }),
+            `‘${book.title}’ 방문록은 이제 ${value}자 이상 써야 보낼 수 있어요.`);
     };
 
     const share = (book) => run(`share:${book.book_id}`, () => api.shareBook({ spaceId, classId, bookId: book.book_id }),
@@ -147,6 +159,19 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                                         <p><strong>{reason.text}</strong> {reason.hint}</p>
                                         {onOpenBooks && <Button type="button" size="sm" variant="outline" onClick={onOpenBooks}>📚 {reason.action} →</Button>}
                                     </div>
+                                )}
+                                {shared && (
+                                    /* 이 문집에 남기는 방문록의 최소 글자 수(기본 100). 이미 쓴 방문록은 그대로, 고쳐 쓸 때부터 적용. */
+                                    <label className="neighbor-books__min-chars">
+                                        <span>✍️ 방문록 최소</span>
+                                        <input type="number" min="1" max="200" disabled={Boolean(busy)}
+                                            value={minDrafts[book.shared_book_id] ?? book.guestbook_min_chars ?? 100}
+                                            onChange={(event) => setMinDrafts((current) => ({ ...current, [book.shared_book_id]: event.target.value }))} />
+                                        <span>자 이상</span>
+                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy)
+                                            || String(minDrafts[book.shared_book_id] ?? book.guestbook_min_chars) === String(book.guestbook_min_chars)}
+                                            onClick={() => saveMinChars(book)}>저장</Button>
+                                    </label>
                                 )}
                                 {hiddenNewer && <p className="neighbor-books__hint">새로 확정한 {book.any_edition_number}판은 아직 학생에게 가려져 있어요. 공개하면 그 판으로 바꿀 수 있어요.</p>}
                                 <span className="neighbor-books__actions">

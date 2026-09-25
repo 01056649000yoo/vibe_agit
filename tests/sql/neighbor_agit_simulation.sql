@@ -908,6 +908,43 @@ SELECT public.zz_sim_login('t_b');
 SELECT public.zz_sim_expect_denied('B4 다른 반(바다반) 교사는 햇살반 문집을 소개할 수 없다',
     format($q$SELECT public.share_neighbor_book_v1(%L, %L, %L)$q$, public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('book')));
 
+-- 방문록 최소 글자 수(20261346): 기본 100자 → 짧은 방문록은 막힌다. 문집을 소개한 반(햇살반) 교사만 바꿀 수 있다.
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.save_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('shared_book'), '짧은 방문록', 'save');
+    PERFORM public.zz_sim_check('M1 기본은 100자 이상 — 짧은 방문록은 저장되지 않는다', FALSE, '막혀야 하는데 저장됐습니다');
+EXCEPTION
+    WHEN invalid_parameter_value THEN PERFORM public.zz_sim_check('M1 기본은 100자 이상 — 짧은 방문록은 저장되지 않는다', SQLERRM LIKE '%100자 이상%', SQLERRM);
+    WHEN OTHERS THEN PERFORM public.zz_sim_check('M1 기본은 100자 이상 — 짧은 방문록은 저장되지 않는다', FALSE, SQLSTATE || ' ' || SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_b');
+DO $$ BEGIN
+    PERFORM public.set_neighbor_book_guestbook_min_v1(public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('shared_book'), 2);
+    PERFORM public.zz_sim_check('M2 다른 반(바다반) 교사는 햇살반 문집의 최소 글자 수를 못 바꾼다', FALSE, '바뀌었습니다');
+EXCEPTION
+    WHEN insufficient_privilege THEN PERFORM public.zz_sim_check('M2 다른 반(바다반) 교사는 햇살반 문집의 최소 글자 수를 못 바꾼다', TRUE, '막힘(42501): ' || SQLERRM);
+    WHEN OTHERS THEN PERFORM public.zz_sim_check('M2 다른 반(바다반) 교사는 햇살반 문집의 최소 글자 수를 못 바꾼다', FALSE, SQLSTATE || ' ' || SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE r JSONB;
+BEGIN
+    r := public.set_neighbor_book_guestbook_min_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book'), 2);
+    PERFORM public.zz_sim_check('M3 문집을 소개한 반(햇살반) 교사가 최소 글자 수를 2자로 바꾼다 · 교사 목록에 보인다',
+        (r->>'guestbook_min_chars')::INT = 2
+        AND (SELECT (x->>'guestbook_min_chars')::INT FROM jsonb_array_elements(public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'))->'shared_books') x
+             WHERE x->>'shared_book_id' = public.zz_sim('shared_book')::TEXT) = 2);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('M3 최소 글자 수 바꾸기', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_expect_denied('M4 최소 글자 수는 200을 넘길 수 없다',
+    format($q$SELECT public.set_neighbor_book_guestbook_min_v1(%L, %L, %L, 201)$q$, public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book')));
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('M5 학생 문집 읽기에 최소 글자 수가 온다(2)',
+        (public.get_neighbor_shared_book_v1(public.zz_sim('space'), public.zz_sim('shared_book'), NULL)#>>'{guestbook,min_chars}')::INT = 2);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('M5 학생 최소 글자 수', FALSE, SQLERRM);
+END $$;
+
 SELECT public.zz_sim_login('u_b1');
 DO $$
 DECLARE l JSONB; b JSONB; w JSONB;

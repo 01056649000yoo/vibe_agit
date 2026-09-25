@@ -124,3 +124,25 @@ test('방문록은 학생마다 카드 한 장, 소개 중인 문집은 테두�
     assert.match(css, /\.neighbor-books__book-card\.is-shared \{ border: 2px solid var\(--space-accent/);
     assert.doesNotMatch(css, /neighbor-books__entries/);
 });
+
+test('방문록 최소 글자 수: 기본 100자, 소개한 반 교사만 1~200자로, 서버·학생 화면이 같은 기준(20261346)', async () => {
+    const [sql, student, teacher, api] = await Promise.all([
+        readFile('supabase/migrations/20261346_neighbor_guestbook_min_chars.sql', 'utf8'),
+        readFile('src/modules/community/neighbor-agit/books/StudentBooksPanel.jsx', 'utf8'),
+        readFile('src/modules/community/neighbor-agit/books/TeacherBooksPanel.jsx', 'utf8'),
+        readFile('src/modules/community/neighbor-agit/books/booksApi.js', 'utf8')
+    ]);
+    assert.match(sql, /ADD COLUMN IF NOT EXISTS guestbook_min_chars SMALLINT NOT NULL DEFAULT 100/);
+    assert.match(sql, /CHECK \(guestbook_min_chars BETWEEN 1 AND 200\)/);
+    assert.match(sql, /WHERE id = p_shared_book_id AND space_id = p_space_id AND class_id = p_actor_class_id;/);
+    assert.match(sql, /IF char_length\(v_content\) < COALESCE\(v_min, 1\) THEN/);
+    assert.match(sql, /'min_chars', v_shared\.guestbook_min_chars,/);
+    assert.match(api, /call\('set_neighbor_book_guestbook_min_v1', \{ p_space_id: spaceId, p_actor_class_id: classId, p_shared_book_id: sharedBookId, p_min_chars: minChars \}\)/);
+    // 학생: 서버와 같은 방법으로 세고(공백 한 칸·앞뒤 자름), 모자라면 보내기를 잠근다.
+    assert.match(student, /const minChars = Number\(book\?\.guestbook\?\.min_chars\) \|\| 100;/);
+    assert.match(student, /const draftLength = draft\.replace\(\/\\s\+\/g, ' '\)\.trim\(\)\.length;/);
+    assert.match(student, /disabled=\{saving \|\| draftLength < minChars\}/);
+    assert.match(student, /<textarea value=\{draft\} maxLength=\{200\}/);
+    assert.match(teacher, /api\.setGuestbookMinChars\(\{ spaceId, classId, sharedBookId: book\.shared_book_id, minChars: value \}\)/);
+});
+

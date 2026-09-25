@@ -74,9 +74,14 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
         return next.work;
     }, [api, spaceId, openId]);
 
+    // 문집을 소개한 반 선생님이 정한 방문록 최소 글자 수(기본 100, 20261346). 세는 방법은 서버와 같다(공백 한 칸으로 줄이고 앞뒤 자름).
+    const minChars = Number(book?.guestbook?.min_chars) || 100;
+    const draftLength = draft.replace(/\s+/g, ' ').trim().length;
+
     const saveEntry = async (action) => {
         const content = draft.replace(/\s+/g, ' ').trim();
-        if (action === 'save' && !content) { setNotice('방문록을 한 줄 적어 주세요.'); return; }
+        if (action === 'save' && !content) { setNotice('방문록을 적어 주세요.'); return; }
+        if (action === 'save' && content.length < minChars) { setNotice(`방문록은 ${minChars}자 이상 써 주세요. (지금 ${content.length}자)`); return; }
         setSaving(true);
         setNotice('');
         try {
@@ -85,8 +90,11 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
             setBook(next);
             setDraft(next.guestbook?.mine?.content || '');
             setNotice(action === 'delete' ? '방문록을 지웠어요.' : '방문록을 보냈어요. 선생님이 확인하면 모두에게 보여요.');
-        } catch {
-            setNotice('방문록을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+        } catch (saveError) {
+            // 22023: 글자 수·형식 안내(서버 문구를 그대로). 그 밖에는 일반 안내.
+            setNotice(saveError?.code === '22023' && saveError?.message
+                ? saveError.message
+                : '방문록을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
         } finally {
             setSaving(false);
         }
@@ -112,14 +120,19 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
 
                         <section className="neighbor-books__card neighbor-books__guestbook" aria-labelledby="neighbor-guestbook-title">
                             <header><h3 id="neighbor-guestbook-title">✍️ 방문록 {entries.length > 0 && `(${entries.length})`}</h3>
-                                <p>책을 읽고 느낀 점을 한 줄로 남겨요. {book.guestbook?.owner_class_name} 선생님이 확인하면 모두에게 보여요.</p></header>
+                                <p>책을 읽고 느낀 점을 <strong>{minChars}자 이상</strong> 남겨요. {book.guestbook?.owner_class_name} 선생님이 확인하면 모두에게 보여요.</p></header>
                             <div className="neighbor-books__form">
                                 {mine && <p className={`neighbor-books__status is-${mine.status}`}>{STATUS_TEXT[mine.status]}</p>}
-                                <input value={draft} maxLength={200} disabled={saving}
-                                    placeholder="이 책에서 좋았던 점을 한 줄로 적어 보세요"
+                                {/* 100자 넘게 쓰기 좋게 여러 줄 높이. 줄바꿈은 여전히 받지 않는다(서버도 한 줄 규칙). */}
+                                <textarea value={draft} maxLength={200} disabled={saving} rows={3}
+                                    aria-describedby="neighbor-guestbook-count"
+                                    placeholder="이 책에서 좋았던 점과 그 까닭을 적어 보세요"
                                     onChange={(event) => setDraft(event.target.value.replace(/[\r\n]/g, ' '))} />
+                                <span id="neighbor-guestbook-count" className={`neighbor-books__count-line${draftLength < minChars ? ' is-short' : ''}`}>
+                                    {draftLength}/200자 · {draftLength < minChars ? `${minChars - draftLength}자 더 써 주세요` : '보낼 수 있어요'}
+                                </span>
                                 <span className="neighbor-books__actions">
-                                    <Button type="button" size="sm" loading={saving} disabled={saving || !draft.trim()} onClick={() => saveEntry('save')}>{mine ? '고쳐서 보내기' : '방문록 보내기'}</Button>
+                                    <Button type="button" size="sm" loading={saving} disabled={saving || draftLength < minChars} onClick={() => saveEntry('save')}>{mine ? '고쳐서 보내기' : '방문록 보내기'}</Button>
                                     {mine && <Button type="button" size="sm" variant="ghost" disabled={saving} onClick={() => saveEntry('delete')}>지우기</Button>}
                                 </span>
                                 {notice && <p className="neighbor-books__notice" role="status">{notice}</p>}

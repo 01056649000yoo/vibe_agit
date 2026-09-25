@@ -45,6 +45,12 @@ export const neighborBooksApi = {
         return data;
     },
     // action: 'approve' | 'reject'(올라간 방문록을 내릴 때도 reject)
+    // 우리 반이 소개한 문집의 방문록 최소 글자 수(1~200, 기본 100, 20261346).
+    async setGuestbookMinChars({ spaceId, classId, sharedBookId, minChars }) {
+        const data = await call('set_neighbor_book_guestbook_min_v1', { p_space_id: spaceId, p_actor_class_id: classId, p_shared_book_id: sharedBookId, p_min_chars: minChars });
+        if (data?.success !== true) throw new Error('방문록 글자 수를 저장하지 못했습니다.');
+        return data;
+    },
     async reviewGuestbook({ spaceId, classId, entryId, action }) {
         const data = await call('review_neighbor_guestbook_v1', { p_space_id: spaceId, p_actor_class_id: classId, p_entry_id: entryId, p_action: action });
         if (data?.success !== true || data?.entry_id !== entryId) throw new Error('방문록 확인 결과를 확인하지 못했습니다.');
