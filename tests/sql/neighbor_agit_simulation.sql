@@ -910,11 +910,12 @@ BEGIN
     w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_a'));
     v_inbox := (w#>>'{notifications,pending_approvals}')::INT + (w#>>'{notifications,blocked_comments}')::INT
         + (w#>>'{notifications,pending_joins}')::INT + (w#>>'{notifications,pending_guestbook}')::INT;
-    PERFORM public.zz_sim_check('B11 햇살반 검토함에 방문록 1 · 메뉴 숫자와 같다',
-        jsonb_array_length(w->'pending_guestbook') = 1 AND v_inbox = (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT,
-        format('검토함 %s · 메뉴 %s · "%s"', v_inbox, public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count', w->'pending_guestbook'->0->>'content'));
+    -- 20261343 부터 메뉴 숫자는 처리할 일 + 새 소식이다. 검토함과 견주는 값은 배지의 todo(처리할 일).
+    PERFORM public.zz_sim_check('B11 햇살반 검토함에 방문록 1 · 메뉴의 처리할 일과 같다',
+        jsonb_array_length(w->'pending_guestbook') = 1 AND v_inbox = (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'todo')::INT,
+        format('검토함 %s · 처리할 일 %s · "%s"', v_inbox, public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'todo', w->'pending_guestbook'->0->>'content'));
     PERFORM public.review_neighbor_guestbook_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('gb_b1'), 'approve');
-    PERFORM public.zz_sim_check('B12 승인하면 메뉴 숫자가 준다', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT = v_inbox - 1);
+    PERFORM public.zz_sim_check('B12 승인하면 메뉴의 처리할 일이 준다', (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'todo')::INT = v_inbox - 1);
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B11~B12 방문록 승인', FALSE, SQLERRM);
 END $$;
 SELECT public.zz_sim_login('u_c1');
@@ -992,6 +993,41 @@ DO $$ BEGIN
         AND (public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'))->'shared_books'->0->>'pending_count')::INT = 1);
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('B22 다시 소개', FALSE, SQLERRM);
 END $$;
+
+-- 새 소식도 메뉴 숫자에(20261343): 바다반 교사가 한 시간 전에 마지막으로 들어왔다고 둔다.
+RESET ROLE;
+INSERT INTO public.neighbor_space_teacher_visits (space_id, class_id, last_seen_at, topic_seen_at)
+VALUES (public.zz_sim('space'), public.zz_sim('c_b'), NOW() - INTERVAL '1 hour', NOW() - INTERVAL '30 minutes')
+ON CONFLICT (space_id, class_id) DO UPDATE SET last_seen_at = NOW() - INTERVAL '1 hour', topic_seen_at = NOW() - INTERVAL '30 minutes';
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_b');
+DO $$
+DECLARE w JSONB; b JSONB; n JSONB; todo INT;
+BEGIN
+    w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_b'));
+    b := public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'));
+    n := w->'notifications';
+    todo := (n->>'pending_approvals')::INT + (n->>'blocked_comments')::INT + (n->>'pending_joins')::INT
+        + (n->>'pending_guestbook')::INT + (n->>'new_topic_submissions')::INT;
+    PERFORM public.zz_sim_check('N1 지난 방문 뒤 이웃 반의 새 글·새 댓글·새 문집을 센다(햇살반 문집 1권)',
+        (n->>'new_books')::INT = 1 AND (n->>'new_posts')::INT > 0 AND (n->>'new_comments')::INT > 0,
+        format('글 %s · 댓글 %s · 문집 %s', n->>'new_posts', n->>'new_comments', n->>'new_books'));
+    PERFORM public.zz_sim_check('N2 메뉴 숫자 = 처리할 일 + 새 소식(작업 공간과 같은 식)',
+        (b->>'count')::INT = todo + (n->>'new_posts')::INT + (n->>'new_comments')::INT + (n->>'new_books')::INT
+        AND (b->>'todo')::INT = todo,
+        format('메뉴 %s = 할 일 %s + 새 소식', b->>'count', todo));
+    PERFORM public.mark_neighbor_teacher_seen_v1(public.zz_sim('c_b'));
+    n := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_b'))->'notifications';
+    PERFORM public.zz_sim_check('N3 모두의 아지트에 들어오면 새 소식은 0, 메뉴 숫자는 처리할 일만 남는다',
+        (n->>'new_posts')::INT + (n->>'new_comments')::INT + (n->>'new_books')::INT = 0
+        AND (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_b'))->>'count')::INT = todo);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('N1~N3 새 소식 배지', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('N4 들어오기만 해서는 같이 쓰기 광장 새 제출 기준선이 움직이지 않는다',
+    (SELECT topic_seen_at < NOW() - INTERVAL '29 minutes' FROM public.neighbor_space_teacher_visits
+     WHERE space_id = public.zz_sim('space') AND class_id = public.zz_sim('c_b')));
+SET LOCAL ROLE authenticated;
 
 -- ───────────────────────── 5. 나가기·종료 ─────────────────────────
 -- 나가는 반 학생도 받은 이웃 알림이 있어야 57-1 이 헛돌지 않는다(시뮬레이션에서는 별빛반 글에 댓글이 없어 직접 남긴다).

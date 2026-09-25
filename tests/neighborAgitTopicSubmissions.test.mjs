@@ -55,3 +55,23 @@ test('서버는 제출 글을 작업 공간 응답에 싣고(N+1 없음), 새 �
     assert.match(sql, /REVOKE ALL ON FUNCTION public\.neighbor_topic_new_submission_count_v1\(UUID, UUID\) FROM PUBLIC, anon, authenticated;/);
     assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.mark_neighbor_topic_seen_v1\(UUID\) TO authenticated;/);
 });
+
+test('모두의 아지트 새 소식(새 이웃 글·댓글·문집)도 메뉴 숫자와 12초 안내에 잡힌다(20261343)', async () => {
+    const news = await readFile('supabase/migrations/20261343_neighbor_news_badge.sql', 'utf8');
+    // 세는 곳은 한 함수 — 작업 공간 알림과 메뉴 배지가 같이 쓴다.
+    assert.equal((news.match(/public\.neighbor_teacher_news_v1\(v_space_id, p_class_id\)/g) || []).length, 2);
+    assert.match(news, /'new_books', \(SELECT count\(\*\)::INTEGER FROM public\.neighbor_shared_books book/);
+    assert.match(news, /'todo', v_approvals \+ v_joins \+ v_blocked \+ v_guestbook \+ v_topic/);
+    // 새 제출 기준선은 모두의 아지트에 들어온 시각(last_seen_at)으로 대신하지 않는다.
+    assert.match(news, /SELECT visit\.topic_seen_at FROM public\.neighbor_space_teacher_visits visit/);
+    assert.match(news, /VALUES \(v_space_id, p_class_id, NOW\(\), NOW\(\)\)/);
+    assert.match(entry, /새 이웃 글 \$\{nextPosts - beforePosts\}편/);
+    assert.match(entry, /새 문집 \$\{nextBooks - beforeBooks\}권/);
+    assert.match(api, /new_books: 0, new_topic_submissions: 0/);
+});
+
+test('제출 글 카드는 넓은 화면에서 5열(20명이 5×4)로 놓인다', () => {
+    assert.match(css, /\.neighbor-teacher__submission-grid \{ display: grid; grid-template-columns: repeat\(5, minmax\(0, 1fr\)\);/);
+    assert.match(css, /min-height: 92px/);
+});
+

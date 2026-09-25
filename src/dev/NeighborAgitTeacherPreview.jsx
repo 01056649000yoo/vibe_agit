@@ -47,16 +47,15 @@ const initialWorkspace = {
       { class_id: classTwo, class_name: '바다반', status: 'approved', is_proposer: false },
     ],
     // 우리 반 제출 글 카드(20261342): 번호 순, 새로 낸 글 2편, 공개 중 1편.
-    my_submissions: [
-      { post_id: 'sub-1', title: '할머니 댁 앞 작은 개울', student_name: '김도윤', share_status: 'published', is_new: false },
-      { post_id: 'sub-2', title: '도서관 창가 자리', student_name: '이서연', share_status: null, is_new: false },
-      { post_id: 'sub-3', title: '우리 집 옥상에서 본 노을이 정말 예뻐서 매일 올라가요', student_name: '박하준', share_status: null, is_new: false },
-      { post_id: 'sub-4', title: '학교 뒤 산책길', student_name: '최지우', share_status: null, is_new: false },
-      { post_id: 'sub-5', title: '놀이터 미끄럼틀', student_name: '정민재', share_status: null, is_new: true },
-      { post_id: 'sub-6', title: '', student_name: '한수아', share_status: null, is_new: true },
-    ],
+    my_submissions: Array.from({ length: 20 }, (_, index) => ({
+      post_id: `sub-${index + 1}`,
+      title: ['할머니 댁 앞 작은 개울', '도서관 창가 자리', '우리 집 옥상에서 본 노을이 정말 예뻐서 매일 올라가요', '학교 뒤 산책길', '놀이터 미끄럼틀'][index % 5] + (index >= 5 ? ` ${index + 1}` : ''),
+      student_name: ['김도윤', '이서연', '박하준', '최지우', '정민재', '한수아', '윤지호', '강예은', '조은우', '임하린'][index % 10],
+      share_status: index === 0 ? 'published' : null,
+      is_new: index >= 18,
+    })),
     class_stats: [
-      { class_id: classOne, class_name: '햇살반', submitted_count: 6, review_count: 0, published_count: 1 },
+      { class_id: classOne, class_name: '햇살반', submitted_count: 20, review_count: 0, published_count: 1 },
       { class_id: classTwo, class_name: '바다반', submitted_count: 0, review_count: 0, published_count: 0 },
     ],
     match_pairs: [],

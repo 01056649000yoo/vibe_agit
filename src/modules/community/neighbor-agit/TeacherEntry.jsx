@@ -540,13 +540,15 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const pendingGuestbook = workspace?.pending_guestbook || [];
     const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0)
         + (notif.pending_guestbook || 0) + (notif.new_topic_submissions || 0);
+    // 메뉴 숫자 = 검토함(처리할 일) + 새 소식(지난 방문 뒤 새 이웃 글·댓글·문집). 서버 메뉴 배지와 같은 식(20261343).
+    const menuCount = reviewInboxCount + (notif.new_posts || 0) + (notif.new_comments || 0) + (notif.new_books || 0);
 
     // 화면을 실제로 보고 있는 교사만 12초 간격으로 한 번 읽는다. 학생 쪽 연결·폴링은 만들지 않는다.
     // 준비 전(참여 신청을 기다리는 호스트·승인을 기다리는 게스트)도 포함한다 — 신청·승인이 새로고침 없이 보이게(2026-09-24).
     useTeacherWorkspacePoll({ enabled: Boolean(workspace?.space?.id), refresh: refreshWorkspace });
 
     // 대기 방문록·AI 차단 댓글·새로 보이는 이웃 댓글이 늘면, 배지와 함께 눈에 보이는 갱신 안내를 남긴다.
-    const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}:${notif.new_topic_submissions || 0}`;
+    const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}:${notif.new_topic_submissions || 0}:${notif.new_posts || 0}:${notif.new_books || 0}`;
     const lastLiveCounts = useRef({ value: liveCounts, ready: false, classId: null });
     useEffect(() => {
         if (!lastLiveCounts.current.ready || lastLiveCounts.current.classId !== classId) {
@@ -554,8 +556,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setLiveNotice('');
             return;
         }
-        const [beforeGuestbook, beforeBlocked, beforeComments, beforeTopic] = lastLiveCounts.current.value.split(':').map(Number);
-        const [nextGuestbook, nextBlocked, nextComments, nextTopic] = liveCounts.split(':').map(Number);
+        const [beforeGuestbook, beforeBlocked, beforeComments, beforeTopic, beforePosts, beforeBooks] = lastLiveCounts.current.value.split(':').map(Number);
+        const [nextGuestbook, nextBlocked, nextComments, nextTopic, nextPosts, nextBooks] = liveCounts.split(':').map(Number);
         lastLiveCounts.current.value = liveCounts;
         const updates = [];
         if (nextGuestbook > beforeGuestbook) updates.push(`새 방문록 ${nextGuestbook - beforeGuestbook}건`);
@@ -566,6 +568,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setEngageRefresh((value) => value + 1);
         }
         if (nextTopic > beforeTopic) updates.push(`새 제출 글 ${nextTopic - beforeTopic}건`);
+        if (nextPosts > beforePosts) updates.push(`새 이웃 글 ${nextPosts - beforePosts}편`);
+        if (nextBooks > beforeBooks) updates.push(`새 문집 ${nextBooks - beforeBooks}권`);
         if (updates.length) setLiveNotice(`${updates.join(' · ')}이 도착했어요.`);
     }, [classId, liveCounts]);
 
@@ -576,13 +580,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (spaceKey === 'gallery') return [`우리 반 공개 ${ownPublished}편`, notif.new_posts > 0 ? `새 이웃 글 ${notif.new_posts}` : '새 이웃 글 없음', notif.new_comments > 0 ? `새 댓글 ${notif.new_comments}` : '새 댓글 없음'];
         if (spaceKey === 'topic') return [`진행 중 ${openTopics}`, notif.pending_approvals > 0 ? `승인할 제안 ${notif.pending_approvals}` : '승인할 제안 없음',
             ...(notif.new_topic_submissions > 0 ? [`새 제출 글 ${notif.new_topic_submissions}`] : [])];
-        return [notif.pending_guestbook > 0 ? `확인할 방문록 ${notif.pending_guestbook}` : '확인할 방문록 없음'];
+        return [notif.pending_guestbook > 0 ? `확인할 방문록 ${notif.pending_guestbook}` : '확인할 방문록 없음',
+            ...(notif.new_books > 0 ? [`새 문집 ${notif.new_books}`] : [])];
     };
 
     // 처리할 일 수를 메뉴 배지로 올린다. 메뉴는 학급을 바꿀 때만 세므로, 여기서 처리하는 즉시 줄어들게 한다.
     useEffect(() => {
-        if (workspace) onTodoCountChange?.(reviewInboxCount);
-    }, [workspace, reviewInboxCount, onTodoCountChange]);
+        if (workspace) onTodoCountChange?.(menuCount);
+    }, [workspace, menuCount, onTodoCountChange]);
 
     // 같이 쓰기 광장 진행 현황을 보고 있으면 "새 제출 글" 을 본 것으로 남긴다. 이번에 본 글은 NEW 를 유지한다.
     const newTopicSubmissions = notif.new_topic_submissions || 0;

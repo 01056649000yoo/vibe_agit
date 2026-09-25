@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabaseClient';
 // 알림 카운트 기본값. 서버가 안 내려줘도(옛 배포) 화면이 깨지지 않게 0으로 채운다.
 const EMPTY_NOTIFICATIONS = Object.freeze({
     pending_reviews: 0, pending_approvals: 0, pending_joins: 0, new_posts: 0, new_comments: 0, blocked_comments: 0,
-    pending_guestbook: 0
+    pending_guestbook: 0, new_books: 0, new_topic_submissions: 0
 });
 
 const assertWorkspace = (data) => {

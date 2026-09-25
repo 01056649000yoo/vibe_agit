@@ -81,7 +81,9 @@ test('메뉴 배지와 검토함은 같은 셋을 센다 — 옛 학생 공개 �
 });
 
 test('처리하면 메뉴 숫자가 바로 줄어든다', () => {
-    assert.match(entry, /onTodoCountChange\?\.\(reviewInboxCount\)/);
+    // 2026-09-25: 메뉴 숫자 = 검토함(처리할 일) + 새 소식(새 이웃 글·댓글·문집). 처리하면 검토함 몫이 바로 준다.
+    assert.match(entry, /const menuCount = reviewInboxCount \+ \(notif\.new_posts \|\| 0\) \+ \(notif\.new_comments \|\| 0\) \+ \(notif\.new_books \|\| 0\);/);
+    assert.match(entry, /onTodoCountChange\?\.\(menuCount\)/);
     assert.match(dashboard, /<TeacherNeighborAgit [^>]*onTodoCountChange=\{setNeighborBadge\}/);
 });
 
