@@ -23,7 +23,7 @@ function createDetailMock() {
       : []
     return {
       version: 1, shared_post_id: id, title: '우리 동네 느티나무', content: '우리 동네에는 커다란 느티나무가 있어요. 여름이면 그늘 아래에서 친구들과 놀아요.',
-      author_name: '김햇살', class_name: '햇살반', published_at: new Date(now - 3600e3).toISOString(), is_mine: false,
+      author_name: id === 'p2' ? '박바다' : '김햇살', class_name: id === 'p2' ? '바다반' : '햇살반', published_at: new Date(now - 3600e3).toISOString(), is_mine: id === 'p2',
       comments: [...others, ...visibleMine], comment_count: 1 + visibleMine.length, comments_truncated: false,
       reaction_count: 2, my_reaction: false, my_saved: false,
       my_comment: my && my.status !== 'visible' ? { comment_id: `${id}-mine`, status: my.status, content: my.content } : null,

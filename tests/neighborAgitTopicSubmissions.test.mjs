@@ -101,3 +101,15 @@ test('주제 삭제: 제안한 반·호스트만, 앱 안 확인 창, 각 반 �
     assert.doesNotMatch(entry, /window\.confirm\(/);
 });
 
+test('모두의 아지트에서는 내 글에 댓글을 달 수 없다(서버·화면 모두, 20261345)', async () => {
+    const [sql, student] = await Promise.all([
+        readFile('supabase/migrations/20261345_neighbor_no_self_comment.sql', 'utf8'),
+        readFile('src/modules/community/neighbor-agit/StudentEntry.jsx', 'utf8')
+    ]);
+    assert.match(sql, /IF p_action = 'save' AND v_owner_student_id = v_student_id THEN\s*RAISE EXCEPTION '내 글에는 댓글을 남길 수 없어요/);
+    // 저장만 막고, 이미 단 내 댓글 지우기는 된다.
+    assert.ok(sql.indexOf("p_action = 'save' AND v_owner_student_id") < sql.indexOf("IF p_action = 'delete' THEN"));
+    assert.match(student, /\) : detail\.is_mine \? \(/);
+    assert.match(student, /✍️ 내 글이에요\. 친구들이 남긴 댓글을 읽어 보세요\./);
+});
+

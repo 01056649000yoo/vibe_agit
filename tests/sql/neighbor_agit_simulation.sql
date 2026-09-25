@@ -460,6 +460,20 @@ EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('F9 비참여 배지', FA
 END $$;
 RESET ROLE;
 
+-- 모두의 아지트에서는 내 글에 댓글을 달 수 없다(20261345). 글 주인 학생으로 로그인해 본다.
+RESET ROLE;
+SELECT set_config('sim.u_owner_a1', (SELECT auth_id::TEXT FROM public.students WHERE id = public.zz_sim('owner_a1')), TRUE);
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_owner_a1');
+DO $$ BEGIN
+    PERFORM public.save_neighbor_comment_v1(public.zz_sim('space'), public.zz_sim('shared_a1'), '내 글에 내가 다는 댓글', 'save');
+    PERFORM public.zz_sim_check('Z1 글 주인은 자기 글에 댓글을 달 수 없다', FALSE, '막혀야 하는데 저장됐습니다');
+EXCEPTION
+    WHEN insufficient_privilege THEN PERFORM public.zz_sim_check('Z1 글 주인은 자기 글에 댓글을 달 수 없다', TRUE, '막힘(42501): ' || SQLERRM);
+    WHEN OTHERS THEN PERFORM public.zz_sim_check('Z1 글 주인은 자기 글에 댓글을 달 수 없다', FALSE, SQLSTATE || ' ' || SQLERRM);
+END $$;
+RESET ROLE;
+
 -- AI 검사 요청은 학생 한 명이 10분에 20번까지(우리 반·이웃 댓글 합산, 20261340).
 SET LOCAL ROLE authenticated;
 SELECT public.zz_sim_login('u_b2');

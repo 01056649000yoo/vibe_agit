@@ -544,6 +544,11 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                                 <p className="neighbor-student-inline-notice" role="status">
                                     🔒 이 주제는 댓글·반응이 마감됐어요. 이제 친구들의 글을 읽을 수만 있어요.
                                 </p>
+                            ) : detail.is_mine ? (
+                                // 내 글에는 댓글을 달지 않는다(2026-09-25, 서버 save_neighbor_comment_v1 도 막는다).
+                                <p className="neighbor-student-inline-notice" role="status">
+                                    ✍️ 내 글이에요. 친구들이 남긴 댓글을 읽어 보세요.
+                                </p>
                             ) : (
                             <form className="neighbor-comment-form" onSubmit={saveComment}>
                                 <label htmlFor="neighbor-comment-input">
