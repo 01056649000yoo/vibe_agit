@@ -14,7 +14,9 @@ const agitApiLocalOrigin = 'http://127.0.0.1:8100';
 const expectedHsts = 'max-age=31536000; includeSubDomains';
 const expectedFunctions = new Set([
     '_shared', 'book-search', 'korean-dictionary-search', 'main',
-    'send-feedback', 'verify-admin-mode', 'vibe-ai', 'neis-meal', 'spelling-weekly-review'
+    'send-feedback', 'verify-admin-mode', 'vibe-ai', 'neis-meal', 'spelling-weekly-review',
+    // 20261300~20261304로 운영 중인 다했니 연동. 배포 동기화 대상과 동일하게 명시한다.
+    'dahandin-credential', 'dahandin-cookie-sync'
 ]);
 
 // Allowed while staged locally; mandatory once its database migration is applied.
