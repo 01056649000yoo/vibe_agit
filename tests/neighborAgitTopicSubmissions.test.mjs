@@ -23,7 +23,8 @@ test('진행 현황 카드는 기한을 보여 주기만 하고, 우리 반 제�
     // 글마다·카드마다 기한을 고치는 입력이 없다(만들 때 정한다). 활동 종료는 그대로.
     assert.doesNotMatch(entry, /type="datetime-local" disabled=\{Boolean\(busy\)\} value=\{value\}/);
     assert.doesNotMatch(entry, /saveActivitySchedule|deadlineDrafts/);
-    assert.match(entry, /renderDeadlineRow\(activity, 'writing_close_at'\)/);
+    assert.match(entry, /renderDeadlineTile\(activity, 'writing_close_at'\)/);
+    assert.match(entry, /topicClassRows\(activity\)\.map/);
     assert.match(entry, /onClick=\{\(\) => setCloseActivityFor\(activity\)\}>활동 종료/);
     // 카드: 제목·글쓴이, 누르면 공개할 글 고르기 창.
     assert.match(entry, /activity\.my_submissions\.map\(\(submission\) =>/);

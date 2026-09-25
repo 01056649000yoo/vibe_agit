@@ -665,15 +665,39 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     );
 
     // ② 공개 글 관리: 주제별/학생별로 묶어 보고, 묶음째 비공개로 돌리거나 한 편씩 숨김·복원.
-    // 주제 카드의 기한 한 줄(글쓰기 마감·댓글·반응 마감). 기한은 주제를 만들 때 정하므로 여기서는 보여 주기만 한다
+    // 주제 카드의 기한 칸(글쓰기 마감·댓글·반응 마감). 기한은 주제를 만들 때 정하므로 여기서는 보여 주기만 한다
     // (2026-09-25 선생님 요청 — 글마다 고칠 일이 없다. 기한 RPC 는 `활동 종료` 가 계속 쓴다).
-    const renderDeadlineRow = (activity, key) => {
+    const renderDeadlineTile = (activity, key) => {
         const saved = deadlineValue(activity, key);
-        const passed = activity.status === 'closed' && key === 'writing_close_at' ? true : saved && new Date(saved) <= new Date();
-        const status = passed
-            ? <small className="neighbor-teacher__deadline-done">마감됨</small>
-            : <small>{saved ? `${formatDeadline(saved)}까지` : '기한 없음'}</small>;
-        return <p className="neighbor-teacher__deadline" key={key}><strong>{deadlineLabel(key)}</strong>{status}</p>;
+        const closed = (activity.status === 'closed' && key === 'writing_close_at') || Boolean(saved && new Date(saved) <= new Date());
+        const days = saved && !closed ? Math.ceil((new Date(saved).getTime() - Date.now()) / 86400000) : null;
+        const remain = closed ? '마감됨' : days === null ? '' : days <= 1 ? '오늘·내일 마감' : `D-${days}`;
+        return (
+            <div className="neighbor-topic-card__deadline" key={key} data-closed={closed ? 'true' : 'false'}>
+                <dt>{key === 'writing_close_at' ? '📝' : '💬'} {deadlineLabel(key)}</dt>
+                <dd>
+                    <span>{saved ? formatDeadline(saved) : '기한 없음'}</span>
+                    {remain && <em>{remain}</em>}
+                </dd>
+            </div>
+        );
+    };
+
+    // 참여 반마다 한 줄: 승인 상태(주제 제안·승인)와 제출·공개 수를 합친다. 우리 반을 맨 앞에.
+    const topicClassRows = (activity) => {
+        const rows = new Map();
+        const approvalLabel = (approval) => (approval.is_proposer ? '제안함'
+            : approval.status === 'approved' ? '승인' : approval.status === 'rejected' ? '거절'
+                : approval.status === 'cancelled' ? '종료' : '확인 전');
+        for (const approval of activity.approvals || []) {
+            rows.set(approval.class_id, { class_id: approval.class_id, class_name: approval.class_name,
+                approvalStatus: approval.is_proposer ? 'approved' : approval.status, approvalLabel: approvalLabel(approval) });
+        }
+        for (const stat of activity.class_stats || []) {
+            const row = rows.get(stat.class_id) || { class_id: stat.class_id, class_name: stat.class_name };
+            rows.set(stat.class_id, { ...row, hasStats: true, submitted: stat.submitted_count, published: stat.published_count });
+        }
+        return [...rows.values()].sort((left, right) => Number(right.class_id === classId) - Number(left.class_id === classId));
     };
 
     const renderManageStep = () => {
@@ -1305,32 +1329,49 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <Button type="button" onClick={() => setTopicCreateOpen(true)}>✏️ 주제 만들기</Button>
                                         </div>
                                         {selectedActivities.length === 0 ? <p className="neighbor-teacher__empty">아직 만든 주제가 없습니다. `주제 만들기` 에서 첫 주제를 내 보세요.</p> : selectedActivities.map((activity) => (
-                                    <article key={activity.id}>
-                                        <div>
-                                            <span>{getNeighborActivityLabel(activity.type)} · {activity.status === 'pending_approval' ? '활동 승인 대기' : activity.status === 'closed' ? '종료' : '글 쓰는 중'}</span>
-                                            <h3>{activity.title}</h3>
-                                            <p>{activity.prompt}</p>
-                                            {activity.approvals?.length > 0 && <ul className="neighbor-teacher__approvals">{activity.approvals.map((approval) => <li key={approval.class_id} data-status={approval.status}>{approval.class_name} · {approval.is_proposer ? '제안함' : approval.status === 'approved' ? '승인' : approval.status === 'rejected' ? '거절' : approval.status === 'cancelled' ? '종료' : '확인 전'}</li>)}</ul>}
-                                            <ul>{activity.class_stats.map((item) => <li key={item.class_id}>{item.class_name} · 제출 {item.submitted_count} · 공개 {item.published_count}</li>)}</ul>
-                                        </div>
-                                        {activity.can_review && (
-                                            <div className="neighbor-teacher__row-actions">
-                                                <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '활동 제안을 승인했습니다. 모든 교사가 승인하면 학생에게 열립니다.')}>활동 승인</Button>
-                                                <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
+                                    <article key={activity.id} className="neighbor-topic-card" data-status={activity.status}>
+                                        {/* 머리: 무엇에 대한 주제인지(왼쪽)와 할 수 있는 일(오른쪽 위)을 한눈에 — 2026-09-25 배치 정리 */}
+                                        <header className="neighbor-topic-card__head">
+                                            <div className="neighbor-topic-card__title">
+                                                <span className="neighbor-topic-card__status" data-status={activity.status}>
+                                                    {activity.status === 'pending_approval' ? '⏳ 승인 대기' : activity.status === 'closed' ? '🔒 종료' : '✏️ 글 쓰는 중'}
+                                                </span>
+                                                <h3>{activity.title}</h3>
+                                                {activity.prompt && <p>{activity.prompt}</p>}
                                             </div>
-                                        )}
-                                        {activity.status !== 'pending_approval' && (
-                                            <div className="neighbor-teacher__row-actions">
-                                                <Button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}>제출 글 공개하기</Button>
-                                                {activity.can_manage && activity.status !== 'closed' && (
-                                                    <Button type="button" variant="outline" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => setCloseActivityFor(activity)}>활동 종료</Button>
+                                            <div className="neighbor-topic-card__actions">
+                                                {activity.can_review && (
+                                                    <>
+                                                        <Button type="button" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: true }, '활동 제안을 승인했습니다. 모든 교사가 승인하면 학생에게 열립니다.')}>활동 승인</Button>
+                                                        <Button type="button" variant="outline" loading={busy === 'review_activity'} disabled={Boolean(busy)} onClick={() => runAction('review_activity', { space_id: workspace.space.id, activity_id: activity.id, approve: false }, '활동 제안을 거절했습니다.')}>거절</Button>
+                                                    </>
+                                                )}
+                                                {activity.status !== 'pending_approval' && (
+                                                    <Button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}>제출 글 공개하기</Button>
+                                                )}
+                                                {activity.status !== 'pending_approval' && activity.can_manage && activity.status !== 'closed' && (
+                                                    <Button type="button" variant="ghost" size="sm" className="neighbor-topic-card__close" loading={busy === 'close_activity'} disabled={Boolean(busy)} onClick={() => setCloseActivityFor(activity)}>활동 종료</Button>
                                                 )}
                                             </div>
-                                        )}
-                                        <div className="neighbor-teacher__deadlines">
-                                            {renderDeadlineRow(activity, 'writing_close_at')}
-                                            {renderDeadlineRow(activity, 'comments_close_at')}
-                                        </div>
+                                        </header>
+
+                                        {/* 기한 두 칸: 날짜와 남은 기간. 기한은 주제를 만들 때 정하고 여기서는 보여 주기만 한다. */}
+                                        <dl className="neighbor-topic-card__deadlines">
+                                            {renderDeadlineTile(activity, 'writing_close_at')}
+                                            {renderDeadlineTile(activity, 'comments_close_at')}
+                                        </dl>
+
+                                        {/* 참여 반: 반마다 한 줄로 승인 상태·제출·공개 수를 함께. */}
+                                        <ul className="neighbor-topic-card__classes">
+                                            {topicClassRows(activity).map((row) => (
+                                                <li key={row.class_id} data-status={row.approvalStatus} className={row.class_id === classId ? 'is-own' : ''}>
+                                                    <strong>{row.class_name}{row.class_id === classId && <small> (우리 반)</small>}</strong>
+                                                    {row.approvalLabel && <span className="neighbor-topic-card__approval">{row.approvalLabel}</span>}
+                                                    {row.hasStats && <span className="neighbor-topic-card__counts">제출 {row.submitted} · 공개 {row.published}</span>}
+                                                </li>
+                                            ))}
+                                        </ul>
+
                                         {activity.status !== 'pending_approval' && (
                                             <div className="neighbor-teacher__submissions">
                                                 <p className="neighbor-teacher__submissions-head">

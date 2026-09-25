@@ -313,15 +313,57 @@
 .neighbor-teacher__deadlines > p.neighbor-teacher__deadline { align-items: baseline; margin-bottom: 0; }
 .neighbor-teacher__deadlines strong { color: #486581; font-size: var(--ui-text-xs); }
 
-/* 같이 쓰기 광장 진행 현황: 우리 반 제출 글을 제목·글쓴이 카드로(2026-09-25). 누르면 공개할 글 고르기 창.
-   주제 카드는 가로 한 줄(flex)이라 줄바꿈을 허용하고, 제출 글 영역은 한 줄을 통째로 쓴다.
-   주제 카드 안의 ul·li·span 기본 규칙(알약 모양·청록 글자)이 더 구체적이라 같은 깊이로 덮는다. */
-.neighbor-teacher__activity-list > article:has(.neighbor-teacher__submissions) { flex-wrap: wrap; }
-.neighbor-teacher__activity-list article .neighbor-teacher__submissions { flex: 0 0 auto; width: 100%; }
+/* 같이 쓰기 광장 진행 현황 카드(2026-09-25 배치 정리): 머리(상태·제목·안내 | 단추) → 기한 두 칸 → 참여 반 → 우리 반 제출 글.
+   예전 주제 카드 규칙(.neighbor-teacher__activity-list > article 의 가로 flex, article ul/li/span 의 알약·청록 글자)이
+   새 카드에 번지지 않게 모두 `> article.neighbor-topic-card` 아래로 한정한다. */
+.neighbor-teacher__activity-list > article.neighbor-topic-card { display: flex; flex-direction: column; align-items: stretch;
+  gap: var(--ui-space-3); padding: var(--ui-space-4); }
+.neighbor-topic-card[data-status="closed"] { background: var(--ui-surface-muted); }
+.neighbor-topic-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ui-space-3); }
+.neighbor-topic-card__title { min-width: 0; }
+.neighbor-topic-card__title h3 { margin: 6px 0 4px; color: var(--ui-ink); font-size: var(--ui-text-lg); line-height: 1.35; overflow-wrap: anywhere; }
+.neighbor-topic-card__title p { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); line-height: 1.5; overflow-wrap: anywhere; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__status { display: inline-flex; padding: 3px 10px; border-radius: 999px;
+  background: var(--ui-success-soft); color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__status[data-status="pending_approval"] { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.neighbor-teacher__activity-list article .neighbor-topic-card__status[data-status="closed"] { background: var(--ui-border); color: var(--ui-ink-muted); }
+.neighbor-topic-card__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--ui-space-2); flex: 0 0 auto; }
+
+.neighbor-topic-card__deadlines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-2); margin: 0; }
+.neighbor-topic-card__deadline { padding: 10px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); background: var(--ui-surface); }
+.neighbor-topic-card__deadline dt { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-topic-card__deadline dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 4px 0 0;
+  color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
+.neighbor-topic-card__deadline em { padding: 1px 8px; border-radius: 999px; background: var(--ui-primary-soft); color: var(--ui-primary);
+  font-size: var(--ui-text-xs); font-style: normal; font-weight: 800; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__deadline dd span { color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__deadline[data-closed="true"] dd span { color: var(--ui-ink-muted); text-decoration: line-through; }
+.neighbor-topic-card__deadline[data-closed="true"] em { background: var(--ui-border); color: var(--ui-ink-muted); }
+
+.neighbor-teacher__activity-list article ul.neighbor-topic-card__classes { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin: 0; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__classes li { display: inline-flex; flex-wrap: wrap; align-items: center;
+  gap: 2px 8px; padding: 6px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); background: var(--ui-surface); color: var(--ui-ink); }
+/* 좁은 화면에서 낱말 가운데가 잘리지 않게 조각마다 한 덩어리로 둔다(칩 안에서만 줄바꿈). */
+.neighbor-topic-card__classes li > * { white-space: nowrap; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__classes li.is-own { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
+.neighbor-topic-card__classes strong { font-size: var(--ui-text-xs); }
+.neighbor-topic-card__classes strong small { color: var(--ui-ink-muted); font-weight: 600; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__approval { color: var(--ui-success); font-size: var(--ui-text-xs); font-weight: 800; }
+.neighbor-teacher__activity-list article .neighbor-topic-card__classes li[data-status="pending"] .neighbor-topic-card__approval { color: var(--ui-warning); }
+.neighbor-teacher__activity-list article .neighbor-topic-card__classes li[data-status="rejected"] .neighbor-topic-card__approval { color: var(--ui-danger); }
+.neighbor-teacher__activity-list article .neighbor-topic-card__counts { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
+
+@media (max-width: 640px) {
+  .neighbor-topic-card__head { flex-direction: column; }
+  .neighbor-topic-card__actions { justify-content: flex-start; }
+  .neighbor-topic-card__deadlines { grid-template-columns: 1fr; }
+}
+
+/* 우리 반 제출 글 카드. 누르면 공개할 글 고르기 창. */
 .neighbor-teacher__activity-list article ul.neighbor-teacher__submission-grid { display: grid; margin: 0; }
 .neighbor-teacher__activity-list article .neighbor-teacher__submission-grid li { padding: 0; border-radius: 0; background: none; }
 .neighbor-teacher__activity-list article .neighbor-teacher__submission .neighbor-teacher__new-flag { color: #fff; }
-.neighbor-teacher__submissions { margin-top: var(--ui-space-3); padding-top: var(--ui-space-3); border-top: 1px dashed var(--ui-border); }
+.neighbor-teacher__submissions { padding-top: var(--ui-space-3); border-top: 1px dashed var(--ui-border); }
 .neighbor-teacher__submissions-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ui-space-2); margin: 0 0 var(--ui-space-2);
   color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
 .neighbor-teacher__submissions-head small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 600; }
