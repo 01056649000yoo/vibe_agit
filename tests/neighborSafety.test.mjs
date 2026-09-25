@@ -74,7 +74,7 @@ test('같이 쓰기 광장은 과제 만들기 모듈을 그대로 쓴다', () =
     const teacher = readFileSync('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
     assert.match(teacher, /import MissionTypePicker from/);
     assert.match(teacher, /applyGenreToMissionDraft/);
-    assert.match(teacher, /createNeighborTopicDraft, toNeighborTopicProposal/);
+    assert.match(teacher, /createNeighborTopicDraft, (?:NEIGHBOR_TOPIC_DEFAULTS, )?toNeighborTopicProposal/);
     assert.doesNotMatch(teacher, /const GENRES = \[|const 글종류 = \[/, '글 종류 목록을 따로 만들면 안 됩니다.');
 
     const sql = readFileSync('supabase/migrations/20261266_neighbor_topic_uses_mission_form.sql', 'utf8');

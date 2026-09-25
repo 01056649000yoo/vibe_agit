@@ -52,6 +52,15 @@ export const neighborAgitTeacherApi = {
         return data;
     },
 
+    // 같이 쓰기 광장 진행 현황을 봤다고 남긴다("새 제출 글" 기준선, 20261342). 이웃 글 마당의 새 글 기준선과 따로다.
+    async markTopicSeen(classId) {
+        const { data, error } = await supabase.rpc('mark_neighbor_topic_seen_v1', {
+            p_class_id: classId
+        });
+        if (error) throw error;
+        return data;
+    },
+
     // AI가 막은 우리 반 이웃 댓글을 검토함에서 되살리거나(restore) 지운다(delete).
     async reviewBlockedComment({ spaceId, classId, commentId, action }) {
         const { data, error } = await supabase.rpc('review_neighbor_blocked_comment_v1', {

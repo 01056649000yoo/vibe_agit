@@ -27,7 +27,7 @@ const initialWorkspace = {
     { class_id: classTwo, class_name: '바다반', matchable_student_count: 3, role: 'guest', status: 'active', student_access_enabled: true },
     { class_id: classThree, class_name: '별빛반', matchable_student_count: 0, role: 'guest', status: 'pending', student_access_enabled: false },
   ],
-  notifications: { pending_approvals: 1, pending_joins: 1, blocked_comments: 0, new_posts: 0, new_comments: 0, pending_guestbook: 1 },
+  notifications: { pending_approvals: 1, pending_joins: 1, blocked_comments: 0, new_posts: 0, new_comments: 0, pending_guestbook: 1, new_topic_submissions: 2 },
   blocked_comments: [],
   pending_guestbook: [
     { entry_id: 'gb-1', shared_book_id: 'sb-1', book_title: '햇살반 동네 이야기', student_name: '박바다', class_name: '바다반', content: '느티나무 이야기가 제일 좋았어요! 우리 동네에도 큰 나무가 있어요.', created_at: new Date().toISOString() },
@@ -46,8 +46,17 @@ const initialWorkspace = {
       { class_id: classOne, class_name: '햇살반', status: 'approved', is_proposer: true },
       { class_id: classTwo, class_name: '바다반', status: 'approved', is_proposer: false },
     ],
+    // 우리 반 제출 글 카드(20261342): 번호 순, 새로 낸 글 2편, 공개 중 1편.
+    my_submissions: [
+      { post_id: 'sub-1', title: '할머니 댁 앞 작은 개울', student_name: '김도윤', share_status: 'published', is_new: false },
+      { post_id: 'sub-2', title: '도서관 창가 자리', student_name: '이서연', share_status: null, is_new: false },
+      { post_id: 'sub-3', title: '우리 집 옥상에서 본 노을이 정말 예뻐서 매일 올라가요', student_name: '박하준', share_status: null, is_new: false },
+      { post_id: 'sub-4', title: '학교 뒤 산책길', student_name: '최지우', share_status: null, is_new: false },
+      { post_id: 'sub-5', title: '놀이터 미끄럼틀', student_name: '정민재', share_status: null, is_new: true },
+      { post_id: 'sub-6', title: '', student_name: '한수아', share_status: null, is_new: true },
+    ],
     class_stats: [
-      { class_id: classOne, class_name: '햇살반', submitted_count: 0, review_count: 0, published_count: 0 },
+      { class_id: classOne, class_name: '햇살반', submitted_count: 6, review_count: 0, published_count: 1 },
       { class_id: classTwo, class_name: '바다반', submitted_count: 0, review_count: 0, published_count: 0 },
     ],
     match_pairs: [],
@@ -91,6 +100,26 @@ function createPreviewApi() {
     ]
   },
   async markSeen() {
+    return { success: true }
+  },
+  // 진행 현황을 보면 서버가 새 제출 기준선을 옮긴다 — 다음 작업 공간 응답부터 NEW·숫자가 빠진다.
+  async getActivityCandidates({ activityId: id }) {
+    const activity = workspace.activities.find((item) => item.id === id)
+    return (activity?.my_submissions || []).map((submission) => ({
+      post_id: submission.post_id, student_name: submission.student_name, title: submission.title || '제목 없음',
+      excerpt: '제출한 글의 앞부분이 여기에 보여요.', updated_at: new Date().toISOString(),
+      shared_post_id: submission.share_status ? `shared-${submission.post_id}` : null, share_status: submission.share_status,
+    }))
+  },
+  async markTopicSeen() {
+    workspace = {
+      ...workspace,
+      notifications: { ...workspace.notifications, new_topic_submissions: 0 },
+      activities: workspace.activities.map((activity) => ({
+        ...activity,
+        my_submissions: (activity.my_submissions || []).map((submission) => ({ ...submission, is_new: false })),
+      })),
+    }
     return { success: true }
   },
   async setActivitySchedule({ activityId: id, changes }) {

@@ -686,7 +686,38 @@ DO $$ BEGIN
     WHERE l.activity_id = public.zz_sim('topic');
 EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('45-1 학생 주제 글 제출', FALSE, SQLERRM);
 END $$;
+-- 같이 쓰기 광장 새 제출 알림(20261342): 햇살반 교사가 진행 현황을 한 시간 전에 마지막으로 봤다고 둔다
+-- (한 트랜잭션 안에서는 NOW() 가 같아 "뒤에 냈다" 를 만들 수 없다).
+INSERT INTO public.neighbor_space_teacher_visits (space_id, class_id, last_seen_at, topic_seen_at)
+VALUES (public.zz_sim('space'), public.zz_sim('c_a'), NOW() - INTERVAL '1 hour', NOW() - INTERVAL '1 hour')
+ON CONFLICT (space_id, class_id) DO UPDATE SET topic_seen_at = NOW() - INTERVAL '1 hour';
 SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE w JSONB; a JSONB; b0 INT; b1 INT;
+BEGIN
+    w := public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_a'));
+    SELECT x INTO a FROM jsonb_array_elements(w->'activities') x WHERE x->>'id' = public.zz_sim('topic')::TEXT;
+    PERFORM public.zz_sim_check('T1 진행 현황에 우리 반 제출 글 3편이 제목·글쓴이 카드로 온다(다른 반 글 없음)',
+        jsonb_array_length(a->'my_submissions') = 3
+        AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements(a->'my_submissions') x WHERE x->>'student_name' NOT LIKE 'A학생%')
+        AND (a#>>'{my_submissions,0,title}') LIKE '%의 운동회',
+        (SELECT string_agg(x->>'student_name', ', ') FROM jsonb_array_elements(a->'my_submissions') x));
+    b0 := (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT;
+    PERFORM public.zz_sim_check('T2 새 제출 글 3건이 알림·메뉴 숫자에 잡힌다(카드에 NEW)',
+        (w#>>'{notifications,new_topic_submissions}')::INT = 3 AND b0 >= 3
+        AND (a#>>'{my_submissions,0,is_new}')::BOOLEAN,
+        format('알림 %s · 메뉴 %s', w#>>'{notifications,new_topic_submissions}', b0));
+    PERFORM public.mark_neighbor_topic_seen_v1(public.zz_sim('c_a'));
+    b1 := (public.get_neighbor_teacher_badge_v1(public.zz_sim('c_a'))->>'count')::INT;
+    PERFORM public.zz_sim_check('T3 진행 현황을 보면 새 제출 알림이 사라지고 메뉴 숫자가 3 줄어든다',
+        (public.get_neighbor_teacher_workspace_v1(public.zz_sim('c_a'))#>>'{notifications,new_topic_submissions}')::INT = 0 AND b1 = b0 - 3,
+        format('메뉴 %s → %s', b0, b1));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('T1~T3 같이 쓰기 광장 제출 카드', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_login('t_d');
+SELECT public.zz_sim_expect_denied('T4 참여하지 않은 교사는 진행 현황 기준선을 못 바꾼다',
+    format($q$SELECT public.mark_neighbor_topic_seen_v1(%L)$q$, public.zz_sim('c_a')));
 
 SELECT public.zz_sim_login('t_a');
 DO $$

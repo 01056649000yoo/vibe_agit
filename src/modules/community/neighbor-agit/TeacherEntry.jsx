@@ -8,7 +8,7 @@ import MissionPromptFields from '../../writing/mission-form/MissionPromptFields'
 import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
 import { describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
 import { applyGenreToMissionDraft } from '../../writing/mission-form/missionDraft';
-import { createNeighborTopicDraft, toNeighborTopicProposal } from './topicProposalAdapter';
+import { createNeighborTopicDraft, NEIGHBOR_TOPIC_DEFAULTS, toNeighborTopicProposal } from './topicProposalAdapter';
 import { callAI } from '../../../lib/openai';
 
 /** 전용 틀 id(`poem` 등)로 카탈로그의 글 종류 이름(`시`)을 찾는다. 목록의 정본은 카탈로그 하나다. */
@@ -71,7 +71,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // 각 탭 안의 3스텝. 이웃 글 마당: 모으기→관리→반응 / 같이 쓰기 광장: 주제→관리→반응.
     const [galleryStep, setGalleryStep] = useState('collect'); // collect | manage | engage
     const [topicStep, setTopicStep] = useState('topics');      // topics | manage | engage
-    const [deadlineDrafts, setDeadlineDrafts] = useState({}); // `${활동id}:${기한 종류}` → datetime-local 입력값
+    // 같이 쓰기 광장 진행 현황에서 이번에 본 "새 제출 글" — 기준선을 옮긴 뒤에도 보는 동안 NEW 를 남긴다.
+    const [seenNewSubmissionIds, setSeenNewSubmissionIds] = useState(() => new Set());
     const [closeActivityFor, setCloseActivityFor] = useState(null); // 활동 종료 방법을 고르는 창의 대상 활동
     const [engageRefresh, setEngageRefresh] = useState(0); // 상세 창을 닫으면 ③ 댓글·반응 반별 목록이 숫자를 다시 맞춘다
     const [liveNotice, setLiveNotice] = useState('');
@@ -252,7 +253,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         const result = applyGenreToMissionDraft(
             {
                 ...activityForm,
-                min_chars: !activityForm.genre && activityForm.min_chars === 50 ? null : activityForm.min_chars,
+                min_chars: !activityForm.genre && activityForm.min_chars === NEIGHBOR_TOPIC_DEFAULTS.min_chars ? null : activityForm.min_chars,
                 min_paragraphs: !activityForm.genre && activityForm.min_paragraphs === 1 ? null : activityForm.min_paragraphs
             },
             genreId,
@@ -420,38 +421,6 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     };
 
-    // ISO 시각 → datetime-local 입력값(YYYY-MM-DDTHH:mm, 로컬 시간). 없으면 빈 값.
-    const toLocalInput = (iso) => {
-        if (!iso) return '';
-        const d = new Date(iso);
-        const pad = (n) => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    };
-
-    // 같이 쓰기 광장의 댓글·반응 마감 시각을 정하거나(빈 값=마감 해제) 지운다.
-    // 주제 카드에서 기한 하나(글쓰기 또는 댓글·반응)를 정하거나 지운다.
-    const saveActivitySchedule = async (activityId, key, localValue) => {
-        if (busy) return;
-        setBusy('set_activity_schedule');
-        setMessage('');
-        setErrorMessage('');
-        try {
-            await api.setActivitySchedule({
-                spaceId: workspace.space.id, classId, activityId,
-                changes: key === 'writing_close_at'
-                    ? { writing_close_at: localInputToIso(localValue) }
-                    : { comments_close_at: localInputToIso(localValue) }
-            });
-            setWorkspace(await api.getWorkspace(classId));
-            setDeadlineDrafts((current) => { const copy = { ...current }; delete copy[`${activityId}:${key}`]; return copy; });
-            setMessage(localValue ? `${deadlineLabel(key)}을 정했습니다.` : `${deadlineLabel(key)}을 해제했습니다.`);
-        } catch (error) {
-            setErrorMessage(getErrorMessage(error, '기한을 정하지 못했습니다.'));
-        } finally {
-            setBusy('');
-        }
-    };
-
     // 활동 종료: 글쓰기만 마칠지, 댓글·반응까지 함께 닫을지 고른다.
     const closeActivity = async (activity, alsoCloseComments) => {
         setCloseActivityFor(null);
@@ -559,7 +528,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         () => workspace?.memberships?.filter((item) => item.status === 'active') || [],
         [workspace?.memberships]
     );
-    const activities = workspace?.activities || [];
+    const activities = useMemo(() => workspace?.activities || [], [workspace?.activities]);
     // 참여 학급 2곳 이상이면 준비 끝 → 운영 화면. 그 전(호스트 단독)은 진행형 마법사.
     const isReady = activeMemberships.length >= 2;
     // 알림 카운트(서버 계산). 배지로 보여 탭을 오가지 않아도 처리할 것을 안다.
@@ -570,14 +539,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const pendingApprovalActivities = activities.filter((activity) => activity.can_review);
     const pendingGuestbook = workspace?.pending_guestbook || [];
     const reviewInboxCount = (notif.pending_approvals || 0) + (notif.blocked_comments || 0) + (notif.pending_joins || 0)
-        + (notif.pending_guestbook || 0);
+        + (notif.pending_guestbook || 0) + (notif.new_topic_submissions || 0);
 
     // 화면을 실제로 보고 있는 교사만 12초 간격으로 한 번 읽는다. 학생 쪽 연결·폴링은 만들지 않는다.
     // 준비 전(참여 신청을 기다리는 호스트·승인을 기다리는 게스트)도 포함한다 — 신청·승인이 새로고침 없이 보이게(2026-09-24).
     useTeacherWorkspacePoll({ enabled: Boolean(workspace?.space?.id), refresh: refreshWorkspace });
 
     // 대기 방문록·AI 차단 댓글·새로 보이는 이웃 댓글이 늘면, 배지와 함께 눈에 보이는 갱신 안내를 남긴다.
-    const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}`;
+    const liveCounts = `${notif.pending_guestbook || 0}:${notif.blocked_comments || 0}:${notif.new_comments || 0}:${notif.new_topic_submissions || 0}`;
     const lastLiveCounts = useRef({ value: liveCounts, ready: false, classId: null });
     useEffect(() => {
         if (!lastLiveCounts.current.ready || lastLiveCounts.current.classId !== classId) {
@@ -585,8 +554,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setLiveNotice('');
             return;
         }
-        const [beforeGuestbook, beforeBlocked, beforeComments] = lastLiveCounts.current.value.split(':').map(Number);
-        const [nextGuestbook, nextBlocked, nextComments] = liveCounts.split(':').map(Number);
+        const [beforeGuestbook, beforeBlocked, beforeComments, beforeTopic] = lastLiveCounts.current.value.split(':').map(Number);
+        const [nextGuestbook, nextBlocked, nextComments, nextTopic] = liveCounts.split(':').map(Number);
         lastLiveCounts.current.value = liveCounts;
         const updates = [];
         if (nextGuestbook > beforeGuestbook) updates.push(`새 방문록 ${nextGuestbook - beforeGuestbook}건`);
@@ -596,6 +565,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             // ③ 댓글·반응 반별 목록은 따로 읽으므로, 새 댓글이 왔을 때만 한 번 다시 맞춘다(점검표 D4).
             setEngageRefresh((value) => value + 1);
         }
+        if (nextTopic > beforeTopic) updates.push(`새 제출 글 ${nextTopic - beforeTopic}건`);
         if (updates.length) setLiveNotice(`${updates.join(' · ')}이 도착했어요.`);
     }, [classId, liveCounts]);
 
@@ -604,7 +574,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     const openTopics = activities.filter((activity) => activity.status === 'open').length;
     const spaceStats = (spaceKey) => {
         if (spaceKey === 'gallery') return [`우리 반 공개 ${ownPublished}편`, notif.new_posts > 0 ? `새 이웃 글 ${notif.new_posts}` : '새 이웃 글 없음', notif.new_comments > 0 ? `새 댓글 ${notif.new_comments}` : '새 댓글 없음'];
-        if (spaceKey === 'topic') return [`진행 중 ${openTopics}`, notif.pending_approvals > 0 ? `승인할 제안 ${notif.pending_approvals}` : '승인할 제안 없음'];
+        if (spaceKey === 'topic') return [`진행 중 ${openTopics}`, notif.pending_approvals > 0 ? `승인할 제안 ${notif.pending_approvals}` : '승인할 제안 없음',
+            ...(notif.new_topic_submissions > 0 ? [`새 제출 글 ${notif.new_topic_submissions}`] : [])];
         return [notif.pending_guestbook > 0 ? `확인할 방문록 ${notif.pending_guestbook}` : '확인할 방문록 없음'];
     };
 
@@ -612,6 +583,20 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     useEffect(() => {
         if (workspace) onTodoCountChange?.(reviewInboxCount);
     }, [workspace, reviewInboxCount, onTodoCountChange]);
+
+    // 같이 쓰기 광장 진행 현황을 보고 있으면 "새 제출 글" 을 본 것으로 남긴다. 이번에 본 글은 NEW 를 유지한다.
+    const newTopicSubmissions = notif.new_topic_submissions || 0;
+    const viewingTopicProgress = isReady && activeActivityTab === 'topic' && topicStep === 'topics';
+    useEffect(() => {
+        if (!viewingTopicProgress || newTopicSubmissions === 0 || !classId) return;
+        const freshIds = activities.flatMap((activity) => (activity.my_submissions || [])
+            .filter((submission) => submission.is_new).map((submission) => submission.post_id));
+        setSeenNewSubmissionIds((current) => new Set([...current, ...freshIds]));
+        api.markTopicSeen(classId).then(refreshWorkspace).catch(() => {});
+    }, [viewingTopicProgress, newTopicSubmissions, classId, activities, api, refreshWorkspace]);
+    useEffect(() => {
+        if (!viewingTopicProgress) setSeenNewSubmissionIds(new Set());
+    }, [viewingTopicProgress]);
 
     // 운영 화면을 열면 "지금까지 봤음"을 남긴다(새 글/새 댓글 배지 기준선).
     useEffect(() => {
@@ -680,30 +665,15 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     );
 
     // ② 공개 글 관리: 주제별/학생별로 묶어 보고, 묶음째 비공개로 돌리거나 한 편씩 숨김·복원.
-    // 주제 카드의 기한 한 줄(글쓰기 마감·댓글·반응 마감). 고칠 수 없으면 정해진 값만 보여 준다.
-    const renderDeadlineRow = (activity, key, editable) => {
+    // 주제 카드의 기한 한 줄(글쓰기 마감·댓글·반응 마감). 기한은 주제를 만들 때 정하므로 여기서는 보여 주기만 한다
+    // (2026-09-25 선생님 요청 — 글마다 고칠 일이 없다. 기한 RPC 는 `활동 종료` 가 계속 쓴다).
+    const renderDeadlineRow = (activity, key) => {
         const saved = deadlineValue(activity, key);
-        const passed = saved && new Date(saved) <= new Date();
-        const draftKey = `${activity.id}:${key}`;
-        const status = saved
-            ? <small className={passed ? 'neighbor-teacher__deadline-done' : ''}>{passed ? '마감됨' : `${formatDeadline(saved)}까지`}</small>
-            : <small>기한 없음</small>;
-        if (!editable) {
-            return <p className="neighbor-teacher__deadline" key={key}><strong>{deadlineLabel(key)}</strong>{status}</p>;
-        }
-        const value = deadlineDrafts[draftKey] ?? toLocalInput(saved);
-        return (
-            <div className="neighbor-teacher__deadline" key={key}>
-                <label>{deadlineLabel(key)}
-                    <input type="datetime-local" disabled={Boolean(busy)} value={value}
-                        onChange={(event) => setDeadlineDrafts((current) => ({ ...current, [draftKey]: event.target.value }))} />
-                </label>
-                <Button type="button" size="sm" loading={busy === 'set_activity_schedule'} disabled={Boolean(busy) || !value}
-                    onClick={() => saveActivitySchedule(activity.id, key, value)}>저장</Button>
-                {saved && <Button type="button" size="sm" variant="ghost" disabled={Boolean(busy)} onClick={() => saveActivitySchedule(activity.id, key, '')}>마감 해제</Button>}
-                {status}
-            </div>
-        );
+        const passed = activity.status === 'closed' && key === 'writing_close_at' ? true : saved && new Date(saved) <= new Date();
+        const status = passed
+            ? <small className="neighbor-teacher__deadline-done">마감됨</small>
+            : <small>{saved ? `${formatDeadline(saved)}까지` : '기한 없음'}</small>;
+        return <p className="neighbor-teacher__deadline" key={key}><strong>{deadlineLabel(key)}</strong>{status}</p>;
     };
 
     const renderManageStep = () => {
@@ -1358,12 +1328,29 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             </div>
                                         )}
                                         <div className="neighbor-teacher__deadlines">
-                                            {activity.status === 'closed'
-                                                ? <p className="neighbor-teacher__deadline"><strong>글쓰기 마감</strong><small className="neighbor-teacher__deadline-done">마감됨</small></p>
-                                                : renderDeadlineRow(activity, 'writing_close_at', activity.can_manage
-                                                    || activity.approvals?.some((approval) => approval.is_proposer && approval.class_id === classId))}
-                                            {renderDeadlineRow(activity, 'comments_close_at', true)}
+                                            {renderDeadlineRow(activity, 'writing_close_at')}
+                                            {renderDeadlineRow(activity, 'comments_close_at')}
                                         </div>
+                                        {activity.status !== 'pending_approval' && (
+                                            <div className="neighbor-teacher__submissions">
+                                                <p className="neighbor-teacher__submissions-head">
+                                                    우리 반 제출 글 <strong>{activity.my_submissions?.length || 0}</strong>편
+                                                    {(activity.my_submissions?.length || 0) > 0 && <small>카드를 누르면 공개할 글을 고를 수 있어요</small>}
+                                                </p>
+                                                {(activity.my_submissions || []).length === 0
+                                                    ? <p className="neighbor-teacher__empty">아직 글을 낸 학생이 없어요.</p>
+                                                    : <ul className="neighbor-teacher__submission-grid">{activity.my_submissions.map((submission) => (
+                                                        <li key={submission.post_id}>
+                                                            <button type="button" disabled={Boolean(busy)} onClick={() => openActivityPublish(activity)}
+                                                                className={`neighbor-teacher__submission${submission.share_status === 'published' ? ' is-published' : ''}`}
+                                                                aria-label={`${submission.student_name}의 글 ${submission.title || '제목 없음'}${submission.share_status === 'published' ? ', 공개 중' : ''}`}>
+                                                                {(submission.is_new || seenNewSubmissionIds.has(submission.post_id)) && <span className="neighbor-teacher__new-flag">NEW</span>}
+                                                                <strong>{submission.title || '제목 없음'}</strong>
+                                                                <small>{submission.student_name}</small>
+                                                            </button>
+                                                        </li>))}</ul>}
+                                            </div>
+                                        )}
                                     </article>
                                         ))}
                                     </section>
@@ -1395,6 +1382,20 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <Button type="button" variant="outline" disabled={Boolean(busy)} onClick={() => runAction('review_join', { space_id: workspace.space.id, target_class_id: membership.class_id, approve: false }, '참여 신청을 거절했습니다.')}>거절</Button>
                                         </span>
                                     </article>))}</div>}
+                        </>
+                    )}
+
+                    {newTopicSubmissions > 0 && (
+                        <>
+                            <h3 className="neighbor-teacher__inbox-heading">🎪 같이 쓰기 광장 새 제출 글</h3>
+                            <div className="neighbor-teacher__post-list">
+                                <article>
+                                    <div><span><strong>우리 반 학생이 새 글 {newTopicSubmissions}편을 냈어요</strong><small>진행 현황에서 보면 알림이 사라져요</small></span></div>
+                                    <span className="neighbor-teacher__row-actions">
+                                        <Button type="button" onClick={() => { setReviewInboxOpen(false); selectActivityTab('topic'); setTopicStep('topics'); }}>진행 현황 보기</Button>
+                                    </span>
+                                </article>
+                            </div>
                         </>
                     )}
 
