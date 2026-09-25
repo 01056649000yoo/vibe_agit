@@ -169,7 +169,8 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                     {books.map((item) => (
                         <button type="button" key={item.shared_book_id} className="class-agit-book-cover" data-design={getBookDesign(item.design).id}
                             style={bookCoverStyle(item.design, item.paper)} onClick={() => openBook(item.shared_book_id)}>
-                            <small>{item.is_own_class ? '⭐ 우리 반' : item.class_name} · {item.number}판</small>
+                            <small>{item.is_own_class ? '⭐ 우리 반' : item.class_name} · {item.number}판
+                                {item.shared_until && ` · ${new Date(item.shared_until).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지`}</small>
                             <h2>{item.title}</h2>
                             {item.subtitle && <p>{item.subtitle}</p>}
                             <span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(item.design).mark}</span>

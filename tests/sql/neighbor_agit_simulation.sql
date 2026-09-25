@@ -1099,6 +1099,59 @@ SELECT public.zz_sim_check('N4 들어오기만 해서는 같이 쓰기 광장 �
      WHERE space_id = public.zz_sim('space') AND class_id = public.zz_sim('c_b')));
 SET LOCAL ROLE authenticated;
 
+-- 문집 게시 기한(20261347): 소개한 반 교사가 정하거나 비운다. 지나면 바로 못 열고, 예약 작업이 소개를 내린다.
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_a');
+DO $$
+DECLARE r JSONB;
+BEGIN
+    r := public.set_neighbor_book_shared_until_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book'), NOW() + INTERVAL '7 days');
+    PERFORM public.zz_sim_check('K1 소개한 반 교사가 게시 기한을 정한다 · 교사 목록에 보인다',
+        (r->>'success')::BOOLEAN AND (SELECT x->>'shared_until' FROM jsonb_array_elements(
+            public.get_neighbor_teacher_books_v1(public.zz_sim('space'), public.zz_sim('c_a'))->'my_books') x
+            WHERE x->>'shared_book_id' = public.zz_sim('shared_book')::TEXT) IS NOT NULL);
+    r := public.set_neighbor_book_shared_until_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book'), NULL);
+    PERFORM public.zz_sim_check('K2 기한을 비우면 기한 없이 계속 게시된다', (r->>'shared_until') IS NULL);
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('K1~K2 게시 기한', FALSE, SQLERRM);
+END $$;
+SELECT public.zz_sim_expect_denied('K3 지난 시각은 게시 기한으로 정할 수 없다',
+    format($q$SELECT public.set_neighbor_book_shared_until_v1(%L, %L, %L, NOW() - INTERVAL '1 minute')$q$, public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('shared_book')));
+SELECT public.zz_sim_login('t_b');
+DO $$ BEGIN
+    PERFORM public.set_neighbor_book_shared_until_v1(public.zz_sim('space'), public.zz_sim('c_b'), public.zz_sim('shared_book'), NOW() + INTERVAL '1 day');
+    PERFORM public.zz_sim_check('K4 다른 반 교사는 게시 기한을 못 정한다', FALSE, '정해졌습니다');
+EXCEPTION
+    WHEN insufficient_privilege THEN PERFORM public.zz_sim_check('K4 다른 반 교사는 게시 기한을 못 정한다', TRUE, '막힘(42501): ' || SQLERRM);
+    WHEN OTHERS THEN PERFORM public.zz_sim_check('K4 다른 반 교사는 게시 기한을 못 정한다', FALSE, SQLSTATE || ' ' || SQLERRM);
+END $$;
+-- 기한이 지난 상태를 만든다(시계를 돌릴 수 없어 값을 과거로 둔다).
+RESET ROLE;
+UPDATE public.neighbor_shared_books SET shared_until = NOW() - INTERVAL '1 minute' WHERE id = public.zz_sim('shared_book');
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('u_b1');
+DO $$ BEGIN
+    PERFORM public.zz_sim_check('K5 기한이 지나면 예약 작업 전이라도 학생 목록에서 빠진다',
+        NOT EXISTS (SELECT 1 FROM jsonb_array_elements(public.get_neighbor_space_books_v1(public.zz_sim('space'))->'books') x
+            WHERE x->>'shared_book_id' = public.zz_sim('shared_book')::TEXT));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('K5 기한 지난 문집', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+-- 부르는 것과 확인을 나눈다(한 문장 안에서는 확인 쪽이 작업 전 상태를 본다).
+SELECT set_config('sim.withdrawn_count', public.withdraw_due_neighbor_books_v1()::TEXT, TRUE);
+SELECT public.zz_sim_check('K6 예약 작업이 기한 지난 소개를 내린다',
+    current_setting('sim.withdrawn_count')::INT >= 1
+    AND (SELECT status FROM public.neighbor_shared_books WHERE id = public.zz_sim('shared_book')) = 'withdrawn',
+    '내린 문집 ' || current_setting('sim.withdrawn_count') || '권');
+SET LOCAL ROLE authenticated;
+SELECT public.zz_sim_login('t_a');
+DO $$ BEGIN
+    PERFORM public.share_neighbor_book_v1(public.zz_sim('space'), public.zz_sim('c_a'), public.zz_sim('book'));
+EXCEPTION WHEN OTHERS THEN PERFORM public.zz_sim_check('K7 다시 소개', FALSE, SQLERRM);
+END $$;
+RESET ROLE;
+SELECT public.zz_sim_check('K7 다시 소개하면 기한이 비워져 바로 다시 게시된다',
+    (SELECT status = 'published' AND shared_until IS NULL FROM public.neighbor_shared_books WHERE id = public.zz_sim('shared_book')));
+
 -- 같이 쓰기 광장 주제 삭제(20261344): 공개 글·댓글은 사라지고, 각 반 과제와 학생 원글은 보관함에 남는다.
 RESET ROLE;
 SELECT set_config('sim.topic_posts_before', (SELECT count(*) FROM public.student_posts post

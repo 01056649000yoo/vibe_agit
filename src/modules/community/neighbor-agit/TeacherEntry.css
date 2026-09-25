@@ -403,6 +403,12 @@
 /* 기한 칸은 한 줄로 길게 — 좁은 격자 칸에 넣으면 날짜만 보이고 시각이 잘린다. */
 .neighbor-teacher__composer-flow .neighbor-teacher__setting-groups fieldset.neighbor-teacher__deadline-field { grid-template-columns: minmax(0, 1fr); }
 .neighbor-teacher__deadline-field input[type="datetime-local"] { width: 100%; max-width: 280px; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups label.neighbor-teacher__deadline-toggle {
+  display: inline-flex; align-items: center; gap: 8px; color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; cursor: pointer; }
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups label.neighbor-teacher__deadline-toggle { justify-self: start; }
+/* 입력칸 공통 규칙(폭 100%·안쪽 여백·테두리)이 체크 상자에 걸리지 않게 같은 깊이로 되돌린다. */
+.neighbor-teacher__composer-flow .neighbor-teacher__setting-groups .neighbor-teacher__deadline-toggle input[type="checkbox"] {
+  flex: 0 0 auto; width: 18px; height: 18px; margin: 0; padding: 0; }
 
 /* 활동 종료 방법 고르기: 두 갈래를 큰 단추로. 단추 안 작은 글씨가 무엇이 달라지는지 말한다. */
 .neighbor-teacher__close-choice { display: grid; gap: var(--ui-space-3); }

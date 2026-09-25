@@ -51,6 +51,12 @@ export const neighborBooksApi = {
         if (data?.success !== true) throw new Error('방문록 글자 수를 저장하지 못했습니다.');
         return data;
     },
+    // 우리 반이 소개 중인 문집의 게시 기한(ISO 시각, null = 기한 없음, 20261347).
+    async setSharedUntil({ spaceId, classId, sharedBookId, sharedUntil }) {
+        const data = await call('set_neighbor_book_shared_until_v1', { p_space_id: spaceId, p_actor_class_id: classId, p_shared_book_id: sharedBookId, p_shared_until: sharedUntil });
+        if (data?.success !== true) throw new Error('게시 기한을 저장하지 못했습니다.');
+        return data;
+    },
     async reviewGuestbook({ spaceId, classId, entryId, action }) {
         const data = await call('review_neighbor_guestbook_v1', { p_space_id: spaceId, p_actor_class_id: classId, p_entry_id: entryId, p_action: action });
         if (data?.success !== true || data?.entry_id !== entryId) throw new Error('방문록 확인 결과를 확인하지 못했습니다.');

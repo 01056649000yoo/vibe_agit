@@ -187,6 +187,10 @@ function createBooksPreviewApi() {
       data = { ...data, my_books: data.my_books.map((book) => book.shared_book_id === sharedBookId ? { ...book, shared_status: 'withdrawn' } : book) }
       return { success: true }
     },
+    async setSharedUntil({ sharedBookId, sharedUntil }) {
+      data = { ...data, my_books: data.my_books.map((book) => book.shared_book_id === sharedBookId ? { ...book, shared_until: sharedUntil } : book) }
+      return { success: true, shared_book_id: sharedBookId, shared_until: sharedUntil }
+    },
     async setGuestbookMinChars({ sharedBookId, minChars }) {
       data = { ...data, my_books: data.my_books.map((book) => book.shared_book_id === sharedBookId ? { ...book, guestbook_min_chars: minChars } : book) }
       return { success: true, shared_book_id: sharedBookId, guestbook_min_chars: minChars }

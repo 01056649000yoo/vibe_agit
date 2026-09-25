@@ -9,6 +9,7 @@ import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
 import { describePresetResult, getGenreEntries } from '../../writing/mission-types/genreCatalog';
 import { applyGenreToMissionDraft } from '../../writing/mission-form/missionDraft';
 import { createNeighborTopicDraft, NEIGHBOR_TOPIC_DEFAULTS, toNeighborTopicProposal } from './topicProposalAdapter';
+import { defaultDeadlineInput } from './deadlineDefaults.js';
 import { callAI } from '../../../lib/openai';
 
 /** 전용 틀 id(`poem` 등)로 카탈로그의 글 종류 이름(`시`)을 찾는다. 목록의 정본은 카탈로그 하나다. */
@@ -1390,17 +1391,35 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                             <section className="neighbor-teacher__form-step">
                                                 <div className="neighbor-teacher__compact-heading"><span>5</span><h3>기한 <small>(선택)</small></h3></div>
                                                 <div className="neighbor-teacher__setting-groups">
+                                                    {/* 기본은 기한 없음. 켜면 7일 뒤 오후 5시로 채운다(2026-09-25, deadlineDefaults.js). */}
                                                     <fieldset className="neighbor-teacher__deadline-field">
                                                         <legend>글쓰기 마감</legend>
-                                                        <label>이때까지 글을 써요<input type="datetime-local" value={topicSchedule.writing_close_at}
-                                                            onChange={(event) => setTopicSchedule((current) => ({ ...current, writing_close_at: event.target.value }))} /></label>
-                                                        <small>지나면 주제가 저절로 종료돼요. 비워 두면 주제 카드의 ‘활동 종료’로 직접 마쳐요.</small>
+                                                        <label className="neighbor-teacher__deadline-toggle">
+                                                            <input type="checkbox" checked={Boolean(topicSchedule.writing_close_at)}
+                                                                onChange={(event) => setTopicSchedule((current) => ({ ...current,
+                                                                    writing_close_at: event.target.checked ? defaultDeadlineInput() : '' }))} />
+                                                            기한 정하기
+                                                        </label>
+                                                        {topicSchedule.writing_close_at && (
+                                                            <label>이때까지 글을 써요<input type="datetime-local" value={topicSchedule.writing_close_at}
+                                                                onChange={(event) => setTopicSchedule((current) => ({ ...current, writing_close_at: event.target.value }))} /></label>
+                                                        )}
+                                                        <small>{topicSchedule.writing_close_at ? '지나면 주제가 저절로 종료돼요.' : '기한 없음 — 주제 카드의 ‘활동 종료’로 직접 마쳐요.'}</small>
                                                     </fieldset>
                                                     <fieldset className="neighbor-teacher__deadline-field">
                                                         <legend>댓글·반응 마감</legend>
-                                                        <label>이때까지 댓글·공감을 남겨요<input type="datetime-local" value={topicSchedule.comments_close_at}
-                                                            onChange={(event) => setTopicSchedule((current) => ({ ...current, comments_close_at: event.target.value }))} /></label>
-                                                        <small>지나면 글은 읽기만 돼요. 비워 두면 공간이 열려 있는 동안 계속 남길 수 있어요.</small>
+                                                        <label className="neighbor-teacher__deadline-toggle">
+                                                            <input type="checkbox" checked={Boolean(topicSchedule.comments_close_at)}
+                                                                onChange={(event) => setTopicSchedule((current) => ({ ...current,
+                                                                    // 댓글 마감은 글쓰기 마감보다 빠를 수 없어, 글쓰기 기한이 있으면 그 값으로 시작한다.
+                                                                    comments_close_at: event.target.checked ? (current.writing_close_at || defaultDeadlineInput()) : '' }))} />
+                                                            기한 정하기
+                                                        </label>
+                                                        {topicSchedule.comments_close_at && (
+                                                            <label>이때까지 댓글·공감을 남겨요<input type="datetime-local" value={topicSchedule.comments_close_at}
+                                                                onChange={(event) => setTopicSchedule((current) => ({ ...current, comments_close_at: event.target.value }))} /></label>
+                                                        )}
+                                                        <small>{topicSchedule.comments_close_at ? '지나면 글은 읽기만 돼요.' : '기한 없음 — 공간이 열려 있는 동안 계속 남길 수 있어요.'}</small>
                                                     </fieldset>
                                                 </div>
                                             </section>

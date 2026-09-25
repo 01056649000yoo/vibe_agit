@@ -91,3 +91,12 @@
     .neighbor-books__mini-cover { width: 52px; padding: 6px; }
     .neighbor-books__reason .ui-button { white-space: normal; text-align: left; }
 }
+
+/* 교사: 소개 중인 문집의 게시 기한(기본 없음, 켜면 7일 뒤 오후 5시, 2026-09-25). */
+.neighbor-books__until { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: var(--ui-space-2); }
+.neighbor-books__until-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--ui-ink); font-size: var(--ui-text-xs); font-weight: 700; cursor: pointer; }
+.neighbor-books__until-toggle input { width: 16px; height: 16px; margin: 0; }
+.neighbor-books__until input[type="datetime-local"] { padding: 5px 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-xs);
+  font: inherit; font-size: var(--ui-text-sm); color: var(--ui-ink); }
+.neighbor-books__until small { flex-basis: 100%; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+

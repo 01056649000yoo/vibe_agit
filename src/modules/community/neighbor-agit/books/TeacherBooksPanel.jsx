@@ -3,6 +3,7 @@ import Button from '../../../../components/common/Button';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
 import { neighborBooksApi } from './booksApi';
 import './books.css';
+import { defaultDeadlineInput, isoToDeadlineInput } from '../deadlineDefaults.js';
 
 /*
  * 🏛️ 문집 도서관 — 교사 칸.
@@ -36,6 +37,8 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
     const [error, setError] = useState('');
     // 문집마다 방문록 최소 글자 수 입력값(저장 전). key = shared_book_id
     const [minDrafts, setMinDrafts] = useState({});
+    // 문집마다 게시 기한 입력값(저장 전). '' = 기한 없음. key = shared_book_id
+    const [untilDrafts, setUntilDrafts] = useState({});
 
     const load = useCallback(async () => {
         if (!spaceId || !classId) return;
@@ -76,6 +79,22 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
         }
         return run(`min:${book.shared_book_id}`, () => api.setGuestbookMinChars({ spaceId, classId, sharedBookId: book.shared_book_id, minChars: value }),
             `‘${book.title}’ 방문록은 이제 ${value}자 이상 써야 보낼 수 있어요.`);
+    };
+
+    const untilDraftOf = (book) => untilDrafts[book.shared_book_id] ?? isoToDeadlineInput(book.shared_until);
+    const saveSharedUntil = (book) => {
+        const value = untilDraftOf(book);
+        if (value && new Date(value).getTime() <= Date.now()) {
+            setError('게시 기한은 지금 이후로 정해 주세요.');
+            return;
+        }
+        return run(`until:${book.shared_book_id}`,
+            async () => {
+                await api.setSharedUntil({ spaceId, classId, sharedBookId: book.shared_book_id, sharedUntil: value ? new Date(value).toISOString() : null });
+                setUntilDrafts((current) => { const next = { ...current }; delete next[book.shared_book_id]; return next; });
+            },
+            value ? `‘${book.title}’은 ${new Date(value).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })}까지 게시돼요. 지나면 저절로 내려가요.`
+                : `‘${book.title}’은 기한 없이 게시돼요.`);
     };
 
     const share = (book) => run(`share:${book.book_id}`, () => api.shareBook({ spaceId, classId, bookId: book.book_id }),
@@ -158,6 +177,24 @@ export default function TeacherBooksPanel({ spaceId, classId, pendingEntries = [
                                     <div className="neighbor-books__reason" role="note">
                                         <p><strong>{reason.text}</strong> {reason.hint}</p>
                                         {onOpenBooks && <Button type="button" size="sm" variant="outline" onClick={onOpenBooks}>📚 {reason.action} →</Button>}
+                                    </div>
+                                )}
+                                {shared && (
+                                    /* 게시 기한: 기본은 없음, 켜면 7일 뒤 오후 5시. 지나면 학생이 바로 못 열고 5분 안에 소개가 내려간다. */
+                                    <div className="neighbor-books__until">
+                                        <label className="neighbor-books__until-toggle">
+                                            <input type="checkbox" disabled={Boolean(busy)} checked={Boolean(untilDraftOf(book))}
+                                                onChange={(event) => setUntilDrafts((current) => ({ ...current,
+                                                    [book.shared_book_id]: event.target.checked ? defaultDeadlineInput() : '' }))} />
+                                            📅 게시 기한 정하기
+                                        </label>
+                                        {untilDraftOf(book) && (
+                                            <input type="datetime-local" disabled={Boolean(busy)} value={untilDraftOf(book)}
+                                                onChange={(event) => setUntilDrafts((current) => ({ ...current, [book.shared_book_id]: event.target.value }))} />
+                                        )}
+                                        <Button type="button" size="sm" variant="outline" disabled={Boolean(busy) || untilDraftOf(book) === isoToDeadlineInput(book.shared_until)}
+                                            onClick={() => saveSharedUntil(book)}>저장</Button>
+                                        <small>{book.shared_until ? `${new Date(book.shared_until).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' })}까지 게시` : '기한 없이 게시 중'}</small>
                                     </div>
                                 )}
                                 {shared && (
