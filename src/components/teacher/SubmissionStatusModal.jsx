@@ -1,4 +1,5 @@
 import React from 'react';
+import RevisionCountChip from '../../modules/writing/review/RevisionCountChip';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
@@ -553,7 +554,10 @@ const SubmissionStatusModal = ({
                                                 }}>
                                                     <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F8F9FA', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <span style={{ fontWeight: '900', color: '#3498DB', fontSize: '1.1rem' }}>{idx + 1}. {post.students?.name}</span>
-                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>{post.char_count}자 작성</span>
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                                            <RevisionCountChip count={post.revision_change_count} />
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>{post.char_count}자 작성</span>
+                                                        </span>
                                                     </div>
 
                                                     <div style={{
@@ -602,6 +606,7 @@ const SubmissionStatusModal = ({
                                                                     enabled={Boolean(post.is_confirmed)}
                                                                     before={post.original_content}
                                                                     after={post.content}
+                                                                    teacherText={post.teacher_revision_content}
                                                                     emptyText="기록 없음"
                                                                 />
                                                             </WritingPresentationTrigger>
@@ -764,6 +769,7 @@ const SubmissionStatusModal = ({
                                 enabled={Boolean(presentationPost?.is_confirmed && presentationPost?.original_content)}
                                 before={presentationPost?.original_content}
                                 after={presentationPost?.content}
+                                teacherText={presentationPost?.teacher_revision_content}
                                 emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
                             />
                         )}

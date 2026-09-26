@@ -87,12 +87,12 @@ test('보내는 동안 버튼이 잠기고 누른 티가 난다', async () => {
  * ⚠️ 잠겼다는 것을 흐린 글씨로만 알리면, 눌러도 아무 일이 없는 이유를 알 수 없다.
  *    이것이 "한 번에 안 눌린다"로 겪게 되는 가장 유력한 경로였다.
  */
-test('수정 모드로 잠기면 두 버튼 모두 왜 잠겼는지 말해 준다', async () => {
+test('직접 고치는 중이면 두 버튼 모두 왜 잠겼는지 말해 준다', async () => {
     const viewer = await readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8');
-    assert.match(viewer, /수정 모드를 끄면 승인할 수 있어요/, '승인이 잠긴 이유를 알려 주지 않는다');
-    assert.match(viewer, /승인 \(수정 모드 끄고\)/, '승인 버튼 글자가 잠긴 것을 드러내지 않는다');
-    assert.match(viewer, /수정 모드를 끄면 다시 쓰기를 요청할 수 있어요/, '다시 쓰기가 잠긴 이유를 알려 주지 않는다');
-    assert.match(viewer, /다시 쓰기 \(수정 모드 끄고\)/, '다시 쓰기 버튼 글자가 잠긴 것을 드러내지 않는다');
+    assert.match(viewer, /고치기를 그만하면 승인할 수 있어요/, '승인이 잠긴 이유를 알려 주지 않는다');
+    assert.match(viewer, /승인 \(고치기 그만하고\)/, '승인 버튼 글자가 잠긴 것을 드러내지 않는다');
+    assert.match(viewer, /고치기를 그만하면 다시 쓰기를 요청할 수 있어요/, '다시 쓰기가 잠긴 이유를 알려 주지 않는다');
+    assert.match(viewer, /다시 쓰기 \(고치기 그만하고\)/, '다시 쓰기 버튼 글자가 잠긴 것을 드러내지 않는다');
 });
 
 test('앱 안 확인 창은 글자 바닥을 지키고 긴 이름을 자르지 않는다', async () => {
@@ -363,4 +363,24 @@ test('되돌릴 수 없는 일은 붉은 단추로 묻는다', async () => {
         assert.ok(at >= 0, `${file}: '${title}' 물음을 찾지 못했다`);
         assert.match(source.slice(at, at + 300), /tone: 'danger'/, `${file}: 붉은 단추로 묻지 않는다`);
     }
+});
+
+/*
+ * `✏️ 직접 고쳐 주기`(2026-09-26): 윗줄 단추 무리 끝의 연보라 `수정 모드` 는 눈에 띄지 않았고 못 쓸 때 말없이 사라졌다.
+ * 이제 본문 제목 줄에 두고, 못 쓰는 글에서는 흐리게 남아 까닭을 적으며, 고치는 동안 저장하면 무슨 일이 생기는지 띠로 알린다.
+ */
+test('직접 고쳐 주기는 제목 줄에 있고, 못 쓸 때 까닭을 적고, 고치는 동안 띠를 보여 준다', async () => {
+    const [viewer, toggle, css] = await Promise.all([
+        readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8'),
+        readFile('src/components/teacher/TeacherEditToggle.jsx', 'utf8'),
+        readFile('src/components/teacher/teacherPostEdit.css', 'utf8')
+    ]);
+    assert.doesNotMatch(viewer, /'수정 모드 종료' : '수정 모드'/, '윗줄에 옛 수정 모드 단추가 남았습니다.');
+    assert.match(viewer, /<\/h2>\s*\{handleTeacherEditPost && \(\s*<TeacherEditToggle/, '직접 고쳐 주기가 본문 제목 줄에 있지 않습니다.');
+    assert.match(viewer, /blockedReason=\{getTeacherEditBlockedReason\(\{ isReportPost, isConfirmed: selectedPost\.is_confirmed \}\)\}/);
+    assert.match(viewer, /<TeacherEditBanner \/>/);
+    assert.match(toggle, /승인한 글은 승인을 취소한 뒤 고칠 수 있어요\./);
+    assert.match(toggle, /disabled=\{Boolean\(blockedReason\)\}/, '못 쓸 때 사라지지 않고 잠겨야 합니다.');
+    assert.match(toggle, /저장하면 이 글이 학생에게 되돌아가/);
+    assert.doesNotMatch(css, /#[0-9a-f]{3,6}\b/i, '색은 토큰만 씁니다.');
 });

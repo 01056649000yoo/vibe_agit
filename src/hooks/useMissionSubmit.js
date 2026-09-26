@@ -27,6 +27,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
     const [originalTitle, setOriginalTitle] = useState('');
     const [originalContent, setOriginalContent] = useState('');
+    // 교사 수정본(teacher_revision_content) — 형광펜에서 선생님이 고쳐 준 곳을 가른다(2026-09-26).
+    const [teacherRevisionContent, setTeacherRevisionContent] = useState('');
     const [showOriginalToFriends, setShowOriginalToFriends] = useState(false);
     const [isTeacherEdited, setIsTeacherEdited] = useState(false);
     const [teacherEditedAt, setTeacherEditedAt] = useState('');
@@ -72,6 +74,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             setAiFeedback(postData?.ai_feedback || '');
             setOriginalTitle(postData?.original_title || '');
             setOriginalContent(postData?.original_content || '');
+            setTeacherRevisionContent(postData?.teacher_revision_content || '');
             setShowOriginalToFriends(Boolean(postData?.show_original));
             setIsTeacherEdited(Boolean(postData?.is_teacher_edited));
             setTeacherEditedAt(postData?.teacher_edited_at || '');
@@ -380,6 +383,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         aiFeedback,
         originalTitle,
         originalContent,
+        teacherRevisionContent,
         showOriginalToFriends,
         isTeacherEdited,
         teacherEditedAt,

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from './TeacherEditToggle';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
@@ -30,7 +31,7 @@ const PostDetailViewer = ({
     // 이 화면의 두 번째 칸은 처음·최종을 나란히 놓는다(승인된 글이면 형광펜). 교사 화면이라 자동으로 열지 않는다.
     const version = useWritingVersion({
         postId: selectedPost?.id, before: selectedPost?.original_content, after: selectedPost?.content,
-        approved: Boolean(selectedPost?.is_confirmed)
+        approved: Boolean(selectedPost?.is_confirmed), teacherText: selectedPost?.teacher_revision_content
     });
     const showOriginal = version.view !== WRITING_VIEW.FINAL;
     const setVersionView = version.setView;
@@ -85,6 +86,17 @@ const PostDetailViewer = ({
      * 피드백 사이드바로 옮겨 글과 나란히 두고, 접었다 펼 수 있게 한다.
      */
     const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+    // `✏️ 직접 고쳐 주기` — 끌 때는 고친 내용을 버리고 원래 글로, 켤 때는 최종 글 보기로 돌린다.
+    const toggleTeacherEdit = () => {
+        if (isTeacherEditMode) {
+            setIsTeacherEditMode(false);
+            setEditedTitle(selectedPost.title || '');
+            setEditedContent(selectedPost.content || '');
+        } else {
+            setVersionView(WRITING_VIEW.FINAL);
+            setIsTeacherEditMode(true);
+        }
+    };
 
     useEffect(() => {
         if (selectedPost) {
@@ -332,7 +344,7 @@ const PostDetailViewer = ({
                                             loading={rewritingPostId === selectedPost.id}
                                             loadingText="요청 중..."
                                             title={isTeacherEditMode
-                                                ? '수정 모드를 끄면 다시 쓰기를 요청할 수 있어요.'
+                                                ? '고치기를 그만하면 다시 쓰기를 요청할 수 있어요.'
                                                 : '피드백 칸에 적어 둔 내용이 학생에게 안내로 보입니다.'}
                                             style={{
                                                 backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
@@ -341,7 +353,7 @@ const PostDetailViewer = ({
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
-                                            {isTeacherEditMode ? '♻️ 다시 쓰기 (수정 모드 끄고)' : '♻️ 다시 쓰기 요청'}
+                                            {isTeacherEditMode ? '♻️ 다시 쓰기 (고치기 그만하고)' : '♻️ 다시 쓰기 요청'}
                                         </Button>
                                         {/*
                                           * ⚠️ 잠겼다는 것을 흐린 글씨로만 알리지 않는다(2026-09-03).
@@ -354,7 +366,7 @@ const PostDetailViewer = ({
                                             loading={approvingPostId === selectedPost.id}
                                             loadingText="승인 중..."
                                             title={isTeacherEditMode
-                                                ? '수정 모드를 끄면 승인할 수 있어요.'
+                                                ? '고치기를 그만하면 승인할 수 있어요.'
                                                 : '승인하면 포인트가 바로 지급됩니다.'}
                                             style={{
                                                 backgroundColor: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
@@ -363,7 +375,7 @@ const PostDetailViewer = ({
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
-                                            {isTeacherEditMode ? '✅ 승인 (수정 모드 끄고)' : '✅ 승인 및 포인트 지급'}
+                                            {isTeacherEditMode ? '✅ 승인 (고치기 그만하고)' : '✅ 승인 및 포인트 지급'}
                                         </Button>
                                     </>
                                 )}
@@ -388,28 +400,6 @@ const PostDetailViewer = ({
                                         }}
                                     >
                                         📊 성장 평가
-                                    </Button>
-                                )}
-                                {!selectedPost.is_confirmed && handleTeacherEditPost && !isReportPost && (
-                                    <Button
-                                        onClick={() => {
-                                            if (isTeacherEditMode) {
-                                                setIsTeacherEditMode(false);
-                                                setEditedTitle(selectedPost.title || '');
-                                                setEditedContent(selectedPost.content || '');
-                                            } else {
-                                                setVersionView(WRITING_VIEW.FINAL);
-                                                setIsTeacherEditMode(true);
-                                            }
-                                        }}
-                                        style={{
-                                            backgroundColor: isTeacherEditMode ? '#FEF3C7' : '#EEF2FF',
-                                            color: isTeacherEditMode ? '#92400E' : '#4338CA',
-                                            border: isTeacherEditMode ? '1px solid #FCD34D' : '1px solid #C7D2FE',
-                                            padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold'
-                                        }}
-                                    >
-                                        {isTeacherEditMode ? '수정 모드 종료' : '수정 모드'}
                                     </Button>
                                 )}
                                 <div style={{ width: '1px', height: '24px', background: '#F1F3F5', margin: '0 4px' }} />
@@ -447,6 +437,13 @@ const PostDetailViewer = ({
                                     }}>
                                         {selectedPost.title || '제목 없음'}
                                     </h2>
+                                    {handleTeacherEditPost && (
+                                        <TeacherEditToggle
+                                            active={isTeacherEditMode}
+                                            blockedReason={getTeacherEditBlockedReason({ isReportPost, isConfirmed: selectedPost.is_confirmed })}
+                                            onToggle={toggleTeacherEdit}
+                                        />
+                                    )}
                                 </div>
                                 {!isTeacherEditMode && (
                                     <WritingVersionSwitch {...version} onChange={version.setView} layout="sideBySide" />
@@ -465,60 +462,37 @@ const PostDetailViewer = ({
 
                                 {isTeacherEditMode ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                                        <div style={{
-                                            background: '#FFF8E1',
-                                            border: '1px solid #FDE68A',
-                                            borderRadius: '18px',
-                                            padding: '16px 18px',
-                                            color: '#8A5A00',
-                                            fontSize: 'var(--ui-text-md)',
-                                            lineHeight: '1.6'
-                                        }}>
-                                            학생 글을 직접 다듬은 뒤 저장하면 학생 화면에서 이 수정본을 이어서 볼 수 있습니다.
-                                        </div>
+                                        <TeacherEditBanner />
                                         <input
                                             type="text"
                                             value={editedTitle}
                                             onChange={(e) => setEditedTitle(e.target.value)}
                                             placeholder="수정된 제목을 입력하세요"
+                                            className="teacher-edit-field"
                                             style={{
-                                                width: '100%',
                                                 padding: '16px 18px',
                                                 borderRadius: '18px',
-                                                border: '1px solid #D1D5DB',
                                                 fontSize: isMobile ? '1.2rem' : '1.4rem',
-                                                fontWeight: '800',
-                                                color: '#1F2937',
-                                                outline: 'none',
-                                                boxSizing: 'border-box'
+                                                fontWeight: '800'
                                             }}
                                         />
                                         <textarea
                                             value={editedContent}
                                             onChange={(e) => setEditedContent(e.target.value)}
                                             placeholder="학생에게 전달할 수정본을 입력하세요"
+                                            className="teacher-edit-field"
                                             style={{
-                                                width: '100%',
                                                 minHeight: isMobile ? '360px' : '520px',
                                                 padding: '20px',
                                                 borderRadius: '22px',
-                                                border: '1px solid #D1D5DB',
                                                 fontSize: isMobile ? '1.05rem' : '1.15rem',
                                                 lineHeight: '1.9',
-                                                color: '#374151',
-                                                outline: 'none',
-                                                resize: 'vertical',
-                                                boxSizing: 'border-box',
-                                                background: '#FFFFFF'
+                                                resize: 'vertical'
                                             }}
                                         />
                                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                                             <Button
-                                                onClick={() => {
-                                                    setIsTeacherEditMode(false);
-                                                    setEditedTitle(selectedPost.title || '');
-                                                    setEditedContent(selectedPost.content || '');
-                                                }}
+                                                onClick={toggleTeacherEdit}
                                                 style={{
                                                     backgroundColor: '#F8F9FA',
                                                     color: '#4B5563',
@@ -542,7 +516,7 @@ const PostDetailViewer = ({
                                                     fontWeight: 'bold'
                                                 }}
                                             >
-                                                {isSavingTeacherEdit ? '저장 중...' : '수정본 저장 및 되돌려주기'}
+                                                {isSavingTeacherEdit ? '보내는 중...' : '📤 고친 글 학생에게 보내기'}
                                             </Button>
                                         </div>
                                     </div>
@@ -599,6 +573,7 @@ const PostDetailViewer = ({
                                                         enabled={Boolean(selectedPost.is_confirmed)}
                                                         before={selectedPost.original_content}
                                                         after={selectedPost.content}
+                                                        teacherText={selectedPost.teacher_revision_content}
                                                     />
                                                 )}
                                             </div>
@@ -1014,6 +989,7 @@ const PostDetailViewer = ({
                                 enabled={Boolean(selectedPost.is_confirmed && selectedPost.original_content)}
                                 before={selectedPost.original_content}
                                 after={selectedPost.content}
+                                teacherText={selectedPost.teacher_revision_content}
                                 emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
                             />
                         )}

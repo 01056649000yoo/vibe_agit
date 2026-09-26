@@ -68,7 +68,7 @@
 .neighbor-teacher__new-flag { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 6px;
     border-radius: 6px; background: #ef4444; color: #fff; font-size: var(--ui-text-xs); font-weight: 900;
     letter-spacing: 0.03em; animation: neighbor-new-pulse 1.4s ease-in-out infinite; }
-.neighbor-teacher__review-btn.is-new { box-shadow: 0 0 0 2px rgba(239, 68, 68, .35); }
+.neighbor-teacher__review-btn .teacher-count-badge { margin-left: 6px; }
 @keyframes neighbor-new-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .neighbor-teacher__new-flag { animation: none; } }
 .neighbor-teacher__inbox-heading { margin: 18px 0 8px; color: #243b53; font-size: var(--ui-text-md); }

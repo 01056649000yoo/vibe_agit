@@ -108,9 +108,10 @@ export { stableBookVariant };
  * @param post     제목·visibility(·writing_missions) 가 있는 글 한 편
  * @param section  책장 탭을 넘기면 그 색으로, 안 넘기면 글을 보고 고른다
  * @param note     라벨 아래 쪽지 한 줄(`♡ 3`). 없어도 자리는 비워 둔다
+ * @param noteLabel 쪽지를 소리로 읽을 글(`🖍️6` → `고친 곳 6군데`). 없으면 쪽지를 그대로 읽는다
  * @param opening  여는 중이면 책을 어둡게 덮는다
  */
-export const ShelfBook = ({ post, section, onOpen, note, opening = false, disabled = false }) => {
+export const ShelfBook = ({ post, section, onOpen, note, noteLabel, opening = false, disabled = false }) => {
     const type = section || shelfSectionFor(post);
     const variant = stableBookVariant(post);
     const palette = shelfBookPalette(type.colors, variant);
@@ -128,7 +129,7 @@ export const ShelfBook = ({ post, section, onOpen, note, opening = false, disabl
             role="listitem"
             onClick={onOpen}
             disabled={disabled}
-            aria-label={`${type.label} ‘${fullTitle}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}${note ? `, ${note}` : ''}`}
+            aria-label={`${type.label} ‘${fullTitle}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}${note ? `, ${noteLabel || note}` : ''}`}
             title={`${type.icon} ${type.label} · ${fullTitle}`}
             whileHover={{ y: -6, rotate: -1.2 }}
             whileTap={{ y: 1, scale: 0.97 }}

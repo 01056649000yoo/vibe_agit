@@ -170,7 +170,7 @@ const TeacherStudentAgitViewer = ({
                 const rows = await dataCache.get(shelfKey, async () => {
                     const { data, error } = await supabase
                         .from('student_posts')
-                        .select('id, title, writing_context, self_writing_type, char_count, visibility, created_at, updated_at')
+                        .select('id, title, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, revision_change_count')
                         .eq('class_id', classId)
                         .eq('student_id', selectedStudentId)
                         .eq('is_submitted', true)
@@ -244,7 +244,7 @@ const TeacherStudentAgitViewer = ({
             const detail = await dataCache.get(detailKey, async () => {
                 const { data, error } = await supabase
                     .from('student_posts')
-                    .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, original_title, original_content, is_confirmed')
+                    .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, original_title, original_content, is_confirmed, teacher_revision_content')
                     .eq('class_id', classId)
                     .eq('student_id', selectedStudentId)
                     .eq('id', summary.id)

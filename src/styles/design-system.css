@@ -42,6 +42,8 @@
   --ui-highlight: #fde68a;
   --ui-highlight-ink: #422006;
   --ui-removed-ink: #94a3b8;
+  --ui-teacher-highlight: #bfdbfe;
+  --ui-teacher-highlight-ink: #1e3a8a;
 
   /* Typography */
   --ui-font-sans: 'Noto Sans KR', 'Pretendard', 'Inter', system-ui, sans-serif;

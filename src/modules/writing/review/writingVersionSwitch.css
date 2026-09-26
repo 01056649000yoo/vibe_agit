@@ -20,6 +20,14 @@
     line-height: 1.5;
 }
 
+.writing-version__teacher {
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--ui-teacher-highlight);
+    color: var(--ui-teacher-highlight-ink);
+    font-size: var(--ui-text-sm);
+}
+
 .writing-version__legend {
     font-size: var(--ui-text-sm);
     font-weight: 700;
@@ -72,4 +80,18 @@
 .writing-version__tab:focus-visible {
     outline: none;
     box-shadow: var(--ui-focus-ring);
+}
+
+/* 목록 카드의 `🖍️ N군데 고침` */
+.revision-count-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+    white-space: nowrap;
 }

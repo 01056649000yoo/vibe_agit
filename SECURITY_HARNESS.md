@@ -2,6 +2,14 @@
 
 새 기능을 붙일 때 성능 하네스와 함께 아래 검사를 통과시킨다.
 
+## 고친 자리 수·교사 수정본 경계 (20261352 · 2026-09-26)
+
+- `student_posts.revision_change_count`·`teacher_revision_content` 는 트리거(`guard_student_post_revision_fields`)가
+  `agit.revision_writer` 설정이 켜진 전용 경로 밖의 변경을 되돌린다. 학생도 RLS 상 자기 글 행을 직접 고칠 수 있기 때문이다.
+- 수 저장은 `record_post_revision_counts_v1` 만(담임 또는 관리자, 승인된 글, 한 번에 200편, anon 닫음). 계산 규칙은 화면의
+  `writingDiff.js` 하나이고 서버는 저장·권한·무효화(글 변경·승인 해제 시 NULL)만 맡는다.
+- 교사 수정본은 친구 글 보기로 내보내지 않는다(학생 본인·담임 화면만). 스모크 `tests/sql/20261352_*.smoke.sql`.
+
 ## 수록 철회 경계 (61257 · 2026-09-07 보안 점검에서 발견)
 
 - **모든 공개 범위가 같은 철회 규칙을 쓴다.** 학급 발행만 `revoked_at` 을 막고 외부 발행이 `removed_at` 만 보면,

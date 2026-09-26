@@ -29,3 +29,10 @@ test('대시보드는 배지를 한 부품으로만 그린다', async () => {
     assert.match(dashboard, /buildTeacherNavBadges\(/);
     assert.doesNotMatch(dashboard, /teacher-subtab__|nav-new|>NEW</);
 });
+
+test('모두의 아지트 검토 단추도 같은 숫자 배지 하나를 쓴다', async () => {
+    const entry = await readFile('src/modules/community/neighbor-agit/TeacherEntry.jsx', 'utf8');
+    // 전에는 `NEW` 글자와 숫자가 함께 붙었다(2026-09-26 정리). 글 카드 한 장의 `NEW` 는 "어느 글이 새 글인지" 표시라 그대로 둔다.
+    assert.match(entry, /🗂️ 검토<TeacherCountBadge count=\{reviewInboxCount\} label="검토할 일" \/>/);
+    assert.doesNotMatch(entry, /🗂️ 검토\{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW/);
+});

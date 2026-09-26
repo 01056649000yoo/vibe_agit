@@ -156,7 +156,7 @@ const STEP_RULES = Object.freeze({
     'neighbor-books': Object.freeze({ anchor: neighborSpaceAnchorId('books'), hint: '카드를 누르면 우리 반 문집·방문록·둘러보기 탭이 열립니다.' }),
     'neighbor-review': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW,
-        hint: '처리할 일이 있으면 `NEW`와 숫자가 붙습니다. 눌러서 한곳에서 처리하세요.'
+        hint: '처리할 일이 있으면 빨간 숫자가 붙습니다. 눌러서 한곳에서 처리하세요.'
     }),
     'class-board': Object.freeze({
         anchor: TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN,

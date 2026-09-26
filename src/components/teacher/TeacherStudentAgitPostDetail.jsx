@@ -27,7 +27,8 @@ const TeacherStudentAgitPostDetail = ({
 }) => {
     const version = useWritingVersion({
         postId: post?.id, before: post?.original_content, after: post?.content,
-        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed)
+        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed),
+        teacherText: post?.teacher_revision_content
     });
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
@@ -134,7 +135,7 @@ const TeacherStudentAgitPostDetail = ({
                                     {displayingReport ? (
                                         <ReportDocument structuredContent={post.structured_content} content={post.content} />
                                     ) : showChanges ? (
-                                        <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
+                                        <WritingChangeHighlight before={post.original_content} after={post.content} teacherText={post.teacher_revision_content} showLegend={false} />
                                     ) : content || '내용이 없습니다.'}
                                 </div>
                             </article>

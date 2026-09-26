@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import TeacherCountBadge from '../../../components/teacher/TeacherCountBadge.jsx';
 import { getTeacherTabLabel } from '../../../constants/teacherNav.js';
 import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle.jsx';
 import Button from '../../../components/common/Button';
@@ -1123,8 +1124,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             >
                                 학생 입장 {workspace.space.student_access_enabled ? '열림' : '닫힘'}
                             </button>
-                            <Button type="button" variant="outline" {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW)} className={reviewInboxCount > 0 ? 'neighbor-teacher__review-btn is-new' : 'neighbor-teacher__review-btn'} onClick={() => setReviewInboxOpen(true)}>
-                                🗂️ 검토{reviewInboxCount > 0 && <><span className="neighbor-teacher__new-flag">NEW</span><span className="neighbor-teacher__badge">{reviewInboxCount}</span></>}
+                            <Button type="button" variant="outline" {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW)} className="neighbor-teacher__review-btn" onClick={() => setReviewInboxOpen(true)}>
+                                {/* 메뉴와 같은 규칙: 처리할 일은 숫자 배지 하나(2026-09-26, 전에는 NEW 글자와 숫자가 함께였다). */}
+                                🗂️ 검토<TeacherCountBadge count={reviewInboxCount} label="검토할 일" />
                             </Button>
                             <Button type="button" variant="outline" onClick={() => setManageOpen(true)}>
                                 ⚙️ 공간 관리

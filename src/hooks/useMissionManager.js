@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { recordRevisionCounts } from '../modules/writing/review/revisionCountApi';
 import useConfirmDialog from '../components/common/useConfirmDialog';
 import useNotice from '../components/common/useNotice';
 import { supabase } from '../lib/supabaseClient';
@@ -610,6 +611,7 @@ export const useMissionManager = (
                     awarded_repeat_bonus_enabled, awarded_repeat_bonus_threshold,
                     awarded_repeat_bonus_reward, awarded_repeat_bonus_max_count,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
+                    revision_change_count, teacher_revision_content,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)
@@ -1043,6 +1045,11 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    const applyRevisionCounts = (saved) => {
+        if (!saved?.size) return;
+        setPosts((current) => current.map((item) => (saved.has(item.id) ? { ...item, revision_change_count: saved.get(item.id) } : item)));
+    };
+
     const handleApprovePost = async (post) => {
         // 같은 글을 두 번 누르면 두 번 보내지 않는다.
         if (approvingPostId) return;
@@ -1069,6 +1076,8 @@ ${postArray.map((p, idx) => {
                 setPosts((current) => current.map((item) => item.id === post.id
                     ? { ...item, is_submitted: true, is_confirmed: true, is_returned: false, ai_feedback: tempFeedback }
                     : item));
+                // 목록 카드의 `🖍️ N군데 고침`. 기다리지 않는다 — 실패해도 승인은 끝났다.
+                void recordRevisionCounts([post]).then((saved) => applyRevisionCounts(saved));
                 if (selectedMission?.mission_type !== 'meeting') {
                     transitionMissionStatus(post.mission_id, 'approve', 1, [post.student_id]);
                 }
@@ -1118,6 +1127,7 @@ ${postArray.map((p, idx) => {
             setPosts((current) => current.map((post) => approvedIds.has(post.id)
                 ? { ...post, is_submitted: true, is_confirmed: true, is_returned: false }
                 : post));
+            void recordRevisionCounts(toApprove).then((saved) => applyRevisionCounts(saved));
             if (selectedMission.mission_type !== 'meeting') {
                 const approvedCount = Number(data?.approved_count ?? toApprove.length);
                 transitionMissionStatus(

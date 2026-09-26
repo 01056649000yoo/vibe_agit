@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import RevisionCountChip from '../../modules/writing/review/RevisionCountChip';
 import { motion } from 'framer-motion';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -60,7 +61,7 @@ const MyAgitPanel = ({
                 async () => {
                     const { data, error } = await supabase
                         .from('student_posts')
-                        .select('id, title, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at')
+                        .select('id, title, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, revision_change_count')
                         .eq('class_id', classId)
                         .eq('student_id', studentId)
                         .eq('is_submitted', true)
@@ -99,7 +100,7 @@ const MyAgitPanel = ({
                 const [postResult, reviewResult] = await Promise.all([
                     supabase
                         .from('student_posts')
-                        .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, ai_feedback, original_title, original_content, is_confirmed')
+                        .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, ai_feedback, original_title, original_content, is_confirmed, teacher_revision_content')
                         .eq('class_id', classId)
                         .eq('student_id', studentId)
                         .eq('id', summary.id)
@@ -313,7 +314,12 @@ const MyAgitPanel = ({
                             mode={shelfViewMode}
                             items={loading ? undefined : activeShelfPosts}
                             renderItem={(post) => (
-                                <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
+                                <ShelfBook
+                                    key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)}
+                                    // 책등은 네 자 폭이라 줄여 적는다. 승인할 때 센 고친 자리 수(2026-09-26).
+                                    note={post.revision_change_count > 0 ? `🖍️${post.revision_change_count}` : undefined}
+                                    noteLabel={post.revision_change_count > 0 ? `고친 곳 ${post.revision_change_count}군데` : undefined}
+                                />
                             )}
                             style={{ margin: '0 10px' }}
                         >
@@ -338,6 +344,7 @@ const MyAgitPanel = ({
                                     <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', fontSize: '.8rem', fontWeight: 850, lineHeight: 1.4 }}>
                                         {post.title || '제목 없는 글'}
                                     </span>
+                                    <RevisionCountChip count={post.revision_change_count} />
                                     {post.visibility !== 'class' && <span aria-label="나만 보는 글" style={{ flex: '0 0 auto', fontSize: '.72rem' }}>🔒</span>}
                                     <span aria-hidden="true" style={{ flex: '0 0 auto', color: '#9C856F', fontWeight: 900 }}>›</span>
                                 </button>

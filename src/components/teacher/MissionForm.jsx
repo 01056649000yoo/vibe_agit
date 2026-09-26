@@ -1,4 +1,5 @@
-import React from 'react';
+import React from 'react';
+
 import {
     getMissionScheduleError,
     getMissionScheduleInputMin,
@@ -211,7 +212,7 @@ const MissionForm = ({
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '12px',
-                                    color: '#64748B'
+                                    color: 'var(--ui-ink-muted)'
                                 }}>
                                     <div style={{ fontSize: '2rem' }}>불러오는 중</div>
                                     <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold' }}>
@@ -227,7 +228,7 @@ const MissionForm = ({
                                     onGuideChange={(guide) => setFormData({ ...formData, guide })}
                                     isMobile={isMobile}
                                     titleAccessory={(
-                                        <select value={formData.genre} onChange={e => handleGenreChange(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
+                                        <select value={formData.genre} onChange={e => handleGenreChange(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid var(--ui-border)', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
                                             {genreCategories.map(cat => (
                                                 <optgroup key={cat.label} label={cat.label}>
                                                     {cat.entries.map(entry => <option key={entry.id} value={entry.id}>{entry.id}</option>)}
@@ -253,7 +254,7 @@ const MissionForm = ({
                                         >
                                             ✨ {formData.genre} 프리셋 다시 넣기
                                         </Button>
-                                        <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>
+                                        <span style={{ color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-sm)' }}>
                                             {hasSubmissions
                                                 ? '제출이 시작돼 안내 질문은 그대로 두고 나머지만 채웁니다.'
                                                 : '선생님이 고친 칸은 그대로 두고 빈 칸만 채웁니다.'}
@@ -262,7 +263,7 @@ const MissionForm = ({
                                 )}
 
                                 {presetNotice && (
-                                    <div style={{ padding: '10px 14px', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
+                                    <div style={{ padding: '10px 14px', borderRadius: '12px', background: 'var(--ui-success-soft)', border: '1px solid #BBF7D0', color: 'var(--ui-success)', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
                                         {presetNotice}
                                     </div>
                                 )}
@@ -391,10 +392,10 @@ const MissionForm = ({
 
                                 {/* [개편] 핵심 질문 설계 인터페이스 */}
                                 <div style={{
-                                    background: '#F8F9FA',
+                                    background: 'var(--ui-page)',
                                     padding: '20px',
                                     borderRadius: '20px',
-                                    border: useAIQuestions ? '2px solid #3498DB' : '1px dashed #BDC3C7',
+                                    border: useAIQuestions ? '2px solid #3498DB' : '1px dashed var(--ui-ink-subtle)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
@@ -406,7 +407,7 @@ const MissionForm = ({
                                             style={{
                                                 width: '50px',
                                                 height: '26px',
-                                                background: useAIQuestions ? '#3498DB' : '#BDC3C7',
+                                                background: useAIQuestions ? '#3498DB' : 'var(--ui-ink-subtle)',
                                                 borderRadius: '13px',
                                                 position: 'relative',
                                                 cursor: 'pointer',
@@ -425,10 +426,10 @@ const MissionForm = ({
                                             }} />
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: 'bold', fontSize: 'var(--ui-text-md)', color: '#2C3E50' }}>
+                                            <div style={{ fontWeight: 'bold', fontSize: 'var(--ui-text-md)', color: 'var(--ui-ink-strong)' }}>
                                                 🎯 핵심 질문 설계 {useAIQuestions ? '(사용 중)' : '(선택)'}
                                             </div>
-                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)' }}>
                                                 {useAIQuestions
                                                     ? `${formData.guide_questions?.length || 0}개의 질문이 준비되었습니다.`
                                                     : '학생들이 생각의 구조를 잡을 수 있도록 AI가 질문을 만들어줍니다.'}
@@ -511,10 +512,10 @@ const MissionForm = ({
                                             {/* 헤더 부분 */}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '32px' }}>
                                                 <div>
-                                                    <h2 style={{ margin: 0, fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: '#1E293B', letterSpacing: '-1px' }}>
+                                                    <h2 style={{ margin: 0, fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: 'var(--ui-ink-strong)', letterSpacing: '-1px' }}>
                                                         🪄 핵심 질문 <span style={{ color: '#6366F1' }}>설계 마법사</span>
                                                     </h2>
-                                                    <p style={{ margin: '14px 0 0 0', color: '#64748B', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.3px' }}>
+                                                    <p style={{ margin: '14px 0 0 0', color: 'var(--ui-ink-muted)', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.3px' }}>
                                                         학생들이 생각의 깊이를 더할 수 있도록 글의 구조를 잡는 징검다리 질문을 디자인합니다.
                                                     </p>
                                                 </div>
@@ -526,7 +527,7 @@ const MissionForm = ({
 
                                             {/* AI 생성 컨트롤바 */}
                                             <div style={{
-                                                background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
+                                                background: 'linear-gradient(135deg, var(--ui-page) 0%, var(--ui-surface-muted) 100%)',
                                                 padding: '24px',
                                                 borderRadius: '24px',
                                                 marginBottom: '32px',
@@ -535,13 +536,13 @@ const MissionForm = ({
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 gap: '16px',
-                                                border: '1px solid #E2E8F0'
+                                                border: '1px solid var(--ui-border)'
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '180px' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#6366F1' }}>질문 개수 설정</span>
-                                                            <span style={{ fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: '#4F46E5', background: 'white', padding: '2px 12px', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                                            <span style={{ fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: '#4F46E5', background: 'white', padding: '2px 12px', borderRadius: '10px', border: '1px solid var(--ui-border)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                                                                 {formData.question_count || 3}개
                                                             </span>
                                                         </div>
@@ -555,7 +556,7 @@ const MissionForm = ({
                                                             style={{
                                                                 width: '100%',
                                                                 height: '8px',
-                                                                background: '#E2E8F0',
+                                                                background: 'var(--ui-border)',
                                                                 borderRadius: '10px',
                                                                 outline: 'none',
                                                                 WebkitAppearance: 'none',
@@ -565,7 +566,7 @@ const MissionForm = ({
                                                         />
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', padding: '0 2px' }}>
                                                             {[1, 2, 3, 4, 5].map(n => (
-                                                                <span key={n} style={{ fontSize: 'var(--ui-text-sm)', color: (formData.question_count || 3) === n ? '#6366F1' : '#94A3B8', fontWeight: 'bold' }}>{n}</span>
+                                                                <span key={n} style={{ fontSize: 'var(--ui-text-sm)', color: (formData.question_count || 3) === n ? '#6366F1' : 'var(--ui-ink-subtle)', fontWeight: 'bold' }}>{n}</span>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -636,7 +637,7 @@ const MissionForm = ({
                                                                 display: 'flex',
                                                                 gap: '24px',
                                                                 background: 'white',
-                                                                border: '1px solid #E2E8F0',
+                                                                border: '1px solid var(--ui-border)',
                                                                 padding: '32px',
                                                                 borderRadius: '28px',
                                                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -650,7 +651,7 @@ const MissionForm = ({
                                                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                                             }}
                                                             onMouseOut={e => {
-                                                                e.currentTarget.style.borderColor = '#E2E8F0';
+                                                                e.currentTarget.style.borderColor = 'var(--ui-border)';
                                                                 e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
                                                                 e.currentTarget.style.transform = 'translateY(0)';
                                                             }}
@@ -679,7 +680,7 @@ const MissionForm = ({
                                                                         top: '42px',
                                                                         bottom: '-36px',
                                                                         width: '4px',
-                                                                        background: 'linear-gradient(to bottom, #E2E8F0 50%, transparent 50%)',
+                                                                        background: 'linear-gradient(to bottom, var(--ui-border) 50%, transparent 50%)',
                                                                         backgroundSize: '4px 12px',
                                                                         zIndex: 1
                                                                     }} />
@@ -696,13 +697,13 @@ const MissionForm = ({
                                                                 }}
                                                                 style={{
                                                                     flex: 1,
-                                                                    background: '#F8FAFC',
+                                                                    background: 'var(--ui-page)',
                                                                     padding: '20px 24px',
                                                                     borderRadius: '20px',
                                                                     resize: 'none',
                                                                     fontSize: '1.2rem',
                                                                     fontWeight: '600',
-                                                                    color: '#0F172A',
+                                                                    color: 'var(--ui-ink)',
                                                                     outline: 'none',
                                                                     fontFamily: 'inherit',
                                                                     lineHeight: '1.7',
@@ -715,7 +716,7 @@ const MissionForm = ({
                                                                     e.currentTarget.style.boxShadow = '0 0 0 4px rgba(99, 102, 241, 0.1)';
                                                                 }}
                                                                 onBlur={e => {
-                                                                    e.currentTarget.style.background = '#F8FAFC';
+                                                                    e.currentTarget.style.background = 'var(--ui-page)';
                                                                     e.currentTarget.style.borderColor = 'transparent';
                                                                     e.currentTarget.style.boxShadow = 'none';
                                                                 }}
@@ -726,8 +727,8 @@ const MissionForm = ({
                                                                 <span
                                                                     title="학생이 이 질문에 쓴 답이 질문 번호로 저장돼 있어 고치거나 지울 수 없습니다."
                                                                     style={{
-                                                                        background: '#F1F5F9',
-                                                                        color: '#64748B',
+                                                                        background: 'var(--ui-surface-muted)',
+                                                                        color: 'var(--ui-ink-muted)',
                                                                         padding: '10px',
                                                                         borderRadius: '12px',
                                                                         fontWeight: 'bold',
@@ -769,10 +770,10 @@ const MissionForm = ({
                                                     style={{
                                                         width: '100%',
                                                         padding: '24px',
-                                                        border: '3px dashed #E2E8F0',
+                                                        border: '3px dashed var(--ui-border)',
                                                         background: 'transparent',
                                                         borderRadius: '24px',
-                                                        color: '#94A3B8',
+                                                        color: 'var(--ui-ink-subtle)',
                                                         cursor: 'pointer',
                                                         fontWeight: '900',
                                                         transition: 'all 0.2s',
@@ -782,8 +783,8 @@ const MissionForm = ({
                                                         justifyContent: 'center',
                                                         gap: '12px'
                                                     }}
-                                                    onMouseOver={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1'; e.currentTarget.style.background = '#F8FAFC'; }}
-                                                    onMouseOut={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.background = 'transparent'; }}
+                                                    onMouseOver={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1'; e.currentTarget.style.background = 'var(--ui-page)'; }}
+                                                    onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--ui-border)'; e.currentTarget.style.color = 'var(--ui-ink-subtle)'; e.currentTarget.style.background = 'transparent'; }}
                                                 >
                                                     <span>➕</span> 직접 질문 추가하기
                                                 </button>
@@ -797,7 +798,7 @@ const MissionForm = ({
                                                         flex: 1,
                                                         height: '64px',
                                                         borderRadius: '20px',
-                                                        background: '#1E293B',
+                                                        background: 'var(--ui-ink-strong)',
                                                         color: 'white',
                                                         fontWeight: '900',
                                                         fontSize: '1.2rem',
@@ -824,23 +825,23 @@ const MissionForm = ({
                                 <div style={{
                                     background: 'white',
                                     borderRadius: '24px',
-                                    border: '1px solid #E0E0E0',
+                                    border: '1px solid var(--ui-border)',
                                     padding: '32px',
                                     marginBottom: '24px',
                                     boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
                                 }}>
                                     {/* 헤더: 제목 + 저장 버튼 */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: 'var(--ui-ink-strong)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             ⚙️ 미션 세부 설정
                                         </h3>
                                         <Button
                                             type="button"
                                             onClick={handleSaveDefaultSettings}
                                             style={{
-                                                background: '#F8F9FA',
-                                                border: '1px solid #DFE6E9',
-                                                color: '#636E72',
+                                                background: 'var(--ui-page)',
+                                                border: '1px solid var(--ui-border)',
+                                                color: 'var(--ui-ink-muted)',
                                                 padding: '5px 12px',
                                                 fontSize: 'var(--ui-text-sm)',
                                                 borderRadius: '8px',
@@ -852,8 +853,8 @@ const MissionForm = ({
                                                 transition: 'all 0.2s',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                             }}
-                                            onMouseOver={e => { e.currentTarget.style.background = '#E2E6EA'; e.currentTarget.style.color = '#2D3436'; }}
-                                            onMouseOut={e => { e.currentTarget.style.background = '#F8F9FA'; e.currentTarget.style.color = '#636E72'; }}
+                                            onMouseOver={e => { e.currentTarget.style.background = 'var(--ui-border)'; e.currentTarget.style.color = 'var(--ui-ink-strong)'; }}
+                                            onMouseOut={e => { e.currentTarget.style.background = 'var(--ui-page)'; e.currentTarget.style.color = 'var(--ui-ink-muted)'; }}
                                         >
                                             <span>💾</span> 설정값을 기본으로 저장
                                         </Button>
@@ -874,7 +875,7 @@ const MissionForm = ({
 
                                             <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                                 <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>최소 글자수</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>최소 글자수</span>
                                                     <input
                                                         type="number"
                                                         step="50"
@@ -889,13 +890,13 @@ const MissionForm = ({
                                                             fontSize: 'var(--ui-text-lg)',
                                                             textAlign: 'center',
                                                             fontWeight: 'bold',
-                                                            color: '#2C3E50',
+                                                            color: 'var(--ui-ink-strong)',
                                                             boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>문단 개수</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>문단 개수</span>
                                                     <input
                                                         type="number"
                                                         placeholder="0"
@@ -909,7 +910,7 @@ const MissionForm = ({
                                                             fontSize: 'var(--ui-text-lg)',
                                                             textAlign: 'center',
                                                             fontWeight: 'bold',
-                                                            color: '#2C3E50',
+                                                            color: 'var(--ui-ink-strong)',
                                                             boxSizing: 'border-box'
                                                         }}
                                                     />
@@ -924,11 +925,11 @@ const MissionForm = ({
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     gap: '10px',
-                                                    background: formData.allow_comments ? '#E8F6F3' : '#F8F9FA',
+                                                    background: formData.allow_comments ? '#E8F6F3' : 'var(--ui-page)',
                                                     padding: '12px',
                                                     borderRadius: '16px',
                                                     cursor: 'pointer',
-                                                    border: formData.allow_comments ? '2px solid #1ABC9C' : '2px solid #BDC3C7',
+                                                    border: formData.allow_comments ? '2px solid #1ABC9C' : '2px solid var(--ui-ink-subtle)',
                                                     transition: 'all 0.2s',
                                                     marginTop: '8px'
                                                 }}
@@ -936,14 +937,14 @@ const MissionForm = ({
                                                 <span style={{ fontSize: '1.1rem' }}>
                                                     {formData.allow_comments ? '💬' : '🔒'}
                                                 </span>
-                                                <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : '#7F8C8D' }}>
+                                                <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : 'var(--ui-ink-muted)' }}>
                                                     {formData.allow_comments ? '친구 댓글 허용함' : '댓글 기능 끄기'}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {/* 구분선 (Desktop only) */}
-                                        {!isMobile && <div style={{ width: '1px', alignSelf: 'stretch', background: '#ECF0F1', margin: '0 8px' }} />}
+                                        {!isMobile && <div style={{ width: '1px', alignSelf: 'stretch', background: 'var(--ui-border)', margin: '0 8px' }} />}
 
                                         {/* (Right) 포인트 보상 설정 */}
                                         <div style={{ flex: 1, width: '100%' }}>
@@ -1015,7 +1016,7 @@ const MissionForm = ({
                                                                 background: 'white'
                                                             }}
                                                         />
-                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', fontWeight: 'bold' }}>자 추가 작성 시</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', fontWeight: 'bold' }}>자 추가 작성 시</span>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#B7950B' }}>+</span>
@@ -1054,15 +1055,15 @@ const MissionForm = ({
                                                     </label>
                                                     {formData.repeat_bonus_enabled && (
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
                                                                 반복 글자 수
                                                                 <input type="number" min="1" max="20000" step="1" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
                                                             </label>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
                                                                 구간당 포인트
                                                                 <input type="number" min="1" max="10000" step="1" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
                                                             </label>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: '#7F8C8D' }}>
+                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
                                                                 최대 반복 횟수
                                                                 <input type="number" min="1" max="20" value={formData.repeat_bonus_max_count} onChange={e => setFormData({ ...formData, repeat_bonus_max_count: Math.min(20, Math.max(1, parseInt(e.target.value) || 1)) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
                                                             </label>
@@ -1088,7 +1089,7 @@ const MissionForm = ({
                                   * 예약 공개. 켜면 정한 시각까지 학생에게 보이지 않는다.
                                   * 숨기는 방법이 보관과 같은 스위치라, 학생 쪽 조회·쓰기는 이미 막혀 있다.
                                   */}
-                                <div style={{ padding: '14px 16px', borderRadius: '14px', background: '#F8F9FA', border: '1px solid #E9ECEF' }}>
+                                <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--ui-page)', border: '1px solid var(--ui-border)' }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
                                         <input
                                             type="checkbox"
@@ -1107,21 +1108,21 @@ const MissionForm = ({
                                                 value={formData.schedule_at}
                                                 min={getMissionScheduleInputMin()}
                                                 onChange={(event) => setFormData({ ...formData, schedule_at: event.target.value })}
-                                                style={{ padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}
+                                                style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--ui-border)', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}
                                             />
                                             {getMissionScheduleError(formData.schedule_at) ? (
-                                                <p style={{ margin: '8px 0 0', color: '#b91c1c', fontSize: 'var(--ui-text-xs)', fontWeight: 'bold' }}>
+                                                <p style={{ margin: '8px 0 0', color: 'var(--ui-danger)', fontSize: 'var(--ui-text-xs)', fontWeight: 'bold' }}>
                                                     {getMissionScheduleError(formData.schedule_at)}
                                                 </p>
                                             ) : (
-                                                <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: 'var(--ui-text-xs)', lineHeight: 1.6 }}>
+                                                <p style={{ margin: '8px 0 0', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-xs)', lineHeight: 1.6 }}>
                                                     그때까지 학생에게 보이지 않아요. 시각은 한국 시간이고, 확인이
                                                     {' '}{MISSION_SCHEDULE_TICK_SECONDS}초마다 돌아 최대 1분쯤 늦게 열릴 수 있어요.
                                                 </p>
                                             )}
                                         </div>
                                     ) : (
-                                        <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: 'var(--ui-text-xs)' }}>
+                                        <p style={{ margin: '8px 0 0', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-xs)' }}>
                                             끄면 저장하는 순간 학생에게 열려요.
                                         </p>
                                     )}
@@ -1139,7 +1140,7 @@ const MissionForm = ({
                                         <Button
                                             type="button"
                                             onClick={handleCancelEdit}
-                                            style={{ flex: 1, backgroundColor: '#95A5A6', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
+                                            style={{ flex: 1, backgroundColor: 'var(--ui-ink-subtle)', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
                                         >
                                             취소하기
                                         </Button>
@@ -1191,7 +1192,7 @@ const MissionForm = ({
                         >
                             🪄
                         </motion.div>
-                        <h2 style={{ fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: '#2C3E50', margin: 0, letterSpacing: '-1px' }}>
+                        <h2 style={{ fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: 'var(--ui-ink-strong)', margin: 0, letterSpacing: '-1px' }}>
                             핵심질문을 설계하고 있어요
                         </h2>
                     </motion.div>,

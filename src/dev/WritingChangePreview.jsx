@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import WritingChangeHighlight from '../modules/writing/review/WritingChangeHighlight';
+import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from '../components/teacher/TeacherEditToggle';
+import RevisionCountChip from '../modules/writing/review/RevisionCountChip';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../modules/writing/review/WritingVersionSwitch';
 
 /*
@@ -18,7 +20,13 @@ const SAMPLES = {
         before: '나는 강아지를 키우고 싶다. 강아지는 귀엽다.\n\n하지만 엄마는 안 된다고 하셨다. 왜냐하면 집이 좁기 때문이다.\n\n그래서 나는 슬펐다.',
         after: '나는 강아지를 꼭 키우고 싶다. 강아지는 귀엽고 나를 반겨 준다.\n\n하지만 엄마는 안 된다고 하셨다. 왜냐하면 집이 좁고 낮에는 돌볼 사람이 없기 때문이다.\n\n그래서 나는 엄마와 약속을 정해 보기로 했다. 산책은 내가 맡겠다고 말씀드릴 것이다.'
     },
-    spaces: { label: '줄바꿈만 바뀐 글', before: '첫 줄\n둘째 줄', after: '첫 줄\n\n둘째 줄' }
+    spaces: { label: '줄바꿈만 바뀐 글', before: '첫 줄\n둘째 줄', after: '첫 줄\n\n둘째 줄' },
+    teacher: {
+        label: '선생님이 고쳐 준 글',
+        before: '나는 밥을 먹었다. 학교에 갓다. 친구랑 놀앗다.',
+        teacher: '나는 밥을 먹었다. 학교에 갔다. 친구랑 놀았다.',
+        after: '나는 저녁밥을 맛있게 먹었다. 학교에 갔다. 친구랑 놀았다. 정말 재미있었다.'
+    }
 };
 
 const box = { padding: 20, borderRadius: 16, border: '1px solid var(--ui-border)', background: 'var(--ui-surface)', fontSize: '1.1rem', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' };
@@ -26,8 +34,9 @@ const box = { padding: 20, borderRadius: 16, border: '1px solid var(--ui-border)
 export default function WritingChangePreview() {
     const [sampleId, setSampleId] = useState('short');
     const [approved, setApproved] = useState(true);
+    const [editing, setEditing] = useState(false);
     const sample = Reflect.get(SAMPLES, sampleId) || SAMPLES.short;
-    const version = useWritingVersion({ postId: `preview-${sampleId}`, before: sample.before, after: sample.after, approved });
+    const version = useWritingVersion({ postId: `preview-${sampleId}`, before: sample.before, after: sample.after, approved, teacherText: sample.teacher });
     return (
         <div style={{ padding: 16, background: 'var(--ui-page)', display: 'grid', gap: 16 }}>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -41,15 +50,36 @@ export default function WritingChangePreview() {
                 <WritingVersionSwitch {...version} onChange={version.setView} />
                 <div style={box}>
                     {version.view === WRITING_VIEW.CHANGES
-                        ? <WritingChangeHighlight before={sample.before} after={sample.after} showLegend={false} />
+                        ? <WritingChangeHighlight before={sample.before} after={sample.after} teacherText={sample.teacher} showLegend={false} />
                         : version.view === WRITING_VIEW.ORIGINAL ? sample.before : sample.after}
+                </div>
+            </section>
+            <section>
+                <h3>교사 글 자세히 보기 — 제목 줄의 직접 고쳐 주기</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottom: '2px solid var(--ui-border)' }}>
+                    <h2 style={{ margin: 0 }}>우리 반 체육 대회</h2>
+                    <TeacherEditToggle
+                        active={editing}
+                        blockedReason={getTeacherEditBlockedReason({ isReportPost: false, isConfirmed: approved })}
+                        onToggle={() => setEditing((value) => !value)}
+                    />
+                </div>
+                {editing && !approved ? <div style={{ marginTop: 12 }}><TeacherEditBanner /></div> : null}
+                <p style={{ color: 'var(--ui-ink-muted)' }}>승인된 글이면 흐리게 두고 까닭을 적는다 — 위 `승인된 글` 을 꺼서 눌러 본다.</p>
+            </section>
+            <section>
+                <h3>목록 카드</h3>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <strong>1. 김아지</strong>
+                    <RevisionCountChip count={approved ? version.changeCount : 0} />
+                    <RevisionCountChip count={approved ? version.changeCount : 0} compact />
                 </div>
             </section>
             <section>
                 <h3>나란히 보기(글 자세히 보기·제출 현황)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
                     <div style={box}><strong>🌱 최초 제출</strong><br /><WritingChangeHighlight variant="before" enabled={approved} before={sample.before} after={sample.after} /></div>
-                    <div style={box}><strong>✨ 최종 제출</strong><br /><WritingChangeHighlight variant="after" enabled={approved} before={sample.before} after={sample.after} /></div>
+                    <div style={box}><strong>✨ 최종 제출</strong><br /><WritingChangeHighlight variant="after" enabled={approved} before={sample.before} after={sample.after} teacherText={sample.teacher} /></div>
                 </div>
             </section>
         </div>

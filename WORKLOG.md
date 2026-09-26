@@ -18,6 +18,37 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-26 — 고친 글 비교 마무리·검토 단추·과제 만들기 색 정리 (Claude)
+- **요청**: 남은 네 가지 — 카드 `🖍️ N군데 고침`, 선생님이 고친 곳 다른 색, 모두의 아지트 `검토` 단추 NEW, 과제 만들기 색 정리.
+- **알게 된 것**: `teacher_edit_student_post` 는 최종 글(content)을 교사 수정본으로 **덮어쓰고** 글을 돌려주며, 학생이 다시 내면
+  `teacher_edited_content` 가 비워져 교사 수정본이 사라졌다. 학생도 RLS 상 자기 글 행을 직접 UPDATE 할 수 있다(스모크 변이로 확인).
+- **변경**:
+  - `20261352_post_revision_tracking.sql`(미적용): `revision_change_count`(0~999)·`teacher_revision_content` 칸, 트리거
+    `guard_student_post_revision_fields`(교사 수정 때 수정본 보관·전용 경로 밖 변경 되돌림·글 변경/승인 해제 시 수 비움),
+    `record_post_revision_counts_v1`(담임·관리자, 승인된 글, 200편, anon 닫음), `get_student_assignment_workspace_v1` 재정의
+    (20261231 그대로 + `teacher_revision_content`), 남아 있던 교사 수정본 옮기기. 롤백 스모크 `tests/sql/20261352_*.smoke.sql`
+    (막는 줄을 빼면 실패하는 것까지 확인).
+  - 비교: `writingDiff.js` 를 토막 단계(`diffPieces`)와 합치기로 나누고 `teacherText` 로 `teacher` 조각을 가름(처음 글에 없던 어절 중
+    교사 수정본에 있던 것), `teacherChangeCount`. 하늘색 토큰 `--ui-teacher-highlight(-ink)`. 띠에 `(선생님이 고쳐 준 곳 N군데)`.
+    친구 글 보기에는 교사 수정본을 넘기지 않는다.
+  - 카드: `revisionCountApi.js`(같은 규칙으로 세서 승인 두 경로 뒤에 저장, 실패는 조용히), `RevisionCountChip`,
+    내 서재 책등 쪽지 `🖍️N`(+`noteLabel` 소리 글)·목록 보기, 제출 현황 학생 이름 옆. 교사의 학생 아지트 책등은 글자 수 쪽지를 유지.
+    옛 승인 글 채우기 `scripts/backfill-revision-change-counts.mjs`(기본은 세기만, `--write`).
+  - 검토 단추: `NEW`+숫자 → `TeacherCountBadge` 하나(글 카드 한 장의 NEW 는 "어느 글이 새 글인지" 표시라 유지), 동행 모드 문구.
+  - 색: `MissionForm.jsx` 133곳 중 61곳(값이 같은 28 + 거의 같은 회색·검정 33)을 토큰으로. 남은 72곳은 보라·분홍·주황 — 토큰부터 정해야 함.
+    `tests/teacherColorTokens.test.mjs`(MIGRATED 목록)로 다시 손으로 적지 못하게.
+  - 도움말·보안 하네스·PITFALLS(DB·권한 갈래 가장 오래된 줄을 빼고 한 줄)·FEATURE_MAP v1.11·버전 1.11.0.
+- **결과/검증**: 검사 1,362/1,362, 빌드, `migrate:check` 통과. dev-lab `writing-change` 에 선생님 예시·카드 딱지 촬영(하늘색 4곳).
+- **추가(같은 날)**: 글 자세히 보기 `수정 모드` 가 눈에 안 띈다 → 윗줄 단추 무리에서 빼고 본문 제목 줄에 `✏️ 직접 고쳐 주기`
+  (`TeacherEditToggle.jsx`·`teacherPostEdit.css`, 토큰만). 승인한 글·보고하는 글에서는 사라지지 않고 흐리게 두고 까닭을 적는다.
+  고치는 동안 제목·본문 칸 노란 테두리와 띠(저장하면 학생에게 되돌아가 다시 쓰기가 됨). 저장 단추 `📤 고친 글 학생에게 보내기`,
+  잠김 문구 `(고치기 그만하고)`. 도움말(dashboard) 단추 이름. dev-lab `writing-change` 세 상태 촬영. 검사 1,363/1,363.
+- **배포(2026-09-26 20:31, git 밖 변경 포함)**: `migrate:check` 통과 → `npm run migrate`(20261352 적용, 교사 수정본 42편 보관 칸으로) →
+  `backfill-revision-change-counts.mjs` 세기 4,485편(고친 곳 있는 글 1,865) → `--write`(0 이상 2,620·1 이상 1,865·최대 49, 남은 빈 글 0) →
+  `check:rpc-surface`(320개, anon SECURITY DEFINER 4개 그대로) → 로컬 배포(되돌릴 지점 `agit-app:rollback-20260926-203114`, 앱 200) →
+  PostgREST `NOTIFY pgrst, 'reload schema'` 뒤 anon 으로 새 두 칸 조회 200·빈 목록 확인. 서빙 번들에 옛 `수정 모드 종료` 0건. 푸시는 지시 대기.
+- **남은 것 / 다음**: 과제 만들기 색 있는 색 72곳(토큰 먼저 정하기). 로그인 화면으로 하늘색·카드 딱지·직접 고쳐 주기 확인.
+
 ## 2026-09-26 — 처음 글·고친 글 보기 선택 통일(형광펜색 띠 + 세 칸) (Claude)
 - **요청**: `최초글과 비교하기` 단추가 눈에 안 띈다 → 제안(띠 + 세 칸 + 화면 통일 + 학생 본인 글 자동 열기)대로 수정.
 - **원인(코드)**: 교사 단추는 흰 바탕·회색 글자·얇은 테두리라 꺼진 단추처럼 보였고, 처음 글이 **있기만 하면** 떠서 고친 적 없는 글도
