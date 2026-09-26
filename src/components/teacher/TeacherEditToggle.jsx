@@ -32,6 +32,6 @@ export const TeacherEditBanner = () => (
     <div className="teacher-edit-banner" role="status">
         <strong>✏️ 학생 글을 고치는 중입니다</strong>
         저장하면 이 글이 학생에게 되돌아가 <b>다시 쓰기</b>가 되고, 학생은 선생님이 고친 글에서 이어 씁니다.
-        학생이 다시 내면 승인할 수 있고, 선생님이 고쳐 준 곳은 하늘색으로 보입니다.
+        학생이 다시 내면 승인할 수 있습니다.
     </div>
 );

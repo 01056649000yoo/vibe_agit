@@ -611,7 +611,7 @@ export const useMissionManager = (
                     awarded_repeat_bonus_enabled, awarded_repeat_bonus_threshold,
                     awarded_repeat_bonus_reward, awarded_repeat_bonus_max_count,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
-                    revision_change_count, teacher_revision_content,
+                    revision_change_count,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)

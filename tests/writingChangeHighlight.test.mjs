@@ -22,7 +22,7 @@ test('어절 단위로 새로 쓴 곳·지운 곳을 찾고, 조각을 이으면
 });
 
 test('같은 글·빈 처음 글·공백만 바뀐 글', () => {
-    assert.deepEqual(diffWritingText('같다', '같다'), { mode: 'same', segments: [{ type: 'same', text: '같다' }], changeCount: 0, teacherChangeCount: 0 });
+    assert.deepEqual(diffWritingText('같다', '같다'), { mode: 'same', segments: [{ type: 'same', text: '같다' }], changeCount: 0 });
     const fresh = diffWritingText('', '새 글');
     assert.equal(fresh.changeCount, 1);
     assert.equal(rebuild(fresh.segments, ['same', 'added']), '새 글');
@@ -48,23 +48,16 @@ test('바뀐 어절 사이의 공백은 보여 줄 때만 형광펜에 붙이고
     assert.match(markedRun, /맛있는 저녁밥을/, `형광펜이 어절마다 끊겼습니다: ${JSON.stringify(afterView)}`);
 });
 
-test('교사 수정본을 주면 선생님이 고쳐 준 곳(teacher)과 학생이 쓴 곳(added)을 가른다', () => {
-    const original = '나는 밥을 먹었다. 학교에 갓다.';
-    const teacher = '나는 밥을 먹었다. 학교에 갔다.';
-    const final = '나는 저녁밥을 맛있게 먹었다. 학교에 갔다. 재미있었다.';
-    const result = diffWritingText(original, final, { teacherText: teacher });
-    const texts = (type) => result.segments.filter((s) => s.type === type).map((s) => s.text.trim());
-    assert.deepEqual(texts('teacher'), ['갔다.']);
-    assert.ok(texts('added').includes('저녁밥을') && texts('added').includes('재미있었다.'));
-    assert.equal(result.teacherChangeCount, 1);
-    // 가른 뒤에도 조각을 이으면 두 원문이 그대로 되살아난다.
-    assert.equal(rebuild(result.segments, ['same', 'added', 'teacher']), final);
-    assert.equal(rebuild(result.segments, ['same', 'removed']), original);
-    // 최종 글 보기(after)에는 선생님 표시도 함께 남는다.
-    assert.ok(segmentsForView(result.segments, 'after').some((s) => s.type === 'teacher'));
-    // 교사 수정본이 없거나 처음 글과 같으면 가르지 않는다.
-    assert.equal(diffWritingText(original, final).teacherChangeCount, 0);
-    assert.equal(diffWritingText(original, final, { teacherText: original }).teacherChangeCount, 0);
+test('누가 고쳤는지는 가르지 않는다 — 처음 글과 최종 글의 차이만 본다', async () => {
+    // 2026-09-26: 교사 수정본과 어절이 같은지로 "선생님이 고쳐 준 곳" 을 갈랐더니, 학생이 선생님 수정을 조금만 다듬어도
+    // 틀리게 판정됐다. 누가 고쳤는지는 어절 비교로 가를 수 없어서 뺐다. 다시 넣지 않는다.
+    const result = diffWritingText('나는 밥을 먹었다.', '나는 저녁밥을 먹었다.', { teacherText: '나는 저녁밥을 먹었다.' });
+    assert.deepEqual([...new Set(result.segments.map((s) => s.type))].sort(), ['added', 'removed', 'same']);
+    assert.equal('teacherChangeCount' in result, false);
+    for (const file of ['src/modules/writing/review/writingDiff.js', 'src/modules/writing/review/WritingChangeHighlight.jsx',
+        'src/modules/writing/review/WritingVersionSwitch.jsx', 'src/styles/design-system.css']) {
+        assert.doesNotMatch(await readFile(file, 'utf8'), /teacherText|teacherChangeCount|ui-teacher-highlight|선생님이 고쳐 준 곳/, `${file} 에 선생님 구분이 남았습니다.`);
+    }
 });
 
 test('아주 긴 글은 멈추지 않고 줄 단위로 물러서거나 칠하지 않는다', () => {
@@ -138,7 +131,7 @@ test('바뀐 자리가 없거나 너무 긴 글은 칠하지 않고 그대로 �
     const component = await readFile('src/modules/writing/review/WritingChangeHighlight.jsx', 'utf8');
     // 줄바꿈만 바뀐 글에 `바뀐 곳 0군데` 안내와 빈칸 형광펜이 그려졌었다(2026-09-26 시험 화면에서 발견).
     assert.match(component, /if \(!diff \|\| diff\.changeCount === 0\) return/);
-    assert.match(component, /enabled \? diffWritingText\(before, after, \{ teacherText \}\) : null/, '승인 전에는 비교를 계산하지 않습니다.');
+    assert.match(component, /enabled \? diffWritingText\(before, after\) : null/, '승인 전에는 비교를 계산하지 않습니다.');
 });
 
 test('형광펜 색은 토큰으로만 칠한다', async () => {

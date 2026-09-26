@@ -31,7 +31,7 @@ const PostDetailViewer = ({
     // 이 화면의 두 번째 칸은 처음·최종을 나란히 놓는다(승인된 글이면 형광펜). 교사 화면이라 자동으로 열지 않는다.
     const version = useWritingVersion({
         postId: selectedPost?.id, before: selectedPost?.original_content, after: selectedPost?.content,
-        approved: Boolean(selectedPost?.is_confirmed), teacherText: selectedPost?.teacher_revision_content
+        approved: Boolean(selectedPost?.is_confirmed)
     });
     const showOriginal = version.view !== WRITING_VIEW.FINAL;
     const setVersionView = version.setView;
@@ -573,7 +573,6 @@ const PostDetailViewer = ({
                                                         enabled={Boolean(selectedPost.is_confirmed)}
                                                         before={selectedPost.original_content}
                                                         after={selectedPost.content}
-                                                        teacherText={selectedPost.teacher_revision_content}
                                                     />
                                                 )}
                                             </div>
@@ -989,7 +988,6 @@ const PostDetailViewer = ({
                                 enabled={Boolean(selectedPost.is_confirmed && selectedPost.original_content)}
                                 before={selectedPost.original_content}
                                 after={selectedPost.content}
-                                teacherText={selectedPost.teacher_revision_content}
                                 emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
                             />
                         )}

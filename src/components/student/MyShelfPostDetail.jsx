@@ -23,7 +23,7 @@ const MyShelfPostDetail = ({
     const version = useWritingVersion({
         postId: post?.id, before: post?.original_content, after: post?.content,
         beforeTitle: post?.original_title, afterTitle: post?.title,
-        approved: Boolean(post?.is_confirmed), teacherText: post?.teacher_revision_content, autoOpenChanges: true
+        approved: Boolean(post?.is_confirmed), autoOpenChanges: true
     });
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
@@ -126,7 +126,7 @@ const MyShelfPostDetail = ({
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
                             ) : showChanges ? (
                                 // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).
-                                <WritingChangeHighlight before={post.original_content} after={post.content} teacherText={post.teacher_revision_content} showLegend={false} />
+                                <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
                             ) : content || '아직 내용이 없어요.'}
                         </div>
 

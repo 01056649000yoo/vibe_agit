@@ -22,10 +22,10 @@ const seenKey = (postId) => `writing-change-seen-v1:${postId}`;
  * (학생 본인 글에만 쓴다 — "선생님이 승인했어요, 이렇게 좋아졌어요" 를 보여 주는 순간). 한 번 열었는지는
  * 이 브라우저에만 남긴다. 저장소가 막혀 있으면 늘 최종 글로 연다.
  */
-export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, teacherText = null, autoOpenChanges = false }) => {
+export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, autoOpenChanges = false }) => {
     const info = useMemo(
-        () => getWritingCompareInfo({ before, after, beforeTitle, afterTitle, approved, teacherText }),
-        [before, after, beforeTitle, afterTitle, approved, teacherText]
+        () => getWritingCompareInfo({ before, after, beforeTitle, afterTitle, approved }),
+        [before, after, beforeTitle, afterTitle, approved]
     );
     const [view, setView] = useState(WRITING_VIEW.FINAL);
     // 글은 화면보다 늦게 도착한다(불러오는 중에는 처음 글이 비어 있다). 그래서 처음 그릴 때가 아니라
@@ -62,7 +62,7 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
  * @param {'three'|'sideBySide'} layout `sideBySide` 는 교사의 글 자세히 보기처럼 두 번째 칸이 처음·최종을 나란히
  *   놓는 화면이다. 그 칸은 승인된 글이면 `🖍️ 바뀐 곳`, 승인 전이면 `처음 글과 나란히` 가 된다.
  */
-const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, teacherChangeCount = 0, canShowChanges, layout = 'three' }) => {
+const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, canShowChanges, layout = 'three' }) => {
     if (!hasOriginal) return null;
     const sideBySide = layout === 'sideBySide';
     const options = [
@@ -76,14 +76,9 @@ const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, teache
         <div className="writing-version">
             {canShowChanges ? (
                 <div className="writing-version__banner">
-                    <span>
-                        ✍️ 처음 글에서 <strong>{changeCount}군데</strong> 고쳤어요
-                        {teacherChangeCount > 0 ? <span className="writing-version__teacher"> (선생님이 고쳐 준 곳 {teacherChangeCount}군데)</span> : null}
-                    </span>
+                    <span>✍️ 처음 글에서 <strong>{changeCount}군데</strong> 고쳤어요</span>
                     {view === WRITING_VIEW.CHANGES ? (
-                        <span className="writing-version__legend">
-                            형광펜: 새로 쓰거나 고친 곳{teacherChangeCount > 0 ? ' · 하늘색: 선생님이 고쳐 준 곳' : ''} · 가운데 줄: 지운 곳
-                        </span>
+                        <span className="writing-version__legend">형광펜: 새로 쓰거나 고친 곳 · 가운데 줄: 지운 곳</span>
                     ) : (
                         <button type="button" className="writing-version__open" onClick={() => onChange(WRITING_VIEW.CHANGES)}>
                             바뀐 곳 보기

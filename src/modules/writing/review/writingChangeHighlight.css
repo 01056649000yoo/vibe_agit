@@ -23,15 +23,6 @@
     -webkit-box-decoration-break: clone;
 }
 
-.writing-change__teacher {
-    padding: 0 1px;
-    border-radius: 3px;
-    background: var(--ui-teacher-highlight);
-    color: var(--ui-teacher-highlight-ink);
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-}
-
 .writing-change__removed {
     color: var(--ui-removed-ink);
     text-decoration: line-through;

@@ -20,14 +20,6 @@
     line-height: 1.5;
 }
 
-.writing-version__teacher {
-    padding: 0 6px;
-    border-radius: 6px;
-    background: var(--ui-teacher-highlight);
-    color: var(--ui-teacher-highlight-ink);
-    font-size: var(--ui-text-sm);
-}
-
 .writing-version__legend {
     font-size: var(--ui-text-sm);
     font-weight: 700;

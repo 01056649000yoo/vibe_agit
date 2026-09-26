@@ -100,7 +100,6 @@ const diffPieces = (before, after, maxCells) => {
         if (!middle) continue;
         return {
             mode,
-            tokenize,
             pieces: [
                 ...beforeTokens.slice(0, start).map((text) => ({ type: 'same', text })),
                 ...middle,
@@ -111,79 +110,33 @@ const diffPieces = (before, after, maxCells) => {
     return null;
 };
 
-/**
- * 최종 글의 토막마다 "교사 수정본에도 그대로 있었나"를 표시한다(순서를 지키며 가장 많이 겹치는 짝).
- * 상한을 넘으면 null — 그때는 선생님이 고친 곳을 가르지 않는다.
- */
-const matchedInSource = (sourceTokens, targetTokens, maxCells) => {
-    const flags = new Uint8Array(targetTokens.length);
-    const pieces = diffMiddle(sourceTokens, targetTokens, maxCells);
-    if (!pieces) return null;
-    let j = 0;
-    for (const piece of pieces) {
-        if (piece.type === 'removed') continue;
-        if (piece.type === 'same') flags[j] = 1;
-        j += 1;
-    }
-    return flags;
-};
-
-const countChanges = (segments, isChange) => {
+const countChanges = (segments) => {
     // 바뀐 자리 = 같은 부분 사이에 낀 바뀐 조각 묶음. 지우고 새로 쓴 것이 붙어 있으면 한 자리다.
     let count = 0;
     let inChange = false;
     for (const segment of segments) {
         // 공백만 있는 같은 부분은 경계가 아니다(`할수` → `할 수` 는 한 자리).
         if (segment.type === 'same') { if (!isBlank(segment.text)) inChange = false; continue; }
-        if (!isBlank(segment.text) && isChange(segment)) {
-            if (!inChange) count += 1;
-            inChange = true;
-        }
+        if (!inChange && !isBlank(segment.text)) { count += 1; inChange = true; }
     }
     return count;
 };
 
 /**
- * @param {{ maxCells?: number, teacherText?: string|null }} options
- *   `teacherText` 는 교사 수정본(`teacher_revision_content`). 주면 처음 글에 없던 어절 가운데 **교사 수정본에 있던 것**을
- *   `teacher`(선생님이 고쳐 준 곳)로, 나머지를 `added`(학생이 새로 쓰거나 고친 곳)로 가른다. 학생이 교사 수정을
- *   받아들이지 않고 지운 곳은 최종 글에 없으므로 칠하지 않는다.
- * @returns {{ mode: 'word'|'line'|'same'|'none', segments: { type: 'same'|'added'|'teacher'|'removed', text: string }[],
- *             changeCount: number, teacherChangeCount: number }}
+ * 처음 글 → 최종 글에서 바뀐 곳. 누가 고쳤는지(학생·선생님)는 가르지 않는다 — 교사 수정본과 어절이 같은지로 가르면
+ * 학생이 선생님 수정을 조금만 다듬어도 틀리게 판정됐다(2026-09-26 선생님 판단으로 뺐다).
+ * @returns {{ mode: 'word'|'line'|'same'|'none', segments: { type: 'same'|'added'|'removed', text: string }[],
+ *             changeCount: number }}
  *   `changeCount` 는 바뀐 **자리** 수(이어진 추가·삭제는 한 자리로 센다). 공백만 바뀐 자리는 세지 않는다.
- *   `teacherChangeCount` 는 그 가운데 선생님이 고쳐 준 어절이 들어 있는 자리 수.
  */
-export const diffWritingText = (beforeText, afterText, { maxCells = WRITING_DIFF_MAX_CELLS, teacherText = null } = {}) => {
+export const diffWritingText = (beforeText, afterText, { maxCells = WRITING_DIFF_MAX_CELLS } = {}) => {
     const before = String(beforeText ?? '');
     const after = String(afterText ?? '');
-    if (before === after) {
-        return { mode: 'same', segments: after ? [{ type: 'same', text: after }] : [], changeCount: 0, teacherChangeCount: 0 };
-    }
+    if (before === after) return { mode: 'same', segments: after ? [{ type: 'same', text: after }] : [], changeCount: 0 };
     const result = diffPieces(before, after, maxCells);
-    if (!result) return { mode: 'none', segments: [{ type: 'same', text: after }], changeCount: 0, teacherChangeCount: 0 };
-
-    let pieces = result.pieces;
-    const teacher = String(teacherText ?? '');
-    if (teacher && teacher !== before) {
-        const afterTokens = result.tokenize(after);
-        const flags = matchedInSource(result.tokenize(teacher), afterTokens, maxCells);
-        if (flags) {
-            let j = 0;
-            pieces = pieces.map((piece) => {
-                if (piece.type === 'removed') return piece;
-                const index = j;
-                j += 1;
-                return piece.type === 'added' && flags[index] ? { type: 'teacher', text: piece.text } : piece;
-            });
-        }
-    }
-    const segments = mergePieces(pieces);
-    return {
-        mode: result.mode,
-        segments,
-        changeCount: countChanges(segments, () => true),
-        teacherChangeCount: countChanges(segments, (segment) => segment.type === 'teacher')
-    };
+    if (!result) return { mode: 'none', segments: [{ type: 'same', text: after }], changeCount: 0 };
+    const segments = mergePieces(result.pieces);
+    return { mode: result.mode, segments, changeCount: countChanges(segments) };
 };
 
 /**
@@ -197,7 +150,7 @@ export const segmentsForView = (segments, variant = 'merged') => {
     const picked = segments.filter((segment) => (
         segment.type === 'same'
         || variant === 'merged'
-        || (variant === 'after' && (segment.type === 'added' || segment.type === 'teacher'))
+        || (variant === 'after' && segment.type === 'added')
         || (variant === 'before' && segment.type === 'removed')
     ));
     return picked.map((segment, index) => {
@@ -214,9 +167,8 @@ export const segmentsForView = (segments, variant = 'merged') => {
  * 처음 글이 최종 글과 같으면 선택을 그리지 않는다(눌러도 같은 글이 나오던 옛 단추의 문제).
  * 바뀐 곳(형광펜)은 승인된 글에서, 제목이 아니라 본문이 바뀐 자리가 있을 때만 연다.
  */
-export const getWritingCompareInfo = ({ before, after, beforeTitle, afterTitle, approved, teacherText = null }) => {
+export const getWritingCompareInfo = ({ before, after, beforeTitle, afterTitle, approved }) => {
     const hasOriginal = Boolean(before) && (before !== after || (beforeTitle != null && beforeTitle !== afterTitle));
-    const diff = approved && hasOriginal ? diffWritingText(before, after, { teacherText }) : null;
-    const changeCount = diff?.changeCount || 0;
-    return { hasOriginal, changeCount, teacherChangeCount: diff?.teacherChangeCount || 0, canShowChanges: changeCount > 0 };
+    const changeCount = approved && hasOriginal ? diffWritingText(before, after).changeCount : 0;
+    return { hasOriginal, changeCount, canShowChanges: changeCount > 0 };
 };

@@ -20,8 +20,16 @@ test('서버: 두 칸·트리거·저장 함수와 권한', async () => {
     assert.match(sql, /post\.is_confirmed IS TRUE[\s\S]*class\.teacher_id = v_caller/);
     assert.match(sql, /REVOKE ALL ON FUNCTION public\.record_post_revision_counts_v1\(JSONB\) FROM PUBLIC, anon;/);
     assert.match(sql, /jsonb_array_length\(p_items\) > 200/);
-    // 학생 글쓰기 작업공간도 교사 수정본을 돌려준다.
-    assert.match(sql, /post\.is_teacher_edited, post\.teacher_revision_content, post\.student_answers/);
+});
+
+test('교사 수정본 칸은 20261353 에서 뺐다 — 화면도 읽지 않는다', async () => {
+    const sql = await read('supabase/migrations/20261353_drop_teacher_revision_content.sql');
+    assert.match(sql, /DROP COLUMN IF EXISTS teacher_revision_content/);
+    assert.doesNotMatch(sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.get_student_assignment_workspace_v1')), /post\.teacher_revision_content/);
+    for (const file of ['src/hooks/useMissionManager.js', 'src/hooks/useMissionSubmit.js', 'src/components/student/MyAgitPanel.jsx',
+        'src/components/teacher/TeacherStudentAgitViewer.jsx', 'src/components/teacher/PostDetailViewer.jsx', 'src/components/teacher/SubmissionStatusModal.jsx']) {
+        assert.doesNotMatch(await read(file), /teacher_revision_content/, `${file} 이 지운 칸을 읽습니다.`);
+    }
 });
 
 test('화면: 승인 두 경로가 모두 같은 규칙으로 센 수를 저장한다', async () => {
@@ -30,10 +38,10 @@ test('화면: 승인 두 경로가 모두 같은 규칙으로 센 수를 저장�
     assert.match(api, /rpc\('record_post_revision_counts_v1'/);
     assert.match(manager, /void recordRevisionCounts\(\[post\]\)/, '한 편 승인 뒤 저장이 없습니다.');
     assert.match(manager, /void recordRevisionCounts\(toApprove\)/, '한꺼번에 승인 뒤 저장이 없습니다.');
-    assert.match(manager, /revision_change_count, teacher_revision_content,/);
+    assert.match(manager, /revision_change_count,\n/);
 });
 
-test('화면: 카드에 표시하고, 교사 수정본은 친구 글에 넘기지 않는다', async () => {
+test('화면: 카드에 고친 자리 수를 표시한다', async () => {
     const [panel, submission, shelfBook, friend, agit] = await Promise.all([
         read('src/components/student/MyAgitPanel.jsx'),
         read('src/components/teacher/SubmissionStatusModal.jsx'),
@@ -46,6 +54,6 @@ test('화면: 카드에 표시하고, 교사 수정본은 친구 글에 넘기�
     assert.match(panel, /<RevisionCountChip count=\{post\.revision_change_count\} \/>/);
     assert.match(submission, /<RevisionCountChip count=\{post\.revision_change_count\} \/>/);
     assert.match(shelfBook, /\$\{note \? `, \$\{noteLabel \|\| note\}` : ''\}/);
-    assert.match(agit, /is_confirmed, teacher_revision_content'\)/);
-    assert.doesNotMatch(friend, /teacher_revision_content/, '친구 글 보기에 교사 수정본을 넘기지 않습니다.');
+    assert.match(agit, /revision_change_count'\)/);
+    assert.doesNotMatch(friend, /teacher_revision_content/);
 });

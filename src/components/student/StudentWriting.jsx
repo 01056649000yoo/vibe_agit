@@ -126,7 +126,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         aiFeedback,
         originalTitle,
         originalContent,
-        teacherRevisionContent,
         showOriginalToFriends,
         isTeacherEdited,
         teacherEditedAt,
@@ -164,7 +163,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 내 글이라 승인받은 뒤 처음 열 때 한 번은 `바뀐 곳` 으로 연다. 고치는 중(승인 전)에는 최종 글·처음 글만.
     const version = useWritingVersion({
         postId, before: originalContent, after: content, beforeTitle: originalTitle, afterTitle: title,
-        approved: Boolean(isConfirmed), teacherText: teacherRevisionContent, autoOpenChanges: true
+        approved: Boolean(isConfirmed), autoOpenChanges: true
     });
     const showOriginal = version.view !== WRITING_VIEW.FINAL;
     const [savingOriginalSharing, setSavingOriginalSharing] = useState(false);
@@ -833,7 +832,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 }}>
                                     {version.view === WRITING_VIEW.CHANGES ? (
                                         // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).
-                                        <WritingChangeHighlight before={originalContent} after={content} teacherText={teacherRevisionContent} showLegend={false} emptyText="기록된 내용이 없습니다." />
+                                        <WritingChangeHighlight before={originalContent} after={content} showLegend={false} emptyText="기록된 내용이 없습니다." />
                                     ) : (originalContent || '기록된 내용이 없습니다.')}
                                 </div>
                             </div>

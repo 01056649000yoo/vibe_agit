@@ -606,7 +606,6 @@ const SubmissionStatusModal = ({
                                                                     enabled={Boolean(post.is_confirmed)}
                                                                     before={post.original_content}
                                                                     after={post.content}
-                                                                    teacherText={post.teacher_revision_content}
                                                                     emptyText="기록 없음"
                                                                 />
                                                             </WritingPresentationTrigger>
@@ -769,7 +768,6 @@ const SubmissionStatusModal = ({
                                 enabled={Boolean(presentationPost?.is_confirmed && presentationPost?.original_content)}
                                 before={presentationPost?.original_content}
                                 after={presentationPost?.content}
-                                teacherText={presentationPost?.teacher_revision_content}
                                 emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
                             />
                         )}

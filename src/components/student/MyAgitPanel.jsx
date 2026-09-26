@@ -100,7 +100,7 @@ const MyAgitPanel = ({
                 const [postResult, reviewResult] = await Promise.all([
                     supabase
                         .from('student_posts')
-                        .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, ai_feedback, original_title, original_content, is_confirmed, teacher_revision_content')
+                        .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, ai_feedback, original_title, original_content, is_confirmed')
                         .eq('class_id', classId)
                         .eq('student_id', studentId)
                         .eq('id', summary.id)
