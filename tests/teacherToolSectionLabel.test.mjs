@@ -21,9 +21,16 @@ test('교사 도구 영역은 학급운영도구 이름을 한 원본에서 사�
   assert.equal(toolsGroup?.label, TEACHER_TOOL_SECTION_LABEL);
   assert.equal(toolsGroup?.tabs[0]?.label, TEACHER_TOOL_SECTION_LABEL);
 
-  for (const source of [guides, hub, mealBoard, arrangement]) {
+  for (const source of [guides, hub]) {
     assert.match(source, /TEACHER_TOOL_SECTION_LABEL/);
+  }
+  // 도구 화면의 `학급운영도구 · …` 머리글은 공통 제목(TeacherPageTitle)으로 바뀌며 빠졌다(2026-09-26).
+  // 다시 넣더라도 이름을 손으로 적지 말고 원본을 쓴다.
+  for (const source of [guides, hub, mealBoard, arrangement]) {
     assert.doesNotMatch(source, /수업 도구/);
+  }
+  for (const source of [mealBoard, arrangement]) {
+    assert.doesNotMatch(source, /학급운영도구/);
   }
 });
 
@@ -41,9 +48,10 @@ test('학급운영도구는 우리 반 스크린 → 급식판 → 자리·역�
     ]
   );
   assert.match(hub, /\.sort\(\(a, b\) => \(a\.tool\?\.order \?\? 100\) - \(b\.tool\?\.order \?\? 100\)\)/);
-  assert.match(hub, /: TOOL_MODULES\[0\]\?\.module\.id \?\? null/);
+  // 고른 도구는 새로고침해도 남는다. 처음에는 순서의 첫 도구(useRememberedChoice 의 validIds[0])로 연다.
+  assert.match(hub, /useRememberedChoice\(\s*'teacher-tools-selected-v1',\s*TOOL_IDS,/);
   assert.match(hub, /<selected\.Entry /);
   assert.doesNotMatch(hub, /TOOL_MODULES\.map\([\s\S]*<Entry /);
   assert.equal(classBoardManifest.tool.beta, true);
-  assert.match(hub, /module\.tool\?\.beta[\s\S]*>Beta</);
+  assert.match(hub, /tag: module\.tool\?\.beta \? 'Beta' : null/);
 });

@@ -1,0 +1,30 @@
+/* 고친 글 비교 — 색은 디자인 토큰만 쓴다. 글자 크기·줄 간격은 감싸는 자리의 것을 물려받는다. */
+.writing-change__legend {
+    display: block;
+    margin-bottom: var(--ui-space-3);
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    line-height: 1.5;
+    white-space: normal;
+}
+
+.writing-change__text {
+    white-space: pre-wrap;
+}
+
+.writing-change__added {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+    /* 형광펜이 줄을 넘어갈 때도 줄마다 끝이 둥글게 */
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.writing-change__removed {
+    color: var(--ui-removed-ink);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}

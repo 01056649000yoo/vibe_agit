@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle';
+import { classBoardManifest } from './manifest.js';
 import { classBoardApi } from './classBoardApi';
 import {
   applyPastedClassBoardImage,
@@ -420,12 +421,10 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     <section className="class-board-editor">
       <header className="class-board-editor__header">
         <div>
-          <span>학급운영도구 · {activeClass.name}</span>
-          <h2>🖥️ 우리 반 스크린 {module?.tool?.beta && <span className="class-board-beta-badge">Beta</span>}</h2>
+          <TeacherPageTitle title={classBoardManifest.name} guideTabId="class-board" meta={module?.tool?.beta ? 'Beta' : null} />
           <p>안내 자료와 끄적끄적 아지트 글쓰기 현황을 한 화면에 배치합니다.</p>
         </div>
         <div className="class-board-editor__header-actions">
-          <TeacherGuideButton tabId="class-board" variant="help" />
           <button
             type="button"
             className="class-board-present"

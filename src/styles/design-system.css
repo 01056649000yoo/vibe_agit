@@ -38,6 +38,11 @@
   --ui-danger-hover: #991b1b;
   --ui-danger-soft: #fef2f2;
 
+  /* 고친 글 비교 — 형광펜(새로 쓰거나 고친 곳)과 지운 곳 */
+  --ui-highlight: #fde68a;
+  --ui-highlight-ink: #422006;
+  --ui-removed-ink: #94a3b8;
+
   /* Typography */
   --ui-font-sans: 'Noto Sans KR', 'Pretendard', 'Inter', system-ui, sans-serif;
   --ui-font-xs: 0.75rem;

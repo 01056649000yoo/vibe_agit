@@ -20,9 +20,25 @@ const ClassAgitPersistencePreview = lazy(() => import('./ClassAgitPersistencePre
 const ClassAgitStudentPreview = lazy(() => import('./ClassAgitStudentPreview.jsx'))
 const ClassAgitDesignPreview = lazy(() => import('./ClassAgitDesignPreview.jsx'))
 const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
+const TeacherLayoutPreview = lazy(() => import('./TeacherLayoutPreview.jsx'))
+const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'writing-change',
+    icon: '🖍️',
+    title: '고친 글 형광펜',
+    description: '승인된 글의 처음 글 → 고친 글을 실제 부품으로 — 합친 보기·나란히 보기·승인 전·문단 많은 글·줄바꿈만 바뀐 글',
+    Component: WritingChangePreview,
+  }),
+  Object.freeze({
+    id: 'teacher-layout',
+    icon: '🧱',
+    title: '교사 화면 틀 (메뉴·제목·배지)',
+    description: '왼쪽 메뉴·공통 제목·처리할 일 배지를 실제 부품으로 띄운다 — 세부 메뉴·학급운영도구·설정이 같은 폭인지, 좁은 화면에서 가로로 눕는지 본다',
+    Component: TeacherLayoutPreview,
+  }),
   Object.freeze({
     id: 'teacher-tour-live',
     icon: '🧭',

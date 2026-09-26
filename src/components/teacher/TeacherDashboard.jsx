@@ -24,7 +24,9 @@ const TeacherNeighborAgit = lazy(getModule('neighbor-agit').teacherEntry);
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
 import ClassSwitcher from './ClassSwitcher';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherSideMenu from './TeacherSideMenu';
+import TeacherCountBadge from './TeacherCountBadge';
+import { buildTeacherNavBadges } from './teacherNavBadges.js';
 import TeacherWritingHub from './TeacherWritingHub';
 import TeacherSettingsHub from './TeacherSettingsHub';
 import TeacherProfileModal from './TeacherProfileModal';
@@ -152,8 +154,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
     const {
         readingLogsUnreviewedCount,
-        diariesUnreviewedCount,
-        totalWritingUnreviewedCount
+        diariesUnreviewedCount
     } = useTeacherUnreviewedWriting(activeClass?.id);
 
     // 학생 개인정보 동의서를 확인하지 않은 학급이 있으면 대시보드 대신 관문을 띄운다.
@@ -401,9 +402,16 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const hasZeroClasses = classes.length === 0;
     const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'operations';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
-    const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
+    // 배지 규칙은 한 곳(teacherNavBadges.js)에서 센다 — 여기서는 세부 메뉴마다 처리할 일 수만 넘긴다.
+    const navBadges = buildTeacherNavBadges({
+        dashboard: missionPendingTotal,
+        'reading-logs': readingLogsUnreviewedCount + readingPendingBooks,
+        diaries: diariesUnreviewedCount,
+        comments: commentTodoBadge,
+        'neighbor-agit': neighborBadge
+    });
 
     useEffect(() => {
         const activeItem = teacherNavRef.current?.querySelector('.teacher-dashboard__nav-item.is-active');
@@ -576,9 +584,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         );
                     }
 
-                    const hasWritingUnreviewed = (group.id === 'writing' && totalWritingUnreviewedCount > 0)
-                        || (group.id === 'writing' && missionPendingTotal > 0);
-
                     return (
                         <button
                             key={group.id}
@@ -591,15 +596,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         >
                             <span aria-hidden="true">{group.icon}</span>
                             {group.label}
-                            {hasWritingUnreviewed && (
-                                <span className="teacher-dashboard__nav-new" aria-label="새 미확인 글 있음">NEW</span>
-                            )}
-                            {group.id === 'neighbor-agit' && neighborBadge > 0 && (
-                                <span className="teacher-subtab__badge-new" aria-label={`모두의 아지트 처리할 일 ${neighborBadge}건`}>{neighborBadge}</span>
-                            )}
-                            {group.id === 'operations' && commentTodoBadge > 0 && (
-                                <span className="teacher-subtab__badge-new" aria-label={`처리할 학생 댓글 ${commentTodoBadge}건`}>{commentTodoBadge}</span>
-                            )}
+                            <TeacherCountBadge count={navBadges.groups[group.id] || 0} label={`${group.label} 처리할 일`} />
                         </button>
                     );
                 })}
@@ -608,82 +605,28 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             {/* 메인 콘텐츠 영역 */}
             <main className="teacher-dashboard__main">
                 {/* 둘러보는 단계가 가리키는 자리 — 메뉴가 아니라 **지금 보고 있는 내용** 이다. */}
-                <div className="teacher-dashboard__workspace" {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)} style={{
-                    display: usesSecondarySidebar ? 'grid' : 'block',
-                    gridTemplateColumns: usesSecondarySidebar ? 'clamp(180px, 10vw, 240px) minmax(0, 1fr)' : undefined,
-                    gap: usesSecondarySidebar ? 'clamp(20px, 1.25vw, 32px)' : undefined,
-                    alignItems: 'start'
-                }}>
+                <div
+                    className={`teacher-dashboard__workspace${secondaryTabs.length > 0 ? ` teacher-side-layout${usesSecondarySidebar ? '' : ' is-stacked'}` : ''}`}
+                    {...tourAnchor(TEACHER_TOUR_ANCHORS.WORKSPACE)}
+                >
                 {secondaryTabs.length > 0 && (
-                    <div
-                        role="tablist"
-                        aria-label={`${activeNavGroup.label} 세부 메뉴`}
-                        style={{
-                            display: 'flex', flexDirection: usesSecondarySidebar ? 'column' : 'row', gap: '6px', padding: '6px',
-                            marginBottom: usesSecondarySidebar ? 0 : (isMobile ? '16px' : '22px'),
-                            width: usesSecondarySidebar || isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
-                            borderRadius: '16px', background: '#E2E8F0', position: usesSecondarySidebar ? 'sticky' : undefined, top: usesSecondarySidebar ? 0 : undefined
-                        }}
-                    >
-                        {secondaryTabs.map(tab => {
-                            const isDashboardPending = tab.id === 'dashboard' && missionPendingTotal > 0;
-                            const hasSubtabUnreviewed = (tab.id === 'reading-logs' && readingLogsUnreviewedCount > 0)
-                                || (tab.id === 'diaries' && diariesUnreviewedCount > 0);
-                            return (
-                                <div
-                                    key={tab.id}
-                                    className={`teacher-subtab${visibleTab === tab.id ? ' is-active' : ''}`}
-                                    style={{ flex: isMobile ? '1 0 auto' : undefined }}
-                                >
-                                    <button
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={visibleTab === tab.id}
-                                        onClick={() => handleTabChange(tab.id)}
-                                        className="teacher-subtab__button"
-                                        {...tourAnchor(tabAnchorId(tab.id))}
-                                        style={{
-                                            padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
-                                            fontSize: isMobile ? '0.85rem' : '0.9rem',
-                                            textAlign: usesSecondarySidebar ? 'left' : 'center',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: usesSecondarySidebar ? 'space-between' : 'center',
-                                            gap: '6px'
-                                        }}
-                                    >
-                                        <span>{tab.label}</span>
-                                        {isDashboardPending && (
-                                            <span className="teacher-subtab__badge-new" aria-label={`확인 대기 과제 ${missionPendingTotal}건`}>
-                                                {missionPendingTotal}
-                                            </span>
-                                        )}
-                                        {hasSubtabUnreviewed && (
-                                            <span className="teacher-subtab__new-badge" aria-label="새 미확인 글 있음">NEW</span>
-                                        )}
-                                        {tab.id === 'comments' && commentTodoBadge > 0 && (
-                                            <span className="teacher-subtab__badge-new" aria-label={`처리할 학생 댓글 ${commentTodoBadge}건`}>
-                                                {commentTodoBadge}
-                                            </span>
-                                        )}
-                                        {tab.id === 'reading-logs' && readingPendingBooks > 0 && (
-                                            <span className="teacher-subtab__badge-new" aria-label={`쪽수 확인이 필요한 책 ${readingPendingBooks}권`}>
-                                                {readingPendingBooks}
-                                            </span>
-                                        )}
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <TeacherSideMenu
+                        semantics="tabs"
+                        horizontal={!usesSecondarySidebar}
+                        ariaLabel={`${activeNavGroup.label} 세부 메뉴`}
+                        activeId={visibleTab}
+                        onSelect={handleTabChange}
+                        items={secondaryTabs.map((tab) => ({
+                            id: tab.id,
+                            label: tab.label,
+                            anchor: tourAnchor(tabAnchorId(tab.id)),
+                            badge: navBadges.tabs[tab.id]
+                                ? { count: navBadges.tabs[tab.id], label: `${tab.label} 처리할 일` }
+                                : null
+                        }))}
+                    />
                 )}
                 <div style={{ minWidth: 0 }}>
-                {secondaryTabs.length > 0 && !['writing', 'operations', 'records', 'class-agit'].includes(activeNavGroup.id) && (
-                    <div className="teacher-tab-heading">
-                        <h2>{activeTab.label}</h2>
-                        <TeacherGuideButton tabId={visibleTab} variant="help" />
-                    </div>
-                )}
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
                     {/* 학급 데이터 로딩 중이면 스켈레톤 표시 */}
                     {loadingClasses ? (

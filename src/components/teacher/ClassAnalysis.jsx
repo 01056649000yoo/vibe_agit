@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import TeacherPageTitle from './TeacherPageTitle';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import DashboardCardHost from '../../modules/dashboard/DashboardCardHost';
@@ -265,7 +266,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
             <header style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: '12px', alignItems: isMobile ? 'stretch' : 'flex-start' }}>
                 <div>
-                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: 'var(--ui-text-lg)', fontWeight: '900' }}>📊 학급 운영 현황</h3>
+                    <TeacherPageTitle tabId="operations" />
                     <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: 'var(--ui-text-sm)', lineHeight: 1.45 }}>
                         활동량과 지금 확인해야 할 일을 한 화면에서 살펴봅니다.
                     </p>

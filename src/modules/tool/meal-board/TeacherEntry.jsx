@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TEACHER_TOOL_SECTION_LABEL } from '../../../constants/teacherNav.js';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle';
+import { mealBoardManifest } from './manifest.js';
 import MealFullscreen from './MealFullscreen';
 import SchoolChangeModal from './SchoolChangeModal';
 import StudentNoteModal from './StudentNoteModal';
@@ -265,11 +265,9 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   return <section className="meal-board">
     <header className="meal-board-header">
       <div>
-        <span className="meal-kicker">{TEACHER_TOOL_SECTION_LABEL} · 급식 확인</span>
-        <h2>얘들아, 밥 먹자! <span aria-hidden="true">🍱</span></h2>
+        <TeacherPageTitle title={mealBoardManifest.name} guideTabId="meal-board" />
         <p>오늘 급식과 우리 반 학생별 비고를 확인해요</p>
       </div>
-      <TeacherGuideButton tabId="meal-board" variant="help" />
     </header>
 
     {error ? <div className="meal-alert is-error" role="alert"><span>!</span>{error}<button type="button" onClick={() => setError('')}>닫기</button></div> : null}

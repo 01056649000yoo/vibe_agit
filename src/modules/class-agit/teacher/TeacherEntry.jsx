@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle.jsx';
 import { CLASS_AGIT_TEACHER_TABS } from '../../../constants/teacherNav.js';
 import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import Button from '../../../components/common/Button.jsx';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton.jsx';
 import { resolveEnabledModuleIds } from '../../registry.js';
 import { classAgitApi } from '../api/classAgitApi.js';
 import ExhibitionWorkbench from './ExhibitionWorkbench.jsx';
@@ -75,8 +75,8 @@ function TeacherWorkspace({ activeClass, api = classAgitApi, isSample = false, r
                 renderShare: releasesEnabled ? ({ key, onStateChange }) => <ShareManager key={key} classId={classId} exhibitionId={workspace.draft.id} api={releaseApi}
                     archived={workspace.draft.state === 'archived'} onOpenPublic={onOpenPublic} embedded onStateChange={onStateChange} /> : undefined,
             }} /> : workspace && <section className="class-agit class-agit-management">
-                <div className="class-agit-project-heading"><div><span className="class-agit-eyebrow">{activeClass.name}</span><h1>우리 반의 글 전시</h1><p>초안을 준비하고 확인한 내용으로 학급 공개판을 만듭니다.</p></div>
-                    <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit" variant="help" /><Button variant="primary" type="button" disabled={busy || workspace.projects.length >= 20} onClick={create}>새 전시 만들기</Button></div></div>
+                <div className="class-agit-project-heading"><div><TeacherPageTitle tabId="class-agit" /><p>초안을 준비하고 확인한 내용으로 학급 공개판을 만듭니다.</p></div>
+                    <div className="class-agit-header-actions"><Button variant="primary" type="button" disabled={busy || workspace.projects.length >= 20} onClick={create}>새 전시 만들기</Button></div></div>
                 {isSample && <p className="class-agit-prototype-note">샘플 저장·공개는 이 화면에서만 동작합니다. 실제 DB에는 반영하지 않습니다.</p>}
                 {!workspace.projects.length && <p className="class-agit-empty">첫 전시를 만들어 우리 반의 글을 담아 보세요.</p>}
                 <ul className="class-agit-projects">{workspace.projects.map((project) => <li key={project.id}><div><strong>{project.title}</strong><p>{project.state === 'published' ? `${project.publication_no}판 공개 중` : project.state === 'archived' ? '보관함' : '비공개 초안'}</p></div><div className="class-agit-header-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => open(project.id)}>전시 열기</Button><Button variant="ghost" type="button" disabled={busy} onClick={() => remove(project)} aria-label={`${project.title} 전시 삭제`}>삭제</Button></div></li>)}</ul>

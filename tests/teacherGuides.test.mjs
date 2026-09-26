@@ -164,8 +164,9 @@ test('학생 독서록 화면의 도움말 버튼은 하나뿐이다', () => {
         'utf8'
     );
 
-    assert.match(source, /TeacherGuideButton tabId="reading-logs" variant="help"\s*\/>/);
-    assert.equal((source.match(/<TeacherGuideButton/g) || []).length, 1,
+    // 도움말 단추는 공통 제목(TeacherPageTitle)이 그린다(2026-09-26). 화면이 따로 더 달지 않는다.
+    assert.match(source, /<TeacherPageTitle tabId="reading-logs" \/>/);
+    assert.equal((source.match(/<TeacherGuideButton|<TeacherPageTitle/g) || []).length, 1,
         '독서록 화면에는 도움말 버튼을 하나만 둡니다. 이벤트 안내는 그 안의 탭입니다.');
 });
 

@@ -1,0 +1,16 @@
+/* 처리할 일 수 배지 — 교사 메뉴의 배지는 이 모양 하나다. */
+.teacher-count-badge {
+    display: inline-flex;
+    min-width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    padding: 0 6px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-danger);
+    color: var(--ui-surface);
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+    line-height: 1;
+}

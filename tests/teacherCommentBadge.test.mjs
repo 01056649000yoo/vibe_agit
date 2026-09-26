@@ -58,8 +58,8 @@ test('처리하면 배지가 줄어든다 — 화면이 센 수를 그대로 올
 });
 
 test('배지는 학급 운영 메뉴와 학생 댓글 탭 두 곳에 뜬다', () => {
-    assert.ok(dashboard.includes("group.id === 'operations' && commentTodoBadge > 0"), '1차 메뉴에 배지가 없습니다.');
-    assert.ok(dashboard.includes("tab.id === 'comments' && commentTodoBadge > 0"), '학생 댓글 탭에 배지가 없습니다.');
-    // 읽어 주는 설명도 있어야 한다.
-    assert.ok(dashboard.includes('처리할 학생 댓글 ${commentTodoBadge}건'), '배지 설명(aria-label)이 없습니다.');
+    // 2026-09-26: 배지는 teacherNavBadges.js 한 규칙으로 센다 — 학생 댓글 수가 학급 운영 상단 숫자에 더해진다.
+    assert.ok(dashboard.includes('comments: commentTodoBadge'), '학생 댓글 수가 배지 계산에 들어가지 않습니다.');
+    assert.ok(dashboard.includes('${tab.label} 처리할 일'), '세부 메뉴 배지 설명(aria-label)이 없습니다.');
+    assert.ok(dashboard.includes('${group.label} 처리할 일'), '상단 메뉴 배지 설명(aria-label)이 없습니다.');
 });

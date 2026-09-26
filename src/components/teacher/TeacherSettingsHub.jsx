@@ -1,7 +1,9 @@
 import React, { lazy, useEffect, useState } from 'react';
+import TeacherSideMenu from './TeacherSideMenu';
+import { useRememberedChoice } from '../../hooks/useRememberedChoice';
 import Button from '../common/Button';
 import TeacherSettingsTab from './TeacherSettingsTab';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import { getAllModules } from '../../modules/registry';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 import { sectionAnchorId, tourAnchor } from '../../guides/teacherTour.js';
@@ -9,10 +11,7 @@ import { sectionAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 const ClassManager = lazy(() => import('./ClassManager'));
 const DahandinIntegrationManager = lazy(() => import('./DahandinIntegrationManager'));
 
-// 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 메뉴마다 폭을 다시 정하지 않도록
-// 데스크톱 폭·항목 여백·모바일 최소 폭을 공통 호스트에서 고정한다.
-const SETTINGS_NAV_WIDTH = '300px';
-const SETTINGS_MOBILE_ITEM_WIDTH = '200px';
+// 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 왼쪽 메뉴의 폭·여백은 공통 부품(TeacherSideMenu)이 정한다.
 
 const MODULE_SETTINGS_ITEMS = getAllModules()
     .filter((module) => module.available !== false && typeof module.settingsEntry === 'function')
@@ -34,6 +33,7 @@ const SETTINGS_ITEMS = [
     // 다했니 연동은 설정 목록 맨 아래에 둔다(사용자 요청 2026-09-16).
     { id: 'dahandin', icon: '🍪', label: '다했니 연동', description: '다했니 쿠키를 포인트로 정산' }
 ];
+const SETTINGS_IDS = SETTINGS_ITEMS.map((item) => item.id);
 
 const TeacherSettingsHub = ({
     isMobile, session, classes, activeClass, setActiveClass, setClasses,
@@ -42,7 +42,7 @@ const TeacherSettingsHub = ({
     setPromptTemplate, setReportPromptTemplate, onNavigate,
     navigationTarget, onNavigationHandled
 }) => {
-    const [section, setSection] = useState('class');
+    const [section, setSection] = useRememberedChoice('teacher-settings-section-v1', SETTINGS_IDS);
     const [promptKind, setPromptKind] = useState(PRESET_KIND.FEEDBACK);
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
     const SelectedModuleEntry = selected.Entry;
@@ -51,68 +51,35 @@ const TeacherSettingsHub = ({
         if (navigationTarget?.tab !== 'settings' || !navigationTarget.requestId) return;
         if (SETTINGS_ITEMS.some((item) => item.id === navigationTarget.section)) {
             // 활용 안내서의 화면 바로가기를 현재 설정 항목과 동기화한다.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSection(navigationTarget.section);
         }
         onNavigationHandled?.(navigationTarget.requestId);
-    }, [navigationTarget, onNavigationHandled]);
+    }, [navigationTarget, onNavigationHandled, setSection]);
 
     return (
-        <div style={{
-            display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : `${SETTINGS_NAV_WIDTH} minmax(0, 1fr)`,
-            gap: isMobile ? '12px' : '20px', alignItems: 'start', width: '100%'
-        }}>
-            <aside style={{
-                position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : 0,
-                padding: isMobile ? '9px' : '12px', borderRadius: '18px', background: '#E9EEF6', minWidth: 0
-            }}>
-                {!isMobile && (
-                    <div style={{ padding: '7px 9px 13px' }}>
-                        <strong style={{ color: '#172033', fontSize: 'var(--ui-text-lg)' }}>⚙️ 설정</strong>
-                        <p style={{ margin: '5px 0 0', color: '#475569', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>필요한 항목만 골라 관리하세요.</p>
-                    </div>
-                )}
-                <nav aria-label="설정 메뉴" style={{
-                    display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '6px',
-                    overflowX: isMobile ? 'auto' : 'visible', scrollbarWidth: 'thin'
-                }}>
-                    {SETTINGS_ITEMS.map((item) => {
-                        const active = item.id === section;
-                        return (
-                            <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => setSection(item.id)}
-                                aria-current={active ? 'page' : undefined}
-                                {...tourAnchor(sectionAnchorId(item.id))}
-                                style={{
-                                minWidth: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : 0, width: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : '100%',
-                                minHeight: isMobile ? '64px' : '76px', padding: isMobile ? '11px 14px' : '13px 15px',
-                                border: active ? '1px solid #C7D7FE' : '1px solid transparent', borderRadius: '12px',
-                                background: active ? 'white' : 'transparent', color: active ? '#315FC4' : '#526176',
-                                boxShadow: active ? '0 4px 14px rgba(37,99,235,.09)' : 'none', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', whiteSpace: 'nowrap',
-                                boxSizing: 'border-box', overflow: 'hidden'
-                                }}
-                            >
-                                <span aria-hidden="true" style={{ flex: '0 0 25px', width: '25px', fontSize: '1.1rem', textAlign: 'center' }}>{item.icon}</span>
-                                <span style={{ flex: 1, minWidth: 0, paddingRight: '2px', overflow: 'hidden' }}>
-                                    <strong title={item.label} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 'var(--ui-text-md)' }}>{item.label}</strong>
-                                    {!isMobile && <span title={item.description} style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>{item.description}</span>}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </nav>
-            </aside>
+        <div className={`teacher-side-layout${isMobile ? ' is-stacked' : ''}`}>
+            <TeacherSideMenu
+                horizontal={isMobile}
+                heading="⚙️ 설정"
+                note="필요한 항목만 골라 관리하세요."
+                ariaLabel="설정 메뉴"
+                activeId={section}
+                onSelect={setSection}
+                items={SETTINGS_ITEMS.map((item) => ({
+                    id: item.id,
+                    label: item.label,
+                    icon: item.icon,
+                    description: item.description,
+                    anchor: tourAnchor(sectionAnchorId(item.id))
+                }))}
+            />
 
-            <main style={{ minWidth: 0 }}>
+            <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#172033', fontSize: 'var(--ui-text-2xl)' }}>{selected.icon} {selected.label}</h2>
-                        <p style={{ margin: '6px 0 0', color: '#475569', fontSize: 'var(--ui-text-md)', lineHeight: 1.55 }}>{selected.description}</p>
+                        <TeacherPageTitle title={selected.label} guideTabId={`settings:${selected.id}`} />
+                        <p style={{ margin: '6px 0 0', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-md)', lineHeight: 1.55 }}>{selected.description}</p>
                     </div>
-                    <TeacherGuideButton tabId={`settings:${selected.id}`} variant="help" />
                 </div>
 
                 {section === 'class' ? (
@@ -194,7 +161,7 @@ const TeacherSettingsHub = ({
                         setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                     />
                 )}
-            </main>
+            </div>
         </div>
     );
 };

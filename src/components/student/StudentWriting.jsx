@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import CommentComposer from './CommentComposer';
@@ -821,17 +822,22 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     lineHeight: '1.4'
                                 }}>
                                     {originalTitle || '제목 없음'}
-                                    <span style={{ fontSize: 'var(--ui-text-md)', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
+                                    <span style={{ fontSize: 'var(--ui-text-md)', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>{isConfirmed ? '처음 글 → 고친 글' : '나의 처음 글'}</span>
                                 </div>
                                 <div style={{
                                     fontSize: isMobile ? '1.1rem' : '1.25rem',
                                     lineHeight: '1.8',
-                                    color: '#7F8C8D',
+                                    color: isConfirmed ? '#2C3E50' : '#7F8C8D',
                                     whiteSpace: 'pre-wrap',
                                     flex: 1,
                                     overflowY: 'auto',
                                     padding: '10px 0'
-                                }}>{originalContent || '기록된 내용이 없습니다.'}</div>
+                                }}>
+                                    {isConfirmed ? (
+                                        // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다.
+                                        <WritingChangeHighlight before={originalContent} after={content} emptyText="기록된 내용이 없습니다." />
+                                    ) : (originalContent || '기록된 내용이 없습니다.')}
+                                </div>
                             </div>
                         )}
                         {GenreEditor ? (

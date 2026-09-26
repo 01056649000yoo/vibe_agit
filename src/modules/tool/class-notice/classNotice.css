@@ -3,8 +3,8 @@
 .class-notice-empty { padding:28px; color:#64748b; font-size:.9rem; font-weight:800; text-align:center; }
 
 .class-notice__header { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; padding:22px 24px; border:1px solid #e5d9a8; border-radius:22px; background:linear-gradient(135deg,#fffdf3,#fef9c3); }
-.class-notice__header>div:first-child>span { color:#8a7a4a; font-size:.75rem; font-weight:900; letter-spacing:.03em; }
-.class-notice__header h2 { margin:5px 0 4px; font-size:1.55rem; }
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.class-notice__header .teacher-page-title { margin-bottom:4px; }
 .class-notice__header p { margin:0; color:#64748b; font-size:.84rem; line-height:1.55; }
 .class-notice__header-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
 .class-notice__header-actions>.guide-info-button { margin-right:0; }

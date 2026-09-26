@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import ModalCloseButton from '../common/ModalCloseButton';
 import ModalPortal from '../common/ModalPortal';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
@@ -137,6 +138,8 @@ const TeacherStudentAgitPostDetail = ({
                                 <div className={`teacher-agit-post-detail__content${displayingReport ? ' is-report' : ''}`}>
                                     {displayingReport ? (
                                         <ReportDocument structuredContent={post.structured_content} content={post.content} />
+                                    ) : showOriginal && post.is_confirmed ? (
+                                        <WritingChangeHighlight before={post.original_content} after={post.content} />
                                     ) : content || '내용이 없습니다.'}
                                 </div>
                             </article>

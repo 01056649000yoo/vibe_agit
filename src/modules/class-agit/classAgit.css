@@ -58,7 +58,7 @@
 .class-agit-brand p { color: var(--ca-muted); font-size: 12px; margin-bottom: 4px; }
 .class-agit-brand h1 { font-size: 21px; letter-spacing: -.04em; }
 .class-agit-prototype-note { margin: 22px 0; padding: 11px 15px; font-size: 12px; line-height: 1.7; border-radius: 8px; background: #edf0e4; color: #50604b; }
-.class-agit-project-heading h2 { font-family: Georgia, 'Noto Serif KR', serif; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; margin: 8px 0; overflow-wrap: anywhere; }
+.class-agit-project-heading > div > h2 { font-family: Georgia, 'Noto Serif KR', serif; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; margin: 8px 0; overflow-wrap: anywhere; }
 .class-agit-project-heading p { color: var(--ca-muted); font-size: 13px; }
 .class-agit-status { min-height: 36px; padding: 10px 0; color: #657260; font-size: 12px; }
 .class-agit-workbench .class-agit-brand { min-width: 0; }

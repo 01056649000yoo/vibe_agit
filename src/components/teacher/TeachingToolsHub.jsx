@@ -1,4 +1,6 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo } from 'react';
+import TeacherSideMenu from './TeacherSideMenu';
+import { useRememberedChoice } from '../../hooks/useRememberedChoice';
 import { TEACHER_TOOL_SECTION_LABEL } from '../../constants/teacherNav.js';
 import { getAllModules } from '../../modules/registry';
 import { toolAnchorId, tourAnchor } from '../../guides/teacherTour.js';
@@ -7,6 +9,7 @@ const TOOL_MODULES = getAllModules()
     .filter((module) => module.part === 'tool' && module.available !== false && typeof module.teacherEntry === 'function')
     .sort((a, b) => (a.tool?.order ?? 100) - (b.tool?.order ?? 100))
     .map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
+const TOOL_IDS = TOOL_MODULES.map(({ module }) => module.id);
 
 const TeachingToolsHub = ({
     activeClass,
@@ -16,12 +19,11 @@ const TeachingToolsHub = ({
     navigationTarget,
     onNavigationHandled
 }) => {
-    const [selectedId, setSelectedId] = useState(() => {
-        const requested = new URL(window.location.href).searchParams.get('tool');
-        return TOOL_MODULES.some(({ module }) => module.id === requested)
-            ? requested
-            : TOOL_MODULES[0]?.module.id ?? null;
-    });
+    const [selectedId, setSelectedId] = useRememberedChoice(
+        'teacher-tools-selected-v1',
+        TOOL_IDS,
+        new URL(window.location.href).searchParams.get('tool')
+    );
     const selected = useMemo(
         () => TOOL_MODULES.find(({ module }) => module.id === selectedId) || TOOL_MODULES[0] || null,
         [selectedId]
@@ -30,11 +32,10 @@ const TeachingToolsHub = ({
     useEffect(() => {
         if (navigationTarget?.tab !== 'tools' || !navigationTarget.requestId) return;
         if (TOOL_MODULES.some(({ module }) => module.id === navigationTarget.tool)) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedId(navigationTarget.tool);
         }
         onNavigationHandled?.(navigationTarget.requestId);
-    }, [navigationTarget, onNavigationHandled]);
+    }, [navigationTarget, onNavigationHandled, setSelectedId]);
 
     if (!selected) {
         return (
@@ -48,53 +49,27 @@ const TeachingToolsHub = ({
 
     return (
         <section style={{ width: '100%' }}>
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '220px minmax(0, 1fr)',
-                gap: isMobile ? '12px' : '18px',
-                alignItems: 'start'
-            }}>
-                <aside style={{
-                    position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '14px',
-                    padding: isMobile ? '10px' : '14px', borderRadius: isMobile ? '16px' : '20px',
-                    background: '#E9EEF6', minWidth: 0
-                }}>
-                    {!isMobile && (
-                        <div style={{ padding: '8px 10px 14px' }}>
-                            <div style={{ color: '#172033', fontWeight: '950', fontSize: 'var(--ui-text-lg)' }}>🧰 {TEACHER_TOOL_SECTION_LABEL}</div>
-                            <div style={{ marginTop: '6px', color: '#475569', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>도구를 선택하면 바로 실행됩니다.</div>
-                        </div>
-                    )}
-                    <nav aria-label={`${TEACHER_TOOL_SECTION_LABEL} 목록`} style={{
-                        display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '7px',
-                        overflowX: isMobile ? 'auto' : 'visible', scrollbarWidth: 'thin'
-                    }}>
-                        {TOOL_MODULES.map(({ module }) => {
-                            const active = module.id === selected.module.id;
-                            return (
-                                <button key={module.id} type="button" onClick={() => setSelectedId(module.id)} aria-current={active ? 'page' : undefined} {...tourAnchor(toolAnchorId(module.id))} style={{
-                                    minWidth: isMobile ? '140px' : 0, width: isMobile ? 'auto' : '100%', padding: isMobile ? '11px 14px' : '13px 12px',
-                                    borderRadius: '13px', border: active ? '1px solid #C7D7FE' : '1px solid transparent',
-                                    background: active ? 'white' : 'transparent', color: active ? '#315FC4' : '#526176',
-                                    boxShadow: active ? '0 5px 16px rgba(37,99,235,.10)' : 'none', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: '9px', textAlign: 'left', fontWeight: '900', whiteSpace: 'nowrap', fontSize: 'var(--ui-text-md)'
-                                }}>
-                                    <span aria-hidden="true" style={{ fontSize: '1.15rem' }}>{module.icon || '🧩'}</span>
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{module.name}</span>
-                                    {module.tool?.beta && (
-                                        <span style={{ flex: '0 0 auto', padding: '2px 6px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontSize: 'var(--ui-text-xs)', fontWeight: '950', letterSpacing: '.02em' }}>Beta</span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </aside>
-
-                <main style={{ minWidth: 0 }}>
+            <div className={`teacher-side-layout${isMobile ? ' is-stacked' : ''}`}>
+                <TeacherSideMenu
+                    horizontal={isMobile}
+                    heading={`🧰 ${TEACHER_TOOL_SECTION_LABEL}`}
+                    note="도구를 선택하면 바로 실행됩니다."
+                    ariaLabel={`${TEACHER_TOOL_SECTION_LABEL} 목록`}
+                    activeId={selected.module.id}
+                    onSelect={setSelectedId}
+                    items={TOOL_MODULES.map(({ module }) => ({
+                        id: module.id,
+                        label: module.name,
+                        icon: module.icon || '🧩',
+                        tag: module.tool?.beta ? 'Beta' : null,
+                        anchor: tourAnchor(toolAnchorId(module.id))
+                    }))}
+                />
+                <div style={{ minWidth: 0 }}>
                     <Suspense fallback={<div style={{ padding: '70px', textAlign: 'center', color: '#94A3B8' }}>{selected.module.name}을 불러오는 중입니다...</div>}>
                         <selected.Entry activeClass={activeClass} teacherInfo={teacherInfo} isMobile={isMobile} module={selected.module} onTeacherSchoolChange={onTeacherSchoolChange} />
                     </Suspense>
-                </main>
+                </div>
             </div>
         </section>
     );

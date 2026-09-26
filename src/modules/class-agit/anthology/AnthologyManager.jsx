@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { getTeacherTabLabel } from '../../../constants/teacherNav.js';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Card from '../../../components/common/Card.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -257,8 +259,8 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
     };
     const panel = (id) => ({ role: 'tabpanel', id: `${stepId}-panel-${id}`, 'aria-labelledby': `${stepId}-tab-${id}`, hidden: step !== id, className: 'class-agit-step-panel' });
     return <section className="class-agit class-agit-management class-agit-books">
-        <header className="class-agit-project-heading"><div><span className="class-agit-eyebrow">우리반 아지트 · 글꽃 책방</span><h1>{book ? book.title : '우리 반의 책 만들기'}</h1></div>
-            <div className="class-agit-header-actions"><TeacherGuideButton tabId="class-agit-books" variant="help" />{(book || onExit) && <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => { if (book) { setBook(null); setPicker(false); setProjects(null); setStep('cover'); } else onExit(); })}>{book ? '문집 목록' : '전시 관리로'}</Button>}</div></header>
+        <header className="class-agit-project-heading"><div>{book ? <><span className="class-agit-eyebrow">{getTeacherTabLabel('class-agit-books')}</span><h1>{book.title}</h1></> : <TeacherPageTitle tabId="class-agit-books" />}</div>
+            <div className="class-agit-header-actions">{book && <TeacherGuideButton tabId="class-agit-books" variant="help" />}{(book || onExit) && <Button variant="outline" type="button" disabled={busy} onClick={() => leave(() => { if (book) { setBook(null); setPicker(false); setProjects(null); setStep('cover'); } else onExit(); })}>{book ? '문집 목록' : '전시 관리로'}</Button>}</div></header>
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {!workspace && !error && <p role="status">문집을 불러오고 있습니다…</p>}
         {!book && workspace && <><p>학급의 글을 함께 묶거나, 한 학생의 작품만 모은 개인 문집을 만들 수 있습니다.</p>{message && <p role="status">{message}</p>}

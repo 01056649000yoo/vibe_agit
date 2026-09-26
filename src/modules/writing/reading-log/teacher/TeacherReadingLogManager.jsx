@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useStat
 import Button from '../../../../components/common/Button';
 import ExportSelectModal from '../../../../components/common/ExportSelectModal';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
-import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
+import TeacherPageTitle from '../../../../components/teacher/TeacherPageTitle';
 import { useDataExport } from '../../../../hooks/useDataExport';
 import { notifyTeacherWritingReviewed } from '../../../../hooks/useTeacherUnreviewedWriting';
 import { supabase } from '../../../../lib/supabaseClient';
@@ -597,12 +597,10 @@ const TeacherReadingLogManager = ({
         <section className="teacher-reading-manager">
             <header className="teacher-reading-header">
                 <div>
-                    <span className="teacher-reading-kicker">자율 글쓰기 관리</span>
-                    <h2>📚 학생 독서록</h2>
+                    <TeacherPageTitle tabId="reading-logs" />
                     <p>학생은 스스로 완료하고, 선생님은 확인 완료 또는 보완 요청과 짧은 한마디를 남겨요.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <TeacherGuideButton tabId="reading-logs" variant="help" />
                     {section === 'reviews' && (
                         <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
                     )}

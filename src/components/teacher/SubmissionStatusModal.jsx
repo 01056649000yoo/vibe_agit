@@ -1,4 +1,5 @@
 import React from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -574,7 +575,13 @@ const SubmissionStatusModal = ({
                                                                  border: '1px solid #DCFCE7', fontSize: 'var(--ui-text-md)', color: '#333',
                                                                  lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
                                                             }}>
-                                                                {post.original_content || '기록 없음'}
+                                                                <WritingChangeHighlight
+                                                                    variant="before"
+                                                                    enabled={Boolean(post.is_confirmed)}
+                                                                    before={post.original_content}
+                                                                    after={post.content}
+                                                                    emptyText="기록 없음"
+                                                                />
                                                             </WritingPresentationTrigger>
                                                         </div>
                                                         <div style={{ minWidth: 0 }}>
@@ -590,7 +597,13 @@ const SubmissionStatusModal = ({
                                                                  border: '1px solid #DBEAFE', fontSize: 'var(--ui-text-md)', color: '#333',
                                                                  lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
                                                             }}>
-                                                                {post.content || '기록 없음'}
+                                                                <WritingChangeHighlight
+                                                                    variant="after"
+                                                                    enabled={Boolean(post.is_confirmed)}
+                                                                    before={post.original_content}
+                                                                    after={post.content}
+                                                                    emptyText="기록 없음"
+                                                                />
                                                             </WritingPresentationTrigger>
                                                         </div>
                                                     </div>
@@ -745,9 +758,15 @@ const SubmissionStatusModal = ({
                                 structuredContent={presentationPost.structured_content}
                                 content={presentationPost.content}
                             />
-                        ) : presentationVersion === 'original'
-                            ? (presentationPost?.original_content || '최초 내용 기록이 없습니다.')
-                            : (presentationPost?.content || '내용이 없습니다.')}
+                        ) : (
+                            <WritingChangeHighlight
+                                variant={presentationVersion === 'original' ? 'before' : 'after'}
+                                enabled={Boolean(presentationPost?.is_confirmed && presentationPost?.original_content)}
+                                before={presentationPost?.original_content}
+                                after={presentationPost?.content}
+                                emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
+                            />
+                        )}
                     </WritingPresentationModal>
                 </motion.div>
             )}

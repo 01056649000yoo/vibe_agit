@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState, Suspense, lazy } from 'react';
+import TeacherPageTitle from './TeacherPageTitle';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveEnabledModuleIds, getEnabledModules } from '../../modules/registry';
 import DashboardMenu from '../student/DashboardMenu';
@@ -229,7 +230,7 @@ const StudentDashboardPreview = ({ activeClass, isMobile }) => {
         <div className="student-preview">
             <div className="student-preview__intro">
                 <div>
-                    <h2>학생 대시보드 미리보기</h2>
+                    <TeacherPageTitle tabId="student-dashboard-preview" />
                     <p>지금 <strong>{activeClass?.name}</strong> 학생 화면에 열려 있는 메뉴 구성입니다. 카드를 누르면 오른쪽에서 그 메뉴의 실제 내용을 확인할 수 있어요(개인 화면은 구성만).</p>
                 </div>
                 {view === 'home' && <button type="button" className="student-preview__refresh" onClick={load} disabled={loading}>새로고침</button>}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { motion } from 'framer-motion';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
@@ -122,9 +123,12 @@ const MyShelfPostDetail = ({
                             </button>
                         )}
 
-                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal && !post.is_confirmed ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {displayingReport ? (
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
+                            ) : showOriginal && post.is_confirmed ? (
+                                // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다.
+                                <WritingChangeHighlight before={post.original_content} after={post.content} />
                             ) : content || '아직 내용이 없어요.'}
                         </div>
 

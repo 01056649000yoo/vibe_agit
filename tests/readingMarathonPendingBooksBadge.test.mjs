@@ -113,10 +113,10 @@ test('배지는 무거운 스냅샷을 부르지 않는다', () => {
 });
 
 test('배지는 학생 독서록과 독서록 이벤트 두 곳에 뜬다', () => {
-    assert.ok(dashboard.includes("tab.id === 'reading-logs' && readingPendingBooks > 0"),
-        '학생 독서록 메뉴에 배지가 없습니다.');
-    assert.ok(dashboard.includes('쪽수 확인이 필요한 책 ${readingPendingBooks}권'),
-        '배지 설명(aria-label)이 없습니다.');
+    // 2026-09-26: 메뉴 배지는 처리할 일 수 하나로 센다 — 학생 독서록 숫자에 더해지고,
+    // 글쓰기 상단 숫자에도 올라간다(전에는 세부 메뉴에만 떠서 다른 메뉴에서는 알 수 없었다).
+    assert.ok(dashboard.includes("'reading-logs': readingLogsUnreviewedCount + readingPendingBooks"),
+        '학생 독서록 메뉴 배지에 쪽수 확인 책이 들어가지 않습니다.');
 
     // 안쪽 독서록 이벤트 탭.
     assert.ok(manager.includes('pendingBooks > 0'), '독서록 이벤트 탭에 배지가 없습니다.');

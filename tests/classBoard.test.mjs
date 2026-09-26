@@ -974,7 +974,8 @@ test('이미지 업로드는 실제 비율로 위젯을 자동 맞추고 이후 
 });
 
 test('새 교사 도구의 도움말과 전체 활용 안내서 이동 경로가 함께 등록된다', () => {
-  assert.match(entry, /TeacherGuideButton tabId="class-board"/);
+  // 도움말 단추는 공통 제목(TeacherPageTitle)이 그린다(2026-09-26).
+  assert.match(entry, /TeacherPageTitle title=\{classBoardManifest\.name\} guideTabId="class-board"/);
   assert.match(guides, /'class-board'/);
   assert.match(guideRegistry, /'class-board': \{ tab: 'tools', tool: 'class-board' \}/);
   assert.match(journeys, /step\('class-board'/);

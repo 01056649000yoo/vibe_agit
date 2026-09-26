@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -568,7 +569,13 @@ const PostDetailViewer = ({
                                                 fontSize: '1.15rem', color: '#64748B', lineHeight: '1.8',
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
-                                                {selectedPost.original_content || '최초 내용 기록이 없습니다.'}
+                                                <WritingChangeHighlight
+                                                    variant="before"
+                                                    enabled={Boolean(selectedPost.is_confirmed)}
+                                                    before={selectedPost.original_content}
+                                                    after={selectedPost.content}
+                                                    emptyText="최초 내용 기록이 없습니다."
+                                                />
                                             </div>
                                         </WritingPresentationTrigger>
 
@@ -591,7 +598,14 @@ const PostDetailViewer = ({
                                             }}>
                                                 {isReportPost ? (
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
-                                                ) : selectedPost.content}
+                                                ) : (
+                                                    <WritingChangeHighlight
+                                                        variant="after"
+                                                        enabled={Boolean(selectedPost.is_confirmed)}
+                                                        before={selectedPost.original_content}
+                                                        after={selectedPost.content}
+                                                    />
+                                                )}
                                             </div>
                                         </WritingPresentationTrigger>
                                     </div>
@@ -999,9 +1013,15 @@ const PostDetailViewer = ({
                                 structuredContent={selectedPost.structured_content}
                                 content={selectedPost.content}
                             />
-                        ) : presentationVersion === 'original'
-                            ? (selectedPost.original_content || '최초 내용 기록이 없습니다.')
-                            : (selectedPost.content || '내용이 없습니다.')}
+                        ) : (
+                            <WritingChangeHighlight
+                                variant={presentationVersion === 'original' ? 'before' : 'after'}
+                                enabled={Boolean(selectedPost.is_confirmed && selectedPost.original_content)}
+                                before={selectedPost.original_content}
+                                after={selectedPost.content}
+                                emptyText={presentationVersion === 'original' ? '최초 내용 기록이 없습니다.' : '내용이 없습니다.'}
+                            />
+                        )}
                     </WritingPresentationModal>
                 </motion.div>
             )}

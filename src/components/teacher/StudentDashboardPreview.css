@@ -5,7 +5,8 @@
 .student-preview__viewtabs button:hover { background: #f0f9ff; }
 .student-preview__viewtabs button.is-active { background: #0f766e; border-color: #0f766e; color: #fff; }
 .student-preview__intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.student-preview__intro h2 { margin: 0 0 4px; font-size: var(--ui-text-lg); color: #243b53; }
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.student-preview__intro .teacher-page-title { margin-bottom: 4px; }
 .student-preview__intro p { margin: 0; color: #486581; font-size: var(--ui-text-sm); line-height: 1.5; max-width: 60ch; }
 .student-preview__refresh { flex: 0 0 auto; padding: 8px 14px; border: 1px solid #bcccdc; border-radius: 9px;
     background: #fff; color: #334e68; font: inherit; font-weight: 700; cursor: pointer; }

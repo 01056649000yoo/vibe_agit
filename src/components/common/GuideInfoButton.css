@@ -43,7 +43,6 @@
 .guide-info-button__dot { fill: currentColor; stroke: none; }
 .guide-info-button:hover { background: #E0E7FF; color: #4F46E5; }
 .guide-info-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-.teacher-subtab.is-active .guide-info-button { color: #6366F1; }
 
 .guide-info-button--help {
     display: inline-flex;

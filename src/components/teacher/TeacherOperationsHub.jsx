@@ -35,7 +35,7 @@ const TeacherOperationsHub = ({
 
     if (section === 'comments') {
         return (
-            <section role="tabpanel" aria-label="학생 댓글 관리" style={cardStyle(isMobile)}>
+            <section role="tabpanel" aria-label="학생 댓글" style={cardStyle(isMobile)}>
                 <Suspense fallback={<PanelLoading>학생 댓글을 모으는 중... 🗨️</PanelLoading>}>
                     <TeacherCommentManager activeClass={activeClass} onTodoCountChange={onCommentTodoChange} />
                 </Suspense>
@@ -45,7 +45,7 @@ const TeacherOperationsHub = ({
 
     if (section === 'student-agits') {
         return (
-            <section role="tabpanel" aria-label="학생 아지트 보기" style={cardStyle(isMobile)}>
+            <section role="tabpanel" aria-label="학생 아지트" style={cardStyle(isMobile)}>
                 <Suspense fallback={<PanelLoading>학생 아지트를 준비하는 중... 🏡</PanelLoading>}>
                     <TeacherStudentAgitViewer
                         activeClass={activeClass}
@@ -69,7 +69,7 @@ const TeacherOperationsHub = ({
             </Suspense>
         </section>
     ) : (
-        <section role="tabpanel" aria-label="학급 운영 현황" style={cardStyle(isMobile)}>
+        <section role="tabpanel" aria-label="운영 현황" style={cardStyle(isMobile)}>
             <Suspense fallback={<PanelLoading>학급 운영 현황을 준비하는 중...</PanelLoading>}>
                 <ClassAnalysis classId={classId} isMobile={isMobile} onNavigate={onNavigate} />
             </Suspense>

@@ -5,7 +5,7 @@ import ExportSelectModal from '../../../../components/common/ExportSelectModal';
 import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import Modal from '../../../../components/common/Modal';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
-import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
+import TeacherPageTitle from '../../../../components/teacher/TeacherPageTitle';
 import { supabase } from '../../../../lib/supabaseClient';
 import { useDataExport } from '../../../../hooks/useDataExport';
 import { notifyTeacherWritingReviewed } from '../../../../hooks/useTeacherUnreviewedWriting';
@@ -402,12 +402,10 @@ const TeacherDiaryManager = ({ activeClass }) => {
         <section className="teacher-diary">
             <header className="teacher-diary__header">
                 <div>
-                    <span className="teacher-diary__kicker">자율 글쓰기 관리</span>
-                    <h2>📔 학생 일기</h2>
+                    <TeacherPageTitle tabId="diaries" />
                     <p>미확인 일기를 골라 한 번에 확인하고, 필요한 글만 자세히 살펴봐요.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <TeacherGuideButton tabId="diaries" variant="help" />
                     {section === 'reviews' && (
                         <Button variant="ghost" size="sm" onClick={load} disabled={loading}>새로고침</Button>
                     )}

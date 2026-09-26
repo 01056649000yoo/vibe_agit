@@ -203,103 +203,6 @@
 }
 
 /* 세부 메뉴는 이동만 담당하고, 도움말은 선택한 화면의 제목 옆에 한 번만 표시한다. */
-.teacher-subtab {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    border-radius: 11px;
-    transition: background var(--ui-motion-fast);
-}
-
-.teacher-subtab.is-active { background: var(--ui-surface); box-shadow: 0 1px 4px rgba(15, 23, 42, .12); }
-
-.teacher-subtab__button {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    border-radius: 11px;
-    background: transparent;
-    color: #64748B;
-    font-weight: 800;
-    /* 긴 라벨(예: 학생 대시보드 미리보기)은 한 줄로 밀지 않고 한국어 단어 단위로 접어
-       위아래 탭과 폭·정렬을 맞춘다. 짧은 라벨은 자리가 넉넉해 그대로 한 줄로 남는다. */
-    white-space: normal;
-    word-break: keep-all;
-    line-height: 1.45;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-}
-.teacher-subtab__button > span:first-child { min-width: 0; }
-
-.teacher-subtab.is-active .teacher-subtab__button { color: #1D4ED8; }
-.teacher-subtab__button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-
-/* 학생 독서록·일기 미확인 글 알림 NEW 뱃지 */
-.teacher-subtab__new-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1px 6px;
-    font-size: 0.72em;
-    font-weight: 900;
-    line-height: 1.2;
-    letter-spacing: 0.4px;
-    border-radius: 999px;
-    background: #EF4444;
-    color: #FFFFFF;
-    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
-    flex-shrink: 0;
-}
-
-/* 상단 글쓰기 탭의 미확인 글 NEW 알림 */
-.teacher-dashboard__nav-new {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 5px;
-    padding: 1px 5px;
-    font-size: 0.7em;
-    font-weight: 900;
-    line-height: 1.2;
-    letter-spacing: 0.4px;
-    border-radius: 999px;
-    background: #EF4444;
-    color: #FFFFFF;
-    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
-}
-
-.teacher-subtab__badge-new {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: #EF4444;
-    color: #FFFFFF;
-    font-size: var(--ui-text-xs);
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.2px;
-}
-
-.teacher-dashboard__nav-dot {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #EF4444;
-    margin-left: 2px;
-    box-shadow: 0 0 0 2px white;
-    vertical-align: middle;
-}
-
-
-
 .teacher-tab-heading {
     display: flex;
     min-height: 36px;
@@ -309,11 +212,6 @@
     gap: 12px;
 }
 
-.teacher-tab-heading h2 {
-    margin: 0;
-    color: #172033;
-    font-size: var(--ui-text-2xl);
-}
 
 
 /* 안내 창 본문 */

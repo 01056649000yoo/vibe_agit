@@ -12,7 +12,7 @@ import { exportObjectsToExcel } from '../../lib/excelExport';
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import PromptRuleButton from './PromptRuleButton';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
 import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
 import {
@@ -710,11 +710,8 @@ ${activitiesInfo}`;
                 boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
             }}>
                 <div>
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '9px', marginBottom: '4px' }}>
-                        <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
-                        </h2>
-                        <TeacherGuideButton tabId="activity" variant="help" />
+                    <div style={{ marginBottom: '4px' }}>
+                        <TeacherPageTitle tabId="activity" meta="2022 성취기준 연동" />
                     </div>
                     <p style={{ color: '#64748B', fontSize: 'var(--ui-text-md)', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
                 </div>

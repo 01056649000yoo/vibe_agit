@@ -11,7 +11,6 @@
     margin-bottom: 16px;
 }
 
-.teacher-student-agit__header > div:first-child > span,
 .teacher-student-agit__section-heading small {
     color: #a16207;
     font-size: var(--ui-text-sm);
@@ -19,18 +18,14 @@
     letter-spacing: .12em;
 }
 
-.teacher-student-agit__header h2,
 .teacher-student-agit__header p,
 .teacher-student-agit__preview-heading h3,
 .teacher-student-agit__section-heading h4 {
     margin: 0;
 }
 
-.teacher-student-agit__header h2 {
-    margin-top: 3px;
-    color: #3e2e23;
-    font-size: var(--ui-text-2xl);
-}
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.teacher-student-agit__header .teacher-page-title { margin-bottom: 3px; }
 
 .teacher-student-agit__header p {
     margin-top: 5px;

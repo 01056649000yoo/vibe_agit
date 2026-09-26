@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getTeacherTabLabel } from '../../../constants/teacherNav.js';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle.jsx';
 import Button from '../../../components/common/Button';
 import Modal from '../../../components/common/Modal';
 import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import ModalPortal from '../../../components/common/ModalPortal';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import { TEACHER_TOUR_ANCHORS, neighborSpaceAnchorId, tourAnchor } from '../../../guides/teacherTour.js';
 import MissionPromptFields from '../../writing/mission-form/MissionPromptFields';
 import MissionTypePicker from '../../../components/teacher/MissionTypePicker';
@@ -974,7 +975,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         return (
             <section className="neighbor-teacher-state neighbor-teacher-state--closed">
                 <div aria-hidden="true">🤝</div>
-                <h1>모두의 아지트(Beta)</h1>
+                <h1>{getTeacherTabLabel('neighbor-agit')}</h1>
                 <p>{errorMessage || '현재 선택한 학급에서는 아직 사용할 수 없습니다.'}</p>
             </section>
         );
@@ -985,12 +986,10 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             {/* 모임을 준비할 때만 설명을 크게, 운영 중에는 한 줄로(2026-09-25 — 위쪽 겹침 정리). */}
             <header className={`neighbor-teacher__header${isReady && workspace?.space?.my_status === 'active' ? ' is-compact' : ''}`}>
                 <div>
-                    <span>여러 반이 함께 글을 나누는 마을</span>
-                    <h1>🤝 모두의 아지트</h1>
+                    <TeacherPageTitle tabId="neighbor-agit" />
                     <p>🌳 이웃 글 마당에서 서로의 글을 읽고, 🎪 같이 쓰기 광장에서 같은 주제로 쓰고, 🏛️ 문집 도서관에서 반 문집을 나눠요.</p>
                 </div>
                 <div className="neighbor-teacher__header-actions">
-                    <TeacherGuideButton tabId="neighbor-agit" variant="help" />
                     <Button type="button" variant="outline" loading={loading} onClick={loadWorkspace}>새로고침</Button>
                 </div>
             </header>

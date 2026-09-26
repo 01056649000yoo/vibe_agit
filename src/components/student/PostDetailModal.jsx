@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
@@ -485,7 +486,7 @@ const PostDetailModal = ({
                         </div>
                     )}
                     <div style={{
-                        color: displayingOriginal ? '#7F8C8D' : '#2D3436',
+                        color: displayingOriginal && !post.is_confirmed ? '#7F8C8D' : '#2D3436',
                         marginBottom: '80px',
                         letterSpacing: '-0.02em',
                         wordBreak: 'break-word',
@@ -493,6 +494,8 @@ const PostDetailModal = ({
                     }}>
                         {displayingReport ? (
                             <ReportDocument structuredContent={post.structured_content} content={post.content} />
+                        ) : displayingOriginal && post.is_confirmed ? (
+                            <WritingChangeHighlight before={post.original_content} after={post.content} />
                         ) : displayingOriginal ? (
                             post.original_content || '기록된 처음글 내용이 없습니다.'
                         ) : post.content}

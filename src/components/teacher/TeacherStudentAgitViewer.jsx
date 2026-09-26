@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../common/Button';
 import ModalPortal from '../common/ModalPortal';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import DragonHideoutScene from '../../modules/game/dragon/DragonHideoutScene';
@@ -281,12 +281,10 @@ const TeacherStudentAgitViewer = ({
         <div className={`teacher-student-agit${isMobile ? ' is-mobile' : ''}`}>
             <header className="teacher-student-agit__header">
                 <div>
-                    <span>CLASS HIDEOUTS</span>
-                    <h2>🏡 학생 아지트 보기</h2>
+                    <TeacherPageTitle tabId="student-agits" />
                     <p>학생이 꾸민 공간과 성장·책장을 읽기 전용으로 확인합니다.</p>
                 </div>
                 <div className="teacher-student-agit__header-actions">
-                    <TeacherGuideButton tabId="student-agits" variant="help" />
                     <Button type="button" variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
                 </div>
             </header>

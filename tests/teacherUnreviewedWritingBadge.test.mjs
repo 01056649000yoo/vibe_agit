@@ -44,20 +44,13 @@ test('독서록 및 일기 관리자는 검토 처리 후 대시보드 미확인
     assert.match(diaryManager, /notifyTeacherWritingReviewed\(\)/);
 });
 
-test('교사 대시보드는 상단 글쓰기 탭과 좌측 독서록·일기 메뉴에 NEW 표기를 렌더링한다', () => {
+test('교사 대시보드는 미확인 독서록·일기 수를 처리할 일 숫자로 보여 준다', () => {
     // 훅 연결
     assert.match(dashboard, /useTeacherUnreviewedWriting\(activeClass\?\.id\)/);
 
-    // 상단 글쓰기 메뉴 NEW
-    assert.match(dashboard, /group\.id === 'writing'\s*&&\s*totalWritingUnreviewedCount > 0/);
-    assert.match(dashboard, /teacher-dashboard__nav-new/);
-
-    // 좌측 서브탭 독서록·일기 NEW
-    assert.match(dashboard, /tab\.id === 'reading-logs'\s*&&\s*readingLogsUnreviewedCount > 0/);
-    assert.match(dashboard, /tab\.id === 'diaries'\s*&&\s*diariesUnreviewedCount > 0/);
-    assert.match(dashboard, /teacher-subtab__new-badge/);
-
-    // CSS 스타일 선언
-    assert.match(dashboardCss, /\.teacher-subtab__new-badge/);
-    assert.match(dashboardCss, /\.teacher-dashboard__nav-new/);
+    // 2026-09-26: `NEW` 글자 배지를 숫자 배지 하나로 합쳤다. 상단 글쓰기 숫자는 세부 메뉴 합이다.
+    assert.match(dashboard, /'reading-logs': readingLogsUnreviewedCount \+ readingPendingBooks/);
+    assert.match(dashboard, /diaries: diariesUnreviewedCount/);
+    assert.doesNotMatch(dashboard, />NEW</);
+    assert.doesNotMatch(dashboardCss, /nav-new|new-badge/);
 });

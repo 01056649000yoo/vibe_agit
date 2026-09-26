@@ -31,19 +31,16 @@ test('선생님 대시보드는 과제 미확인 건수를 받아 2차 메뉴와
     assert.match(dashCode, /missionPendingTotal,\s*setMissionPendingTotal/, 'missionPendingTotal 상태가 없습니다.');
     assert.match(dashCode, /onPendingCountChange=\{setMissionPendingTotal\}/, 'TeacherWritingHub로 onPendingCountChange가 전달되지 않았습니다.');
 
-    // 2차 탭 뱃지 확인
-    assert.match(dashCode, /tab\.id === 'dashboard' && missionPendingTotal > 0/, '과제 탭 미확인 뱃지 조건이 누락되었습니다.');
-    assert.match(dashCode, /teacher-subtab__badge-new/, 'teacher-subtab__badge-new 클래스가 누락되었습니다.');
-
-    // 1차 탭 알림 확인
-    assert.match(dashCode, /missionPendingTotal\s*>\s*0/, '글쓰기 탭 미확인 조건이 누락되었습니다.');
-    assert.match(dashCode, /teacher-dashboard__nav-new/, 'teacher-dashboard__nav-new 클래스가 누락되었습니다.');
+    // 배지는 한 규칙(teacherNavBadges.js)으로 센다 — 과제 탭 숫자가 글쓰기 상단 숫자에 더해진다(2026-09-26).
+    assert.match(dashCode, /buildTeacherNavBadges\(\{[\s\S]*dashboard: missionPendingTotal/, '과제 탭 처리할 일 수가 배지 계산에 들어가지 않습니다.');
+    assert.match(dashCode, /<TeacherCountBadge count=\{navBadges\.groups\[group\.id\] \|\| 0\}/, '상단 메뉴 배지가 없습니다.');
+    assert.match(dashCode, /badge: navBadges\.tabs\[tab\.id\]/, '세부 메뉴 배지가 없습니다.');
 });
 
-test('대시보드 CSS는 새 알림 뱃지와 도트 스타일을 디자인 시스템 규칙에 맞게 갖춘다', async () => {
-    const css = await readFile('src/components/teacher/TeacherDashboard.css', 'utf8');
+test('처리할 일 배지는 한 모양이고 디자인 시스템 토큰만 쓴다', async () => {
+    const css = await readFile('src/components/teacher/TeacherCountBadge.css', 'utf8');
 
-    assert.match(css, /\.teacher-subtab__badge-new\s*\{/, 'teacher-subtab__badge-new 스타일이 없습니다.');
+    assert.match(css, /\.teacher-count-badge\s*\{/, 'teacher-count-badge 스타일이 없습니다.');
     assert.match(css, /font-size:\s*var\(--ui-text-xs\);/, '뱃지 글자 크기가 디자인 시스템 토큰을 쓰지 않았습니다.');
-    assert.match(css, /\.teacher-dashboard__nav-dot\s*\{/, 'teacher-dashboard__nav-dot 스타일이 없습니다.');
+    assert.doesNotMatch(css, /#[0-9a-f]{3,6}\b/i, '배지 색을 직접 적지 않습니다.');
 });

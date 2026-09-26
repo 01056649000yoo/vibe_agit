@@ -9,7 +9,7 @@ import { useDataExport } from '../../hooks/useDataExport';
 import ExportSelectModal from '../common/ExportSelectModal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import { getPdfRenderModes } from '../../modules/writing/mission-types/registry';
 import CardSizeControl from '../../modules/card-layout/CardSizeControl';
 import { getCardColumns, normalizeCardSize } from '../../modules/card-layout/cardSize';
@@ -352,11 +352,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    📂 보관함 <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
-                </h3>
+                <TeacherPageTitle tabId="archive" meta="지난 과제와 학생 글" />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
-                    <TeacherGuideButton tabId="archive" variant="help" />
                     {!isMobile && (
                         <CardSizeControl
                             value={normalizedCardSize}

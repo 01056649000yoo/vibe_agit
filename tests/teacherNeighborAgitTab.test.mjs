@@ -11,14 +11,15 @@ const [teacherNav, dashboard, manifest, entry, teacherApi, guideRegistry] = awai
     readFile('src/guides/teacherGuideRegistry.js', 'utf8')
 ]);
 
-test('모두의 아지트(Beta) 메뉴는 학급운영도구 오른쪽과 설정 왼쪽의 독립 메뉴다', () => {
-    const toolsIndex = teacherNav.indexOf("id: 'tools'");
+test('모두의 아지트(Beta) 메뉴는 우리반 아지트 바로 오른쪽의 독립 메뉴다', () => {
+    // 2026-09-26 선생님 요청: 같은 '아지트' 갈래라 학급운영도구 옆에서 우리반 아지트 옆으로 옮겼다.
+    const classAgitIndex = teacherNav.indexOf("        id: 'class-agit',");
     const neighborIndex = teacherNav.indexOf("id: 'neighbor-agit'");
-    const settingsIndex = teacherNav.indexOf("id: 'settings'");
+    const operationsIndex = teacherNav.indexOf("id: 'operations'");
 
-    assert.ok(toolsIndex > -1 && toolsIndex < neighborIndex && neighborIndex < settingsIndex);
+    assert.ok(classAgitIndex > -1 && classAgitIndex < neighborIndex && neighborIndex < operationsIndex);
     assert.match(teacherNav, /id: 'neighbor-agit'[\s\S]*label: '모두의 아지트\(Beta\)'[\s\S]*defaultTab: 'neighbor-agit'/);
-    assert.doesNotMatch(teacherNav.slice(neighborIndex, settingsIndex), /badge: 'BETA'/);
+    assert.doesNotMatch(teacherNav.slice(neighborIndex, operationsIndex), /badge: 'BETA'/);
     assert.match(dashboard, /const TeacherNeighborAgit = lazy\(getModule\('neighbor-agit'\)\.teacherEntry\)/);
     assert.match(dashboard, /visibleTab === 'neighbor-agit'[\s\S]*<TeacherNeighborAgit key=\{activeClass.id\} activeClass=\{activeClass\} isMobile=\{isMobile\}/);
 });
@@ -31,7 +32,7 @@ test('모두의 아지트는 설정 진입점을 남기지 않고 메인 메뉴�
 });
 
 test('제한 공개 교사 화면은 공간·초대·승인·학생 공개·글 검토를 전용 RPC로 운영한다', () => {
-    assert.match(entry, /TeacherGuideButton tabId="neighbor-agit"/);
+    assert.match(entry, /TeacherPageTitle tabId="neighbor-agit"/);
     assert.match(entry, /새 모임 만들기/);
     assert.match(entry, /받은 초대 코드로 들어가기/);
     assert.match(entry, /review_join/);

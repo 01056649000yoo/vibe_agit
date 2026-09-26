@@ -44,6 +44,15 @@ export const TEACHER_NAV_GROUPS = [
         tabs: CLASS_AGIT_TEACHER_TABS
     },
     {
+        // 우리반 아지트와 같은 '아지트' 갈래라 그 바로 오른쪽에 둔다(2026-09-26 선생님 요청).
+        id: 'neighbor-agit',
+        label: '모두의 아지트(Beta)',
+        icon: '🤝',
+        navSection: 'writing',
+        defaultTab: 'neighbor-agit',
+        tabs: [{ id: 'neighbor-agit', label: '모두의 아지트(Beta)' }]
+    },
+    {
         id: 'operations',
         label: '학급 운영',
         icon: '📊',
@@ -109,14 +118,6 @@ export const TEACHER_NAV_GROUPS = [
         tabs: [{ id: 'tools', label: TEACHER_TOOL_SECTION_LABEL }]
     },
     {
-        id: 'neighbor-agit',
-        label: '모두의 아지트(Beta)',
-        icon: '🤝',
-        navSection: 'extensions',
-        defaultTab: 'neighbor-agit',
-        tabs: [{ id: 'neighbor-agit', label: '모두의 아지트(Beta)' }]
-    },
-    {
         id: 'settings',
         label: '설정',
         icon: '⚙️',
@@ -127,3 +128,11 @@ export const TEACHER_NAV_GROUPS = [
         tabs: [{ id: 'settings', label: '통합 설정' }]
     }
 ];
+
+/**
+ * 메뉴 칸 이름 = 그 화면의 제목. 화면이 제목을 따로 적으면 `학생 평가` 를 눌렀는데
+ * `학생 평가 관리` 가 뜨는 식으로 어긋난다(2026-09-26 점검). 제목은 여기서만 꺼낸다.
+ */
+export const getTeacherTabLabel = (tabId) => TEACHER_NAV_GROUPS
+    .flatMap((group) => group.tabs)
+    .find((tab) => tab.id === tabId)?.label || '';

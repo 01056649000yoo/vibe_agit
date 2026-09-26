@@ -1,7 +1,7 @@
 .classroom-arrangement { color:#172033; --arrange-blue:#315fc4; --arrange-border:#dce4ef; }
 .arrange-header { display:flex; justify-content:space-between; gap:20px; align-items:flex-end; padding:22px 24px; border:1px solid var(--arrange-border); border-radius:22px; background:linear-gradient(135deg,#f8fbff,#f2f5ff); }
-.arrange-eyebrow { color:#5270a8; font-size:.74rem; font-weight:900; letter-spacing:.04em; }
-.arrange-header h2 { margin:5px 0 4px; font-size:1.55rem; }
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.arrange-header .teacher-page-title { margin-bottom:4px; }
 .arrange-header p,.arrange-panel-heading p,.arrange-transfer-card p,.arrange-sound-card p,.arrange-settings-card p { margin:0; color:#64748b; font-size:.82rem; line-height:1.55; }
 .arrange-header-actions { display:flex; align-items:flex-start; justify-content:flex-end; gap:10px; flex-shrink:0; }
 .arrange-header-actions>.guide-info-button { margin-right:0; }
@@ -249,7 +249,6 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 }
 @media (max-width:600px) {
   .arrange-header { padding:17px; }
-  .arrange-header h2 { font-size:1.3rem; }
   .arrange-tabs button { padding:9px 11px; }
   .arrange-role-form,.arrange-inline-form,.arrange-fixed-form,.arrange-transfer-card,.arrange-import-box,.arrange-sound-card { grid-template-columns:1fr; }
   .arrange-settings-heading,.arrange-settings-block-heading,.arrange-condition-title { align-items:stretch; flex-direction:column; }

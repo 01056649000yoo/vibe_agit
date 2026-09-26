@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import TeacherPageTitle from '../../../components/teacher/TeacherPageTitle';
+import { classNoticeManifest } from './manifest.js';
 import { formatSeoulDate } from '../../../utils/seoulDate';
 import NoticeComposer from '../class-board/widgets/notice-board/NoticeComposer';
 import { noticeBoardApi } from '../class-board/widgets/notice-board/noticeBoardApi';
@@ -69,12 +70,8 @@ export default function ClassNoticeTeacherEntry({ activeClass }) {
     <section className="class-notice">
       <header className="class-notice__header">
         <div>
-          <span>학급운영도구 · {activeClass.name}</span>
-          <h2>📒 알림장</h2>
+          <TeacherPageTitle title={classNoticeManifest.name} guideTabId="class-notice" />
           <p>날짜마다 알림을 남기고 지난 알림을 다시 봅니다. 우리 반 스크린에 알림장을 올리면 같은 내용이 교실 화면에 함께 나옵니다.</p>
-        </div>
-        <div className="class-notice__header-actions">
-          <TeacherGuideButton tabId="class-notice" variant="help" />
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
 
 const StudentManagerHeader = ({
@@ -147,12 +147,7 @@ const StudentManagerHeader = ({
         }}>
             {/* 이 메뉴는 세부 메뉴 목록이 없어(그룹에 탭이 하나뿐) 화면 제목 옆에 사용법 ⓘ 를 둔다 */}
             <div className="student-list-heading">
-                <h3 className="student-list-heading__title">
-                    <span aria-hidden="true">👥</span>
-                    <span>학생 명단</span>
-                    <span className="student-list-heading__count">{students.length}명</span>
-                </h3>
-                <TeacherGuideButton tabId="students" variant="help" className="student-list-heading__help" />
+                <TeacherPageTitle tabId="students" meta={`${students.length}명`} />
             </div>
             {/*
               * 도구를 셋으로 가른다(2026-09-14 지적: 눈에 잘 안 들어온다).

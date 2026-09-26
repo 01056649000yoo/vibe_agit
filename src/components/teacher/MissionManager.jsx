@@ -20,7 +20,7 @@ import useFeedbackPhrases from '../../hooks/useFeedbackPhrases';
 import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import TeacherSubmissionBoard from './TeacherSubmissionBoard';
 import CardSizeControl from '../../modules/card-layout/CardSizeControl';
 import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
@@ -305,11 +305,12 @@ const MissionManager = ({
                 borderBottom: '1px solid #F1F3F5',
                 marginBottom: '12px'
             }}>
-                <h3 style={{ margin: 0, fontSize: isMobile ? '1.05rem' : '1.15rem', color: '#2C3E50', fontWeight: '900' }}>
-                    {isDashboardMode ? '✍️ 선생님 과제' : '✍️ 글쓰기 미션 관리'}
-                </h3>
+                {isDashboardMode ? (
+                    <TeacherPageTitle tabId="dashboard" id="teacher-missions-heading" />
+                ) : (
+                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.05rem' : '1.15rem', color: '#2C3E50', fontWeight: '900' }}>✍️ 글쓰기 미션 관리</h3>
+                )}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {isDashboardMode && <TeacherGuideButton tabId="dashboard" variant="help" />}
                     {isDashboardMode && !isMobile && !isSubmissionBoardView && (
                         <CardSizeControl
                             value={missionCardSize}

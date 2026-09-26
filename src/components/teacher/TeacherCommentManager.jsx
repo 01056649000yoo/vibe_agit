@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { supabase } from '../../lib/supabaseClient';
-import TeacherGuideButton from './TeacherGuideButton';
+import TeacherPageTitle from './TeacherPageTitle';
 import './teacherComments.css';
 
 /**
@@ -185,10 +185,7 @@ const TeacherCommentManager = ({ activeClass, onTodoCountChange }) => {
         <div className="teacher-comments">
             <header className="teacher-comments__header">
                 <div className="teacher-comments__heading-copy">
-                    <div className="teacher-comments__title-row">
-                        <h2>🗨️ 학생 댓글 관리</h2>
-                        <TeacherGuideButton tabId="comments" variant="help" />
-                    </div>
+                    <TeacherPageTitle tabId="comments" />
                     <p>친구 글에 남긴 댓글을 한자리에서 보고, 자동 검사가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
                 <div className="teacher-comments__tools">

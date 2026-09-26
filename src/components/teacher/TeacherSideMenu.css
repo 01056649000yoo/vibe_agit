@@ -1,0 +1,147 @@
+/*
+ * 교사 화면 왼쪽 메뉴와 그 옆 본문 배치. 세부 메뉴·학급운영도구·설정이 함께 쓴다.
+ * 폭을 바꾸려면 여기 한 곳만 고친다 — 셋이 어긋나면 메뉴를 옮길 때 본문이 흔들린다.
+ */
+.teacher-side-layout {
+    --teacher-side-menu-width: clamp(240px, 15vw, 280px);
+    display: grid;
+    grid-template-columns: var(--teacher-side-menu-width) minmax(0, 1fr);
+    gap: clamp(20px, 1.25vw, 32px);
+    align-items: start;
+}
+
+.teacher-side-layout.is-stacked {
+    display: block;
+}
+
+.teacher-side-layout.is-stacked > .teacher-side-menu {
+    margin-bottom: var(--ui-space-4);
+}
+
+.teacher-side-menu {
+    position: sticky;
+    top: 0;
+    min-width: 0;
+    padding: var(--ui-space-2);
+    box-sizing: border-box;
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-border);
+}
+
+.teacher-side-menu.is-horizontal {
+    position: static;
+}
+
+.teacher-side-menu__heading {
+    padding: var(--ui-space-2) var(--ui-space-3) var(--ui-space-3);
+}
+
+.teacher-side-menu__heading strong {
+    display: block;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-lg);
+}
+
+.teacher-side-menu__heading p {
+    margin: var(--ui-space-1) 0 0;
+    word-break: keep-all;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: 1.5;
+}
+
+.teacher-side-menu__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.teacher-side-menu.is-horizontal .teacher-side-menu__list {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.teacher-side-menu__item {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius-md);
+    background: transparent;
+    color: var(--ui-ink-muted);
+    font: inherit;
+    font-size: var(--ui-text-md);
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--ui-motion-fast), color var(--ui-motion-fast);
+}
+
+.teacher-side-menu.is-horizontal .teacher-side-menu__item {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 9px 14px;
+    white-space: nowrap;
+}
+
+.teacher-side-menu__item:hover {
+    color: var(--ui-ink-strong);
+}
+
+.teacher-side-menu__item.is-active {
+    border-color: var(--ui-primary-border);
+    background: var(--ui-surface);
+    color: var(--ui-primary);
+    box-shadow: var(--ui-shadow-xs);
+}
+
+.teacher-side-menu__item:focus-visible {
+    outline: none;
+    box-shadow: var(--ui-focus-ring);
+}
+
+.teacher-side-menu__icon {
+    flex: 0 0 24px;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.teacher-side-menu__text {
+    flex: 1;
+    min-width: 0;
+}
+
+.teacher-side-menu__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* 긴 이름(예: 학생 대시보드 미리보기)은 한국어 단어 단위로 접는다. */
+    word-break: keep-all;
+    line-height: 1.45;
+}
+
+.teacher-side-menu__description {
+    display: block;
+    margin-top: 3px;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+    /* 설명은 자르지 않고 단어 단위로 접는다 — `AI 피드백과 평어 …` 처럼 잘리면 무엇인지 모른다. */
+    word-break: keep-all;
+    line-height: 1.4;
+}
+
+.teacher-side-menu__tag {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+}

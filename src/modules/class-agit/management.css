@@ -18,7 +18,8 @@
     font: var(--ui-text-md) / var(--ui-line-body) var(--ui-font-sans);
 }
 
-.class-agit-management :is(h1, h2, h3):not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) {
+/* 교사 화면 제목(.teacher-page-title)은 모든 메뉴가 같은 모양이라 여기서 크기·굵기를 바꾸지 않는다(2026-09-26). */
+.class-agit-management :is(h1, h2, h3):not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *, .teacher-page-title *)) {
     font-family: var(--ui-font-sans);
     color: var(--ui-ink-strong);
     font-weight: 800;
@@ -27,7 +28,7 @@
     overflow-wrap: anywhere;
 }
 .class-agit-management h1:not(:where(.class-agit-gallery *, .class-agit-public *)) { font-size: var(--ui-text-2xl); }
-.class-agit-management h2:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) { font-size: var(--ui-text-xl); }
+.class-agit-management h2:not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *, .teacher-page-title *)) { font-size: var(--ui-text-xl); }
 .class-agit-management h3:not(:where(.class-agit-gallery *, .class-agit-public *)) { font-size: var(--ui-text-lg); }
 .class-agit-management :is(p, small):not(:where(.class-agit-gallery *, .class-agit-reader *, .class-agit-book-cover *, .class-agit-public *)) {
     color: var(--ui-ink-muted);

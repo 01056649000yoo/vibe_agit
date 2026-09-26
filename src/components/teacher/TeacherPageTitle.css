@@ -1,0 +1,22 @@
+/* 교사 화면 제목 — 모든 메뉴가 같은 단계·크기·색으로 시작한다. */
+.teacher-page-title {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2);
+}
+
+.teacher-page-title h2 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-2xl);
+    font-weight: 900;
+    line-height: var(--ui-line-compact);
+}
+
+.teacher-page-title__meta {
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: 700;
+}

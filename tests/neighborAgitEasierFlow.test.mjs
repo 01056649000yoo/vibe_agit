@@ -80,7 +80,7 @@ test('머리글 줄이기가 도움말 단추 글자를 숨기지 않는다(2026
     // 머리글 안 모든 span 을 건드리면 GuideInfoButton 안의 💡·도움말 글자까지 숨겨지거나 색이 바뀐다.
     assert.doesNotMatch(css, /\.neighbor-teacher__header(\.is-compact)? span/);
     assert.match(css, /\.neighbor-teacher__header\.is-compact > div:first-child > span/);
-    assert.match(entry, /<TeacherGuideButton tabId="neighbor-agit" variant="help" \/>/);
+    assert.match(entry, /<TeacherPageTitle tabId="neighbor-agit" \/>/);
 });
 
 test('학생 입장은 두 반이 모이면 저절로 열리고, 교사가 닫은 반만 닫힌 채로 둔다(20261349)', async () => {

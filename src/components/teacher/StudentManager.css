@@ -6,36 +6,8 @@
     gap: 10px;
 }
 
-.student-list-heading__title {
-    display: flex;
-    margin: 0;
-    align-items: center;
-    gap: 6px;
-    color: #212529;
-    font-size: var(--ui-text-lg);
-    font-weight: 900;
-    line-height: 1.2;
-    white-space: nowrap;
-}
-
-.student-list-heading__count {
-    display: inline-flex;
-    min-height: 24px;
-    padding: 0 8px;
-    align-items: center;
-    border-radius: 999px;
-    background: #F1F5F9;
-    color: #64748B;
-    font-size: var(--ui-text-sm);
-    font-weight: 800;
-}
-
-.student-list-heading__help { flex: 0 0 auto; }
-
 @media (max-width: 520px) {
     .student-list-heading { gap: 7px; }
-    .student-list-heading__title { gap: 4px; font-size: var(--ui-text-lg); }
-    .student-list-heading__count { min-height: 22px; padding-inline: 6px; font-size: var(--ui-text-sm); }
 }
 
 /* 스크롤바 커스텀 스타일 */

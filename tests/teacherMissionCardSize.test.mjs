@@ -53,7 +53,7 @@ test('공통 조절기는 선생님 과제 도움말 옆에 있고 상단 메뉴
     assert.doesNotMatch(dashboard, /showsMissionCardSizeControls|MISSION_CARD_SIZE_OPTIONS\.map/);
     assert.match(dashboard, /MISSION_CARD_SIZE_STORAGE_KEY, missionCardSize/);
     assert.match(dashboard, /onMissionCardSizeChange=\{setMissionCardSize\}/);
-    assert.match(manager, /<TeacherGuideButton tabId="dashboard" variant="help" \/>[\s\S]*<CardSizeControl/);
+    assert.match(manager, /<TeacherPageTitle tabId="dashboard"[^>]*\/>[\s\S]*<CardSizeControl/);
     assert.match(manager, /value=\{missionCardSize\}[\s\S]*onChange=\{onMissionCardSizeChange\}[\s\S]*label="미션 카드"/);
     assert.match(control, /role="group"[\s\S]*CARD_SIZE_OPTIONS\.map[\s\S]*aria-pressed/);
     assert.doesNotMatch(control, /teacher|mission|archive/i);
@@ -79,7 +79,7 @@ test('선생님 과제와 보관함은 같은 크기 프리셋을 받고 모바�
 
     assert.match(archive, /getCardColumns\(normalizedCardSize\)/);
     assert.match(archive, /gridTemplateColumns: isMobile \? '1fr' : `repeat\(\$\{cardColumns\}/);
-    assert.match(archive, /<TeacherGuideButton tabId="archive" variant="help" \/>[\s\S]*<CardSizeControl/);
+    assert.match(archive, /<TeacherPageTitle tabId="archive"[^>]*\/>[\s\S]*<CardSizeControl/);
     assert.match(archive, /label="보관 카드"/);
     assert.match(dashboard, /cardSize=\{missionCardSize\}[\s\S]*onCardSizeChange=\{setMissionCardSize\}/);
 });

@@ -7,8 +7,8 @@
 
 .teacher-reading-manager { width:100%; padding:20px; box-sizing:border-box; border:1px solid #E2E8F0; border-radius:26px; background:white; box-shadow:0 8px 26px rgba(15,23,42,.04); }
 .teacher-reading-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-.teacher-reading-kicker { color:#2563EB; font-size:var(--ui-text-sm); font-weight:900; }
-.teacher-reading-header h2 { margin:4px 0; color:#1E293B; font-size:var(--ui-text-xl); }
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.teacher-reading-header .teacher-page-title { margin-bottom:4px; }
 .teacher-reading-header p { margin:0; color:#64748B; font-size:var(--ui-text-md); }
 .teacher-reading-sections { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin:14px 0 10px; padding:4px; border:1px solid #E2E8F0; border-radius:17px; background:#F1F5F9; }
 .teacher-reading-sections button { display:flex; min-height:42px; align-items:center; justify-content:center; gap:9px; padding:8px 14px; border:0; border-radius:13px; background:transparent; color:#64748B; font-size:var(--ui-text-md); font-weight:900; cursor:pointer; }

@@ -19,8 +19,8 @@
     flex-wrap: wrap;
     gap: 20px;
 }
-.teacher-diary__kicker { color: #2563EB; font-size: .78rem; font-weight: 900; }
-.teacher-diary__header h2 { margin: 4px 0; color: #1E293B; font-size: 1.45rem; }
+/* 제목은 공통 부품(TeacherPageTitle)이 그린다 — 여기서는 아래 설명과의 간격만 둔다. */
+.teacher-diary__header .teacher-page-title { margin-bottom: 4px; }
 .teacher-diary__header p { margin: 0; color: #64748B; font-size: .88rem; }
 /* 상단 업무 탭. `확인`이 매일 쓰는 것이라 기본이고, 큰 설정 폼은 열 때만 마운트한다. */
 .teacher-diary__sections {

@@ -16,22 +16,22 @@ test('교사 상단 메뉴는 글쓰기 → 학급 관리 → 확장 기능 → 
             'writing',
             'writing-lab',
             'class-agit',
+            'neighbor-agit',
             'operations',
             'students',
             'footprints',
             'records',
             'playground',
             'tools',
-            'neighbor-agit',
             'settings'
         ]
     );
     assert.deepEqual(
         TEACHER_NAV_GROUPS.map((group) => group.navSection),
         [
-            'writing', 'writing', 'writing',
+            'writing', 'writing', 'writing', 'writing',
             'class', 'class', 'class', 'class',
-            'extensions', 'extensions', 'extensions',
+            'extensions', 'extensions',
             'settings'
         ]
     );
