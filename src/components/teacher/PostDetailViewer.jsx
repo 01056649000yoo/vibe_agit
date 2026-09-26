@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -26,7 +27,13 @@ const PostDetailViewer = ({
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
-    const [showOriginal, setShowOriginal] = useState(false);
+    // 이 화면의 두 번째 칸은 처음·최종을 나란히 놓는다(승인된 글이면 형광펜). 교사 화면이라 자동으로 열지 않는다.
+    const version = useWritingVersion({
+        postId: selectedPost?.id, before: selectedPost?.original_content, after: selectedPost?.content,
+        approved: Boolean(selectedPost?.is_confirmed)
+    });
+    const showOriginal = version.view !== WRITING_VIEW.FINAL;
+    const setVersionView = version.setView;
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -84,13 +91,13 @@ const PostDetailViewer = ({
             setInitialEval(selectedPost.initial_eval);
             setFinalEval(selectedPost.final_eval);
             setEvalComment(selectedPost.eval_comment || '');
-            setShowOriginal(false);
+            setVersionView(WRITING_VIEW.FINAL);
             setIsTeacherEditMode(false);
             setEditedTitle(selectedPost.title || '');
             setEditedContent(selectedPost.content || '');
             setPresentationVersion(null);
         }
-    }, [selectedPost]);
+    }, [selectedPost, setVersionView]);
 
     const handleSaveTeacherEdit = async () => {
         if (!selectedPost || !handleTeacherEditPost || isSavingTeacherEdit) return;
@@ -391,7 +398,7 @@ const PostDetailViewer = ({
                                                 setEditedTitle(selectedPost.title || '');
                                                 setEditedContent(selectedPost.content || '');
                                             } else {
-                                                setShowOriginal(false);
+                                                setVersionView(WRITING_VIEW.FINAL);
                                                 setIsTeacherEditMode(true);
                                             }
                                         }}
@@ -438,24 +445,12 @@ const PostDetailViewer = ({
                                         margin: 0, lineHeight: '1.4',
                                         borderLeft: '5px solid #FBC02D', paddingLeft: '16px'
                                     }}>
-                                        {showOriginal ? (selectedPost.original_title || selectedPost.title) : (selectedPost.title || '제목 없음')}
+                                        {selectedPost.title || '제목 없음'}
                                     </h2>
-                                    {!isTeacherEditMode && selectedPost.original_content && (
-                                        <button
-                                            onClick={() => setShowOriginal(!showOriginal)}
-                                            style={{
-                                                fontSize: 'var(--ui-text-sm)', padding: '8px 16px', borderRadius: '12px',
-                                                border: showOriginal ? '2px solid #3498DB' : '1px solid #DEE2E6',
-                                                background: showOriginal ? '#EBF5FB' : 'white',
-                                                color: showOriginal ? '#3498DB' : '#7F8C8D',
-                                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
-                                                display: 'flex', alignItems: 'center', gap: '6px'
-                                            }}
-                                        >
-                                            {showOriginal ? '✨ 최신글만 보기' : '📜 최초글과 비교하기'}
-                                        </button>
-                                    )}
                                 </div>
+                                {!isTeacherEditMode && (
+                                    <WritingVersionSwitch {...version} onChange={version.setView} layout="sideBySide" />
+                                )}
 
 
                                 {!postDetailLoading && outlineReference === null && selectedPost.mission_id && (

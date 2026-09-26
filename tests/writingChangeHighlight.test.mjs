@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { diffWritingText, segmentsForView, tokenizeWords, WRITING_DIFF_MAX_CELLS } from '../src/modules/writing/review/writingDiff.js';
+import { diffWritingText, getWritingCompareInfo, segmentsForView, tokenizeWords, WRITING_DIFF_MAX_CELLS } from '../src/modules/writing/review/writingDiff.js';
 
 /*
  * 승인된 글의 처음 글 → 고친 글 비교(2026-09-26). 바뀐 곳에 형광펜, 지운 곳에 가운데 줄.
@@ -61,27 +61,56 @@ test('아주 긴 글은 멈추지 않고 줄 단위로 물러서거나 칠하지
     assert.equal(diffWritingText(huge, `${huge}끝`).changeCount, 1);
 });
 
-const TOGGLE_VIEWS = [
-    ['src/components/student/MyShelfPostDetail.jsx', /showOriginal && post\.is_confirmed \? \(\s*(\/\/[^\n]*\n\s*)?<WritingChangeHighlight before=\{post\.original_content\} after=\{post\.content\} \/>/],
-    ['src/components/teacher/TeacherStudentAgitPostDetail.jsx', /showOriginal && post\.is_confirmed \? \(\s*<WritingChangeHighlight before=\{post\.original_content\} after=\{post\.content\} \/>/],
-    ['src/components/student/PostDetailModal.jsx', /displayingOriginal && post\.is_confirmed \? \(\s*<WritingChangeHighlight before=\{post\.original_content\} after=\{post\.content\} \/>/],
-    ['src/components/student/StudentWriting.jsx', /isConfirmed \? \(\s*(\/\/[^\n]*\n\s*)?<WritingChangeHighlight before=\{originalContent\} after=\{content\}/]
-];
-const SIDE_BY_SIDE_VIEWS = [
-    ['src/components/teacher/PostDetailViewer.jsx', 'selectedPost'],
-    ['src/components/teacher/SubmissionStatusModal.jsx', 'post']
+/*
+ * 비교 보기 선택(2026-09-26): 회색 `📜 처음글과 비교하기` 단추 대신 형광펜색 띠(`처음 글에서 N군데 고쳤어요`)와
+ * `최종 글 · 🖍️ 바뀐 곳 · 처음 글` 세 칸. 다섯 화면이 같은 부품을 쓰고, 학생 본인 글 두 곳만 처음 열 때 바뀐 곳으로 연다.
+ */
+const SWITCH_VIEWS = [
+    ['src/components/student/MyShelfPostDetail.jsx', 'post?.is_confirmed', true],
+    ['src/components/student/StudentWriting.jsx', 'isConfirmed', true],
+    ['src/components/student/PostDetailModal.jsx', 'post?.is_confirmed', false],
+    ['src/components/teacher/TeacherStudentAgitPostDetail.jsx', 'post?.is_confirmed', false],
+    ['src/components/teacher/PostDetailViewer.jsx', 'selectedPost?.is_confirmed', false]
 ];
 
-test('처음글 비교 화면 여섯 곳이 모두 승인된 글에만 형광펜을 쓴다', async () => {
-    for (const [file, pattern] of TOGGLE_VIEWS) {
+test('비교 화면 다섯 곳이 같은 보기 선택을 쓰고, 형광펜은 승인된 글에만', async () => {
+    for (const [file, approvedExpr, autoOpen] of SWITCH_VIEWS) {
         const source = await readFile(file, 'utf8');
-        assert.match(source, pattern, `${file} 이 승인된 글의 형광펜 비교를 쓰지 않습니다.`);
+        assert.match(source, /<WritingVersionSwitch \{\.\.\.version\} onChange=\{version\.setView\}/, `${file} 이 보기 선택을 쓰지 않습니다.`);
+        const hook = source.slice(source.indexOf('useWritingVersion({'), source.indexOf('});', source.indexOf('useWritingVersion({')));
+        assert.ok(hook.includes(`approved: Boolean(${approvedExpr})`), `${file} 이 승인 여부로 형광펜을 가르지 않습니다.`);
+        assert.equal(hook.includes('autoOpenChanges: true'), autoOpen,
+            autoOpen ? `${file} 은 학생 본인 글이라 처음 열 때 바뀐 곳으로 열어야 합니다.` : `${file} 은 자동으로 바뀐 곳을 열지 않습니다.`);
     }
-    for (const [file, name] of SIDE_BY_SIDE_VIEWS) {
+    const viewer = await readFile('src/components/teacher/PostDetailViewer.jsx', 'utf8');
+    assert.match(viewer, /layout="sideBySide"/, '글 자세히 보기는 처음·최종을 나란히 놓는 두 칸이다.');
+});
+
+test('옛 비교 단추 이름이 화면에 남지 않는다', async () => {
+    const files = [...SWITCH_VIEWS.map(([file]) => file), 'src/constants/teacherGuides.js', 'src/components/student/studentGuide.js'];
+    for (const file of files) {
+        const source = await readFile(file, 'utf8');
+        assert.doesNotMatch(source, /최초글과 비교하기|처음글과 비교하기|처음 글과 비교하기|최신글만 보기|마지막글 보기|마지막 글\(수정본\) 보기/, `${file} 에 옛 단추 이름이 남았습니다.`);
+    }
+});
+
+test('보기 선택 규칙: 같은 글이면 그리지 않고, 형광펜 칸은 승인된 글에 바뀐 곳이 있을 때만', () => {
+    assert.equal(getWritingCompareInfo({ before: '같다', after: '같다', approved: true }).hasOriginal, false);
+    assert.equal(getWritingCompareInfo({ before: '', after: '글', approved: true }).hasOriginal, false);
+    // 제목만 바뀐 글은 처음 글을 볼 수는 있지만 본문 형광펜 칸은 열지 않는다.
+    const titleOnly = getWritingCompareInfo({ before: '본문', after: '본문', beforeTitle: '옛 제목', afterTitle: '새 제목', approved: true });
+    assert.deepEqual([titleOnly.hasOriginal, titleOnly.canShowChanges], [true, false]);
+    const draft = getWritingCompareInfo({ before: '처음 글', after: '고친 글', approved: false });
+    assert.deepEqual([draft.hasOriginal, draft.canShowChanges, draft.changeCount], [true, false, 0]);
+    const approved = getWritingCompareInfo({ before: '처음 글', after: '고친 글', approved: true });
+    assert.deepEqual([approved.canShowChanges, approved.changeCount], [true, 1]);
+});
+
+test('제출 현황 창의 나란히 보기와 크게 보기도 승인된 글에만 칠한다', async () => {
+    for (const [file, name] of [['src/components/teacher/PostDetailViewer.jsx', 'selectedPost'], ['src/components/teacher/SubmissionStatusModal.jsx', 'post']]) {
         const source = await readFile(file, 'utf8');
         assert.match(source, new RegExp(`variant="before"\\s+enabled=\\{Boolean\\(${name}\\.is_confirmed\\)\\}`), `${file} 왼쪽(처음 글)`);
         assert.match(source, new RegExp(`variant="after"\\s+enabled=\\{Boolean\\(${name}\\.is_confirmed\\)\\}`), `${file} 오른쪽(최종 글)`);
-        // 크게 보기(전체 화면)도 같은 규칙.
         assert.match(source, /variant=\{presentationVersion === 'original' \? 'before' : 'after'\}\s+enabled=\{Boolean\([^}]*is_confirmed/, `${file} 크게 보기`);
     }
 });

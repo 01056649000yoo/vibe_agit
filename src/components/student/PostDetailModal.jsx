@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
@@ -184,7 +185,6 @@ const PostDetailModal = ({
     const [submittingComment, setSubmittingComment] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [isTeacher, setIsTeacher] = useState(false);
-    const [showOriginal, setShowOriginal] = useState(false);
     const [originalAllowed, setOriginalAllowed] = useState(Boolean(post?.show_original));
     const [hoveredType, setHoveredType] = useState(null);
     const selfType = getSelfWritingType(post);
@@ -193,8 +193,14 @@ const PostDetailModal = ({
     const bookInfo = post?.structured_content || {};
     const bookCoverUrl = normalizeBookCoverUrl(bookInfo.thumbnailUrl);
     const canShowOriginal = originalAllowed && Boolean(post?.original_content);
-    const displayingOriginal = canShowOriginal && showOriginal;
-    const displayingReport = !displayingOriginal && isReportStructuredContent(post?.structured_content);
+    // 친구 글이라 자동으로 `바뀐 곳` 을 열지 않는다. 처음 글은 글쓴이가 공개를 허락했을 때만.
+    const version = useWritingVersion({
+        postId: post?.id, before: canShowOriginal ? post?.original_content : null, after: post?.content,
+        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed)
+    });
+    const displayingOriginal = canShowOriginal && version.view === WRITING_VIEW.ORIGINAL;
+    const displayingChanges = canShowOriginal && version.view === WRITING_VIEW.CHANGES;
+    const displayingReport = version.view === WRITING_VIEW.FINAL && isReportStructuredContent(post?.structured_content);
 
     const {
         reactions,
@@ -252,8 +258,8 @@ const PostDetailModal = ({
             }
 
             const nextOriginalAllowed = Boolean(data.show_original);
+            // 공개를 거두면 처음 글이 사라져 보기 선택이 저절로 최종 글로 돌아간다(useWritingVersion).
             setOriginalAllowed(nextOriginalAllowed);
-            if (!nextOriginalAllowed) setShowOriginal(false);
         };
 
         void verifyPublicAccess();
@@ -451,23 +457,7 @@ const PostDetailModal = ({
                             )}
                         </div>
                     </div>
-                    {canShowOriginal && (
-                        <button
-                            onClick={() => setShowOriginal(!showOriginal)}
-                            style={{
-                                background: displayingOriginal ? '#E3F2FD' : '#F8F9FA',
-                                color: displayingOriginal ? '#1976D2' : '#636E72',
-                                border: 'none', padding: '10px 16px', borderRadius: '14px',
-                                fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                transition: 'all 0.2s',
-                                flexShrink: 0
-                            }}
-                        >
-                            {displayingOriginal ? '✨ 마지막글 보기' : '📜 처음글과 비교하기'}
-                        </button>
-                    )}
-                    {!canShowOriginal && <div style={{ width: '44px' }} />}
+                    <div style={{ width: '44px' }} />
                 </header>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '28px 20px 80px 20px' : '48px 60px 100px 60px', scrollbarWidth: 'thin' }}>
@@ -485,8 +475,9 @@ const PostDetailModal = ({
                             </div>
                         </div>
                     )}
+                    <WritingVersionSwitch {...version} onChange={version.setView} />
                     <div style={{
-                        color: displayingOriginal && !post.is_confirmed ? '#7F8C8D' : '#2D3436',
+                        color: displayingOriginal ? '#7F8C8D' : '#2D3436',
                         marginBottom: '80px',
                         letterSpacing: '-0.02em',
                         wordBreak: 'break-word',
@@ -494,8 +485,8 @@ const PostDetailModal = ({
                     }}>
                         {displayingReport ? (
                             <ReportDocument structuredContent={post.structured_content} content={post.content} />
-                        ) : displayingOriginal && post.is_confirmed ? (
-                            <WritingChangeHighlight before={post.original_content} after={post.content} />
+                        ) : displayingChanges ? (
+                            <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
                         ) : displayingOriginal ? (
                             post.original_content || '기록된 처음글 내용이 없습니다.'
                         ) : post.content}

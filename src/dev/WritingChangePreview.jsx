@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import WritingChangeHighlight from '../modules/writing/review/WritingChangeHighlight';
+import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../modules/writing/review/WritingVersionSwitch';
 
 /*
  * 승인된 글의 처음 글 → 고친 글 형광펜 미리보기 (2026-09-26).
@@ -26,6 +27,7 @@ export default function WritingChangePreview() {
     const [sampleId, setSampleId] = useState('short');
     const [approved, setApproved] = useState(true);
     const sample = Reflect.get(SAMPLES, sampleId) || SAMPLES.short;
+    const version = useWritingVersion({ postId: `preview-${sampleId}`, before: sample.before, after: sample.after, approved });
     return (
         <div style={{ padding: 16, background: 'var(--ui-page)', display: 'grid', gap: 16 }}>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -35,11 +37,12 @@ export default function WritingChangePreview() {
                 <label><input type="checkbox" checked={approved} onChange={(event) => setApproved(event.target.checked)} /> 승인된 글</label>
             </div>
             <section>
-                <h3>전환형(내 서재·친구 글·학생 아지트·글쓰기 화면) — 처음글과 비교하기</h3>
+                <h3>전환형(내 서재·친구 글·학생 아지트·글쓰기 화면)</h3>
+                <WritingVersionSwitch {...version} onChange={version.setView} />
                 <div style={box}>
-                    {approved
-                        ? <WritingChangeHighlight before={sample.before} after={sample.after} />
-                        : sample.before}
+                    {version.view === WRITING_VIEW.CHANGES
+                        ? <WritingChangeHighlight before={sample.before} after={sample.after} showLegend={false} />
+                        : version.view === WRITING_VIEW.ORIGINAL ? sample.before : sample.after}
                 </div>
             </section>
             <section>

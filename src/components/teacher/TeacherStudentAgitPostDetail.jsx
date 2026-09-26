@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import ModalCloseButton from '../common/ModalCloseButton';
 import ModalPortal from '../common/ModalPortal';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
@@ -24,18 +25,20 @@ const TeacherStudentAgitPostDetail = ({
     onClose,
     onRetry
 }) => {
-    const [showOriginal, setShowOriginal] = useState(false);
+    const version = useWritingVersion({
+        postId: post?.id, before: post?.original_content, after: post?.content,
+        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed)
+    });
+    const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
+    const showChanges = version.view === WRITING_VIEW.CHANGES;
     const source = post || summary;
     const selfType = getSelfWritingType(source);
     const readingLog = selfType?.id === 'reading_log';
     const book = post?.structured_content || {};
     const bookCoverUrl = normalizeBookCoverUrl(book.thumbnailUrl);
-    const canCompare = Boolean(post?.original_content) && (
-        post.original_title !== post.title || post.original_content !== post.content
-    );
     const title = showOriginal ? (post?.original_title || post?.title) : post?.title;
     const content = showOriginal ? post?.original_content : post?.content;
-    const displayingReport = !showOriginal && isReportStructuredContent(post?.structured_content);
+    const displayingReport = version.view === WRITING_VIEW.FINAL && isReportStructuredContent(post?.structured_content);
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -125,21 +128,13 @@ const TeacherStudentAgitPostDetail = ({
                                     </section>
                                 )}
 
-                                {canCompare && (
-                                    <button
-                                        type="button"
-                                        className="teacher-agit-post-detail__compare"
-                                        onClick={() => setShowOriginal((value) => !value)}
-                                    >
-                                        {showOriginal ? '✨ 마지막글 보기' : '📜 처음글과 비교하기'}
-                                    </button>
-                                )}
+                                <WritingVersionSwitch {...version} onChange={version.setView} />
 
                                 <div className={`teacher-agit-post-detail__content${displayingReport ? ' is-report' : ''}`}>
                                     {displayingReport ? (
                                         <ReportDocument structuredContent={post.structured_content} content={post.content} />
-                                    ) : showOriginal && post.is_confirmed ? (
-                                        <WritingChangeHighlight before={post.original_content} after={post.content} />
+                                    ) : showChanges ? (
+                                        <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
                                     ) : content || '내용이 없습니다.'}
                                 </div>
                             </article>

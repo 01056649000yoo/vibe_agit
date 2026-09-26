@@ -147,3 +147,14 @@ export const segmentsForView = (segments, variant = 'merged') => {
         return bridges ? { type: previous.type, text: segment.text, bridged: true } : segment;
     });
 };
+
+/**
+ * 처음 글이 있는지(최종 글과 다른지), 승인된 글에서 바뀐 자리가 몇 곳인지 — 보기 선택(`WritingVersionSwitch`)의 규칙.
+ * 처음 글이 최종 글과 같으면 선택을 그리지 않는다(눌러도 같은 글이 나오던 옛 단추의 문제).
+ * 바뀐 곳(형광펜)은 승인된 글에서, 제목이 아니라 본문이 바뀐 자리가 있을 때만 연다.
+ */
+export const getWritingCompareInfo = ({ before, after, beforeTitle, afterTitle, approved }) => {
+    const hasOriginal = Boolean(before) && (before !== after || (beforeTitle != null && beforeTitle !== afterTitle));
+    const changeCount = approved && hasOriginal ? diffWritingText(before, after).changeCount : 0;
+    return { hasOriginal, changeCount, canShowChanges: changeCount > 0 };
+};

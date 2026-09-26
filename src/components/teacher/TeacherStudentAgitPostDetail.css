@@ -74,8 +74,7 @@
     color: #b42318;
 }
 
-.teacher-agit-post-detail__state button,
-.teacher-agit-post-detail__compare {
+.teacher-agit-post-detail__state button {
     border: 1px solid #e4d3bd;
     border-radius: 11px;
     padding: 9px 13px;
@@ -198,10 +197,6 @@
     margin: 4px 0 0;
     color: #78877d;
     font-size: var(--ui-text-sm);
-}
-
-.teacher-agit-post-detail__compare {
-    margin-top: 20px;
 }
 
 .teacher-agit-post-detail__content {

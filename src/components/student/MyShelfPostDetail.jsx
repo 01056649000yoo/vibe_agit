@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import { motion } from 'framer-motion';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
@@ -18,18 +19,22 @@ const formatDate = (value) => {
 const MyShelfPostDetail = ({
     summary, post, loading, errorMessage, onClose, onRetry, returnsToHome = false
 }) => {
-    const [showOriginal, setShowOriginal] = useState(false);
+    // 내 글이라 승인받은 뒤 처음 열 때 한 번은 `바뀐 곳` 으로 연다(선생님이 승인했어요 → 이렇게 좋아졌어요).
+    const version = useWritingVersion({
+        postId: post?.id, before: post?.original_content, after: post?.content,
+        beforeTitle: post?.original_title, afterTitle: post?.title,
+        approved: Boolean(post?.is_confirmed), autoOpenChanges: true
+    });
+    const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
+    const showChanges = version.view === WRITING_VIEW.CHANGES;
 
     const selfType = getSelfWritingType(post);
     const readingLog = selfType?.id === 'reading_log';
     const book = post?.structured_content || {};
     const bookCoverUrl = normalizeBookCoverUrl(book.thumbnailUrl);
-    const canCompare = Boolean(post?.original_content) && (
-        post.original_title !== post.title || post.original_content !== post.content
-    );
     const title = showOriginal ? (post?.original_title || post?.title) : post?.title;
     const content = showOriginal ? post?.original_content : post?.content;
-    const displayingReport = !showOriginal && isReportStructuredContent(post?.structured_content);
+    const displayingReport = version.view === WRITING_VIEW.FINAL && isReportStructuredContent(post?.structured_content);
     const typeName = selfType ? selfType.label : '선생님 과제';
 
     return (
@@ -114,21 +119,14 @@ const MyShelfPostDetail = ({
                             </section>
                         )}
 
-                        {canCompare && (
-                            <button type="button" onClick={() => setShowOriginal((value) => !value)} style={{
-                                marginTop: '22px', border: '1px solid #FFE0B2', borderRadius: '12px', padding: '9px 13px',
-                                background: showOriginal ? '#E3F2FD' : '#FFF8E1', color: showOriginal ? '#1565C0' : '#E65100', cursor: 'pointer', fontWeight: 900
-                            }}>
-                                {showOriginal ? '✨ 마지막글 보기' : '📜 처음글과 비교하기'}
-                            </button>
-                        )}
+                        <WritingVersionSwitch {...version} onChange={version.setView} />
 
-                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal && !post.is_confirmed ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {displayingReport ? (
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
-                            ) : showOriginal && post.is_confirmed ? (
-                                // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다.
-                                <WritingChangeHighlight before={post.original_content} after={post.content} />
+                            ) : showChanges ? (
+                                // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).
+                                <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
                             ) : content || '아직 내용이 없어요.'}
                         </div>
 
