@@ -30,14 +30,19 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         id: 'first-writing-class',
         icon: '✍️',
         title: '첫 글쓰기 수업 운영하기',
-        summary: '과제를 만들고 학생 제출을 확인한 뒤 다시 쓰기·승인·평가까지 이어 갑니다.',
+        summary: '과제를 만들고 학생 제출을 확인한 뒤 다시 쓰기·승인·평가까지 이어 갑니다. 글쓰기 연구소는 마지막에 골라 해 봅니다.',
         estimatedTime: '수업 전 10분',
+        /*
+         * 과제 만들기가 맨 앞이다(2026-09-27). 전에는 베타인 글쓰기 연구소가 먼저라 8명이 거기서 멈췄고,
+         * 학생 등록은 늘었는데 첫 학생 글은 그대로였다(사용자 분석의 '동행 모드와 첫 주' 항목).
+         * 옛 자리(연구소)에 서 있던 사람은 teacherTour.js 의 TOUR_STEP_MOVES 가 과제 만들기로 옮긴다.
+         */
         steps: [
-            step('writing-lab', '글쓰기 전에 생각 모으기', '연구소에서 개요·질문을 함께 만들고 그 결과를 과제로 이어 줍니다.', 'writing-lab'),
             step('create-mission', '과제 만들기', '글 종류와 조건을 정하고 학생 화면을 확인한 뒤 과제를 공개합니다.', 'dashboard', 'create'),
             step('review-submissions', '제출 확인과 피드백', '학생별 제출 상태를 보고 글을 읽은 뒤 확인 또는 다시 쓰기를 결정합니다.', 'dashboard', 'review'),
             step('approve-and-evaluate', '승인과 평가로 마무리', '완성 글을 승인하고 필요하면 평가와 리포트로 이어 갑니다.', 'dashboard', 'complete'),
-            step('set-ai-standards', 'AI 피드백 기준 정하기', 'AI가 학생에게 제안할 말투와 평가 문장의 기준을 수업에 맞게 정합니다.', 'settings:ai-prompts')
+            step('set-ai-standards', 'AI 피드백 기준 정하기', 'AI가 학생에게 제안할 말투와 평가 문장의 기준을 수업에 맞게 정합니다.', 'settings:ai-prompts'),
+            step('writing-lab', '(선택) 글쓰기 전에 생각 모으기', '연구소에서 개요·질문을 함께 만들고 그 결과를 과제로 이어 줍니다. 건너뛰어도 흐름이 끝납니다.', 'writing-lab')
         ]
     },
     {

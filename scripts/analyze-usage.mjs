@@ -202,6 +202,79 @@ sections.push(['동행 모드', () => {
     ];
 }]);
 
+/*
+ * 동행 모드가 첫 주를 바꾸나 (2026-09-27).
+ * 계정 나이를 가른다 — 오래된 계정일수록 학생이 많은 게 당연해서(2026-09-14 에 뒤집힌 결론이 나왔다), 모두
+ * **가입 뒤 7일 안**에 한 일만 센다. 7일이 다 지난 사람만 넣는다.
+ *   ① 동행 모드가 생기기 전(8/31~9/12) 가입과 생긴 뒤(9/13~) 가입을 견준다 — 스스로 고른 사람만 모이는 치우침을 덜어 준다.
+ *   ② 생긴 뒤 가입 안에서 동행 모드를 어디까지 했는지로 가른다 — 열심인 사람이 끝까지 하기도 하므로 ①과 함께 읽는다.
+ * 활용 안내서를 읽기만 한 것은 기록이 없어 셀 수 없다(동행 모드만 발자국이 남는다).
+ */
+const TOUR_LAUNCH = '2026-09-13';
+const FIRST_WEEK_SQL = `
+    WITH cohort AS (
+        SELECT p.id, p.created_at,
+               CASE
+                   WHEN p.created_at < DATE '${TOUR_LAUNCH}' THEN '0 동행 모드 전 가입(8/31~9/12)'
+                   WHEN COALESCE((p.teacher_tour_state->'tours'->'getting-started'->>'everFinished')::boolean, false) THEN '1 첫 흐름을 끝냄'
+                   WHEN EXISTS (SELECT 1 FROM jsonb_each(COALESCE(p.teacher_tour_state->'tours','{}'::jsonb)) e
+                                WHERE e.value->>'status' <> 'idle' OR jsonb_array_length(COALESCE(e.value->'completed','[]'))>0) THEN '2 시작만 함'
+                   WHEN p.teacher_tour_state ? 'welcomeSeenAt' THEN '3 환영 창만 봄'
+                   ELSE '4 만나지 않음'
+               END AS grp
+        FROM public.profiles p
+        WHERE p.role = 'TEACHER'
+          AND p.created_at >= DATE '2026-08-31'
+          AND p.created_at < now() - INTERVAL '7 days'
+    ), first_week AS (
+        SELECT t.grp,
+               EXISTS (SELECT 1 FROM public.classes c WHERE c.teacher_id = t.id AND c.created_at < t.created_at + INTERVAL '7 days') has_class,
+               (SELECT count(*) FROM public.students s JOIN public.classes c ON c.id = s.class_id
+                 WHERE c.teacher_id = t.id AND s.created_at < t.created_at + INTERVAL '7 days') kids,
+               EXISTS (SELECT 1 FROM public.student_posts sp JOIN public.classes c ON c.id = sp.class_id
+                        WHERE c.teacher_id = t.id AND sp.created_at < t.created_at + INTERVAL '7 days') has_post
+        FROM cohort t
+    )
+    SELECT grp, count(*), count(*) FILTER (WHERE has_class), count(*) FILTER (WHERE kids > 0),
+           count(*) FILTER (WHERE kids >= 10), count(*) FILTER (WHERE has_post)
+    FROM first_week GROUP BY grp ORDER BY grp`;
+
+sections.push(['동행 모드와 첫 주 (가입 뒤 7일 안)', () => {
+    const table = rows(FIRST_WEEK_SQL);
+    const lines = table.map(([grp, total, withClass, withKids, withTen, withPost]) => {
+        const all = n(total);
+        const small = all < 30 ? ' · 표본 작음' : '';
+        return `- ${grp.slice(2)} **${all}명**${small}: 학급 ${pct(n(withClass), all)} · 학생 등록 **${pct(n(withKids), all)}** · 학생 10명 이상 ${pct(n(withTen), all)} · 학생 글 ${pct(n(withPost), all)}`;
+    });
+    const after = table.filter(([grp]) => !grp.startsWith('0'));
+    const sum = (index) => after.reduce((total, row) => total + n(row.at(index)), 0);
+    const afterTotal = sum(1);
+    if (afterTotal) {
+        lines.push(`- 동행 모드 뒤 가입 전체 **${afterTotal}명**: 학급 ${pct(sum(2), afterTotal)} · 학생 등록 **${pct(sum(3), afterTotal)}** · 학생 10명 이상 ${pct(sum(4), afterTotal)} · 학생 글 ${pct(sum(5), afterTotal)}`);
+    }
+    // 첫 흐름(getting-started)은 학급·학생·글쓰기 설정에서 끝나고 첫 과제는 두 번째 흐름에 있다 — 이어 갔나.
+    const [firstDone, secondStarted, secondDone] = one(`
+        SELECT count(*) FILTER (WHERE COALESCE((teacher_tour_state->'tours'->'getting-started'->>'everFinished')::boolean,false)),
+               count(*) FILTER (WHERE COALESCE((teacher_tour_state->'tours'->'getting-started'->>'everFinished')::boolean,false)
+                                  AND (teacher_tour_state->'tours'->'first-writing-class'->>'status' <> 'idle'
+                                       OR jsonb_array_length(COALESCE(teacher_tour_state->'tours'->'first-writing-class'->'completed','[]'))>0
+                                       OR COALESCE((teacher_tour_state->'tours'->'first-writing-class'->>'everFinished')::boolean,false))),
+               count(*) FILTER (WHERE COALESCE((teacher_tour_state->'tours'->'first-writing-class'->>'everFinished')::boolean,false))
+        FROM public.profiles WHERE role='TEACHER' AND teacher_tour_state <> '{}'::jsonb`);
+    lines.push(`- 첫 흐름을 끝낸 **${n(firstDone)}명** 중 두 번째 흐름(첫 과제)을 시작 **${n(secondStarted)}명**(${pct(n(secondStarted), n(firstDone))}) · 끝냄 ${n(secondDone)}명`);
+    const secondStuck = rows(`
+        SELECT COALESCE(value->>'stepId','-'), count(*) FROM public.profiles p, jsonb_each(p.teacher_tour_state->'tours')
+        WHERE key='first-writing-class' AND NOT COALESCE((value->>'everFinished')::boolean,false)
+          AND (value->>'status' <> 'idle' OR jsonb_array_length(COALESCE(value->'completed','[]'))>0)
+        GROUP BY 1 ORDER BY count(*) DESC LIMIT 5`);
+    if (secondStuck.length) {
+        lines.push('- 두 번째 흐름에서 멈춘 자리:', ...secondStuck.map(([step, count]) => `    - \`${step}\` ${count}명`));
+    }
+    lines.push('- 읽는 법: 전·후 비교(맨 위와 맨 아래 줄)가 효과에 가깝고, 그룹 사이 차이는 열심인 사람이 끝까지 하는 치우침이 섞인다.');
+    lines.push('- 주의: 9/14 에 학생 명단 붙여넣기도 들어가 전·후 차이에 함께 섞인다(두 변화를 날짜로 가를 수 없다).');
+    return lines;
+}]);
+
 sections.push([`AI 를 무엇에 쓰나 (최근 ${DAYS}일)`, () => rows(`
         SELECT scope, count(*), count(DISTINCT actor_id) FROM public.ai_request_events
         WHERE created_at > now() - INTERVAL '${DAYS} days' GROUP BY 1 ORDER BY count(*) DESC`)

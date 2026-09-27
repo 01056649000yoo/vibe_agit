@@ -241,6 +241,18 @@ export const getTeacherTourSteps = (tourId) => {
 
 export const TEACHER_TOUR_STATUSES = Object.freeze(['idle', 'running', 'done', 'skipped']);
 
+/*
+ * 단계 순서를 바꾼 뒤 **옛 자리에 서 있는 사람을 옮긴다.**
+ *
+ * 동행 모드는 지금 단계의 바로 다음 칸으로 넘어간다. 2026-09-27 에 `첫 글쓰기 수업` 에서 베타인 글쓰기 연구소를
+ * 과제 만들기 앞에서 맨 뒤(선택)로 옮겼는데(분석: 두 번째 흐름에서 8명이 연구소에서 멈춤, 첫 학생 글 19% → 20% 그대로),
+ * 연구소에 서 있던 사람이 거기서 `다음` 을 누르면 과제를 만들지 않은 채 흐름이 끝나 버린다.
+ * 그래서 옮겨 간 단계(`to`)를 아직 안 했으면 그 단계에서 이어 보게 한다.
+ */
+export const TOUR_STEP_MOVES = Object.freeze({
+    'first-writing-class': Object.freeze([Object.freeze({ from: 'writing-lab', to: 'create-mission' })])
+});
+
 const normalizeTourEntry = (raw, tourId) => {
     const steps = getTeacherTourSteps(tourId);
     const knownStepIds = steps.map((step) => step.stepId);
@@ -249,7 +261,12 @@ const normalizeTourEntry = (raw, tourId) => {
         ? knownStepIds.filter((candidateId) => raw.completed.includes(candidateId))
         : [];
     // 사라진 단계 이름이 남아 있으면 첫 단계로 되돌린다. 화면을 개편해도 갇히지 않는다.
-    const stepId = knownStepIds.includes(raw?.stepId) ? raw.stepId : (knownStepIds[0] || null);
+    let stepId = knownStepIds.includes(raw?.stepId) ? raw.stepId : (knownStepIds[0] || null);
+    const finishedBefore = raw?.everFinished === true || raw?.status === 'done';
+    const move = (Reflect.get(TOUR_STEP_MOVES, tourId) || []).find((candidate) => candidate.from === stepId);
+    if (move && !finishedBefore && !completed.includes(move.to) && knownStepIds.includes(move.to)) {
+        stepId = move.to;
+    }
     return {
         status,
         stepId,
