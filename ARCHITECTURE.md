@@ -33,6 +33,11 @@
 새 모듈을 만드는 구체적 계약(필수 파일, `manifest.js` 형태, props)은
 [src/modules/game/README.md](src/modules/game/README.md)를 본다.
 
+**새 모듈은 뼈대 도구로 시작한다**(2026-09-27): `npm run new:module -- --id <영문-id> --name "<화면 이름>" --part tool|game|writing|community --audience teacher|student|both [--db]`.
+폴더·설정 파일·화면 뼈대·기본 검사·레지스트리 등록을 한 번에 만들고, 배포에서는 숨긴 채(`available` 은 개발 서버에서만 참) 시작한다.
+`--db` 는 보안 규칙이 든 마이그레이션 초안을 적용 도구가 읽지 않는 `supabase/migration-drafts/` 에 둔다. 남은 일은 생성된 README 체크리스트.
+확장 지점(모듈·스크린 위젯·글 종류·글쓰기 도구) 네 곳의 등록 누락은 `tests/extensionRegistries.test.mjs` 가 막는다.
+
 ## 핵심 설계 불변식 (2026-08-06 확정, 계속 지킬 것)
 
 이 네 가지는 "그때 정한 규칙"이 아니라 **지금도 항상 참이어야 하는 구조적 약속**이다. 어기면 화면마다

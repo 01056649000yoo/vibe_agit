@@ -18,6 +18,40 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-27 — 확장 지점 등록 검사·평일 부하 장부·모듈 뼈대 도구 (Claude)
+- **요청**: 점검 추천 순서대로(class_boards 정리 → 등록 누락 검사 → 평일 부하 기록) + 모듈 뼈대 도구.
+- **class_boards 정리**: 원인 확인 — 2026-09-09 저장 충돌의 PostgREST 무한 재시도(초당 약 2,300회, `20261275` 로 이미 고침)가 남긴 옛 판.
+  다시 쌓이지 않는다(저장은 교사가 단추를 눌러야만). `VACUUM (FULL, ANALYZE) public.class_boards` 는 운영 DB 변경이라 권한 확인에서 막혀
+  **선생님이 직접 실행**(2026-09-27, git 밖 변경): **112MB → 136kB**, 스크린 21개 그대로, 앱 200. 처음 드린 명령은 `-c` 하나에 SET 과 VACUUM 을
+  넣어 한 트랜잭션이 되는 바람에 `VACUUM cannot run inside a transaction block` 으로 거절됐다(변경 없음) — `-c` 를 문장마다 나눠 해결.
+- **등록 누락 검사** `tests/extensionRegistries.test.mjs`: 네 확장 지점(모듈·스크린 위젯·글 종류·글쓰기 도구)의 `manifest.js` 마다
+  목록 불러오기 줄 + 이름 줄이 있는지. 위젯 한 줄을 빼 실패하는 것까지 확인.
+- **평일 부하 장부**: `scripts/queryLoadLedger.mjs`(하루 차이·통계 초기화 판별·요약, 순수 함수) + `scripts/snapshot-query-load.mjs`(DB 읽기만,
+  함수 이름은 쿼리 글 전체에서 — 앞 300자만 보면 PostgREST 쿼리 이름을 놓쳤다). `npm run db:load`(보고서)·`db:load:snapshot`.
+  **git 밖 변경**: `~/Library/LaunchAgents/com.agit.query-load-snapshot.plist` 등록(매일 23:55, 원본 `ops/launchd/`),
+  첫 기록 `~/backups/query-load/ledger.jsonl`(22:37). 검사 `tests/queryLoadLedger.test.mjs`.
+- **모듈 뼈대 도구** `npm run new:module -- --id … --name … --part … --audience … [--db]`(`scripts/moduleScaffold.mjs` 순수 + `scripts/new-module.mjs`):
+  설정 파일(기본 OFF, `available` 은 개발 서버에서만 참, 보수적 성능 약속)·교사/학생 화면 뼈대(공통 제목·토큰)·README 체크리스트·기본 검사·레지스트리 등록,
+  `--db` 면 보안 규칙이 든 마이그레이션·스모크 초안을 `supabase/migration-drafts/`(적용 도구가 읽지 않음)에. 덮어쓰지 않는다.
+  시험 모듈을 실제로 만들어 검사·lint·빌드·초안 롤백 실행까지 통과시킨 뒤 지웠다 — 이때 생성 검사가 registry.js 를 직접 불러와 Node 에서
+  깨지는 것(확장자 없는 import)과 교사 화면의 쓰지 않는 값을 잡아 고쳤다. 상시 검사 `tests/moduleScaffold.test.mjs`(모든 종류×대상 조합).
+  ARCHITECTURE·게임 모듈 README·PERFORMANCE_HARNESS 에 안내.
+- **결과/검증**: 검사 1,374/1,374, lint 오류 0, 빌드 통과. 앱 화면 변경 없음(배포 불필요).
+- **남은 것 / 다음**: 교사 도움말 원본 합치기·학습 콘텐츠 데이터화는 다음 콘텐츠가 정해지면.
+
+## 2026-09-27 — DB 부하 정밀 점검·확장 구조 점검 (Claude, 읽기 전용)
+- **한 일**: 운영 DB 를 읽기만 해서 `pg_stat_statements`(9/26 00:57 UTC 부터 24시간, 토요일)·표 크기·순차 스캔·캐시·연결·예약 작업·
+  `system_daily_metrics`(평일 포함 16일)·컨테이너 자원을 확인. 코드·설정 변경 없음.
+- **결과**: 24시간 DB 실행 시간 합계 88.4초(8만 호출). 평일 도커 VM 메모리 최저 여유 5.1~5.8GB/9.4GB·스왑 0·게이트웨이 CPU 최대 10~14%.
+  캐시 적중 99.87%, 연결 21/100, DB 485MB(하루 약 7MB 증가). 최다 소비 `poll_my_priority_writing_notifications_v1`(12초 폴링, 보이는 탭만):
+  같은 연결에서 두 번째부터 0.19ms, 첫 호출 7.2ms — 한가할 때 PostgREST 연결이 닫혀 평균 9ms 로 보임(바쁠수록 싸짐).
+  `auth_user_role()` 는 실제 학생 기준 0.03ms(처음 잰 2.8ms 는 첫 호출 준비 비용). Realtime 은 연구소만 사용(끄지 말 것).
+- **발견**: `class_boards` 21행(약 30KB)인데 표 본체 112MB — 옛 판이 쌓인 빈자리. 매일 밤 백업이 통째로 읽는다.
+  쿼리 통계는 DB 재시작 때 지워지는데 평일 부하 기록을 따로 남기지 않는다(`db:usage` 는 안 쓰는 색인·함수만 장부에).
+  확장 지점 4개(모듈 16·스크린 위젯 10·글 종류 3·글쓰기 도구 3)가 각자 손 목록이고, 폴더만 만들고 등록을 빠뜨려도 잡는 검사가 없다.
+  모듈 하나 추가에 20파일(알림장 `7cee1109`) — 교사 도움말이 세 파일(안내 글·화면 연결·활용 안내서)로 나뉨.
+- **남은 것 / 다음**: 선생님 결정 대기 — class_boards 정리, 평일 부하 기록, 확장 지점 등록 검사·모듈 뼈대 도구·도움말 원본 합치기.
+
 ## 2026-09-26 — 형광펜의 "선생님이 고쳐 준 곳" 구분 빼기 (Claude)
 - **요청**: 학생이 선생님 수정을 포함해 다시 고치면 판정이 이상하다 → 선생님 구분을 빼고 처음 글 ↔ 최종 글 차이만.
 - **원인**: 규칙이 "최종 글 어절이 교사 수정본에 똑같이 있으면 선생님 몫" 이라, 선생님 수정을 조금 다듬으면 학생 몫, 학생이 쓴 말이

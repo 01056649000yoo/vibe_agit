@@ -3,6 +3,8 @@
 새 게임은 `src/modules/game/<module-id>/` 폴더 하나로 만든다. 기존 `GameManager`나
 `StudentDashboard`에 게임별 조건문을 추가하지 않는다.
 
+> 새 모듈은 `npm run new:module` 로 뼈대부터 만든다(ARCHITECTURE.md "새 모듈은 뼈대 도구로 시작한다").
+
 ## 필수 파일
 
 ```text

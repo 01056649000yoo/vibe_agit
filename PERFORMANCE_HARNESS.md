@@ -171,6 +171,13 @@ DB SQL은 운영 적용 전에 `npm run migrate:check`로 검사한다. 이 명�
 10분 유지, 학생별 4~6분 동기화다. 더 강한 스트레스 시험은 `AGIT_LOAD_TEST_SYNC_MIN_MS`와
 `AGIT_LOAD_TEST_SYNC_MAX_MS`를 명시해 별도로 실행한다. 원격 서버는 명시적인 안전 확인 환경변수 없이는 실행되지 않는다.
 
+## 평일 부하 장부 (2026-09-27)
+
+`pg_stat_statements` 는 DB 를 다시 켜면 지워져 평일 부하를 나중에 볼 수 없었다. 매일 23:55 `com.agit.query-load-snapshot`
+(`ops/launchd/`)이 누적값의 하루 차이를 `~/backups/query-load/ledger.jsonl` 에 한 줄씩 쌓는다(DB 읽기만).
+`npm run db:load` 로 날짜별·평일 평균·많이 쓴 함수를 본다. 통계가 초기화된 날은 `재시작 뒤 누적` 으로 따로 표시한다.
+2026-09-27 점검 기준: 24시간 DB 실행 합계 88초(토요일), 알림 12초 폴링은 같은 연결에서 0.19ms·첫 호출 7.2ms.
+
 ## 측정 기록
 
 시험할 때마다 한 줄씩 추가한다. 위 합격선과 바로 비교할 수 있도록 같은 항목만 남긴다.
