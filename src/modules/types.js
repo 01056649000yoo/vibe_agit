@@ -22,7 +22,9 @@
  * @property {{order?: number}} [myAgit] 나의 아지트에서 확장 카드를 표시할 순서
  * @property {{title?: string, subtitle?: string, order?: number, activeColor?: string, headerBackground?: string, borderColor?: string, titleColor?: string, subtitleColor?: string, legacy?: boolean}} [management]
  *   교사 아지트 놀이터 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
- * @property {{order?: number, launchMode?: 'embedded'|'external', href?: string, beta?: boolean}} [tool]
+ * @property {{order?: number, launchMode?: 'embedded'|'external', href?: string, beta?: boolean, shortcutLaunch?: string}} [tool]
+ *   `shortcutLaunch`: 교사 머리말 단축 단추로 열 때 도구에 넘길 동작(예: `fullscreen`). 도구의 teacherEntry 가
+ *   `launchRequest.action` 으로 받아 한 번 처리하고 `onLaunchHandled(requestId)` 를 부른다.
  *   교사 수업 도구 런처 정보. part가 tool이면 teacherEntry를 선택할 때만 지연 로딩한다.
  * @property {{order?: number, label?: string, description?: string}} [settings]
  *   교사 통합 설정 메뉴 정보. settingsEntry가 있을 때 해당 화면을 선택한 뒤에만 지연 로딩한다.

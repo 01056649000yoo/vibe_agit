@@ -128,7 +128,16 @@ const ROLE_FIXTURES = Object.freeze({
         rpc: {
             ...commonRpc,
             get_teacher_app_bootstrap_v1: teacherBootstrap({ userId: IDS.teacher, role: 'TEACHER', fullName: '가상 교사', classes: [FIXTURE_CLASS] }),
-            get_teacher_mission_overview_v1: teacherMissionOverview
+            get_teacher_mission_overview_v1: teacherMissionOverview,
+            // 급식판(머리말 단축 단추 → 곧바로 전체화면 검사, 2026-09-28). 학교가 연결된 학급.
+            get_teacher_meal_board_workspace_v1: {
+                school: { officeCode: 'B10', schoolCode: '7000000', schoolName: '가상초등학교' },
+                allergens: [],
+                students: []
+            }
+        },
+        functions: {
+            'neis-meal': { meals: [{ mealType: '중식', calories: '600 Kcal', dishes: [{ name: '가상 비빔밥', allergenCodes: [] }] }] }
         }
     },
     // 가입해 승인은 받았지만 학급을 아직 안 만든 교사(현실에서 가장 흔한 첫 화면).

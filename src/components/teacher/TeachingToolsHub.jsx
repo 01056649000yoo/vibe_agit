@@ -14,7 +14,10 @@ const TeachingToolsHub = ({
     isMobile,
     onTeacherSchoolChange,
     navigationTarget,
-    onNavigationHandled
+    onNavigationHandled,
+    // 머리말 단축 단추가 넘긴 동작(예: 급식판 전체화면). 그 도구에만 건네고, 도구가 처리하면 대시보드가 지운다.
+    launchRequest,
+    onLaunchHandled
 }) => {
     const [selectedId, setSelectedId] = useRememberedChoice(
         'teacher-tools-selected-v1',
@@ -64,7 +67,15 @@ const TeachingToolsHub = ({
                 />
                 <div style={{ minWidth: 0 }}>
                     <Suspense fallback={<div style={{ padding: '70px', textAlign: 'center', color: '#94A3B8' }}>{selected.module.name}을 불러오는 중입니다...</div>}>
-                        <selected.Entry activeClass={activeClass} teacherInfo={teacherInfo} isMobile={isMobile} module={selected.module} onTeacherSchoolChange={onTeacherSchoolChange} />
+                        <selected.Entry
+                            activeClass={activeClass}
+                            teacherInfo={teacherInfo}
+                            isMobile={isMobile}
+                            module={selected.module}
+                            onTeacherSchoolChange={onTeacherSchoolChange}
+                            launchRequest={launchRequest?.toolId === selected.module.id ? launchRequest : null}
+                            onLaunchHandled={onLaunchHandled}
+                        />
                     </Suspense>
                 </div>
             </div>

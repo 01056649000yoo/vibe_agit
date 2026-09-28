@@ -40,6 +40,22 @@ test('우리 반 스크린은 새 창으로 바로 열고, 다른 도구는 학�
     assert.match(hub, /navigationTarget\.tool/);
 });
 
+test('급식판처럼 매니페스트에 shortcutLaunch 를 적은 도구는 단축 단추로 열 때 그 동작을 한 번 받는다', async () => {
+    const { mealBoardManifest } = await import('../src/modules/tool/meal-board/manifest.js');
+    assert.equal(mealBoardManifest.tool.shortcutLaunch, 'fullscreen');
+    const handler = dashboard.slice(dashboard.indexOf('const handleOpenPinnedTool'), dashboard.indexOf('const handleConfirmAdminPassword'));
+    assert.match(handler, /pinnedTool\.tool\?\.shortcutLaunch/);
+    assert.match(handler, /setToolLaunchRequest\(/);
+    assert.match(dashboard, /launchRequest=\{toolLaunchRequest\}/);
+    // 허브는 고른 도구에게만 넘긴다 — 다른 도구로 바꾸면 받지 않는다.
+    assert.match(hub, /launchRequest=\{launchRequest\?\.toolId === selected\.module\.id \? launchRequest : null\}/);
+    const entry = readFileSync('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8');
+    const effect = entry.slice(entry.indexOf('머리말 단축 단추로 열면'), entry.indexOf('onLaunchHandled]);'));
+    assert.match(effect, /launchRequest\?\.action !== 'fullscreen' \|\| loading \|\| mealLoading/, '급식을 다 읽기 전에 열면 빈 급식판이 뜬다');
+    assert.match(effect, /setFullscreenOpen\(true\)/);
+    assert.match(effect, /onLaunchHandled\?\.\(launchRequest\.requestId\)/, '처리했다고 알려야 닫은 뒤 다시 저절로 열리지 않는다');
+});
+
 test('고른 도구는 이 기기에 기억하고, 목록은 학급운영도구 화면과 같은 원본에서 읽는다', () => {
     assert.equal(HEADER_TOOL_SHORTCUT_STORAGE_KEY, 'teacher-header-tool-shortcut-v1');
     assert.match(dashboard, /window\.localStorage\.getItem\(HEADER_TOOL_SHORTCUT_STORAGE_KEY\)/);

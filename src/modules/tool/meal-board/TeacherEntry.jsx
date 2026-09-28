@@ -32,7 +32,7 @@ const normalizeWorkspace = (result) => ({
   students: Array.isArray(result?.students) ? result.students : []
 });
 
-export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeacherSchoolChange }) {
+export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeacherSchoolChange, launchRequest, onLaunchHandled }) {
   const [workspace, setWorkspace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -171,6 +171,16 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
     [allergens]
   );
   const meals = useMemo(() => Array.isArray(mealData?.meals) ? mealData.meals : [], [mealData?.meals]);
+
+  // 머리말 단축 단추로 열면 곧바로 전체화면 급식판(manifest `shortcutLaunch: 'fullscreen'`).
+  // 급식을 다 읽은 뒤에 연다 — 먼저 열면 빈 급식판이 뜬다. 학교가 없거나 급식을 못 읽으면 열지 않고
+  // 지금 화면(학교 설정·오류 안내)을 그대로 보여 준다. 요청마다 한 번만 처리한다.
+  useEffect(() => {
+    if (launchRequest?.action !== 'fullscreen' || loading || mealLoading) return;
+    if (workspace?.school && mealData && !mealError) setFullscreenOpen(true);
+    else if (workspace?.school && !mealError && !mealData) return;
+    onLaunchHandled?.(launchRequest.requestId);
+  }, [launchRequest, loading, mealLoading, workspace?.school, mealData, mealError, onLaunchHandled]);
   const summary = useMemo(
     () => summarizeRoster(workspace?.students || []),
     [workspace?.students]

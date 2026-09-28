@@ -53,7 +53,7 @@ test('학급운영도구는 우리 반 스크린 → 급식판 → 자리·역�
   assert.match(hub, /TEACHER_TOOL_MODULES\.map/);
   // 고른 도구는 새로고침해도 남는다. 처음에는 순서의 첫 도구(useRememberedChoice 의 validIds[0])로 연다.
   assert.match(hub, /useRememberedChoice\(\s*'teacher-tools-selected-v1',\s*TOOL_IDS,/);
-  assert.match(hub, /<selected\.Entry /);
+  assert.match(hub, /<selected\.Entry\s/);
   assert.doesNotMatch(hub, /TOOL_MODULES\.map\([\s\S]*<Entry /);
   assert.equal(classBoardManifest.tool.beta, true);
   assert.match(hub, /tag: module\.tool\?\.beta \? 'Beta' : null/);

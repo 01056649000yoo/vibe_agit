@@ -366,6 +366,32 @@ test.describe('교사', () => {
         await assertScreen(page, problems, log, testInfo);
     });
 
+    defineScreen('교사 머리말 단축 단추 › 급식판을 고정하면 누르자마자 전체화면 급식판', async ({ page }, testInfo) => {
+        // 2026-09-28: 급식판 매니페스트 `tool.shortcutLaunch: 'fullscreen'` — 단축 단추로 열면 곧바로 전체화면.
+        const problems = watchProblems(page);
+        const log = await installFakeSupabase(page, 'teacher');
+        await openTeacher(page);
+        await page.getByRole('button', { name: '단축 단추에 고정할 학급운영도구 고르기' }).click();
+        await page.getByRole('menuitemradio', { name: /밥 먹자/ }).click();
+        const shortcut = page.locator('.teacher-tool-shortcut .teacher-class-board-shortcut');
+        await expect(shortcut).toContainText('밥 먹자');
+        await shortcut.click();
+        const board = page.getByRole('dialog', { name: /급식/ });
+        await expect(board).toBeVisible();
+        await expect(board).toContainText('가상 비빔밥');
+        // 닫으면 급식판 화면에 남고, 다시 저절로 열리지 않는다(요청은 한 번만 처리).
+        await page.getByRole('button', { name: '전체화면 급식판 닫기' }).click();
+        await expect(board).toBeHidden();
+        await page.waitForTimeout(500);
+        await expect(board).toBeHidden();
+        // 학급운영도구 메뉴에서 직접 고르면 전체화면이 아니라 급식판 화면이 열린다.
+        await page.locator('[aria-label="학급운영도구 목록"]').getByRole('button').filter({ hasText: '알림장' }).first().click();
+        await page.locator('[aria-label="학급운영도구 목록"]').getByRole('button').filter({ hasText: '밥 먹자' }).first().click();
+        await expect(page.getByRole('button', { name: '전체화면 보기' })).toBeVisible();
+        await expect(board).toBeHidden();
+        await assertScreen(page, problems, log, testInfo);
+    });
+
     defineScreen('교사 학급 0개 첫 화면', async ({ page }, testInfo) => {
         const problems = watchProblems(page);
         const log = await installFakeSupabase(page, 'teacherNoClass');

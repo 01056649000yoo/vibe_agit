@@ -7,5 +7,6 @@ export const mealBoardManifest = {
   audience: 'teacher',
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100 },
   teacherEntry: () => import('./TeacherEntry'),
-  tool: { order: 10, launchMode: 'embedded' }
+  // 머리말 단축 단추로 열면 곧바로 전체화면 급식판(2026-09-28 선생님 요청).
+  tool: { order: 10, launchMode: 'embedded', shortcutLaunch: 'fullscreen' }
 };

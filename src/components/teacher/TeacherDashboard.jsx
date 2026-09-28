@@ -147,6 +147,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         }
     });
     const pinnedTool = TEACHER_TOOL_MODULES.find((module) => module.id === pinnedToolId) || null;
+    // 단축 단추로 연 도구에 넘길 동작(매니페스트 `tool.shortcutLaunch`). 도구가 한 번 처리하면 지운다.
+    const [toolLaunchRequest, setToolLaunchRequest] = useState(null);
+    const handleToolLaunchHandled = useCallback((requestId) => {
+        setToolLaunchRequest((current) => (current?.requestId === requestId ? null : current));
+    }, []);
     const [guideAiAvailability, setGuideAiAvailability] = useState(null);
     const [missionPendingTotal, setMissionPendingTotal] = useState(0);
 
@@ -375,6 +380,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             void handleOpenDefaultClassBoard();
             return;
         }
+        // 도구가 매니페스트에 `tool.shortcutLaunch` 를 적었으면 그 동작으로 연다(급식판 → 곧바로 전체화면).
+        const action = pinnedTool.tool?.shortcutLaunch;
+        setToolLaunchRequest(action
+            ? { toolId: pinnedTool.id, action, requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }
+            : null);
         handleWorkspaceNavigate({ tab: 'tools', tool: pinnedTool.id });
     }, [pinnedTool, handleOpenDefaultClassBoard, handleWorkspaceNavigate]);
 
@@ -703,6 +713,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             onTeacherSchoolChange={handleTeacherSchoolChanged}
                             navigationTarget={workspaceTarget}
                             onNavigationHandled={handleWorkspaceNavigationHandled}
+                            launchRequest={toolLaunchRequest}
+                            onLaunchHandled={handleToolLaunchHandled}
                         />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
