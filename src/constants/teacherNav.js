@@ -106,7 +106,7 @@ export const TEACHER_NAV_GROUPS = [
         // 화면 안이 카드로 구성된다 (GameManager).
         // 켜고 끄는 버튼은 별도 화면이 아니라 각 카드 머리에 붙어 있다.
         innerShape: 'cards',
-        innerItems: ['드래곤 키우기 관리', '어휘의 탑 관리'],
+        innerItems: ['작가 수호룡 관리', '어휘의 탑 관리'],
         innerNote: '각 카드 머리의 "학생 화면 ON/OFF" 버튼으로 켜고 끕니다.'
     },
     {
