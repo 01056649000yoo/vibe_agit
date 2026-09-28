@@ -63,7 +63,11 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                     }
 
                     .nav-item {
-                        flex: 1;
+                        flex: 1 1 0;
+                        /* 글자 폭만큼 버티지 않고 여섯 칸이 화면 폭을 나눠 갖는다 — 없으면 360~430px 폰에서
+                           오른쪽 칸(친구 아지트·아지트 놀이터)이 화면 밖으로 밀려 누를 수 없었다(2026-09-28 렌더 스모크). */
+                        min-width: 0;
+                        padding: 0 2px;
                         height: 100%;
                         background: none;
                         border: none;
@@ -88,10 +92,15 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                     }
 
                     .nav-label {
-                        /* 6칸이라 라벨이 좁다. 줄바꿈 없이 한 줄에 들어가도록 줄인다. */
+                        /* 6칸이라 폰에서는 한 칸이 60~70px 이다. 한 줄 고집하면 칸이 밀려나므로
+                           낱말 단위로 두 줄까지 접는다(아지트 / 놀이터). */
                         font-size: var(--ui-text-xs);
                         font-weight: 700;
-                        white-space: nowrap;
+                        line-height: 1.15;
+                        text-align: center;
+                        white-space: normal;
+                        word-break: keep-all;
+                        overflow-wrap: anywhere;
                     }
 
                     .nav-icon { font-size: 1.35rem; }

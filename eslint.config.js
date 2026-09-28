@@ -48,8 +48,8 @@ export default defineConfig([
   {
     // 검사 파일은 저장소의 소스를 경로·패턴 변수로 읽어 대조하는 것이 본업이다.
     // 사용자 입력이 닿지 않으므로 아래 세 규칙의 경고는 전부 오탐이다(2026-09-28, 58건 확인).
-    // 앱 코드(src)에는 그대로 적용된다.
-    files: ['tests/**/*.{js,mjs}'],
+    // 앱 코드(src)에는 그대로 적용된다. 브라우저 스모크(e2e)도 같은 까닭으로 같이 둔다.
+    files: ['tests/**/*.{js,mjs}', 'e2e/**/*.{js,cjs}'],
     rules: {
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',

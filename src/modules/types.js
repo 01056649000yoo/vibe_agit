@@ -133,8 +133,11 @@ export function validateManifest(m) {
     if (m.studentDashboard.visibilityKey && typeof m.studentDashboard.visibilityKey !== 'string') problems.push('studentDashboard.visibilityKey는 문자열이어야 함');
     if (m.studentDashboard.badgeCountKey && typeof m.studentDashboard.badgeCountKey !== 'string') problems.push('studentDashboard.badgeCountKey는 문자열이어야 함');
   }
-  if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
-    problems.push('teacherEntry가 있지만 audience가 student임');
+  // audience 는 "학생 화면에 보이는가" 를 정한다. 학생이 쓰는 콘텐츠를 교사가 관리하는 모듈(수호룡·독서록·일기)은
+  // audience 'student' + teacherEntry 가 정상이다. 학생 진입점이 전혀 없는데 student 로 적힌 교사 전용 모듈만 잡는다
+  // (2026-09-28: 옛 조건이 세 모듈을 매번 잘못 짚어 개발 콘솔 오류로 남았다).
+  if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student' && !m.studentEntry && !m.studentRoute) {
+    problems.push('teacherEntry만 있는데 audience가 student임');
   }
   return problems;
 }

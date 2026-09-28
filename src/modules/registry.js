@@ -71,9 +71,13 @@ export function getLegacyModuleFields() {
  * 반환값의 CONFIGURED_MARK는 메모리에서 "명시적 목록"으로 해석하기 위한 것이며,
  * 교사가 토글하기 전에는 DB에 기록되지 않는다.
  */
-export function resolveEnabledModuleIds(enabledIds, legacySettings = {}) {
+export function resolveEnabledModuleIds(enabledIds, legacySettingsInput = {}) {
   const saved = Array.isArray(enabledIds) ? enabledIds : null;
   if (saved && saved.length > 0) return saved;
+  // `.maybeSingle()` 은 행이 안 보이면 오류 없이 null 을 준다(학급 전환·삭제 직후). 기본값 `= {}` 은
+  // undefined 만 받으므로 null 은 따로 막는다 — 막지 않으면 Reflect.get 이 던져 놀이터가 "불러오는 중"에 멈췄다
+  // (2026-09-28 로그인 화면 렌더 스모크에서 발견).
+  const legacySettings = legacySettingsInput ?? {};
 
   const defaults = manifests
     .filter((m) => {
