@@ -38,7 +38,7 @@ test('화면: 승인 두 경로가 모두 같은 규칙으로 센 수를 저장�
     assert.match(api, /rpc\('record_post_revision_counts_v1'/);
     assert.match(manager, /void recordRevisionCounts\(\[post\]\)/, '한 편 승인 뒤 저장이 없습니다.');
     assert.match(manager, /void recordRevisionCounts\(toApprove\)/, '한꺼번에 승인 뒤 저장이 없습니다.');
-    assert.match(manager, /revision_change_count,\n/);
+    assert.match(manager, /revision_change_count,\r?\n/); // 윈도우 체크아웃(CRLF)에서도 통과
 });
 
 test('화면: 카드에 고친 자리 수를 표시한다', async () => {
