@@ -8,11 +8,14 @@
 | 알고 싶은 것 | 정본 |
 |---|---|
 | 지금 있는 기능 전체(v1 지도) | [FEATURE_MAP.md](../../FEATURE_MAP.md) |
-| 세션의 최소 활성 정보 | [SESSION_CONTEXT.md](../../SESSION_CONTEXT.md) |
+| 세션의 최소 활성 정보 | [SESSION_CONTEXT.md](../../SESSION_CONTEXT.md) — 생성 파일. 손으로 쓰는 원본은 [SESSION_RULES.md](SESSION_RULES.md) |
 | 작업 방법과 절대 규칙 | [AGENTS.md](../../AGENTS.md) |
 | 현재 위치와 앞으로 할 일 | [ROADMAP.md](../../ROADMAP.md) |
 | 최근 변경과 변경 이유 | [WORKLOG.md](../../WORKLOG.md) (지난 달은 [docs/worklog/](../worklog/)) |
 | **되풀이하지 말 것** | [PITFALLS.md](PITFALLS.md) — 작업 시작 전에 훑는다 |
+| 아직 안 끝난 일 | [OPEN_ITEMS.md](../OPEN_ITEMS.md) (옛 `[ ]` 는 [roadmap/BACKLOG.md](../roadmap/BACKLOG.md)) |
+| 지난 계획·결정 | [docs/roadmap/](../roadmap/) — `grep -n "말" docs/roadmap/*.md` |
+| 월간 회고 | [docs/retro/](../retro/) |
 
 ## 작업별 라우팅
 
@@ -44,7 +47,8 @@ rg -n "^## |^### " ROADMAP.md
 
 ## 유지 원칙
 
-- `SESSION_CONTEXT.md`는 짧게 유지하고 이력을 쌓지 않는다.
+- `SESSION_CONTEXT.md`는 `npm run context:build` 가 만든다(8,000자 상한). 규칙은 `SESSION_RULES.md` 만 고친다.
+  2026-09-28 전 손으로 쓰던 원문은 [archive/SESSION_CONTEXT-2026-09-28.md](archive/SESSION_CONTEXT-2026-09-28.md).
 - 완료 과정은 WORKLOG, 미래 계획은 ROADMAP, 설계 이유는 ARCHITECTURE 계열 문서에만 둔다.
 - 새 문서가 생기면 이 표에 경로와 사용 시점을 추가한다.
-- WORKLOG가 더 커지면 월별 보관 파일로 분리하되, 기존 링크와 검색 경로를 보존하는 별도 작업으로 진행한다.
+- WORKLOG 는 `npm run worklog:rotate` 가 최근 7일(최소 20항목)만 남기고 월별 보관 파일로 옮긴다.

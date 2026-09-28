@@ -10,8 +10,12 @@
 | **AGENTS.md**(이 파일) | 어떻게 작업할지 — 읽는 순서, 절대 규칙, 운영 함정, 검증 명령 |
 | **[FEATURE_MAP.md](FEATURE_MAP.md)** | **지금 있는 기능 전체 지도(v1, 2026-09-24~)** — 메뉴별 기능·상태·도움말 키, 변경 기록(v1.x) |
 | **[ROADMAP.md](ROADMAP.md)** | 앞으로 할 일만 — 현재 위치, 스테이지별 계획, 결정 기록. 지난 작업 서술은 없다 |
-| **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — 최근치만 둔다(2,500줄 한도, 검사가 막는다). 지난 달치는 [docs/worklog/](docs/worklog/) |
-| **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** | 되풀이하지 말 것 — 작업 시작 전 3초 훑기 |
+| **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — 최근 7일(최소 20항목)만 둔다. 옮기기는 `npm run worklog:rotate`(검사가 막는다). 지난 것은 [docs/worklog/](docs/worklog/) |
+| **[SESSION_CONTEXT.md](SESSION_CONTEXT.md)** | 세션 시작 때 읽는 짧은 요약 — **생성 파일**(`npm run context:build`). 손으로 쓰는 원본은 [docs/wiki/SESSION_RULES.md](docs/wiki/SESSION_RULES.md) |
+| **[docs/OPEN_ITEMS.md](docs/OPEN_ITEMS.md)** | **아직 안 끝난 일 한 곳** — 결정·운영·후속·실기기·관측·제보. WORKLOG `남은 것` 은 여기 ID 로 |
+| **[docs/roadmap/](docs/roadmap/)** | ROADMAP 에서 옮긴 지난 절·결정(`npm run roadmap:archive`). 남은 `[ ]` 는 `BACKLOG.md`(재확인 전) |
+| **[docs/retro/](docs/retro/)** | 월간 회고 한 장(`npm run retro`) — 고침이 몰린 곳·원인 태그·자주 깨진 검사 |
+| **[docs/wiki/PITFALLS.md](docs/wiki/PITFALLS.md)** | 되풀이하지 말 것 — 줄 끝 `[경로: …]` 로 `checklist`·`recall` 이 관련된 것만 띄운다 |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | 이 시스템이 왜 이렇게 생겼는지 — 목표 아키텍처, 핵심 설계 불변식, 맥미니 인프라 상식 |
 | **[docs/TECH_GLOSSARY.md](docs/TECH_GLOSSARY.md)** | **기술·방법론 단어 사전** — 전체 기술 스택, 아키텍처, 코딩 및 보안 방법론 해설과 자동 동기화 |
 | **[PERFORMANCE_HARNESS.md](PERFORMANCE_HARNESS.md)** | 성능 설계 원칙·1,000명 합격선·측정 기록표 |
@@ -29,6 +33,8 @@
 | **[MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)** | 브라우저 없이는 확인 못 하는 실기기 인수 검사표 |
 
 ## 세션 시작 시 (필수)
+0. **[`SESSION_CONTEXT.md`](SESSION_CONTEXT.md)** 를 읽는다(약 4,000자). Claude·Codex 는 훅이 자동으로 넣어 주고,
+   훅이 없는 도구(Kiro 등)는 직접 연다. 지금 상태·최근 작업 5건·남은 것이 들어 있다.
 1. **`git log --oneline -20`와 `git branch -a`를 먼저 본다.** 이 저장소는 다른 모델(Claude/GPT)이 세션
    사이에 독립적으로 작업할 수 있다 — 실제로 한쪽이 대규모 작업을 별도 브랜치에 해뒀는데 다른 쪽이 한참
    뒤에야 발견한 적이 있다. 병합 안 된 브랜치, 낯선 최근 커밋이 있으면 먼저 파악하고 시작한다.
@@ -44,8 +50,8 @@
 5. **백업·복구를 건드릴 일이면 [`backup.md`](backup.md)** — 무엇이 언제 어디로 가는지, 복구 절차,
    매월 1일 자동 리허설. 백업 설정을 바꾸면 그 파일도 함께 고친다.
 
-> **Codex 자동 주입**: `.codex/hooks.json`의 `SessionStart` 훅은 `startup`·`resume`·`clear`·`compact` 때마다
-> 짧은 [`SESSION_CONTEXT.md`](SESSION_CONTEXT.md)만 developer context에 넣는다. 상세 규칙과 이력은
+> **자동 주입**: Claude(`.claude/settings.json`)·Codex(`.codex/hooks.json`)의 `SessionStart` 훅은 같은
+> [`SESSION_CONTEXT.md`](SESSION_CONTEXT.md)만 넣는다(`tests/sessionContext.test.mjs` 가 두 훅의 출력이 같고 Codex 상한 안인지 본다). 상세 규칙과 이력은
 > [`docs/wiki/README.md`](docs/wiki/README.md)의 라우팅을 따라 필요한 원문만 읽는다. `AGENTS.md` 전체와
 > WORKLOG 항목을 훅에서 중복 주입하지 않는다. 훅이 새로 생겼거나 내용이 바뀌었으면 Codex에서 `/hooks`를 열어
 > 현재 해시를 한 번 신뢰해야 한다.
@@ -67,10 +73,13 @@
 - 이후 사용자가 `배포`·`마무리`·`확정`을 말하면 누적된 `[skip ci]` 변경까지 포함해 아래 마감 절차를 한 번 수행한다.
 
 ### 사용자가 `배포`·`마무리`·`확정`을 말하면 한 번만 마감
-1. **`WORKLOG.md` 맨 위에 항목 추가** (형식은 그 파일 상단 규칙 참조). 최신이 위.
+1. **`npm run wrap -- --model <모델>`** 을 돌린다. 먼저 WORKLOG 초안(git 이 아는 `변경`·검사 칸을 채운 것)을 보여 주고,
+   옛 항목 옮기기 → 새 항목 형식 → 검사 개수 장부 → SESSION_CONTEXT 재생성 → 확인표를 차례로 본다.
+   초안을 `WORKLOG.md` 맨 위에 붙여 `한 일`·`남은 것` 을 채우고(네 칸·15줄 이하) 한 번 더 돌려 초록불을 본다.
 2. **`ROADMAP.md` 갱신**: 완료 체크박스 `[x]`, 방향이 바뀌면 "결정 기록"에 한 줄.
 3. git 밖 변경도 WORKLOG에 기록한다 — 맥미니 인프라(도커·Caddy·DNS·`~/agit-supabase/`)는 커밋에 안 남는다.
-4. `npm run checklist`가 짚은 항목과 해당 자동 검사·린트·빌드를 한 번 실행한다. DB·보안 변경은 기존 전용
+4. `wrap` 끝의 확인표가 짚은 항목과 해당 자동 검사·린트·빌드를 한 번 실행한다. 검사 수가 줄었으면 장부가 막는다 —
+   일부러 줄였으면 `npm run checks:count -- --update --reason "까닭"`. DB·보안 변경은 기존 전용
    검증 규칙을 추가로 따른다.
 5. 검사가 통과하면 의미 단위로 커밋하고 별도 재확인 없이 `origin/main`에 한 번 푸시해 자동 배포한다. Actions
    전체 로그를 다시 읽지 말고 성공 상태·운영 HTTP·변경 번들의 핵심 표지만 간결하게 확인한다. 자동 검사가
@@ -313,6 +322,8 @@ CHECKLIST_BASE=HEAD~5 npm run checklist # 더 넓게 보고 싶을 때
 | 언제 | 명령 |
 |---|---|
 | 항상 | `npm run lint` (0경고·0오류 기준), `npm run build` |
+| 고치기 전·중 | `npm run recall -- <파일>`(과거 맥락), `npm run test:related`(바뀐 파일을 지키는 검사만) |
+| 새 검사를 넣었으면 | `npm run verify:guard` — 고치기 전 코드에서 실패하는지 |
 | 학생 홈·목록·쓰기 화면을 고쳤으면 | `npm run test:architecture` — 1,000명 하네스 규칙(폴링·N+1·Realtime 재도입 등) 자동 검사 |
 | 보안 관련(RLS·Edge 함수·인증)을 고쳤으면 | `npm run test:security` (정적 검사+`migrate:check`+권한 스모크+운영 설정 검사) |
 | 새 SQL 마이그레이션을 만들었으면 | `npm run migrate:check` (ROLLBACK 검증) → 승인 후 `npm run migrate` |

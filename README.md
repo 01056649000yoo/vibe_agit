@@ -5,7 +5,9 @@
 > 1. **[ROADMAP.md](ROADMAP.md)** — 비전, "현재 위치", 진행할 스테이지, 대원칙, 결정 기록
 > 2. **[WORKLOG.md](WORKLOG.md)** — 직전까지의 작업·변경·완료 내역 (최신이 위)
 >
-> **작업을 마치면 반드시** `WORKLOG.md` 맨 위에 항목을 추가하고 `ROADMAP.md`를 갱신하세요.
+> 세션 시작 요약은 **[SESSION_CONTEXT.md](SESSION_CONTEXT.md)**(생성 파일, 훅이 없는 도구는 직접 읽기).
+> **작업을 마치면** `npm run wrap -- --model <모델>` 이 WORKLOG 초안·옮기기·형식·검사 수·요약 재생성을 한 번에 봅니다.
+> 초안을 `WORKLOG.md` 맨 위에 붙여 채우고 `ROADMAP.md`를 갱신하세요.
 > git 밖 인프라 변경(맥미니 도커·Caddy·DNS)도 WORKLOG에 남깁니다. 비밀 값은 문서에 쓰지 않습니다.
 > 모델 공통 규칙 전체: **[AGENTS.md](AGENTS.md)** (Claude는 [CLAUDE.md](CLAUDE.md)가 이를 가리킴).
 
@@ -119,7 +121,7 @@ sudo caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 1. 시작할 때 `README.md` → `ROADMAP.md` 현재 위치 → `WORKLOG.md` 최신 항목 순으로 읽는다.
 2. 실제 상태는 추측하지 말고 코드, Docker, Caddy, 응답으로 확인한다. git 밖 변경도 작업 범위에 포함한다.
 3. 기존 변경을 되돌리거나 코어 글쓰기 셸을 수정하지 않는다. 확장은 모듈/슬롯으로만 한다.
-4. 작업 후 `WORKLOG.md` 맨 위에 **한 일 / 변경 / 결과·검증 / 남은 것**을 기록한다.
+4. 작업 후 `npm run wrap` 초안으로 `WORKLOG.md` 맨 위에 **한 일 / 변경 / 결과·검증 / 남은 것**을 15줄 안에 기록한다.
 5. 완료 체크나 순서·방향 변경이 있으면 같은 세션에서 `ROADMAP.md`도 갱신한다.
 6. 비밀 값은 절대 기록하지 않는다. 커밋 전 `git diff`와 빌드·핵심 흐름을 확인한다.
 

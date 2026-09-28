@@ -259,6 +259,7 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --exit-on-error 리얼타임
 | 항목 | 누가 |
 |---|---|
 | 🔴 `rclone.conf` 사본을 맥미니 밖에 보관 (3절) | **사용자** |
+| 맥미니 없이 새 기계에서 전체 복구 리허설 — Docker 기계에 저장소+Drive 암호화 사본만으로 스택·DB·Storage 복원, `/etc/hosts` 로 로그인·글·사진 확인, 걸린 시간 기록. 월간 자동 리허설은 맥미니 안에서만 돌아 이 경우를 증명하지 못한다 | **2026-27 겨울방학** (ROADMAP 결정 기록 2026-09-28) |
 | 내부 APFS FileVault는 무인 재부팅·Docker 자동 복구를 우선해 보류. 내장 사본은 평문이므로 맥미니 물리 접근을 제한 | 운영 결정 |
 | 외장 SSD 신규 사본은 `agitssdcrypt:` 파일 단위 암호화 완료. 기존 `/Volumes/SHmaegmini/backups/` 평문 사본은 7일 관측·9월 1일 리허설 뒤 삭제 여부 결정 | 2026-09-05 이후 사용자 확인 |
 | 더 이상 갱신하지 않는 `gdrive:Supabase-Backups/literacy/` 옛 평문 사본의 보존·삭제 결정 | 미정 |
