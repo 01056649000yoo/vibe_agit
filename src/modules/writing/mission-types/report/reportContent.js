@@ -1,3 +1,5 @@
+import { countContentChars } from '../../../../lib/textMetrics.js';
+
 export const REPORT_TEMPLATE_ID = 'report';
 export const REPORT_MAX_SECTIONS = 12;
 export const REPORT_MAX_IMAGES = 3;
@@ -117,6 +119,19 @@ export const reportSectionsToContent = (sections) => sections
     })
     .filter(Boolean)
     .join('\n\n');
+
+// 글자 수는 학생이 쓴 칸 내용만 센다. 선생님이 정한 칸 제목은 넣지 않는다.
+// (칸 제목이 질문 문장이면 학생이 한 글자도 안 써도 수백 자로 보였다. 2026-09-28 제보)
+// 옛 글처럼 내용 없이 사진 설명만 있으면 그 설명을 센다.
+export const countReportWrittenChars = (structuredContent) => {
+    if (structuredContent?.template !== REPORT_TEMPLATE_ID || !Array.isArray(structuredContent.sections)) {
+        return null;
+    }
+    return structuredContent.sections.reduce((sum, section) => {
+        const body = String(section?.body ?? '');
+        return sum + countContentChars(body !== '' ? body : String(section?.image?.caption ?? ''));
+    }, 0);
+};
 
 export const countFilledReportSections = (sections) => (
     sections.filter((section) => section.body?.trim()).length

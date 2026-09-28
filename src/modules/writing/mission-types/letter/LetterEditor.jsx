@@ -1,6 +1,7 @@
 import React from 'react';
 import SpellingUnderlineInput from '../../tools/spelling-lookup/SpellingUnderlineInput';
 import SpellingUnderlineTextarea from '../../tools/spelling-lookup/SpellingUnderlineTextarea';
+import { countContentChars } from '../../../../lib/textMetrics.js';
 import {
     LETTER_PARTS,
     buildLetterContent,
@@ -57,8 +58,8 @@ const LetterEditor = ({
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px', gap: '10px' }}>
                             <strong style={{ color: '#9D174D', fontSize: '0.85rem' }}>{part.label}</strong>
                             {part.key === 'body' && minBodyChars > 0 && (
-                                <span style={{ color: parts.body.length >= minBodyChars ? '#15803D' : '#94A3B8', fontSize: '0.78rem', fontWeight: 'bold' }}>
-                                    {parts.body.length} / {minBodyChars}자
+                                <span style={{ color: countContentChars(parts.body) >= minBodyChars ? '#15803D' : '#94A3B8', fontSize: '0.78rem', fontWeight: 'bold' }}>
+                                    {countContentChars(parts.body)} / {minBodyChars}자
                                 </span>
                             )}
                         </div>

@@ -1,4 +1,4 @@
-import { normalizeLetterParts, validateLetterSubmission } from './letterContent.js';
+import { countLetterWrittenChars, normalizeLetterParts, validateLetterSubmission } from './letterContent.js';
 import { getLetterPaperRenderModes } from './letterPapers.js';
 
 export const letterMissionType = {
@@ -22,5 +22,6 @@ export const letterMissionType = {
         const parts = normalizeLetterParts(structuredContent, content);
         return [parts.recipient, parts.greeting, parts.body, parts.closing].filter(Boolean).length;
     },
+    countWrittenChars: countLetterWrittenChars,
     validateSubmission: validateLetterSubmission,
 };

@@ -5,6 +5,8 @@
  * 주고받는 기능을 붙일 때 이 칸이 배달 주소가 된다(지금은 저장만 하고 배달하지 않는다).
  */
 
+import { countContentChars } from '../../../../lib/textMetrics.js';
+
 export const LETTER_TEMPLATE_ID = 'letter';
 
 export const LETTER_PARTS = Object.freeze([
@@ -41,6 +43,13 @@ export const buildLetterContent = (parts) => [
     parts.closing,
 ].map(cleanPart).filter(Boolean).join('\n\n');
 
+/** 글자 수는 학생이 쓴 네 칸만 센다. 본문을 이을 때 붙는 `에게`·빈 줄은 넣지 않는다. */
+export const countLetterWrittenChars = (structuredContent) => {
+    if (structuredContent?.template !== LETTER_TEMPLATE_ID) return null;
+    return ['recipient', 'greeting', 'body', 'closing']
+        .reduce((sum, key) => sum + countContentChars(structuredContent[key] ?? ''), 0);
+};
+
 export const createLetterStructuredContent = (parts) => ({
     template: LETTER_TEMPLATE_ID,
     version: 1,
@@ -58,8 +67,9 @@ export const validateLetterSubmission = ({ structuredContent, content, config = 
     if (!parts.closing) return '끝인사를 적어주세요. 편지는 인사로 마무리해요. ✉️';
 
     const minChars = Math.max(0, Number(config.min_body_chars) || 0);
-    if (parts.body.length < minChars) {
-        return `하고 싶은 말을 ${minChars}자 이상 적어주세요! 지금은 ${parts.body.length}자예요. ✍️`;
+    const bodyChars = countContentChars(parts.body);
+    if (bodyChars < minChars) {
+        return `하고 싶은 말을 ${minChars}자 이상 적어주세요! 지금은 ${bodyChars}자예요. ✍️`;
     }
     return null;
 };

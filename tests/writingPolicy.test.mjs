@@ -10,9 +10,9 @@ import {
     writingPolicyFromMission
 } from '../src/modules/writing/policy/writingPolicy.js';
 
-test('공백은 글자 수에 포함하고 보이지 않는 서식 문자는 제외한다', () => {
+test('띄어쓰기는 한 칸으로 세고 줄바꿈·보이지 않는 서식 문자는 세지 않는다', () => {
     assert.deepEqual(measureWritingContent('한 줄\u200B 글\n\n둘째 줄'), {
-        charCount: 11,
+        charCount: 9,
         paragraphCount: 2
     });
 });

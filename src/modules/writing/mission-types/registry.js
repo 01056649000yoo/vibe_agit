@@ -3,6 +3,7 @@ import { poemMissionType } from './poem/manifest.js';
 import { reportMissionType } from './report/manifest.js';
 import { meetingMissionType } from '../idea-market/missionTypeManifest.js';
 import { getReactionProfile } from '../reactions/registry.js';
+import { countContentChars } from '../../../lib/textMetrics.js';
 
 const genreMissionTypes = [
     poemMissionType,
@@ -43,6 +44,18 @@ export const getPdfRenderModes = (mission) => (
 export const getAnyRegisteredPdfRenderModes = () => {
     const withModes = genreMissionTypes.find((type) => type.pdfExport?.renderModes?.length > 0);
     return withModes?.pdfExport.renderModes || [];
+};
+
+// 글자 수의 원본. 보고서·편지·시처럼 칸이 나뉜 글은 학생이 쓴 칸만 세고(장르의 countWrittenChars),
+// 그 밖의 글은 본문을 센다. 서버 public.writing_post_char_count 가 같은 규칙을 따른다.
+// 칸으로 센 값이 본문보다 클 수는 없게 둘 중 작은 값을 쓴다 — 칸 값만 부풀려 보내도 늘지 않는다.
+export const countWrittenChars = ({ content = '', structuredContent = null } = {}) => {
+    const contentChars = countContentChars(content);
+    for (const type of genreMissionTypes) {
+        const written = type.countWrittenChars?.(structuredContent);
+        if (Number.isFinite(written)) return Math.min(written, contentChars);
+    }
+    return contentChars;
 };
 
 export const validateGenreMissionSubmission = (id, payload) => {

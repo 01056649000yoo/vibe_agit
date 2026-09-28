@@ -18,6 +18,29 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-09-28 — 글자 수가 부풀려지던 것 고침: 학생이 쓴 글자만, 줄바꿈 빼고 (Claude)
+- **제보**: 학생이 몇 자 안 썼는데 900자로 보인다.
+- **알게 된 것**: 세는 함수·화면·포인트 계산은 정상이었고 **무엇을 세느냐**가 문제였다. ① 보고서는 칸 제목(선생님이 정한 질문)까지
+  본문에 이어 붙이고 그 본문을 셌다 — 비운 칸 제목도. 칸 제목 80자×최대 12칸이라 질문형 12칸이면 학생 5자가 724자로 보였다(재현).
+  서버 `char_count`·최소 글자 수 판정·추가 분량 보너스도 같은 수를 썼다. ② 줄바꿈도 한 글자로 셌다 — 엔터를 누르고 있으면 수백 자.
+  제보된 글이 어느 쪽인지는 운영 DB 읽기가 권한에서 막혀 확인하지 못했다.
+- **결정(선생님)**: ①은 고친다. ②는 **줄바꿈은 세지 않고 띄어쓰기는 몇 칸이든 한 칸**(앞뒤 빈칸 제외). 모든 빈칸을 빼는 안은 숫자가 크게 줄어 택하지 않음.
+- **변경**:
+  - `src/lib/textMetrics.js` 규칙 원본(코드 포인트 단위 — 이모지 1자, 서버 `char_length` 와 같게). 세 글자 묶음을 상수로 내보냄.
+  - 장르 `countWrittenChars` 끼울 자리: 보고서(칸 내용만, 비었으면 사진 설명)·편지(네 칸, `에게`·빈 줄 제외)·시(연만).
+    `registry.countWrittenChars` 가 고르고, 칸 값이 본문보다 커지지 않게 작은 값. 학생 글쓰기 화면·제출 검사·편지 본문 카운터가 씀.
+  - `20261354_student_written_char_count.sql`(**미적용**): `writing_content_char_count` 새 규칙, `writing_post_char_count(content, structured)` 신설,
+    저장 트리거 `guard_student_post_server_columns`(20261230 그대로 + 한 줄)·제출 `writing_engine_submit_assignment`(20261170 그대로 + 한 줄).
+    이미 저장된 글의 `char_count` 는 다시 세지 않음(이미 준 보상과 맞춤). 다음 저장 때 새 규칙.
+  - 검사 `tests/charCountParity.test.mjs` — 화면·서버 글자 묶음 문자열 대조, 장르 목록 ↔ SQL 갈래, 최신 트리거·제출 정의, 예시 값.
+    SQL 줄을 옛 방식으로 되돌리거나 글자 묶음 한 글자를 바꾸면 실패하는 것 확인. 롤백 스모크 `tests/sql/20261354_*.smoke.sql`(같은 예시).
+    `writingPolicy.test.mjs` 첫 예시 11 → 9자.
+- **주의(도구)**: 이 PC의 Bash·Edit 도구가 `\u200B` 같은 표기를 **보이지 않는 실제 글자로 바꿔** 파일에 쓴다. SQL 은 `\x200B`, JS 는 백슬래시를 두 번 쓴 문자열로 적었다(검사가 둘을 맞춰 대조).
+- **결과/검증**: 검사 1,386/1,387(실패 1건은 `revisionTracking.test.mjs` — 이 PC 줄 끝(CRLF) 탓, 변경 전에도 실패), lint 오류 0, 빌드 통과.
+  SQL 실행 검증(`migrate:check`)은 이 PC에 Docker 가 없어 **아직**.
+- **남은 것 / 다음**: 맥미니에서 `npm run migrate:check` → **앱 먼저 배포 → 그다음 `npm run migrate`**(서버가 먼저 바뀌면 옛 화면은 "채웠다"는데 서버가 거절).
+  브라우저로 보고서·편지·자유 글 글자 수 한 번 확인.
+
 ## 2026-09-27 — 첫 글쓰기 수업 흐름: 과제 만들기를 맨 앞으로, 연구소는 맨 뒤 선택 (Claude)
 - **근거**: 같은 날 분석 — 첫 주 학생 등록 40% → 67% 인데 첫 학생 글 19% → 20% 그대로, 두 번째 흐름 멈춘 자리에 `writing-lab` 8명(과제 만들기 앞).
 - **변경**: `teacherGuideJourneys.js` `first-writing-class` 순서 `create-mission → review-submissions → approve-and-evaluate → set-ai-standards → writing-lab`,

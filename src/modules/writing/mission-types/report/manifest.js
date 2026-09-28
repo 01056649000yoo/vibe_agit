@@ -1,5 +1,6 @@
 import {
     countFilledReportSections,
+    countReportWrittenChars,
     normalizeReportSections,
     REPORT_TEMPLATE_ID,
     validateReportSubmission,
@@ -59,5 +60,6 @@ export const reportMissionType = {
     countParagraphs: ({ structuredContent, content, config = {} }) => (
         countFilledReportSections(normalizeReportSections(structuredContent, content, config))
     ),
+    countWrittenChars: countReportWrittenChars,
     validateSubmission: validateReportSubmission,
 };

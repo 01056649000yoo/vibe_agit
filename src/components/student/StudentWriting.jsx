@@ -10,8 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import useMediaQuery from '../../hooks/useMediaQuery';
-import { countContentChars } from '../../lib/textMetrics';
-import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+import { countWrittenChars, getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
 import LabReferenceSource from '../../modules/writing/references/LabReferenceSource';
@@ -243,7 +242,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const previewLines = content.split('\n');
 
     // 통계 계산
-    const charCount = countContentChars(content);
+    const charCount = countWrittenChars({ content, structuredContent });
     const genreParagraphCount = genreMissionType?.countParagraphs?.({
         structuredContent,
         content,

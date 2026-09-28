@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
-import { countContentChars } from '../lib/textMetrics';
-import { getGenreMissionType, validateGenreMissionSubmission } from '../modules/writing/mission-types/registry';
+import { countWrittenChars, getGenreMissionType, validateGenreMissionSubmission } from '../modules/writing/mission-types/registry';
 import {
     evaluateWritingPolicy,
     getWritingPolicyError,
@@ -249,7 +248,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             return false;
         }
 
-        const charCount = countContentChars(content);
+        const charCount = countWrittenChars({ content, structuredContent });
         const paragraphCount = getParagraphCount();
 
         const missionType = getGenreMissionType(mission?.input_template);

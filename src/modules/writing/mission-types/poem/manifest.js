@@ -1,3 +1,4 @@
+import { countContentChars } from '../../../../lib/textMetrics.js';
 import { normalizePoemStanzas } from './poemContent.js';
 
 const getWrittenStanzas = (structuredContent, content) => (
@@ -26,6 +27,12 @@ export const poemMissionType = {
     skipGenericParagraphValidation: true,
     countParagraphs: ({ structuredContent, content }) => (
         getWrittenStanzas(structuredContent, content).length
+    ),
+    // 글자 수는 학생이 쓴 연만 센다. 연 사이 빈 줄은 넣지 않는다.
+    countWrittenChars: (structuredContent) => (
+        structuredContent?.template === 'poem' && Array.isArray(structuredContent.stanzas)
+            ? structuredContent.stanzas.reduce((sum, stanza) => sum + countContentChars(stanza), 0)
+            : null
     ),
     validateSubmission: ({ structuredContent, content, config = {} }) => {
         const writtenStanzas = getWrittenStanzas(structuredContent, content);
