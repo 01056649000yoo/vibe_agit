@@ -65,7 +65,8 @@ BEGIN
     v_workspace := public.get_teacher_class_board_workspace_v1(
         current_setting('test.board_class_id')::UUID, 200
     );
-    IF v_workspace->>'version' <> '1'
+    -- 20261220 파일에서 바뀜: 작업공간 형식이 version 2(isDefault·displayOrder 포함)로 올라갔다. 상한 20은 그대로.
+    IF v_workspace->>'version' <> '2'
        OR JSONB_TYPEOF(v_workspace->'boards') <> 'array'
        OR JSONB_ARRAY_LENGTH(v_workspace->'boards') > 20 THEN
         RAISE EXCEPTION '우리 반 스크린 작업공간 형식이나 상한이 올바르지 않습니다.';

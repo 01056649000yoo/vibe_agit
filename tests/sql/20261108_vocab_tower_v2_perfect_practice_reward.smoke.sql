@@ -1,3 +1,4 @@
+-- 20261112 파일에서 바뀜: 한 판 12/12 보상(100P)을 층별 진도 4구간(합계 100P)으로 옮겼다. 20261162 에서 층 순차 해금이 붙었다.
 -- 이 파일은 migrate:check의 바깥 트랜잭션 안에서 실행되고 마지막에 전부 롤백된다.
 
 DO $$
@@ -75,6 +76,28 @@ BEGIN
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_reward_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_reward_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_reward_teacher_id'), 'role', 'authenticated'
@@ -139,29 +162,23 @@ BEGIN
         IF v_result->>'perfect_practice' <> 'true' THEN
             RAISE EXCEPTION '12/12 연습이 완벽 달성으로 처리되지 않았습니다: %', v_result;
         END IF;
-        IF v_attempt = 1 AND (
-            (v_result->>'reward_points')::INTEGER <> 100
-            OR v_result->>'perfect_reward_earned' <> 'true'
-            OR v_result->>'perfect_reward_already_earned' <> 'false'
-        ) THEN
-            RAISE EXCEPTION '최초 완벽 연습 100P 지급이 잘못됐습니다: %', v_result;
-        END IF;
-        IF v_attempt = 2 AND (
-            (v_result->>'reward_points')::INTEGER <> 0
-            OR v_result->>'perfect_reward_earned' <> 'false'
-            OR v_result->>'perfect_reward_already_earned' <> 'true'
-        ) THEN
-            RAISE EXCEPTION '반복 완벽 연습 중복 지급이 차단되지 않았습니다: %', v_result;
+        -- 12/12 완벽은 명예 표시로만 남고 포인트는 층 진도 구간(익힘 낱말 수)으로만 나간다.
+        -- 이 두 판은 익힘까지 간 낱말이 없으므로 한 번도 포인트가 나가면 안 된다.
+        IF (v_result->>'reward_points')::INTEGER <> 0
+           OR (v_result->>'deck_reward_points')::INTEGER <> 100
+           OR jsonb_array_length(v_result->'awarded_milestones') <> 0
+           OR (SELECT SUM((milestone->>'points')::INTEGER)
+               FROM jsonb_array_elements(v_result->'progress_milestones') milestone) <> 100 THEN
+            RAISE EXCEPTION '완벽 연습이 진도 구간 밖에서 포인트를 주거나 층 예산 100P가 어긋났습니다: %', v_result;
         END IF;
     END LOOP;
-
     IF (SELECT student.total_points FROM public.students student WHERE student.id = v_student_id)
-       <> current_setting('test.vocab_reward_points_before')::INTEGER + 100 THEN
-        RAISE EXCEPTION '학생 포인트가 최초 1회 100P만 증가하지 않았습니다.';
+       <> current_setting('test.vocab_reward_points_before')::INTEGER THEN
+        RAISE EXCEPTION '완벽 연습만으로 학생 포인트가 늘었습니다.';
     END IF;
     IF (SELECT count(*) FROM public.point_logs point_log
-        WHERE point_log.student_id = v_student_id AND point_log.event_key = v_event_key) <> 1 THEN
-        RAISE EXCEPTION '완벽 연습 포인트 event_key 원장이 한 건이 아닙니다.';
+        WHERE point_log.student_id = v_student_id AND point_log.event_key = v_event_key) <> 0 THEN
+        RAISE EXCEPTION '폐지된 완벽 연습 event_key 로 포인트가 기록됐습니다.';
     END IF;
 
     v_overview := public.get_my_vocab_tower_v2_overview_v1();
@@ -169,7 +186,7 @@ BEGIN
     FROM jsonb_array_elements(v_overview->'decks') deck
     WHERE (deck->>'deck_number')::INTEGER = 10;
     IF (v_overview->>'perfect_reward_points')::INTEGER <> 100
-       OR v_deck->>'perfect_reward_earned' <> 'true' THEN
+       OR v_deck IS NULL THEN
         RAISE EXCEPTION 'V2 지도에 보상 설정·획득 상태가 반영되지 않았습니다: %, %', v_overview, v_deck;
     END IF;
 END;

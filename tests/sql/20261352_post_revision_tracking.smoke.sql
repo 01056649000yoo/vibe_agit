@@ -30,8 +30,12 @@ BEGIN
     PERFORM set_config('test.rev_teacher', v_teacher::TEXT, true);
     PERFORM set_config('test.rev_student', v_student_auth::TEXT, true);
 
-    IF position('post.teacher_revision_content' IN pg_get_functiondef('public.get_student_assignment_workspace_v1(uuid, uuid)'::regprocedure)) = 0 THEN
-        RAISE EXCEPTION '학생 글쓰기 작업공간이 교사 수정본을 돌려주지 않습니다.';
+    -- 2026-09-28 갱신: 20261353_drop_teacher_revision_content.sql 이 교사 수정본 보관 칸을 지웠다(선생님 판단, FEATURE_MAP v1.12).
+    -- 고친 자리 수와 그 보호는 그대로라 ①~④·⑥ 은 그대로 보고, ⑤ 는 "칸이 되살아나지 않았다" 로 바꿨다.
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+               AND table_name = 'student_posts' AND column_name = 'teacher_revision_content')
+       OR position('teacher_revision_content' IN pg_get_functiondef('public.get_student_assignment_workspace_v1(uuid, uuid)'::regprocedure)) > 0 THEN
+        RAISE EXCEPTION '지운 교사 수정본 칸이 되살아났습니다.';
     END IF;
     IF has_function_privilege('anon', 'public.record_post_revision_counts_v1(jsonb)', 'EXECUTE') THEN
         RAISE EXCEPTION 'anon 이 고친 자리 수 함수를 부를 수 있습니다.';
@@ -111,21 +115,12 @@ BEGIN
         RAISE EXCEPTION '글이 바뀌었는데 고친 자리 수가 남았습니다: %', v_count;
     END IF;
 
-    -- ⑤ 교사 수정본 보관
-    UPDATE public.student_posts SET teacher_edited_content = '교사가 고친 글' WHERE id = v_post;
-    SELECT teacher_revision_content INTO v_saved FROM public.student_posts WHERE id = v_post;
-    IF v_saved IS DISTINCT FROM '교사가 고친 글' THEN
-        RAISE EXCEPTION '교사가 고친 글이 보관되지 않았습니다: %', v_saved;
+    -- ⑤ 교사가 글을 고쳐도(teacher_edited_content) 고친 자리 수 보호는 흔들리지 않는다
+    UPDATE public.student_posts SET revision_change_count = 7, teacher_edited_content = '교사가 고친 글' WHERE id = v_post;
+    SELECT revision_change_count INTO v_count FROM public.student_posts WHERE id = v_post;
+    IF v_count IS NOT NULL THEN
+        RAISE EXCEPTION '전용 함수 밖에서 고친 자리 수가 저장됐습니다: %', v_count;
     END IF;
-    UPDATE public.student_posts SET teacher_edited_content = NULL, content = '학생이 다시 낸 글' WHERE id = v_post;
-    SELECT teacher_revision_content INTO v_saved FROM public.student_posts WHERE id = v_post;
-    IF v_saved IS DISTINCT FROM '교사가 고친 글' THEN
-        RAISE EXCEPTION '학생이 다시 냈더니 교사 수정본이 사라졌습니다: %', v_saved;
-    END IF;
-    UPDATE public.student_posts SET teacher_revision_content = '몰래 바꾼 글' WHERE id = v_post;
-    SELECT teacher_revision_content INTO v_saved FROM public.student_posts WHERE id = v_post;
-    IF v_saved IS DISTINCT FROM '교사가 고친 글' THEN
-        RAISE EXCEPTION '교사 수정본이 전용 경로 밖에서 바뀌었습니다: %', v_saved;
-    END IF;
+    v_saved := NULL;
 END;
 $$;

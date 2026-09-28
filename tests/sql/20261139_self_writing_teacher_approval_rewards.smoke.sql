@@ -1,3 +1,4 @@
+-- 데이터 탓 실패 고침: 같은 책·일기 날짜의 옛 보상 기록과 글자 수 미달 글 때문에 픽스처가 흔들려, 트랜잭션 안에서 보상 기록을 비우고 지급 가능한 글만 고른다.
 DO $$
 DECLARE
     v_review_constraint TEXT;
@@ -68,6 +69,8 @@ BEGIN
     WHERE post.writing_context = 'self'
       AND post.self_writing_type IN ('reading_log', 'diary')
       AND post.is_submitted IS TRUE
+      -- 글자 수가 모자라 원래 0P 인 글을 고르면 지급 경로를 못 본다.
+      AND COALESCE(post.char_count, 0) >= COALESCE(post.awarded_min_chars, policy.min_chars, 0)
     ORDER BY post.created_at DESC, post.id
     LIMIT 1;
 
@@ -83,12 +86,14 @@ BEGIN
     -- 시험 글의 제출일 보상 상한과 기존 중복 키를 트랜잭션 안에서만 비운다.
     DELETE FROM public.point_logs
     WHERE student_id = v_post.student_id
-      AND event_key = format('self-writing-review:%s', v_post.id);
+      -- 지급 키는 뒤에 회수 회차가 붙는다(`self-writing-review:<글>:<회차>`). 옛 꼴만 지우면 엔진이 중복으로 본다.
+      AND (event_key = format('self-writing-review:%s', v_post.id) OR event_key LIKE format('self-writing-review:%s:%%', v_post.id));
+    -- 같은 책·같은 일기 날짜(source_key)의 옛 보상 기록이 다른 날에 있어도 already_claimed 가 되므로
+    -- 그 학생·그 갈래의 완료 보상 기록을 날짜와 상관없이 비운다(데이터 탓 실패 방지, 롤백된다).
     DELETE FROM public.writing_reward_claims
     WHERE student_id = v_post.student_id
       AND writing_type = v_post.self_writing_type
-      AND reward_kind = 'completion'
-      AND created_at >= v_day_start AND created_at < v_day_start + INTERVAL '1 day';
+      AND reward_kind = 'completion';
 
     SELECT total_points INTO v_before FROM public.students WHERE id = v_post.student_id;
     v_first := public.award_self_writing_review_points_v1(v_post.id);
@@ -96,7 +101,7 @@ BEGIN
 
     IF COALESCE((v_first ->> 'points_awarded')::INTEGER, 0) <= 0
        OR v_after <> v_before + (v_first ->> 'points_awarded')::INTEGER THEN
-        RAISE EXCEPTION '교사 확인 보상이 포인트 엔진으로 한 번 지급되지 않았습니다.';
+        RAISE EXCEPTION '교사 확인 보상이 포인트 엔진으로 한 번 지급되지 않았습니다: % (전 %, 후 %)', v_first, v_before, v_after;
     END IF;
 
     v_second := public.award_self_writing_review_points_v1(v_post.id);

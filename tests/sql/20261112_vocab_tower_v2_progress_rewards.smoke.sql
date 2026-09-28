@@ -1,3 +1,4 @@
+-- 20261120 파일에서 바뀜: 낱말 학습 상태는 공통 엔진 표 learning_item_progress(collection_key=학년·덱)에서 읽고 쓴다. 20261162 에서 층 순차 해금이 붙었다.
 -- migrate:check가 만든 바깥 트랜잭션에서 실행되며 마지막에 전부 롤백된다.
 -- 층별 진도 보상이 구간마다 한 번씩만 지급되고, 총액이 층 예산을 넘지 않는지 확인한다.
 
@@ -79,15 +80,38 @@ BEGIN
      WHERE run.student_id = v_student_id
        AND run.status = 'active';
 
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
-       AND progress.class_id = v_class_id;
+       AND progress.class_id = v_class_id
+       AND progress.content_type = 'vocab';
     DELETE FROM public.point_logs point_log
      WHERE point_log.student_id = v_student_id
        AND (point_log.event_key LIKE 'vocab-v2-progress:%' OR point_log.event_key LIKE 'vocab-v2-perfect:%');
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_reward_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_reward_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_reward_teacher_id'), 'role', 'authenticated'
@@ -131,12 +155,12 @@ BEGIN
     END IF;
 
     -- 2) 첫 구간(25%)을 넘기면 그 구간만 지급한다.
-    INSERT INTO public.vocab_tower_v2_item_progress (
-        student_id, class_id, grade, deck_number, item_key,
+    INSERT INTO public.learning_item_progress (
+        student_id, class_id, content_type, collection_key, item_key,
         learning_state, attempt_count, correct_count, consecutive_correct,
         correct_question_types, last_correct
     )
-    SELECT v_student_id, v_class_id, 3, 8, item.item_key,
+    SELECT v_student_id, v_class_id, 'vocab', public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT), item.item_key,
            'mastered', 2, 2, 2, ARRAY['meaningChoice', 'definitionInput']::TEXT[], TRUE
     FROM public.vocab_tower_v2_review_items item
     JOIN public.vocab_tower_v2_review_decks deck ON deck.deck_id = item.deck_id
@@ -161,25 +185,25 @@ BEGIN
     END IF;
 
     -- 4) 한 번에 여러 구간을 넘기면 넘은 구간을 모두 지급한다.
-    UPDATE public.vocab_tower_v2_item_progress progress
+    UPDATE public.learning_item_progress progress
        SET learning_state = 'mastered',
            correct_question_types = ARRAY['meaningChoice', 'definitionInput']::TEXT[],
            consecutive_correct = 2
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
-    INSERT INTO public.vocab_tower_v2_item_progress (
-        student_id, class_id, grade, deck_number, item_key,
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
+    INSERT INTO public.learning_item_progress (
+        student_id, class_id, content_type, collection_key, item_key,
         learning_state, attempt_count, correct_count, consecutive_correct,
         correct_question_types, last_correct
     )
-    SELECT v_student_id, v_class_id, 3, 8, item.item_key,
+    SELECT v_student_id, v_class_id, 'vocab', public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT), item.item_key,
            'mastered', 2, 2, 2, ARRAY['meaningChoice', 'definitionInput']::TEXT[], TRUE
     FROM public.vocab_tower_v2_review_items item
     JOIN public.vocab_tower_v2_review_decks deck ON deck.deck_id = item.deck_id
     WHERE deck.grade = 3 AND deck.deck_number = 8 AND deck.review_status = 'locked'
-    ON CONFLICT (student_id, class_id, grade, deck_number, item_key) DO UPDATE
+    ON CONFLICT (student_id, class_id, content_type, collection_key, item_key) DO UPDATE
         SET learning_state = 'mastered';
 
     v_run := public.start_my_vocab_tower_v2_practice_v1(8::SMALLINT);

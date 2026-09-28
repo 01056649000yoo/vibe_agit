@@ -1,10 +1,14 @@
+-- 20261120 파일에서 바뀜: 낱말 학습 상태는 공통 엔진 표 learning_item_progress(collection_key=학년·덱)에서 읽고 쓴다. 20261162 에서 층 순차 해금이 붙었다.
 -- migrate:check가 만든 바깥 트랜잭션에서 실행되며 마지막에 전부 롤백된다.
 
 DO $$
 BEGIN
     IF has_table_privilege('authenticated', 'public.vocab_tower_v2_item_progress', 'SELECT')
        OR has_table_privilege('authenticated', 'public.vocab_tower_v2_item_progress', 'INSERT')
-       OR has_table_privilege('authenticated', 'public.vocab_tower_v2_item_progress', 'UPDATE') THEN
+       OR has_table_privilege('authenticated', 'public.vocab_tower_v2_item_progress', 'UPDATE')
+       OR has_table_privilege('authenticated', 'public.learning_item_progress', 'SELECT')
+       OR has_table_privilege('authenticated', 'public.learning_item_progress', 'INSERT')
+       OR has_table_privilege('authenticated', 'public.learning_item_progress', 'UPDATE') THEN
         RAISE EXCEPTION 'authenticated가 V2 낱말 학습 상태 표에 직접 접근할 수 있습니다.';
     END IF;
 END;
@@ -55,14 +59,36 @@ BEGIN
      WHERE run.student_id = v_student_id
        AND run.status = 'active';
 
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
        AND progress.class_id = current_setting('test.vocab_learning_class_id')::UUID
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_learning_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_learning_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_learning_teacher_id'), 'role', 'authenticated'
@@ -86,7 +112,7 @@ DECLARE
     v_item_key TEXT;
     v_correct_answer TEXT;
     v_wrong_answer TEXT;
-    v_progress public.vocab_tower_v2_item_progress%ROWTYPE;
+    v_progress public.learning_item_progress%ROWTYPE;
 BEGIN
     v_run := public.start_my_vocab_tower_v2_practice_v1(8::SMALLINT);
     v_question := public.get_next_my_vocab_tower_v2_practice_question_v1(
@@ -117,13 +143,13 @@ BEGIN
     END IF;
 
     SELECT progress.* INTO v_progress
-    FROM public.vocab_tower_v2_item_progress progress
+    FROM public.learning_item_progress progress
     WHERE progress.student_id = current_setting('test.vocab_learning_student_id')::UUID
       AND progress.class_id = current_setting('test.vocab_learning_class_id')::UUID
-      AND progress.grade = 3
-      AND progress.deck_number = 8
+      AND progress.content_type = 'vocab'
+      AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT)
       AND progress.item_key = v_item_key;
-    IF v_progress.learning_state <> 'needs_review'
+    IF v_progress.learning_state IS NULL OR v_progress.learning_state <> 'needs_review'
        OR v_progress.attempt_count <> 1
        OR v_progress.wrong_count <> 1 THEN
         RAISE EXCEPTION '오답 낱말이 복습 필요 상태로 저장되지 않았습니다: %', row_to_json(v_progress);
@@ -145,14 +171,14 @@ BEGIN
         RAISE EXCEPTION '직전 오답 낱말이 다음 연습에서 우선 출제되지 않았습니다.';
     END IF;
 
-    UPDATE public.vocab_tower_v2_item_progress progress
+    UPDATE public.learning_item_progress progress
        SET learning_state = 'familiar',
            consecutive_correct = 1,
            correct_question_types = ARRAY['meaningChoice']::TEXT[]
      WHERE progress.student_id = current_setting('test.vocab_learning_student_id')::UUID
        AND progress.class_id = current_setting('test.vocab_learning_class_id')::UUID
-       AND progress.grade = 3
-       AND progress.deck_number = 8
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT)
        AND progress.item_key = v_item_key;
     UPDATE public.vocab_tower_v2_run_questions question
        SET question_type = 'clozeChoice'
@@ -168,13 +194,13 @@ BEGIN
         FALSE
     );
     SELECT progress.* INTO v_progress
-    FROM public.vocab_tower_v2_item_progress progress
+    FROM public.learning_item_progress progress
     WHERE progress.student_id = current_setting('test.vocab_learning_student_id')::UUID
       AND progress.class_id = current_setting('test.vocab_learning_class_id')::UUID
-      AND progress.grade = 3
-      AND progress.deck_number = 8
+      AND progress.content_type = 'vocab'
+      AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT)
       AND progress.item_key = v_item_key;
-    IF v_progress.learning_state <> 'mastered'
+    IF v_progress.learning_state IS NULL OR v_progress.learning_state <> 'mastered'
        OR cardinality(v_progress.correct_question_types) <> 2
        OR v_progress.last_mastered_run_id <> (v_run->>'run_id')::UUID THEN
         RAISE EXCEPTION '서로 다른 두 유형 성공이 익힘 상태로 전환되지 않았습니다: %', row_to_json(v_progress);

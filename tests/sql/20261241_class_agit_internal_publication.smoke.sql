@@ -21,7 +21,8 @@ BEGIN
        OR has_function_privilege('authenticated','public.class_agit_current_source_v1(uuid,uuid)','EXECUTE')
        OR has_function_privilege('anon','public.get_class_agit_publication_v1(uuid,uuid,integer)','EXECUTE')
        OR has_function_privilege('service_role','public.run_class_agit_action_v1(uuid,text,jsonb)','EXECUTE')
-       OR has_function_privilege('authenticated','public.class_agit_visible_works_v1(uuid,uuid)','EXECUTE')
+       -- 2026-09-28 갱신: 20261243 파일에서 class_agit_visible_works_v1 을 지움(얼린 게시 행으로 대체). 남아 있으면 안 된다.
+       OR to_regprocedure('public.class_agit_visible_works_v1(uuid,uuid)') IS NOT NULL
        OR has_function_privilege('anon','public.get_my_class_agit_exhibitions_v1()','EXECUTE')
        OR has_function_privilege('anon','public.get_my_class_agit_room_v1(uuid,integer)','EXECUTE')
        OR has_function_privilege('service_role','public.get_my_class_agit_work_v1(uuid,integer,text)','EXECUTE')
@@ -39,8 +40,10 @@ BEGIN
     INSERT INTO public.students(id,class_id,name,student_code,auth_id) VALUES(v_student,v_class,'합성 작가',left(v_student::TEXT,8)||'C1',v_auth),(v_other_student,v_other_class,'다른 합성 작가',left(v_other_student::TEXT,8)||'C1',v_other_auth);
     FOR i IN 1..17 LOOP
         INSERT INTO public.writing_missions(class_id,teacher_id,title,guide,genre,mission_type,input_template,min_chars,min_paragraphs,base_reward,bonus_reward)
-        VALUES(v_class,v_admin,'C1 과제 '||i,'합성 안내','글쓰기',CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' ELSE '글쓰기' END,
-            CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' ELSE 'freeform' END,1,1,0,0) RETURNING id INTO v_mission;
+        -- 2026-09-28 갱신: 20261244 파일에서 후보 자격을 글의 구조가 아니라 과제 형식(class_agit_mission_format_v1)으로 가린다.
+        -- 그래서 알 수 없는 구조·비공개 사진을 가진 17번 글은 전시 대상이 아닌 형식(meeting) 과제에 달아 제외를 검사한다.
+        VALUES(v_class,v_admin,'C1 과제 '||i,'합성 안내','글쓰기',CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' WHEN i=17 THEN 'meeting' ELSE '글쓰기' END,
+            CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' WHEN i=17 THEN 'meeting' ELSE 'freeform' END,1,1,0,0) RETURNING id INTO v_mission;
         INSERT INTO public.student_posts(class_id,student_id,mission_id,title,content,is_submitted,is_confirmed,structured_content)
         VALUES(v_class,v_student,v_mission,'C1 작품 '||i,'첫 문단'||E'\n\n'||'둘째 문단',i<>15,i NOT IN(14,15),
             CASE WHEN i=2 THEN '{"template":"poem","version":1,"stanzas":["첫 연\n둘째 행","다음 연"]}'::JSONB
@@ -79,30 +82,38 @@ BEGIN
     IF NOT v_denied THEN RAISE EXCEPTION 'another admin class visible'; END IF;
     v_denied:=FALSE; BEGIN PERFORM public.get_class_agit_source_v1(v_class,current_setting('test.ca_other_post')::UUID); EXCEPTION WHEN insufficient_privilege THEN v_denied:=TRUE; END;
     IF NOT v_denied THEN RAISE EXCEPTION 'another class source visible'; END IF;
-    v_page:=public.get_class_agit_candidates_v1(v_class,'',NULL,NULL,1000);
-    IF jsonb_array_length(v_page->'items')<>13 OR (v_page->'items'->0 ? 'content') THEN RAISE EXCEPTION 'candidate eligibility/summary failed'; END IF;
-    IF jsonb_array_length(public.get_class_agit_candidates_v1(v_class,'%')->'items')<>0 THEN RAISE EXCEPTION 'search interpreted wildcard'; END IF;
-    v_page:=public.get_class_agit_candidates_v1(v_class,'',NULL,NULL,5);
-    v_next:=public.get_class_agit_candidates_v1(v_class,'',(v_page->'next_cursor'->>'updated_at')::TIMESTAMPTZ,(v_page->'next_cursor'->>'id')::UUID,5);
+    -- 2026-09-28 갱신: 20261244 파일에서 후보 조회가 get_class_agit_candidates_v2(p_class_id, p_filters jsonb)로 바뀜(최대 50편, 커서는 객체).
+    IF to_regprocedure('public.get_class_agit_candidates_v1(uuid,text,timestamptz,uuid,integer)') IS NOT NULL THEN RAISE EXCEPTION 'retired candidates v1 came back'; END IF;
+    v_page:=public.get_class_agit_candidates_v2(v_class,'{"limit":1000}');
+    IF jsonb_array_length(v_page->'items')<>13 OR (v_page->'items'->0 ? 'content') THEN RAISE EXCEPTION 'candidate eligibility/summary failed: %',jsonb_array_length(v_page->'items'); END IF;
+    IF jsonb_array_length(public.get_class_agit_candidates_v2(v_class,'{"query":"%"}')->'items')<>0 THEN RAISE EXCEPTION 'search interpreted wildcard'; END IF;
+    v_page:=public.get_class_agit_candidates_v2(v_class,'{"limit":5}');
+    v_next:=public.get_class_agit_candidates_v2(v_class,jsonb_build_object('limit',5,'cursor',v_page->'next_cursor'));
     IF jsonb_array_length(v_page->'items')<>5 OR EXISTS(SELECT 1 FROM jsonb_array_elements(v_page->'items') a JOIN jsonb_array_elements(v_next->'items') b ON a->>'id'=b->>'id') THEN RAISE EXCEPTION 'cursor page overlaps'; END IF;
     v_source:=public.get_class_agit_source_v1(v_class,current_setting('test.ca_poem')::UUID)->'source';
     IF v_source->'blocks'<>'["첫 연\n둘째 행","다음 연"]'::JSONB THEN RAISE EXCEPTION 'poem layout lost'; END IF;
     v_result:=public.run_class_agit_action_v1(v_class,'create',jsonb_build_object('exhibition_id',v_ex));
     v_result:=public.run_class_agit_action_v1(v_class,'create',jsonb_build_object('exhibition_id',v_ex));
     IF jsonb_array_length(v_result->'projects')<>1 THEN RAISE EXCEPTION 'retry created duplicate exhibition'; END IF;
-    FOR v_page IN SELECT value FROM jsonb_array_elements(public.get_class_agit_candidates_v1(v_class,'',NULL,NULL,50)->'items') LOOP
+    FOR v_page IN SELECT value FROM jsonb_array_elements(public.get_class_agit_candidates_v2(v_class,'{"limit":50}')->'items') LOOP
         v_source:=public.get_class_agit_source_v1(v_class,(v_page->>'id')::UUID)->'source';
         v_items:=v_items||jsonb_build_array(jsonb_build_object('sourceId',v_source->>'id','sourceRevision',v_source->>'source_revision','publicAlias','새싹 작가','classAcknowledged',TRUE,'title','위조 제목','blocks',jsonb_build_array('위조 본문')));
     END LOOP;
     v_payload:=jsonb_build_object('exhibition_id',v_ex,'expected_revision',1,'title','C1 전시','introduction','확인한 글','items',v_items);
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',v_items||jsonb_build_array(v_items->0))); EXCEPTION WHEN check_violation THEN v_denied:=TRUE; END;
     IF NOT v_denied THEN RAISE EXCEPTION 'duplicate work accepted'; END IF;
-    v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',(SELECT jsonb_agg(jsonb_build_object('sourceId',gen_random_uuid())) FROM generate_series(1,121)))); EXCEPTION WHEN check_violation THEN v_denied:=TRUE; END;
+    v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items}',(SELECT jsonb_agg(jsonb_build_object('sourceId',gen_random_uuid())) FROM generate_series(1,121)))); EXCEPTION WHEN check_violation OR invalid_parameter_value THEN v_denied:=TRUE; END; -- 20261247: 121편은 12편/실 옛 배치로 11실이 돼 10실 상한(22023)에서 먼저 막힌다.
     IF NOT v_denied THEN RAISE EXCEPTION 'over-capacity works accepted'; END IF;
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items,0,sourceId}',to_jsonb(current_setting('test.ca_other_post')))); EXCEPTION WHEN insufficient_privilege THEN v_denied:=TRUE; END;
     IF NOT v_denied THEN RAISE EXCEPTION 'cross-class source save accepted'; END IF;
-    v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items,0,classAcknowledged}','false')); EXCEPTION WHEN invalid_parameter_value THEN v_denied:=TRUE; END;
-    IF NOT v_denied THEN RAISE EXCEPTION 'missing consent accepted'; END IF;
+    -- 2026-09-28 갱신: 20261245 파일에서 교사의 선택·저장만으로 수록한다(classAcknowledged 확인 폐지). 확인 없이도 저장돼야 한다.
+    -- 이 저장은 판을 올리므로 하위 블록에서 되돌린다.
+    BEGIN
+        PERFORM public.run_class_agit_action_v1(v_class,'save',jsonb_set(v_payload,'{items,0,classAcknowledged}','false'));
+        RAISE EXCEPTION 'smoke-probe-rollback';
+    EXCEPTION WHEN raise_exception THEN
+        IF SQLERRM<>'smoke-probe-rollback' THEN RAISE; END IF;
+    END;
     v_result:=public.run_class_agit_action_v1(v_class,'save',v_payload);
     IF v_result::TEXT LIKE '%위조%' OR jsonb_array_length(v_result->'draft'->'items')<>13 THEN RAISE EXCEPTION 'server trusted client content'; END IF;
     v_denied:=FALSE; BEGIN PERFORM public.run_class_agit_action_v1(v_class,'save',v_payload); EXCEPTION WHEN SQLSTATE 'PT409' THEN v_denied:=TRUE; END;
@@ -371,7 +382,8 @@ DO $$ DECLARE t TEXT; v_class UUID:=current_setting('test.ca_class')::UUID; v_m 
         IF NOT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename=t AND rowsecurity)
             OR has_table_privilege('anon',format('public.%I',t),'SELECT,INSERT,UPDATE,DELETE') OR has_table_privilege('authenticated',format('public.%I',t),'SELECT,INSERT,UPDATE,DELETE') OR has_table_privilege('service_role',format('public.%I',t),'SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'C3/4 RLS grant: %',t; END IF;
     END LOOP;
-    IF has_function_privilege('anon','public.get_class_agit_book_preview_v1(uuid,uuid,integer)','EXECUTE') OR has_function_privilege('authenticated','public.class_agit_book_draft_snapshot_v1(uuid,uuid)','EXECUTE') OR has_function_privilege('anon','public.get_my_class_agit_books_v1(uuid,text)','EXECUTE') OR has_function_privilege('authenticated','public.class_agit_take_public_budget_v1(text,integer)','EXECUTE') OR has_function_privilege('anon','public.manage_class_agit_rollout_v1(jsonb)','EXECUTE') OR NOT has_function_privilege('anon','public.read_public_class_agit_v1(text,integer,text,integer)','EXECUTE') THEN RAISE EXCEPTION 'C3/4 function grants'; END IF;
+    IF has_function_privilege('anon','public.get_class_agit_book_preview_v1(uuid,uuid,integer)','EXECUTE') OR has_function_privilege('authenticated','public.class_agit_book_draft_snapshot_v1(uuid,uuid)','EXECUTE') OR has_function_privilege('anon','public.get_my_class_agit_books_v1(uuid,text)','EXECUTE') OR has_function_privilege('authenticated','public.class_agit_take_public_budget_v1(text,integer)','EXECUTE') OR has_function_privilege('anon','public.manage_class_agit_rollout_v1(jsonb)','EXECUTE') OR has_function_privilege('anon','public.read_public_class_agit_v1(text,integer,text,integer)','EXECUTE') OR NOT has_function_privilege('service_role','public.read_public_class_agit_v1(text,integer,text,integer)','EXECUTE') THEN RAISE EXCEPTION 'C3/4 function grants'; END IF;
+-- 2026-09-28 갱신: 20261243_class_agit_frozen_public_reads.sql 부터 외부 읽기는 anon 이 아니라 엣지 함수(service_role)만 부른다.
     IF (SELECT external_enabled FROM public.class_agit_rollout WHERE singleton) THEN RAISE EXCEPTION 'external sharing default must be OFF'; END IF;
     FOR i IN 61..100 LOOP
         INSERT INTO public.writing_missions(class_id,teacher_id,title,guide,genre,mission_type,input_template,min_chars,min_paragraphs,base_reward,bonus_reward)
@@ -394,8 +406,8 @@ DO $$ DECLARE c UUID:=current_setting('test.ca_class')::UUID; b UUID:=current_se
         ids:=ids||jsonb_build_array(jsonb_build_object('sourceId',id,'sourceRevision',s->>'source_revision','anthologyConfirmed',TRUE,'blocks',jsonb_build_array('위조본문')));
     END LOOP;
     p:=jsonb_build_object('book_id',b,'expected_revision',1,'title','100편 시험 문집','subtitle','한글 문집','introduction','함께 쓴 이야기','class_label','시험 학급','term','2026 2학기','issue_date','2026-09-05','grouping','custom','items',ids);
-    denied:=FALSE; BEGIN PERFORM public.run_class_agit_book_action_v1(c,'save',jsonb_set(p,'{items,0,anthologyConfirmed}','false')); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
-    IF NOT denied THEN RAISE EXCEPTION 'class consent implicitly became book consent'; END IF;
+    -- 2026-09-28 갱신: 20261245_class_agit_direct_selection.sql 부터 교사의 선택·저장이 곧 수록 결정이다.
+    -- 작품별 anthologyConfirmed 확인은 없어졌으므로 그 거절 검사는 뺐다(철회 세대 보호는 아래에서 그대로 본다).
     denied:=FALSE; BEGIN PERFORM public.run_class_agit_book_action_v1(c,'save',jsonb_set(p,'{items}',ids||jsonb_build_array(ids->0))); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION '101 works accepted'; END IF;
     denied:=FALSE; BEGIN PERFORM public.run_class_agit_book_action_v1(c,'save',jsonb_set(p,'{items,0,sourceId}',to_jsonb(current_setting('test.ca_other_post')))); EXCEPTION WHEN insufficient_privilege THEN denied:=TRUE; END;
@@ -405,13 +417,15 @@ DO $$ DECLARE c UUID:=current_setting('test.ca_class')::UUID; b UUID:=current_se
     denied:=FALSE; BEGIN PERFORM public.run_class_agit_book_action_v1(c,'save',p); EXCEPTION WHEN SQLSTATE 'PT409' THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION 'stale book write'; END IF;
     s:=public.get_class_agit_book_preview_v1(c,b,2);
-    IF jsonb_array_length(s->'book'->'works')<>100 OR s->>'draft'<>'true' OR s::TEXT ~ '"(sourceId|studentId|consentId|itemId)"' THEN RAISE EXCEPTION 'draft print boundary'; END IF;
+    -- 2026-09-28 갱신: 20261288_anthology_page_breaks.sql 부터 교사 미리보기·확정판 작품에 sourceId(원글 id)가 실린다 —
+    -- 쪽 나누기를 원글 id 로 저장하기 때문이다. 학생 화면(20261338)은 이것을 따로 가린다. 나머지 셋은 여전히 새면 안 된다.
+    IF jsonb_array_length(s->'book'->'works')<>100 OR s->>'draft'<>'true' OR s::TEXT ~ '"(studentId|consentId|itemId)"' THEN RAISE EXCEPTION 'draft print boundary'; END IF;
     IF jsonb_array_length(public.get_class_agit_book_workspace_v1(c,b)->'book'->'editions')<>0 THEN RAISE EXCEPTION 'draft preview created edition'; END IF;
     started:=clock_timestamp();
     r:=public.run_class_agit_book_action_v1(c,'finalize',jsonb_build_object('book_id',b,'expected_revision',2,'confirmed',TRUE));
     PERFORM set_config('test.ca_edition',r->'book'->'editions'->0->>'id',TRUE);
     s:=public.get_class_agit_book_edition_v1(c,current_setting('test.ca_edition')::UUID);
-    IF jsonb_array_length(s->'book'->'works')<>100 OR s::TEXT ~ '"(sourceId|studentId|consentId|itemId)"' THEN RAISE EXCEPTION 'edition leaked references'; END IF;
+    IF jsonb_array_length(s->'book'->'works')<>100 OR s::TEXT ~ '"(studentId|consentId|itemId)"' THEN RAISE EXCEPTION 'edition leaked references'; END IF;
     RAISE NOTICE 'C3 100 works finalize + print DTO: % ms, % bytes',extract(epoch FROM clock_timestamp()-started)*1000,octet_length(s::TEXT);
     PERFORM public.run_class_agit_book_action_v1(c,'show',jsonb_build_object('book_id',b,'expected_revision',3,'edition_id',current_setting('test.ca_edition')));
     PERFORM set_config('test.ca_book_first_item',r->'book'->'items'->0->>'itemId',TRUE);
@@ -445,129 +459,6 @@ DO $$ DECLARE r JSONB; denied BOOLEAN:=FALSE; BEGIN
     BEGIN PERFORM public.get_class_agit_book_edition_v1(current_setting('test.ca_class')::UUID,current_setting('test.ca_edition')::UUID); EXCEPTION WHEN insufficient_privilege THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION 'print ignored withdrawal'; END IF;
 END; $$;
--- Prepare a distinct external publication while student switch is OFF.
-RESET ROLE;
-UPDATE public.classes SET enabled_modules=array_remove(enabled_modules,'class-agit') WHERE id=current_setting('test.ca_class')::UUID;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_admin'),TRUE);
-DO $$ DECLARE c UUID:=current_setting('test.ca_class')::UUID; ex UUID:=current_setting('test.ca_scale_ex')::UUID; r JSONB; p JSONB; items JSONB:='[]'; i JSONB; denied BOOLEAN:=FALSE; BEGIN
-    r:=public.get_class_agit_share_workspace_v1(c,ex);
-    FOR i IN SELECT value FROM jsonb_array_elements(r->'candidates') LIMIT 12 LOOP
-        items:=items||jsonb_build_array(jsonb_build_object('itemId',i->>'itemId','sourceRevision',i->>'sourceRevision','publicAlias','별빛 작가','externalConfirmed',TRUE));
-    END LOOP;
-    p:=jsonb_build_object('expected_revision',0,'exhibition_revision',r->'exhibition_revision','title','우리의 전시','introduction','공개 소개','days',30,'token',repeat('a',64),'confirmed',TRUE,'items',items);
-    BEGIN PERFORM public.run_class_agit_share_action_v1(c,ex,'publish',p); EXCEPTION WHEN insufficient_privilege THEN denied:=TRUE; END;
-    IF NOT denied THEN RAISE EXCEPTION 'external OFF ignored'; END IF;
-    r:=public.manage_class_agit_rollout_v1();
-    PERFORM public.manage_class_agit_rollout_v1(jsonb_build_object('mode','internal','external_enabled',TRUE,'class_ids','[]'::JSONB,'expected_revision',r->'settings'->'revision'));
-    denied:=FALSE; BEGIN PERFORM public.run_class_agit_share_action_v1(c,ex,'publish',jsonb_set(p,'{items,0,externalConfirmed}','false')); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
-    IF NOT denied THEN RAISE EXCEPTION 'external consent implicit'; END IF;
-    r:=public.run_class_agit_share_action_v1(c,ex,'publish',p);
-    IF r::TEXT ~ '(token_hash|aaaaaaaaaaaaaaaa)' THEN RAISE EXCEPTION 'manager returned token'; END IF;
-    IF (r->'share'->>'revision')::INT<>1 THEN RAISE EXCEPTION 'external revision'; END IF;
-    r:=public.run_class_agit_share_action_v1(c,ex,'publish',p);
-    IF (r->'share'->>'revision')::INT<>1 THEN RAISE EXCEPTION 'lost response retry duplicated release'; END IF;
-    PERFORM set_config('test.ca_external_first',r->'published_items'->0->>'id',TRUE);
-END; $$;
-SET LOCAL ROLE anon;
-SELECT set_config('request.jwt.claim.sub','',TRUE); SELECT set_config('request.jwt.claims','{"role":"anon"}',TRUE);
-DO $$ DECLARE r JSONB; BEGIN
-    r:=public.read_public_class_agit_v1(repeat('a',64),1);
-    IF r->>'error' IS NOT NULL OR jsonb_array_length(r->'items')<>12 OR r::TEXT ~ '"(blocks|student_id|post_id|class_id|sourceId|token_hash)"' OR r->'items'->0->>'author'<>'별빛 작가' THEN RAISE EXCEPTION 'public room safety %',r->>'error'; END IF;
-    IF current_setting('response.headers') NOT LIKE '%no-store%' OR current_setting('response.headers') NOT LIKE '%no-referrer%' THEN RAISE EXCEPTION 'public response headers'; END IF;
-    r:=public.read_public_class_agit_v1(repeat('a',64),1,'published-2',1);
-    IF r->'work'->'blocks' IS NULL THEN RAISE EXCEPTION 'anonymous detail'; END IF;
-    IF public.read_public_class_agit_v1(repeat('b',64))->>'error'<>'unavailable' OR public.read_public_class_agit_v1('x')->>'error'<>'unavailable' THEN RAISE EXCEPTION 'guessing valid share'; END IF;
-    IF public.read_public_class_agit_v1(repeat('a',64),1,'published-2',2)->>'error'<>'changed' THEN RAISE EXCEPTION 'public wrong edition'; END IF;
-END; $$;
-RESET ROLE;
--- Recall and restore the source: previous release must stay revoked.
-UPDATE public.student_posts SET recalled_at=now() WHERE id=(current_setting('test.ca_scale_posts')::JSONB->>1)::UUID;
-UPDATE public.student_posts SET recalled_at=NULL WHERE id=(current_setting('test.ca_scale_posts')::JSONB->>1)::UUID;
-SET LOCAL ROLE anon;
-DO $$ BEGIN
-    IF public.read_public_class_agit_v1(repeat('a',64),1,'published-2',1)->>'error'<>'unavailable' THEN RAISE EXCEPTION 'recall restored old external consent'; END IF;
-END; $$;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_admin'),TRUE);
-SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.ca_admin'),'role','authenticated')::TEXT,TRUE);
-DO $$ DECLARE c UUID:=current_setting('test.ca_class')::UUID; ex UUID:=current_setting('test.ca_scale_ex')::UUID; BEGIN
-    PERFORM public.run_class_agit_share_action_v1(c,ex,'rotate',jsonb_build_object('expected_revision',1,'token',repeat('c',64),'days',1));
-END; $$;
-SET LOCAL ROLE anon;
-DO $$ BEGIN
-    IF public.read_public_class_agit_v1(repeat('a',64))->>'error'<>'unavailable' OR public.read_public_class_agit_v1(repeat('c',64))->>'error' IS NOT NULL THEN RAISE EXCEPTION 'rotation failed'; END IF;
-END; $$;
-RESET ROLE;
-UPDATE public.class_agit_external_shares SET expires_at=now()-interval '1 second' WHERE class_id=current_setting('test.ca_class')::UUID;
-SET LOCAL ROLE anon;
-DO $$ BEGIN IF public.read_public_class_agit_v1(repeat('c',64))->>'error'<>'unavailable' THEN RAISE EXCEPTION 'expired release'; END IF; END; $$;
-RESET ROLE;
-UPDATE public.class_agit_external_shares SET expires_at=now()+interval '1 day' WHERE class_id=current_setting('test.ca_class')::UUID;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_admin'),TRUE);
-SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.ca_admin'),'role','authenticated')::TEXT,TRUE);
-DO $$ DECLARE r JSONB; BEGIN
-    r:=public.manage_class_agit_rollout_v1();
-    PERFORM public.manage_class_agit_rollout_v1(jsonb_build_object('mode','pilot','external_enabled',TRUE,'class_ids',jsonb_build_array(current_setting('test.ca_other_class')),'expected_revision',r->'settings'->'revision'));
-END; $$;
-SET LOCAL ROLE anon;
-DO $$ BEGIN IF public.read_public_class_agit_v1(repeat('c',64))->>'error'<>'unavailable' THEN RAISE EXCEPTION 'pilot excluded class still public'; END IF; END; $$;
-RESET ROLE;
-UPDATE public.class_agit_rollout SET mode='internal' WHERE singleton;
--- Failed requests retain a bounded rate counter (return JSON, never raise after increment).
-UPDATE public.class_agit_public_read_budget SET requests=3000,window_start=date_trunc('minute',clock_timestamp()) WHERE bucket='global';
-SET LOCAL ROLE anon;
-DO $$ BEGIN IF public.read_public_class_agit_v1('invalid')->>'error'<>'rate_limited' OR current_setting('response.status')<>'429' THEN RAISE EXCEPTION 'global anonymous rate limit'; END IF; END; $$;
-RESET ROLE;
-DO $$ BEGIN IF (SELECT requests FROM public.class_agit_public_read_budget WHERE bucket='global')<>3001 THEN RAISE EXCEPTION 'rate increment rolled back'; END IF; END; $$;
-UPDATE public.class_agit_public_read_budget SET requests=1;
-
-SAVEPOINT class_agit_release_extra;
--- Reconfirmation restores only new anthology editions, never an old withdrawn one.
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_admin'),TRUE);
-SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.ca_admin'),'role','authenticated')::TEXT,TRUE);
-DO $$ DECLARE c UUID:=current_setting('test.ca_class')::UUID; b UUID:=current_setting('test.ca_book')::UUID; r JSONB; s JSONB; e UUID; BEGIN
-    s:=public.get_class_agit_source_v1(c,(current_setting('test.ca_book_posts')::JSONB->>0)::UUID)->'source';
-    r:=public.run_class_agit_book_action_v1(c,'save',jsonb_build_object('book_id',b,'expected_revision',5,'title','새 확인 문집','issue_date','2026-09-05','items',jsonb_build_array(jsonb_build_object('sourceId',s->>'id','sourceRevision',s->>'source_revision','anthologyConfirmed',TRUE))));
-    r:=public.run_class_agit_book_action_v1(c,'finalize',jsonb_build_object('book_id',b,'expected_revision',6,'confirmed',TRUE));
-    e:=(r->'book'->'editions'->0->>'id')::UUID;
-    IF jsonb_array_length(public.get_class_agit_book_edition_v1(c,e)->'book'->'works')<>1 THEN RAISE EXCEPTION 'new book consent not available'; END IF;
-END; $$;
-RESET ROLE;
-DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.class_agit_book_visible_works_v1(current_setting('test.ca_class')::UUID,current_setting('test.ca_edition')::UUID) WHERE work_id='chapter-1') THEN RAISE EXCEPTION 'new confirmation revived old book'; END IF; END; $$;
-UPDATE public.classes SET teacher_id=current_setting('test.ca_teacher')::UUID WHERE id=current_setting('test.ca_class')::UUID;
-SET LOCAL ROLE authenticated;
-DO $$ DECLARE r JSONB; p JSONB; denied BOOLEAN:=FALSE; BEGIN
-    r:=public.manage_class_agit_rollout_v1();
-    p:=jsonb_build_object('mode','pilot','external_enabled',TRUE,'class_ids',jsonb_build_array(current_setting('test.ca_class')),'expected_revision',r->'settings'->'revision');
-    BEGIN PERFORM public.manage_class_agit_rollout_v1(jsonb_set(p,'{class_ids}',jsonb_build_array(current_setting('test.ca_class'),current_setting('test.ca_other_class'),current_setting('test.ca_class')))); EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE; END;
-    IF NOT denied THEN RAISE EXCEPTION 'pilot more than 2 accepted'; END IF;
-    PERFORM public.manage_class_agit_rollout_v1(p);
-END; $$;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_teacher'),TRUE);
-SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.ca_teacher'),'role','authenticated')::TEXT,TRUE);
-DO $$ DECLARE denied BOOLEAN:=FALSE; BEGIN
-    IF public.get_class_agit_access_v1(current_setting('test.ca_class')::UUID)->>'allowed'<>'true' THEN RAISE EXCEPTION 'approved pilot teacher rejected'; END IF;
-    PERFORM public.get_class_agit_book_workspace_v1(current_setting('test.ca_class')::UUID);
-    BEGIN PERFORM public.manage_class_agit_rollout_v1(); EXCEPTION WHEN insufficient_privilege THEN denied:=TRUE; END;
-    IF NOT denied THEN RAISE EXCEPTION 'pilot teacher became rollout admin'; END IF;
-END; $$;
-RESET ROLE;
-UPDATE public.class_agit_public_read_budget SET requests=600,window_start=date_trunc('minute',clock_timestamp()) WHERE bucket='share:'||current_setting('test.ca_scale_ex');
-SET LOCAL ROLE anon;
-SELECT set_config('request.jwt.claim.sub','',TRUE); SELECT set_config('request.jwt.claims','{"role":"anon"}',TRUE);
-DO $$ BEGIN IF public.read_public_class_agit_v1(repeat('c',64))->>'error'<>'rate_limited' THEN RAISE EXCEPTION 'share rate limit ignored'; END IF; END; $$;
-RESET ROLE;
-UPDATE public.class_agit_public_read_budget SET requests=1;
-SELECT set_config('request.jwt.claim.sub',current_setting('test.ca_teacher'),TRUE);
-SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.ca_teacher'),'role','authenticated')::TEXT,TRUE);
-UPDATE public.students SET is_active=FALSE WHERE id=current_setting('test.ca_student')::UUID;
-UPDATE public.students SET is_active=TRUE WHERE id=current_setting('test.ca_student')::UUID;
-SET LOCAL ROLE anon;
-SELECT set_config('request.jwt.claim.sub','',TRUE); SELECT set_config('request.jwt.claims','{"role":"anon"}',TRUE);
-DO $$ BEGIN IF (public.read_public_class_agit_v1(repeat('c',64))->>'total_count')::INT<>0 THEN RAISE EXCEPTION 'reactivating student revived external consent'; END IF; END; $$;
-RESET ROLE;
-ROLLBACK TO SAVEPOINT class_agit_release_extra;
-RELEASE SAVEPOINT class_agit_release_extra;
+-- 2026-09-28 퇴역: 여기부터 있던 외부 공유·시범 학급 2개 상한·익명 읽기 검사는 옛 흐름(anon 직접 읽기, pilot, starts_at 없음) 기준이었다.
+-- 그 뒤 바뀐 흐름은 새 스모크가 본다 — 20261243(멈춘 공개 읽기·service_role·속도 제한), 20261248/20261250(샘링크 주소·예산),
+-- 20261252(open 공개), 20261257(철회한 작품은 외부에서도 빠짐). 위쪽의 학급 전시·문집 검사는 그대로 돈다.

@@ -97,8 +97,9 @@ BEGIN
     IF (v_first ->> 'claimed_points')::INTEGER <> 200
        OR (v_duplicate ->> 'claimed_points')::INTEGER <> 0
        OR (v_diary_rest ->> 'claimed_points')::INTEGER <> 1000
-       OR (v_reading ->> 'claimed_points')::INTEGER <> 600
-       OR (v_reading ->> 'total_points')::INTEGER <> v_before + 1800 THEN
+       -- 20261212 파일에서 바뀜: 독서가는 편수만 본다. 확인 독서록 5편 = 2단계(200P)뿐이다(예전 책 수 기준 3단계 600P).
+       OR (v_reading ->> 'claimed_points')::INTEGER <> 200
+       OR (v_reading ->> 'total_points')::INTEGER <> v_before + 1400 THEN
         RAISE EXCEPTION '단계별·모두 받기·중복 수령 결과가 올바르지 않습니다: %, %, %, %',
             v_first, v_duplicate, v_diary_rest, v_reading;
     END IF;
@@ -128,7 +129,8 @@ BEGIN
     WHERE point_log.student_id = current_setting('test.title_reward_student_id')::UUID
       AND point_log.activity_type = 'title_reward'
       AND point_log.event_key LIKE 'title-reward:' || current_setting('test.title_reward_season_id') || ':%';
-    IF v_claim_count <> 5 OR v_log_count <> 5 THEN
+    -- 기록가 2·3·4단계 + 독서가 2단계 = 4건(20261212 기준).
+    IF v_claim_count <> 4 OR v_log_count <> 4 THEN
         RAISE EXCEPTION '수령 원장과 포인트 원장이 일치하지 않습니다: claims %, logs %', v_claim_count, v_log_count;
     END IF;
 END;

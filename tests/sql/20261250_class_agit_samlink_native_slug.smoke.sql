@@ -56,7 +56,8 @@ BEGIN
   INTO items FROM jsonb_array_elements(r->'candidates') i;
  r:=public.run_class_agit_share_action_v1(c,e,'publish',jsonb_build_object('display_version',2,'layout_version',2,'expected_revision',0,
   'exhibition_revision',2,'title','샘링크 방식 전시','rooms',rooms,'items',items,'token',repeat('e',64),'starts_at',now(),'expires_at',now()+INTERVAL '30 days'));
- IF r->'share'->>'short_url' !~ '^https://샘링크\.kr/[a-km-z2-9]{4}$' THEN RAISE EXCEPTION 'published url is not a samlink 4-char address: %',r->'share'->>'short_url'; END IF;
+ -- 2026-09-28 갱신: 20261251_class_agit_longer_share_slug.sql 이 전시 주소를 8자(겹치면 10자)로 늘렸다. 알파벳은 그대로.
+ IF r->'share'->>'short_url' !~ '^https://샘링크\.kr/[a-km-z2-9]{8,10}$' THEN RAISE EXCEPTION 'published url is not a samlink 8~10-char address: %',r->'share'->>'short_url'; END IF;
  SELECT * INTO link FROM samlink.short_links WHERE slug=(SELECT samlink_slug FROM public.class_agit_external_shares WHERE class_id=c AND id=e);
  -- 샘링크 프로그램에 주인과 이름표까지 남아야 목록에서 관리할 수 있다.
  IF link.created_by<>'agit-exhibition' OR link.display_label<>'아지트 글 전시관' THEN RAISE EXCEPTION 'samlink ownership/label missing'; END IF;

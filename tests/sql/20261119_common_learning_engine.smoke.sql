@@ -1,3 +1,5 @@
+-- 20261120 파일에서 바뀜: 옛 어휘 진도 표는 얼었고 엔진 표만 쓴다(③ 존재만 대조, ④ 엔진에만 기록).
+-- 20261156 파일에서 바뀜: 어휘 층당 진도 보상 총액 상한(500P)이 없어져 ② 대조 범위를 500P 이하로 좁히고 상한 없음을 따로 본다.
 -- 공통 학습 엔진 1단계 스모크. 핵심 합격 조건은 **엔진 규칙이 어휘 V2와 완전히 같다**는 것이다.
 -- 규칙이 한 곳이라도 달라지면 학생이 보는 익힘 판정·복습 시점이 조용히 바뀐다.
 -- 반드시 ROLLBACK 트랜잭션에서 돌린다.
@@ -79,7 +81,12 @@ END; $$;
 DO $$
 DECLARE r RECORD; v_diff INTEGER;
 BEGIN
-    FOR r IN SELECT * FROM (VALUES (0,0),(1,100),(12,100),(157,100),(157,0),(157,500),(157,999)) v(items, pts)
+    -- 20261156 파일에서 바뀜: 어휘 함수는 층당 총액 500P 상한을 없앴다. 엔진 함수는 아무도 부르지 않은 채
+    -- 옛 상한이 남아 있으므로 500P 이하에서만 둘을 대조하고, 상한 없음은 아래에서 어휘 함수만 본다.
+    IF (SELECT SUM(v.reward_points) FROM public.vocab_tower_v2_progress_milestones_v1(157, 999) v) <> 999 THEN
+        RAISE EXCEPTION '② 어휘 층당 보상 총액이 다시 500P 등으로 잘립니다(20261156 상한 없음 계약).';
+    END IF;
+    FOR r IN SELECT * FROM (VALUES (0,0),(1,100),(12,100),(157,100),(157,0),(157,500)) v(items, pts)
     LOOP
         -- 두 함수는 반환 컬럼 이름만 다르고(엔진은 콘텐츠 중립 이름) 값은 같아야 한다.
         SELECT count(*) INTO v_diff FROM (
@@ -106,7 +113,8 @@ BEGIN
         RAISE EXCEPTION '③ 항목 진도가 덜 옮겨졌습니다: 옛 % → 새 %', v_old, v_new;
     END IF;
 
-    -- 값까지 같은지 대조한다(상태·시도·연속·복습 시점).
+    -- 20261120 부터 옛 표는 얼어 있고 엔진 표만 계속 바뀐다. 값 대조는 이관 당시에만 의미가 있으므로
+    -- 이제는 옛 행마다 엔진 행이 빠짐없이 있는지만 본다.
     SELECT count(*) INTO v_mismatch
     FROM public.vocab_tower_v2_item_progress old
     LEFT JOIN public.learning_item_progress new
@@ -114,13 +122,9 @@ BEGIN
      AND new.content_type = 'vocab'
      AND new.collection_key = public.vocab_tower_v2_collection_key(old.grade, old.deck_number)
      AND new.item_key = old.item_key
-    WHERE new.item_key IS NULL
-       OR new.learning_state IS DISTINCT FROM old.learning_state
-       OR new.attempt_count IS DISTINCT FROM old.attempt_count
-       OR new.consecutive_correct IS DISTINCT FROM old.consecutive_correct
-       OR new.next_review_at IS DISTINCT FROM old.next_review_at;
+    WHERE new.item_key IS NULL;
     IF v_mismatch <> 0 THEN
-        RAISE EXCEPTION '③ 옮긴 값이 원본과 다른 행이 %개 있습니다', v_mismatch;
+        RAISE EXCEPTION '③ 엔진 표로 옮겨지지 않은 옛 진도 행이 %개 있습니다', v_mismatch;
     END IF;
 
     RAISE NOTICE '③ 항목 진도 이관 완료 (옛 %행 → 새 %행)', v_old, v_new;
@@ -154,24 +158,27 @@ BEGIN
         RAISE NOTICE '④ V2 실행을 찾지 못해 건너뜀'; RETURN;
     END IF;
     v_key := public.vocab_tower_v2_collection_key(v_run.grade, v_run.v2_deck_number);
-
+    SELECT row_to_json(old)::TEXT INTO v_old FROM public.vocab_tower_v2_item_progress old
+     WHERE student_id = v_q.student_id AND class_id = v_q.class_id
+       AND grade = v_run.grade AND deck_number = v_run.v2_deck_number AND item_key = v_q.item_key;
     INSERT INTO public.vocab_tower_answers
         (run_id, student_id, class_id, question_key, room_type, word, selected_answer, is_correct, used_hint)
     VALUES (v_q.run_id, v_q.student_id, v_q.class_id, v_q.id::TEXT,
             'meaning', v_q.item_key, '스모크', true, false);
 
-    SELECT learning_state INTO v_old FROM public.vocab_tower_v2_item_progress
-     WHERE student_id = v_q.student_id AND class_id = v_q.class_id
-       AND grade = v_run.grade AND deck_number = v_run.v2_deck_number AND item_key = v_q.item_key;
+    -- 20261120 파일에서 바뀜: 양쪽 쓰기를 끝냈다. 답안은 엔진 표에만 남고 옛 표 행은 그대로여야 한다.
+    IF (SELECT row_to_json(old)::TEXT FROM public.vocab_tower_v2_item_progress old
+         WHERE student_id = v_q.student_id AND class_id = v_q.class_id
+           AND grade = v_run.grade AND deck_number = v_run.v2_deck_number AND item_key = v_q.item_key)
+       IS DISTINCT FROM v_old THEN
+        RAISE EXCEPTION '④ 쓰지 않기로 한 옛 어휘 진도 표에 답안이 기록됐습니다';
+    END IF;
     SELECT learning_state INTO v_new FROM public.learning_item_progress
      WHERE student_id = v_q.student_id AND class_id = v_q.class_id
        AND content_type = 'vocab' AND collection_key = v_key AND item_key = v_q.item_key;
 
     IF v_new IS NULL THEN RAISE EXCEPTION '④ 엔진에 답안이 기록되지 않았습니다'; END IF;
-    IF v_old IS DISTINCT FROM v_new THEN
-        RAISE EXCEPTION '④ 같은 답안인데 상태가 다릅니다: 어휘=% 엔진=%', v_old, v_new;
-    END IF;
-    RAISE NOTICE '④ 새 답안이 양쪽에 같은 상태(%)로 기록됨', v_new;
+    RAISE NOTICE '④ 새 답안이 엔진 표에만 기록됨(%)', v_new;
 END; $$;
 
 -- ⑤ 엔진 표가 학생·교사에게 직접 열려 있지 않은가

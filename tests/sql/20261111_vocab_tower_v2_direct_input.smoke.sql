@@ -1,3 +1,5 @@
+-- 20261221 파일에서 바뀜: 새 판은 모두 정책 2(층별 직접 입력 자리)라 입력 자리까지 선택형을 넘긴 뒤 확인한다.
+-- 20261120 파일에서 바뀜: 낱말 학습 상태는 공통 엔진 표 learning_item_progress(collection_key=학년·덱)에서 읽고 쓴다. 20261162 에서 층 순차 해금이 붙었다.
 -- migrate:check가 만든 바깥 트랜잭션에서 실행되며 마지막에 전부 롤백된다.
 -- 직접 입력형 출제·정답 비노출·정규화 채점·익힘 전환을 실제 운영 스키마에서 확인한다.
 
@@ -47,11 +49,11 @@ BEGIN
      WHERE run.student_id = v_student_id
        AND run.status = 'active';
 
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
 END;
 $$;
 
@@ -71,6 +73,28 @@ BEGIN
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_input_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_input_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_input_teacher_id'), 'role', 'authenticated'
@@ -116,22 +140,24 @@ DECLARE
     v_item_key TEXT;
     v_accepted JSONB;
     v_typed TEXT;
-    v_progress public.vocab_tower_v2_item_progress%ROWTYPE;
+    v_progress public.learning_item_progress%ROWTYPE;
+    v_index INTEGER;
+    v_choice_answer TEXT;
 BEGIN
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
 
     -- 8번 덱 전체를 `한 유형 성공`으로 두어 어떤 낱말이 뽑혀도 입력형이 되게 한다.
-    INSERT INTO public.vocab_tower_v2_item_progress (
-        student_id, class_id, grade, deck_number, item_key,
+    INSERT INTO public.learning_item_progress (
+        student_id, class_id, content_type, collection_key, item_key,
         learning_state, attempt_count, correct_count, wrong_count,
         consecutive_correct, correct_question_types, last_question_type,
         last_correct, next_review_at
     )
-    SELECT v_student_id, v_class_id, 3, 8, item.item_key,
+    SELECT v_student_id, v_class_id, 'vocab', public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT), item.item_key,
            'familiar', 1, 1, 0, 1, ARRAY['meaningChoice']::TEXT[], 'meaningChoice',
            TRUE, NOW() - INTERVAL '1 day'
     FROM public.vocab_tower_v2_review_items item
@@ -139,8 +165,19 @@ BEGIN
     WHERE deck.grade = 3 AND deck.deck_number = 8 AND deck.review_status = 'locked';
 
     v_run := public.start_my_vocab_tower_v2_practice_v1(8::SMALLINT);
-    v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
-
+    -- 20261221 이후 모든 새 판은 정책 2(층별 직접 입력 자리 고정)다. 8층은 4·8·12번째가 입력 자리이므로
+    -- 앞의 선택형 문항을 정답으로 넘기며 첫 입력 자리까지 간다.
+    FOR v_index IN 1..12 LOOP
+        v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
+        EXIT WHEN v_question->>'question_type' IN ('definitionInput', 'clozeInput');
+        SELECT question.correct_answer INTO v_choice_answer
+        FROM public.vocab_tower_v2_run_questions question
+        WHERE question.id = (v_question->>'question_key')::UUID;
+        PERFORM public.submit_my_vocab_tower_v2_practice_answer_v1(
+            (v_run->>'run_id')::UUID, (v_question->>'question_key')::UUID, v_choice_answer, FALSE
+        );
+        PERFORM pg_sleep(0.16);
+    END LOOP;
     IF v_question->>'question_type' NOT IN ('definitionInput', 'clozeInput') THEN
         RAISE EXCEPTION '한 유형 성공 낱말이 직접 입력형으로 올라가지 않았습니다: %', v_question->>'question_type';
     END IF;
@@ -187,13 +224,13 @@ BEGIN
 
     -- 선택형 1회 + 입력형 1회 = 서로 다른 두 유형 연속 성공이므로 익힘으로 올라간다.
     SELECT progress.* INTO v_progress
-    FROM public.vocab_tower_v2_item_progress progress
+    FROM public.learning_item_progress progress
     WHERE progress.student_id = v_student_id
       AND progress.class_id = v_class_id
-      AND progress.grade = 3
-      AND progress.deck_number = 8
+      AND progress.content_type = 'vocab'
+      AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT)
       AND progress.item_key = v_item_key;
-    IF v_progress.learning_state <> 'mastered' THEN
+    IF v_progress.learning_state IS NULL OR v_progress.learning_state <> 'mastered' THEN
         RAISE EXCEPTION '직접 입력형 성공 뒤 익힘으로 전환되지 않았습니다: %', row_to_json(v_progress);
     END IF;
     IF cardinality(v_progress.correct_question_types) < 2 THEN
@@ -213,20 +250,32 @@ DECLARE
     v_question JSONB;
     v_result JSONB;
     v_item_key TEXT;
-    v_progress public.vocab_tower_v2_item_progress%ROWTYPE;
+    v_progress public.learning_item_progress%ROWTYPE;
+    v_index INTEGER;
+    v_choice_answer TEXT;
 BEGIN
-    UPDATE public.vocab_tower_v2_item_progress progress
+    UPDATE public.learning_item_progress progress
        SET learning_state = 'familiar',
            consecutive_correct = 1,
            correct_question_types = ARRAY['meaningChoice']::TEXT[],
            next_review_at = NOW() - INTERVAL '1 day'
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
 
     v_run := public.start_my_vocab_tower_v2_practice_v1(8::SMALLINT);
-    v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
+    FOR v_index IN 1..12 LOOP
+        v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
+        EXIT WHEN v_question->>'question_type' IN ('definitionInput', 'clozeInput');
+        SELECT question.correct_answer INTO v_choice_answer
+        FROM public.vocab_tower_v2_run_questions question
+        WHERE question.id = (v_question->>'question_key')::UUID;
+        PERFORM public.submit_my_vocab_tower_v2_practice_answer_v1(
+            (v_run->>'run_id')::UUID, (v_question->>'question_key')::UUID, v_choice_answer, FALSE
+        );
+        PERFORM pg_sleep(0.16);
+    END LOOP;
     IF v_question->>'question_type' NOT IN ('definitionInput', 'clozeInput') THEN
         RAISE EXCEPTION '두 번째 확인에서 직접 입력형이 나오지 않았습니다: %', v_question->>'question_type';
     END IF;
@@ -246,28 +295,40 @@ BEGIN
     END IF;
 
     SELECT progress.* INTO v_progress
-    FROM public.vocab_tower_v2_item_progress progress
+    FROM public.learning_item_progress progress
     WHERE progress.student_id = v_student_id
       AND progress.class_id = v_class_id
-      AND progress.grade = 3
-      AND progress.deck_number = 8
+      AND progress.content_type = 'vocab'
+      AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT)
       AND progress.item_key = v_item_key;
-    IF v_progress.learning_state <> 'needs_review' THEN
+    IF v_progress.learning_state IS NULL OR v_progress.learning_state <> 'needs_review' THEN
         RAISE EXCEPTION '직접 입력형 오답이 복습 필요로 내려가지 않았습니다: %', row_to_json(v_progress);
     END IF;
 
     -- 복습 필요로 내려간 낱말은 다시 선택형으로 만나야 한다.
-    UPDATE public.vocab_tower_v2_item_progress progress
+    UPDATE public.learning_item_progress progress
        SET learning_state = 'needs_review'
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 8;
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 8::SMALLINT);
 
-    v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
-    IF v_question->>'question_type' NOT IN ('meaningChoice', 'clozeChoice', 'usageDistinction') THEN
-        RAISE EXCEPTION '복습 필요 낱말이 선택형으로 돌아가지 않았습니다: %', v_question->>'question_type';
-    END IF;
+    -- 다음 입력 자리(8번째)까지 가도 복습 필요 낱말은 선택형으로 나와야 한다.
+    FOR v_index IN 1..4 LOOP
+        v_question := public.get_next_my_vocab_tower_v2_practice_question_v1((v_run->>'run_id')::UUID);
+        IF v_question->>'question_type' NOT IN ('meaningChoice', 'clozeChoice', 'usageDistinction') THEN
+            RAISE EXCEPTION '복습 필요 낱말이 선택형으로 돌아가지 않았습니다(%번째): %', v_index + 4, v_question->>'question_type';
+        END IF;
+        EXIT WHEN v_index = 4;
+        PERFORM pg_sleep(0.16);
+        SELECT question.correct_answer INTO v_choice_answer
+        FROM public.vocab_tower_v2_run_questions question
+        WHERE question.id = (v_question->>'question_key')::UUID;
+        PERFORM public.submit_my_vocab_tower_v2_practice_answer_v1(
+            (v_run->>'run_id')::UUID, (v_question->>'question_key')::UUID, v_choice_answer, FALSE
+        );
+        PERFORM pg_sleep(0.16);
+    END LOOP;
 
     PERFORM public.finish_my_vocab_tower_v2_practice_v1((v_run->>'run_id')::UUID, 'exited');
 END;

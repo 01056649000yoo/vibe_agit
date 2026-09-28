@@ -1,3 +1,4 @@
+-- 20261019 파일에서 바뀜: report-images 버킷 한도 1.5MB → 256KiB(262144).
 DO $$
 DECLARE
     v_bucket storage.buckets%ROWTYPE;
@@ -9,7 +10,7 @@ BEGIN
 
     IF v_bucket.id IS NULL
        OR v_bucket.public IS TRUE
-       OR v_bucket.file_size_limit <> 1572864
+       OR v_bucket.file_size_limit <> 262144
        OR NOT (v_bucket.allowed_mime_types @> ARRAY['image/webp', 'image/jpeg']::TEXT[]) THEN
         RAISE EXCEPTION 'report-images bucket contract mismatch';
     END IF;

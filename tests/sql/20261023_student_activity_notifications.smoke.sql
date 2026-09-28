@@ -1,3 +1,4 @@
+-- 20261262 파일에서 바뀜: notification_emit_v1 에 actor_student_id(uuid) 9번째 인자가 붙고 8인자 판은 지워졌다(20261272 에서 내부 전용 확인).
 DO $$
 DECLARE
     v_student public.students%ROWTYPE;
@@ -64,9 +65,12 @@ BEGIN
     IF has_table_privilege('authenticated', 'public.student_notification_events', 'SELECT') THEN
         RAISE EXCEPTION '활동 알림 원장이 authenticated에 직접 공개되어 있습니다.';
     END IF;
+    IF to_regprocedure('public.notification_emit_v1(uuid,text,text,text,uuid,jsonb,text,smallint)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 8인자 notification_emit_v1 이 다시 생겼습니다.';
+    END IF;
     IF has_function_privilege(
         'authenticated',
-        'public.notification_emit_v1(uuid,text,text,text,uuid,jsonb,text,smallint)',
+        'public.notification_emit_v1(uuid,text,text,text,uuid,jsonb,text,smallint,uuid)',
         'EXECUTE'
     ) THEN
         RAISE EXCEPTION '내부 알림 발행 함수가 authenticated에 공개되어 있습니다.';

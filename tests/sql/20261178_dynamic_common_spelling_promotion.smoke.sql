@@ -1,3 +1,4 @@
+-- 2026-09-28 갱신: 20261185 파일에서 admin_reject_spelling_candidate_v1(→20261189 admin_set_spelling_candidate_excluded_v1)·작업공간 _v2(→20261179 _v3) 를 지움
 DO $$
 DECLARE
     v_admin UUID;
@@ -14,7 +15,7 @@ BEGIN
         RAISE EXCEPTION '공통 맞춤법 검토 원장이 브라우저 역할에 직접 공개됐습니다.';
     END IF;
     IF has_function_privilege('anon', 'public.admin_publish_common_spelling_entry_v1(text,text,text,jsonb,uuid)', 'EXECUTE')
-       OR has_function_privilege('anon', 'public.admin_reject_spelling_candidate_v1(text,text,text)', 'EXECUTE')
+       OR has_function_privilege('anon', 'public.admin_set_spelling_candidate_excluded_v1(text,text,text,boolean)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.admin_set_common_spelling_entry_status_v1(uuid,boolean)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.get_student_spelling_entries_v2()', 'EXECUTE') THEN
         RAISE EXCEPTION '공통 맞춤법 RPC가 익명 역할에 공개됐습니다.';
@@ -81,7 +82,7 @@ BEGIN
         RAISE EXCEPTION '관리자 승격이 승인된 공통 맞춤법 자료를 만들지 못했습니다.';
     END IF;
 
-    v_workspace := public.admin_get_spelling_promotion_workspace_v2(1, 1, 200);
+    v_workspace := public.admin_get_spelling_promotion_workspace_v3();
     IF NOT EXISTS (
         SELECT 1 FROM jsonb_array_elements(v_workspace->'common_entries') item
         WHERE item->>'id' = v_entry_id::TEXT
@@ -158,7 +159,10 @@ BEGIN
     PERFORM set_config('request.jwt.claims', jsonb_build_object(
         'sub', v_admin, 'role', 'authenticated'
     )::TEXT, TRUE);
-    PERFORM public.admin_reject_spelling_candidate_v1('search', '검증검색후보', '');
+    IF to_regprocedure('public.admin_reject_spelling_candidate_v1(text,text,text)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 admin_reject_spelling_candidate_v1 이 다시 생겼습니다.';
+    END IF;
+    PERFORM public.admin_set_spelling_candidate_excluded_v1('search', '검증검색후보', '', TRUE);
     IF NOT EXISTS (
         SELECT 1 FROM public.spelling_common_reviews review
         WHERE review.source_kind = 'search'

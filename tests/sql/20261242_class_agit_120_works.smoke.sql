@@ -49,7 +49,9 @@ BEGIN
     END LOOP;
     payload:=jsonb_build_object('exhibition_id',e,'expected_revision',1,'title','120편 전시','introduction','열 개의 전시실','items',items);
     denied:=FALSE;
-    BEGIN PERFORM public.run_class_agit_action_v1(c,'save',payload); EXCEPTION WHEN check_violation THEN denied:=TRUE; END;
+    -- 2026-09-28 갱신: 20261247_class_agit_themed_rooms.sql 부터 rooms 없이 121편을 보내면 옛 12편 기준 11실이 되어
+    -- 10실 상한(22023)에서 먼저 막힌다. 막히는 이유가 둘 중 무엇이든 121편은 저장되지 않아야 한다.
+    BEGIN PERFORM public.run_class_agit_action_v1(c,'save',payload); EXCEPTION WHEN check_violation OR invalid_parameter_value THEN denied:=TRUE; END;
     IF NOT denied THEN RAISE EXCEPTION '121 works accepted'; END IF;
     payload:=jsonb_set(payload,'{items}',items-120);
     IF octet_length(payload::TEXT)<=30000 THEN RAISE EXCEPTION 'save payload did not cover old byte limit'; END IF;

@@ -1,10 +1,13 @@
 -- migrate:check 바깥 트랜잭션에서 실행되며 마지막에 모두 롤백된다.
 
+-- 2026-09-28 갱신: 20261218 파일에서 새 업로드 상한이 2MB → 1MB(앱 CLASS_BOARD_IMAGE_MAX_STORED_BYTES 와 같음)·webp/jpeg 로 바뀜.
 DO $$
 BEGIN
     IF (SELECT public FROM storage.buckets WHERE id = 'class-board-assets') IS DISTINCT FROM FALSE
-       OR (SELECT file_size_limit FROM storage.buckets WHERE id = 'class-board-assets') <> 2097152 THEN
-        RAISE EXCEPTION '우리 반 스크린 이미지 버킷이 비공개·2MB 계약을 지키지 않습니다.';
+       OR (SELECT file_size_limit FROM storage.buckets WHERE id = 'class-board-assets') <> 1048576
+       OR (SELECT allowed_mime_types FROM storage.buckets WHERE id = 'class-board-assets')
+          IS DISTINCT FROM ARRAY['image/webp', 'image/jpeg']::TEXT[] THEN
+        RAISE EXCEPTION '우리 반 스크린 이미지 버킷이 비공개·1MB·webp/jpeg 계약을 지키지 않습니다.';
     END IF;
 END;
 $$;

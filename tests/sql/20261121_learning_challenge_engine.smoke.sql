@@ -1,3 +1,4 @@
+-- 20261130 파일에서 바뀜: learning_engine_close_challenge_v1 에 p_wrong_item_keys(8인자)가 붙어 5인자 호출이 모호하다. 8인자로 명시해 부른다.
 -- 공식 도전(덱 마스터) 엔진 스모크. 반드시 ROLLBACK 트랜잭션에서 돌린다.
 -- 규칙은 ROADMAP `2단계 공식 도전`에서 왔다: 모든 항목을 확인하고 숙달해야 도전할 수 있고,
 -- 전체와 직접 입력 기준을 함께 채워야 합격하며, 중도 종료는 최고 기록이 되지 않는다.
@@ -95,7 +96,8 @@ BEGIN
     IF v_again <> v_a1 THEN RAISE EXCEPTION '③ 도전이 중복으로 열렸습니다'; END IF;
 
     -- 중도 종료: 합격이 아니고 최고 기록도 되면 안 된다
-    v_res := public.learning_engine_close_challenge_v1(v_a1, 5::SMALLINT, 5::SMALLINT, 2::SMALLINT, FALSE);
+    v_res := public.learning_engine_close_challenge_v1(v_a1, 5::SMALLINT, 5::SMALLINT, 2::SMALLINT, FALSE,
+            0.75::NUMERIC, 0.5::NUMERIC, NULL::TEXT[]);
     IF (v_res->>'passed')::boolean THEN RAISE EXCEPTION '③ 중도 종료가 합격 처리되었습니다'; END IF;
 
     v_best := public.learning_engine_challenge_best_v1(v_student.id, v_student.class_id, 'smoke', v_key);
@@ -106,7 +108,8 @@ BEGIN
     -- 완주해서 합격
     v_a2 := public.learning_engine_open_challenge_v1(
         v_student.id, v_student.class_id, 'smoke', v_key, 12::SMALLINT, 4::SMALLINT);
-    v_res := public.learning_engine_close_challenge_v1(v_a2, 12::SMALLINT, 10::SMALLINT, 3::SMALLINT, TRUE);
+    v_res := public.learning_engine_close_challenge_v1(v_a2, 12::SMALLINT, 10::SMALLINT, 3::SMALLINT, TRUE,
+            0.75::NUMERIC, 0.5::NUMERIC, NULL::TEXT[]);
     IF NOT (v_res->>'passed')::boolean THEN
         RAISE EXCEPTION '③ 기준을 넘겼는데 불합격입니다: %', v_res;
     END IF;
@@ -131,7 +134,9 @@ BEGIN
     IF has_function_privilege('authenticated',
         'public.learning_engine_open_challenge_v1(uuid,uuid,text,text,smallint,smallint,text)', 'EXECUTE')
        OR has_function_privilege('authenticated',
-        'public.learning_engine_close_challenge_v1(uuid,smallint,smallint,smallint,boolean,numeric,numeric)', 'EXECUTE') THEN
+        'public.learning_engine_close_challenge_v1(uuid,smallint,smallint,smallint,boolean,numeric,numeric)', 'EXECUTE')
+       OR has_function_privilege('authenticated',
+        'public.learning_engine_close_challenge_v1(uuid,smallint,smallint,smallint,boolean,numeric,numeric,text[])', 'EXECUTE') THEN
         RAISE EXCEPTION '④ 도전 열기·끝내기 함수가 로그인 사용자에게 공개되었습니다';
     END IF;
     RAISE NOTICE '④ 권한 경계 통과';

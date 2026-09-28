@@ -59,7 +59,8 @@ BEGIN
  denied:=FALSE;BEGIN PERFORM public.run_class_agit_share_action_v1(c,e,'publish',jsonb_set(payload,'{items,0,author}','""'));EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE;END;
  IF NOT denied THEN RAISE EXCEPTION 'blank author accepted';END IF;
  r:=public.run_class_agit_share_action_v1(c,e,'publish',payload);
- IF r->'share'->>'short_url' NOT LIKE 'https://샘링크.kr/e-%' OR r->'share'->>'publication_no'<>'1' THEN RAISE EXCEPTION 'samlink missing';END IF;
+ -- 2026-09-28 갱신: 주소는 20261250(샘링크 알파벳)·20261251(8자, 겹치면 10자)에서 바뀌었다.
+ IF r->'share'->>'short_url' !~ '^https://샘링크\.kr/[a-km-z2-9]{8,10}$' OR r->'share'->>'publication_no'<>'1' THEN RAISE EXCEPTION 'samlink missing: %',r->'share'->>'short_url';END IF;
  IF r->'candidates'->0->>'shareTitle'<>'외부 제목' OR r->'candidates'->0->>'shareAuthor'<>'교사가 정한 지은이' OR r->'share_rooms'->0->>'title'<>'공개 봄 주제' THEN RAISE EXCEPTION 'editor restore missing';END IF;
  PERFORM set_config('test.editor_url',r->'share'->>'short_url',TRUE);
  r:=public.run_class_agit_share_action_v1(c,e,'publish',payload);
@@ -72,7 +73,8 @@ DO $$ DECLARE c UUID:=current_setting('test.direct_class')::UUID;e UUID:=current
 BEGIN
  SELECT * INTO s FROM public.class_agit_external_shares WHERE class_id=c AND id=e;
  SELECT * INTO l FROM samlink.short_links WHERE slug=s.samlink_slug;
- IF l.destination<>'https://xn--vz0ba242ncqcba79xhwx.site/exhibition#'||repeat('e',64) OR l.expires_at<>s.expires_at OR l.created_by IS NOT NULL THEN RAISE EXCEPTION 'samlink destination/expiry/ownership invalid';END IF;
+ IF l.destination<>'https://xn--vz0ba242ncqcba79xhwx.site/exhibition#'||repeat('e',64) OR l.expires_at<>s.expires_at OR l.created_by IS DISTINCT FROM 'agit-exhibition' THEN RAISE EXCEPTION 'samlink destination/expiry/ownership invalid';END IF;
+ -- 2026-09-28 갱신: 20261250 부터 전시 주소는 created_by='agit-exhibition' 으로 주인을 남긴다.
  IF EXISTS(SELECT 1 FROM public.student_posts WHERE class_id=c AND title='외부 제목') THEN RAISE EXCEPTION 'source modified';END IF;
  FOREACH r IN ARRAY ARRAY['anon','authenticated','service_role'] LOOP
   IF has_function_privilege(r,'public.class_agit_create_samlink_v1(uuid,uuid,text)','EXECUTE') OR has_function_privilege(r,'public.class_agit_sync_samlink_v1()','EXECUTE') THEN RAISE EXCEPTION 'private helper exposed'; END IF;

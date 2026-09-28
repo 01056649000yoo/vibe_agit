@@ -1,3 +1,5 @@
+-- 2026-09-28 갱신: 데이터 탓 — 운영 공개 단계가 public_beta 라 내부 시험 공간을 못 만든다. 트랜잭션 안에서 internal 로 되돌려 검사한다(롤백됨).
+UPDATE public.neighbor_rollout_state SET mode = 'internal' WHERE singleton IS TRUE;
 DO $$
 BEGIN
     IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.neighbor_internal_test_classes'::regclass)

@@ -1,3 +1,4 @@
+-- 20261185 파일에서 바뀜: get_teacher_assignment_submission_board_v1 을 지우고 _v2(class_id, mission_id, recent_limit)로 옮겼다(응답 version 2).
 DO $$
 DECLARE
     v_student public.students%ROWTYPE;
@@ -9,8 +10,12 @@ DECLARE
     v_expected_attempts INTEGER;
     v_denied BOOLEAN := false;
 BEGIN
-    IF has_function_privilege('anon', 'public.get_teacher_assignment_submission_board_v1(uuid,integer)', 'EXECUTE')
-       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v1(uuid,integer,integer)', 'EXECUTE') THEN
+    IF to_regprocedure('public.get_teacher_assignment_submission_board_v1(uuid,integer)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 get_teacher_assignment_submission_board_v1 이 다시 생겼습니다.';
+    END IF;
+    IF has_function_privilege('anon', 'public.get_teacher_assignment_submission_board_v2(uuid,uuid,integer)', 'EXECUTE')
+       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v1(uuid,integer,integer)', 'EXECUTE')
+       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v2(uuid,uuid,integer,integer)', 'EXECUTE') THEN
         RAISE EXCEPTION '학생별 제출 현황 내부/외부 함수 권한이 너무 넓습니다.';
     END IF;
 
@@ -41,7 +46,7 @@ BEGIN
     )::TEXT, true);
 
     BEGIN
-        PERFORM public.get_teacher_assignment_submission_board_v1(v_student.class_id, 8);
+        PERFORM public.get_teacher_assignment_submission_board_v2(v_student.class_id, NULL, 8);
     EXCEPTION WHEN insufficient_privilege THEN
         v_denied := true;
     END;
@@ -54,7 +59,7 @@ BEGIN
         'sub', v_teacher_id, 'role', 'authenticated'
     )::TEXT, true);
 
-    v_board := public.get_teacher_assignment_submission_board_v1(v_student.class_id, 1000);
+    v_board := public.get_teacher_assignment_submission_board_v2(v_student.class_id, NULL, 1000);
     v_overview := public.get_teacher_mission_overview_v1(v_student.class_id, 1000);
 
     IF v_board->'student_statuses' IS NULL
@@ -94,7 +99,13 @@ BEGIN
         END IF;
     END LOOP;
 
-    IF v_overview->'submission_board'->'student_statuses' IS DISTINCT FROM v_board->'student_statuses' THEN
+    -- 첫 과제 개요는 아직 snapshot_v1 을 쓰고 전광판은 snapshot_v2 를 쓴다. v2 는 학생마다 `status` 를
+    -- 더 싣는다. 네 상태 수는 같은 원본이어야 하므로 `status` 를 뺀 나머지를 순서대로 대조한다.
+    IF (SELECT jsonb_agg(item.value - 'status' ORDER BY item.ordinality)
+        FROM jsonb_array_elements(v_overview->'submission_board'->'student_statuses') WITH ORDINALITY item)
+       IS DISTINCT FROM
+       (SELECT jsonb_agg(item.value - 'status' ORDER BY item.ordinality)
+        FROM jsonb_array_elements(v_board->'student_statuses') WITH ORDINALITY item) THEN
         RAISE EXCEPTION '첫 과제 개요와 12초 전광판의 학생별 상태 원본이 다릅니다.';
     END IF;
 

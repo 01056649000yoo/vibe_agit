@@ -1,3 +1,4 @@
+-- 20261185 파일에서 바뀜: get_teacher_assignment_submission_board_v1 을 지우고 _v2(class_id, mission_id, recent_limit)로 옮겼다(응답 version 2).
 DO $$
 DECLARE
     v_student public.students%ROWTYPE;
@@ -6,12 +7,16 @@ DECLARE
     v_overview JSONB;
     v_denied BOOLEAN := false;
 BEGIN
-    IF has_function_privilege('anon', 'public.get_teacher_assignment_submission_board_v1(uuid,integer)', 'EXECUTE')
-       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v1(uuid,integer,integer)', 'EXECUTE') THEN
+    IF to_regprocedure('public.get_teacher_assignment_submission_board_v1(uuid,integer)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 get_teacher_assignment_submission_board_v1 이 다시 생겼습니다.';
+    END IF;
+    IF has_function_privilege('anon', 'public.get_teacher_assignment_submission_board_v2(uuid,uuid,integer)', 'EXECUTE')
+       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v1(uuid,integer,integer)', 'EXECUTE')
+       OR has_function_privilege('authenticated', 'public.teacher_assignment_submission_board_snapshot_v2(uuid,uuid,integer,integer)', 'EXECUTE') THEN
         RAISE EXCEPTION '과제 제출 전광판 내부/외부 함수 권한이 너무 넓습니다.';
     END IF;
 
-    IF NOT has_function_privilege('authenticated', 'public.get_teacher_assignment_submission_board_v1(uuid,integer)', 'EXECUTE') THEN
+    IF NOT has_function_privilege('authenticated', 'public.get_teacher_assignment_submission_board_v2(uuid,uuid,integer)', 'EXECUTE') THEN
         RAISE EXCEPTION '인증 교사가 과제 제출 전광판 RPC를 실행할 수 없습니다.';
     END IF;
 
@@ -41,7 +46,7 @@ BEGIN
     )::TEXT, true);
 
     BEGIN
-        PERFORM public.get_teacher_assignment_submission_board_v1(v_student.class_id, 8);
+        PERFORM public.get_teacher_assignment_submission_board_v2(v_student.class_id, NULL, 8);
     EXCEPTION WHEN insufficient_privilege THEN
         v_denied := true;
     END;
@@ -54,10 +59,11 @@ BEGIN
         'sub', v_teacher_id, 'role', 'authenticated'
     )::TEXT, true);
 
-    v_board := public.get_teacher_assignment_submission_board_v1(v_student.class_id, 1000);
+    v_board := public.get_teacher_assignment_submission_board_v2(v_student.class_id, NULL, 1000);
     v_overview := public.get_teacher_mission_overview_v1(v_student.class_id, 1000);
 
-    IF v_board->>'version' <> '1'
+    IF v_board->>'version' <> '2'
+       OR v_board->>'scope' <> 'all'
        OR v_board->'mission_statuses' IS NULL
        OR v_board->'submission_counts' IS NULL
        OR v_board->'recent_submissions' IS NULL

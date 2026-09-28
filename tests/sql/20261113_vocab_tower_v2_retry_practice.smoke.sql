@@ -1,3 +1,4 @@
+-- 20261120 파일에서 바뀜: 낱말 학습 상태는 공통 엔진 표 learning_item_progress(collection_key=학년·덱)에서 읽고 쓴다. 20261162 에서 층 순차 해금이 붙었다.
 -- migrate:check가 만든 바깥 트랜잭션에서 실행되며 마지막에 전부 롤백된다.
 -- 같은 연습에서 틀린 낱말이 3문항 뒤 다른 형태로 한 번만 다시 나오는지 확인한다.
 
@@ -45,12 +46,35 @@ BEGIN
      WHERE run.student_id = v_student_id
        AND run.status = 'active';
 
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
-       AND progress.class_id = v_class_id;
+       AND progress.class_id = v_class_id
+       AND progress.content_type = 'vocab';
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_retry_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_retry_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_retry_teacher_id'), 'role', 'authenticated'
@@ -171,9 +195,10 @@ DECLARE
     v_correct TEXT;
     v_index INTEGER;
 BEGIN
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
-       AND progress.class_id = v_class_id;
+       AND progress.class_id = v_class_id
+       AND progress.content_type = 'vocab';
 
     v_run := public.start_my_vocab_tower_v2_practice_v1(6::SMALLINT);
     v_run_id := (v_run->>'run_id')::UUID;

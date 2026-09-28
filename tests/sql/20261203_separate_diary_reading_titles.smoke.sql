@@ -10,9 +10,12 @@ BEGIN
     IF public.dragon_diary_level(39) <> 6 OR public.dragon_diary_level(40) <> 7 THEN
         RAISE EXCEPTION '기록가 칭호 DB 경계가 화면 기준과 다릅니다.';
     END IF;
-    IF public.dragon_reading_level(25, 17) <> 6
-       OR public.dragon_reading_level(25, 18) <> 7 THEN
-        RAISE EXCEPTION '독서가 칭호 DB의 편수·책 수 동시 경계가 잘못되었습니다.';
+    -- 20261212 파일에서 바뀜: 독서가 칭호는 확인 독서록 편수만 본다(책 수 인자는 호환용으로만 남음). 7단계=30편, 6단계=22편.
+    IF public.dragon_reading_level(29, 100) <> 6
+       OR public.dragon_reading_level(30, 0) <> 7
+       OR public.dragon_reading_level(21, 999) <> 5
+       OR public.dragon_reading_level(22, 0) <> 6 THEN
+        RAISE EXCEPTION '독서가 칭호 DB의 편수 단일 경계가 잘못되었습니다.';
     END IF;
 END;
 $$;

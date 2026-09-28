@@ -51,8 +51,9 @@ test('초대키는 혼동 문자 없는 일회성 원문 응답과 SHA-256 해�
     assert.match(migration, /extensions\.digest\(convert_to\(v_normalized, 'UTF8'\), 'sha256'\)/);
     assert.match(migration, /v_expires_at TIMESTAMPTZ := NOW\(\) \+ INTERVAL '24 hours'/);
     assert.match(migration, /SET status = 'used', used_at = v_now, used_by_class_id = p_class_id/);
-    assert.match(smoke, /invite must be hash-only and expire in 24 hours/);
-    assert.match(smoke, /used one-time invite key was accepted again/);
+    assert.match(smoke, /invite must be hash-only, expire in 7 days/); // 2026-09-28: 초대 코드 24시간 → 7일·여러 반(v1.6)
+    // 2026-09-28: 코드 하나로 남은 자리만큼 여러 반이 들어온다(v1.6) — 일회성 재사용 거절 대신 둘째 반 수락을 본다.
+    assert.match(smoke, /multi-use invite key did not accept a second class/);
 });
 
 test('초대 추측은 10분 창 5회 뒤 30초 차단되고 실패 기록은 일반 오류 응답으로 남는다', () => {
@@ -75,5 +76,5 @@ test('신청·승인·호스트 이전·퇴장·종료 흐름과 최종 접근 �
     assert.match(smoke, /closed neighbor space retained active access/);
     // 2026-09-19: 참여 학급 상한 4→10(20261318). 파운데이션 스모크는 격리된 옛 트리거(4) 검사.
     assert.match(classLimitMigration, /v_active_count >= 10/);
-    assert.match(smoke, /fifth active class must be blocked/);
+    assert.match(smoke, /eleventh active class must be blocked/); // 2026-09-28: 학급 상한 4 → 10(v1.6)
 });

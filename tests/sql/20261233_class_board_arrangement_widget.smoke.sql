@@ -70,12 +70,16 @@ BEGIN
         NULL;
     END;
 
-    -- 같은 위젯을 둘 넣으면 막아야 한다(스크린에 하나만 둔다).
+    -- 2026-09-28 갱신: 20261234 파일에서 자리·역할 배치 위젯을 둘까지 허용(화면 manifest maxInstances: 2 와 같음).
+    -- 둘은 통과하고, 셋째는 막아야 한다.
+    v_widgets := v_widgets || JSONB_SET(v_widgets -> 0, '{instanceId}', '"arrangement-smoke-2"'::JSONB);
+    PERFORM public.validate_class_board_payload_v1(
+        v_class, JSONB_BUILD_OBJECT('version', 3), v_widgets);
     BEGIN
         PERFORM public.validate_class_board_payload_v1(
             v_class, JSONB_BUILD_OBJECT('version', 3),
-            v_widgets || JSONB_SET(v_widgets -> 0, '{instanceId}', '"arrangement-smoke-2"'::JSONB));
-        RAISE EXCEPTION '자리·역할 배치 위젯이 두 개 통과했습니다.';
+            v_widgets || JSONB_SET(v_widgets -> 0, '{instanceId}', '"arrangement-smoke-3"'::JSONB));
+        RAISE EXCEPTION '자리·역할 배치 위젯이 세 개 통과했습니다.';
     EXCEPTION WHEN SQLSTATE '22023' THEN
         NULL;
     END;

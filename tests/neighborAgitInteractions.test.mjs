@@ -97,7 +97,9 @@ test('숨김·회수·종료 뒤 본문 차단과 상호작용 원장 보존은 
     assert.match(smoke, /hidden neighbor comment remained in the student detail/);
     assert.match(smoke, /another class teacher restored the hidden comment/);
     assert.match(smoke, /own neighbor post was saved as an external reference/);
-    assert.match(smoke, /neighbor interaction rows disappeared after source recall/);
+    // 2026-09-28: 학생 회수는 20261317 에서 폐지됐다 — 막히는지 본다. 공간 종료 뒤 원장 보존은 그대로 본다.
+    assert.match(smoke, /retired student recall still works/);
+    assert.match(smoke, /neighbor interaction rows disappeared after space close/);
     assert.match(smoke, /neighbor interaction rows disappeared after space close/);
 });
 

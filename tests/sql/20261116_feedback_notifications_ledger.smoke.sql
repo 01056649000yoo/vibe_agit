@@ -1,3 +1,4 @@
+-- 20261262 파일에서 바뀜: notification_emit_v1 은 9인자(actor_student_id). 픽스처는 글·주인·상대를 한 번에 고정 정렬로 고른다.
 -- 내 글 소식 원장 전환 스모크. 실제 운영 스키마에서 트리거·필터·갈래 분리를 확인한다.
 -- 반드시 ROLLBACK 트랜잭션 안에서 돌린다(반응·댓글을 실제로 넣었다 지운다).
 DO $$
@@ -13,31 +14,37 @@ DECLARE
   v_payload JSONB;
 BEGIN
   -- 같은 학급에서 글 주인과 반응을 남길 다른 학생을 고른다.
-  SELECT s.* INTO v_owner
-  FROM public.students s
-  WHERE s.auth_id IS NOT NULL AND s.deleted_at IS NULL AND s.is_active IS DISTINCT FROM FALSE
-    AND EXISTS (SELECT 1 FROM public.student_posts p
-                WHERE p.student_id = s.id AND p.class_id = s.class_id
-                  AND p.is_submitted IS TRUE AND p.visibility = 'class')
-    AND EXISTS (SELECT 1 FROM public.classes c WHERE c.id = s.class_id AND c.deleted_at IS NULL)
-  LIMIT 1;
-  IF v_owner.id IS NULL THEN RAISE EXCEPTION '스모크용 글 주인을 찾지 못했습니다.'; END IF;
-
-  SELECT s.* INTO v_actor
-  FROM public.students s
-  WHERE s.class_id = v_owner.class_id AND s.id <> v_owner.id
-    AND s.deleted_at IS NULL AND s.is_active IS DISTINCT FROM FALSE
-  LIMIT 1;
-  IF v_actor.id IS NULL THEN RAISE EXCEPTION '스모크용 상대 학생을 찾지 못했습니다.'; END IF;
-
+  -- 글 주인·상대 학생·글을 한 번에 고른다. 따로 고르면 상대가 이미 그 주인의 모든 글에 반응해
+  -- 운영 데이터에 따라 글을 못 찾는 일이 생겼다(데이터 탓 실패). 정렬도 고정한다.
   SELECT p.id INTO v_post_id
   FROM public.student_posts p
-  WHERE p.student_id = v_owner.id AND p.class_id = v_owner.class_id
+  JOIN public.students s ON s.id = p.student_id AND s.class_id = p.class_id
+  JOIN public.classes c ON c.id = s.class_id AND c.deleted_at IS NULL
+  WHERE s.auth_id IS NOT NULL AND s.deleted_at IS NULL AND s.is_active IS DISTINCT FROM FALSE
     AND p.is_submitted IS TRUE AND p.visibility = 'class'
-    AND NOT EXISTS (SELECT 1 FROM public.post_reactions r
-                    WHERE r.post_id = p.id AND r.student_id = v_actor.id)
+    AND NOT EXISTS (SELECT 1 FROM public.post_reactions own
+                    WHERE own.post_id = p.id AND own.student_id = s.id)
+    AND EXISTS (
+        SELECT 1 FROM public.students a
+        WHERE a.class_id = s.class_id AND a.id <> s.id
+          AND a.deleted_at IS NULL AND a.is_active IS DISTINCT FROM FALSE
+          AND NOT EXISTS (SELECT 1 FROM public.post_reactions r
+                          WHERE r.post_id = p.id AND r.student_id = a.id))
+  ORDER BY p.created_at DESC, p.id
   LIMIT 1;
   IF v_post_id IS NULL THEN RAISE EXCEPTION '스모크용 글을 찾지 못했습니다.'; END IF;
+  SELECT s.* INTO v_owner
+  FROM public.student_posts p JOIN public.students s ON s.id = p.student_id
+  WHERE p.id = v_post_id;
+  SELECT a.* INTO v_actor
+  FROM public.students a
+  WHERE a.class_id = v_owner.class_id AND a.id <> v_owner.id
+    AND a.deleted_at IS NULL AND a.is_active IS DISTINCT FROM FALSE
+    AND NOT EXISTS (SELECT 1 FROM public.post_reactions r
+                    WHERE r.post_id = v_post_id AND r.student_id = a.id)
+  ORDER BY a.created_at, a.id
+  LIMIT 1;
+  IF v_actor.id IS NULL THEN RAISE EXCEPTION '스모크용 상대 학생을 찾지 못했습니다.'; END IF;
 
   -- 이 학생의 기존 미확인은 전환 대상이 아니므로 비우고 시작한다.
   DELETE FROM public.student_notification_events WHERE student_id = v_owner.id;
@@ -178,7 +185,7 @@ BEGIN
       'public.purge_read_student_notifications_v1(integer)', 'EXECUTE') THEN
     RAISE EXCEPTION '알림 정리 함수가 로그인 사용자에게 공개되었습니다.';
   END IF;
-  IF has_function_privilege('authenticated', 'public.notification_emit_v1(uuid,text,text,text,uuid,jsonb,text,smallint)', 'EXECUTE') THEN
+  IF has_function_privilege('authenticated', 'public.notification_emit_v1(uuid,text,text,text,uuid,jsonb,text,smallint,uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION '알림 생성 내부 함수가 로그인 사용자에게 공개되었습니다.';
   END IF;
   RAISE NOTICE '권한 경계 4개 통과';

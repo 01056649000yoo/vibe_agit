@@ -1,3 +1,4 @@
+-- 20261265 파일에서 바뀜: 이웃 글 간직하기를 폐지해 toggle_neighbor_save_v1 의 authenticated 실행 권한을 회수했다.
 DO $$
 DECLARE
     v_table TEXT;
@@ -65,7 +66,7 @@ BEGIN
        OR has_function_privilege('anon', 'public.toggle_neighbor_reaction_v1(uuid,uuid)', 'EXECUTE')
        OR NOT has_function_privilege('authenticated', 'public.toggle_neighbor_reaction_v1(uuid,uuid)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.toggle_neighbor_save_v1(uuid,uuid)', 'EXECUTE')
-       OR NOT has_function_privilege('authenticated', 'public.toggle_neighbor_save_v1(uuid,uuid)', 'EXECUTE')
+       OR has_function_privilege('authenticated', 'public.toggle_neighbor_save_v1(uuid,uuid)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.get_neighbor_teacher_post_engagement_v1(uuid,uuid,uuid)', 'EXECUTE')
        OR NOT has_function_privilege('authenticated', 'public.get_neighbor_teacher_post_engagement_v1(uuid,uuid,uuid)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.get_neighbor_admin_dashboard_v1(uuid)', 'EXECUTE')
@@ -236,69 +237,93 @@ SELECT public.set_neighbor_class_access_v1(
     TRUE
 );
 
+-- 20261317 파일에서 바뀜: 학생 공개 요청(pending→교사 검토)을 없애고 교사가 자기 학급 제출 글을 직접 공개한다.
 RESET ROLE;
+SELECT set_config('test.neighbor_post_revision', public.neighbor_source_revision_v1(post), TRUE)
+FROM public.student_posts post
+WHERE post.id = current_setting('test.neighbor_post_source')::UUID;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_student_auth'), TRUE);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_student_auth'), 'role', 'authenticated'
 )::TEXT, TRUE);
-
 DO $$
 DECLARE
-    v_result JSONB;
+    v_blocked BOOLEAN := FALSE;
 BEGIN
-    v_result := public.request_neighbor_post_share_v1(
-        current_setting('test.neighbor_post_space')::UUID,
-        current_setting('test.neighbor_post_source')::UUID
-    );
-    IF v_result->>'status' <> 'pending' THEN
-        RAISE EXCEPTION 'student share request did not enter pending review: %', v_result;
+    BEGIN
+        PERFORM public.request_neighbor_post_share_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_post_source')::UUID
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_blocked := TRUE;
+    END;
+    IF NOT v_blocked THEN
+        RAISE EXCEPTION 'retired student share request still works';
     END IF;
-    PERFORM set_config('test.neighbor_shared_post', v_result->>'shared_post_id', TRUE);
 END;
 $$;
-
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_guest_teacher'), TRUE);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_guest_teacher'), 'role', 'authenticated'
 )::TEXT, TRUE);
-
 DO $$
 DECLARE
     v_blocked BOOLEAN := FALSE;
 BEGIN
     BEGIN
-        PERFORM public.review_neighbor_shared_post_v1(
-            current_setting('test.neighbor_post_space')::UUID,
-            current_setting('test.neighbor_shared_post')::UUID,
-            'publish', ''
+        PERFORM public.run_neighbor_teacher_action_v1(
+            current_setting('test.neighbor_post_guest_class')::UUID, 'publish_gallery_post',
+            jsonb_build_object('space_id', current_setting('test.neighbor_post_space'),
+                'post_id', current_setting('test.neighbor_post_source'),
+                'source_revision', current_setting('test.neighbor_post_revision'))
         );
     EXCEPTION WHEN insufficient_privilege THEN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
-        RAISE EXCEPTION 'guest teacher reviewed another class post';
+        RAISE EXCEPTION 'guest teacher published another class post';
     END IF;
 END;
 $$;
-
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_teacher'), TRUE);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_teacher'), 'role', 'authenticated'
 )::TEXT, TRUE);
-SELECT public.run_neighbor_teacher_action_v1(
-    current_setting('test.neighbor_post_class')::UUID, 'review_post',
-    jsonb_build_object('space_id', current_setting('test.neighbor_post_space'),
-        'shared_post_id', current_setting('test.neighbor_shared_post'), 'decision', 'publish',
-        'source_revision', public.get_neighbor_teacher_post_detail_v1(
-            current_setting('test.neighbor_post_space')::UUID,
-            current_setting('test.neighbor_post_class')::UUID,
-            current_setting('test.neighbor_shared_post')::UUID)->>'source_revision')
-);
+DO $$
+DECLARE
+    v_result JSONB;
+BEGIN
+    v_result := public.run_neighbor_teacher_action_v1(
+        current_setting('test.neighbor_post_class')::UUID, 'publish_gallery_post',
+        jsonb_build_object('space_id', current_setting('test.neighbor_post_space'),
+            'post_id', current_setting('test.neighbor_post_source'),
+            'source_revision', current_setting('test.neighbor_post_revision'))
+    );
+    IF v_result->>'success' IS DISTINCT FROM 'true' THEN
+        RAISE EXCEPTION 'original class teacher could not publish directly';
+    END IF;
+END;
+$$;
+RESET ROLE;
+SELECT set_config('test.neighbor_shared_post', COALESCE(max(shared.id::TEXT), ''), TRUE)
+FROM public.neighbor_shared_posts shared
+WHERE shared.space_id = current_setting('test.neighbor_post_space')::UUID
+  AND shared.post_id = current_setting('test.neighbor_post_source')::UUID
+  AND shared.status = 'published'
+  AND shared.reviewed_by = current_setting('test.neighbor_post_teacher')::UUID;
+DO $$
+BEGIN
+    IF current_setting('test.neighbor_shared_post') = '' THEN
+        RAISE EXCEPTION 'teacher direct publish did not create a published shared post';
+    END IF;
+END;
+$$;
 
 -- Step 4: 홈 요약은 기존 bootstrap 한 번에 포함하고, 피드·상세 RPC는
 -- 공간/학급/학생 접근 조건을 서버에서 다시 확인한다.
@@ -477,11 +502,48 @@ BEGIN
         '글의 장면과 느낌이 눈앞에 잘 그려져요.',
         'save'
     );
+    -- 20261264 파일에서 바뀜: 이웃 댓글도 AI 검사 대기(pending)로 들어가 통과 전에는 세지 않는다.
     IF v_restored->>'comment_id' <> v_first->>'comment_id'
-       OR (v_restored->>'comment_count')::INTEGER <> 1 THEN
-        RAISE EXCEPTION 'deleted neighbor comment did not reuse its one row: %', v_restored;
+       OR v_restored->>'status' IS DISTINCT FROM 'pending'
+       OR (v_restored->>'comment_count')::INTEGER <> 0 THEN
+        RAISE EXCEPTION 'deleted neighbor comment did not reuse its one row as pending review: %', v_restored;
     END IF;
-
+END;
+$$;
+-- 검사 작업기와 같은 경로(service_role 의 complete_comment_ai_review_v2)로 통과시킨다.
+RESET ROLE;
+DO $$
+DECLARE
+    v_token UUID := gen_random_uuid();
+    v_done JSONB;
+BEGIN
+    UPDATE public.neighbor_comments
+    SET ai_review_token = v_token
+    WHERE id = current_setting('test.neighbor_comment')::UUID AND status = 'pending';
+    PERFORM set_config('request.jwt.claim.sub', '', TRUE);
+    PERFORM set_config('request.jwt.claim.role', 'service_role', TRUE);
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::TEXT, TRUE);
+    v_done := public.complete_comment_ai_review_v2(
+        current_setting('test.neighbor_comment')::UUID, v_token, TRUE, NULL, 'ai'
+    );
+    IF v_done->>'status' IS DISTINCT FROM 'visible' THEN
+        RAISE EXCEPTION 'AI review approval did not make the neighbor comment visible: %', v_done;
+    END IF;
+    PERFORM set_config('request.jwt.claim.role', '', TRUE);
+END;
+$$;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_guest_student_auth'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.neighbor_post_guest_student_auth'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_reaction JSONB;
+    v_detail JSONB;
+    v_feed JSONB;
+    v_save_blocked BOOLEAN := FALSE;
+BEGIN
     v_reaction := public.toggle_neighbor_reaction_v1(
         current_setting('test.neighbor_post_space')::UUID,
         current_setting('test.neighbor_shared_post')::UUID
@@ -489,14 +551,18 @@ BEGIN
     IF (v_reaction->>'active')::BOOLEAN IS NOT TRUE OR (v_reaction->>'reaction_count')::INTEGER <> 1 THEN
         RAISE EXCEPTION 'neighbor empathy toggle did not activate once: %', v_reaction;
     END IF;
-    v_saved := public.toggle_neighbor_save_v1(
-        current_setting('test.neighbor_post_space')::UUID,
-        current_setting('test.neighbor_shared_post')::UUID
-    );
-    IF (v_saved->>'saved')::BOOLEAN IS NOT TRUE THEN
-        RAISE EXCEPTION 'other-class neighbor post was not saved as a reference: %', v_saved;
+    -- 20261265 파일에서 바뀜: 이웃 글 간직하기는 폐지됐다. 학생이 불러도 막혀야 한다.
+    BEGIN
+        PERFORM public.toggle_neighbor_save_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_shared_post')::UUID
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_save_blocked := TRUE;
+    END;
+    IF NOT v_save_blocked THEN
+        RAISE EXCEPTION 'retired neighbor save still works for students';
     END IF;
-
     v_detail := public.get_neighbor_shared_post_v1(
         current_setting('test.neighbor_post_space')::UUID,
         current_setting('test.neighbor_shared_post')::UUID
@@ -505,7 +571,7 @@ BEGIN
        OR (v_detail->>'comment_count')::INTEGER <> 1
        OR (v_detail->>'reaction_count')::INTEGER <> 1
        OR (v_detail->>'my_reaction')::BOOLEAN IS NOT TRUE
-       OR (v_detail->>'my_saved')::BOOLEAN IS NOT TRUE
+       OR (v_detail->>'my_saved')::BOOLEAN IS TRUE
        OR char_length(COALESCE(v_detail #>> '{comments,0,author_name}', '')) NOT BETWEEN 1 AND 30
        OR (v_detail #> '{comments,0}') ?| ARRAY['student_id', 'class_id'] THEN
         RAISE EXCEPTION 'neighbor interaction detail contract failed: %', v_detail;
@@ -515,7 +581,7 @@ BEGIN
     );
     IF (v_feed #>> '{items,0,comment_count}')::INTEGER <> 1
        OR (v_feed #>> '{items,0,reaction_count}')::INTEGER <> 1
-       OR (v_feed #>> '{items,0,my_saved}')::BOOLEAN IS NOT TRUE THEN
+       OR (v_feed #>> '{items,0,my_saved}')::BOOLEAN IS TRUE THEN
         RAISE EXCEPTION 'neighbor feed interaction summary failed: %', v_feed;
     END IF;
 END;
@@ -537,7 +603,7 @@ BEGIN
             current_setting('test.neighbor_post_space')::UUID,
             current_setting('test.neighbor_shared_post')::UUID
         );
-    EXCEPTION WHEN invalid_parameter_value THEN
+    EXCEPTION WHEN invalid_parameter_value OR insufficient_privilege THEN
         v_own_save_blocked := TRUE;
     END;
     IF NOT v_own_save_blocked THEN
@@ -672,20 +738,57 @@ SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_guest_teacher'), 'role', 'authenticated'
 )::TEXT, TRUE);
 
+-- 20261319 파일에서 바뀜: 글 비공개(숨김)는 자기 학급이 공개한 글만 된다. 참여 교사는 남의 학급 글을 못 숨긴다.
+DO $$
+DECLARE
+    v_hide_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN
+        PERFORM public.moderate_neighbor_item_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_post_guest_class')::UUID,
+            'post', current_setting('test.neighbor_shared_post')::UUID,
+            'hide', '롤백 스모크'
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_hide_blocked := TRUE;
+    END;
+    IF NOT v_hide_blocked THEN
+        RAISE EXCEPTION 'guest teacher hid another class post';
+    END IF;
+END;
+$$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_teacher'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.neighbor_post_teacher'), 'role', 'authenticated'
+)::TEXT, TRUE);
 DO $$
 DECLARE
     v_result JSONB;
-    v_restore_blocked BOOLEAN := FALSE;
 BEGIN
     v_result := public.moderate_neighbor_item_v1(
         current_setting('test.neighbor_post_space')::UUID,
-        current_setting('test.neighbor_post_guest_class')::UUID,
+        current_setting('test.neighbor_post_class')::UUID,
         'post', current_setting('test.neighbor_shared_post')::UUID,
         'hide', '롤백 스모크'
     );
     IF v_result->>'status' <> 'hidden' THEN
-        RAISE EXCEPTION 'participant teacher could not emergency-hide: %', v_result;
+        RAISE EXCEPTION 'original class teacher could not hide own post: %', v_result;
     END IF;
+END;
+$$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_guest_teacher'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.neighbor_post_guest_teacher'), 'role', 'authenticated'
+)::TEXT, TRUE);
+DO $$
+DECLARE
+    v_restore_blocked BOOLEAN := FALSE;
+BEGIN
     BEGIN
         PERFORM public.moderate_neighbor_item_v1(
             current_setting('test.neighbor_post_space')::UUID,
@@ -736,7 +839,8 @@ BEGIN
             current_setting('test.neighbor_post_space')::UUID,
             current_setting('test.neighbor_post_source')::UUID
         );
-    EXCEPTION WHEN object_not_in_prerequisite_state THEN
+    -- 20261317 이후 학생 공개 요청 자체가 막힌다(insufficient_privilege). 숨긴 글 우회도 당연히 안 된다.
+    EXCEPTION WHEN object_not_in_prerequisite_state OR insufficient_privilege THEN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
@@ -793,25 +897,61 @@ SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_s
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.neighbor_post_student_auth'), 'role', 'authenticated'
 )::TEXT, TRUE);
-SELECT public.recall_my_neighbor_shared_post_v1(
-    current_setting('test.neighbor_post_space')::UUID,
-    current_setting('test.neighbor_shared_post')::UUID
-);
+-- 20261317 파일에서 바뀜: 학생 회수(recall)는 폐지됐다. 학생이 불러도 막히고 글은 그대로 남는다.
+-- 내리는 일은 원래 학급 교사가 비공개(hide)로 한다.
+DO $$
+DECLARE
+    v_blocked BOOLEAN := FALSE;
+BEGIN
+    BEGIN
+        PERFORM public.recall_my_neighbor_shared_post_v1(
+            current_setting('test.neighbor_post_space')::UUID,
+            current_setting('test.neighbor_shared_post')::UUID
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_blocked := TRUE;
+    END;
+    IF NOT v_blocked THEN
+        RAISE EXCEPTION 'retired student recall still works';
+    END IF;
+END;
+$$;
 
 RESET ROLE;
 DO $$
 BEGIN
     IF (SELECT status FROM public.neighbor_shared_posts
-        WHERE id = current_setting('test.neighbor_shared_post')::UUID) <> 'recalled' THEN
-        RAISE EXCEPTION 'student recall did not remove the shared post';
+        WHERE id = current_setting('test.neighbor_shared_post')::UUID) <> 'published' THEN
+        RAISE EXCEPTION 'blocked student recall still changed the shared post';
     END IF;
+END;
+$$;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('test.neighbor_post_teacher'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.neighbor_post_teacher'), 'role', 'authenticated'
+)::TEXT, TRUE);
+SELECT public.moderate_neighbor_item_v1(
+    current_setting('test.neighbor_post_space')::UUID,
+    current_setting('test.neighbor_post_class')::UUID,
+    'post', current_setting('test.neighbor_shared_post')::UUID,
+    'hide', '롤백 스모크: 교사가 내림'
+);
+RESET ROLE;
+DO $$
+BEGIN
+    IF (SELECT status FROM public.neighbor_shared_posts
+        WHERE id = current_setting('test.neighbor_shared_post')::UUID) <> 'hidden' THEN
+        RAISE EXCEPTION 'teacher take-down did not hide the shared post';
+    END IF;
+    -- 간직하기(neighbor_saves)는 20261265 로 폐지돼 행이 생기지 않는다.
     IF (SELECT count(*) FROM public.neighbor_comments
         WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 1
        OR (SELECT count(*) FROM public.neighbor_reactions
            WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 1
        OR (SELECT count(*) FROM public.neighbor_saves
-           WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 1 THEN
-        RAISE EXCEPTION 'neighbor interaction rows disappeared after source recall';
+           WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 0 THEN
+        RAISE EXCEPTION 'neighbor interaction rows changed after teacher take-down';
     END IF;
 END;
 $$;
@@ -834,7 +974,7 @@ BEGIN
         v_blocked := TRUE;
     END;
     IF NOT v_blocked THEN
-        RAISE EXCEPTION 'recalled neighbor post content remained readable';
+        RAISE EXCEPTION 'taken-down neighbor post content remained readable';
     END IF;
 END;
 $$;
@@ -886,7 +1026,7 @@ BEGIN
        OR (SELECT count(*) FROM public.neighbor_reactions
            WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 1
        OR (SELECT count(*) FROM public.neighbor_saves
-           WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 1 THEN
+           WHERE shared_post_id = current_setting('test.neighbor_shared_post')::UUID) <> 0 THEN
         RAISE EXCEPTION 'neighbor interaction rows disappeared after space close';
     END IF;
 END;
@@ -1031,9 +1171,12 @@ BEGIN
     IF v_invite.id IS NULL
        OR v_invite.invite_hash <> encode(extensions.digest(convert_to(v_normalized, 'UTF8'), 'sha256'), 'hex')
        OR v_invite.invite_hash LIKE '%' || v_normalized || '%'
-       OR v_invite.expires_at NOT BETWEEN NOW() + INTERVAL '23 hours 59 minutes'
-                                      AND NOW() + INTERVAL '24 hours 1 minute' THEN
-        RAISE EXCEPTION 'invite must be hash-only and expire in 24 hours';
+       -- 20261348 파일에서 바뀜: 초대 코드는 7일 동안 남은 자리 수(10반 - 참여·대기 반)만큼 쓴다.
+       OR v_invite.expires_at NOT BETWEEN NOW() + INTERVAL '6 days 23 hours 59 minutes'
+                                      AND NOW() + INTERVAL '7 days 1 minute'
+       OR v_invite.max_uses <> 9 OR v_invite.use_count <> 0 THEN
+        RAISE EXCEPTION 'invite must be hash-only, expire in 7 days and allow the remaining 9 seats: %',
+            jsonb_build_object('expires_at', v_invite.expires_at, 'max_uses', v_invite.max_uses, 'use_count', v_invite.use_count);
     END IF;
 END;
 $$;
@@ -1109,8 +1252,9 @@ BEGIN
         current_setting('test.neighbor_class_4')::UUID,
         '네 번째 학급'
     );
-    IF v_result->>'error' <> 'invalid_or_expired_invite' THEN
-        RAISE EXCEPTION 'used one-time invite key was accepted again: %', v_result;
+    -- 20261348 파일에서 바뀜: 같은 코드로 여러 반이 신청한다. 두 번째 반도 대기(pending)로 들어간다.
+    IF (v_result->>'success')::BOOLEAN IS NOT TRUE OR v_result->>'status' <> 'pending' THEN
+        RAISE EXCEPTION 'multi-use invite key did not accept a second class: %', v_result;
     END IF;
 END;
 $$;
@@ -1385,9 +1529,8 @@ DECLARE
     v_teacher UUID;
     v_space UUID := gen_random_uuid();
     v_second_space UUID := gen_random_uuid();
-    v_classes UUID[] := ARRAY[
-        gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()
-    ];
+    -- 20261318 파일에서 바뀜: 한 공간의 활성 학급 상한이 4 → 10(호스트 포함). 열한 번째를 막는지 본다.
+    v_classes UUID[] := ARRAY(SELECT gen_random_uuid() FROM generate_series(1, 11));
     v_fifth_blocked BOOLEAN := FALSE;
     v_second_space_blocked BOOLEAN := FALSE;
 BEGIN
@@ -1417,27 +1560,27 @@ BEGIN
         space_id, class_id, role, status, public_class_name, joined_at, reviewed_at, reviewed_by
     )
     SELECT v_space, v_classes[index], 'guest', 'active', '게스트 학급 ' || index, NOW(), NOW(), v_teacher
-    FROM generate_series(2, 4) AS index;
+    FROM generate_series(2, 10) AS index;
 
     BEGIN
         INSERT INTO public.neighbor_space_classes (
             space_id, class_id, role, status, public_class_name, joined_at, reviewed_at, reviewed_by
         ) VALUES (
-            v_space, v_classes[5], 'guest', 'active', '다섯 번째 학급', NOW(), NOW(), v_teacher
+            v_space, v_classes[11], 'guest', 'active', '열한 번째 학급', NOW(), NOW(), v_teacher
         );
     EXCEPTION WHEN check_violation THEN
         v_fifth_blocked := TRUE;
     END;
     IF NOT v_fifth_blocked THEN
-        RAISE EXCEPTION 'fifth active class must be blocked';
+        RAISE EXCEPTION 'eleventh active class must be blocked';
     END IF;
 
     INSERT INTO public.neighbor_spaces (id, host_class_id, created_by, name, status)
-    VALUES (v_second_space, v_classes[5], v_teacher, '두 번째 이웃 공간', 'draft');
+    VALUES (v_second_space, v_classes[11], v_teacher, '두 번째 이웃 공간', 'draft');
     INSERT INTO public.neighbor_space_classes (
         space_id, class_id, role, status, public_class_name, joined_at, reviewed_at, reviewed_by
     ) VALUES (
-        v_second_space, v_classes[5], 'host', 'active', '두 번째 호스트', NOW(), NOW(), v_teacher
+        v_second_space, v_classes[11], 'host', 'active', '두 번째 호스트', NOW(), NOW(), v_teacher
     );
 
     BEGIN

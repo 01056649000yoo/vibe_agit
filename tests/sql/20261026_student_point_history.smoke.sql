@@ -1,3 +1,4 @@
+-- 20261215 파일에서 바뀜: get_my_point_history_v1 응답 version 2, 종료된 comment_reward 는 학생 내역에서 숨긴다.
 DO $$
 DECLARE
     v_student public.students%ROWTYPE;
@@ -36,7 +37,7 @@ BEGIN
     )::TEXT, TRUE);
 
     v_history := public.get_my_point_history_v1(200);
-    IF v_history->>'version' <> '1'
+    IF v_history->>'version' <> '2'
        OR v_history->>'max_rows' <> '50'
        OR jsonb_array_length(v_history->'items') > 50 THEN
         RAISE EXCEPTION '학생 포인트 내역 응답 계약 오류: %', v_history;
@@ -56,6 +57,12 @@ BEGIN
         WHERE item ?| ARRAY['student_id', 'class_id', 'event_key', 'metadata']
     ) THEN
         RAISE EXCEPTION '학생 응답에 내부 포인트 원장 정보가 노출되었습니다: %', v_history;
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM jsonb_array_elements(v_history->'items') item
+        WHERE item->>'activity_type' = 'comment_reward'
+    ) THEN
+        RAISE EXCEPTION '종료된 댓글 포인트가 학생 내역에 다시 보입니다: %', v_history;
     END IF;
     IF has_function_privilege(
         'anon',

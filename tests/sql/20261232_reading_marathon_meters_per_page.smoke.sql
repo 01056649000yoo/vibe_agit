@@ -51,12 +51,17 @@ BEGIN
         RAISE EXCEPTION '매개변수 10개짜리 옛 함수가 %개 남아 있습니다.', v_old_count;
     END IF;
 
-    -- 4) 돌고 있는 마라톤이 모두 1m 로 옮겨졌는가.
+    -- 4) 2026-09-28 갱신(데이터 탓): 1m 일괄 이전은 이 마이그레이션 적용 때 한 번만 했다. 그 뒤로 교사가
+    --    쪽당 10m 등을 골라 저장한 마라톤은 정상이다. 그래서 "모두 1m" 대신 이전 기록과 허용 범위(1~100)를 본다.
+    IF NOT EXISTS (SELECT 1 FROM public.applied_migrations
+                   WHERE filename = '20261232_reading_marathon_meters_per_page.sql') THEN
+        RAISE EXCEPTION '쪽당 거리 1m 이전 마이그레이션 기록이 없습니다.';
+    END IF;
     SELECT COUNT(*) INTO v_stale
     FROM public.reading_marathon_campaigns
-    WHERE archived_at IS NULL AND meters_per_page <> 1;
+    WHERE archived_at IS NULL AND (meters_per_page IS NULL OR meters_per_page NOT BETWEEN 1 AND 100);
     IF v_stale > 0 THEN
-        RAISE EXCEPTION '아직 옛 비율로 남은 마라톤이 %개 있습니다.', v_stale;
+        RAISE EXCEPTION '쪽당 거리가 1~100m 범위를 벗어난 마라톤이 %개 있습니다.', v_stale;
     END IF;
 
     -- 5) 거리와 쪽수가 그 마라톤의 비율과 어긋난 기록이 없어야 한다.

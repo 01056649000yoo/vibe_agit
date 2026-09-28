@@ -501,10 +501,11 @@ SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_settin
 DO $$
 DECLARE v_result JSONB; v_blocked BOOLEAN := FALSE;
 BEGIN
-    v_result := public.get_neighbor_my_share_candidates_v1(current_setting('test.limited_space')::UUID, 50);
-    IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_result->'items') item WHERE item->>'post_id' = current_setting('test.hardening_post')) THEN
-        RAISE EXCEPTION 'private diary leaked into student candidates';
-    END IF;
+    -- 20261317 파일에서 바뀜: 학생 공개 후보·요청은 폐지돼 부르면 막힌다(비공개 일기가 샐 길 자체가 없다).
+    BEGIN v_result := public.get_neighbor_my_share_candidates_v1(current_setting('test.limited_space')::UUID, 50);
+    EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
+    IF NOT v_blocked THEN RAISE EXCEPTION 'retired student share candidates still answer'; END IF;
+    v_blocked := FALSE;
     BEGIN PERFORM public.request_neighbor_post_share_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_post')::UUID);
     EXCEPTION WHEN insufficient_privilege THEN v_blocked := TRUE; END;
     IF NOT v_blocked THEN RAISE EXCEPTION 'student requested private diary by direct call'; END IF;
@@ -512,11 +513,25 @@ END;
 $$;
 RESET ROLE;
 UPDATE public.student_posts SET visibility = 'class' WHERE id = current_setting('test.hardening_post')::UUID;
+-- 20261317 파일에서 바뀜: 학생 요청 대신 교사가 직접 공개하고, 공개 뒤 원문을 고치면 다시 검토 대기(pending)로 돌아간다.
 SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student_auth_1'), TRUE);
-SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated')::TEXT, TRUE);
-SELECT set_config('test.hardening_shared', public.request_neighbor_post_share_v1(current_setting('test.limited_space')::UUID, current_setting('test.hardening_post')::UUID)->>'shared_post_id', TRUE);
+SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_1'), TRUE);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_1'), 'role', 'authenticated')::TEXT, TRUE);
+SELECT public.run_neighbor_teacher_action_v1(current_setting('test.limited_class_1')::UUID, 'publish_gallery_post', jsonb_build_object(
+    'space_id', current_setting('test.limited_space')::UUID, 'post_id', current_setting('test.hardening_post')::UUID, 'source_revision',
+    public.get_neighbor_teacher_source_post_v1(current_setting('test.limited_space')::UUID, current_setting('test.limited_class_1')::UUID, current_setting('test.hardening_post')::UUID)->>'source_revision'));
 RESET ROLE;
+SELECT set_config('test.hardening_shared', COALESCE(max(shared.id::TEXT), ''), TRUE)
+FROM public.neighbor_shared_posts shared
+WHERE shared.space_id = current_setting('test.limited_space')::UUID
+  AND shared.post_id = current_setting('test.hardening_post')::UUID AND shared.status = 'published';
+UPDATE public.student_posts SET title = title || ' [재검토]' WHERE id = current_setting('test.hardening_post')::UUID;
+DO $$ BEGIN
+    IF current_setting('test.hardening_shared') = '' OR NOT EXISTS (SELECT 1 FROM public.neighbor_shared_posts
+        WHERE id = current_setting('test.hardening_shared')::UUID AND status = 'pending') THEN
+        RAISE EXCEPTION 'teacher direct publish then source edit did not return the share to pending review';
+    END IF;
+END; $$;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_teacher_2'), TRUE);
 SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('test.limited_teacher_2'), 'role', 'authenticated')::TEXT, TRUE);
@@ -875,20 +890,24 @@ SELECT set_config('request.jwt.claim.sub', current_setting('test.limited_student
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.limited_student_auth_1'), 'role', 'authenticated'
 )::TEXT, TRUE);
+-- 20261317 파일에서 바뀜: 학생 공개 후보 RPC는 폐지돼 선택 학급 학생도 막힌다.
 DO $$
 DECLARE
     v_home JSONB;
-    v_candidates JSONB;
+    v_candidates_blocked BOOLEAN := FALSE;
 BEGIN
     v_home := public.get_student_home_bootstrap_v1();
-    v_candidates := public.get_neighbor_my_share_candidates_v1(
-        current_setting('test.limited_space')::UUID, 500
-    );
+    BEGIN
+        PERFORM public.get_neighbor_my_share_candidates_v1(
+            current_setting('test.limited_space')::UUID, 500
+        );
+    EXCEPTION WHEN insufficient_privilege THEN
+        v_candidates_blocked := TRUE;
+    END;
     IF (v_home #>> '{home,neighbor_agit_available}')::BOOLEAN IS NOT TRUE
        OR v_home #>> '{home,neighbor_agit_space_id}' <> current_setting('test.limited_space')
-       OR (v_candidates->>'max_rows')::INTEGER <> 50
-       OR jsonb_array_length(v_candidates->'items') > 50 THEN
-        RAISE EXCEPTION 'limited student bootstrap or share candidates failed: %, %', v_home, v_candidates;
+       OR NOT v_candidates_blocked THEN
+        RAISE EXCEPTION 'limited student bootstrap failed or retired share candidates still answer: %', v_home;
     END IF;
 END;
 $$;

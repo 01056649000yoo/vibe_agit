@@ -49,7 +49,7 @@ test('맞춤법 발자국은 없는 detail 부모를 먼저 만든 뒤 통계를
     assert.match(migration, /jsonb_build_object\('spelling_labels', v_labels\)/);
     assert.match(migration, /stats\.class_id = p_class_id/);
     assert.match(migration, /stats\.event_date >= CURRENT_DATE - 30/);
-    assert.match(smoke, /detail\.spelling_labels에 담기지 않았습니다/);
+    assert.match(smoke, /최상위 spelling_labels에 담기지 않았습니다/); // 2026-09-28: 응답 최상위로 옮김(20261209)
 });
 
 test('발자국 완료 시각은 과제 승인일과 자율 글 완료본 생성일을 한 기준으로 사용한다', () => {

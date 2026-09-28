@@ -56,7 +56,7 @@ test('원학급 교사만 자기 반 글을 공개·반려·복원·비공개한
     // 숨김 분기가 "자기 학급이 공개한 글"로 좁혀졌다.
     assert.match(hideMigration, /자기 학급이 공개한 글만 비공개로 돌릴 수 있습니다/);
     assert.match(hideMigration, /IF v_shared\.class_id <> p_actor_class_id THEN\s*\n\s*RAISE EXCEPTION '자기 학급이 공개한 글만/);
-    assert.match(smoke, /guest teacher reviewed another class post/);
+    assert.match(smoke, /guest teacher published another class post/); // 2026-09-28: 검토 대신 교사 직접 공개(20261317)
     assert.match(smoke, /guest teacher restored another class post/);
 });
 

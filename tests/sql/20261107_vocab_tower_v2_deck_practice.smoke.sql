@@ -1,3 +1,4 @@
+-- 20261110 파일에서 바뀜: 학급 기본 출제 버전이 v2 가 되어, v1 준비 단계를 담당 교사 신원으로 한다.
 -- 이 파일은 migrate:check의 바깥 트랜잭션 안에서 실행되고 마지막에 전부 롤백된다.
 
 DO $$
@@ -35,7 +36,12 @@ BEGIN
        OR current_setting('test.vocab_practice_student_auth_id', true) IS NULL THEN
         RAISE EXCEPTION 'V2 덱 연습 스모크용 fixture가 없습니다.';
     END IF;
-
+    -- 20261106 트리거는 담당 교사만 출제 버전을 바꾸게 한다. 20261110 이후 학급 기본값이 v2 라
+    -- v1 로 되돌리는 준비 단계도 담당 교사 신원으로 해야 한다.
+    PERFORM set_config('request.jwt.claim.sub', current_setting('test.vocab_practice_teacher_id'), true);
+    PERFORM set_config('request.jwt.claims', jsonb_build_object(
+        'sub', current_setting('test.vocab_practice_teacher_id'), 'role', 'authenticated'
+    )::TEXT, true);
     UPDATE public.classes class
        SET vocab_tower_grade = 3,
            vocab_tower_daily_limit = 5,

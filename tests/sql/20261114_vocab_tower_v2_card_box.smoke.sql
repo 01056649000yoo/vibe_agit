@@ -1,3 +1,4 @@
+-- 20261120 파일에서 바뀜: 낱말 학습 상태는 공통 엔진 표 learning_item_progress(collection_key=학년·덱)에서 읽고 쓴다. 20261162 에서 층 순차 해금이 붙었다.
 -- migrate:check가 만든 바깥 트랜잭션에서 실행되며 마지막에 전부 롤백된다.
 -- 카드함이 만난 낱말만 돌려주고, 아직 만나지 않은 낱말의 뜻을 노출하지 않는지 확인한다.
 
@@ -40,12 +41,35 @@ BEGIN
            END
      WHERE class.id = v_class_id;
 
-    DELETE FROM public.vocab_tower_v2_item_progress progress
+    DELETE FROM public.learning_item_progress progress
      WHERE progress.student_id = v_student_id
-       AND progress.class_id = v_class_id;
+       AND progress.class_id = v_class_id
+       AND progress.content_type = 'vocab';
 END;
 $$;
 
+-- 20261162 파일에서 바뀜: N층은 1~N-1층 덱마스터를 통과해야 열린다. 이 스모크는 층 연습 자체를 보므로
+-- 학생의 3학년 1~9층 덱마스터 통과 기록을 이 트랜잭션 안에서 만든다(마지막에 롤백된다).
+INSERT INTO public.learning_challenge_attempts (
+    student_id, class_id, content_type, collection_key, challenge_kind,
+    status, question_count, answered_count, correct_count, passed, finished_at
+)
+SELECT student.id, student.class_id, 'vocab',
+       public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT),
+       'collection', 'completed', 1, 1, 1, TRUE, NOW()
+FROM public.students student
+CROSS JOIN generate_series(1, 9) deck_number
+WHERE student.id = current_setting('test.vocab_card_student_id')::UUID
+  AND NOT EXISTS (
+      SELECT 1 FROM public.learning_challenge_attempts attempt
+      WHERE attempt.student_id = student.id
+        AND attempt.class_id = student.class_id
+        AND attempt.content_type = 'vocab'
+        AND attempt.challenge_kind = 'collection'
+        AND attempt.status = 'completed'
+        AND attempt.passed IS TRUE
+        AND attempt.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, deck_number::SMALLINT)
+  );
 SELECT set_config('request.jwt.claim.sub', current_setting('test.vocab_card_teacher_id'), true);
 SELECT set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.vocab_card_teacher_id'), 'role', 'authenticated'
@@ -97,14 +121,14 @@ BEGIN
       AND item.item_key <> v_first
     ORDER BY item.item_key LIMIT 1;
 
-    INSERT INTO public.vocab_tower_v2_item_progress (
-        student_id, class_id, grade, deck_number, item_key,
+    INSERT INTO public.learning_item_progress (
+        student_id, class_id, content_type, collection_key, item_key,
         learning_state, attempt_count, correct_count, wrong_count,
         consecutive_correct, correct_question_types, last_correct, next_review_at
     ) VALUES
-        (v_student_id, v_class_id, 3, 4, v_first,
+        (v_student_id, v_class_id, 'vocab', public.vocab_tower_v2_collection_key(3::SMALLINT, 4::SMALLINT), v_first,
          'needs_review', 3, 1, 2, 0, ARRAY['meaningChoice']::TEXT[], FALSE, NOW()),
-        (v_student_id, v_class_id, 3, 4, v_second,
+        (v_student_id, v_class_id, 'vocab', public.vocab_tower_v2_collection_key(3::SMALLINT, 4::SMALLINT), v_second,
          'mastered', 4, 4, 0, 2, ARRAY['meaningChoice', 'definitionInput']::TEXT[], TRUE,
          NOW() + INTERVAL '14 days');
 
@@ -140,12 +164,12 @@ BEGIN
     END IF;
 
     -- 5) 복습 시점이 지난 익힘 낱말은 `복습할 때`로 바뀐다.
-    UPDATE public.vocab_tower_v2_item_progress progress
+    UPDATE public.learning_item_progress progress
        SET next_review_at = NOW() - INTERVAL '1 day'
      WHERE progress.student_id = v_student_id
        AND progress.class_id = v_class_id
-       AND progress.grade = 3
-       AND progress.deck_number = 4
+       AND progress.content_type = 'vocab'
+       AND progress.collection_key = public.vocab_tower_v2_collection_key(3::SMALLINT, 4::SMALLINT)
        AND progress.item_key = v_second;
 
     v_box := public.get_my_vocab_tower_v2_card_box_v1(4::SMALLINT);

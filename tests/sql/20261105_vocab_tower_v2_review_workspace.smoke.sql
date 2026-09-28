@@ -13,6 +13,14 @@ BEGIN
 END;
 $$;
 
+-- 운영에는 이미 전 학년 덱(grade6-deck10 포함)이 잠긴 채 들어 있다. 새 덱 초기화 경로를 보려고
+-- 이 트랜잭션 안에서만 grade6-deck10 을 비운다(마지막에 롤백된다).
+DELETE FROM public.vocab_tower_v2_run_questions question
+WHERE question.deck_id = 'grade6-deck10'
+   OR question.item_key IN (SELECT item.item_key FROM public.vocab_tower_v2_review_items item WHERE item.deck_id = 'grade6-deck10');
+DELETE FROM public.vocab_tower_v2_item_progress progress
+WHERE progress.item_key IN (SELECT item.item_key FROM public.vocab_tower_v2_review_items item WHERE item.deck_id = 'grade6-deck10');
+DELETE FROM public.vocab_tower_v2_review_decks WHERE deck_id = 'grade6-deck10';
 SELECT set_config('test.vocab_admin_id', profile.id::TEXT, true)
 FROM public.profiles profile
 WHERE profile.role = 'ADMIN'

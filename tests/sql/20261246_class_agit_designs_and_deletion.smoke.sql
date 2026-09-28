@@ -63,7 +63,8 @@ BEGIN
   FOREACH design IN ARRAY ARRAY['botanical','editorial','notebook','constellation'] LOOP
    r:=public.run_class_agit_book_action_v1(c,'save',payload||jsonb_build_object('expected_revision',rev,'paper_format',paper,'design_id',design));rev:=rev+1;
    r:=public.get_class_agit_book_preview_v1(c,b,rev);
-   IF r->'book'->'print' IS DISTINCT FROM jsonb_build_object('paper',paper,'design',design,'body_pt',12,'poem_pt',14,'version',2) THEN RAISE EXCEPTION 'paper/design preview lost';END IF;
+   -- 2026-09-28 갱신: 20261287_anthology_page_layout.sql 이 print 에 쪽 배치(layout)를 더했다. 판형·디자인은 그대로 본다.
+   IF ((r->'book'->'print') - 'layout'::TEXT) IS DISTINCT FROM jsonb_build_object('paper',paper,'design',design,'body_pt',12,'poem_pt',14,'version',2) OR r->'book'->'print'->>'layout' IS NULL THEN RAISE EXCEPTION 'paper/design preview lost';END IF;
   END LOOP;
  END LOOP;
  denied:=FALSE;BEGIN PERFORM public.run_class_agit_book_action_v1(c,'save',payload||jsonb_build_object('expected_revision',rev,'paper_format','A3'));EXCEPTION WHEN invalid_parameter_value THEN denied:=TRUE;END;

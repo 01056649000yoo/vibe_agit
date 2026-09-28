@@ -1,3 +1,6 @@
+-- 20261130 파일에서 바뀜: learning_engine_close_challenge_v1 에 p_wrong_item_keys(8인자)가 붙어 5인자 호출이 모호하다. 8인자로 명시해 부른다.
+-- 20261127 파일에서 바뀜: 친구용 응답에도 관문 진행도가 열렸다(③).
+-- 20261125 파일에서 바뀜: learning_engine_grant_summit_v1 에 p_level(4인자)이 붙어 3인자 호출이 모호하다. 1단계로 명시한다.
 -- 덱마스터 상징·어휘 마스터 휘장 스모크. 반드시 ROLLBACK 트랜잭션에서 돌린다.
 -- 핵심 합격 조건은 **친구에게는 완성된 것만 보이고 진행도는 서버가 아예 안 내려보낸다**는 것이다(A안).
 DO $$
@@ -46,7 +49,8 @@ BEGIN
         v_attempt := public.learning_engine_open_challenge_v1(
             v_me.id, v_me.class_id, 'vocab', v_key, 12::SMALLINT, 4::SMALLINT);
         PERFORM public.learning_engine_close_challenge_v1(
-            v_attempt, 12::SMALLINT, 11::SMALLINT, 4::SMALLINT, TRUE);
+            v_attempt, 12::SMALLINT, 11::SMALLINT, 4::SMALLINT, TRUE,
+            0.75::NUMERIC, 0.5::NUMERIC, NULL::TEXT[]);
     END LOOP;
 
     v_res := public.get_my_learning_mastery_v1();
@@ -67,8 +71,13 @@ BEGIN
 
         v_res := public.get_classmate_learning_mastery_v1(v_me.id);
         SELECT c INTO v_vocab FROM jsonb_array_elements(v_res->'contents') c WHERE c->>'content_type' = 'vocab';
-        IF v_vocab ? 'passed_count' THEN
-            RAISE EXCEPTION '③ 친구에게 진행도가 노출됩니다: %', v_vocab;
+        -- 20261127 파일에서 바뀜: 친구에게도 관문 진행도(passed_count)는 연다. 점수·오답·시도 횟수는 여전히 닫는다.
+        IF (v_vocab->>'passed_count')::int IS DISTINCT FROM 7 THEN
+            RAISE EXCEPTION '③ 친구용 관문 진행도가 7이 아닙니다: %', v_vocab->>'passed_count';
+        END IF;
+        IF v_vocab ?| ARRAY['correct_count', 'answered_count', 'attempt_count', 'wrong_count',
+                            'input_correct_count', 'accuracy', 'score', 'attempts'] THEN
+            RAISE EXCEPTION '③ 친구에게 점수·시도 정보가 노출됩니다: %', v_vocab;
         END IF;
         IF (v_vocab->>'summit_reached')::boolean OR (v_vocab->>'all_collections_cleared')::boolean THEN
             RAISE EXCEPTION '③ 완성하지 않았는데 친구에게 완성으로 보입니다';
@@ -87,13 +96,14 @@ BEGIN
         v_attempt := public.learning_engine_open_challenge_v1(
             v_me.id, v_me.class_id, 'vocab', v_key, 12::SMALLINT, 4::SMALLINT);
         PERFORM public.learning_engine_close_challenge_v1(
-            v_attempt, 12::SMALLINT, 11::SMALLINT, 4::SMALLINT, TRUE);
+            v_attempt, 12::SMALLINT, 11::SMALLINT, 4::SMALLINT, TRUE,
+            0.75::NUMERIC, 0.5::NUMERIC, NULL::TEXT[]);
     END LOOP;
 
-    v_granted := public.learning_engine_grant_summit_v1(v_me.id, v_me.class_id, 'vocab');
+    v_granted := public.learning_engine_grant_summit_v1(v_me.id, v_me.class_id, 'vocab', 1::SMALLINT);
     IF NOT v_granted THEN RAISE EXCEPTION '④ 10개를 채웠는데 휘장이 나오지 않았습니다'; END IF;
     -- 두 번 불러도 중복으로 주지 않는다.
-    IF public.learning_engine_grant_summit_v1(v_me.id, v_me.class_id, 'vocab') THEN
+    IF public.learning_engine_grant_summit_v1(v_me.id, v_me.class_id, 'vocab', 1::SMALLINT) THEN
         RAISE EXCEPTION '④ 휘장이 중복 지급되었습니다';
     END IF;
 
@@ -114,8 +124,13 @@ BEGIN
         IF NOT (v_vocab->>'summit_reached')::boolean OR NOT (v_vocab->>'all_collections_cleared')::boolean THEN
             RAISE EXCEPTION '⑤ 완성했는데 친구에게 안 보입니다: %', v_vocab;
         END IF;
-        IF v_vocab ? 'passed_count' THEN
-            RAISE EXCEPTION '⑤ 완성 뒤에도 진행도는 감춰야 합니다';
+        -- 20261127 이후 친구에게도 관문 진행도는 보인다. 점수·시도 정보는 완성 뒤에도 닫는다.
+        IF (v_vocab->>'passed_count')::int IS DISTINCT FROM 10 THEN
+            RAISE EXCEPTION '⑤ 완성 뒤 친구용 관문 진행도가 10이 아닙니다: %', v_vocab->>'passed_count';
+        END IF;
+        IF v_vocab ?| ARRAY['correct_count', 'answered_count', 'attempt_count', 'wrong_count',
+                            'input_correct_count', 'accuracy', 'score', 'attempts'] THEN
+            RAISE EXCEPTION '⑤ 완성 뒤 친구에게 점수·시도 정보가 노출됩니다: %', v_vocab;
         END IF;
         RAISE NOTICE '⑤ 완성된 휘장은 친구에게 보임';
     END IF;

@@ -1,3 +1,4 @@
+-- 20261232 파일에서 바뀜: save_teacher_reading_marathon_v2 에 p_meters_per_page(11인자)가 붙고 10인자 판은 지워졌다.
 DO $$
 DECLARE
     v_class RECORD;
@@ -12,10 +13,13 @@ DECLARE
 BEGIN
     IF has_function_privilege(
         'anon',
-        'public.save_teacher_reading_marathon_v2(uuid,text,integer,text,text,integer,jsonb,date,boolean,boolean)',
+        'public.save_teacher_reading_marathon_v2(uuid,text,integer,text,text,integer,jsonb,date,boolean,boolean,integer)',
         'EXECUTE'
     ) THEN
         RAISE EXCEPTION '익명 사용자가 독서마라톤 모둠 배정을 저장할 수 있습니다.';
+    END IF;
+    IF to_regprocedure('public.save_teacher_reading_marathon_v2(uuid,text,integer,text,text,integer,jsonb,date,boolean,boolean)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 10인자 save_teacher_reading_marathon_v2 가 다시 생겼습니다.';
     END IF;
 
     SELECT class.id, class.teacher_id

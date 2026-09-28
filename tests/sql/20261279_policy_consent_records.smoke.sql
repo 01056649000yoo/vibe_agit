@@ -1,4 +1,6 @@
--- 동의 기록이 서버 시계로 남고, 남의 학급은 확인할 수 없는지 본다. 모두 롤백된다.
+-- 2026-09-28 갱신: 20261280_policy_consent_history.sql 이 profiles 의 동의 열 세 개를 policy_consents 이력 표로 옮기고
+-- record_policy_consent_v1 을 (text,text) 로 바꿨다. 약관 동의 기록은 20261280 스모크가 본다.
+-- 여기서는 20261279 가 남긴 것 — 학급 동의서 확인(confirm_class_student_consent_v1)과 옛 열이 되살아나지 않았는지 — 만 본다.
 DO $$
 DECLARE
     v_teacher UUID;
@@ -6,24 +8,23 @@ DECLARE
     v_class UUID;
     v_other_class UUID;
     v_result JSONB;
-    v_backfilled INTEGER;
 BEGIN
-    -- 1) 기존 교사가 가입일로 소급 기록됐는가
-    SELECT count(*) INTO v_backfilled FROM public.profiles
-    WHERE role = 'TEACHER' AND terms_agreed_at IS NULL;
-    IF v_backfilled > 0 THEN
-        RAISE EXCEPTION '동의 기록이 비어 있는 교사가 %명 있습니다 — 소급 기록이 빠졌습니다.', v_backfilled;
+    -- 1) 동의 기록은 한 곳(이력 표)에만 있다 — profiles 에 옛 열이 되살아나면 두 곳이 어긋난다
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles'
+               AND column_name IN ('terms_agreed_at', 'privacy_agreed_at', 'agreed_policy_version')) THEN
+        RAISE EXCEPTION 'profiles 에 옛 동의 열이 남아 있습니다 — 동의 기록이 두 곳으로 갈립니다.';
     END IF;
-    IF EXISTS (SELECT 1 FROM public.profiles WHERE role = 'TEACHER' AND agreed_policy_version = 'backfill'
-               AND terms_agreed_at <> created_at) THEN
-        RAISE EXCEPTION '소급 기록의 동의 시각이 가입일과 다릅니다.';
+    IF to_regclass('public.policy_consents') IS NULL THEN
+        RAISE EXCEPTION '동의 이력 표가 없습니다.';
     END IF;
 
     -- 2) 학급 둘을 서로 다른 교사로 찾는다(교사가 없으면 건너뛴다)
+    -- 아직 확인 전인 학급만 고른다. 이미 확인된 학급을 고르면 "남의 학급이 확인됐다" 로 잘못 실패한다(운영 데이터가 늘면서 생긴 흔들림).
     SELECT c.id, c.teacher_id INTO v_class, v_teacher
-    FROM public.classes c WHERE c.deleted_at IS NULL LIMIT 1;
+    FROM public.classes c WHERE c.deleted_at IS NULL AND c.student_consent_confirmed_at IS NULL ORDER BY c.id LIMIT 1;
     SELECT c.id, c.teacher_id INTO v_other_class, v_other
-    FROM public.classes c WHERE c.deleted_at IS NULL AND c.teacher_id <> v_teacher LIMIT 1;
+    FROM public.classes c WHERE c.deleted_at IS NULL AND c.student_consent_confirmed_at IS NULL
+      AND c.teacher_id <> v_teacher ORDER BY c.id LIMIT 1;
     IF v_class IS NULL OR v_other_class IS NULL THEN
         RAISE NOTICE '학급이 둘 미만이라 RPC 검사는 건너뜁니다.'; RETURN;
     END IF;
@@ -58,7 +59,7 @@ BEGIN
     END IF;
 
     -- 4) 비로그인에는 닫혀 있어야 한다
-    IF has_function_privilege('anon', 'public.record_policy_consent_v1(TEXT)', 'EXECUTE')
+    IF has_function_privilege('anon', 'public.record_policy_consent_v1(TEXT,TEXT)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.confirm_class_student_consent_v1(UUID[])', 'EXECUTE') THEN
         RAISE EXCEPTION '동의 기록 함수가 비로그인에 열려 있습니다.';
     END IF;

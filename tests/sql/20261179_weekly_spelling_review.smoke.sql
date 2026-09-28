@@ -1,3 +1,4 @@
+-- 20261190 파일에서 바뀜: start_spelling_weekly_review_v1 에 p_allow_resume(3인자)이 붙고 2인자 판은 지워졌다.
 DO $$
 DECLARE
     v_admin UUID;
@@ -12,7 +13,11 @@ BEGIN
        OR has_table_privilege('authenticated', 'public.spelling_weekly_review_items', 'SELECT') THEN
         RAISE EXCEPTION '주간 맞춤법 검수 원장이 브라우저 역할에 직접 공개됐습니다.';
     END IF;
-    IF has_function_privilege('authenticated', 'public.start_spelling_weekly_review_v1(date,text)', 'EXECUTE')
+    IF to_regprocedure('public.start_spelling_weekly_review_v1(date,text)') IS NOT NULL THEN
+        RAISE EXCEPTION '지운 2인자 start_spelling_weekly_review_v1 이 다시 생겼습니다.';
+    END IF;
+    IF has_function_privilege('authenticated', 'public.start_spelling_weekly_review_v1(date,text,boolean)', 'EXECUTE')
+       OR has_function_privilege('anon', 'public.start_spelling_weekly_review_v1(date,text,boolean)', 'EXECUTE')
        OR has_function_privilege('anon', 'public.admin_get_spelling_promotion_workspace_v3()', 'EXECUTE')
        OR has_function_privilege('anon', 'public.admin_publish_weekly_spelling_entry_v1(uuid,jsonb)', 'EXECUTE') THEN
         RAISE EXCEPTION '주간 맞춤법 서버/관리자 RPC 권한이 잘못 공개됐습니다.';

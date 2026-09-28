@@ -1,3 +1,4 @@
+-- 20261209 파일에서 바뀜: 맞춤법 통계가 detail.spelling_labels 에서 응답 최상위 spelling_labels 로 옮겨졌다.
 -- check-migrations의 바깥 트랜잭션에서 실행되며 마지막에 모두 롤백된다.
 
 DO $$
@@ -92,16 +93,15 @@ BEGIN
         RAISE EXCEPTION '수정 제출 횟수가 증가하지 않았습니다: before %, after %',
             v_before_student, v_after_student;
     END IF;
-    IF NOT (v_after ? 'detail')
-       OR jsonb_typeof(v_after #> '{detail,spelling_labels}') <> 'array'
+    IF jsonb_typeof(v_after->'spelling_labels') IS DISTINCT FROM 'array'
        OR NOT EXISTS (
            SELECT 1
-           FROM jsonb_array_elements(v_after #> '{detail,spelling_labels}') label
+           FROM jsonb_array_elements(v_after->'spelling_labels') label
            WHERE label.value->>'type' = v_label
              AND (label.value->>'total')::INTEGER = 100000
        ) THEN
-        RAISE EXCEPTION '맞춤법 발자국이 detail.spelling_labels에 담기지 않았습니다: %',
-            v_after->'detail';
+        RAISE EXCEPTION '맞춤법 발자국이 최상위 spelling_labels에 담기지 않았습니다: %',
+            v_after->'spelling_labels';
     END IF;
 END;
 $$;

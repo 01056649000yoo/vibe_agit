@@ -53,7 +53,7 @@ test('공개 기본값과 학급·피드 제한은 화면 정책과 DB 제약 �
     assert.match(classLimitMigration, /v_active_count >= 10/);
     assert.match(classLimitMigration, /at most ten active classes/);
     assert.match(migration, /uq_neighbor_space_classes_one_active_space/);
-    assert.match(smoke, /fifth active class must be blocked/);
+    assert.match(smoke, /eleventh active class must be blocked/); // 2026-09-28: 학급 상한 4 → 10(v1.6)
     assert.match(smoke, /one class must not join two active neighbor spaces/);
     assert.match(smoke, /SET CONSTRAINTS neighbor_spaces_host_constraint, neighbor_space_classes_host_constraint IMMEDIATE/);
     assert.match(smoke, /active space without one matching host class must be blocked/);

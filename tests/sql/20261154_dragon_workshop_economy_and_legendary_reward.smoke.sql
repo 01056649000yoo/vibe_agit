@@ -1,3 +1,4 @@
+-- 20261155 파일에서 바뀜: 자유 구매 세트 3개(15종, 15,000P)가 더해져 유료 카탈로그가 52종·61,800P 다.
 -- 바깥 마이그레이션 검사 트랜잭션이 마지막에 모두 롤백한다.
 
 DO $$
@@ -10,7 +11,7 @@ BEGIN
     INTO v_paid_count, v_paid_total
     FROM public.dragon_decor_catalog
     WHERE is_active = true AND price > 0;
-    IF v_paid_count <> 37 OR v_paid_total <> 46800 THEN
+    IF v_paid_count <> 52 OR v_paid_total <> 61800 THEN
         RAISE EXCEPTION '공방 유료 카탈로그가 기대값과 다릅니다: %종, %P', v_paid_count, v_paid_total;
     END IF;
 

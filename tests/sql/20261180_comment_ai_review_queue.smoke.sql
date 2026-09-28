@@ -1,3 +1,4 @@
+-- 20261181 파일에서 바뀜: 구형 댓글 포인트 함수 reward_for_comment 는 지워졌다. 다시 생기지 않았는지 본다.
 -- 바깥에서 BEGIN ... ROLLBACK으로 실행한다. 운영 댓글·포인트는 남지 않는다.
 
 DO $$
@@ -11,7 +12,7 @@ BEGIN
        OR has_function_privilege('authenticated', 'public.fail_comment_ai_review_v2(uuid,uuid,text)', 'EXECUTE') THEN
         RAISE EXCEPTION '댓글 AI 내부 대기열이 브라우저 역할에 공개됐습니다.';
     END IF;
-    IF has_function_privilege('authenticated', 'public.reward_for_comment(uuid)', 'EXECUTE') THEN
+    IF to_regprocedure('public.reward_for_comment(uuid)') IS NOT NULL THEN
         RAISE EXCEPTION '구형 댓글 포인트 함수가 학생에게 남아 있습니다.';
     END IF;
 END;
