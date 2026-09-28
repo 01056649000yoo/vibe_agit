@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Codex SessionStart hook: 짧은 활성 컨텍스트만 developer context에 주입한다.
-# 상세 규칙과 이력은 SESSION_CONTEXT.md의 문서 라우팅을 따라 필요할 때 읽는다.
+# SESSION_CONTEXT.md 는 `npm run context:build` 가 만든 생성 파일이다(원본 docs/wiki/SESSION_RULES.md).
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"

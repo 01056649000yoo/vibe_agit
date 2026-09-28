@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "unitFiles": 199,
+    "unitTests": 1414,
+    "sqlSmokes": 174,
+    "e2eFiles": 4,
+    "e2eTests": 9,
+    "skipped": 0
+  },
+  "lastChange": "늘림: 단위 검사 파일 195→199, 단위 검사 선언 1402→1414"
+}

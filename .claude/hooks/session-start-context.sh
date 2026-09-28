@@ -17,24 +17,11 @@ command -v node >/dev/null 2>&1 || exit 0
 HOOK_REPO_ROOT="$REPO_ROOT" node -e '
 const fs = require("fs");
 const root = process.env.HOOK_REPO_ROOT;
-// 최근 작업 제목 5줄만 뽑는다. WORKLOG 는 통째로 읽으면 한 세션 예산을 통째로 쓴다.
-// 제목만 보여 주고, 필요한 항목은 그때 골라 읽게 한다(2026-09-02).
-const recentTitles = (() => {
-  try {
-    const log = fs.readFileSync(root + "/WORKLOG.md", "utf8");
-    const titles = log.split("\n").filter((line) => line.startsWith("## 20")).slice(0, 5);
-    if (titles.length === 0) return "";
-    return "\n=== 최근 작업 5건 (제목만 · 자세한 것은 WORKLOG.md 에서 골라 읽는다) ===\n"
-      + titles.map((line) => line.replace(/^## /, "- ")).join("\n") + "\n";
-  } catch {
-    return "";
-  }
-})();
-
+// 최근 작업·지금 상태는 `npm run context:build` 가 SESSION_CONTEXT 안에 이미 넣는다(2026-09-28).
+// 예전에는 여기서 WORKLOG 제목 5줄을 따로 붙였는데, Codex 훅은 그러지 않아 모델마다 받는 내용이 달랐다.
 const context =
   "=== SESSION_CONTEXT.md (짧은 활성 컨텍스트) ===\n" +
-  fs.readFileSync(root + "/SESSION_CONTEXT.md", "utf8") +
-  recentTitles;
+  fs.readFileSync(root + "/SESSION_CONTEXT.md", "utf8");
 
 process.stdout.write(JSON.stringify({
   hookSpecificOutput: {

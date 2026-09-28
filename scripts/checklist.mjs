@@ -17,6 +17,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { lessonsFor, parseOpenItems, parsePitfalls, STALE_DAYS, staleOpenItems } from './workMemory.mjs';
 
 const run = (cmd, args) => {
     try {
@@ -155,10 +156,38 @@ if (newTests.length > 0) {
         lines: [
             ...newTests.map((f) => path.basename(f)),
             '',
-            '일부러 코드를 되돌려 검사가 실패하는 것까지 봐야 합니다.',
+            '일부러 코드를 되돌려 검사가 실패하는 것까지 봐야 합니다 — `npm run verify:guard` 가 대신 해 줍니다.',
             '통과만 하고 아무것도 안 보는 검사가 실제로 나온 적이 있습니다.'
         ]
     });
+}
+
+// --- 7) 이번에 고친 파일과 관련된 교훈 ------------------------------------------
+// PITFALLS 줄 끝의 `[경로: …]` 로 맞춘다. 32개를 다 훑지 않아도 필요한 것만 뜬다(2026-09-28).
+if (existsSync('docs/wiki/PITFALLS.md')) {
+    const lessons = lessonsFor(parsePitfalls(readFileSync('docs/wiki/PITFALLS.md', 'utf8')), [...changed])
+        .filter((lesson) => lesson.guards.length === 0); // 검사가 이미 막는 것은 띄우지 않는다
+    if (lessons.length > 0) {
+        notes.push({
+            level: '🧠',
+            title: `이번 파일과 관련된 교훈 ${lessons.length}개 (docs/wiki/PITFALLS.md)`,
+            lines: lessons.slice(0, 8).map((lesson) => `[${lesson.section}] ${lesson.headline}`)
+                .concat(lessons.length > 8 ? [`… 외 ${lessons.length - 8}개`] : [])
+        });
+    }
+}
+
+// --- 8) 오래된 열린 일 ----------------------------------------------------------
+if (existsSync('docs/OPEN_ITEMS.md')) {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+    const stale = staleOpenItems(parseOpenItems(readFileSync('docs/OPEN_ITEMS.md', 'utf8')), today);
+    if (stale.length > 0) {
+        notes.push({
+            level: '⏳',
+            title: `${STALE_DAYS}일 넘은 열린 일 ${stale.length}개 (docs/OPEN_ITEMS.md) — 끝났으면 지우고, 안 할 일이면 BACKLOG 로`,
+            lines: stale.slice(0, 6).map((item) => `${item.id} ${item.kind} · ${item.text.slice(0, 70)}`)
+        });
+    }
 }
 
 // --- 출력 ---------------------------------------------------------------------

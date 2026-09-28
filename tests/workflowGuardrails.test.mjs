@@ -122,8 +122,9 @@ test('작업 로그는 통째로 읽어도 되는 크기로 유지한다', async
         + '. 그 갈래에서 낡은 줄을 빼거나 갈래를 새로 만드세요.'
     );
 
-    // 세션 훅은 최근 작업 제목만 넣는다(본문을 넣으면 매 세션 비용이 된다)
-    const hook = await read('.claude/hooks/session-start-context.sh');
-    assert.match(hook, /startsWith\("## 20"\)/);
-    assert.match(hook, /slice\(0, 5\)/);
+    // 세션 훅은 최근 작업 **제목과 남은 것 한 줄**만 넣는다(본문을 넣으면 매 세션 비용이 된다).
+    // 2026-09-28부터 훅이 아니라 생성기(scripts/sessionContext.mjs)가 뽑는다 — Claude·Codex 가 같은 것을 받게.
+    const generator = await read('scripts/sessionContext.mjs');
+    assert.match(generator, /WORKLOG_ITEMS = 5\b/);
+    assert.match(generator, /MAX_CONTEXT_CHARS = \d+/);
 });
