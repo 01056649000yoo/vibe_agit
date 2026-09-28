@@ -73,7 +73,7 @@ export default function MyShelfPreview() {
       </p>
 
       {SHELF_SECTIONS.map((section, index) => {
-        const posts = sectionPosts[index]
+        const posts = sectionPosts.at(index)
         return (
           <section key={section.id} style={{ marginBottom: '28px' }}>
             <Heading>{section.icon} {section.tabLabel} <span style={{ opacity: .6 }}>{posts.length}권</span></Heading>

@@ -29,7 +29,6 @@ test('RPC 함수 안에는 WHERE 없는 DELETE·UPDATE 를 두지 않는다', ()
     for (const name of files) {
         // 옛 마이그레이션은 이력이라 고치지 않는다. 나중 마이그레이션이 덮어쓴 것만 실제로 살아 있다.
         if (name < '20261253') continue;
-        // eslint-disable-next-line security/detect-non-literal-fs-filename -- 경로는 이 저장소의 마이그레이션 목록뿐이다
         for (const statement of unqualifiedWrites(readFileSync(`${dir}/${name}`, 'utf8'))) offenders.push(`${name}: ${statement}`);
     }
     assert.deepEqual(offenders, [], `앱에서 "DELETE requires a WHERE clause" 로 실패합니다:\n${offenders.join('\n')}`);

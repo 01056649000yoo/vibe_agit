@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-non-literal-fs-filename, security/detect-non-literal-regexp */
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';

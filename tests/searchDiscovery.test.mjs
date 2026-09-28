@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-non-literal-fs-filename */
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
@@ -124,12 +123,10 @@ test('자바스크립트 전 첫 화면은 진짜 첫 화면과 같은 모양이
   const pick = (css, selector, property) => {
     // `landing-card` 처럼 클래스 하나도, `landing-promise h1` 처럼 자손도 받는다.
     const escaped = selector.replace(/ /g, '\\s+').replace(/-/g, '\\-');
-    // eslint-disable-next-line security/detect-non-literal-regexp
     const block = css.match(new RegExp('\\.' + escaped + '\\s*\\{([^}]*)\\}'));
     if (!block) return null;
     // 주석을 먼저 걷어낸다. 규칙 사이에 설명이 끼면 바로 앞 `;` 을 못 찾아 값을 놓친다.
     const body = block[1].replace(/\/\*[\s\S]*?\*\//g, '');
-    // eslint-disable-next-line security/detect-non-literal-regexp
     const found = body.match(new RegExp('(?:^|;)\\s*' + property + '\\s*:\\s*([^;]+)'));
     return found ? tidy(found[1]) : null;
   };

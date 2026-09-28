@@ -98,9 +98,7 @@ test('공유 주소는 샘링크가 쓰는 방식 그대로 4자로 발급하고
     // 샘링크 저장소가 있는 곳(맥미니)에서는 원본과 갈라졌는지까지 본다.
     const source = `${homedir()}/URL/lib/slug.ts`;
     // 경로는 홈 디렉터리 + 고정 문자열뿐이고 검사에서만 읽는다(사용자 입력이 섞이지 않는다).
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (existsSync(source)) {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         const samlink = readFileSync(source, 'utf8');
         assert.equal(samlink.match(/const ALPHABET = "([^"]+)"/)[1], alphabet);
         assert.equal(Number(samlink.match(/const DEFAULT_SLUG_LENGTH = (\d+)/)[1]), length);

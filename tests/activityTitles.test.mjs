@@ -13,7 +13,6 @@ import { normalizeTitleStatus } from '../src/modules/writing/title-status/titleS
 import { titleNotificationDefinitions } from '../src/modules/writing/title-status/notifications.js';
 
 // 테스트가 넘기는 저장소 상대 경로만 읽는다.
-// eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('기록가 칭호는 서로 다른 일기 날짜 0·3·7·14·21·30·40일로 성장한다', () => {

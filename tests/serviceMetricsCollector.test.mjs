@@ -35,7 +35,6 @@ const AWK_PROGRAM = extractDayDeltaProgram(script);
  */
 const dayDelta = (previousLines, currentLines) => {
     const stateFile = join(mkdtempSync(join(tmpdir(), 'agit-metrics-')), 'state');
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- 검사가 방금 만든 임시 폴더에만 쓴다.
     writeFileSync(stateFile, previousLines.length ? `${previousLines.join('\n')}\n` : '');
 
     const out = execFileSync('awk', [AWK_PROGRAM, stateFile, '-'], {

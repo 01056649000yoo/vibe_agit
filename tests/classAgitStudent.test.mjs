@@ -6,7 +6,6 @@ import { assertStudentExhibitions, assertStudentRoom, assertStudentWork } from '
 import { createClassAgitStudentFixture, studentExhibitionId as id } from '../src/dev/fixtures/classAgitStudentFixture.js';
 import { getStudentBackDestination, createStudentHistoryState, readStudentHistoryParent, STUDENT_BOTTOM_NAV_TABS } from '../src/components/student/studentNavigation.js';
 
-// eslint-disable-next-line security/detect-non-literal-fs-filename -- 저장소의 고정 경로와 manifest 목록만 읽는다.
 const read = (file) => readFileSync(file, 'utf8');
 const sql = read('supabase/migrations/20261241_class_agit_internal_publication.sql') + read('supabase/migrations/20261242_class_agit_120_works.sql') + read('supabase/migrations/20261243_class_agit_frozen_public_reads.sql');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`).at(-1)?.split('$$;')[0] || '';

@@ -74,13 +74,11 @@ test('공개 진입점 전체 import 경로에는 인증·앱 셸·저장소·�
     const visited = new Set();
     const visit = (file) => {
         if (visited.has(file)) return; visited.add(file);
-        // eslint-disable-next-line security/detect-non-literal-fs-filename -- 저장소의 import 경로만 순회한다.
         const content = readFileSync(file, 'utf8');
         assert.doesNotMatch(content, /supabaseClient|\/App\.jsx|localStorage|sessionStorage|\/dev\/|get_student_home_bootstrap|analytics/i, file);
         for (const match of content.matchAll(/(?:from\s*|import\s*\()['"]([^'"]+)['"]/g)) {
             if (!match[1].startsWith('.')) continue;
             const child = resolve(dirname(file), match[1]);
-            // eslint-disable-next-line security/detect-non-literal-fs-filename -- 위에서 해석한 저장소 import만 검사한다.
             if (existsSync(child) && ['.js', '.jsx'].includes(extname(child))) visit(child);
         }
     };

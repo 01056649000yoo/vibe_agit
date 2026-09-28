@@ -1,4 +1,4 @@
-/* eslint-disable security/detect-non-literal-fs-filename, security/detect-unsafe-regex, security/detect-non-literal-regexp -- 고정된 로컬 소스 계약을 검사한다. */
+/* eslint-disable security/detect-unsafe-regex -- 고정된 로컬 소스 계약을 검사한다. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';

@@ -1,7 +1,7 @@
 {
   "name": "kkujuk-kkujuk-azit",
   "private": true,
-  "version": "1.13.0",
+  "version": "1.13.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,7 @@
     "glossary:sync": "node scripts/sync-tech-glossary.mjs",
     "glossary:check": "node scripts/sync-tech-glossary.mjs --check",
     "analyze:usage": "node scripts/analyze-usage.mjs",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "test": "npm run test:all",
     "test:all": "node --test tests/*.test.mjs",
     "preview": "vite preview",

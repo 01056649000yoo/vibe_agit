@@ -11,7 +11,6 @@ import { CLASS_AGIT_LIMITS as limits } from '../src/modules/class-agit/policy.js
 import { NARROW_LAYOUT_PX } from '../src/modules/class-agit/selection/selectionLayout.js';
 
 // Test-only paths are literal callers below, never user input.
-// eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (path) => readFileSync(path, 'utf8');
 const sql = read('supabase/migrations/20261244_class_agit_mission_selection.sql');
 const fn = (name) => sql.split(`CREATE OR REPLACE FUNCTION public.${name}(`)[1]?.split('$$;')[0] || '';

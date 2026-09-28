@@ -169,13 +169,13 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const goToPrevBoard = useCallback(() => {
     if (!hasMultipleBoards || currentIndex < 0) return;
     const prevIndex = (currentIndex - 1 + classBoards.length) % classBoards.length;
-    switchToBoardId(classBoards[prevIndex].id);
+    switchToBoardId(classBoards.at(prevIndex).id);
   }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
 
   const goToNextBoard = useCallback(() => {
     if (!hasMultipleBoards || currentIndex < 0) return;
     const nextIndex = (currentIndex + 1) % classBoards.length;
-    switchToBoardId(classBoards[nextIndex].id);
+    switchToBoardId(classBoards.at(nextIndex).id);
   }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
 
   // 좌우 화살표 키로 스크린 전환

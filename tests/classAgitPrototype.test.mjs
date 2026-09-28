@@ -28,7 +28,6 @@ test('class-agit은 기본 OFF이며 홈 요약 신호로 학생 카드를 제�
     const files = readdirSync('src/modules/class-agit', { recursive: true }).filter((path) => /\.(jsx?|css)$/.test(path));
     for (const file of files) {
         const portableFile = file.replaceAll('\\', '/');
-        // eslint-disable-next-line security/detect-non-literal-fs-filename -- 고정 모듈 폴더 안의 저장소 파일만 검사한다.
         const text = readFileSync(`src/modules/class-agit/${file}`, 'utf8');
         assert.doesNotMatch(text, /setInterval|postgres_changes|localStorage|sessionStorage|\/dev\/|fixtures/, file);
         if (portableFile !== 'public/publicApi.js') assert.doesNotMatch(text, /fetch\(/, file);

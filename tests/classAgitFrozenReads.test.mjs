@@ -85,7 +85,6 @@ test('본문·작품·방·임의 RPC 입력 제한으로 서버 호출 전에 �
 test('공개 브라우저는 전용 입구를 쓰며 배포 두 경로가 같은 두 파일을 설치한다', () => {
     const api = readFileSync('src/modules/class-agit/public/publicApi.js', 'utf8');
     assert.match(api, /\/functions\/v1\/class-agit-public-read/); assert.doesNotMatch(api, /\/rest\/v1\/rpc/);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Only the two literal deployment paths below.
     for (const file of ['scripts/deploy-local.sh', '.github/workflows/deploy.yml']) assert.match(readFileSync(file, 'utf8'), /bash scripts\/sync-class-agit-public-read.sh/);
     const sync = readFileSync('scripts/sync-class-agit-public-read.sh', 'utf8');
     for (const file of ['index.ts', 'handler.js']) assert.ok(sync.includes(`install -m 0644 "$class_agit_edge_src/${file}"`));

@@ -46,7 +46,6 @@ const created = new Set();
 const dropped = new Set();
 
 for (const file of files) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- 저장소 마이그레이션 디렉터리에서 readdir로 받은 SQL 파일명만 읽는다.
     const sql = (await readFile(`${MIGRATIONS_DIR}/${file}`, 'utf8'))
         .replace(/CREATE\s+OR\s+REPLACE\s+FUNCTION/gi, 'CREATE FUNCTION')
         .replace(/DROP\s+FUNCTION\s+IF\s+EXISTS/gi, 'DROP FUNCTION');

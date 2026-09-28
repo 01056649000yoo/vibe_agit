@@ -47,7 +47,7 @@ export const buildLetterContent = (parts) => [
 export const countLetterWrittenChars = (structuredContent) => {
     if (structuredContent?.template !== LETTER_TEMPLATE_ID) return null;
     return ['recipient', 'greeting', 'body', 'closing']
-        .reduce((sum, key) => sum + countContentChars(structuredContent[key] ?? ''), 0);
+        .reduce((sum, key) => sum + countContentChars(Reflect.get(structuredContent, key) ?? ''), 0);
 };
 
 export const createLetterStructuredContent = (parts) => ({

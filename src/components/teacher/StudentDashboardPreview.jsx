@@ -61,11 +61,14 @@ const StudentDashboardPreview = ({ activeClass, isMobile }) => {
     // 실제 DashboardMenu 가 쓰는 부트스트랩을 흉내 낸다(조회 없이 초기값만).
     const syntheticBootstrap = useMemo(() => {
         if (!preview) return null;
-        const home = { has_new_mission: missions.length > 0 };
-        for (const module of enabledModules) {
-            const key = module.studentDashboard?.visibilityKey;
-            if (key) home[key] = true; // 켜진 모듈은 학생 홈에 보인다.
-        }
+        // 켜진 모듈은 학생 홈에 보인다.
+        const home = {
+            has_new_mission: missions.length > 0,
+            ...Object.fromEntries(enabledModules
+                .map((module) => module.studentDashboard?.visibilityKey)
+                .filter(Boolean)
+                .map((key) => [key, true]))
+        };
         return {
             home,
             reading_daily: { daily_limit: preview.reading_policy?.daily_limit ?? 1, completed_today: 0 },
