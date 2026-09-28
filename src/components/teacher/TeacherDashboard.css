@@ -91,6 +91,82 @@
     font-weight: 800!important;
 }
 
+/* 머리말 단축 단추 + 옆의 ▾(고정할 학급운영도구 고르기). 두 단추를 한 덩어리로 붙인다. */
+.teacher-tool-shortcut {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.teacher-tool-shortcut > .teacher-class-board-shortcut {
+    border-top-right-radius: 0!important;
+    border-bottom-right-radius: 0!important;
+}
+
+.teacher-tool-pin { position: relative; display: inline-flex; }
+
+.teacher-tool-pin__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    padding: 0 6px;
+    border: 1px solid #BFDBFE;
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: var(--ui-text-xs);
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.teacher-tool-pin__toggle:hover,
+.teacher-tool-pin__toggle[aria-expanded="true"] { background: #DBEAFE; }
+
+.teacher-tool-pin__toggle:focus-visible { outline: 2px solid #1D4ED8; outline-offset: 2px; }
+
+.teacher-tool-pin__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 120;
+    min-width: 220px;
+    padding: 6px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-raised);
+    box-shadow: var(--ui-shadow-modal);
+}
+
+.teacher-tool-pin__heading {
+    margin: 4px 8px 6px;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+}
+
+.teacher-tool-pin__item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: var(--ui-radius-sm);
+    background: transparent;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-sm);
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.teacher-tool-pin__item:hover,
+.teacher-tool-pin__item:focus-visible { background: var(--ui-surface-muted); }
+.teacher-tool-pin__item.is-pinned { background: #EFF6FF; color: #1D4ED8; }
+.teacher-tool-pin__name { flex: 1; min-width: 0; }
+.teacher-tool-pin__check { flex-shrink: 0; font-size: var(--ui-text-xs); font-weight: 800; }
+
 /* 헤더 왼쪽: 현재 학급 이름(고정) + 오른쪽 전환 버튼.
    이름을 박스로 감싸지 않는다 — 헤더가 무거워 보인다. 색과 굵기만으로 구분한다. */
 .teacher-class-bar {
@@ -369,6 +445,18 @@
     }
 
     .teacher-class-board-shortcut > span:last-child { display: none; }
+
+    /* 좁은 화면에서는 단추가 왼쪽에 있어 오른쪽 기준으로 펼치면 화면 왼쪽 밖으로 잘린다(2026-09-28 390px 확인).
+       화면 폭에 맞춰 머리말 바로 아래에 띄운다. */
+    .teacher-tool-pin__menu {
+        position: fixed;
+        top: 56px;
+        right: 8px;
+        left: auto;
+        width: min(360px, calc(100vw - 16px));
+        min-width: 0;
+        box-sizing: border-box;
+    }
 }
 
 @media (max-width: 600px) {

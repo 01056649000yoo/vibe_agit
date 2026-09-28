@@ -2,14 +2,11 @@ import React, { lazy, Suspense, useEffect, useMemo } from 'react';
 import TeacherSideMenu from './TeacherSideMenu';
 import { useRememberedChoice } from '../../hooks/useRememberedChoice';
 import { TEACHER_TOOL_SECTION_LABEL } from '../../constants/teacherNav.js';
-import { getAllModules } from '../../modules/registry';
+import { TEACHER_TOOL_IDS, TEACHER_TOOL_MODULES } from './teacherTools.js';
 import { toolAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 
-const TOOL_MODULES = getAllModules()
-    .filter((module) => module.part === 'tool' && module.available !== false && typeof module.teacherEntry === 'function')
-    .sort((a, b) => (a.tool?.order ?? 100) - (b.tool?.order ?? 100))
-    .map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
-const TOOL_IDS = TOOL_MODULES.map(({ module }) => module.id);
+const TOOL_MODULES = TEACHER_TOOL_MODULES.map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
+const TOOL_IDS = TEACHER_TOOL_IDS;
 
 const TeachingToolsHub = ({
     activeClass,

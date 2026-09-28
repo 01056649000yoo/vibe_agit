@@ -341,6 +341,31 @@ test.describe('교사', () => {
         });
     }
 
+    defineScreen('교사 머리말 단축 단추 › ▾ 로 알림장 고정 → 열기 → 새로고침해도 유지', async ({ page }, testInfo) => {
+        // 2026-09-28: 우리 반 스크린 자리에 학급운영도구 하나를 고정한다(v1.14).
+        const problems = watchProblems(page);
+        const log = await installFakeSupabase(page, 'teacher');
+        await openTeacher(page);
+        const shortcut = page.locator('.teacher-tool-shortcut .teacher-class-board-shortcut');
+        await expect(shortcut).toContainText('우리 반 스크린');
+        const toggle = page.getByRole('button', { name: '단축 단추에 고정할 학급운영도구 고르기' });
+        await toggle.click();
+        const menu = page.getByRole('menu', { name: '단축 단추에 고정할 학급운영도구' });
+        await expect(menu).toBeVisible();
+        expect(await menu.getByRole('menuitemradio').count()).toBe(TOOL_LABELS.length);
+        await expect(menu.getByRole('menuitemradio', { name: /우리 반 스크린/ })).toHaveAttribute('aria-checked', 'true');
+        await testInfo.attach('pin-menu-open', { body: await page.screenshot(), contentType: 'image/png' });
+        await menu.getByRole('menuitemradio', { name: /알림장/ }).click();
+        await expect(menu).toBeHidden();
+        await expect(shortcut).toContainText('알림장');
+        await shortcut.click();
+        await expect(page.locator('[aria-label="학급운영도구 목록"]')).toBeVisible();
+        await expect(page.locator('[aria-label="학급운영도구 목록"] [aria-current="page"], [aria-label="학급운영도구 목록"] .is-active').first()).toContainText('알림장');
+        await page.reload();
+        await expect(page.locator('.teacher-tool-shortcut .teacher-class-board-shortcut')).toContainText('알림장');
+        await assertScreen(page, problems, log, testInfo);
+    });
+
     defineScreen('교사 학급 0개 첫 화면', async ({ page }, testInfo) => {
         const problems = watchProblems(page);
         const log = await installFakeSupabase(page, 'teacherNoClass');

@@ -41,6 +41,9 @@ import { TEACHER_GUIDE_JOURNEYS, getTeacherGuideJourney } from '../../guides/tea
 import { TEACHER_TOUR_ANCHORS, launchAnchorId, tabAnchorId, tourAnchor } from '../../guides/teacherTour.js';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
+import TeacherToolPinMenu from './TeacherToolPinMenu';
+import { TEACHER_TOOL_IDS, TEACHER_TOOL_MODULES } from './teacherTools.js';
+import { HEADER_TOOL_SHORTCUT_STORAGE_KEY, resolveHeaderToolShortcut } from './headerToolShortcut.js';
 import TeacherAccountMenu from './TeacherAccountMenu.jsx';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
 import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
@@ -135,6 +138,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [workspaceTarget, setWorkspaceTarget] = useState(null);
     const [guideCenterRequest, setGuideCenterRequest] = useState(null);
     const [openingClassBoard, setOpeningClassBoard] = useState(false);
+    // 머리말 단축 단추에 고정한 학급운영도구(처음 값 우리 반 스크린). 이 기기에만 기억한다.
+    const [pinnedToolId, setPinnedToolId] = useState(() => {
+        try {
+            return resolveHeaderToolShortcut(window.localStorage.getItem(HEADER_TOOL_SHORTCUT_STORAGE_KEY), TEACHER_TOOL_IDS);
+        } catch {
+            return resolveHeaderToolShortcut(null, TEACHER_TOOL_IDS);
+        }
+    });
+    const pinnedTool = TEACHER_TOOL_MODULES.find((module) => module.id === pinnedToolId) || null;
     const [guideAiAvailability, setGuideAiAvailability] = useState(null);
     const [missionPendingTotal, setMissionPendingTotal] = useState(0);
 
@@ -348,6 +360,24 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         }
     }, [activeClass?.id, openingClassBoard, ask]);
 
+    const handlePinTool = useCallback((toolId) => {
+        setPinnedToolId(toolId);
+        try {
+            window.localStorage.setItem(HEADER_TOOL_SHORTCUT_STORAGE_KEY, toolId);
+        } catch {
+            // 저장소가 막혀 있어도 이 화면에서는 고른 도구로 바뀐다.
+        }
+    }, []);
+
+    // 우리 반 스크린은 별표 화면을 새 창으로 바로 띄우고, 다른 도구는 학급운영도구에서 그 도구를 연다.
+    const handleOpenPinnedTool = useCallback(() => {
+        if (!pinnedTool || pinnedTool.id === 'class-board') {
+            void handleOpenDefaultClassBoard();
+            return;
+        }
+        handleWorkspaceNavigate({ tab: 'tools', tool: pinnedTool.id });
+    }, [pinnedTool, handleOpenDefaultClassBoard, handleWorkspaceNavigate]);
+
     const handleConfirmAdminPassword = useCallback(async () => {
         if (!adminPassword.trim()) {
             setAdminPasswordError('비밀번호를 입력해주세요.');
@@ -477,19 +507,28 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
                             })}
                         />
-                        {/* 동행 모드가 짚는 자리다. 접으면 그 단계에서 선생님이 갇힌다. */}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="teacher-class-board-shortcut"
-                            {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)}
-                            disabled={!activeClass?.id || openingClassBoard}
-                            title="별표로 지정한 기본 우리 반 스크린 열기"
-                            onClick={() => void handleOpenDefaultClassBoard()}
-                        >
-                            <span aria-hidden="true">🖥️</span>
-                            <span>{openingClassBoard ? '여는 중…' : '우리 반 스크린'}</span>
-                        </Button>
+                        {/* 동행 모드가 짚는 자리다(접지 않는다). 처음 값은 우리 반 스크린, 옆 ▾ 로 다른 도구를 고정한다. */}
+                        <div className="teacher-tool-shortcut">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="teacher-class-board-shortcut"
+                                {...tourAnchor(TEACHER_TOUR_ANCHORS.CLASS_BOARD_OPEN)}
+                                disabled={!activeClass?.id || openingClassBoard}
+                                title={pinnedTool && pinnedTool.id !== 'class-board'
+                                    ? `학급운영도구 ${pinnedTool.name} 열기`
+                                    : '별표로 지정한 기본 우리 반 스크린 열기'}
+                                onClick={handleOpenPinnedTool}
+                            >
+                                <span aria-hidden="true">{pinnedTool?.icon || '🖥️'}</span>
+                                <span>{openingClassBoard ? '여는 중…' : (pinnedTool?.name || '우리 반 스크린')}</span>
+                            </Button>
+                            <TeacherToolPinMenu
+                                tools={TEACHER_TOOL_MODULES}
+                                pinnedId={pinnedTool?.id || null}
+                                onPin={handlePinTool}
+                            />
+                        </div>
                     </div>
 
                     <div className="teacher-dashboard__tools-group teacher-dashboard__tools-group--news">

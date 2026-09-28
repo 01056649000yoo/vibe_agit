@@ -7,9 +7,11 @@ import { mealBoardManifest } from '../src/modules/tool/meal-board/manifest.js';
 import { samlinkManifest } from '../src/modules/tool/samlink/manifest.js';
 import { classBoardManifest } from '../src/modules/tool/class-board/manifest.js';
 
-const [guides, hub, mealBoard, arrangement] = await Promise.all([
+const [guides, hub, toolList, mealBoard, arrangement] = await Promise.all([
   readFile('src/constants/teacherGuides.js', 'utf8'),
   readFile('src/components/teacher/TeachingToolsHub.jsx', 'utf8'),
+  // 도구 목록의 원본. 학급운영도구 화면과 머리말 단축 단추가 같이 쓴다(2026-09-28).
+  readFile('src/components/teacher/teacherTools.js', 'utf8'),
   readFile('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8'),
   readFile('src/modules/tool/classroom-arrangement/TeacherEntry.jsx', 'utf8')
 ]);
@@ -47,7 +49,8 @@ test('학급운영도구는 우리 반 스크린 → 급식판 → 자리·역�
       ['samlink', 'URL 단축하기', 30]
     ]
   );
-  assert.match(hub, /\.sort\(\(a, b\) => \(a\.tool\?\.order \?\? 100\) - \(b\.tool\?\.order \?\? 100\)\)/);
+  assert.match(toolList, /\.sort\(\(a, b\) => \(a\.tool\?\.order \?\? 100\) - \(b\.tool\?\.order \?\? 100\)\)/);
+  assert.match(hub, /TEACHER_TOOL_MODULES\.map/);
   // 고른 도구는 새로고침해도 남는다. 처음에는 순서의 첫 도구(useRememberedChoice 의 validIds[0])로 연다.
   assert.match(hub, /useRememberedChoice\(\s*'teacher-tools-selected-v1',\s*TOOL_IDS,/);
   assert.match(hub, /<selected\.Entry /);
