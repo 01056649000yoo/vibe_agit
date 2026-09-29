@@ -88,12 +88,14 @@ test('칸 수 한도는 화면 코드와 DB CHECK 가 같은 값을 쓴다', () 
     assert.doesNotMatch(migration, /CREATE TABLE/);
 });
 
-test('불러오기는 입력칸만 채우고 저장하지 않는다', () => {
-    // 불러온 즉시 저장되면 교실 화면에 빈 틀이 그대로 걸린다.
+test('불러오기는 입력칸만 채우고, 고치기 전에는 자동 저장도 하지 않는다', () => {
+    // 불러온 즉시 저장되면 교실 화면에 빈 틀이 그대로 걸린다. 2026-09-29 자동 저장 뒤에도 같다 —
+    // 불러온 내용은 held 로 붙잡아 두고, 한 글자라도 고치거나 `이대로 저장`을 눌러야 저장한다.
     assert.match(composer, /const applyTemplate = \(template\) => \{/);
-    assert.match(composer, /setState\(\(current\) => \(\{ \.\.\.current, body: template\.body \}\)\)/);
+    assert.match(composer, /setState\(\(current\) => \(\{ \.\.\.current, body: template\.body, held: template\.body \}\)\)/);
     const applyBlock = composer.split('const applyTemplate')[1].split('const persistTemplates')[0];
-    assert.doesNotMatch(applyBlock, /write\(|saveNotice/);
+    assert.doesNotMatch(applyBlock, /write\(|saveNotice|persist\(/);
+    assert.match(composer, /isHeldNotice\(state\.body, state\.held\)\) \{ setSaveStatus\('held'\); return undefined; \}/);
     // 쓰던 글이 있으면 먼저 물어본다.
     assert.match(applyBlock, /dirty && !window\.confirm/);
     // 펼친 뒤에야 서버에서 읽는다.

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { readLocalStorageJson, writeLocalStorageJson } from '../../../../../lib/browserStorage';
 import { formatSeoulDate } from '../../../../../utils/seoulDate';
 import { noticeBoardApi } from './noticeBoardApi';
@@ -13,19 +13,26 @@ import {
   withNoticeTemplateAt,
 } from './noticeTemplates';
 import { loadNoticeTemplates, saveNoticeTemplates } from './noticeTemplateStore';
+import { findPreviousNoticeDate, isHeldNotice, NOTICE_AUTOSAVE_DELAY_MS, shouldAutoSaveNotice } from './noticeAutosave';
 
 const defaultTemplateStore = Object.freeze({ load: loadNoticeTemplates, save: saveNoticeTemplates });
 import './noticeComposer.css';
 
 /*
- * 날짜별 알림을 쓰고 고치는 부분. 설정창과 발표 화면이 같은 것을 쓴다.
+ * 날짜별 알림을 쓰고 고치는 부분. 설정창·발표 화면·알림장 도구가 같은 것을 쓴다.
  *
- * 저장은 보드 `저장`과 무관한 별도 RPC라 누르는 즉시 반영된다. 화면을 열 때는 한 번만 읽고,
- * 다른 날짜를 고를 때만 그 날짜를 더 읽는다.
+ * 저장은 보드 `저장`과 무관한 별도 RPC다. 2026-09-29 부터 **치는 대로 자동 저장**한다 —
+ * 입력을 멈추고 잠시 뒤 한 번 저장하고, 교실 화면(다른 창 포함)에 바로 나간다.
+ * 규칙은 `noticeAutosave.js` 한 곳에 있다: 빈 입력칸은 저장하지 않는다(지우기는 `삭제` 단추로만).
+ * 화면을 열 때는 한 번만 읽고, 다른 날짜나 지난 알림을 고를 때만 그 날짜를 더 읽는다.
  */
 
 const NOTICE_LIMIT = 2000;
-const emptyState = { status: 'loading', today: '', date: '', recent: [], body: '', savedBody: '' };
+/*
+ * `held`: 서식·지난 알림으로 채운 내용. 한 글자라도 고치기 전에는 저장하지 않는다 — 불러온 즉시 저장하면
+ * 채우지 않은 빈 틀이 교실 화면에 그대로 걸린다. 그대로 쓰려면 `이대로 저장`.
+ */
+const emptyState = { status: 'loading', today: '', date: '', recent: [], body: '', savedBody: '', held: null };
 
 /*
  * 입력칸 글씨 크기는 교사가 고른다. 아이들과 함께 보면서 적는 자리라 기본을 가장 큰 계단에 둔다.
@@ -43,22 +50,34 @@ const FONT_STEPS = Object.freeze([
 const DEFAULT_FONT_STEP = 'display';
 const getFontStep = (id) => FONT_STEPS.find((step) => step.id === id) || FONT_STEPS.at(-1);
 
+const SAVE_STATUS_TEXT = Object.freeze({
+  held: '가져온 내용입니다 · 고치면 자동으로 저장됩니다',
+  pending: '입력 중…',
+  saving: '저장 중…',
+  saved: '저장됨 · 교실 화면에 나갔습니다',
+  empty: '비어 있어 저장하지 않았습니다 · 알림을 지우려면 `삭제`',
+  error: '저장하지 못했습니다',
+});
+
 export default function NoticeComposer({
   classId,
   initialDate = null,
   showRecent = true,
   widgetHint = false,
+  /* `sheet`: 화면 전체로 여는 알림장 쓰기(발표 화면). 입력칸이 남는 높이를 모두 쓴다. */
+  variant = 'panel',
+  autoFocus = false,
   onSaved,
   /*
    * 알림장·서식을 읽고 쓰는 통로는 밖에서 넣을 수 있다. 운영에서는 기본값(실제 RPC)을 쓰고,
-   * `src/dev/` 미리보기는 DB 없이 화면만 보려고 샘플을 넣는다. 이 부품은 설정창·열린 스크린
-   * 머리말·알림장 도구 세 곳에 들어가는데 그동안 미리보기가 없어 눈으로 볼 길이 없었다.
+   * `src/dev/` 미리보기는 DB 없이 화면만 보려고 샘플을 넣는다.
    */
   api = noticeBoardApi,
   templateStore = defaultTemplateStore,
 }) {
   const [state, setState] = useState(emptyState);
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const [busy, setBusy] = useState(false);
   /*
    * 서식은 알림 본문과 **다른 곳에 저장된다**(교사 프로필). 펼치기 전에는 읽지 않는다 —
    * 알림장을 열 때마다 미리 읽으면 서식을 쓰지 않는 교사에게도 조회가 한 번씩 붙는다.
@@ -73,15 +92,98 @@ export default function NoticeComposer({
     return FONT_STEPS.some((step) => step.id === saved) ? saved : DEFAULT_FONT_STEP;
   });
 
+  // 자동 저장은 타이머·요청이 화면 그리기와 어긋나므로 최신 값을 ref 로 본다.
+  const latestRef = useRef(state);
+  latestRef.current = state;
+  const timerRef = useRef(0);
+  const inFlightRef = useRef(null);
+  const onSavedRef = useRef(onSaved);
+  onSavedRef.current = onSaved;
+
   const chooseFontStep = (id) => {
     setFontStepId(id);
     writeLocalStorageJson(FONT_STORAGE_KEY, id);
   };
 
+  const applySaved = (date, savedBody, { replaceBody = false } = {}) => {
+    setState((current) => {
+      if (current.date !== date) return current;
+      const withoutDate = current.recent.filter((item) => item.date !== date);
+      const nextRecent = savedBody
+        ? [{ date, preview: savedBody.slice(0, 40) }, ...withoutDate]
+          .sort((left, right) => String(right.date).localeCompare(String(left.date)))
+        : withoutDate;
+      // 자동 저장 뒤에는 입력칸을 건드리지 않는다 — 서버가 끝 빈칸을 잘라 돌려주므로 덮으면 치던 띄어쓰기가 사라진다.
+      return { ...current, savedBody, recent: nextRecent, ...(replaceBody ? { body: savedBody } : {}) };
+    });
+  };
+
+  /* 한 번에 하나만 보낸다. 보내는 동안 더 친 글은 끝난 뒤 다시 본다. */
+  const persist = useCallback(async ({ date, body }, { replaceBody = false } = {}) => {
+    if (!classId || !date) return false;
+    setSaveStatus('saving');
+    setError('');
+    const request = (async () => {
+      const result = await api.saveNotice(classId, date, body);
+      return result?.notice?.body || '';
+    })();
+    inFlightRef.current = request;
+    try {
+      const savedBody = await request;
+      const wasNew = !latestRef.current.savedBody && Boolean(savedBody);
+      applySaved(date, savedBody, { replaceBody });
+      publishClassBoardNotice({ classId, date, body: savedBody });
+      // 알림장 도구의 날짜 목록은 알림이 새로 생기거나 없어질 때만 다시 읽는다(치는 동안 매번 읽지 않는다).
+      if (wasNew || !savedBody || replaceBody) onSavedRef.current?.({ date, body: savedBody });
+      setSaveStatus(savedBody ? 'saved' : 'idle');
+      return true;
+    } catch (saveError) {
+      setSaveStatus('error');
+      setError(saveError.message || '알림을 저장하지 못했습니다.');
+      return false;
+    } finally {
+      if (inFlightRef.current === request) inFlightRef.current = null;
+    }
+  }, [api, classId]);
+
+  const flush = useCallback(async () => {
+    if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = 0; }
+    if (inFlightRef.current) await inFlightRef.current.catch(() => {});
+    const { date, body, savedBody, status, held } = latestRef.current;
+    if (status !== 'ready' || isHeldNotice(body, held)) return true;
+    const decision = shouldAutoSaveNotice(body, savedBody);
+    if (decision === 'empty') { setSaveStatus('empty'); return true; }
+    if (decision !== 'save') return true;
+    return persist({ date, body });
+  }, [persist]);
+
+  // 입력이 멈추면 저장한다.
+  useEffect(() => {
+    if (state.status !== 'ready') return undefined;
+    const decision = shouldAutoSaveNotice(state.body, state.savedBody);
+    if (decision === 'unchanged') return undefined;
+    if (isHeldNotice(state.body, state.held)) { setSaveStatus('held'); return undefined; }
+    if (decision === 'empty') { setSaveStatus('empty'); return undefined; }
+    setSaveStatus('pending');
+    timerRef.current = window.setTimeout(() => { timerRef.current = 0; void flush(); }, NOTICE_AUTOSAVE_DELAY_MS);
+    return () => { if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = 0; } };
+  }, [state.body, state.savedBody, state.status, state.held, flush]);
+
+  // 창을 닫거나 다른 화면으로 가도 친 글은 남긴다(응답은 기다리지 않는다).
+  useEffect(() => () => {
+    const { date, body, savedBody, status, held } = latestRef.current;
+    if (status !== 'ready' || isHeldNotice(body, held)) return;
+    if (shouldAutoSaveNotice(body, savedBody) !== 'save' || !classId || !date) return;
+    void api.saveNotice(classId, date, body)
+      .then((result) => publishClassBoardNotice({ classId, date, body: result?.notice?.body || '' }))
+      .catch(() => {});
+  }, [api, classId]);
+
   const load = useCallback((date = null) => {
     if (!classId) return;
     setError('');
     setMessage('');
+    setSaveStatus('idle');
     void api.getNotices(classId, date)
       .then((result) => setState({
         status: 'ready',
@@ -90,6 +192,7 @@ export default function NoticeComposer({
         recent: Array.isArray(result?.recent) ? result.recent : [],
         body: result?.notice?.body || '',
         savedBody: result?.notice?.body || '',
+        held: null,
       }))
       .catch((loadError) => {
         setState((current) => ({ ...current, status: 'ready' }));
@@ -102,40 +205,54 @@ export default function NoticeComposer({
     load(initialDate);
   }, [initialDate, load]);
 
-  const dirty = state.body !== state.savedBody;
-  const isToday = Boolean(state.today) && state.date === state.today;
-  const hasSaved = state.savedBody.length > 0;
-
-  const write = async (body) => {
-    if (!classId || saving) return;
-    setSaving(true);
-    setError('');
+  /* 다른 날짜로 가기 전에 쓰던 것을 먼저 저장한다. */
+  const switchDate = async (date) => {
+    setBusy(true);
     try {
-      const result = await api.saveNotice(classId, state.date, body);
-      const savedBody = result?.notice?.body || '';
-      setState((current) => {
-        const withoutDate = current.recent.filter((item) => item.date !== current.date);
-        const nextRecent = savedBody
-          ? [{ date: current.date, preview: savedBody.slice(0, 40) }, ...withoutDate]
-            .sort((left, right) => String(right.date).localeCompare(String(left.date)))
-          : withoutDate;
-        return { ...current, body: savedBody, savedBody, recent: nextRecent };
-      });
-      publishClassBoardNotice({ classId, date: state.date, body: savedBody });
-      onSaved?.({ date: state.date, body: savedBody });
-      setMessage(savedBody ? '알림을 저장했습니다. 화면에 바로 반영됩니다.' : '이 날짜의 알림을 지웠습니다.');
-    } catch (saveError) {
-      setError(saveError.message || '알림을 저장하지 못했습니다.');
+      await flush();
+      load(date);
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   };
 
-  const save = () => { if (dirty) void write(state.body); };
+  const dirty = state.body.trim() !== state.savedBody.trim();
+  const isToday = Boolean(state.today) && state.date === state.today;
+  const hasSaved = state.savedBody.length > 0;
+  const previousDate = findPreviousNoticeDate(state.recent, state.date);
+
+  /* ── 지난 알림 가져오기 ─────────────────────────────────────────────────
+   * 가장 최근에 알림을 쓴 날(보고 있는 날짜보다 앞)의 내용을 입력칸에 채운다. 주말·방학을 건너도
+   * "어제"가 아니라 "마지막으로 쓴 날"이다. 목록에는 미리보기만 있어 그 날짜를 한 번 더 읽는다.
+   */
+  const importPrevious = async () => {
+    if (!previousDate || busy) return;
+    if (state.body.trim() && !window.confirm('쓰던 내용 대신 지난 알림을 넣을까요?')) return;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await api.getNotices(classId, previousDate);
+      const body = result?.notice?.body || '';
+      if (!body) { setError('가져올 지난 알림이 없습니다.'); return; }
+      setState((current) => ({ ...current, body, held: body }));
+      setMessage(`${formatSeoulDate(previousDate) || previousDate} 알림을 가져왔습니다. 고치면 자동으로 저장됩니다.`);
+    } catch (loadError) {
+      setError(loadError.message || '지난 알림을 가져오지 못했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* 가져온 내용을 고치지 않고 그대로 쓴다. */
+  const saveHeld = () => {
+    const { date, body } = latestRef.current;
+    setState((current) => ({ ...current, held: null }));
+    void persist({ date, body });
+  };
 
   /* ── 서식 ─────────────────────────────────────────────────────────────────
-   * 불러오기는 **입력칸을 채울 뿐 저장하지 않는다.** 교사가 고친 뒤 `알림 저장` 을 눌러야
-   * 교실 화면에 나간다. 그래서 쓰던 글이 있으면 먼저 물어본다.
+   * 불러오기는 **입력칸을 채울 뿐 바로 저장하지 않는다**(held). 고치기 시작하면 자동 저장된다.
+   * 쓰던 글이 있으면 먼저 물어본다.
    */
   const openTemplates = () => {
     setTemplateOpen((open) => !open);
@@ -150,8 +267,8 @@ export default function NoticeComposer({
   const applyTemplate = (template) => {
     if (isNoticeTemplateEmpty(template)) return;
     if (dirty && !window.confirm('쓰던 내용이 사라집니다. 서식을 불러올까요?')) return;
-    setState((current) => ({ ...current, body: template.body }));
-    setMessage('서식을 불러왔습니다. 고친 뒤 `알림 저장`을 눌러 주세요.');
+    setState((current) => ({ ...current, body: template.body, held: template.body }));
+    setMessage('서식을 불러왔습니다. 고치면 자동으로 저장됩니다.');
   };
 
   const persistTemplates = async (next, done) => {
@@ -189,29 +306,43 @@ export default function NoticeComposer({
   const fillDefaults = () => void persistTemplates(
     normalizeNoticeTemplates(DEFAULT_NOTICE_TEMPLATES), '기본 서식을 담았습니다. 자유롭게 고쳐 쓰세요.');
 
-  const remove = () => {
+  const remove = async () => {
     if (!hasSaved) return;
     const label = formatSeoulDate(state.date) || state.date;
     if (!window.confirm(`${label} 알림을 지울까요? 지우면 교실 화면에서도 사라집니다.`)) return;
-    void write('');
+    if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = 0; }
+    if (inFlightRef.current) await inFlightRef.current.catch(() => {});
+    if (await persist({ date: state.date, body: '' }, { replaceBody: true })) setMessage('이 날짜의 알림을 지웠습니다.');
   };
 
   if (state.status === 'loading') return <p className="class-board-note">알림장을 불러오는 중…</p>;
 
+  const disabled = busy;
+  const statusText = Reflect.get(SAVE_STATUS_TEXT, saveStatus) || '';
+
   return (
-    <div className="class-board-notice-composer">
-      <label>
-        <span>알림 날짜</span>
-        <div className="class-board-notice-composer__date">
-          <input
-            type="date"
-            value={state.date}
-            disabled={saving}
-            onChange={(event) => { if (event.target.value) load(event.target.value); }}
-          />
-          <button type="button" disabled={saving || isToday} onClick={() => load(state.today || null)}>오늘</button>
-        </div>
-      </label>
+    <div className={`class-board-notice-composer class-board-notice-composer--${variant}`}>
+      <div className="class-board-notice-composer__toolbar">
+        <label>
+          <span>알림 날짜</span>
+          <div className="class-board-notice-composer__date">
+            <input
+              type="date"
+              value={state.date}
+              disabled={disabled}
+              onChange={(event) => { if (event.target.value) void switchDate(event.target.value); }}
+            />
+            <button type="button" disabled={disabled || isToday} onClick={() => void switchDate(state.today || null)}>오늘</button>
+          </div>
+        </label>
+        <button
+          type="button"
+          className="class-board-notice-composer__import"
+          disabled={disabled || !previousDate}
+          title={previousDate ? `${formatSeoulDate(previousDate) || previousDate} 알림을 입력칸에 넣습니다` : '가져올 지난 알림이 없습니다'}
+          onClick={() => void importPrevious()}
+        >📋 지난 알림 가져오기{previousDate ? ` (${formatSeoulDate(previousDate) || previousDate})` : ''}</button>
+      </div>
       <p className="class-board-note">
         {formatSeoulDate(state.date) || state.date}
         {isToday ? ' · 지금 화면에 보이는 날짜입니다' : ' · 지난 알림을 고치는 중입니다'}
@@ -223,7 +354,7 @@ export default function NoticeComposer({
           type="button"
           className="class-board-notice-composer__templates-toggle"
           aria-expanded={templateOpen}
-          disabled={saving}
+          disabled={disabled}
           onClick={openTemplates}
         >{templateOpen ? '▾' : '▸'} 서식 불러오기 · 저장</button>
 
@@ -238,7 +369,7 @@ export default function NoticeComposer({
                       <button
                         type="button"
                         className="class-board-notice-composer__template-load"
-                        disabled={saving || templateBusy || isNoticeTemplateEmpty(template)}
+                        disabled={disabled || templateBusy || isNoticeTemplateEmpty(template)}
                         title={isNoticeTemplateEmpty(template) ? '비어 있는 칸입니다' : template.body.slice(0, 60)}
                         onClick={() => applyTemplate(template)}
                       >
@@ -247,13 +378,13 @@ export default function NoticeComposer({
                       </button>
                       <button
                         type="button"
-                        disabled={saving || templateBusy || !state.body.trim()}
+                        disabled={disabled || templateBusy || !state.body.trim()}
                         title="지금 쓴 내용을 이 칸에 저장합니다"
                         onClick={() => storeTemplate(index)}
                       >지금 내용 저장</button>
                       <button
                         type="button"
-                        disabled={saving || templateBusy || isNoticeTemplateEmpty(template)}
+                        disabled={disabled || templateBusy || isNoticeTemplateEmpty(template)}
                         title="이 칸을 비웁니다"
                         onClick={() => clearTemplate(index)}
                       >비우기</button>
@@ -263,16 +394,14 @@ export default function NoticeComposer({
                 {templates.every(isNoticeTemplateEmpty) ? (
                   <button type="button" disabled={templateBusy} onClick={fillDefaults}>기본 서식 담기</button>
                 ) : null}
-                <p className="class-board-note">
-                  서식을 불러오면 아래 입력칸만 채워집니다. 고친 뒤 `알림 저장`을 눌러야 교실 화면에 나갑니다.
-                </p>
+                <p className="class-board-note">서식을 불러오면 입력칸이 채워지고, 다른 글처럼 자동으로 저장됩니다.</p>
               </>
             ) : null}
           </div>
         ) : null}
       </div>
 
-      <label>
+      <label className="class-board-notice-composer__body-field">
         <div className="class-board-notice-composer__body-heading">
           <span>알림 내용</span>
           {/* 아이들과 함께 보면서 적는 자리라 입력칸 글씨 크기를 교사가 고른다. */}
@@ -294,24 +423,30 @@ export default function NoticeComposer({
           style={{ fontSize: getFontStep(fontStepId).size }}
           maxLength={NOTICE_LIMIT}
           rows={3}
-          disabled={saving}
+          disabled={disabled}
+          autoFocus={autoFocus}
           value={state.body}
           placeholder="예) 내일 준비물은 색연필과 풀입니다."
           onChange={(event) => setState((current) => ({ ...current, body: event.target.value }))}
+          onBlur={() => { if (dirty && !isHeldNotice(state.body, state.held)) void flush(); }}
         />
       </label>
 
       <div className="class-board-notice-composer__actions">
         <span>{state.body.length} / {NOTICE_LIMIT}자</span>
+        <span className={`class-board-notice-composer__status is-${saveStatus}`} role="status" aria-live="polite">{statusText}</span>
         <div className="class-board-notice-composer__buttons">
+          {saveStatus === 'held' ? (
+            <button type="button" className="class-board-primary" disabled={disabled} onClick={saveHeld}>이대로 저장</button>
+          ) : null}
+          {saveStatus === 'error' ? (
+            <button type="button" className="class-board-primary" onClick={() => void flush()}>다시 저장</button>
+          ) : null}
           {hasSaved ? (
-            <button type="button" className="class-board-notice-composer__delete" disabled={saving} onClick={remove}>
+            <button type="button" className="class-board-notice-composer__delete" disabled={disabled} onClick={() => void remove()}>
               삭제
             </button>
           ) : null}
-          <button type="button" className="class-board-primary" disabled={saving || !dirty} onClick={save}>
-            {saving ? '저장 중…' : '알림 저장'}
-          </button>
         </div>
       </div>
 
@@ -326,9 +461,9 @@ export default function NoticeComposer({
               <li key={item.date}>
                 <button
                   type="button"
-                  disabled={saving || item.date === state.date}
+                  disabled={disabled || item.date === state.date}
                   aria-current={item.date === state.date}
-                  onClick={() => load(item.date)}
+                  onClick={() => void switchDate(item.date)}
                 >
                   <strong>{formatSeoulDate(item.date) || item.date}</strong>
                   <small>{item.preview}</small>
@@ -340,8 +475,8 @@ export default function NoticeComposer({
       ) : null}
 
       <p className="class-board-note">
-        알림은 날짜마다 따로 저장되고, 저장하면 교실 화면의 알림장에 바로 나타납니다.
-        {widgetHint ? ' 위젯의 제목과 색은 아래에서 정하며 스크린 `저장`을 눌러야 함께 보관됩니다.' : ''}
+        알림은 날짜마다 따로 저장됩니다. 입력을 멈추면 자동으로 저장되고 교실 화면의 알림장에 바로 나타납니다.
+        {widgetHint ? ' 위젯의 제목과 색은 아래에서 정합니다.' : ''}
       </p>
     </div>
   );

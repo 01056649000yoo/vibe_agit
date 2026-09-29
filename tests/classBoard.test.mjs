@@ -232,7 +232,7 @@ test('알림장은 날짜별로 저장하고 지난 날짜를 다시 불러와 �
    * 저장은 여전히 전용 RPC 한 곳만 거친다.
    */
   assert.match(noticeComposer, /api = noticeBoardApi/);
-  assert.match(noticeComposer, /await api\.saveNotice\(classId, state\.date, body\)/);
+  assert.match(noticeComposer, /await api\.saveNotice\(classId, date, body\)/);
   assert.match(noticeComposer, /publishClassBoardNotice/);
   assert.match(noticeComposer, /maxLength=\{NOTICE_LIMIT\}/);
   assert.match(noticeComposer, /지난 알림/);
@@ -370,7 +370,10 @@ test('발표 화면은 알림장을 넣은 스크린에서만 화면 편집 없�
   assert.match(presentation, /const NoticeComposer = lazy\(\(\) => import\('\.\/widgets\/notice-board\/NoticeComposer'\)\)/);
   assert.match(presentation, /hasNoticeWidget = Boolean\(data\?\.board\?\.widgets\?\.some\(\(widget\) => widget\.widgetId === 'notice-board'\)\)/);
   assert.match(presentation, /!editing && hasNoticeWidget[\s\S]*class-board-presentation-notice-button/);
-  assert.match(presentation, /!editing && noticeOpen && hasNoticeWidget[\s\S]*<NoticeComposer classId=\{data\.class\?\.id\} \/>/);
+  // 2026-09-29: 알림장 쓰기는 화면 전체로 열고(크게 쓰며 바로 안내), Esc·닫기로 돌아간다.
+  assert.match(presentation, /!editing && noticeOpen && hasNoticeWidget[\s\S]*class-board-presentation-notice-sheet[\s\S]*role="dialog"[\s\S]*<NoticeComposer classId=\{data\.class\?\.id\} variant="sheet" showRecent=\{false\} autoFocus \/>/);
+  assert.match(presentation, /event\.key === 'Escape'[\s\S]*setNoticeOpen\(false\)/);
+  assert.match(styles, /\.class-board-presentation-notice-sheet \{[^}]*position:fixed; inset:0/);
 });
 
 test('서울 기준 오늘과 날짜 표기는 한 곳에서만 계산한다', () => {
@@ -1085,7 +1088,7 @@ test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지�
   assert.doesNotMatch(noticeComposer, /p_font|fontStep.*saveNotice/);
 
   // 비우고 저장하는 대신 눈에 보이는 삭제 버튼을 두고, 지울 때는 한 번 물어본다.
-  assert.match(noticeComposer, /const remove = \(\) => \{[\s\S]*window\.confirm[\s\S]*void write\(''\)/);
+  assert.match(noticeComposer, /const remove = async \(\) => \{[\s\S]*window\.confirm[\s\S]*persist\(\{ date: state\.date, body: '' \}/);
   assert.match(noticeComposer, /hasSaved \? \([\s\S]*class-board-notice-composer__delete/);
   assert.match(noticeComposer, /const hasSaved = state\.savedBody\.length > 0/);
   assert.match(noticeComposerStyles, /\.class-board-notice-composer__delete \{/);

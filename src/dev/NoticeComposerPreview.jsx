@@ -31,12 +31,15 @@ const WIDTHS = Object.freeze([
     { id: 'panel', label: '설정창 (380px)', width: 380 },
     { id: 'header', label: '열린 스크린 머리말 (560px)', width: 560 },
     { id: 'tool', label: '알림장 도구 (900px)', width: 900 },
+    // 발표 화면의 `알림장 쓰기` — 화면 전체로 연다(2026-09-29). 높이도 정해 두어야 입력칸이 늘어나는 것이 보인다.
+    { id: 'sheet', label: '화면 전체 알림장 쓰기 (1200×640)', width: 1200, height: 640, variant: 'sheet' },
 ]);
 
 export default function NoticeComposerPreview() {
     const [widthId, setWidthId] = useState('panel');
     const [filled, setFilled] = useState(false);
-    const [store] = useState(() => ({ bodies: {} }));
+    // 어제 알림이 있어야 `지난 알림 가져오기`를 눌러 볼 수 있다.
+    const [store] = useState(() => ({ bodies: { [yesterday]: '어제 알림\n준비물: 색연필, 풀\n숙제: 받아쓰기 3급 연습' } }));
     const [api] = useState(() => makeApi(store));
     const [saved, setSaved] = useState([]);
 
@@ -47,7 +50,8 @@ export default function NoticeComposerPreview() {
         save: (next) => { setTemplates(next); return Promise.resolve(next); },
     }), [templates]);
 
-    const width = WIDTHS.find((item) => item.id === widthId)?.width || 380;
+    const current = WIDTHS.find((item) => item.id === widthId) || WIDTHS[0];
+    const width = current.width;
 
     return (
         <div style={{ display: 'grid', gap: 12 }}>
@@ -66,8 +70,11 @@ export default function NoticeComposerPreview() {
                 DB 없이 화면만 봅니다. 저장은 이 화면 메모리에만 남습니다.
                 {filled ? ' · 서식 두 칸이 채워진 상태입니다.' : ' · 서식이 비어 있어 `기본 서식 담기`가 보입니다.'}
             </p>
-            <div style={{ width, maxWidth: '100%', border: '1px dashed #cbd5e1', borderRadius: 12, padding: 8 }}>
+            <div style={{ width, height: current.height, maxWidth: '100%', border: '1px dashed #cbd5e1', borderRadius: 12, padding: 8, boxSizing: 'border-box', background: current.variant === 'sheet' ? '#fffdf3' : undefined }}>
                 <NoticeComposer
+                    key={current.variant || 'panel'}
+                    variant={current.variant || 'panel'}
+                    showRecent={current.variant !== 'sheet'}
                     classId="preview-class"
                     api={api}
                     templateStore={templateStore}

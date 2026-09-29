@@ -412,16 +412,26 @@ export default function ClassBoardPresentationPage({ boardId }) {
           <ModalCloseButton label="우리 반 스크린 닫기" onClick={() => void closeScreen()} />
         </div>
       </header>
+      {/*
+        * 알림장 쓰기는 화면 전체로 연다(2026-09-29 선생님 요청). 교실 화면에 띄운 채 크게 쓰면서
+        * 바로 안내할 수 있게 입력칸이 남는 높이를 모두 쓴다. 치는 대로 자동 저장되고, Esc·닫기로 돌아간다.
+        */}
       {!editing && noticeOpen && hasNoticeWidget ? (
-        <aside className="class-board-presentation-notice-panel" aria-label="오늘 알림장 쓰기">
-          <div className="class-board-panel-heading">
-            <strong>📒 알림장</strong>
-            <button type="button" onClick={() => setNoticeOpen(false)}>닫기</button>
+        <div
+          className="class-board-presentation-notice-sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="알림장 쓰기"
+          onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); setNoticeOpen(false); } }}
+        >
+          <div className="class-board-presentation-notice-sheet__heading">
+            <strong>📒 알림장 쓰기</strong>
+            <button type="button" onClick={() => setNoticeOpen(false)}>닫기 (Esc)</button>
           </div>
           <Suspense fallback={<p className="class-board-note">알림장을 여는 중…</p>}>
-            <NoticeComposer classId={data.class?.id} />
+            <NoticeComposer classId={data.class?.id} variant="sheet" showRecent={false} autoFocus />
           </Suspense>
-        </aside>
+        </div>
       ) : null}
       {editing ? (
         <PresentationEditPanel
