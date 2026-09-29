@@ -98,7 +98,7 @@ export default function TimetableWidget({ config = {}, classId, dragHandleProps,
                 <tr>
                   <th>{period + 1}</th>
                   {view.days.map((day, index) => {
-                    const cell = view.cells[index][period];
+                    const cell = view.cells.at(index).at(period);
                     return (
                       <td
                         key={day.id}

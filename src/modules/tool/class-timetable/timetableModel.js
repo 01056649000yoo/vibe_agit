@@ -37,10 +37,13 @@ export const normalizeCell = (cell) => {
 /** 어떤 모양이 와도 6 × 8 로 맞춘다. */
 export const normalizeCells = (cells) => TIMETABLE_DAYS.map((_, day) => Array.from(
     { length: TIMETABLE_PERIODS },
-    (_unused, period) => normalizeCell(Array.isArray(cells) && Array.isArray(cells[day]) ? cells[day][period] : null),
+    (_unused, period) => normalizeCell(cellAt(cells, day, period)),
 ));
 
-const cellAt = (cells, day, period) => (Array.isArray(cells) && Array.isArray(cells[day]) ? cells[day][period] ?? null : null);
+function cellAt(cells, day, period) {
+    const row = Array.isArray(cells) ? cells.at(day) : null;
+    return Array.isArray(row) ? row.at(period) ?? null : null;
+}
 
 export const setCell = (cells, day, period, value) => normalizeCells(cells).map((row, rowIndex) => (
     rowIndex === day ? row.map((cell, index) => (index === period ? normalizeCell(value) : cell)) : row
@@ -76,7 +79,7 @@ export const countChangedCells = (cells, base) => {
 export const lastFilledPeriod = (dayCells) => {
     const list = Array.isArray(dayCells) ? dayCells : [];
     for (let index = TIMETABLE_PERIODS - 1; index >= 0; index -= 1) {
-        if (normalizeCell(list[index])) return index + 1;
+        if (normalizeCell(list.at(index))) return index + 1;
     }
     return 0;
 };
@@ -135,7 +138,7 @@ export const resolveTimetableDay = (weeks, date) => {
         dayIndex,
         week,
         lunchAfter: Number(week.lunchAfter) || DEFAULT_LUNCH_AFTER,
-        cells: dayIndex <= 5 ? cells[dayIndex] : Array(TIMETABLE_PERIODS).fill(null),
+        cells: dayIndex <= 5 ? cells.at(dayIndex) : Array(TIMETABLE_PERIODS).fill(null),
         hasTimetable: Boolean(week.cells),
     };
 };

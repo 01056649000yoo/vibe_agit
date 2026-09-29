@@ -37,7 +37,8 @@ export default function ClassTimetablePreview() {
   const [scene, setScene] = useState('changed')
   const [today, setToday] = useState('2026-09-29')
   const [version, setVersion] = useState(0)
-  const api = useMemo(() => createFakeTimetableApi({ today, scene }), [today, scene, version])
+  // `처음 상태로`(version)를 누르면 새 가짜 서버를 만든다.
+  const api = useMemo(() => createFakeTimetableApi({ today, scene, resetKey: version }), [today, scene, version])
   const key = `${scene}-${today}-${version}`
 
   return (

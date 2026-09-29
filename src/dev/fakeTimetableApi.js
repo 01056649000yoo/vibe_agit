@@ -15,6 +15,7 @@ import {
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+// 실험실은 `처음 상태로` 때 resetKey 를 바꿔 넘겨 새 서버를 만든다(값 자체는 쓰지 않는다).
 export const createFakeTimetableApi = ({ today, scene = 'filled', latencyMs = 250 } = {}) => {
     const thisWeek = weekStartOf(today);
     const bases = new Map();

@@ -71,7 +71,7 @@ export default function TimetableEditor({
         if (disabled) return;
         if (armed === ERASER) { fill(day, period, null); return; }
         if (armed) { fill(day, period, { s: armed }); return; }
-        const current = grid[day][period];
+        const current = grid.at(day).at(period);
         setEditing({ day, period, s: current?.s || '', m: current?.m || '' });
     };
 
@@ -127,7 +127,7 @@ export default function TimetableEditor({
         <tr key={`p${period}`}>
             <th scope="row">{period + 1}교시</th>
             {days.map((dayInfo, day) => {
-                const cell = grid[day][period];
+                const cell = grid.at(day).at(period);
                 const changed = baseCells ? isCellChanged(grid, baseCells, day, period) : false;
                 const isDrop = dropTarget === `${day}-${period}`;
                 const isEditing = editing?.day === day && editing?.period === period;

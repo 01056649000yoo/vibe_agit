@@ -33,7 +33,7 @@ export const pickTimetableView = ({ view = 'auto', switchHour = 13, today, hour,
     if (!week?.cells) return { kind: 'empty', reason: 'no-timetable' };
     const cells = normalizeCells(week.cells);
     const days = week.includeSaturday ? TIMETABLE_DAYS : TIMETABLE_DAYS.slice(0, 5);
-    const rows = Math.max(0, ...days.map((_, index) => lastFilledPeriod(cells[index])));
+    const rows = Math.max(0, ...days.map((_, index) => lastFilledPeriod(cells.at(index))));
     return {
       kind: 'week',
       weekStart: week.weekStart,
