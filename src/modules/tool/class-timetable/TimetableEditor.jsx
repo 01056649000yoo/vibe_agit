@@ -187,7 +187,7 @@ export default function TimetableEditor({
                             aria-label="직접 적을 과목 이름"
                             onChange={(event) => setNewSubject(event.target.value)}
                         />
-                        <Button type="submit" size="sm" variant="outline" disabled={disabled || !newSubject.trim()}>＋ 과목 추가</Button>
+                        <Button type="submit" size="md" variant="outline" disabled={disabled || !newSubject.trim()}>＋ 과목 추가</Button>
                     </form>
                 </div>
                 <p className="class-timetable-note">
@@ -250,9 +250,9 @@ export default function TimetableEditor({
                         {[...curriculum, ...CREATIVE_ACTIVITY_AREAS, ...custom].map((name) => <option key={name} value={name} />)}
                     </datalist>
                     <div className="class-timetable-cell-form__actions">
-                        <Button type="submit" size="sm">넣기</Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => { fill(editing.day, editing.period, null); setEditing(null); }}>칸 비우기</Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(null)}>그만두기</Button>
+                        <Button type="submit" size="md">넣기</Button>
+                        <Button type="button" size="md" variant="ghost" onClick={() => { fill(editing.day, editing.period, null); setEditing(null); }}>칸 비우기</Button>
+                        <Button type="button" size="md" variant="ghost" onClick={() => setEditing(null)}>그만두기</Button>
                     </div>
                 </form>
             ) : null}

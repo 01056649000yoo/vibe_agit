@@ -220,7 +220,7 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
                 </div>
                 <span className={`class-timetable-status is-${status}`} role="status" aria-live="polite">
                     {Reflect.get(TIMETABLE_SAVE_STATUS_TEXT, status) || ''}
-                    {status === 'error' ? <Button type="button" size="xs" variant="outline" onClick={() => void retry()}>다시 저장</Button> : null}
+                    {status === 'error' ? <Button type="button" size="sm" variant="outline" onClick={() => void retry()}>다시 저장</Button> : null}
                 </span>
             </div>
 
@@ -278,11 +278,11 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
             {info.status === 'ready' && tab === 'week' && weekDraft ? (
                 <div className="class-timetable-panel" role="tabpanel" aria-label="주간 시간표">
                     <div className="class-timetable-week-nav">
-                        <Button type="button" size="sm" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, -7))}>◀ 지난주</Button>
+                        <Button type="button" size="md" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, -7))}>◀ 지난주</Button>
                         <strong>{formatWeekLabel(weekDraft.weekStart)}{weekDraft.weekStart === info.thisWeek ? ' · 이번 주' : ''}</strong>
-                        <Button type="button" size="sm" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, 7))}>다음 주 ▶</Button>
+                        <Button type="button" size="md" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, 7))}>다음 주 ▶</Button>
                         {weekDraft.weekStart !== info.thisWeek ? (
-                            <Button type="button" size="sm" variant="ghost" disabled={weekLoading} onClick={() => void openWeek(info.thisWeek)}>이번 주로</Button>
+                            <Button type="button" size="md" variant="ghost" disabled={weekLoading} onClick={() => void openWeek(info.thisWeek)}>이번 주로</Button>
                         ) : null}
                     </div>
                     <div className="class-timetable-settings">
@@ -298,7 +298,7 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
                                 : '기초 시간표 그대로'}
                         </p>
                         {weekState?.saved ? (
-                            <Button type="button" size="sm" variant="outline" onClick={() => void revertWeek()}>기초 시간표로 되돌리기</Button>
+                            <Button type="button" size="md" variant="outline" onClick={() => void revertWeek()}>기초 시간표로 되돌리기</Button>
                         ) : null}
                     </div>
                     {!weekState?.base ? (
@@ -339,7 +339,7 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
                         ))}
                     </ul>
                     {log.nextCursor ? (
-                        <Button type="button" size="sm" variant="outline" disabled={log.status === 'loading'} onClick={() => void loadLog(log.nextCursor)}>더 지난 기록</Button>
+                        <Button type="button" size="md" variant="outline" disabled={log.status === 'loading'} onClick={() => void loadLog(log.nextCursor)}>더 지난 기록</Button>
                     ) : null}
 
                     <h3 className="class-timetable-subhead">기초 시간표 판</h3>
