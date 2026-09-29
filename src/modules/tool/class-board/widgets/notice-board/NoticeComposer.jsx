@@ -476,7 +476,7 @@ export default function NoticeComposer({
 
       <p className="class-board-note">
         알림은 날짜마다 따로 저장됩니다. 입력을 멈추면 자동으로 저장되고 교실 화면의 알림장에 바로 나타납니다.
-        {widgetHint ? ' 위젯의 제목과 색은 아래에서 정합니다.' : ''}
+        {widgetHint ? ' 위젯의 제목과 색은 아래에서 정하며 스크린 `저장`을 눌러야 함께 보관됩니다.' : ''}
       </p>
     </div>
   );
