@@ -15,7 +15,8 @@ test('스크린 열기는 noopener 없이 새 탭을 먼저 열고 저장된 boa
     assert.doesNotMatch(openScreen, /window\.open\([^)]*noopener/);
 
     const openAt = openScreen.indexOf('window.open');
-    const saveAt = openScreen.indexOf('await save()');
+    // 2026-09-29 자동 저장: 기다리던 저장을 먼저 끝내는 것이 `저장` 이다.
+    const saveAt = openScreen.indexOf('await flushAutosave()');
     assert.ok(openAt > -1 && saveAt > -1, '새 탭 열기와 저장이 모두 있어야 합니다.');
     assert.ok(openAt < saveAt, '저장을 기다린 뒤 새 탭을 열면 브라우저가 막습니다.');
 

@@ -15,7 +15,9 @@ import {
   updateClassBoardWidgetPlacement,
 } from './classBoardModel';
 import BoardCanvas from './host/BoardCanvas';
+import useClassBoardAutosave, { CLASS_BOARD_SAVE_STATUS_TEXT } from './host/useClassBoardAutosave';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
+import useClassBoardUndo from './host/useClassBoardUndo';
 import { WidgetSettingsHost } from './host/WidgetHost';
 import WidgetLayerControls from './host/WidgetLayerControls';
 import { moveClassBoardWidgetLayer } from './host/widgetLayers';
@@ -26,13 +28,6 @@ import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
 
-const snapshot = (board) => JSON.stringify(board ? {
-  id: board.id,
-  title: board.title,
-  layout: board.layout,
-  widgets: board.widgets,
-  revision: board.revision,
-} : null);
 const workspaceRevision = (items = []) => items
   .map((item) => `${item.id}:${item.revision}:${item.isActive ? 1 : 0}:${item.isDefault ? 1 : 0}:${item.displayOrder}`)
   .join('|');
@@ -40,10 +35,10 @@ const workspaceRevision = (items = []) => items
 export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const [boards, setBoards] = useState([]);
   const [board, setBoard] = useState(null);
-  const [savedSnapshot, setSavedSnapshot] = useState('');
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // 복제·삭제·복구처럼 자동 저장이 아닌 탭 작업이 도는 중인지.
+  const [tabBusy, setTabBusy] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [defaultingBoardId, setDefaultingBoardId] = useState(null);
   const [draftIndex, setDraftIndex] = useState(0);
@@ -57,9 +52,6 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   const lastReturnRefreshRef = useRef(0);
   const canvasContentRef = useRef(null);
 
-  const dirty = Boolean(board) && snapshot(board) !== savedSnapshot;
-  const dirtyRef = useRef(dirty);
-  dirtyRef.current = dirty;
   const boardsRef = useRef(boards);
   boardsRef.current = boards;
   const selectedInstance = board?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
@@ -92,19 +84,88 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       setNotice('');
     },
   });
-  const busyRef = useRef(false);
-  busyRef.current = saving || pastingImage || reordering || Boolean(defaultingBoardId);
+  /*
+   * 편집한 것은 자동으로 저장한다(2026-09-29). 저장이 끝나도 편집 중인 판의 내용은 그대로 두고
+   * 아이디·버전 같은 서버 값만 받는다 — 그 사이 고친 것이 사라지지 않게. 규칙은 host/useClassBoardAutosave.js.
+   * 새 탭은 처음 저장될 때 만들어지고, 그때 고른 탭 자리(draftIndex)에 들어간다.
+   */
+  const draftIndexRef = useRef(draftIndex);
+  draftIndexRef.current = draftIndex;
+  const boardIdRef = useRef(board?.id || null);
+  boardIdRef.current = board?.id || boardIdRef.current;
+  const persistBoard = useCallback(async (boardToSave) => {
+    const isNewBoard = !boardToSave.id;
+    const saved = normalizeClassBoard(await classBoardApi.save({
+      classId: activeClass?.id,
+      board: boardToSave,
+      tabPosition: isNewBoard ? draftIndexRef.current : null,
+    }));
+    return { saved, isNewBoard };
+  }, [activeClass?.id]);
+  const autosave = useClassBoardAutosave({
+    board,
+    enabled: Boolean(board && activeClass?.id),
+    paused: pastingImage,
+    save: persistBoard,
+    onSaved: ({ saved, isNewBoard }) => {
+      boardIdRef.current = saved.id;
+      setBoard((current) => (current ? {
+        ...saved,
+        title: current.title,
+        layout: current.layout,
+        widgets: current.widgets,
+      } : current));
+      setBoards((current) => {
+        const remaining = current.filter((item) => item.id !== saved.id).map((item) => ({
+          ...item,
+          isActive: false,
+          displayOrder: isNewBoard && item.displayOrder >= saved.displayOrder
+            ? item.displayOrder + 1
+            : item.displayOrder,
+        }));
+        return sortClassBoards([saved, ...remaining]);
+      });
+      if (isNewBoard) {
+        setDraftIndex(0);
+        setNotice(`‘${saved.title}’ 탭을 만들었습니다. 이제 고치는 것은 자동으로 저장됩니다.`);
+      }
+      setError('');
+    },
+    onError: (saveError) => setError(saveError.message || '스크린을 저장하지 못했습니다.'),
+  });
+  const { baseline: autosaveBaseline, flush: flushAutosave } = autosave;
+  const saving = autosave.status === 'saving';
+  const hasUnsaved = autosave.hasUnsaved;
+  const hasUnsavedRef = useRef(hasUnsaved);
+  hasUnsavedRef.current = hasUnsaved;
+  const undo = useClassBoardUndo(board);
+  const { reset: resetUndo } = undo;
 
-  const selectBoard = useCallback((nextBoard, { force = false } = {}) => {
+  const busyRef = useRef(false);
+  busyRef.current = saving || tabBusy || pastingImage || reordering || Boolean(defaultingBoardId);
+
+  /* 다른 곳으로 가기 전에 남은 변경을 먼저 저장한다. 저장하지 못하면 한 번 묻는다. */
+  const settleEdits = useCallback(async (question) => {
+    if (!hasUnsavedRef.current) return true;
+    if (await flushAutosave()) return true;
+    return window.confirm(question);
+  }, [flushAutosave]);
+
+  const selectBoard = useCallback((nextBoard) => {
     if (!nextBoard) return;
-    if (!force && dirtyRef.current && !window.confirm('저장하지 않은 변경을 버리고 다른 스크린으로 이동할까요?')) return;
     const normalized = normalizeClassBoard(nextBoard);
     setBoard(normalized);
-    setSavedSnapshot(snapshot(normalized));
+    autosaveBaseline(normalized);
+    resetUndo(normalized);
     setSelectedInstanceId(normalized.widgets[0]?.instanceId || null);
     setError('');
     setNotice('');
-  }, []);
+  }, [autosaveBaseline, resetUndo]);
+
+  const selectBoardAfterSaving = async (nextBoard) => {
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 다른 스크린으로 이동할까요?'))) return;
+    selectBoard(nextBoard);
+  };
 
   const loadWorkspace = useCallback(async ({ background = false } = {}) => {
     if (!activeClass?.id) {
@@ -123,17 +184,18 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       setBoards(nextBoards);
       setHiddenPanelOpen(false);
       setHiddenBoards([]);
-      if (nextBoards.length > 0) selectBoard(nextBoards.find((item) => item.isActive) || nextBoards[0], { force: true });
+      if (nextBoards.length > 0) selectBoard(nextBoards.find((item) => item.isActive) || nextBoards[0]);
       else {
         setBoard(null);
-        setSavedSnapshot('');
+        autosaveBaseline(null);
+        resetUndo(null);
       }
     } catch (loadError) {
       if (requestId === requestRef.current) setError(loadError.message || '스크린을 불러오지 못했습니다.');
     } finally {
       if (requestId === requestRef.current) setLoading(false);
     }
-  }, [activeClass?.id, selectBoard]);
+  }, [activeClass?.id, selectBoard, autosaveBaseline, resetUndo]);
 
   useEffect(() => {
     void loadWorkspace();
@@ -146,7 +208,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   useEffect(() => {
     const refreshWhenReturning = (event) => {
       if (event?.type === 'pageshow' && !event.persisted) return;
-      if (document.visibilityState === 'hidden' || dirtyRef.current || busyRef.current) return;
+      if (document.visibilityState === 'hidden' || hasUnsavedRef.current || busyRef.current) return;
       const now = Date.now();
       if (now - lastReturnRefreshRef.current < 750) return;
       lastReturnRefreshRef.current = now;
@@ -162,59 +224,14 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     };
   }, [loadWorkspace]);
 
-  useEffect(() => {
-    const warn = (event) => {
-      if (!dirty) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
-
   const updateBoard = (updater) => {
     setBoard((current) => typeof updater === 'function' ? updater(current) : updater);
     setNotice('');
   };
 
-  const save = async () => {
-    if (!board || !activeClass?.id) return null;
-    setSaving(true);
-    setError('');
-    try {
-      const isNewBoard = !board.id;
-      const saved = normalizeClassBoard(await classBoardApi.save({
-        classId: activeClass.id,
-        board,
-        tabPosition: isNewBoard ? draftIndex : null,
-      }));
-      setBoard(saved);
-      setSavedSnapshot(snapshot(saved));
-      setBoards((current) => {
-        const remaining = current.filter((item) => item.id !== saved.id).map((item) => ({
-          ...item,
-          isActive: false,
-          displayOrder: isNewBoard && item.displayOrder >= saved.displayOrder
-            ? item.displayOrder + 1
-            : item.displayOrder,
-        }));
-        return sortClassBoards([saved, ...remaining]);
-      });
-      setDraftIndex(0);
-      setNotice(`‘${saved.title}’ 탭을 저장했습니다. 상단 탭과 열린 스크린에 최신 내용이 보입니다.`);
-      return saved;
-    } catch (saveError) {
-      setError(saveError.message || '스크린을 저장하지 못했습니다.');
-      return null;
-    } finally {
-      setSaving(false);
-    }
-  };
-
   /*
-   * `스크린 열기` 는 저장 안 된 변경이 있으면 **잠겨 있었다.** 스크린은 서버에서 읽으므로
-   * 저장 전에 열면 옛 화면이 뜨기 때문인데, 교사는 `저장` 을 누르고 다시 이 버튼을 눌러야 했다.
-   * 수업 직전에 두 번 누르게 하지 말고 **한 번에 저장하고 연다.**
+   * 스크린은 서버에서 읽으므로 저장 전에 열면 옛 화면이 뜬다. 자동 저장이 아직 기다리는 중이면
+   * **남은 것을 먼저 저장하고 연다**(2026-09-29 전에는 `저장하고 스크린 열기` 였다).
    *
    * 새 탭은 **누른 그 순간 먼저 연다.** 저장을 기다린 뒤에 열면 사용자 조작 문맥이 끊겨
    * 브라우저가 팝업으로 보고 막는다(문집 인쇄 창이 같은 이유로 이 방식을 쓴다).
@@ -228,8 +245,9 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       if (target.document) {
         target.document.title = '우리 반 스크린 준비 중…';
       }
-      const boardId = dirty || !board?.id ? (await save())?.id : board.id;
-      if (!boardId) { target.close(); return; }
+      const saved = await flushAutosave();
+      const boardId = boardIdRef.current;
+      if (!saved || !boardId) { target.close(); return; }
       target.location.replace(`/class-board/${boardId}`);
       try { target.opener = null; } catch {}
     } catch (openError) {
@@ -238,14 +256,17 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     }
   };
 
-  const createBoard = () => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 새 탭을 만들까요?')) return;
+  const createBoard = async () => {
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 새 탭을 만들까요?'))) return;
     const next = createDefaultClassBoard(activeClass?.name);
     setDraftIndex(0);
+    boardIdRef.current = null;
     setBoard(next);
-    setSavedSnapshot('');
+    // 아직 서버에 없는 판 — 저장된 상태를 비워 두면 곧바로 자동 저장되어 새 탭이 만들어진다.
+    autosaveBaseline(null);
+    resetUndo(next);
     setSelectedInstanceId(next.widgets[0].instanceId);
-    setNotice('탭 이름과 내용을 다듬은 뒤 상단 작업바의 `저장`을 눌러 주세요. 이미지는 첫 저장 후 올릴 수 있습니다.');
+    setNotice('새 탭을 만들고 있습니다. 탭 이름과 내용을 다듬으면 자동으로 저장됩니다. 이미지는 탭이 저장된 뒤 올릴 수 있습니다.');
   };
 
   const openHiddenBoards = async () => {
@@ -275,8 +296,8 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
   };
 
   const restoreHiddenBoard = async (boardId) => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 삭제한 탭을 복구할까요?')) return;
-    setSaving(true);
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 삭제한 탭을 복구할까요?'))) return;
+    setTabBusy(true);
     setError('');
     try {
       const restored = normalizeClassBoard(await classBoardApi.restore(boardId));
@@ -289,18 +310,20 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         })),
       ]));
       setHiddenBoards((current) => current.filter((item) => item.id !== restored.id));
-      selectBoard(restored, { force: true });
+      selectBoard(restored);
       setNotice(`‘${restored.title}’ 스크린을 상단 탭으로 복구했습니다.`);
     } catch (restoreError) {
       setError(restoreError.message || '삭제한 탭을 복구하지 못했습니다.');
     } finally {
-      setSaving(false);
+      setTabBusy(false);
     }
   };
 
   const duplicate = async () => {
-    if (!board?.id || dirty) return;
-    setSaving(true);
+    if (!board?.id) return;
+    // 복제는 서버에 저장된 판을 복사하므로 남은 변경을 먼저 저장한다.
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 저장된 내용으로 복제할까요?'))) return;
+    setTabBusy(true);
     setError('');
     try {
       const copy = normalizeClassBoard(await classBoardApi.duplicate(board.id));
@@ -308,18 +331,20 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         copy,
         ...current.map((item) => ({ ...item, isActive: false, displayOrder: item.displayOrder + 1 })),
       ]));
-      selectBoard(copy, { force: true });
+      selectBoard(copy);
       setNotice('복사본을 새 탭으로 만들었습니다. 원본과 별도로 수정할 수 있습니다.');
     } catch (copyError) {
       setError(copyError.message || '스크린을 복제하지 못했습니다.');
     } finally {
-      setSaving(false);
+      setTabBusy(false);
     }
   };
 
   const hideBoard = async () => {
-    if (!board?.id || dirty || !window.confirm(`‘${board.title}’ 탭을 삭제할까요?\n삭제한 탭 복구에서 다시 되돌릴 수 있습니다.`)) return;
-    setSaving(true);
+    if (!board?.id || !window.confirm(`‘${board.title}’ 탭을 삭제할까요?\n삭제한 탭 복구에서 다시 되돌릴 수 있습니다.`)) return;
+    // 기다리던 자동 저장이 삭제 뒤에 날아가지 않게 먼저 끝낸다.
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 탭을 삭제할까요?'))) return;
+    setTabBusy(true);
     setError('');
     try {
       await classBoardApi.archive(board.id);
@@ -328,7 +353,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     } catch (archiveError) {
       setError(archiveError.message || '스크린을 삭제하지 못했습니다.');
     } finally {
-      setSaving(false);
+      setTabBusy(false);
     }
   };
 
@@ -409,8 +434,15 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
     setSelectedInstanceId(null);
   };
 
+  const undoLast = () => {
+    const target = undo.takeUndo();
+    if (!target) return;
+    updateBoard((current) => (current ? { ...current, ...target } : current));
+    setSelectedInstanceId((id) => (target.widgets.some((widget) => widget.instanceId === id) ? id : null));
+  };
+
   useClassBoardEscapeRemove({
-    enabled: Boolean(selectedInstance) && !saving && !pastingImage,
+    enabled: Boolean(selectedInstance) && !tabBusy && !pastingImage,
     onRemove: removeSelected,
   });
 
@@ -428,10 +460,10 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
           <button
             type="button"
             className="class-board-present"
-            disabled={saving || pastingImage || (!board?.id && !dirty)}
-            title={dirty ? '저장한 뒤 새 탭으로 엽니다.' : ''}
+            disabled={tabBusy || pastingImage || !board}
+            title={hasUnsaved ? '남은 변경을 저장한 뒤 새 탭으로 엽니다.' : ''}
             onClick={() => void openScreen()}
-          >{dirty ? '저장하고 스크린 열기 ↗' : '스크린 열기 ↗'}</button>
+          >스크린 열기 ↗</button>
         </div>
       </header>
 
@@ -448,15 +480,15 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       <ClassBoardTabs
         boards={boards}
         currentBoard={board}
-        dirty={dirty}
-        disabled={saving || pastingImage || reordering || Boolean(defaultingBoardId)}
-        saving={saving}
+        dirty={hasUnsaved}
+        disabled={tabBusy || pastingImage || reordering || Boolean(defaultingBoardId)}
+        canUndo={undo.canUndo}
         deletedPanelOpen={hiddenPanelOpen}
         draftIndex={draftIndex}
         defaultingBoardId={defaultingBoardId}
-        onSelect={selectBoard}
-        onCreate={createBoard}
-        onSave={() => void save()}
+        onSelect={(item) => void selectBoardAfterSaving(item)}
+        onCreate={() => void createBoard()}
+        onUndo={undoLast}
         onDelete={() => void hideBoard()}
         onDuplicate={() => void duplicate()}
         onOpenDeleted={() => void openHiddenBoards()}
@@ -468,7 +500,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         <HiddenClassBoardPanel
           boards={hiddenBoards}
           loading={hiddenLoading}
-          disabled={saving || pastingImage}
+          disabled={tabBusy || pastingImage}
           onRestore={(boardId) => void restoreHiddenBoard(boardId)}
           onClose={() => {
             hiddenRequestRef.current += 1;
@@ -482,7 +514,7 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
         <div className="class-board-empty class-board-empty--create">
           <span>🧩</span><h3>첫 우리 반 스크린을 만들어 보세요</h3>
           <p>텍스트·이미지·글쓰기 현황 위젯이 담긴 기본 화면을 첫 탭으로 만듭니다.</p>
-          <button type="button" className="class-board-primary" onClick={createBoard}>첫 탭 만들기</button>
+          <button type="button" className="class-board-primary" onClick={() => void createBoard()}>첫 탭 만들기</button>
         </div>
       ) : (
         <div className="class-board-editor__workspace">
@@ -507,7 +539,15 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
           </div>
 
           <aside className="class-board-settings-panel">
-            <div className="class-board-panel-heading"><strong>위젯 설정</strong><span>{dirty ? '저장하지 않은 변경 있음' : '저장됨'}</span></div>
+            {/* 자동 저장(2026-09-29) — 지금 상태를 보여 주고, 실패했으면 다시 저장할 수 있게 한다. */}
+            <div className="class-board-panel-heading">
+              <strong>위젯 설정</strong>
+              <span className={`class-board-save-status is-${autosave.status}`} role="status" aria-live="polite">
+                {Reflect.get(CLASS_BOARD_SAVE_STATUS_TEXT, autosave.status) || ''}
+                {autosave.status === 'error' ? <button type="button" onClick={() => void flushAutosave()}>다시 저장</button> : null}
+                {autosave.status === 'conflict' ? <button type="button" onClick={() => void loadWorkspace()}>새로 불러오기</button> : null}
+              </span>
+            </div>
             <div className="class-board-add-widget">
               <span>위젯 추가</span>
               <div>{addableWidgets.map((manifest) => (

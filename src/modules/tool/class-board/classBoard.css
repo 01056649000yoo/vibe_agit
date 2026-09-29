@@ -130,6 +130,12 @@
 .class-board-text--sky { background:linear-gradient(145deg,#eff6ff,#dbeafe); }
 .class-board-text--sun { background:linear-gradient(145deg,#fffbeb,#fef3c7); }
 .class-board-text--mint { background:linear-gradient(145deg,#ecfdf5,#d1fae5); }
+/* 자동 저장 상태(2026-09-29) — `저장` 단추 대신 지금 상태를 보여 준다. */
+.class-board-save-status { display:inline-flex; align-items:center; gap:6px; color:#64748b; }
+.class-board-save-status.is-saved,.class-board-save-status.is-idle,.class-board-presentation-editbar__state small.is-saved,.class-board-presentation-editbar__state small.is-idle { color:#047857; }
+.class-board-save-status.is-error,.class-board-save-status.is-conflict,.class-board-presentation-editbar__state small.is-error,.class-board-presentation-editbar__state small.is-conflict { color:#b91c1c; }
+.class-board-save-status.is-untitled,.class-board-presentation-editbar__state small.is-untitled { color:#b45309; }
+.class-board-save-status button { border:1px solid #cbd7e7; border-radius:8px; padding:3px 8px; background:#fff; color:#334155; font:inherit; font-size:.72rem; font-weight:900; cursor:pointer; }
 /* 글상자 설정의 글씨 크기 단추(2026-09-29) */
 .class-board-text-size { display:grid; gap:6px; min-width:0; margin:0; padding:0; border:0; }
 .class-board-text-size legend { padding:0; margin-bottom:6px; color:#64748b; font-size:.72rem; font-weight:900; }

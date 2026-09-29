@@ -3,6 +3,7 @@ import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import { getClassBoardWidget } from '../widgets/registry';
 import { WidgetSettingsHost } from '../host/WidgetHost';
 import WidgetLayerControls from '../host/WidgetLayerControls';
+import { CLASS_BOARD_SAVE_STATUS_TEXT } from '../host/useClassBoardAutosave';
 
 export default function PresentationEditPanel({
   addableWidgets,
@@ -11,8 +12,9 @@ export default function PresentationEditPanel({
   settingsAnchorStyle,
   classId,
   boardId,
-  dirty,
+  saveStatus = 'idle',
   saving,
+  canUndo = false,
   pastingImage,
   error,
   notice,
@@ -22,8 +24,9 @@ export default function PresentationEditPanel({
   onTogglePin,
   onRemove,
   onCloseSelection,
-  onSave,
-  onCancel,
+  onUndo,
+  onRetrySave,
+  onFinish,
 }) {
   const selectedManifest = getClassBoardWidget(selectedInstance?.widgetId);
   const busy = saving || pastingImage;
@@ -32,7 +35,10 @@ export default function PresentationEditPanel({
       <div className="class-board-presentation-editbar" role="toolbar" aria-label="스크린 바로 편집 도구">
         <div className="class-board-presentation-editbar__state">
           <strong><span aria-hidden="true">✏️</span> 화면 편집 중</strong>
-          <small>{pastingImage ? '붙여넣은 캡처를 준비하는 중…' : dirty ? '저장하지 않은 변경이 있어요' : '현재 화면이 저장되어 있어요'}</small>
+          {/* 자동 저장(2026-09-29) — `저장` 단추 대신 지금 상태를 보여 준다. */}
+          <small className={`is-${saveStatus}`} role="status" aria-live="polite">
+            {pastingImage ? '붙여넣은 캡처를 준비하는 중…' : Reflect.get(CLASS_BOARD_SAVE_STATUS_TEXT, saveStatus) || ''}
+          </small>
         </div>
         <div className="class-board-presentation-editbar__add" aria-label="자료 추가">
           {addableWidgets.map((manifest) => (
@@ -42,12 +48,11 @@ export default function PresentationEditPanel({
           ))}
         </div>
         <div className="class-board-presentation-editbar__actions">
-          <button type="button" className="is-save" disabled={!dirty || busy} onClick={onSave}>
-            {saving ? '저장 중…' : '저장'}
-          </button>
-          <button type="button" disabled={busy} onClick={onCancel}>
-            {dirty ? '변경 취소' : '편집 끝내기'}
-          </button>
+          {saveStatus === 'error' ? (
+            <button type="button" className="is-save" disabled={busy} onClick={onRetrySave}>다시 저장</button>
+          ) : null}
+          <button type="button" disabled={!canUndo || busy} title="방금 한 것을 하나씩 되돌립니다" onClick={onUndo}>↶ 되돌리기</button>
+          <button type="button" className="is-save" disabled={busy} onClick={onFinish}>편집 끝내기</button>
         </div>
       </div>
 

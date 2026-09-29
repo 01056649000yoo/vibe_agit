@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { CLASS_BOARD_AUTOSAVE_DELAY_MS } from '../modules/tool/class-board/host/useClassBoardAutosave'
 import {
   CLASS_BOARD_LAYOUT,
   createWidgetInstance,
@@ -66,6 +67,16 @@ const createPreviewBoard = ({ id, title, heading, body, tone, displayOrder, isDe
     isDefault,
     displayOrder,
   }
+}
+
+/* 실제 화면처럼 고친 뒤 잠시 조용하면 저절로 저장한다(2026-09-29 자동 저장). 여기서는 메모리에만. */
+function LocalAutosave({ dirty, onSave }) {
+  useEffect(() => {
+    if (!dirty) return undefined
+    const timer = window.setTimeout(onSave, CLASS_BOARD_AUTOSAVE_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [dirty, onSave])
+  return null
 }
 
 const createPreviewState = () => {
@@ -302,19 +313,19 @@ export default function ClassBoardPreview() {
         <code>?class-board-preview=1</code>
       </header>
 
+      <LocalAutosave dirty={preview.dirty} onSave={saveLocalBoard} />
       <section className="class-board-preview__tabs" aria-label="스크린 탭 기능 미리보기">
         <ClassBoardTabs
           boards={preview.boards}
           currentBoard={preview.board}
           dirty={preview.dirty}
           disabled={false}
-          saving={false}
           deletedPanelOpen={false}
           draftIndex={preview.draftIndex}
           defaultingBoardId={null}
           onSelect={selectLocalBoard}
           onCreate={createLocalBoard}
-          onSave={saveLocalBoard}
+          onUndo={() => setPreview((current) => ({ ...current, notice: '실제 화면에서는 방금 한 것을 하나씩 되돌립니다.' }))}
           onDelete={deleteLocalBoard}
           onDuplicate={duplicateLocalBoard}
           onOpenDeleted={() => setPreview((current) => ({ ...current, notice: '실제 화면에서는 삭제한 탭을 여기서 복구합니다.' }))}

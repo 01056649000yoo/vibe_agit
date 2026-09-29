@@ -93,6 +93,9 @@ const [
   read('PERFORMANCE_HARNESS.md'),
 ]);
 
+// 스크린 자동 저장(2026-09-29) — 두 편집 화면이 같이 쓰는 부품.
+const autosaveHook = await read('src/modules/tool/class-board/host/useClassBoardAutosave.js');
+
 const [weatherApi, weatherSettings, timerSettings, pickerSettings, audioPlayer, textSettings, textScale, fittedTextHook,
   stageMigration, stageSmoke, caddy, escapeRemoveHook, settingsAnchorHook, layerControls, mainEntry,
   classBoardPreview, classBoardPreviewStyles, agentInstructions] = await Promise.all([
@@ -440,8 +443,10 @@ test('첫 스크린은 고정 16:9 좌표계 안에서 오늘 현황을 접어�
   assert.match(frame, /getDiagonalResizeScale\(gesture\.startPlacement, next\)/);
   assert.match(frame, /type === 'resize-x'[\s\S]*setResizeAxis\('x'\)[\s\S]*type === 'resize-y'[\s\S]*setResizeAxis\('y'\)[\s\S]*setResizeAxis\('both'\)/);
   assert.match(frame, /aria-pressed=\{draftPlacement\.pinned\}/);
-  assert.match(tabs, /＋ 새 탭[\s\S]*저장[\s\S]*삭제/);
-  assert.match(entry, /beforeunload/);
+  // 2026-09-29 자동 저장: 탭 줄의 `저장` 은 `되돌리기` 로 바뀌었고, 닫기 전 확인은 자동 저장 부품이 맡는다.
+  assert.match(tabs, /＋ 새 탭[\s\S]*되돌리기[\s\S]*삭제/);
+  assert.match(entry, /useClassBoardAutosave\(\{/);
+  assert.match(autosaveHook, /beforeunload/);
   assert.match(entry, /p_expected_revision|classBoardApi\.save/);
 });
 
@@ -452,8 +457,9 @@ test('저장한 스크린은 상단 탭으로 전환하고 각각 독립적으�
   assert.match(tabs, /aria-selected=\{selected\}/);
   assert.match(tabs, /onSelect\(item\)/);
   assert.match(tabs, /수정 중/);
-  assert.match(tabs, /className="class-board-tabs__actions"[\s\S]*＋ 새 탭[\s\S]*저장[\s\S]*삭제[\s\S]*복제[\s\S]*복구/);
-  assert.match(entry, /onCreate=\{createBoard\}[\s\S]*onSave=[\s\S]*onDelete=[\s\S]*onDuplicate=[\s\S]*onOpenDeleted=/);
+  assert.match(tabs, /className="class-board-tabs__actions"[\s\S]*＋ 새 탭[\s\S]*되돌리기[\s\S]*삭제[\s\S]*복제[\s\S]*복구/);
+  assert.match(entry, /onCreate=\{\(\) => void createBoard\(\)\}[\s\S]*onUndo=[\s\S]*onDelete=[\s\S]*onDuplicate=[\s\S]*onOpenDeleted=/);
+  assert.doesNotMatch(tabs, /onSave|className="is-save"/, '자동 저장이라 탭 줄에 `저장` 단추를 두지 않는다');
   assert.match(entry, /탭 이름/);
   assert.doesNotMatch(entry, /class-board-toolbar__actions/);
   assert.doesNotMatch(entry, /현재 탭 저장|탭에서 숨기기|복제해서 새 탭/);
@@ -547,12 +553,12 @@ test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중
   assert.match(escapeRemoveHook, /event\.repeat[\s\S]*event\.isComposing[\s\S]*isClassBoardTextEntryTarget\(event\.target\)/);
   assert.match(escapeRemoveHook, /window\.addEventListener\('keydown', removeWithEscape\)/);
   assert.match(escapeRemoveHook, /window\.removeEventListener\('keydown', removeWithEscape\)/);
-  assert.match(entry, /useClassBoardEscapeRemove\([\s\S]*enabled: Boolean\(selectedInstance\) && !saving && !pastingImage/);
+  assert.match(entry, /useClassBoardEscapeRemove\([\s\S]*enabled: Boolean\(selectedInstance\) && !tabBusy && !pastingImage/);
   assert.match(presentation, /useClassBoardEscapeRemove\([\s\S]*enabled: editing && Boolean\(selectedInstance\) && !saving && !pastingImage/);
   assert.match(frame, /aria-keyshortcuts=\{editable && selected \? 'Escape' : undefined\}/);
   assert.match(entry, /위젯을 선택한 뒤 Esc를 누르면 화면에서 뺄 수 있습니다/);
   assert.match(presentationEditPanel, /선택한 자료는 Esc로 뺄 수 있고/);
-  assert.match(guides, /선택한 자료는 `Esc` 또는 `빼기`로 화면에서 뺀/);
+  assert.match(guides, /선택한 자료는 `Esc` 또는 `빼기`로 화면에서 뺍니다/);
 });
 
 test('열린 스크린 설정창은 선택 위젯 오른쪽을 따라가고 빈 화면에서 닫힌다', () => {
@@ -658,20 +664,23 @@ test('열린 스크린은 설정 화면과 같은 16:9 논리 화면을 비율�
   assert.match(guides, /같은 1600×900 논리 화면[\s\S]*글자 크기와 줄바꿈은 두 화면에서 같게 유지/);
 });
 
-test('스크린은 임시 편집 모드에서 텍스트·이미지를 추가하고 저장 또는 취소한다', () => {
+test('스크린은 편집 모드에서 텍스트·이미지를 추가하고 자동 저장하며, 되돌리기와 편집 끝내기를 둔다', () => {
   assert.match(presentation, /✏️ 화면 편집/);
   assert.match(presentation, /fullscreen \? ' is-fullscreen' : ''/);
   assert.match(styles, /\.class-board-presentation-page\.is-fullscreen \.class-board-presentation-editbar__state\s*\{[^}]*display:none/);
   assert.match(presentation, /draftBoard/);
-  assert.match(presentation, /beforeunload/);
+  assert.match(presentation, /useClassBoardAutosave\(\{/);
+  assert.match(autosaveHook, /beforeunload/);
   assert.match(presentation, /classBoardApi\.save/);
   assert.match(presentation, /editable=\{editing\}/);
   assert.match(presentation, /getAddableWidgets[\s\S]*defaultPlacement\.zone === 'content'/);
   assert.match(presentation, /createWidgetInstance\(widgetId/);
-  assert.match(presentation, /저장하지 않은 변경을 모두 취소/);
+  assert.match(presentation, /const finishEditing = async \(\) => \{[\s\S]*settleEdits\('저장하지 못한 변경이 있습니다\. 그래도 편집을 끝낼까요\?'\)/);
   assert.match(presentationEditPanel, /WidgetSettingsHost/);
   assert.match(presentationEditPanel, /manifest\.name\} 추가/);
-  assert.match(presentationEditPanel, /저장하지 않은 변경이 있어요/);
+  assert.match(presentationEditPanel, /CLASS_BOARD_SAVE_STATUS_TEXT/);
+  assert.match(presentationEditPanel, /↶ 되돌리기[\s\S]*편집 끝내기/);
+  assert.doesNotMatch(presentationEditPanel, /onSave|변경 취소/);
   assert.match(presentationEditPanel, /위치에 핀 꽂기/);
   assert.match(presentationEditPanel, /자료 삭제/);
   assert.match(guides, /전체화면에서는 편집 중에도 상단의 `화면 편집 중` 안내가 숨겨/);
@@ -685,7 +694,7 @@ test('스크린 편집 뒤 대시보드로 돌아오면 서버의 최신 보드�
   assert.match(entry, /loadWorkspace = useCallback\(async \(\{ background = false \} = \{\}\)/);
   assert.match(entry, /workspaceRevision[\s\S]*item\.revision[\s\S]*item\.isActive/);
   assert.match(entry, /background && workspaceRevision\(nextBoards\) === workspaceRevision\(boardsRef\.current\)/);
-  assert.match(entry, /refreshWhenReturning[\s\S]*dirtyRef\.current[\s\S]*busyRef\.current/);
+  assert.match(entry, /refreshWhenReturning[\s\S]*hasUnsavedRef\.current[\s\S]*busyRef\.current/);
   assert.match(entry, /event\?\.type === 'pageshow' && !event\.persisted/);
   assert.match(entry, /lastReturnRefreshRef\.current < 750/);
   assert.match(entry, /loadWorkspace\(\{ background: true \}\)/);
@@ -695,7 +704,7 @@ test('스크린 편집 뒤 대시보드로 돌아오면 서버의 최신 보드�
   assert.match(entry, /removeEventListener\('focus', refreshWhenReturning\)/);
   assert.match(entry, /removeEventListener\('pageshow', refreshWhenReturning\)/);
   assert.match(entry, /removeEventListener\('visibilitychange', refreshWhenReturning\)/);
-  assert.match(guides, /열린 스크린에서 내용을 저장하고 기존 대시보드 탭으로 돌아오면 최신 탭 내용이 자동으로 반영/);
+  assert.match(guides, /열린 스크린에서 고치고 기존 대시보드 탭으로 돌아오면 최신 탭 내용이 자동으로 반영/);
 });
 
 test('스크린 현황은 미션 이름표와 일일 자율 글 집계를 20초 가시 화면 폴링으로 표시한다', () => {
@@ -1359,12 +1368,13 @@ test('스크린 열기는 저장까지 한 번에 하고, 새 탭을 누른 순�
      */
     // 저장 안 됐다고 잠그지 않는다.
     assert.doesNotMatch(entry, /disabled=\{!board\?\.id \|\| dirty \|\| saving/);
-    assert.match(entry, /\{dirty \? '저장하고 스크린 열기 ↗' : '스크린 열기 ↗'\}/);
+    // 2026-09-29 자동 저장: 기다리던 저장이 있으면 그것을 먼저 끝내고 연다. 단추 이름은 하나다.
+    assert.match(entry, />스크린 열기 ↗<\/button>/);
 
     const openScreen = entry.split('const openScreen = async () => {')[1].split('\n  };')[0];
     // 열기가 먼저, 저장이 나중이어야 팝업 차단에 걸리지 않는다.
     const openAt = openScreen.indexOf('window.open');
-    const saveAt = openScreen.indexOf('await save()');
+    const saveAt = openScreen.indexOf('await flushAutosave()');
     assert.ok(openAt > -1 && saveAt > -1, '새 탭 열기와 저장이 모두 있어야 합니다.');
     assert.ok(openAt < saveAt, '저장을 기다린 뒤 새 탭을 열면 브라우저가 막습니다.');
 
@@ -1553,7 +1563,8 @@ test('스크린 내용과 사진 주소를 나란히 요청하고, 기억하는 
     assert.match(effect, /\.catch\(\(\) => new Map\(\)\)/);
     assert.match(canvas, /assetSeed/);
     assert.match(canvas, /seed: assetSeed/);
-    assert.match(page, /assetSeed=\{assetSeedRef\.current\}/);
+    // 화면을 그리는 중에 ref 를 읽지 않도록 상태로 넘긴다(2026-09-29).
+    assert.match(page, /assetSeed=\{assetSeed\}/);
 
     // [6] 미리 받아 둔 것으로 다 채워졌으면 서버에 다시 묻지 않는다.
     assert.match(hook, /stillMissing\.length > 0 \? await getClassBoardImageUrls\(stillMissing\) : EMPTY_URLS/);

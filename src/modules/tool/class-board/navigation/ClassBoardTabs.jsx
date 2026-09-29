@@ -4,15 +4,16 @@ import { moveClassBoardTab } from './tabOrder';
 export default function ClassBoardTabs({
   boards = [],
   currentBoard,
+  /* 아직 저장되지 않은 변경이 있는지(자동 저장 대기 중). */
   dirty,
   disabled,
-  saving,
+  canUndo = false,
   deletedPanelOpen,
   draftIndex = 0,
   defaultingBoardId,
   onSelect,
   onCreate,
-  onSave,
+  onUndo,
   onDelete,
   onDuplicate,
   onOpenDeleted,
@@ -22,7 +23,8 @@ export default function ClassBoardTabs({
   const [draggedId, setDraggedId] = useState(null);
   const [dropTargetId, setDropTargetId] = useState(null);
   const currentId = currentBoard?.id || (currentBoard ? 'draft' : null);
-  const savedBoardReady = Boolean(currentBoard?.id) && !dirty && !disabled;
+  // 자동 저장이라 삭제·복제 전에 남은 변경을 먼저 저장한다(화면 쪽). 저장된 탭이면 누를 수 있다.
+  const savedBoardReady = Boolean(currentBoard?.id) && !disabled;
   const visibleBoards = currentBoard?.id
     ? boards.map((item) => item.id === currentBoard.id ? { ...item, title: currentBoard.title } : item)
     : currentBoard
@@ -102,7 +104,7 @@ export default function ClassBoardTabs({
                 className="class-board-tab-item__default"
                 aria-label={item.isDefault ? `${item.title} 기본 스크린 해제 불가` : `${item.title}을 기본 스크린으로 지정`}
                 aria-pressed={Boolean(item.isDefault)}
-                title={isDraft ? '먼저 새 탭을 저장해 주세요.' : item.isDefault ? '기본 스크린' : '기본 스크린으로 지정'}
+                title={isDraft ? '새 탭이 저장되면 지정할 수 있습니다.' : item.isDefault ? '기본 스크린' : '기본 스크린으로 지정'}
                 disabled={disabled || isDraft || Boolean(defaultingBoardId)}
                 onClick={() => { if (!item.isDefault && !isDraft) onSetDefault(item); }}
               >{defaultingBoardId === item.id ? '…' : item.isDefault ? '★' : '☆'}</button>
@@ -112,14 +114,13 @@ export default function ClassBoardTabs({
       </div>
       <div className="class-board-tabs__actions" role="group" aria-label="탭 관리">
         <button type="button" className="is-create" disabled={disabled} onClick={onCreate}>＋ 새 탭</button>
-        <button type="button" className="is-save" disabled={!currentBoard || !dirty || disabled} onClick={onSave}>
-          {saving ? '저장 중…' : '저장'}
-        </button>
+        {/* 자동 저장(2026-09-29) — `저장` 단추 대신 방금 한 것을 하나씩 되돌린다. */}
+        <button type="button" disabled={!currentBoard || !canUndo || disabled} title="방금 한 것을 하나씩 되돌립니다" onClick={onUndo}>↶ 되돌리기</button>
         <button
           type="button"
           className="is-delete"
           disabled={!savedBoardReady}
-          title={dirty ? '먼저 변경 내용을 저장해 주세요.' : '삭제한 탭은 복구할 수 있습니다.'}
+          title="삭제한 탭은 복구할 수 있습니다."
           onClick={onDelete}
         >삭제</button>
         <button type="button" disabled={!savedBoardReady} onClick={onDuplicate}>복제</button>

@@ -15,15 +15,15 @@ import {
 import { getClassBoardImageUrls } from './classBoardImageApi';
 import { readRememberedClassBoardAssetPaths } from './host/classBoardAssetPolicy';
 import BoardCanvas from './host/BoardCanvas';
+import useClassBoardAutosave from './host/useClassBoardAutosave';
 import useClassBoardEscapeRemove from './host/useClassBoardEscapeRemove';
+import useClassBoardUndo from './host/useClassBoardUndo';
 import { moveClassBoardWidgetLayer } from './host/widgetLayers';
 import PresentationEditPanel from './presentation/PresentationEditPanel';
 import useClassBoardSettingsAnchor from './presentation/useClassBoardSettingsAnchor';
 import useClassBoardImagePaste from './widgets/image/useClassBoardImagePaste';
 import { getClassBoardWidget } from './widgets/registry';
 import './classBoard.css';
-
-const snapshot = (board) => JSON.stringify(board);
 
 // 알림장은 화면 편집을 켜지 않고도 바로 쓸 수 있어야 해서 발표 화면이 직접 연다.
 // 아이들이 보는 화면이므로 알림장 위젯을 실제로 올린 스크린에서만 버튼을 내보인다.
@@ -40,12 +40,12 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const [fullscreenPrompt, setFullscreenPrompt] = useState(false);
   const [draftBoard, setDraftBoard] = useState(null);
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
-  const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [notice, setNotice] = useState('');
   const [noticeOpen, setNoticeOpen] = useState(false);
   const canvasContentRef = useRef(null);
-  const assetSeedRef = useRef(null);
+  // 기억해 둔 사진 주소 받기(Promise). 화면을 그리는 중에 ref 를 읽지 않도록 상태로 둔다.
+  const [assetSeed, setAssetSeed] = useState(null);
 
   useEffect(() => {
     setCurrentBoardId(boardId);
@@ -54,7 +54,6 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const editing = Boolean(draftBoard);
   const visibleBoard = draftBoard || data?.board;
   const hasNoticeWidget = Boolean(data?.board?.widgets?.some((widget) => widget.widgetId === 'notice-board'));
-  const dirty = Boolean(draftBoard && data?.board) && snapshot(draftBoard) !== snapshot(data.board);
   const selectedInstance = draftBoard?.widgets.find((widget) => widget.instanceId === selectedInstanceId) || null;
   const clearSelection = useCallback(() => setSelectedInstanceId(null), []);
   const settingsAnchorStyle = useClassBoardSettingsAnchor({
@@ -93,6 +92,37 @@ export default function ClassBoardPresentationPage({ boardId }) {
     },
   });
 
+  /*
+   * 편집한 것은 자동으로 저장한다(2026-09-29). 저장이 끝나도 편집 중인 판을 서버 판으로 바꾸지 않고
+   * 아이디·버전만 받는다 — 그 사이 고친 것이 사라지지 않게. 규칙은 host/useClassBoardAutosave.js.
+   */
+  const classId = data?.class?.id;
+  const persistBoard = useCallback(async (boardToSave) => normalizeClassBoard(await classBoardApi.save({
+    classId,
+    board: boardToSave,
+  })), [classId]);
+  const autosave = useClassBoardAutosave({
+    board: draftBoard,
+    enabled: editing && Boolean(classId),
+    paused: pastingImage,
+    save: persistBoard,
+    onSaved: (saved) => {
+      setData((current) => (current ? { ...current, board: saved } : current));
+      setDraftBoard((current) => (current ? { ...current, id: saved.id, revision: saved.revision } : current));
+      setEditError('');
+    },
+    onError: (saveError) => setEditError(saveError.message || '스크린을 저장하지 못했습니다.'),
+  });
+  const saving = autosave.status === 'saving';
+  const undo = useClassBoardUndo(draftBoard);
+
+  /* 다른 곳으로 가기 전에 남은 변경을 먼저 저장한다. 저장하지 못하면 한 번 묻는다. */
+  const settleEdits = useCallback(async (question) => {
+    if (!autosave.hasUnsaved) return true;
+    if (await autosave.flush()) return true;
+    return window.confirm(question);
+  }, [autosave]);
+
   // 현재 스크린 데이터 로드
   useEffect(() => {
     let active = true;
@@ -102,9 +132,9 @@ export default function ClassBoardPresentationPage({ boardId }) {
     // 이 스크린에 어떤 사진이 있었는지 기억해 두었으므로, 스크린 내용을 기다리지 않고
     // 사진 주소 받기를 나란히 시작한다. 사진이 그대로면 왕복 한 번을 통째로 아낀다.
     const remembered = readRememberedClassBoardAssetPaths(window.localStorage, boardId);
-    assetSeedRef.current = remembered.length > 0
+    setAssetSeed(remembered.length > 0
       ? getClassBoardImageUrls(remembered).catch(() => new Map())
-      : null;
+      : null);
     void classBoardApi.getPresentation(boardId)
       .then((result) => {
         if (!active) return;
@@ -144,11 +174,9 @@ export default function ClassBoardPresentationPage({ boardId }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [currentBoardId]);
 
-  const switchToBoardId = useCallback((targetId) => {
-    if (!targetId || targetId === currentBoardId || loading || saving) return;
-    if (dirty && !window.confirm('저장하지 않은 변경사항이 있습니다. 다른 스크린으로 이동할까요?')) {
-      return;
-    }
+  const switchToBoardId = useCallback(async (targetId) => {
+    if (!targetId || targetId === currentBoardId || loading) return;
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 다른 스크린으로 이동할까요?'))) return;
     setDraftBoard(null);
     setSelectedInstanceId(null);
     setEditError('');
@@ -158,7 +186,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
     const url = new URL(window.location.href);
     url.pathname = `/class-board/${targetId}`;
     window.history.pushState({ boardId: targetId }, '', url.toString());
-  }, [currentBoardId, loading, saving, dirty]);
+  }, [currentBoardId, loading, settleEdits]);
 
   const currentIndex = useMemo(() => {
     return classBoards.findIndex((item) => item.id === currentBoardId);
@@ -169,13 +197,13 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const goToPrevBoard = useCallback(() => {
     if (!hasMultipleBoards || currentIndex < 0) return;
     const prevIndex = (currentIndex - 1 + classBoards.length) % classBoards.length;
-    switchToBoardId(classBoards.at(prevIndex).id);
+    void switchToBoardId(classBoards.at(prevIndex).id);
   }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
 
   const goToNextBoard = useCallback(() => {
     if (!hasMultipleBoards || currentIndex < 0) return;
     const nextIndex = (currentIndex + 1) % classBoards.length;
-    switchToBoardId(classBoards.at(nextIndex).id);
+    void switchToBoardId(classBoards.at(nextIndex).id);
   }, [hasMultipleBoards, currentIndex, classBoards, switchToBoardId]);
 
   // 좌우 화살표 키로 스크린 전환
@@ -221,16 +249,6 @@ export default function ClassBoardPresentationPage({ boardId }) {
     return () => { active = false; };
   }, [autoFullscreen, data?.board]);
 
-  useEffect(() => {
-    const warn = (event) => {
-      if (!dirty) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
-
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else {
@@ -249,14 +267,17 @@ export default function ClassBoardPresentationPage({ boardId }) {
   };
 
   const beginEditing = () => {
-    setDraftBoard(normalizeClassBoard(data.board));
+    const draft = normalizeClassBoard(data.board);
+    setDraftBoard(draft);
+    autosave.baseline(draft);
+    undo.reset(draft);
     setSelectedInstanceId(null);
     setEditError('');
-    setNotice('왼쪽 자료를 누르거나 새 텍스트·이미지를 추가해 보세요.');
+    setNotice('자료를 누르거나 새 텍스트·이미지를 추가해 보세요. 고치는 것은 자동으로 저장됩니다.');
   };
 
-  const cancelEditing = () => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 모두 취소하고 편집을 끝낼까요?')) return;
+  const finishEditing = async () => {
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 편집을 끝낼까요?'))) return;
     setDraftBoard(null);
     setSelectedInstanceId(null);
     setEditError('');
@@ -272,7 +293,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setDraftBoard((current) => current ? { ...current, widgets: [...current.widgets, instance] } : current);
     setSelectedInstanceId(instance.instanceId);
     setEditError('');
-    setNotice(`${manifest.name} 자료를 추가했습니다. 내용을 정한 뒤 저장해 주세요.`);
+    setNotice(`${manifest.name} 자료를 추가했습니다. 고치는 내용은 자동으로 저장됩니다.`);
   };
 
   const updatePlacement = (instanceId, placement, metadata) => {
@@ -319,7 +340,15 @@ export default function ClassBoardPresentationPage({ boardId }) {
       widgets: current.widgets.filter((widget) => widget.instanceId !== selectedInstanceId),
     }) : current);
     setSelectedInstanceId(null);
-    setNotice('자료를 화면에서 뺐습니다. 저장하면 확정됩니다.');
+    setNotice('자료를 화면에서 뺐습니다. 잘못 뺐다면 `되돌리기`를 누르세요.');
+  };
+
+  const undoLast = () => {
+    const target = undo.takeUndo();
+    if (!target) return;
+    setDraftBoard((current) => (current ? { ...current, ...target } : current));
+    setSelectedInstanceId((id) => (target.widgets.some((widget) => widget.instanceId === id) ? id : null));
+    setNotice('');
   };
 
   useClassBoardEscapeRemove({
@@ -327,27 +356,8 @@ export default function ClassBoardPresentationPage({ boardId }) {
     onRemove: removeSelected,
   });
 
-  const save = async () => {
-    if (!draftBoard || !data?.class?.id || !dirty || pastingImage) return;
-    setSaving(true);
-    setEditError('');
-    try {
-      const saved = normalizeClassBoard(await classBoardApi.save({
-        classId: data.class.id,
-        board: draftBoard,
-      }));
-      setData((current) => ({ ...current, board: saved }));
-      setDraftBoard(saved);
-      setNotice('스크린을 저장했습니다. 지금 화면과 다음에 여는 화면에 그대로 적용됩니다.');
-    } catch (saveError) {
-      setEditError(saveError.message || '스크린을 저장하지 못했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const refresh = () => {
-    if (dirty && !window.confirm('저장하지 않은 변경을 버리고 화면을 새로고침할까요?')) return;
+  const refresh = async () => {
+    if (!(await settleEdits('저장하지 못한 변경이 있습니다. 그래도 화면을 새로고침할까요?'))) return;
     window.location.reload();
   };
 
@@ -407,7 +417,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
             >📒 {noticeOpen ? '알림장 닫기' : '알림장 쓰기'}</button>
           ) : null}
           {!editing ? <button type="button" className="class-board-presentation-edit-button" onClick={beginEditing}>✏️ 화면 편집</button> : null}
-          <button type="button" className="class-board-presentation-refresh-button" disabled={pastingImage} onClick={refresh}>새로고침</button>
+          <button type="button" className="class-board-presentation-refresh-button" disabled={pastingImage} onClick={() => void refresh()}>새로고침</button>
           <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? '전체화면 나가기' : '전체화면'}</button>
           <ModalCloseButton label="우리 반 스크린 닫기" onClick={() => void closeScreen()} />
         </div>
@@ -441,8 +451,9 @@ export default function ClassBoardPresentationPage({ boardId }) {
           settingsAnchorStyle={settingsAnchorStyle}
           classId={data.class?.id}
           boardId={draftBoard.id}
-          dirty={dirty}
+          saveStatus={autosave.status}
           saving={saving}
+          canUndo={undo.canUndo}
           pastingImage={pastingImage}
           error={editError}
           notice={notice}
@@ -452,8 +463,9 @@ export default function ClassBoardPresentationPage({ boardId }) {
           onTogglePin={toggleSelectedPin}
           onRemove={removeSelected}
           onCloseSelection={clearSelection}
-          onSave={() => void save()}
-          onCancel={cancelEditing}
+          onUndo={undoLast}
+          onRetrySave={() => void autosave.flush()}
+          onFinish={() => void finishEditing()}
         />
       ) : null}
       {fullscreenPrompt ? (
@@ -467,7 +479,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
         <BoardCanvas
           board={visibleBoard}
           classId={data.class?.id}
-          assetSeed={assetSeedRef.current}
+          assetSeed={assetSeed}
           presentation
           editable={editing}
           contentRef={canvasContentRef}
