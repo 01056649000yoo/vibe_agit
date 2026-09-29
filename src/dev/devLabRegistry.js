@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 
 const ClassBoardPreview = lazy(() => import('./ClassBoardPreview.jsx'))
+const ClassTimetablePreview = lazy(() => import('./ClassTimetablePreview.jsx'))
 const ApprovePostFlowPreview = lazy(() => import('./ApprovePostFlowPreview.jsx'))
 const ArrangementBoardWidgetPreview = lazy(() => import('./ArrangementBoardWidgetPreview.jsx'))
 const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonStudentCardPreview.jsx'))
@@ -132,6 +133,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '알림장 쓰기 · 서식',
     description: '설정창·머리말·도구 세 폭에서 서식 1·2·3 불러오기와 저장이 넘치지 않는지 본다',
     Component: NoticeComposerPreview,
+  }),
+  Object.freeze({
+    id: 'class-timetable',
+    icon: '🗓️',
+    title: '학급 시간표 관리 · 시간표 위젯',
+    description: '빈 학급·기초 시간표·이번 주 바뀜·오류 장면에서 입력 화면과 오늘·내일·이번 주 위젯을 함께 본다(오늘 요일 바꾸기)',
+    Component: ClassTimetablePreview,
   }),
   Object.freeze({
     id: 'class-board',

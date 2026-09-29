@@ -1,0 +1,15 @@
+/*
+ * 시간표 과목 색 — 도구 화면과 스크린 `시간표` 위젯이 같이 쓴다.
+ * 번호는 timetableModel.js 의 subjectColorIndex(교육과정 과목은 늘 같은 색, 직접 적은 과목은 이름으로 정한 색).
+ * 공용 토큰에 과목별 색이 없어 이 모듈 안에서만 정의한다(배경은 연하게, 글자는 진하게 — 교실 화면에서 읽히게).
+ */
+.class-timetable-subject--0 { --tt-bg:#e0edff; --tt-ink:#1e3a8a; --tt-line:#93c5fd; }
+.class-timetable-subject--1 { --tt-bg:#fde8e8; --tt-ink:#9b1c1c; --tt-line:#f8b4b4; }
+.class-timetable-subject--2 { --tt-bg:#e6f6ec; --tt-ink:#14532d; --tt-line:#9ae6b4; }
+.class-timetable-subject--3 { --tt-bg:#e0f5f5; --tt-ink:#115e59; --tt-line:#8fdbd4; }
+.class-timetable-subject--4 { --tt-bg:#f1e8fd; --tt-ink:#5b21b6; --tt-line:#c4b5fd; }
+.class-timetable-subject--5 { --tt-bg:#fff1dc; --tt-ink:#92400e; --tt-line:#fbd38d; }
+.class-timetable-subject--6 { --tt-bg:#fde7f3; --tt-ink:#9d174d; --tt-line:#f9a8d4; }
+.class-timetable-subject--7 { --tt-bg:#fef9c3; --tt-ink:#713f12; --tt-line:#fde047; }
+.class-timetable-subject--8 { --tt-bg:#e9eef5; --tt-ink:#334155; --tt-line:#cbd5e1; }
+.class-timetable-subject--9 { --tt-bg:#e8f3dc; --tt-ink:#3f6212; --tt-line:#bef264; }

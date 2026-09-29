@@ -1,0 +1,37 @@
+/*
+ * 스크린 `시간표` 위젯. 위젯 틀이 크기 기준(container-type:size)이라 글씨를 cqb·cqi 로 틀 크기에 맞춘다.
+ * 줄 수(--rows)가 많을수록 글씨가 작아지고, 교시가 적은 날은 크게 보인다.
+ */
+.class-board-timetable { display:grid; grid-template-rows:auto minmax(0,1fr); gap:clamp(4px,2.5cqmin,12px); min-width:0; min-height:0; width:100%; height:100%; overflow:hidden; box-sizing:border-box; padding:clamp(8px,3.5cqmin,22px); border-radius:inherit; color:#0f2a4a; }
+.class-board-timetable--sky { background:linear-gradient(160deg,#f0f7ff,#dcebff); }
+.class-board-timetable--mint { background:linear-gradient(160deg,#effcf6,#d6f5e6); }
+.class-board-timetable--yellow { background:linear-gradient(160deg,#fffbeb,#fdefc4); color:#5b3b09; }
+.class-board-timetable--paper { background:linear-gradient(160deg,#ffffff,#f6f4ee); }
+.class-board-timetable>header { display:flex; align-items:center; gap:clamp(4px,2cqmin,12px); min-width:0; }
+.class-board-timetable>header>span { font-size:max(1rem,7cqmin); line-height:1; }
+.class-board-timetable>header div { display:grid; min-width:0; }
+.class-board-timetable>header small { font-size:max(.8rem,3.4cqmin); font-weight:800; opacity:.78; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.class-board-timetable>header h2 { margin:0; font-size:max(1rem,6.4cqmin); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.class-board-timetable__state { display:grid; place-items:center; margin:0; font-size:max(.8rem,4.4cqmin); font-weight:800; text-align:center; opacity:.8; }
+
+/* 하루 시간표 — 한 줄에 한 교시 */
+.class-board-timetable__day { display:grid; grid-template-rows:repeat(var(--rows,6),minmax(0,1fr)); gap:clamp(2px,1.2cqmin,8px); min-height:0; margin:0; padding:0; list-style:none; }
+.class-board-timetable__day li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:clamp(4px,2.5cqi,18px); min-height:0; padding:0 clamp(6px,3cqi,20px); border:1px solid var(--tt-line,rgba(15,42,74,.18)); border-radius:clamp(6px,2cqmin,14px); background:var(--tt-bg,rgba(255,255,255,.7)); color:var(--tt-ink,inherit); overflow:hidden; font-size:max(.8rem,min(calc(62cqb / var(--rows,6)),8cqi)); }
+.class-board-timetable__day li>span { font-size:.62em; font-weight:800; opacity:.75; white-space:nowrap; }
+.class-board-timetable__day li>strong { font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.class-board-timetable__day li>small { font-size:.55em; font-weight:800; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40cqi; }
+.class-board-timetable__day li.is-empty { border-style:dashed; background:rgba(255,255,255,.4); }
+.class-board-timetable__day li.is-lunch { grid-template-columns:auto minmax(0,1fr); border:0; background:rgba(245,158,11,.18); color:#7c4a03; font-size:max(.8rem,min(calc(44cqb / var(--rows,6)),6cqi)); }
+
+/* 한 주 시간표 — 표 */
+.class-board-timetable__week { width:100%; height:100%; min-height:0; border-collapse:separate; border-spacing:clamp(1px,.8cqmin,5px); table-layout:fixed; font-size:max(.8rem,min(calc(52cqb / var(--rows,7)),calc(24cqi / var(--cols,6)))); }
+.class-board-timetable__week th { font-weight:900; opacity:.8; }
+.class-board-timetable__week thead th { font-size:.9em; }
+.class-board-timetable__week tbody th { width:1.6em; font-size:.8em; }
+.class-board-timetable__week td { padding:0 .15em; border:1px solid var(--tt-line,rgba(15,42,74,.14)); border-radius:clamp(4px,1.4cqmin,10px); background:var(--tt-bg,rgba(255,255,255,.5)); color:var(--tt-ink,inherit); font-weight:900; text-align:center; overflow:hidden; line-height:1.05; }
+/* 직접 적은 긴 과목은 두 줄까지 나눠 보여 주고, 그래도 길면 줄임표. 교육과정 과목은 줄임말(창체 등)로 한 줄에 든다. */
+.class-board-timetable__week td>span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; word-break:keep-all; }
+.class-board-timetable__week td.is-empty { background:rgba(255,255,255,.35); border-style:dashed; }
+.class-board-timetable__week th.is-today { color:#1d4ed8; opacity:1; }
+.class-board-timetable__week td.is-today { box-shadow:inset 0 0 0 2px #2563eb; }
+.class-board-timetable__week tr.is-lunch td,.class-board-timetable__week tr.is-lunch th { height:.1em; padding:0; border:0; background:rgba(245,158,11,.18); color:#7c4a03; font-size:.6em; }

@@ -84,6 +84,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('tool-overview', '학급운영도구 고르기', '현재 학급 명부를 사용하는 수업 도구를 한곳에서 엽니다.', 'tools'),
             step('class-board', '우리 반 스크린 띄우기', '수업별 화면을 탭으로 준비하고 기본 스크린을 전체화면으로 열어 안내 자료와 오늘의 글쓰기 현황을 함께 보여 줍니다.', 'class-board'),
             step('class-notice', '알림장 남기기', '날짜마다 우리 반 알림을 적고 지난 알림을 다시 찾아봅니다. 스크린에 올려 두면 교실 화면에도 함께 나옵니다.', 'class-notice'),
+            step('class-timetable', '학급 시간표 입력', '학년 과목을 끌어다 기초 시간표를 채우고, 그 주에만 바뀐 수업은 주간 시간표에 남깁니다. 스크린 시간표 위젯이 오늘·내일을 보여 줍니다.', 'class-timetable'),
             step('meal-board', '급식판 활용', '학교 급식을 확인하고 학생 정보가 빠진 화면을 교실에 크게 띄웁니다.', 'meal-board'),
             step('classroom-arrangement', '자리와 역할 배치', '교실 모양과 조건을 준비해 자리·역할을 배정하고 결과를 보완합니다.', 'classroom-arrangement', 'seat')
         ]
