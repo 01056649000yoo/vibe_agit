@@ -95,6 +95,10 @@
 }
 .class-board-notice-composer__templates-body li>button:disabled { opacity:.45; cursor:default; }
 .class-board-notice-composer__templates-body li>button:not(:disabled):hover { border-color:var(--ui-primary); color:var(--ui-primary); }
+/* 서식 이름을 그 줄 안에서 받는다(브라우저 prompt 는 전체화면을 푼다). */
+.class-board-notice-composer__template-name { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+.class-board-notice-composer__template-name input { width:10em; min-height:32px; padding:4px 8px; font-size:var(--ui-text-sm); }
+.class-board-notice-composer__template-name button { border:1px solid #cbd7e7; border-radius:var(--ui-radius-sm); background:#fff; padding:6px 9px; color:#334155; font:inherit; font-size:var(--ui-text-xs); font-weight:800; cursor:pointer; }
 /* 불러오기 칸이 남는 자리를 차지한다 — 가장 자주 누르는 버튼이다. */
 .class-board-notice-composer__template-load { flex:1; min-width:0; display:grid; gap:1px; text-align:left; }
 .class-board-notice-composer__template-load>strong { font-size:var(--ui-text-xs); }

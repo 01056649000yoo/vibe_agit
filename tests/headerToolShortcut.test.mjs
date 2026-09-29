@@ -51,7 +51,12 @@ test('급식판처럼 매니페스트에 shortcutLaunch 를 적은 도구는 단
     assert.match(hub, /launchRequest=\{launchRequest\?\.toolId === selected\.module\.id \? launchRequest : null\}/);
     const entry = readFileSync('src/modules/tool/meal-board/TeacherEntry.jsx', 'utf8');
     const effect = entry.slice(entry.indexOf('머리말 단축 단추로 열면'), entry.indexOf('onLaunchHandled]);'));
-    assert.match(effect, /launchRequest\?\.action !== 'fullscreen' \|\| loading \|\| mealLoading/, '급식을 다 읽기 전에 열면 빈 급식판이 뜬다');
+    assert.match(effect, /launchRequest\?\.action !== 'fullscreen'\) return;[\s\S]*if \(loading \|\| mealLoading\) return;/, '급식을 다 읽기 전에 열면 빈 급식판이 뜬다');
+    // 2026-09-29 점검: 처리하지 못한 요청이 남으면 나중에 메뉴로 열어도 저절로 전체화면이 됐다.
+    // 오래된 요청은 무시하고, 급식판을 떠나면 남은 요청을 지운다.
+    assert.match(effect, /Date\.now\(\) - Number\(launchRequest\.requestedAt \|\| 0\) > LAUNCH_REQUEST_TTL_MS[\s\S]*onLaunchHandled\?\.\(launchRequest\.requestId\);\s*return;/);
+    assert.match(entry, /useEffect\(\(\) => \(\) => \{\s*const \{ request, onHandled \} = pendingLaunchRef\.current;\s*if \(request\?\.requestId\) onHandled\?\.\(request\.requestId\);/);
+    assert.match(handler, /requestedAt: Date\.now\(\)/);
     assert.match(effect, /setFullscreenOpen\(true\)/);
     assert.match(effect, /onLaunchHandled\?\.\(launchRequest\.requestId\)/, '처리했다고 알려야 닫은 뒤 다시 저절로 열리지 않는다');
 });

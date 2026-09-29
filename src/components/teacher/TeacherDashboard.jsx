@@ -383,7 +383,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         // 도구가 매니페스트에 `tool.shortcutLaunch` 를 적었으면 그 동작으로 연다(급식판 → 곧바로 전체화면).
         const action = pinnedTool.tool?.shortcutLaunch;
         setToolLaunchRequest(action
-            ? { toolId: pinnedTool.id, action, requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }
+            ? { toolId: pinnedTool.id, action, requestedAt: Date.now(), requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }
             : null);
         handleWorkspaceNavigate({ tab: 'tools', tool: pinnedTool.id });
     }, [pinnedTool, handleOpenDefaultClassBoard, handleWorkspaceNavigate]);

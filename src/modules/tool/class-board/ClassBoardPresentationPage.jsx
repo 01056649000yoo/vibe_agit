@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
+import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import { classBoardApi } from './classBoardApi';
 import {
   applyPastedClassBoardImage,
@@ -31,6 +32,14 @@ const NoticeComposer = lazy(() => import('./widgets/notice-board/NoticeComposer'
 
 export default function ClassBoardPresentationPage({ boardId }) {
   const autoFullscreen = new URLSearchParams(window.location.search).get('fullscreen') === '1';
+  // 자동 전체화면은 창을 처음 열 때 **한 번만** 시도한다(2026-09-29 점검). 예전에는 스크린 내용이 바뀔 때마다
+  // (자동 저장·탭 넘기기) 다시 시도해, 선생님이 Esc 로 나와도 도로 전체화면이 되거나 안내가 또 떴다.
+  const autoFullscreenTriedRef = useRef(false);
+  /*
+   * 확인은 앱 안 창으로 묻는다. 브라우저 기본 창(window.confirm·prompt)은 크롬에서 **전체화면을 강제로 푼다**
+   * (2026-09-29 크롬으로 확인). 교실 화면에서 자료 하나 지우다 전체화면이 풀리면 안 된다.
+   */
+  const { ask, confirmDialog } = useConfirmDialog();
   const [currentBoardId, setCurrentBoardId] = useState(boardId);
   const [classBoards, setClassBoards] = useState([]);
   const [data, setData] = useState(null);
@@ -120,8 +129,8 @@ export default function ClassBoardPresentationPage({ boardId }) {
   const settleEdits = useCallback(async (question) => {
     if (!autosave.hasUnsaved) return true;
     if (await autosave.flush()) return true;
-    return window.confirm(question);
-  }, [autosave]);
+    return ask({ title: '저장하지 못한 변경이 있습니다', body: question, confirmLabel: '그래도 계속', tone: 'danger' });
+  }, [autosave, ask]);
 
   // 현재 스크린 데이터 로드
   useEffect(() => {
@@ -237,7 +246,17 @@ export default function ClassBoardPresentationPage({ boardId }) {
   }, []);
 
   useEffect(() => {
-    if (!autoFullscreen || !data?.board || document.fullscreenElement) return undefined;
+    if (!autoFullscreen || !data?.board || autoFullscreenTriedRef.current) return undefined;
+    autoFullscreenTriedRef.current = true;
+    // 주소의 표시도 지운다 — 탭을 넘길 때 주소가 이어져 다음 스크린에서 다시 시도하지 않게.
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('fullscreen');
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {
+      // 주소를 못 고쳐도 한 번만 시도하는 것은 위의 표시가 지킨다.
+    }
+    if (document.fullscreenElement) return undefined;
     if (typeof document.documentElement.requestFullscreen !== 'function') {
       setFullscreenPrompt(true);
       return undefined;
@@ -247,7 +266,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
       .then(() => { if (active) setFullscreenPrompt(false); })
       .catch(() => { if (active) setFullscreenPrompt(true); });
     return () => { active = false; };
-  }, [autoFullscreen, data?.board]);
+  }, [autoFullscreen, data?.board]); // data.board 가 바뀌어도 위의 표시 때문에 다시 시도하지 않는다.
 
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
@@ -333,8 +352,13 @@ export default function ClassBoardPresentationPage({ boardId }) {
     setNotice('');
   };
 
-  const removeSelected = () => {
-    if (!selectedInstance || !window.confirm(`${getClassBoardWidget(selectedInstance.widgetId)?.name || '자료'}를 화면에서 삭제할까요?`)) return;
+  const removeSelected = async () => {
+    if (!selectedInstance || !(await ask({
+      title: `${getClassBoardWidget(selectedInstance.widgetId)?.name || '자료'}를 화면에서 삭제할까요?`,
+      body: '잘못 뺐다면 `되돌리기`로 되살릴 수 있습니다.',
+      confirmLabel: '삭제',
+      tone: 'danger',
+    }))) return;
     setDraftBoard((current) => current ? ({
       ...current,
       widgets: current.widgets.filter((widget) => widget.instanceId !== selectedInstanceId),
@@ -436,7 +460,8 @@ export default function ClassBoardPresentationPage({ boardId }) {
         >
           <div className="class-board-presentation-notice-sheet__heading">
             <strong>📒 알림장 쓰기</strong>
-            <button type="button" onClick={() => setNoticeOpen(false)}>닫기 (Esc)</button>
+            {/* 전체화면에서는 Esc 를 브라우저가 먼저 가져가 전체화면을 푼다 — 그때는 `닫기` 로만 안내한다. */}
+            <button type="button" onClick={() => setNoticeOpen(false)}>{fullscreen ? '닫기' : '닫기 (Esc)'}</button>
           </div>
           <Suspense fallback={<p className="class-board-note">알림장을 여는 중…</p>}>
             <NoticeComposer classId={data.class?.id} variant="sheet" showRecent={false} autoFocus />
@@ -489,6 +514,7 @@ export default function ClassBoardPresentationPage({ boardId }) {
           onPlacementChange={updatePlacement}
         />
       </div>
+      {confirmDialog}
     </main>
   );
 }

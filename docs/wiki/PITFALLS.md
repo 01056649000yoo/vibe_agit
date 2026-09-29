@@ -65,6 +65,9 @@
 - **로그인 세션은 localStorage 가 아니라 쿠키(`sb-agit-auth-token`)에 있다.** `localStorage.clear()` 로는
   안 지워지고, `@supabase/ssr` 은 조각(`.0`,`.1`)으로 나눠 담아 하나만 남아도 옛 토큰이 되살아난다.
   계정이 지워진 뒤엔 서버 로그아웃도 실패한다 — `clearStoredAuthSession()` 로 이름·조각까지 지운다. (2026-09-13) [경로: src/lib/supabaseClient.js, src/**/auth*, src/stores/**]
+- **`window.confirm`·`prompt`·`alert` 를 띄우면 크롬은 전체화면을 강제로 푼다.** 교실 스크린에서 자료 하나 지우다
+  전체화면이 풀렸다. 전체화면이 될 수 있는 화면은 앱 안 창(`useConfirmDialog`)만 쓰고, 자동 전체화면은 한 번만 시도한다.
+  전체화면의 Esc 는 브라우저가 먼저 가져간다. (2026-09-29) [경로: src/modules/tool/class-board/**] [검사: tests/classBoardFullscreen.test.mjs]
 
 ## 크기를 재서 그릴 때 (화면이 떨리면 여기부터)
 

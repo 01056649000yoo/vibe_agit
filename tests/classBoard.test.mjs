@@ -1097,7 +1097,7 @@ test('알림장 작성칸은 교실에서 함께 보며 쓰는 크기이고 지�
   assert.doesNotMatch(noticeComposer, /p_font|fontStep.*saveNotice/);
 
   // 비우고 저장하는 대신 눈에 보이는 삭제 버튼을 두고, 지울 때는 한 번 물어본다.
-  assert.match(noticeComposer, /const remove = async \(\) => \{[\s\S]*window\.confirm[\s\S]*persist\(\{ date: state\.date, body: '' \}/);
+  assert.match(noticeComposer, /const remove = async \(\) => \{[\s\S]*await ask\(\{[\s\S]*persist\(\{ date: state\.date, body: '' \}/);
   assert.match(noticeComposer, /hasSaved \? \([\s\S]*class-board-notice-composer__delete/);
   assert.match(noticeComposer, /const hasSaved = state\.savedBody\.length > 0/);
   assert.match(noticeComposerStyles, /\.class-board-notice-composer__delete \{/);

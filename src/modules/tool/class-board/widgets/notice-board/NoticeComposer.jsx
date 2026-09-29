@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import useConfirmDialog from '../../../../../components/common/useConfirmDialog';
 import { readLocalStorageJson, writeLocalStorageJson } from '../../../../../lib/browserStorage';
 import { formatSeoulDate } from '../../../../../utils/seoulDate';
 import { noticeBoardApi } from './noticeBoardApi';
@@ -86,6 +87,12 @@ export default function NoticeComposer({
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templateBusy, setTemplateBusy] = useState(false);
   const [message, setMessage] = useState('');
+  /*
+   * 묻는 것은 앱 안 창으로(2026-09-29 점검). 브라우저 기본 창(confirm·prompt)은 크롬에서 전체화면을 강제로 풀어,
+   * 교실 화면에서 알림장을 쓰다가 전체화면이 풀렸다. 서식 이름은 그 줄 안의 입력칸으로 받는다.
+   */
+  const { ask, confirmDialog } = useConfirmDialog();
+  const [naming, setNaming] = useState(null);
   const [error, setError] = useState('');
   const [fontStepId, setFontStepId] = useState(() => {
     const saved = readLocalStorageJson(FONT_STORAGE_KEY, null);
@@ -227,7 +234,7 @@ export default function NoticeComposer({
    */
   const importPrevious = async () => {
     if (!previousDate || busy) return;
-    if (state.body.trim() && !window.confirm('쓰던 내용 대신 지난 알림을 넣을까요?')) return;
+    if (state.body.trim() && !(await ask({ title: '쓰던 내용 대신 지난 알림을 넣을까요?', confirmLabel: '넣기' }))) return;
     setBusy(true);
     setError('');
     try {
@@ -264,9 +271,9 @@ export default function NoticeComposer({
       .finally(() => setTemplateBusy(false));
   };
 
-  const applyTemplate = (template) => {
+  const applyTemplate = async (template) => {
     if (isNoticeTemplateEmpty(template)) return;
-    if (dirty && !window.confirm('쓰던 내용이 사라집니다. 서식을 불러올까요?')) return;
+    if (dirty && !(await ask({ title: '쓰던 내용이 사라집니다. 서식을 불러올까요?', confirmLabel: '불러오기' }))) return;
     setState((current) => ({ ...current, body: template.body, held: template.body }));
     setMessage('서식을 불러왔습니다. 고치면 자동으로 저장됩니다.');
   };
@@ -287,10 +294,11 @@ export default function NoticeComposer({
     }
   };
 
-  const storeTemplate = (index) => {
-    const name = window.prompt(`서식 ${index + 1}의 이름 (비워 두면 "서식 ${index + 1}")`,
-      templates?.at(index)?.name || '')?.slice(0, MAX_NOTICE_TEMPLATE_NAME);
-    if (name === undefined || name === null) return;
+  const startNaming = (index) => setNaming({ index, name: templates?.at(index)?.name || '' });
+
+  const storeTemplate = (index, rawName) => {
+    const name = String(rawName || '').slice(0, MAX_NOTICE_TEMPLATE_NAME);
+    setNaming(null);
     const candidate = { name, body: state.body };
     const invalid = validateNoticeTemplate(candidate);
     if (invalid) { setError(invalid); return; }
@@ -298,8 +306,8 @@ export default function NoticeComposer({
       `지금 내용을 ${noticeTemplateLabel(candidate, index)}에 저장했습니다.`);
   };
 
-  const clearTemplate = (index) => {
-    if (!window.confirm(`${noticeTemplateLabel(templates?.at(index), index)}을(를) 비울까요?`)) return;
+  const clearTemplate = async (index) => {
+    if (!(await ask({ title: `${noticeTemplateLabel(templates?.at(index), index)}을(를) 비울까요?`, confirmLabel: '비우기', tone: 'danger' }))) return;
     void persistTemplates(withNoticeTemplateAt(templates, index, { name: '', body: '' }), '서식을 비웠습니다.');
   };
 
@@ -309,7 +317,7 @@ export default function NoticeComposer({
   const remove = async () => {
     if (!hasSaved) return;
     const label = formatSeoulDate(state.date) || state.date;
-    if (!window.confirm(`${label} 알림을 지울까요? 지우면 교실 화면에서도 사라집니다.`)) return;
+    if (!(await ask({ title: `${label} 알림을 지울까요?`, body: '지우면 교실 화면에서도 사라집니다.', confirmLabel: '지우기', tone: 'danger' }))) return;
     if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = 0; }
     if (inFlightRef.current) await inFlightRef.current.catch(() => {});
     if (await persist({ date: state.date, body: '' }, { replaceBody: true })) setMessage('이 날짜의 알림을 지웠습니다.');
@@ -371,23 +379,43 @@ export default function NoticeComposer({
                         className="class-board-notice-composer__template-load"
                         disabled={disabled || templateBusy || isNoticeTemplateEmpty(template)}
                         title={isNoticeTemplateEmpty(template) ? '비어 있는 칸입니다' : template.body.slice(0, 60)}
-                        onClick={() => applyTemplate(template)}
+                        onClick={() => void applyTemplate(template)}
                       >
                         <strong>{noticeTemplateLabel(template, index)}</strong>
                         <small>{isNoticeTemplateEmpty(template) ? '비어 있음' : template.body.replace(/\n+/gu, ' ').slice(0, 24)}</small>
                       </button>
-                      <button
-                        type="button"
-                        disabled={disabled || templateBusy || !state.body.trim()}
-                        title="지금 쓴 내용을 이 칸에 저장합니다"
-                        onClick={() => storeTemplate(index)}
-                      >지금 내용 저장</button>
-                      <button
-                        type="button"
-                        disabled={disabled || templateBusy || isNoticeTemplateEmpty(template)}
-                        title="이 칸을 비웁니다"
-                        onClick={() => clearTemplate(index)}
-                      >비우기</button>
+                      {naming?.index === index ? (
+                        <form
+                          className="class-board-notice-composer__template-name"
+                          onSubmit={(event) => { event.preventDefault(); storeTemplate(index, naming.name); }}
+                        >
+                          <input
+                            autoFocus
+                            value={naming.name}
+                            maxLength={MAX_NOTICE_TEMPLATE_NAME}
+                            placeholder={`비워 두면 "서식 ${index + 1}"`}
+                            aria-label={`서식 ${index + 1}의 이름`}
+                            onChange={(event) => setNaming({ index, name: event.target.value })}
+                          />
+                          <button type="submit" disabled={templateBusy}>저장</button>
+                          <button type="button" onClick={() => setNaming(null)}>그만두기</button>
+                        </form>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            disabled={disabled || templateBusy || !state.body.trim()}
+                            title="지금 쓴 내용을 이 칸에 저장합니다"
+                            onClick={() => startNaming(index)}
+                          >지금 내용 저장</button>
+                          <button
+                            type="button"
+                            disabled={disabled || templateBusy || isNoticeTemplateEmpty(template)}
+                            title="이 칸을 비웁니다"
+                            onClick={() => void clearTemplate(index)}
+                          >비우기</button>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -478,6 +506,7 @@ export default function NoticeComposer({
         알림은 날짜마다 따로 저장됩니다. 입력을 멈추면 자동으로 저장되고 교실 화면의 알림장에 바로 나타납니다.
         {widgetHint ? ' 위젯의 제목과 색은 아래에서 정하며 스크린과 함께 자동으로 저장됩니다.' : ''}
       </p>
+      {confirmDialog}
     </div>
   );
 }

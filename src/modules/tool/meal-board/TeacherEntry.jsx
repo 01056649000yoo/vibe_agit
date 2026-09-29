@@ -32,6 +32,9 @@ const normalizeWorkspace = (result) => ({
   students: Array.isArray(result?.students) ? result.students : []
 });
 
+// 단축 단추로 연 전체화면 요청을 기다리는 최대 시간. 급식을 읽는 데는 충분하고, 나중에 메뉴로 열 때 되살아나지 않을 만큼 짧게.
+const LAUNCH_REQUEST_TTL_MS = 20_000;
+
 export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeacherSchoolChange, launchRequest, onLaunchHandled }) {
   const [workspace, setWorkspace] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -175,12 +178,26 @@ export default function MealBoardTeacherEntry({ activeClass, teacherInfo, onTeac
   // 머리말 단축 단추로 열면 곧바로 전체화면 급식판(manifest `shortcutLaunch: 'fullscreen'`).
   // 급식을 다 읽은 뒤에 연다 — 먼저 열면 빈 급식판이 뜬다. 학교가 없거나 급식을 못 읽으면 열지 않고
   // 지금 화면(학교 설정·오류 안내)을 그대로 보여 준다. 요청마다 한 번만 처리한다.
+  //
+  // 처리하지 못한 요청이 남아 나중에 메뉴로 평범하게 열어도 저절로 전체화면이 되던 것을 막는다(2026-09-29 점검):
+  // 오래된 요청(LAUNCH_REQUEST_TTL_MS)은 무시하고 지우며, 급식판을 떠나면 남은 요청을 지운다(아래 정리 효과).
   useEffect(() => {
-    if (launchRequest?.action !== 'fullscreen' || loading || mealLoading) return;
+    if (launchRequest?.action !== 'fullscreen') return;
+    if (Date.now() - Number(launchRequest.requestedAt || 0) > LAUNCH_REQUEST_TTL_MS) {
+      onLaunchHandled?.(launchRequest.requestId);
+      return;
+    }
+    if (loading || mealLoading) return;
     if (workspace?.school && mealData && !mealError) setFullscreenOpen(true);
     else if (workspace?.school && !mealError && !mealData) return;
     onLaunchHandled?.(launchRequest.requestId);
   }, [launchRequest, loading, mealLoading, workspace?.school, mealData, mealError, onLaunchHandled]);
+  const pendingLaunchRef = useRef({ request: null, onHandled: null });
+  pendingLaunchRef.current = { request: launchRequest, onHandled: onLaunchHandled };
+  useEffect(() => () => {
+    const { request, onHandled } = pendingLaunchRef.current;
+    if (request?.requestId) onHandled?.(request.requestId);
+  }, []);
   const summary = useMemo(
     () => summarizeRoster(workspace?.students || []),
     [workspace?.students]
