@@ -40,13 +40,14 @@
 
 /* 표 */
 .class-timetable-grid-wrap { overflow-x:auto; }
-.class-timetable-grid { width:100%; min-width:520px; border-collapse:separate; border-spacing:var(--ui-space-1); table-layout:fixed; }
+/* 표는 화면 폭의 70%(2026-09-29 선생님 요청 — 가로가 길어 한눈에 안 들어왔다). 좁은 화면에서는 최소 폭을 지키고 가로로 넘긴다. */
+.class-timetable-grid { width:70%; min-width:520px; border-collapse:separate; border-spacing:var(--ui-space-1); table-layout:fixed; }
 .class-timetable-grid th { color:var(--ui-ink-muted); font-size:var(--ui-text-xs); font-weight:900; }
 .class-timetable-grid thead th { padding-bottom:var(--ui-space-1); font-size:var(--ui-text-sm); color:var(--ui-ink-strong); }
 .class-timetable-grid tbody th { width:4.5em; text-align:right; padding-right:var(--ui-space-2); white-space:nowrap; }
 .class-timetable-cell { display:grid; place-content:center; gap:2px; width:100%; min-height:52px; border:1px solid var(--tt-line, var(--ui-border)); border-radius:var(--ui-radius-sm); padding:var(--ui-space-1); background:var(--tt-bg, var(--ui-surface)); color:var(--tt-ink, var(--ui-ink)); font:inherit; text-align:center; cursor:pointer; }
-.class-timetable-cell strong { font-size:var(--ui-text-sm); font-weight:900; line-height:1.2; overflow-wrap:anywhere; }
-.class-timetable-cell small { font-size:var(--ui-text-xs); font-weight:700; opacity:.85; overflow-wrap:anywhere; }
+.class-timetable-cell strong { font-size:var(--ui-text-sm); font-weight:900; line-height:1.2; overflow-wrap:anywhere; word-break:keep-all; }
+.class-timetable-cell small { font-size:var(--ui-text-xs); font-weight:700; opacity:.85; overflow-wrap:anywhere; word-break:keep-all; }
 .class-timetable-cell.is-empty { border-style:dashed; background:var(--ui-surface-muted); }
 .class-timetable-cell.is-changed { outline:3px dashed var(--ui-warning); outline-offset:-3px; }
 .class-timetable-cell.is-drop-target { outline:3px solid var(--ui-primary); outline-offset:-3px; }

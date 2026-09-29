@@ -32,8 +32,9 @@ import './classTimetable.css';
  */
 
 const TABS = Object.freeze([
-    { id: 'week', label: '주간 시간표' },
+    // 기초 시간표를 앞에 둔다(2026-09-29 선생님 요청) — 기초를 먼저 입력하고 주마다 고치는 순서.
     { id: 'base', label: '기초 시간표' },
+    { id: 'week', label: '주간 시간표' },
     { id: 'log', label: '지난 기록' },
 ]);
 
