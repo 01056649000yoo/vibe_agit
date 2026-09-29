@@ -10,7 +10,8 @@ export const updateClassBoardWidgetPlacement = (board, instanceId, placement, me
       return {
         ...widget,
         placement,
-        ...(widget.widgetId === 'text' && textBodySize ? {
+        // 고른 크기(step) 글상자는 모서리로 끌어도 크기를 저장하지 않는다 — 상자에 맞춰 알아서 줄어든다.
+        ...(widget.widgetId === 'text' && textBodySize && widget.config?.sizeMode !== 'step' ? {
           config: { ...widget.config, bodySize: textBodySize },
         } : {}),
       };

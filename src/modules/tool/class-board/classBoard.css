@@ -130,6 +130,12 @@
 .class-board-text--sky { background:linear-gradient(145deg,#eff6ff,#dbeafe); }
 .class-board-text--sun { background:linear-gradient(145deg,#fffbeb,#fef3c7); }
 .class-board-text--mint { background:linear-gradient(145deg,#ecfdf5,#d1fae5); }
+/* 글상자 설정의 글씨 크기 단추(2026-09-29) */
+.class-board-text-size { display:grid; gap:6px; min-width:0; margin:0; padding:0; border:0; }
+.class-board-text-size legend { padding:0; margin-bottom:6px; color:#64748b; font-size:.72rem; font-weight:900; }
+.class-board-text-size>div { display:flex; flex-wrap:wrap; gap:6px; }
+.class-board-text-size button { border:1px solid #cbd7e7; border-radius:999px; padding:6px 12px; background:#fff; color:#334155; font-size:.8rem; font-weight:800; cursor:pointer; }
+.class-board-text-size button[aria-pressed="true"] { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; }
 .class-board-image { display:flex; flex-direction:column; min-height:inherit; height:100%; margin:0; background:#111827; }
 .class-board-image img { width:100%; min-height:0; flex:1 1 auto; display:block; }
 .class-board-image figcaption { padding:10px 14px; background:#fff; color:#475569; font-size:.78rem; font-weight:750; text-align:center; }

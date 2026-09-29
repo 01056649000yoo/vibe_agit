@@ -24,12 +24,15 @@ import { getClipboardImageFile } from '../src/modules/tool/class-board/widgets/i
 import { isClassBoardTextEntryTarget } from '../src/modules/tool/class-board/host/useClassBoardEscapeRemove.js';
 import { calculateClassBoardSettingsAnchor } from '../src/modules/tool/class-board/presentation/useClassBoardSettingsAnchor.js';
 import {
+  CLASS_BOARD_TEXT_SIZE_STEPS,
   createResponsiveTextSize,
   findLargestFittingTextSize,
   normalizeClassBoardTextBodySize,
   normalizeTextScale,
+  resolveClassBoardTextSizing,
   shouldRefitClassBoardText,
 } from '../src/modules/tool/class-board/widgets/text/textScale.js';
+import { textWidgetManifest } from '../src/modules/tool/class-board/widgets/text/manifest.js';
 import { hasLiveWeatherLocation } from '../src/modules/tool/class-board/widgets/weather/weatherApi.js';
 import {
   DEFAULT_MEAL_COLUMNS,
@@ -531,7 +534,7 @@ test('텍스트와 이미지는 본문 자체를 마우스로 드래그해 이�
   assert.match(styles, /\[data-board-drag-surface="true"\][\s\S]*cursor:grab/);
   assert.match(entry, /이미지나 텍스트 자체를 드래그해 옮기고/);
   assert.match(presentationEditPanel, /이미지나 텍스트는 마우스로 옮길 수 있습니다/);
-  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*제목과 내용이 칸을 가장 크게 채우도록 자동 정렬[\s\S]*오른쪽 손잡이는 글자 크기를 유지하고 줄바꿈만[\s\S]*아래쪽 손잡이는 보이는 줄 수[\s\S]*오른쪽 아래 모서리는 글씨 크기/);
+  assert.match(guides, /이미지·텍스트는 본체를[\s\S]*`글씨 크기`\(작게·보통·크게·아주 크게, 처음 값 크게\)[\s\S]*넘칠 때만 알아서 줄어듭니다[\s\S]*`상자에 꽉 채우기`[\s\S]*오른쪽 손잡이는 줄바꿈만[\s\S]*아래쪽 손잡이는 보이는 줄 수[\s\S]*오른쪽 아래 모서리는 글씨 크기/);
 });
 
 test('선택한 위젯은 두 편집 화면에서 Esc로 제거하되 입력 중에는 보존한다', () => {
@@ -804,9 +807,9 @@ test('수업 위젯은 바깥 여백과 조작부를 줄이고 핵심 정보를 
   assert.match(styles, /\.class-board-status\s*\{[^}]*padding:16px 14px/);
 });
 
-test('텍스트는 수동 배율 없이 실제 내용을 여백 없이 맞추고 프레임 변경에 다시 반응한다', () => {
+test('꽉 채우기 글상자는 실제 내용을 여백 없이 맞추고 프레임 변경에 다시 반응한다', () => {
+  // 2026-09-29: 크기 단추가 돌아왔다. `상자에 꽉 채우기` 를 고르거나 옛 글상자(sizeMode 없음)일 때의 설명이다.
   assert.match(textSettings, /오른쪽은 줄바꿈[\s\S]*아래쪽은 보이는 줄 수[\s\S]*모서리는 글씨 크기/);
-  assert.doesNotMatch(textSettings, /<legend>글씨 크기<\/legend>|aria-pressed|TEXT_SCALE_OPTIONS/);
   assert.match(textWidget, /--class-board-text-heading-size[\s\S]*createResponsiveTextSize\(1\.5, 5\)/);
   assert.match(textWidget, /useFittedClassBoardText\(config\)[\s\S]*ref=\{textRef\}/);
   assert.match(styles, /container-type:size[\s\S]*--class-board-text-heading-size[\s\S]*7\.5cqi \+ 7\.5cqb/);
@@ -866,6 +869,37 @@ test('텍스트는 수동 배율 없이 실제 내용을 여백 없이 맞추고
     { resizeAxis: 'both', textBodySize: 38.62 }
   );
   assert.equal(diagonal.widgets[0].config.bodySize, 38.5);
+});
+
+test('새 글상자는 고른 크기에서 시작해 넘칠 때만 줄이고, 옛 글상자는 꽉 채우기 그대로다', () => {
+  // 2026-09-29 선생님 제보: 처음에 글씨가 너무 컸다가 상자를 줄여야 작아진다.
+  assert.deepEqual(resolveClassBoardTextSizing({}), { mode: 'fill', targetPx: null }, '옛 글상자는 바뀌지 않는다');
+  assert.deepEqual(resolveClassBoardTextSizing({ sizeMode: 'fill' }), { mode: 'fill', targetPx: null });
+  assert.deepEqual(resolveClassBoardTextSizing({ sizeMode: 'step' }), { mode: 'step', stepId: 'large', targetPx: 48 });
+  assert.deepEqual(resolveClassBoardTextSizing({ sizeMode: 'step', sizeStep: 'small' }), { mode: 'step', stepId: 'small', targetPx: 28 });
+  assert.deepEqual(resolveClassBoardTextSizing({ sizeMode: 'step', sizeStep: '없는값' }), { mode: 'step', stepId: 'large', targetPx: 48 });
+  assert.deepEqual(CLASS_BOARD_TEXT_SIZE_STEPS.map((step) => step.label), ['작게', '보통', '크게', '아주 크게']);
+  assert.ok(CLASS_BOARD_TEXT_SIZE_STEPS.every((step) => step.bodyPx >= 12.8), '글씨 바닥 0.8rem 아래로 내리지 않는다');
+
+  const created = textWidgetManifest.createDefaultConfig();
+  assert.equal(created.sizeMode, 'step');
+  assert.equal(created.sizeStep, 'large');
+
+  // 고른 크기: 먼저 고른 크기로 그려 보고 넘칠 때만 그 아래에서 찾는다. 상자가 실제로 바뀔 때만 다시 잰다.
+  assert.match(fittedTextHook, /applyTextSize\(element, targetPx\);\s*if \(fitsInside\(element\)\) return;/);
+  assert.match(fittedTextHook, /findLargestFittingTextSize\([\s\S]*CLASS_BOARD_TEXT_MIN_BODY_PX, targetPx\)/);
+  assert.match(fittedTextHook, /withFrozenOverflow\(element/);
+  assert.match(fittedTextHook, /offsetWidth === lastBoxWidth && element\.offsetHeight === lastBoxHeight\) return;/);
+
+  // 설정: 네 계단 + 꽉 채우기, 누른 것이 표시된다.
+  assert.match(textSettings, /<legend>글씨 크기<\/legend>/);
+  assert.match(textSettings, /CLASS_BOARD_TEXT_SIZE_STEPS\.map[\s\S]*aria-pressed/);
+  assert.match(textSettings, /상자에 꽉 채우기/);
+
+  // 고른 크기 글상자는 모서리로 끌어도 크기를 저장하지 않는다.
+  const stepBoard = { widgets: [{ instanceId: 't', widgetId: 'text', placement: { x: 0, y: 0, width: 30, height: 40 }, config: { sizeMode: 'step' } }] };
+  const dragged = updateClassBoardWidgetPlacement(stepBoard, 't', { x: 0, y: 0, width: 45, height: 60 }, { resizeAxis: 'both', textBodySize: 72 });
+  assert.equal(dragged.widgets[0].config.bodySize, undefined);
 });
 
 test('편집 화면과 전체화면은 같은 1600×900 논리 캔버스를 균일하게 확대한다', () => {

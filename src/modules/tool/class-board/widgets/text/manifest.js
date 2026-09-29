@@ -17,6 +17,9 @@ export const textWidgetManifest = Object.freeze({
     body: '우리 반에 보여 줄 안내를 입력해 주세요.',
     tone: 'paper',
     fontScale: 1.5,
+    // 새 글상자는 고른 크기에서 시작해 넘칠 때만 줄인다(2026-09-29). 옛 글상자는 sizeMode 가 없어 꽉 채우기로 보인다.
+    sizeMode: 'step',
+    sizeStep: 'large',
   }),
   load: () => import('./TextWidget'),
   loadSettings: () => import('./TextSettings'),

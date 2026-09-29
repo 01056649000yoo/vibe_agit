@@ -48,7 +48,8 @@ const createPreviewBoard = ({ id, title, heading, body, tone, displayOrder, isDe
     title,
     layout: { ...CLASS_BOARD_LAYOUT },
     widgets: [
-      { ...textInstance, config: { heading, body, tone, fontScale: 1.5 } },
+      // 새 글상자와 같은 기본값(고른 크기에서 시작)을 쓴다 — 실험실이 실제 화면과 어긋나지 않게.
+      { ...textInstance, config: { ...textInstance.config, heading, body, tone } },
       {
         ...weatherInstance,
         placement: { x: 36, y: 4, width: 31.5, height: 42, pinned: false },
