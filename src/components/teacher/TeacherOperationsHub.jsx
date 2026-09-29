@@ -18,7 +18,7 @@ const cardStyle = (isMobile) => ({
     boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)'
 });
 
-/** 학급 운영 흐름과 학생 아지트 읽기 전용 보기를 담당한다. 개인 정보·코드·포인트 변경은 학생 탭에 둔다. */
+/** 학급 살펴보기 — 학급 흐름과 학생별 아지트 읽기 전용 보기를 담당한다. 개인 정보·코드·포인트 변경은 학생 탭에 둔다. */
 const TeacherOperationsHub = ({
     activeClass,
     isMobile,
@@ -45,8 +45,8 @@ const TeacherOperationsHub = ({
 
     if (section === 'student-agits') {
         return (
-            <section role="tabpanel" aria-label="학생 아지트" style={cardStyle(isMobile)}>
-                <Suspense fallback={<PanelLoading>학생 아지트를 준비하는 중... 🏡</PanelLoading>}>
+            <section role="tabpanel" aria-label="학생별 아지트" style={cardStyle(isMobile)}>
+                <Suspense fallback={<PanelLoading>학생별 아지트를 준비하는 중... 🏡</PanelLoading>}>
                     <TeacherStudentAgitViewer
                         activeClass={activeClass}
                         isMobile={isMobile}
@@ -69,8 +69,8 @@ const TeacherOperationsHub = ({
             </Suspense>
         </section>
     ) : (
-        <section role="tabpanel" aria-label="운영 현황" style={cardStyle(isMobile)}>
-            <Suspense fallback={<PanelLoading>학급 운영 현황을 준비하는 중...</PanelLoading>}>
+        <section role="tabpanel" aria-label="한눈에 보기" style={cardStyle(isMobile)}>
+            <Suspense fallback={<PanelLoading>학급 현황을 준비하는 중...</PanelLoading>}>
                 <ClassAnalysis classId={classId} isMobile={isMobile} onNavigate={onNavigate} />
             </Suspense>
         </section>

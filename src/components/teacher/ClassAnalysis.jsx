@@ -231,7 +231,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
             if (requestId !== requestSequenceRef.current) return;
             console.error('학급 운영 현황 로드 실패:', error.message);
             setData(EMPTY_DATA);
-            setErrorMessage('학급 운영 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+            setErrorMessage('학급 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
             if (requestId === requestSequenceRef.current) {
                 setLoading(false);
@@ -257,7 +257,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: '9px' }}>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((key) => <div key={key} style={{ height: '92px', borderRadius: '15px', background: '#F8FAFC' }} />)}
                 </div>
-                <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>학급 운영 현황을 집계하는 중...</span>
+                <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>학급 현황을 집계하는 중...</span>
             </div>
         );
     }
@@ -272,7 +272,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div role="group" aria-label="운영 현황 조회 기간" style={{ display: 'flex', gap: '4px', padding: '3px', borderRadius: '10px', background: '#F1F5F9' }}>
+                    <div role="group" aria-label="학급 현황 조회 기간" style={{ display: 'flex', gap: '4px', padding: '3px', borderRadius: '10px', background: '#F1F5F9' }}>
                         {PERIOD_OPTIONS.map((option) => {
                             const selected = period === option.id;
                             return (
@@ -294,7 +294,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                         type="button"
                         onClick={() => loadDashboard({ force: true })}
                         disabled={refreshing}
-                        aria-label="학급 운영 현황 새로고침"
+                        aria-label="학급 현황 새로고침"
                         style={{
                             border: '1px solid #CBD5E1', borderRadius: '10px', padding: '7px 10px',
                             background: 'white', color: '#475569', cursor: refreshing ? 'wait' : 'pointer',

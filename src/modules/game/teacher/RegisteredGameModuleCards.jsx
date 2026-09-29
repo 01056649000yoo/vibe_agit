@@ -57,7 +57,7 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
     }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: compact ? '8px' : '16px' }}>
             <div>
-                <div style={{ color: '#92400E', fontWeight: '950', fontSize: compact ? '0.8rem' : '1rem' }}>학생 대시보드 미리보기</div>
+                <div style={{ color: '#92400E', fontWeight: '950', fontSize: compact ? '0.8rem' : '1rem' }}>학생 화면 미리보기</div>
                 {compact ? null : <div style={{ color: '#A16207', fontSize: '0.78rem', marginTop: '3px' }}>학생의 ‘아지트 놀이터’에 보이는 콘텐츠입니다.</div>}
             </div>
             <span style={{ background: 'white', color: '#B45309', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '900' }}>

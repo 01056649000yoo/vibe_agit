@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
-test('학급 운영에 학생 아지트 탭이 있고 학생 명단 버튼이 같은 화면으로 연결된다', async () => {
+test('학급 살펴보기에 학생별 아지트 탭이 있고 학생 명단 버튼이 같은 화면으로 연결된다', async () => {
     const [navigation, dashboard, operations, studentHub, studentList] = await Promise.all([
         read('src/constants/teacherNav.js'),
         read('src/components/teacher/TeacherDashboard.jsx'),
@@ -16,7 +16,7 @@ test('학급 운영에 학생 아지트 탭이 있고 학생 명단 버튼이 �
         read('src/components/teacher/StudentManagementList.jsx')
     ]);
 
-    assert.match(navigation, /id: 'operations'[\s\S]*id: 'student-agits', label: '학생 아지트'/);
+    assert.match(navigation, /id: 'operations'[\s\S]*id: 'student-agits', label: '학생별 아지트'/);
     assert.match(dashboard, /visibleTab === 'student-agits'/);
     assert.match(dashboard, /navigationTarget=\{workspaceTarget\}/);
     assert.match(operations, /section === 'student-agits'[\s\S]*<TeacherStudentAgitViewer/);

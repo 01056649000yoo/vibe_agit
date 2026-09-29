@@ -27,7 +27,7 @@ export default function MissionList({ api, classId, selected, onSelect, items })
             <label>미션명 찾기<input value={input} maxLength={80} placeholder="오래된 미션도 찾아보세요" onChange={(event) => setInput(event.target.value)} /></label>
             <Button variant="outline" type="submit">미션 검색</Button>
         </form>
-        <label>미션 범위<select value={scope} onChange={(event) => setScope(event.target.value)}><option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">보관함</option></select></label>
+        <label>미션 범위<select value={scope} onChange={(event) => setScope(event.target.value)}><option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">지난 과제 보관함</option></select></label>
         <Button variant={!selected ? 'primary' : 'ghost'} type="button" aria-pressed={!selected} onClick={() => choose(null)}>전체 미션에서 글 찾기</Button>
         <BrowseStatus state={state} />
         <ul className="class-agit-mission-list">{state.page?.items.map((mission) => <li key={mission.id}>

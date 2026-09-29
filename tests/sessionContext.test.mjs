@@ -33,12 +33,15 @@ test('같은 입력이면 같은 결과다(날짜 같은 흔들리는 값이 없
     assert.ok(!buildSessionContext(input).includes('설명'), '규칙 파일의 머리 설명은 싣지 않는다');
 });
 
+// 윈도우 체크아웃은 줄 끝이 CRLF 다. 생성본(LF)과 견주기 전에 맞춘다(내용이 같은데 줄 끝만 달라 실패하던 것).
+const readLf = (file) => readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+
 test('저장된 SESSION_CONTEXT 는 생성 결과와 같고, 상한 안이며, 꼭 있어야 할 규칙을 담는다', () => {
-    const rules = readFileSync('docs/wiki/SESSION_RULES.md', 'utf8');
-    const saved = readFileSync('SESSION_CONTEXT.md', 'utf8');
+    const rules = readLf('docs/wiki/SESSION_RULES.md');
+    const saved = readLf('SESSION_CONTEXT.md');
     const built = buildSessionContext({
-        rules, roadmap: readFileSync('ROADMAP.md', 'utf8'), worklog: readFileSync('WORKLOG.md', 'utf8'),
-        openItems: readFileSync('docs/OPEN_ITEMS.md', 'utf8')
+        rules, roadmap: readLf('ROADMAP.md'), worklog: readLf('WORKLOG.md'),
+        openItems: readLf('docs/OPEN_ITEMS.md')
     });
     assert.ok(rules.length <= MAX_RULES_CHARS, `SESSION_RULES ${rules.length}자 > ${MAX_RULES_CHARS}`);
     assert.ok(built.length <= MAX_CONTEXT_CHARS, `생성본 ${built.length}자 > ${MAX_CONTEXT_CHARS}`);
@@ -54,7 +57,7 @@ test('두 세션 시작 훅이 같은 내용을 넣고, Codex 상한 안이다',
     const claude = JSON.parse(execFileSync('bash', ['.claude/hooks/session-start-context.sh'], { encoding: 'utf8' }))
         .hookSpecificOutput.additionalContext;
     const codex = execFileSync('bash', ['.codex/hooks/session-start-context.sh'], { encoding: 'utf8' });
-    assert.equal(claude.trim(), codex.trim(), 'Claude 와 Codex 가 받는 내용이 달라졌다');
+    assert.equal(claude.replace(/\r\n/g, '\n').trim(), codex.replace(/\r\n/g, '\n').trim(), 'Claude 와 Codex 가 받는 내용이 달라졌다');
     const codexLimit = JSON.parse(readFileSync('.codex/hooks.json', 'utf8'))
         .hooks.SessionStart[0].hooks[0].additionalContextLimit;
     assert.ok(codex.length <= codexLimit, `Codex 훅 출력 ${codex.length}자 > 상한 ${codexLimit}자 — 끝이 잘린다`);

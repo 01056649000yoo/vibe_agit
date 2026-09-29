@@ -28,7 +28,7 @@ const MODULE_SETTINGS_ITEMS = getAllModules()
 const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
     { id: 'ai-prompts', icon: '🤖', label: '피드백·평어 기준', description: 'AI 피드백과 평어 작성 기준' },
-    // 글쓰기 창 관리는 학급 운영 → 학생 대시보드 미리보기로 옮겼다(2026-09-20, 같은 성격이라 통합).
+    // 글쓰기 창 관리는 학급 살펴보기 → 학생 화면 미리보기로 옮겼다(2026-09-20, 같은 성격이라 통합).
     ...MODULE_SETTINGS_ITEMS,
     // 다했니 연동은 설정 목록 맨 아래에 둔다(사용자 요청 2026-09-16).
     { id: 'dahandin', icon: '🍪', label: '다했니 연동', description: '다했니 쿠키를 포인트로 정산' }

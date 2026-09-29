@@ -9,7 +9,7 @@ import './StudentDashboardPreview.css';
 const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/editor-settings/TeacherWritingEditorManager'));
 
 /*
- * 학생 대시보드 미리보기(교사용, 읽기 전용).
+ * 학생 화면 미리보기(교사용, 읽기 전용).
  *
  * 학생 앱은 익명 인증(auth.uid=학생)이라 교사가 라이브로 못 부른다. 그래서 학급 단위 콘텐츠를
  * 교사 권한으로 모아 주는 get_teacher_student_home_preview_v1 로 학생 홈을 재현한다.
@@ -34,7 +34,7 @@ const StudentDashboardPreview = ({ activeClass, isMobile }) => {
             if (!data?.class_config) throw new Error('미리보기 응답을 확인할 수 없습니다.');
             setPreview(data);
         } catch (err) {
-            setError(err?.message || '학생 대시보드 미리보기를 불러오지 못했습니다.');
+            setError(err?.message || '학생 화면 미리보기를 불러오지 못했습니다.');
             setPreview(null);
         } finally {
             setLoading(false);

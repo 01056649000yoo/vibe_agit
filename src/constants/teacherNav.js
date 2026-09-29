@@ -23,7 +23,7 @@ export const TEACHER_NAV_GROUPS = [
             { id: 'dashboard', label: '선생님 과제' },
             { id: 'reading-logs', label: '학생 독서록' },
             { id: 'diaries', label: '학생 일기' },
-            { id: 'archive', label: '보관함' }
+            { id: 'archive', label: '지난 과제 보관함' }
         ]
     },
     {
@@ -54,15 +54,15 @@ export const TEACHER_NAV_GROUPS = [
     },
     {
         id: 'operations',
-        label: '학급 운영',
+        label: '학급 살펴보기',
         icon: '📊',
         navSection: 'class',
         defaultTab: 'operations',
         secondaryShape: 'sidebar',
         tabs: [
-            { id: 'operations', label: '운영 현황' },
-            { id: 'student-dashboard-preview', label: '학생 대시보드 미리보기' },
-            { id: 'student-agits', label: '학생 아지트' },
+            { id: 'operations', label: '한눈에 보기' },
+            { id: 'student-dashboard-preview', label: '학생 화면 미리보기' },
+            { id: 'student-agits', label: '학생별 아지트' },
             { id: 'recent-activity', label: '최근 활동' },
             { id: 'comments', label: '학생 댓글' }
         ]
@@ -73,7 +73,7 @@ export const TEACHER_NAV_GROUPS = [
         icon: '👥',
         navSection: 'class',
         defaultTab: 'students',
-        // 학생 탭은 개인 관리로만 쓴다. 학급 전체 흐름은 바로 앞의 학급 운영에서 본다.
+        // 학생 탭은 개인 관리로만 쓴다. 학급 전체 흐름은 바로 앞의 학급 살펴보기에서 본다.
         tabs: [{ id: 'students', label: '학생 명단 관리' }]
     },
     {

@@ -136,7 +136,7 @@ const MissionItem = memo(({
                     }} style={{
                         ...CARD_ACTION_BUTTON_STYLE,
                         background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8'
-                    }} title="과제를 보관함으로 이동" aria-label={`${mission.title} 과제를 보관함으로 이동`}>
+                    }} title="지난 과제 보관함으로 이동" aria-label={`${mission.title} 과제를 지난 과제 보관함으로 이동`}>
                         📂 보관
                     </button>
                     <button onClick={async (e) => {

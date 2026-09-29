@@ -66,15 +66,18 @@ test('보관 파일은 새 것을 위에 쌓고 링크를 docs/roadmap/ 기준�
     assert.match(backlog, /- \*\*옛 절\*\*\n {2}- \[ \] 확인/);
 });
 
+// 윈도우 체크아웃은 줄 끝이 CRLF 다. 생성본(LF)과 견주기 전에 맞춘다(내용이 같은데 줄 끝만 달라 실패하던 것).
+const readLf = (file) => readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+
 test('실제 ROADMAP 은 상한 안이고 더 옮길 것이 없으며, BACKLOG 가 보관 파일과 맞다', () => {
-    const roadmap = readFileSync('ROADMAP.md', 'utf8');
+    const roadmap = readLf('ROADMAP.md');
     const lines = roadmap.split('\n').length;
     assert.ok(lines <= MAX_ROADMAP_LINES, `ROADMAP 이 ${lines}줄(상한 ${MAX_ROADMAP_LINES}). \`npm run roadmap:archive\``);
     const { counts } = planArchive(roadmap);
     assert.equal(Object.values(counts).reduce((a, b) => a + b, 0), 0, '옮길 것이 남았다. `npm run roadmap:archive` 를 돌리세요.');
     if (!existsSync('docs/roadmap')) return;
     const archives = Object.fromEntries(readdirSync('docs/roadmap').filter((f) => f.endsWith('.md') && f !== 'BACKLOG.md')
-        .map((f) => [f, readFileSync(`docs/roadmap/${f}`, 'utf8')]));
-    assert.equal(readFileSync('docs/roadmap/BACKLOG.md', 'utf8'), buildBacklog(archives),
+        .map((f) => [f, readLf(`docs/roadmap/${f}`)]));
+    assert.equal(readLf('docs/roadmap/BACKLOG.md'), buildBacklog(archives),
         'BACKLOG.md 를 직접 고쳤거나 보관 파일이 바뀌었다. `npm run roadmap:archive` 를 돌리세요.');
 });

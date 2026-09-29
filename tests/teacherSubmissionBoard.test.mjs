@@ -57,10 +57,10 @@ test('과제 카드의 수정·보관·삭제 동작은 아이콘만이 아니�
     assert.match(missionList, /const CARD_ACTION_BUTTON_STYLE/);
     assert.match(missionList, /flexWrap: 'wrap'/);
     assert.match(missionList, /title="과제 내용 수정"/);
-    assert.match(missionList, /title="과제를 보관함으로 이동"/);
+    assert.match(missionList, /title="지난 과제 보관함으로 이동"/);
     assert.match(missionList, /title="과제 삭제"/);
     assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제 내용 수정`\}/);
-    assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제를 보관함으로 이동`\}/);
+    assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제를 지난 과제 보관함으로 이동`\}/);
     assert.match(missionList, /aria-label=\{`\$\{mission\.title\} 과제 삭제`\}/);
     assert.match(guides, /`✏️ 수정`[\s\S]*`📂 보관`[\s\S]*`🗑️ 삭제`/);
 });

@@ -56,7 +56,7 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
         </form>
         <div className="anthology-bulk__filters">
             <label>미션 범위<select value={scope} onChange={(event) => setScope(event.target.value)}>
-                <option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">보관함</option>
+                <option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">지난 과제 보관함</option>
             </select></label>
             <label><input type="checkbox" checked={skipRepresented} onChange={(event) => setSkipRepresented(event.target.checked)} />이미 담은 학생은 빼기</label>
             <span className="anthology-bulk__capacity">{capacityNote}</span>
@@ -71,7 +71,7 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
                 <div className="anthology-bulk__work">
                     <strong>{mission.title}</strong>
                     <small>{mission.format === 'poem' ? '시' : mission.format === 'prose' ? '글' : '기타 장르'}
-                        {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''}{mission.archived ? ' · 보관함' : ''}</small>
+                        {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''}{mission.archived ? ' · 지난 과제 보관함' : ''}</small>
                     <small>{mission.supported ? `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}` : '전시·문집 지원 준비 중'}</small>
                 </div>
                 <div className="anthology-bulk__actions">

@@ -730,7 +730,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         const ok = await ask({
             title: '이 주제를 지울까요?',
             body: `모두의 아지트에서 이 주제와 공개된 글 ${published}편, 그 댓글·공감이 사라집니다.\n`
-                + '각 반의 과제와 학생이 쓴 글은 지우지 않고 그 반 보관함으로 옮겨 둡니다.\n지운 주제는 되돌릴 수 없어요.',
+                + '각 반의 과제와 학생이 쓴 글은 지우지 않고 그 반 지난 과제 보관함으로 옮겨 둡니다.\n지운 주제는 되돌릴 수 없어요.',
             confirmLabel: '주제 지우기', cancelLabel: '그만두기', tone: 'danger'
         });
         if (!ok) return;
@@ -741,7 +741,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             await api.deleteActivity({ spaceId: workspace.space.id, classId, activityId: activity.id });
             setTopicDetailId(null);
             await refreshWorkspace();
-            setMessage('주제를 지웠습니다. 각 반 과제와 학생 글은 그 반 보관함에 남아 있어요.');
+            setMessage('주제를 지웠습니다. 각 반 과제와 학생 글은 그 반 지난 과제 보관함에 남아 있어요.');
         } catch (error) {
             setErrorMessage(getErrorMessage(error, '주제를 지우지 못했습니다.'));
         } finally {
@@ -816,7 +816,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                         )}
                                         {canDeleteTopic(activity) && (
                                             <footer className="neighbor-topic-card__danger">
-                                                <small>주제를 지우면 공개된 글과 댓글이 모두의 아지트에서 사라집니다. 각 반 과제와 학생 글은 그 반 보관함에 남아요.</small>
+                                                <small>주제를 지우면 공개된 글과 댓글이 모두의 아지트에서 사라집니다. 각 반 과제와 학생 글은 그 반 지난 과제 보관함에 남아요.</small>
                                                 <Button type="button" variant="danger" size="sm" className="neighbor-topic-card__delete" loading={busy === 'delete_activity'}
                                                     disabled={Boolean(busy)} onClick={() => deleteTopic(activity)}>🗑️ 주제 지우기</Button>
                                             </footer>
