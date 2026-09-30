@@ -66,7 +66,8 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
             setQuestions(data);
             // 기본으로 득표수가 1표 이상인 질문들을 전부 선택 상태로 초기화
             // 여럿이 고른(쓴) 질문을 먼저 체크해 둔다. 교사가 거기서 덜어 내며 다듬는 편이 빠르다.
-            const topIds = new Set(data.filter((q) => q.pickedCount > 1).map((q) => q.questionId));
+            // 선생님이 연구소에서 직접 더한 질문도 쓰려고 넣은 것이라 처음부터 골라 둔다.
+            const topIds = new Set(data.filter((q) => q.pickedCount > 1 || q.fromTeacher).map((q) => q.questionId));
             if (topIds.size === 0 && data.length > 0) {
                 topIds.add(data[0].questionId);
             }
@@ -304,11 +305,11 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                                                         <span className="mission-lab-question-votes">
                                                             {selectedRoom?.isVoting
                                                                 ? `🗳️ ${q.pickedCount}표`
-                                                                : `✍️ ${q.pickedCount}명`}
+                                                                : q.fromTeacher ? '👩‍🏫 선생님' : `✍️ ${q.pickedCount}명`}
                                                         </span>
                                                     </div>
                                                     <p className="mission-lab-question-text">{q.text}</p>
-                                                    {!selectedRoom?.isVoting && q.authors && (
+                                                    {!selectedRoom?.isVoting && !q.fromTeacher && q.authors && (
                                                         <p className="mission-lab-question-authors">{q.authors}</p>
                                                     )}
                                                     <div className="mission-lab-question-check">

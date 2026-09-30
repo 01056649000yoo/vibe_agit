@@ -79,6 +79,7 @@ export const labReferenceApi = {
     /*
      * 방 하나의 질문 꾸러미. 두 활동이 같은 모양으로 온다.
      * pickedCount 는 투표방이면 받은 표, 질문 만들기 방이면 같은 질문을 쓴 학생 수다.
+     * 선생님이 더한 질문은 `fromTeacher` — 학생 수가 아니므로 0 이다.
      */
     async getRoomQuestionPool(classId, roomId) {
         if (!supabase || !classId || !roomId) throw new Error('활동 정보를 준비하지 못했습니다.');
@@ -93,7 +94,9 @@ export const labReferenceApi = {
             questionId: row.question_id,
             text: String(row.text || '').trim(),
             pickedCount: Number(row.picked_count) || 0,
-            authors: String(row.authors || '').trim()
+            authors: String(row.authors || '').trim(),
+            // 연구소 질문 만들기에서 선생님이 더한 질문(2026-09-30, `20261361`). 서버가 맨 앞에 싣는다.
+            fromTeacher: String(row.question_id || '').startsWith('teacher-')
         }));
     }
 };
