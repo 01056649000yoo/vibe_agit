@@ -47,6 +47,8 @@ export default function TimetableEditor({
     extraSubjects = [],
     disabled = false,
     onChange,
+    /* 옆 칸 맨 아래에 붙일 것(도구 화면의 짧은 설명 등). */
+    sideFooter = null,
 }) {
     const [armed, setArmed] = useState(null);
     const [editing, setEditing] = useState(null);
@@ -165,97 +167,108 @@ export default function TimetableEditor({
     );
 
     return (
+        /*
+         * 왼쪽은 표, 오른쪽 옆 칸은 과목 단추와 칸 입력(2026-09-30 선생님 요청 — 오른쪽 빈 공간이 많았고,
+         * 위에 쌓인 단추 때문에 표가 밀려 8교시까지 한 화면에 안 들어왔다). 좁은 화면에서는 위아래로 쌓는다(CSS).
+         */
         <div className="class-timetable-editor">
-            <div className="class-timetable-palette" aria-label="과목 단추">
-                <div className="class-timetable-palette__row">
-                    {curriculum.map((subject) => chip(subject))}
-                    {chip(ERASER, { label: '🧽 지우개' })}
+            <div className="class-timetable-editor__table">
+                <div className="class-timetable-grid-wrap">
+                    <table className="class-timetable-grid">
+                        <thead>
+                            <tr>
+                                <th scope="col" aria-label="교시" />
+                                {days.map((day) => <th key={day.id} scope="col">{day.label}</th>)}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: TIMETABLE_PERIODS }, (_, period) => (
+                                <React.Fragment key={period}>
+                                    {renderRow(period)}
+                                    {period + 1 === Number(lunchAfter) ? (
+                                        <tr className="class-timetable-lunch">
+                                            <th scope="row">🍚</th>
+                                            <td colSpan={days.length}>점심시간</td>
+                                        </tr>
+                                    ) : null}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-                <div className="class-timetable-palette__row">
-                    <span className="class-timetable-palette__label">창체 영역</span>
-                    {CREATIVE_ACTIVITY_AREAS.map((subject) => chip(subject, { small: true }))}
-                </div>
-                <div className="class-timetable-palette__row">
-                    <span className="class-timetable-palette__label">직접 적은 과목</span>
-                    {custom.map((subject) => chip(subject, { small: true }))}
-                    <form className="class-timetable-palette__add" onSubmit={(event) => { event.preventDefault(); addSubject(); }}>
-                        <input
-                            value={newSubject}
-                            maxLength={MAX_SUBJECT_LENGTH}
-                            disabled={disabled}
-                            placeholder="예) 생존수영"
-                            aria-label="직접 적을 과목 이름"
-                            onChange={(event) => setNewSubject(event.target.value)}
-                        />
-                        <Button type="submit" size="md" variant="outline" disabled={disabled || !newSubject.trim()}>＋ 과목 추가</Button>
-                    </form>
-                </div>
-                <p className="class-timetable-note">
-                    {armed === ERASER
-                        ? '지우개를 누른 상태입니다. 비울 칸을 차례로 누르세요. 다시 누르면 풀립니다.'
-                        : armed
-                            ? `‘${armed}’을(를) 누른 상태입니다. 넣을 칸을 차례로 누르세요. 다시 누르면 풀립니다.`
-                            : '과목 단추를 칸으로 끌어다 놓거나, 단추를 누른 뒤 칸을 차례로 누르세요. 칸끼리 끌면 서로 바뀝니다. 칸을 누르면 직접 적을 수 있습니다.'}
-                </p>
             </div>
-
-            <div className="class-timetable-grid-wrap">
-                <table className="class-timetable-grid">
-                    <thead>
-                        <tr>
-                            <th scope="col" aria-label="교시" />
-                            {days.map((day) => <th key={day.id} scope="col">{day.label}</th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.from({ length: TIMETABLE_PERIODS }, (_, period) => (
-                            <React.Fragment key={period}>
-                                {renderRow(period)}
-                                {period + 1 === Number(lunchAfter) ? (
-                                    <tr className="class-timetable-lunch">
-                                        <th scope="row">🍚</th>
-                                        <td colSpan={days.length}>점심시간</td>
-                                    </tr>
-                                ) : null}
-                            </React.Fragment>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {editing ? (
-                <form className="class-timetable-cell-form" onSubmit={commitEditing}>
-                    <strong>{days.at(editing.day)?.label}요일 {editing.period + 1}교시</strong>
-                    <label>
-                        <span>과목</span>
-                        <input
-                            autoFocus
-                            list="class-timetable-subject-list"
-                            maxLength={MAX_SUBJECT_LENGTH}
-                            value={editing.s}
-                            placeholder="예) 체육, 찾아오는 과학교실"
-                            onChange={(event) => setEditing((current) => ({ ...current, s: event.target.value }))}
-                        />
-                    </label>
-                    <label>
-                        <span>메모 (선택)</span>
-                        <input
-                            maxLength={MAX_MEMO_LENGTH}
-                            value={editing.m}
-                            placeholder="예) 외부강사 · 강당"
-                            onChange={(event) => setEditing((current) => ({ ...current, m: event.target.value }))}
-                        />
-                    </label>
-                    <datalist id="class-timetable-subject-list">
-                        {[...curriculum, ...CREATIVE_ACTIVITY_AREAS, ...custom].map((name) => <option key={name} value={name} />)}
-                    </datalist>
-                    <div className="class-timetable-cell-form__actions">
-                        <Button type="submit" size="md">넣기</Button>
-                        <Button type="button" size="md" variant="ghost" onClick={() => { fill(editing.day, editing.period, null); setEditing(null); }}>칸 비우기</Button>
-                        <Button type="button" size="md" variant="ghost" onClick={() => setEditing(null)}>그만두기</Button>
+            <aside className="class-timetable-editor__side" aria-label="과목 단추와 칸 입력">
+                <div className="class-timetable-palette" aria-label="과목 단추">
+                    <div className="class-timetable-palette__row">
+                        {curriculum.map((subject) => chip(subject))}
+                        {chip(ERASER, { label: '🧽 지우개' })}
                     </div>
-                </form>
-            ) : null}
+                    <div className="class-timetable-palette__row">
+                        <span className="class-timetable-palette__label">창체 영역</span>
+                        {CREATIVE_ACTIVITY_AREAS.map((subject) => chip(subject, { small: true }))}
+                    </div>
+                    <div className="class-timetable-palette__row">
+                        <span className="class-timetable-palette__label">직접 적은 과목</span>
+                        {custom.map((subject) => chip(subject, { small: true }))}
+                        <form className="class-timetable-palette__add" onSubmit={(event) => { event.preventDefault(); addSubject(); }}>
+                            <input
+                                value={newSubject}
+                                maxLength={MAX_SUBJECT_LENGTH}
+                                disabled={disabled}
+                                placeholder="예) 생존수영"
+                                aria-label="직접 적을 과목 이름"
+                                onChange={(event) => setNewSubject(event.target.value)}
+                            />
+                            <Button type="submit" size="md" variant="outline" disabled={disabled || !newSubject.trim()}>＋ 과목 추가</Button>
+                        </form>
+                    </div>
+                    <p className="class-timetable-note">
+                        {armed === ERASER
+                            ? '지우개를 누른 상태입니다. 비울 칸을 차례로 누르세요. 다시 누르면 풀립니다.'
+                            : armed
+                                ? `‘${armed}’을(를) 누른 상태입니다. 넣을 칸을 차례로 누르세요. 다시 누르면 풀립니다.`
+                                : '과목 단추를 칸으로 끌어다 놓거나, 단추를 누른 뒤 칸을 차례로 누르세요. 칸끼리 끌면 서로 바뀝니다. 칸을 누르면 직접 적을 수 있습니다.'}
+                    </p>
+                </div>
+                {editing ? (
+                    <form className="class-timetable-cell-form" onSubmit={commitEditing}>
+                        <strong>{days.at(editing.day)?.label}요일 {editing.period + 1}교시</strong>
+                        <label>
+                            <span>과목</span>
+                            <input
+                                autoFocus
+                                list="class-timetable-subject-list"
+                                maxLength={MAX_SUBJECT_LENGTH}
+                                value={editing.s}
+                                placeholder="예) 체육, 찾아오는 과학교실"
+                                onChange={(event) => setEditing((current) => ({ ...current, s: event.target.value }))}
+                            />
+                        </label>
+                        <label>
+                            <span>메모 (선택)</span>
+                            <input
+                                maxLength={MAX_MEMO_LENGTH}
+                                value={editing.m}
+                                placeholder="예) 외부강사 · 강당"
+                                onChange={(event) => setEditing((current) => ({ ...current, m: event.target.value }))}
+                            />
+                        </label>
+                        <datalist id="class-timetable-subject-list">
+                            {[...curriculum, ...CREATIVE_ACTIVITY_AREAS, ...custom].map((name) => <option key={name} value={name} />)}
+                        </datalist>
+                        <div className="class-timetable-cell-form__actions">
+                            <Button type="submit" size="md">넣기</Button>
+                            <Button type="button" size="md" variant="ghost" onClick={() => { fill(editing.day, editing.period, null); setEditing(null); }}>칸 비우기</Button>
+                            <Button type="button" size="md" variant="ghost" onClick={() => setEditing(null)}>그만두기</Button>
+                        </div>
+                    </form>
+                ) : (
+                    <p className="class-timetable-cell-hint">
+                        칸을 누르면 여기서 과목과 메모를 직접 적을 수 있습니다. 외부 강의처럼 목록에 없는 수업도 적어 두면 과목 단추로 남습니다.
+                    </p>
+                )}
+                {sideFooter}
+            </aside>
         </div>
     );
 }

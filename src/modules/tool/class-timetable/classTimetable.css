@@ -15,7 +15,7 @@
 .class-timetable-status.is-saved { color:var(--ui-success); }
 .class-timetable-status.is-error { color:var(--ui-danger); }
 
-.class-timetable-panel { display:grid; gap:var(--ui-space-3); min-width:0; padding:var(--ui-space-4); border:1px solid var(--ui-border); border-radius:var(--ui-radius-lg); background:var(--ui-surface); }
+.class-timetable-panel { container-type:inline-size; display:grid; gap:var(--ui-space-3); min-width:0; padding:var(--ui-space-4); border:1px solid var(--ui-border); border-radius:var(--ui-radius-lg); background:var(--ui-surface); }
 .class-timetable-settings { display:flex; flex-wrap:wrap; align-items:flex-end; gap:var(--ui-space-3); }
 .class-timetable-settings label { display:grid; gap:var(--ui-space-1); }
 .class-timetable-settings label>span { color:var(--ui-ink-muted); font-size:var(--ui-text-sm); font-weight:800; }
@@ -41,8 +41,8 @@
 
 /* 표 */
 .class-timetable-grid-wrap { overflow-x:auto; }
-/* 표는 화면 폭의 70%(2026-09-29 선생님 요청 — 가로가 길어 한눈에 안 들어왔다). 좁은 화면에서는 최소 폭을 지키고 가로로 넘긴다. */
-.class-timetable-grid { width:70%; min-width:520px; border-collapse:separate; border-spacing:var(--ui-space-1); table-layout:fixed; }
+/* 표는 왼쪽 칸을 채운다. 칸 폭은 왼쪽 칸 상한(660px)으로 정해져 한눈에 들어온다(2026-09-30, 전에는 화면 폭의 70%). */
+.class-timetable-grid { width:100%; min-width:480px; border-collapse:separate; border-spacing:var(--ui-space-1); table-layout:fixed; }
 .class-timetable-grid th { color:var(--ui-ink-muted); font-size:var(--ui-text-sm); font-weight:900; }
 .class-timetable-grid thead th { padding-bottom:var(--ui-space-1); font-size:var(--ui-text-md); color:var(--ui-ink-strong); }
 .class-timetable-grid tbody th { width:4.5em; text-align:right; padding-right:var(--ui-space-2); white-space:nowrap; }
@@ -71,3 +71,31 @@
 .class-timetable-log button { cursor:pointer; }
 .class-timetable-log button:hover { border-color:var(--ui-primary); }
 .class-timetable-log small { color:var(--ui-ink-muted); font-size:var(--ui-text-sm); font-weight:700; }
+
+/* ── 배치(2026-09-30 선생님 요청 — 오른쪽 빈 공간이 많았고 위에 쌓인 단추가 표를 밀어냈다) ── */
+/* 맨 위 한 줄 도구막대: 주 이동·학년·점심·적용 시작·상태·되돌리기 */
+.class-timetable-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:var(--ui-space-2) var(--ui-space-3); padding-bottom:var(--ui-space-3); border-bottom:1px solid var(--ui-border); }
+.class-timetable-toolbar label { display:flex; align-items:center; gap:var(--ui-space-2); }
+.class-timetable-toolbar label>span { color:var(--ui-ink-muted); font-size:var(--ui-text-sm); font-weight:800; white-space:nowrap; }
+.class-timetable-toolbar select { min-height:var(--ui-control-sm); border:1px solid var(--ui-border-strong); border-radius:var(--ui-radius-sm); padding:0 var(--ui-space-2); background:var(--ui-surface); color:var(--ui-ink); font:inherit; font-size:var(--ui-text-md); }
+.class-timetable-toolbar>strong { color:var(--ui-ink-strong); font-size:var(--ui-text-lg); white-space:nowrap; }
+.class-timetable-toolbar .class-timetable-week-state { min-height:0; }
+.class-timetable-toolbar__gap { width:var(--ui-space-3); }
+.class-timetable-warning { margin:0; padding:var(--ui-space-2) var(--ui-space-3); border-radius:var(--ui-radius-sm); background:var(--ui-warning-soft); color:var(--ui-ink); font-size:var(--ui-text-sm); font-weight:800; }
+
+/* 왼쪽 표 + 오른쪽 옆 칸(과목 단추·칸 입력). 옆 칸은 스크롤해도 따라온다. */
+.class-timetable-editor { display:grid; grid-template-columns:minmax(480px,660px) minmax(280px,380px); gap:var(--ui-space-5); align-items:start; justify-content:start; }
+.class-timetable-editor__table { min-width:0; }
+.class-timetable-editor__side { position:sticky; top:var(--ui-space-4); display:grid; gap:var(--ui-space-3); max-height:calc(100vh - 2 * var(--ui-space-4)); overflow:auto; padding:var(--ui-space-4); border:1px solid var(--ui-border); border-radius:var(--ui-radius-lg); background:var(--ui-surface-muted); }
+.class-timetable-editor__side .class-timetable-palette__add { flex:1 1 100%; }
+.class-timetable-editor__side .class-timetable-palette__add input { flex:1 1 auto; width:auto; min-width:0; }
+.class-timetable-palette__add button { white-space:nowrap; flex:0 0 auto; }
+.class-timetable-editor__side .class-timetable-cell-form { flex-direction:column; align-items:stretch; }
+.class-timetable-editor__side .class-timetable-cell-form input { width:100%; box-sizing:border-box; }
+.class-timetable-cell-hint { margin:0; padding:var(--ui-space-3); border:1px dashed var(--ui-border-strong); border-radius:var(--ui-radius-md); background:var(--ui-surface); color:var(--ui-ink-muted); font-size:var(--ui-text-sm); line-height:var(--ui-line-body); }
+
+/* 좁은 화면(태블릿 세로 등)에서는 위아래로 쌓는다. */
+@container (max-width: 880px) {
+  .class-timetable-editor { grid-template-columns:minmax(0,1fr); }
+  .class-timetable-editor__side { position:static; max-height:none; order:-1; }
+}

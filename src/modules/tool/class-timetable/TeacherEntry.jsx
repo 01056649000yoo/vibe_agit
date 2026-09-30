@@ -229,7 +229,8 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
 
             {info.status === 'ready' && tab === 'base' && baseDraft ? (
                 <div className="class-timetable-panel" role="tabpanel" aria-label="기초 시간표">
-                    <div className="class-timetable-settings">
+                    {/* 설정은 맨 위 한 줄(2026-09-30). 설명은 표 옆 칸 아래로. */}
+                    <div className="class-timetable-toolbar">
                         <label>
                             <span>학년</span>
                             <select value={baseDraft.grade} onChange={(event) => setBaseDraft((current) => ({ ...current, grade: Number(event.target.value) }))}>
@@ -261,11 +262,13 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
                             <span>토요일 수업</span>
                         </label>
                     </div>
-                    <p className="class-timetable-note">
-                        고치면 자동으로 저장됩니다. `적용 시작` 주부터 이 시간표를 쓰고, 그 전 주들은 그때 쓰던 기초 시간표 그대로 남습니다.
-                        2학기처럼 시간표가 바뀌면 `다음 주부터`를 고른 뒤 고치세요.
-                    </p>
                     <TimetableEditor
+                        sideFooter={(
+                            <p className="class-timetable-note">
+                                고치면 자동으로 저장됩니다. `적용 시작` 주부터 이 시간표를 쓰고, 그 전 주들은 그때 쓰던 기초 시간표 그대로 남습니다.
+                                2학기처럼 시간표가 바뀌면 `다음 주부터`를 고른 뒤 고치세요.
+                            </p>
+                        )}
                         cells={baseDraft.cells}
                         grade={baseDraft.grade}
                         lunchAfter={baseDraft.lunchAfter}
@@ -277,15 +280,15 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
 
             {info.status === 'ready' && tab === 'week' && weekDraft ? (
                 <div className="class-timetable-panel" role="tabpanel" aria-label="주간 시간표">
-                    <div className="class-timetable-week-nav">
+                    {/* 주 이동·점심·상태·되돌리기를 맨 위 한 줄로(2026-09-30). */}
+                    <div className="class-timetable-toolbar">
                         <Button type="button" size="md" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, -7))}>◀ 지난주</Button>
                         <strong>{formatWeekLabel(weekDraft.weekStart)}{weekDraft.weekStart === info.thisWeek ? ' · 이번 주' : ''}</strong>
                         <Button type="button" size="md" variant="outline" disabled={weekLoading} onClick={() => void openWeek(addDays(weekDraft.weekStart, 7))}>다음 주 ▶</Button>
                         {weekDraft.weekStart !== info.thisWeek ? (
                             <Button type="button" size="md" variant="ghost" disabled={weekLoading} onClick={() => void openWeek(info.thisWeek)}>이번 주로</Button>
                         ) : null}
-                    </div>
-                    <div className="class-timetable-settings">
+                        <span className="class-timetable-toolbar__gap" aria-hidden="true" />
                         <label>
                             <span>이 주 점심시간</span>
                             <select value={weekDraft.lunchAfter} onChange={(event) => setWeekDraft((current) => ({ ...current, lunchAfter: Number(event.target.value) }))}>
@@ -302,14 +305,15 @@ export default function ClassTimetableTeacherEntry({ activeClass, isMobile, api 
                         ) : null}
                     </div>
                     {!weekState?.base ? (
-                        <p className="class-timetable-note">이 주에 쓰는 기초 시간표가 없습니다. `기초 시간표`를 먼저 입력하면 칸이 미리 채워집니다.</p>
-                    ) : (
-                        <p className="class-timetable-note">
-                            기초 시간표로 채워져 있습니다. 이 주에만 바뀌는 칸을 고치면 자동으로 저장되고, 바꾼 칸은 점선으로 표시됩니다.
-                            {info.today ? ` 오늘은 ${formatTimetableDate(info.today)}입니다.` : ''}
-                        </p>
-                    )}
+                        <p className="class-timetable-warning">이 주에 쓰는 기초 시간표가 없습니다. `기초 시간표`를 먼저 입력하면 칸이 미리 채워집니다.</p>
+                    ) : null}
                     <TimetableEditor
+                        sideFooter={(
+                            <p className="class-timetable-note">
+                                이 주에만 바뀌는 칸을 고치면 자동으로 저장되고, 바꾼 칸은 점선으로 표시됩니다.
+                                {info.today ? ` 오늘은 ${formatTimetableDate(info.today)}입니다.` : ''}
+                            </p>
+                        )}
                         cells={weekDraft.cells}
                         baseCells={weekBaseCells}
                         grade={weekGrade}
