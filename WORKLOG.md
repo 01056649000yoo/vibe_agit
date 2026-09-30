@@ -30,7 +30,7 @@
   `proofMarks.js`·`TeacherProofText`·`TeacherEditRounds`·`teacherEditRoundsApi`, 보기 선택 칸, 네 화면(글쓰기·내 서재·글 자세히 보기·학생 아지트) 연결,
   토큰 `--ui-proof-*`, 실험실 `teacher-edit-rounds`, 안내서·학생 사용법, FEATURE_MAP v1.20·1.20.0. 친구 글 창에는 넣지 않음.
 - **결과/검증**: `tests/proofMarks.test.mjs` 7개(옛 코드에서 실패 확인), `migrate:check` 통과(전부 롤백), 실험실 1280·390px 캡처 — 가로 넘침·오류 없음.
-- **남은 것 / 다음**: **아직 운영 DB에 적용 안 함** — 배포 때 `npm run migrate` 먼저(새 칸을 읽으므로 앱보다 앞서야 한다). 기능 전에 고친 글은 교정지가 비어 있다.
+- **남은 것 / 다음**: 운영 적용·로컬 배포 완료(`20261360` → 스키마 다시 읽기 → `deploy:local`, 사이트 200·새 번들 확인). 기능 전에 고친 글은 교정지가 비어 있다. 실제 교실에서 부호가 읽기 쉬운지.
 
 ## 2026-09-30 — 디스크 급감 원인: URL 저장소 실행기 기록 폭주 36GB 정리 (Claude)
 - **한 일**: [원인: 9/29 22:47~23:52 KST 누군가 `~/actions-runner-URL/config.sh` 를 입력 없이 반복 실행 — "저장소 주소?" 를 끝없이 되묻는 기록 3,346개(8~25MB씩)]
