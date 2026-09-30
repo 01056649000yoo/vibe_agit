@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from './TeacherEditToggle';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
+import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -31,9 +32,10 @@ const PostDetailViewer = ({
     // 이 화면의 두 번째 칸은 처음·최종을 나란히 놓는다(승인된 글이면 형광펜). 교사 화면이라 자동으로 열지 않는다.
     const version = useWritingVersion({
         postId: selectedPost?.id, before: selectedPost?.original_content, after: selectedPost?.content,
-        approved: Boolean(selectedPost?.is_confirmed)
+        approved: Boolean(selectedPost?.is_confirmed), teacherEditRounds: selectedPost?.teacher_edit_rounds
     });
-    const showOriginal = version.view !== WRITING_VIEW.FINAL;
+    const showTeacherEdits = version.view === WRITING_VIEW.TEACHER;
+    const showOriginal = version.view !== WRITING_VIEW.FINAL && !showTeacherEdits;
     const setVersionView = version.setView;
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
@@ -520,6 +522,8 @@ const PostDetailViewer = ({
                                             </Button>
                                         </div>
                                     </div>
+                                ) : showTeacherEdits ? (
+                                    <TeacherEditRounds postId={selectedPost.id} />
                                 ) : showOriginal ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', flex: 1 }}>
                                         {/* Left: Original Content */}

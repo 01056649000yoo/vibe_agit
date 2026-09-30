@@ -11,8 +11,11 @@ import './writingVersionSwitch.css';
  *   ① 승인된 글에서 고친 곳이 있으면 형광펜색 띠로 **"처음 글에서 N군데 고쳤어요"** 를 먼저 알리고
  *   ② `최종 글 · 🖍️ 바뀐 곳 · 처음 글` 세 칸 가운데 지금 보는 칸을 채워 보여 준다.
  * 처음 글이 없거나 최종 글과 같으면 아무것도 그리지 않는다.
+ *
+ * 2026-09-30: 선생님이 수정 모드로 고쳐 준 글이면 `✏️ 선생님 교정 N회` 칸이 더 생긴다(`TeacherEditRounds`).
+ * 누르면 빨간 펜 교정지와 그다음에 낸 글을 좌우로 놓는다. 회차는 이 기능이 생긴 뒤 고친 글에만 쌓인다.
  */
-export const WRITING_VIEW = Object.freeze({ FINAL: 'final', CHANGES: 'changes', ORIGINAL: 'original' });
+export const WRITING_VIEW = Object.freeze({ FINAL: 'final', CHANGES: 'changes', ORIGINAL: 'original', TEACHER: 'teacher' });
 
 const seenKey = (postId) => `writing-change-seen-v1:${postId}`;
 
@@ -22,7 +25,7 @@ const seenKey = (postId) => `writing-change-seen-v1:${postId}`;
  * (학생 본인 글에만 쓴다 — "선생님이 승인했어요, 이렇게 좋아졌어요" 를 보여 주는 순간). 한 번 열었는지는
  * 이 브라우저에만 남긴다. 저장소가 막혀 있으면 늘 최종 글로 연다.
  */
-export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, autoOpenChanges = false }) => {
+export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, autoOpenChanges = false, teacherEditRounds = 0 }) => {
     const info = useMemo(
         () => getWritingCompareInfo({ before, after, beforeTitle, afterTitle, approved }),
         [before, after, beforeTitle, afterTitle, approved]
@@ -51,26 +54,29 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
             // 저장소가 막혀 있으면 다음에도 한 번 더 바뀐 곳으로 열릴 뿐이다.
         }
     }, [view, postId]);
+    const rounds = Math.max(0, Number(teacherEditRounds) || 0);
     // 고른 칸이 사라졌으면(글이 바뀌었거나 승인이 풀림) 최종 글로 돌아간다.
-    const safeView = (view === WRITING_VIEW.CHANGES && !info.canShowChanges) || (view !== WRITING_VIEW.FINAL && !info.hasOriginal)
-        ? WRITING_VIEW.FINAL
-        : view;
-    return { ...info, view: safeView, setView };
+    const lost = view === WRITING_VIEW.TEACHER
+        ? rounds === 0
+        : (view === WRITING_VIEW.CHANGES && !info.canShowChanges) || (view !== WRITING_VIEW.FINAL && !info.hasOriginal);
+    const safeView = lost ? WRITING_VIEW.FINAL : view;
+    return { ...info, teacherEditRounds: rounds, view: safeView, setView };
 };
 
 /**
  * @param {'three'|'sideBySide'} layout `sideBySide` 는 교사의 글 자세히 보기처럼 두 번째 칸이 처음·최종을 나란히
  *   놓는 화면이다. 그 칸은 승인된 글이면 `🖍️ 바뀐 곳`, 승인 전이면 `처음 글과 나란히` 가 된다.
  */
-const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, canShowChanges, layout = 'three' }) => {
-    if (!hasOriginal) return null;
+const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, canShowChanges, teacherEditRounds = 0, layout = 'three' }) => {
+    if (!hasOriginal && !teacherEditRounds) return null;
     const sideBySide = layout === 'sideBySide';
     const options = [
         { id: WRITING_VIEW.FINAL, label: '최종 글' },
-        ...(canShowChanges || sideBySide
+        ...(hasOriginal && (canShowChanges || sideBySide)
             ? [{ id: WRITING_VIEW.CHANGES, label: canShowChanges ? '🖍️ 바뀐 곳' : '처음 글과 나란히' }]
             : []),
-        ...(sideBySide ? [] : [{ id: WRITING_VIEW.ORIGINAL, label: '처음 글' }])
+        ...(hasOriginal && !sideBySide ? [{ id: WRITING_VIEW.ORIGINAL, label: '처음 글' }] : []),
+        ...(teacherEditRounds > 0 ? [{ id: WRITING_VIEW.TEACHER, label: `✏️ 선생님 교정 ${teacherEditRounds}회`, teacher: true }] : [])
     ];
     return (
         <div className="writing-version">
@@ -93,7 +99,7 @@ const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, canSho
                         type="button"
                         role="radio"
                         aria-checked={view === option.id}
-                        className={`writing-version__tab${view === option.id ? ' is-active' : ''}`}
+                        className={`writing-version__tab${option.teacher ? ' writing-version__tab--teacher' : ''}${view === option.id ? ' is-active' : ''}`}
                         onClick={() => onChange(option.id)}
                     >
                         {option.label}

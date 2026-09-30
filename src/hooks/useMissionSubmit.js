@@ -29,6 +29,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [showOriginalToFriends, setShowOriginalToFriends] = useState(false);
     const [isTeacherEdited, setIsTeacherEdited] = useState(false);
     const [teacherEditedAt, setTeacherEditedAt] = useState('');
+    const [teacherEditRounds, setTeacherEditRounds] = useState(0); // 선생님 교정 회차 수(교정지는 열 때 따로 불러온다)
     const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
     const [structuredContent, setStructuredContent] = useState(null);
     const [postUpdatedAt, setPostUpdatedAt] = useState(null); // 로컬 임시본과의 최신성 비교용
@@ -74,6 +75,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             setShowOriginalToFriends(Boolean(postData?.show_original));
             setIsTeacherEdited(Boolean(postData?.is_teacher_edited));
             setTeacherEditedAt(postData?.teacher_edited_at || '');
+            setTeacherEditRounds(Number(postData?.teacher_edit_rounds) || 0);
             setStudentAnswers(postData?.student_answers || []);
             setStructuredContent(hasTeacherEditedDraft ? null : (postData?.structured_content || null));
             setPostId(postData?.id || null);
@@ -382,6 +384,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         showOriginalToFriends,
         isTeacherEdited,
         teacherEditedAt,
+        teacherEditRounds,
         studentAnswers,
         setStudentAnswers,
         structuredContent,

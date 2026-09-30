@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
+import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import CommentComposer from './CommentComposer';
@@ -128,6 +129,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         showOriginalToFriends,
         isTeacherEdited,
         teacherEditedAt,
+        teacherEditRounds,
         studentAnswers,
         setStudentAnswers,
         structuredContent,
@@ -162,9 +164,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 내 글이라 승인받은 뒤 처음 열 때 한 번은 `바뀐 곳` 으로 연다. 고치는 중(승인 전)에는 최종 글·처음 글만.
     const version = useWritingVersion({
         postId, before: originalContent, after: content, beforeTitle: originalTitle, afterTitle: title,
-        approved: Boolean(isConfirmed), autoOpenChanges: true
+        approved: Boolean(isConfirmed), autoOpenChanges: true, teacherEditRounds
     });
-    const showOriginal = version.view !== WRITING_VIEW.FINAL;
+    const showTeacherEdits = version.view === WRITING_VIEW.TEACHER;
+    const showOriginal = version.view !== WRITING_VIEW.FINAL && !showTeacherEdits;
     const [savingOriginalSharing, setSavingOriginalSharing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const editorRef = useRef(null);
@@ -675,6 +678,14 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         <WritingNotice tone="success" icon="📝" title="선생님이 직접 다듬은 글이 도착했어요">
                             아래 글은 선생님이 손봐서 보내준 버전이에요. 이 상태에서 이어서 수정하거나 다시 제출하면 돼요.
                             {teacherEditedAt ? ` (${new Date(teacherEditedAt).toLocaleString()})` : ''}
+                            {teacherEditRounds > 0 ? (
+                                <>
+                                    {' '}선생님이 어디를 고쳤는지는 빨간 펜 교정지로 볼 수 있어요.{' '}
+                                    <Button type="button" size="sm" onClick={() => version.setView(WRITING_VIEW.TEACHER)}>
+                                        ✏️ 교정지 보기
+                                    </Button>
+                                </>
+                            ) : null}
                         </WritingNotice>
                     </motion.div>
                 )}
@@ -802,6 +813,13 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     }] : []}
                 >
                     <div style={{ position: 'relative' }}>
+                        {showTeacherEdits && (
+                            // 선생님 교정지는 좌우로 넓게 놓아야 해서 편집칸을 덮지 않고 그 위에 따로 편다.
+                            // 다 보면 `최종 글` 을 눌러 다시 고친다.
+                            <div style={{ marginBottom: '20px' }}>
+                                <TeacherEditRounds postId={postId} />
+                            </div>
+                        )}
                         {showOriginal && (
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>
                                 <div style={{

@@ -1,6 +1,7 @@
 import React from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
+import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
 import { motion } from 'framer-motion';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
@@ -23,7 +24,7 @@ const MyShelfPostDetail = ({
     const version = useWritingVersion({
         postId: post?.id, before: post?.original_content, after: post?.content,
         beforeTitle: post?.original_title, afterTitle: post?.title,
-        approved: Boolean(post?.is_confirmed), autoOpenChanges: true
+        approved: Boolean(post?.is_confirmed), autoOpenChanges: true, teacherEditRounds: post?.teacher_edit_rounds
     });
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
@@ -122,7 +123,10 @@ const MyShelfPostDetail = ({
                         <WritingVersionSwitch {...version} onChange={version.setView} />
 
                         <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                            {displayingReport ? (
+                            {version.view === WRITING_VIEW.TEACHER ? (
+                                // 선생님이 고쳐 준 회차별 교정지와 그다음에 낸 글을 좌우로(승인 뒤에도 볼 수 있다).
+                                <TeacherEditRounds postId={post.id} />
+                            ) : displayingReport ? (
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
                             ) : showChanges ? (
                                 // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).

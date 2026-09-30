@@ -1,0 +1,157 @@
+/* 선생님 교정지 — 빨간 펜 교정 부호와 회차별 좌우 비교. 색은 토큰만 쓴다. */
+.teacher-proof__text {
+    white-space: pre-wrap;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    /* 고친 말이 줄 위에 얹히므로 줄 사이를 넉넉히 */
+    line-height: 2.4;
+}
+
+.teacher-proof__text ruby {
+    ruby-position: over;
+}
+
+.teacher-proof__text rt {
+    color: var(--ui-proof-ink);
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.teacher-proof__text rt ins {
+    text-decoration: none;
+}
+
+.teacher-proof__replace del,
+.teacher-proof__delete {
+    text-decoration: line-through;
+    text-decoration-color: var(--ui-proof-ink);
+    text-decoration-thickness: 2px;
+}
+
+.teacher-proof__mark {
+    color: var(--ui-proof-ink);
+    font-weight: 900;
+    margin: 0 1px;
+}
+
+.teacher-proof__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-1) var(--ui-space-3);
+    margin-top: var(--ui-space-3);
+    padding-top: var(--ui-space-2);
+    border-top: 1px dashed var(--ui-border);
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.teacher-proof__legend b {
+    color: var(--ui-proof-ink);
+}
+
+.teacher-edits {
+    display: grid;
+    gap: var(--ui-space-3);
+}
+
+.teacher-edits__rounds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2);
+}
+
+.teacher-edits__round {
+    padding: 6px 12px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-surface);
+    color: var(--ui-ink-muted);
+    font: inherit;
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.teacher-edits__round.is-active {
+    border-color: var(--ui-proof-ink);
+    color: var(--ui-proof-ink);
+}
+
+.teacher-edits__round:focus-visible {
+    outline: none;
+    box-shadow: var(--ui-focus-ring);
+}
+
+.teacher-edits__pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: var(--ui-space-3);
+}
+
+.teacher-edits__sheet {
+    min-width: 0;
+    padding: var(--ui-space-4);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+}
+
+.teacher-edits__sheet--proof {
+    background: var(--ui-proof-paper);
+}
+
+.teacher-edits__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-1) var(--ui-space-2);
+    margin-bottom: var(--ui-space-3);
+}
+
+.teacher-edits__badge {
+    padding: 3px 10px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+}
+
+.teacher-edits__badge--proof {
+    background: var(--ui-danger-soft);
+    color: var(--ui-proof-ink);
+}
+
+.teacher-edits__hint {
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-xs);
+    font-weight: 700;
+}
+
+.teacher-edits__title {
+    margin: 0 0 var(--ui-space-2);
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-lg);
+    font-weight: 900;
+}
+
+.teacher-edits__body {
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    line-height: 1.9;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+}
+
+.teacher-edits__empty {
+    padding: var(--ui-space-4);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: 700;
+}

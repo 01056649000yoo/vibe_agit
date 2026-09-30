@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
+import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
 import ModalCloseButton from '../common/ModalCloseButton';
 import ModalPortal from '../common/ModalPortal';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
@@ -27,7 +28,8 @@ const TeacherStudentAgitPostDetail = ({
 }) => {
     const version = useWritingVersion({
         postId: post?.id, before: post?.original_content, after: post?.content,
-        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed)
+        beforeTitle: post?.original_title, afterTitle: post?.title, approved: Boolean(post?.is_confirmed),
+        teacherEditRounds: post?.teacher_edit_rounds
     });
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
@@ -131,7 +133,9 @@ const TeacherStudentAgitPostDetail = ({
                                 <WritingVersionSwitch {...version} onChange={version.setView} />
 
                                 <div className={`teacher-agit-post-detail__content${displayingReport ? ' is-report' : ''}`}>
-                                    {displayingReport ? (
+                                    {version.view === WRITING_VIEW.TEACHER ? (
+                                        <TeacherEditRounds postId={post.id} />
+                                    ) : displayingReport ? (
                                         <ReportDocument structuredContent={post.structured_content} content={post.content} />
                                     ) : showChanges ? (
                                         <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />

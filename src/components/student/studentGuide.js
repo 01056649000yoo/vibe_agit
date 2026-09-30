@@ -12,7 +12,7 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
         items: Object.freeze([
             Object.freeze({
                 id: 'missions', icon: '📝', title: '과제 글쓰기',
-                description: '선생님이 낸 글을 쓰고 제출해요. 승인되면 고친 곳이 형광펜으로 보여요.',
+                description: '과제 글을 쓰고 내요. 고친 곳 형광펜과 선생님 교정지를 봐요.',
                 ctaLabel: '과제 보기', destination: Object.freeze({ type: 'tab', tabId: 'mission_list' })
             }),
             Object.freeze({

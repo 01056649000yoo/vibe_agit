@@ -87,3 +87,13 @@
     font-weight: 900;
     white-space: nowrap;
 }
+
+/* `✏️ 선생님 교정 N회` — 빨간 펜 색으로 다른 칸과 구별한다. */
+.writing-version__tab--teacher {
+    color: var(--ui-proof-ink);
+}
+
+.writing-version__tab--teacher.is-active {
+    color: var(--ui-proof-ink);
+    box-shadow: var(--ui-shadow-xs), inset 0 -2px 0 var(--ui-proof-ink);
+}

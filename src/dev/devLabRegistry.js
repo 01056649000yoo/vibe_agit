@@ -23,9 +23,17 @@ const ClassAgitDesignPreview = lazy(() => import('./ClassAgitDesignPreview.jsx')
 const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
 const TeacherLayoutPreview = lazy(() => import('./TeacherLayoutPreview.jsx'))
 const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
+const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'teacher-edit-rounds',
+    icon: '✏️',
+    title: '선생님 교정지',
+    description: '선생님이 고쳐 준 글을 빨간 펜 교정 부호로 — 회차 단추, 교정지와 다음에 낸 글 좌우 비교, 아직 다시 내지 않은 회차',
+    Component: TeacherEditRoundsPreview,
+  }),
   Object.freeze({
     id: 'writing-change',
     icon: '🖍️',
