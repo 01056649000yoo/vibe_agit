@@ -41,7 +41,7 @@
 
 /* 표 */
 .class-timetable-grid-wrap { overflow-x:auto; }
-/* 표는 왼쪽 칸을 채운다. 칸 폭은 왼쪽 칸 상한(660px)으로 정해져 한눈에 들어온다(2026-09-30, 전에는 화면 폭의 70%). */
+/* 표는 왼쪽 칸을 채운다. 왼쪽 칸은 화면 폭에 비례한다(아래 배치). */
 .class-timetable-grid { width:100%; min-width:480px; border-collapse:separate; border-spacing:var(--ui-space-1); table-layout:fixed; }
 .class-timetable-grid th { color:var(--ui-ink-muted); font-size:var(--ui-text-sm); font-weight:900; }
 .class-timetable-grid thead th { padding-bottom:var(--ui-space-1); font-size:var(--ui-text-md); color:var(--ui-ink-strong); }
@@ -84,11 +84,15 @@
 .class-timetable-warning { margin:0; padding:var(--ui-space-2) var(--ui-space-3); border-radius:var(--ui-radius-sm); background:var(--ui-warning-soft); color:var(--ui-ink); font-size:var(--ui-text-sm); font-weight:800; }
 
 /* 왼쪽 표 + 오른쪽 옆 칸(과목 단추·칸 입력). 옆 칸은 스크롤해도 따라온다. */
-.class-timetable-editor { display:grid; grid-template-columns:minmax(480px,660px) minmax(280px,380px); gap:var(--ui-space-5); align-items:start; justify-content:start; }
+/* 화면 폭에 비례해 나눈다(표 : 옆 칸 ≈ 1.8 : 1, 2026-09-30 선생님 요청 — 노트북에서도 오른쪽이 많이 남았다). */
+.class-timetable-editor { display:grid; grid-template-columns:minmax(480px,1.8fr) minmax(300px,1fr); gap:var(--ui-space-5); align-items:start; }
 .class-timetable-editor__table { min-width:0; }
+/* 옆 칸 안쪽은 옆 칸 폭에 맞춘다 — 칸 폭을 내용에 맡기면 과목 단추 줄이 옆 칸보다 넓어져 오른쪽이 잘렸다. */
+.class-timetable-editor__side,.class-timetable-editor__side .class-timetable-palette { grid-template-columns:minmax(0,1fr); }
+.class-timetable-editor__side>*,.class-timetable-editor__side .class-timetable-palette>* { min-width:0; }
 .class-timetable-editor__side { position:sticky; top:var(--ui-space-4); display:grid; gap:var(--ui-space-3); max-height:calc(100vh - 2 * var(--ui-space-4)); overflow:auto; padding:var(--ui-space-4); border:1px solid var(--ui-border); border-radius:var(--ui-radius-lg); background:var(--ui-surface-muted); }
-.class-timetable-editor__side .class-timetable-palette__add { flex:1 1 100%; }
-.class-timetable-editor__side .class-timetable-palette__add input { flex:1 1 auto; width:auto; min-width:0; }
+.class-timetable-editor__side .class-timetable-palette__add { flex:1 1 100%; min-width:0; }
+.class-timetable-editor__side .class-timetable-palette__add input { flex:1 1 0; width:0; min-width:0; }
 .class-timetable-palette__add button { white-space:nowrap; flex:0 0 auto; }
 .class-timetable-editor__side .class-timetable-cell-form { flex-direction:column; align-items:stretch; }
 .class-timetable-editor__side .class-timetable-cell-form input { width:100%; box-sizing:border-box; }
