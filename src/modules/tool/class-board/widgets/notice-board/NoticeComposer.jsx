@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import useConfirmDialog from '../../../../../components/common/useConfirmDialog';
 import { readLocalStorageJson, writeLocalStorageJson } from '../../../../../lib/browserStorage';
 import { formatSeoulDate } from '../../../../../utils/seoulDate';
@@ -65,7 +65,10 @@ export default function NoticeComposer({
   initialDate = null,
   showRecent = true,
   widgetHint = false,
-  /* `sheet`: 화면 전체로 여는 알림장 쓰기(발표 화면). 입력칸이 남는 높이를 모두 쓴다. */
+  /*
+   * `sheet`: 화면 전체로 여는 알림장 쓰기(발표 화면). 입력칸이 남는 높이를 모두 쓴다.
+   * `tool`: 학급 운영 도구의 알림장. 입력칸이 내용만큼 늘어나 모든 줄이 보이고, 저장 상태는 화면 아래에 붙는다.
+   */
   variant = 'panel',
   autoFocus = false,
   onSaved,
@@ -98,6 +101,26 @@ export default function NoticeComposer({
     const saved = readLocalStorageJson(FONT_STORAGE_KEY, null);
     return FONT_STEPS.some((step) => step.id === saved) ? saved : DEFAULT_FONT_STEP;
   });
+
+  /*
+   * 입력칸 높이를 내용에 맞춘다(2026-09-30 선생님 요청). 짧은 칸에 큰 글씨라 두세 줄만 보이고 나머지는 칸 안에서 스크롤됐다.
+   * `sheet` 는 남는 높이를 모두 쓰므로 제외. 최소·최대 높이는 CSS 가 정한다(설정창은 최대에서 칸 안 스크롤).
+   */
+  const bodyRef = useRef(null);
+  const autoGrow = variant !== 'sheet';
+  const fitBodyHeight = useCallback(() => {
+    const node = bodyRef.current;
+    if (!node || !autoGrow) return;
+    node.style.height = 'auto';
+    node.style.height = `${node.scrollHeight + node.offsetHeight - node.clientHeight}px`;
+  }, [autoGrow]);
+  // 글·글씨 크기가 바뀌면 다시 잰다. 창 폭이 바뀌면 줄바꿈이 달라지므로 그때도.
+  useLayoutEffect(fitBodyHeight, [fitBodyHeight, state.body, fontStepId]);
+  useEffect(() => {
+    if (!autoGrow) return undefined;
+    window.addEventListener('resize', fitBodyHeight);
+    return () => window.removeEventListener('resize', fitBodyHeight);
+  }, [autoGrow, fitBodyHeight]);
 
   // 자동 저장은 타이머·요청이 화면 그리기와 어긋나므로 최신 값을 ref 로 본다.
   const latestRef = useRef(state);
@@ -447,6 +470,7 @@ export default function NoticeComposer({
           </div>
         </div>
         <textarea
+          ref={bodyRef}
           className="class-board-notice-composer__body"
           style={{ fontSize: getFontStep(fontStepId).size }}
           maxLength={NOTICE_LIMIT}

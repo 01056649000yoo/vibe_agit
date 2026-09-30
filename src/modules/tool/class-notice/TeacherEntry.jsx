@@ -127,6 +127,7 @@ export default function ClassNoticeTeacherEntry({ activeClass }) {
               classId={classId}
               initialDate={writingDate}
               showRecent={false}
+              variant="tool"
               onSaved={loadLog}
             />
           ) : null}

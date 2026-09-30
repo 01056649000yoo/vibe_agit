@@ -30,7 +30,7 @@ const makeApi = (store) => Object.freeze({
 const WIDTHS = Object.freeze([
     { id: 'panel', label: '설정창 (380px)', width: 380 },
     { id: 'header', label: '열린 스크린 머리말 (560px)', width: 560 },
-    { id: 'tool', label: '알림장 도구 (900px)', width: 900 },
+    { id: 'tool', label: '알림장 도구 (900px)', width: 900, variant: 'tool' },
     // 발표 화면의 `알림장 쓰기` — 화면 전체로 연다(2026-09-29). 높이도 정해 두어야 입력칸이 늘어나는 것이 보인다.
     { id: 'sheet', label: '화면 전체 알림장 쓰기 (1200×640)', width: 1200, height: 640, variant: 'sheet' },
 ]);
@@ -74,7 +74,7 @@ export default function NoticeComposerPreview() {
                 <NoticeComposer
                     key={current.variant || 'panel'}
                     variant={current.variant || 'panel'}
-                    showRecent={current.variant !== 'sheet'}
+                    showRecent={!current.variant}
                     classId="preview-class"
                     api={api}
                     templateStore={templateStore}

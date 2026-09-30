@@ -24,7 +24,14 @@
  * 위의 `font:inherit`보다 약하면 안 되므로 클래스를 하나 더 겹쳐 적는다.
  * 실제 글씨 크기는 교사가 고른 계단을 화면이 인라인으로 얹는다(여기 값은 그 전 기본).
  */
-.class-board-notice-composer .class-board-notice-composer__body { resize:vertical; min-height:2.4em; max-height:52vh; padding:var(--ui-space-3); font-size:var(--notice-input-display); font-weight:700; line-height:1.35; }
+.class-board-notice-composer .class-board-notice-composer__body { resize:none; min-height:2.4em; max-height:52vh; padding:var(--ui-space-3); font-size:var(--notice-input-display); font-weight:700; line-height:1.35; }
+/*
+ * 학급 운영 도구의 알림장(2026-09-30). 입력칸은 내용만큼 늘어나고(높이는 화면이 잰다) 칸 안에서 숨는 줄이 없다.
+ * 길어지면 페이지가 내려가므로 글자 수·저장 상태·버튼 줄은 화면 아래에 붙여 늘 보이게 한다.
+ */
+.class-board-notice-composer--tool .class-board-notice-composer__body { min-height:max(9rem,36vh); max-height:none; overflow:hidden; }
+.class-board-notice-composer--tool .class-board-notice-composer__actions { position:sticky; bottom:0; z-index:1; margin:0 -11px; padding:10px 11px; border-top:1px solid #efe4b8; background:#fffdf3; }
+.class-board-notice-composer--tool .class-board-notice-composer__status { font-size:var(--ui-text-sm); }
 
 .class-board-notice-composer__body-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; }
 .class-board-notice-composer__font { display:flex; gap:3px; }
