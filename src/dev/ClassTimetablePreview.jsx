@@ -25,6 +25,7 @@ const TODAYS = Object.freeze([
 const WIDGET_VIEWS = Object.freeze([
   { view: 'today', label: '오늘', width: 360, height: 420 },
   { view: 'tomorrow', label: '내일', width: 360, height: 420 },
+  { view: 'pair', label: '오늘·내일', width: 620, height: 360 },
   { view: 'week', label: '이번 주', width: 620, height: 420 },
 ])
 

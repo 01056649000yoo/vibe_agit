@@ -21,17 +21,38 @@ const NameList = ({ title, names = [], emptyText, tone, rewritingNames = [] }) =
   );
 };
 
+/*
+ * 자율 글은 **제출**과 **선생님 확인**을 따로 보인다(2026-09-30 선생님 요청).
+ * 자율 글의 완료 기록은 선생님이 확인할 때 생겨서, 예전 카드는 확인된 것만 세고 "제출"이라 적었다.
+ * 제출 = 오늘 처음 낸 학생(submittedStudentCount·submittedCount, 20261359), 확인 = 오늘 선생님이 확인한 학생.
+ * 서버가 아직 옛 판이면 제출 값이 없어 확인 줄만 보인다.
+ */
+const percent = (count, total) => (total > 0 ? Math.min(100, Math.round((count / total) * 100)) : 0);
+
 const DailyCard = ({ icon, label, value = {} }) => {
-  const completed = value.completedStudentCount || 0;
+  const confirmed = value.completedStudentCount || 0;
   const total = value.totalStudents || 0;
-  const progress = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+  const hasSubmitted = Number.isFinite(value.submittedStudentCount);
+  const submitted = hasSubmitted ? value.submittedStudentCount : 0;
   return (
     <div className="class-board-status__daily-card">
       <span className="class-board-status__daily-icon" aria-hidden="true">{icon}</span>
       <div>
-        <div className="class-board-status__daily-heading"><strong>{label}</strong><span>{completed}/{total}명</span></div>
-        <div className="class-board-status__daily-progress"><span style={{ width: `${progress}%` }} /></div>
-        <small>오늘 {value.submissionCount || 0}편 제출</small>
+        <div className="class-board-status__daily-heading"><strong>{label}</strong><span>{total}명 중</span></div>
+        {hasSubmitted ? (
+          <div className="class-board-status__daily-line is-submitted">
+            <span>제출</span>
+            <div className="class-board-status__daily-progress"><span style={{ width: `${percent(submitted, total)}%` }} /></div>
+            <strong>{submitted}명</strong>
+            <small>{value.submittedCount || 0}편</small>
+          </div>
+        ) : null}
+        <div className="class-board-status__daily-line is-confirmed">
+          <span>선생님 확인</span>
+          <div className="class-board-status__daily-progress"><span style={{ width: `${percent(confirmed, total)}%` }} /></div>
+          <strong>{confirmed}명</strong>
+          <small>{value.submissionCount || 0}편</small>
+        </div>
       </div>
     </div>
   );

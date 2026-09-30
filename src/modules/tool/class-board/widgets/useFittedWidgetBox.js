@@ -44,8 +44,11 @@ const withFrozenOverflow = (element, measure) => {
  * @param {string} options.property 넣어 줄 CSS 변수 이름 (예: `--class-board-meal-dish-size`)
  * @param {number} options.minSize 글자 바닥(px). 디자인 가이드상 0.8rem = 12.8px 아래로 내리지 않는다.
  * @param {number} [options.maxSize] 위 한계(px). 없으면 상자 크기에서 잡는다.
+ * @param {string} [options.layouts] 배치 후보(쉼표로 구분, 예: `one,two`). 주면 후보마다 `data-fit-layout` 을 바꿔
+ *   재 보고 **글씨가 가장 크게 나오는 배치**를 고른다(시간표 위젯: 한 줄 / 두 줄, 2026-09-30). CSS 가 그 속성으로 배치를 바꾼다.
+ *   React 가 다루지 않는 data 속성이라 다시 그려도 지워지지 않는다. 없으면 예전처럼 크기만 맞춘다.
  */
-export default function useFittedWidgetBox(signature, { property, minSize, maxSize }) {
+export default function useFittedWidgetBox(signature, { property, minSize, maxSize, layouts = '' }) {
   const elementRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -71,12 +74,25 @@ export default function useFittedWidgetBox(signature, { property, minSize, maxSi
 
       withFrozenOverflow(element, () => {
         const upperBound = maxSize || Math.max(minSize, element.clientWidth, element.clientHeight);
-        const largest = findLargestFittingTextSize((candidate) => {
+        const measure = () => findLargestFittingTextSize((candidate) => {
           applySize(candidate);
           return element.scrollWidth <= element.clientWidth
             && element.scrollHeight <= element.clientHeight;
         }, minSize, upperBound);
-        applySize(largest);
+        const candidates = layouts ? layouts.split(',').filter(Boolean) : [];
+        if (candidates.length === 0) {
+          applySize(measure());
+          return;
+        }
+        // 후보마다 재서 가장 큰 글씨가 나오는 배치를 고른다(같으면 앞의 후보).
+        let best = { layout: candidates.at(0), size: -1 };
+        candidates.forEach((layout) => {
+          element.dataset.fitLayout = layout;
+          const size = measure();
+          if (size > best.size) best = { layout, size };
+        });
+        element.dataset.fitLayout = best.layout;
+        applySize(best.size);
       });
     };
 
@@ -104,7 +120,7 @@ export default function useFittedWidgetBox(signature, { property, minSize, maxSi
       if (animationFrame) cancelAnimationFrame(animationFrame);
       resizeObserver?.disconnect();
     };
-  }, [signature, property, minSize, maxSize]);
+  }, [signature, property, minSize, maxSize, layouts]);
 
   return elementRef;
 }

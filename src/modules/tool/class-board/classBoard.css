@@ -304,6 +304,13 @@
 .class-board-status__daily-progress { height:4px; margin:6px 0; overflow:hidden; border-radius:999px; background:var(--status-veil-strong); }
 .class-board-status__daily-progress span { display:block; height:100%; border-radius:inherit; background:var(--status-info); }
 .class-board-status__daily-card small { display:block; color:var(--status-muted); font-size:.62rem; }
+/* 자율 글 제출·선생님 확인을 한 줄씩(2026-09-30). 이름 · 막대 · 명 · 편 */
+.class-board-status__daily-line { display:grid; grid-template-columns:6.2em minmax(0,1fr) auto auto; align-items:center; gap:6px; margin-top:4px; font-size:.68rem; }
+.class-board-status__daily-line>span { color:var(--status-muted); font-weight:900; white-space:nowrap; }
+.class-board-status__daily-line>strong { font-weight:900; white-space:nowrap; }
+.class-board-status__daily-line>small { margin:0; white-space:nowrap; }
+.class-board-status__daily-line .class-board-status__daily-progress { margin:0; }
+.class-board-status__daily-line.is-confirmed .class-board-status__daily-progress span { background:var(--status-good); }
 .class-board-status__titles { display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; }
 .class-board-status__titles>span { display:inline-flex; align-items:baseline; gap:4px; border-radius:8px; padding:5px 8px; background:var(--status-veil); font-size:.7rem; font-weight:850; }
 .class-board-status__titles>span em { color:var(--status-note); font-style:normal; font-size:.66rem; font-weight:900; }

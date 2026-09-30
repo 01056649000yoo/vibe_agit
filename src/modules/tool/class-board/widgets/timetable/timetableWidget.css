@@ -14,14 +14,32 @@
 .class-board-timetable>header h2 { margin:0; font-size:max(1rem,6.4cqmin); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .class-board-timetable__state { display:grid; place-items:center; margin:0; font-size:max(.8rem,4.4cqmin); font-weight:800; text-align:center; opacity:.8; }
 
-/* 하루 시간표 — 한 줄에 한 교시 */
-.class-board-timetable__day { display:grid; grid-template-rows:repeat(var(--rows,6),minmax(0,1fr)); gap:clamp(2px,1.2cqmin,8px); min-height:0; margin:0; padding:0; list-style:none; }
-.class-board-timetable__day li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:clamp(4px,2.5cqi,18px); min-height:0; padding:0 clamp(6px,3cqi,20px); border:1px solid var(--tt-line,rgba(15,42,74,.18)); border-radius:clamp(6px,2cqmin,14px); background:var(--tt-bg,rgba(255,255,255,.7)); color:var(--tt-ink,inherit); overflow:hidden; font-size:max(.8rem,min(calc(62cqb / var(--rows,6)),8cqi)); }
-.class-board-timetable__day li>span { font-size:.62em; font-weight:800; opacity:.75; white-space:nowrap; }
-.class-board-timetable__day li>strong { font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.class-board-timetable__day li>small { font-size:.55em; font-weight:800; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40cqi; }
+/*
+ * 하루 시간표 — 한 줄에 한 교시. 글씨(--timetable-text-size)는 공용 맞춤 부품(useFittedWidgetBox)이 가로·세로 모두
+ * 넘치지 않는 가장 큰 크기로 정한다(2026-09-30 — 높이로만 정해 과목만 있으면 오른쪽이 비었다). 재는 동안 넘침을
+ * 숨겨 두고 바깥 틀이 바뀔 때만 다시 재는 떨림 차단기는 공용 부품에 있다. 아래 값은 재기 전 잠깐 쓰는 처음 값.
+ */
+.class-board-timetable__body { display:grid; min-width:0; min-height:0; overflow:hidden; }
+.class-board-timetable__day { display:grid; grid-template-rows:repeat(var(--rows,6),minmax(0,1fr)); gap:clamp(2px,1.2cqmin,8px); min-width:0; min-height:0; margin:0; padding:0; list-style:none; }
+.class-board-timetable__day li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.45em; min-width:0; min-height:0; padding:0 .45em; border:1px solid var(--tt-line,rgba(15,42,74,.18)); border-radius:clamp(6px,2cqmin,14px); background:var(--tt-bg,rgba(255,255,255,.7)); color:var(--tt-ink,inherit); font-size:var(--timetable-text-size,max(.8rem,min(calc(62cqb / var(--rows,6)),8cqi))); line-height:1.1; }
+.class-board-timetable__day li>span { font-size:.55em; font-weight:800; opacity:.75; white-space:nowrap; }
+.class-board-timetable__day li>strong { font-weight:900; white-space:nowrap; }
+.class-board-timetable__day li>small { font-size:.5em; font-weight:800; opacity:.85; white-space:nowrap; }
 .class-board-timetable__day li.is-empty { border-style:dashed; background:rgba(255,255,255,.4); }
-.class-board-timetable__day li.is-lunch { grid-template-columns:auto minmax(0,1fr); border:0; background:rgba(245,158,11,.18); color:#7c4a03; font-size:max(.8rem,min(calc(44cqb / var(--rows,6)),6cqi)); }
+.class-board-timetable__day li.is-lunch { grid-template-columns:auto minmax(0,1fr); border:0; background:rgba(245,158,11,.18); color:#7c4a03; }
+.class-board-timetable__day li.is-lunch>strong { font-size:.7em; }
+/* 두 줄 배치(1~3교시 | 4~6교시). 맞춤 부품이 한 줄·두 줄을 모두 재 보고 글씨가 더 크게 나오는 쪽을 고른다(data-fit-layout). */
+.class-board-timetable__body[data-fit-layout="two"]>.class-board-timetable__day { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--half,3),minmax(0,1fr)); grid-auto-flow:column; column-gap:clamp(4px,2cqmin,14px); }
+
+/* 오늘·내일 한 번에(2026-09-30): 좌우로 두 날(처음 값). */
+.class-board-timetable__pair { grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(6px,2.5cqmin,16px); }
+.class-board-timetable__pair-day { display:grid; grid-template-rows:auto minmax(0,1fr); gap:clamp(2px,1cqmin,6px); min-width:0; min-height:0; }
+.class-board-timetable__pair-day>h3 { margin:0; font-size:max(.8rem,calc(var(--timetable-text-size,18px) * .55)); font-weight:900; opacity:.8; white-space:nowrap; }
+.class-board-timetable__pair-day>.class-board-timetable__state { font-size:max(.8rem,calc(var(--timetable-text-size,18px) * .6)); }
+/* 위아래 배치 — 세로로 긴 위젯에서 맞춤 부품이 고른다. */
+.class-board-timetable__pair[data-fit-layout^="stack"] { grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(2,minmax(0,1fr)); }
+/* 날마다 교시를 두 줄로(side-two·stack-two). */
+.class-board-timetable__pair[data-fit-layout$="-two"] .class-board-timetable__day { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--half,3),minmax(0,1fr)); grid-auto-flow:column; column-gap:clamp(4px,1.5cqmin,10px); }
 
 /* 한 주 시간표 — 표 */
 .class-board-timetable__week { width:100%; height:100%; min-height:0; border-collapse:separate; border-spacing:clamp(1px,.8cqmin,5px); table-layout:fixed; font-size:max(.8rem,min(calc(52cqb / var(--rows,7)),calc(24cqi / var(--cols,6)))); }
@@ -35,3 +53,10 @@
 .class-board-timetable__week th.is-today { color:#1d4ed8; opacity:1; }
 .class-board-timetable__week td.is-today { box-shadow:inset 0 0 0 2px #2563eb; }
 .class-board-timetable__week tr.is-lunch td,.class-board-timetable__week tr.is-lunch th { height:.1em; padding:0; border:0; background:rgba(245,158,11,.18); color:#7c4a03; font-size:.6em; }
+
+/* 어제·내일 넘기기 단추(2026-09-30). 제목 줄 오른쪽. */
+.class-board-timetable>header { position:relative; }
+.class-board-timetable__nav { display:flex; align-items:center; gap:clamp(3px,1cqmin,6px); margin-left:auto; }
+.class-board-timetable__nav button { display:grid; place-items:center; min-width:max(1.8rem,7cqmin); height:max(1.8rem,7cqmin); padding:0 .5em; border:1px solid rgba(15,42,74,.2); border-radius:999px; background:rgba(255,255,255,.75); color:inherit; font:inherit; font-size:max(.8rem,3.2cqmin); font-weight:900; cursor:pointer; }
+.class-board-timetable__nav button:hover { background:#fff; }
+.class-board-timetable__nav .class-board-timetable__back { font-size:max(.8rem,2.8cqmin); white-space:nowrap; }
