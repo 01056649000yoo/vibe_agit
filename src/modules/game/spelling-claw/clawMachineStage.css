@@ -150,9 +150,15 @@
     font-size: var(--ui-text-lg);
 }
 
-.claw-stage__dpad button:disabled,
-.claw-stage__go:disabled {
+.claw-stage__dpad button:disabled {
     opacity: 0.45;
+    cursor: default;
+}
+
+/* 집게가 움직이는 동안 큰 단추는 비치지 않게 채운 회색으로(반투명이면 뒤의 3D 화면이 비쳐 글씨가 흐려졌다). */
+.claw-stage__go:disabled {
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
     cursor: default;
 }
 

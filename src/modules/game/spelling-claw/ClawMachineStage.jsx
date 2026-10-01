@@ -120,8 +120,9 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
                 >{item.mark}</button>)}
             </div>
             <button type="button" className="claw-stage__go" onClick={press} disabled={Boolean(loading || error) || (!playing && hud.mode !== 'ready')}>
-                {playing ? '뽑기!' : hud.mode === 'ready' ? '코인 넣기' : '집게가 움직여요'}
-                <small>{playing ? 'DROP' : hud.mode === 'ready' ? `코인 ${coins}개` : '잠깐만요'}</small>
+                {/* 원(120px, 폰 96px) 안에 들어가게 큰 글은 네 글자 안으로(2026-10-02 `집게가 움직여요` 가 원 밖으로 나갔다). */}
+                {playing ? '뽑기!' : hud.mode === 'ready' ? '코인 넣기' : '잠깐만요'}
+                <small>{playing ? 'DROP' : hud.mode === 'ready' ? `코인 ${coins}개` : '집게 이동 중'}</small>
             </button>
         </div>
     </div>;
