@@ -81,7 +81,7 @@ test('월간 LaunchAgent는 매일 짧게 확인하되 DB의 30일 기준 전에
     assert.match(scanner, /elapsedDays < config\.scanIntervalDays/);
     const parsed = JSON.parse(catalog);
     assert.equal(parsed.scanIntervalDays, 30);
-    for (const service of ['agit-app', 'agit-db', 'writing-helper-lab-app', 'samlink-app', 'jarvis-frontend', 'classroom-tools']) {
+    for (const service of ['agit-app', 'agit-db', 'writing-helper-lab-app', 'samlink-app', 'jarvis-frontend']) {
         assert.ok(Object.hasOwn(parsed.services, service), `${service} 분류가 없다`);
     }
 });

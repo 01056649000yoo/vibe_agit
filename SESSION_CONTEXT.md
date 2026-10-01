@@ -78,8 +78,8 @@
 
 ## 최근 작업 5건 — 제목과 남은 것 (자세한 것은 [WORKLOG.md](WORKLOG.md) 에서 골라 읽는다)
 
-- 2026-10-01 — 옛 교실 도구(survival) 내림 (Claude)
-  - 남은 것: `/etc/caddy/Caddyfile` 의 survival 블록을 아지트 도구 주소로 넘기기(sudo 필요). 한 달 문의 없으면 이미지·실행기 폴더 삭제.
+- 2026-10-01 — 옛 교실 도구(survival) 내리고 관련 자료 삭제 (Claude)
+  - 남은 것: 운영 `/etc/caddy/Caddyfile` survival 블록 삭제(sudo). GitHub 의 classroom-tools 실행기 등록은 오프라인으로 남음(저장소 설정에서 지우면 됨).
 - 2026-09-30 — 연구소 질문 만들기에 선생님 질문 추가, 학생 불러오기까지(v1.21) (Claude)
   - 남은 것: 운영 적용·배포 완료 — `20261361` → 연구소 이미지 재빌드(되돌릴 지점 `writing-helper:integrated-lab-rollback-20260930`, 연구소 `fe419cd`) → 아지트 로컬 배포, 둘 다 200.
 - 2026-09-30 — 선생님 교정지: 고쳐 준 글을 회차마다 빨간 펜 교정 부호로(v1.20) (Claude)

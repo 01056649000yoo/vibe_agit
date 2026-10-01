@@ -71,10 +71,6 @@
     "jarvis-caddy": {
       "group": "jarvis",
       "exposure": "public"
-    },
-    "classroom-tools": {
-      "group": "classroom",
-      "exposure": "public"
     }
   }
 }

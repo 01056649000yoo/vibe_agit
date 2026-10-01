@@ -22,13 +22,14 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
-## 2026-10-01 — 옛 교실 도구(survival) 내림 (Claude)
-- **한 일**: 선생님 결정 — 옛 `classroom-tools`(survival.도메인, 자리 배치·역할) 운영 종료. 9/21 종료 예고가 이미 지났고, 아지트 학급운영도구로
-  자리 배치를 쓰는 교사 15명, 옛 앱 백업 불러오기는 0건. 옛 앱 자료는 교사 브라우저(IndexedDB)에만 있어 서버에 지울 자료는 없음.
-- **변경(git 밖)**: `docker stop classroom-tools`(restart=unless-stopped 라 재부팅에도 꺼진 채), 실행기 서비스
-  `actions.runner.01056649000yoo-classroom-tools.…` bootout + `launchctl disable`(푸시로 다시 뜨지 않게). 이미지·코드·실행기 폴더는 남김.
-- **결과/검증**: survival 주소 502, 아지트 200. 되살리기: `docker start classroom-tools` + `launchctl enable gui/501/<라벨>` 후 bootstrap.
-- **남은 것 / 다음**: `/etc/caddy/Caddyfile` 의 survival 블록을 아지트 도구 주소로 넘기기(sudo 필요). 한 달 문의 없으면 이미지·실행기 폴더 삭제.
+## 2026-10-01 — 옛 교실 도구(survival) 내리고 관련 자료 삭제 (Claude)
+- **한 일**: 선생님 결정 — 옛 `classroom-tools`(survival.도메인, 자리 배치·역할) 운영 종료·삭제. 9/21 종료 예고가 이미 지났고 아지트에서 자리 배치를 쓰는
+  교사 15명, 옛 앱 백업 불러오기 0건. 옛 앱 자료는 교사 브라우저(IndexedDB)에만 있어 서버에서 지워지는 학생 자료는 없음.
+  [원인: 함께 남아 있던 자비스 `com.jarvis.survival`(옛 사본 `npm run preview` 를 3001에 띄움)이 연구소와 포트가 겹쳐 계속 죽으며 기록 172MB를 쌓음]
+- **변경(git 밖)**: 컨테이너·이미지 삭제, 실행기 `~/actions-runner-classroom-tools`·plist 삭제(launchctl disable 남음), `~/classroom-tools` 사본·
+  `com.jarvis.survival` plist·로그 삭제, `~/.runner-guard/guard.sh` 목록에서 뺌. 저장소: 서비스 목록·RPC 허용 목록·Caddy 사본·검사에서 뺌.
+- **결과/검증**: survival 502, 아지트 200, 연구소 3001 정상, guard.sh 문법 통과, 검사 통과.
+- **남은 것 / 다음**: 운영 `/etc/caddy/Caddyfile` survival 블록 삭제(sudo). GitHub 의 classroom-tools 실행기 등록은 오프라인으로 남음(저장소 설정에서 지우면 됨).
 
 ## 2026-09-30 — 연구소 질문 만들기에 선생님 질문 추가, 학생 불러오기까지(v1.21) (Claude)
 - **한 일**: 선생님 요청 — 학생 질문이 모자랄 때 선생님이 질문을 더하고 학생들이 불러올 수 있게. 실시간 보기에 `+ 선생님 질문 추가`(고치기·지우기).
@@ -694,70 +695,6 @@
   같은 뜻으로 옮김(옛 스크립트에서 2 실패 확인). 운영에 대고 실행: 9개 함수 모두 기대 응답.
 - **문서**: 보안 보고서 결정 필요 A~D 결과, 기능 지도 v1.0.1.
 
-## 2026-09-24 — 끄적끄적 아지트 v1 확정: 기능 지도 + 도움말·활용 안내서·학생 도움말 전체 대조 (Claude Opus 5.5)
-- **요청**: 지금까지의 기능을 v1로 이름 붙여 총정리하고, 앞으로는 그 지도를 고쳐 가며 전체 맵을 유지. v1에 맞춰 도움말·활용 안내서 전부 대조.
-- **v1**: [FEATURE_MAP.md](FEATURE_MAP.md)(교사 메뉴 11갈래·학생·관리자·플랫폼, 상태·도움말 키, 변경 기록), `package.json` 1.0.0, git 태그 `v1.0.0`.
-  AGENTS.md·SESSION_CONTEXT·위키에 "기능을 바꾸면 지도·도움말을 같은 커밋에서" 규칙 등록.
-- **대조 방법**: 도움말 3종이 백틱으로 가리키는 단추·메뉴 이름을 모두 뽑아 실제 화면 코드에서 찾음 → 어긋난 4곳 고침:
-  문집 `구글 문서로 보내기`(실제: `내보내기` → `구글 문서 (Google Docs)`), 수호룡 시즌 단계 이름, `전체 코드 보기`(실제: `🔑 전원 코드 확대`),
-  `우리 모둠 거리`(실제: `우리 모둠 현황`, 이를 고정하던 기존 검사도 고침). 빠진 설명 보강: 학생 명단의 `기록 도우미` 등 줄 단추,
-  글쓰기 창 도구 세 가지. 학생 도움말에 **글쓰기 연구소·모두의 아지트** 추가, 우리반 아지트 설명 갱신.
-- **새 검사**: `guideLabelsExist`(도움말 단추 이름 ↔ 화면, 예외는 까닭과 함께), `featureMap`(메뉴·도움말 키·학생 기능 ↔ 지도, 버전 ↔ 변경 기록).
-  둘 다 옛 도움말·줄 지운 지도에서 실패 확인. 옛 이름 검사 파일의 린트 경고 2개도 정리(42→40).
-- **결과/검증**: test:all 1304/1304, build, deploy:local, 번들에 새 도움말 확인.
-- **남은 것 / 다음**: 교사 메뉴 이름 `모두의 아지트(제작 중)` 는 제한 공개라 그대로 둠 — 정식 공개 때 `(제작 중)` 을 떼고 지도 상태도 바꾼다.
-
-## 2026-09-24 — KISA 시큐어코딩 기준 앱 전체 보안 점검 + 고침 9건 (Claude Opus 5.5)
-- **요청**: KISA 시큐어 코드 룰로 취약점·SQL 인젝션·세션 탈취 포함 전체 점검. 앞으로 보안 점검은 날짜별 파일로.
-- **보고서**: [docs/security-audits/2026-09-24.md](docs/security-audits/2026-09-24.md). 옛 감사 두 개도 `docs/security-audits/`로 옮김(링크 갱신).
-  AGENTS.md 보안 규칙·위키 목록에 "날짜별 파일" 규칙 등록.
-- **안전 확인**: SQL 인젝션(동적 SQL 0), XSS(이스케이프·CSP), SSRF·오픈 리다이렉트(고정 주소), 업로드(비공개 버킷·MIME·크기).
-- **고침**: 학생 코드 `crypto.getRandomValues`, 학생 코드 반복 대입 10분 10번 잠금+한국어 오류(`20261341`), 정의자 트리거 함수 3개
-  search_path 고정, `vibe-ai`·`verify-admin-mode` 내부 오류 문구 비노출, 관리자 비밀번호 일정 시간 비교·CORS 규칙, 개발 의존성 14건.
-- **git 밖 변경**: `~/agit-supabase/volumes/functions/verify-admin-mode/index.ts` 를 저장소 판으로 손 복사(로컬 배포 스크립트가
-  이 함수를 옮기지 않음). `vibe-ai` 는 deploy:local 이 옮김.
-- **정정**: 점검 중 "ALLOWED_ORIGINS 비어 있음" 이라 판단했으나 변수 이름을 잘못 본 것 — 실제 이름 `ALLOWED_ORIGIN` 은 설정돼 있다.
-  응답의 `*` 는 게이트웨이(Kong) 기본 CORS.
-- **결과/검증**: test:all 1299/1299, test:security:static 351/351(새 검사 옛 코드에서 4/4 실패), 롤백 탐침(11번째 잠김·정상 코드 로그인),
-  lint 새 경고 0, build, migrate:check, rpc-surface, npm audit 0 → migrate → deploy:local → 함수 운영 호출 확인.
-- **남은 것 / 다음(선생님 결정)**: 관리자 모드 비밀번호 4자리→12자 이상, 인증 서버 이메일·전화 가입 끄기, Kong CORS(유지 가능),
-  로컬 배포가 모든 엣지 함수를 동기화하게.
-
-## 2026-09-24 — 모두의 아지트 보안 3건 + 세 공간 새 이름 + 도움말·안내서 맞춤 (Claude Opus 5.5)
-- **보안 ①** 다른 반이 숨긴 글을 교사 글 상세 RPC(`get_neighbor_teacher_post_detail_v1`)로 계속 열 수 있었다(09-19 결정이
-  목록에만 걸림) → hidden 은 자기 학급만. **②** 댓글을 쓰거나 고칠 때마다 AI 검사가 다시 돌아 비용 증폭 가능 →
-  학생 한 명 **10분 20번**(우리 반 댓글 쓰기·고치기 + 이웃 댓글 저장 합산, `consume_comment_review_quota_v1`, `PT429`),
-  넘으면 저장 자체가 롤백되고 화면에 서버 문구. **③** 학생 `결과 확인` 단추 연타 → 요청 중 잠금 + 3초 간격.
-- **이름**: 🖼️ 글 나눔 공간 → 🌳 이웃 글 마당, ✍️ 함께 쓰는 주제 → 🎪 같이 쓰기 광장, 📚 문집 나눔 → 🏛️ 문집 도서관.
-  앱·검사·문서 40개 파일, 서버 문구 2곳, 기존 주제 과제 태그 2건(`이웃 아지트` 식별 태그는 그대로). 옛 이름 재유입은
-  `tests/neighborSpaceNames.test.mjs` 가 막는다(옛 코드에서 실패 확인).
-- **도움말·안내서**: `teacherGuides.js` 모두의 아지트 항목을 지금 기능(댓글 상태 표시·확인할 댓글 담임 검토함·다른 메뉴 12초 배지·
-  숨긴 글 규칙·댓글 횟수 제한·종료 시 알림 회수)으로 다시 씀, 활용 안내서 단계는 세 곳+검토함으로. `SECURITY_HARNESS.md` 규칙 추가.
-- **변경**: `20261340_neighbor_security_and_space_names.sql`(운영 적용), 시뮬레이션 36-1·36-2·Q1~Q4 추가.
-- **결과/검증**: 시뮬레이션 115/115(마이그레이션 없이는 4 실패), 우리 반 댓글 횟수 제한 롤백 탐침(앞선 1번 + 19번째에 막힘),
-  test:all 1295/1295, lint 새 경고 0, build, migrate:check, rpc-surface, dev-lab 학생 로비·교사 화면 촬영 → migrate → deploy:local.
-
-## 2026-09-24 — 모두의 아지트 기능 점검 이어받아 결함 D1~D5 고침 + 재점검 (Claude Opus 5.5)
-- **요청**: GPT(Codex)가 하던 기능 점검(커밋 안 된 `docs/NEIGHBOR_AGIT_FUNCTIONAL_CHECKLIST.md`)을 마무리하고 다시 꼼꼼히 점검.
-- **D1 (AI 검사 실패 댓글이 영영 “확인 중”)**: `fail_comment_ai_review_v2` 는 두 번째 실패 뒤 `pending`·`next_at NULL` 로 두고,
-  이웃 검토함·배지는 `blocked` 만 세서 아무도 못 봤다. 두 번째 시도의 작업기가 멈춘 경우(`claim` 의 임대 만료 회수)도 같았다.
-  → 이웃 댓글은 재시도가 끝나면 `blocked`·`moderated_by='ai_failed'`·사유 "AI 검사를 끝내지 못했어요". 되살리면 기존 트리거가
-  글쓴이에게 알림. 우리 반 댓글(`post_comments`)은 학급 댓글 관리가 `pending` 을 이미 "처리할 것"으로 세므로 그대로.
-- **D2 (학생 대기 문구)**: 상세 RPC 가 `visible` 만 돌려줘 다시 열면 내 댓글 상태를 몰랐고, `commentPending` 은 열기·닫기에서
-  안 지워져 다른 글로 따라갔다. → `get_neighbor_shared_post_v1` 에 `my_comment`(pending/blocked/hidden 일 때만),
-  화면은 글마다 그 값으로 맞춤·늦게 온 옛 글 응답 버림. 학생 폴링 금지라 저장 뒤 8초 **1회** 확인 + `결과 확인` 단추.
-- **D3/D4**: 메뉴 배지 RPC 에 `active` → 참여 학급이면 다른 메뉴에서도 같은 12초 훅으로 배지만 센다(학급 전환 중 옛 응답 버림).
-  새 이웃 댓글이 오면 ③ 댓글·반응 목록 재조회. 참여 신청·승인 대기 화면에도 12초 확인(예전엔 2학급 이상일 때만).
-- **D5**: 공간 `closed`·학급 `left` 때 그 공간의 이웃 댓글·방문록 알림을 거두는 트리거. 기존 잔여 1건 정리(15→14건).
-- **시뮬레이션**: F1~F9·L1(임대 만료)·57-1 추가, 관찰만 하던 65를 실제 검사로. 실행기는 `ON_ERROR_STOP=1`·실패 시 종료 코드 1
-  (예전엔 파이프 때문에 늘 0). 새 검사는 마이그레이션 없이 10개 실패/있으면 통과, 57-1 이 헛돌아 가짜 알림을 넣어 고침.
-- **변경**: `20261339_neighbor_comment_review_recovery.sql`, `StudentEntry.jsx/.css`, `TeacherEntry.jsx`, `TeacherDashboard.jsx`,
-  `teacherGuides.js`, `PERFORMANCE_HARNESS.md`, dev-lab 학생 미리보기(상세·댓글 상태 흉내), `neighborAgitTeacherPoll` 검사 3건,
-  `run-neighbor-simulation.sh`, 점검표 문서(재점검 결과 표).
-- **결과/검증**: test:all 1292/1292, test:neighbor-agit 117/117, 시뮬레이션 109/109(운영 DB, 롤백), 새 계약 검사는 옛 코드에서 4/5 실패 확인,
-  lint 오류 0, build, migrate:check, rpc-surface, dev-lab Playwright(PC·390px, 콘솔 오류 0) → migrate → deploy:local, 번들에 새 코드 확인.
-- **남은 것 / 다음**: 실제 교사·학생 로그인 브라우저 인수(점검표 `[ ]`) — 특히 실제 AI 오류 시 검토함 도착, 다른 메뉴 배지 12초.
-
 ## 지난 기록
 
 이 파일에는 **최근 것만** 둔다. 통째로 읽으면 한 세션 예산을 통째로 쓴다.
@@ -765,7 +702,7 @@
 
 | 기간 | 보관소 |
 |---|---|
-| 2026년 9월 23일까지 | [docs/worklog/2026-09.md](docs/worklog/2026-09.md) |
+| 2026년 9월 24일까지 | [docs/worklog/2026-09.md](docs/worklog/2026-09.md) |
 | 2026년 8월 | [docs/worklog/2026-08.md](docs/worklog/2026-08.md) |
 | 2026년 7월 | [docs/worklog/2026-07.md](docs/worklog/2026-07.md) |
 

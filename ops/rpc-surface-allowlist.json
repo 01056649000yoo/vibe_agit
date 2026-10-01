@@ -31,13 +31,6 @@
       ]
     },
     {
-      "container": "classroom-tools",
-      "설명": "클래스룸툴.",
-      "paths": [
-        "/srv"
-      ]
-    },
-    {
       "container": "jarvis-frontend",
       "설명": "자비스.",
       "paths": [

@@ -25,18 +25,6 @@ supabase.xn--9y2br3k43n.kr {
 	reverse_proxy 127.0.0.1:8100
 }
 
-survival.xn--vz0ba242ncqcba79xhwx.site {
-	encode gzip zstd
-
-	handle /webhook {
-		reverse_proxy 127.0.0.1:9000
-	}
-
-	handle {
-		reverse_proxy 127.0.0.1:8080
-	}
-}
-
 # ── 끄적끄적 아지트 (앱 컨테이너, 2026-07-24 이관) ──
 www.xn--vz0ba242ncqcba79xhwx.site {
 	redir https://xn--vz0ba242ncqcba79xhwx.site{uri} permanent
