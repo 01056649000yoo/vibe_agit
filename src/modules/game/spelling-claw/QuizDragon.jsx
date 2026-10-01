@@ -8,7 +8,7 @@ import './quizDragon.css';
  */
 const QuizDragon = ({ speciesId, writerLevel = 1, readerLevel = 1, line, compact = false, size = 'normal' }) => {
     const dragon = getDragonStage(writerLevel, speciesId);
-    return <div className={`quiz-dragon${compact ? ' is-compact' : ''}${size === 'large' ? ' is-large' : ''}`}>
+    return <div className={`quiz-dragon${compact ? ' is-compact' : ''}${size === 'large' ? ' is-large' : ''}${size === 'hero' ? ' is-hero' : ''}`}>
         <DragonAvatar dragon={dragon} readerLevel={readerLevel} alt={`${dragon.species.shortName} ${dragon.name}`} className="quiz-dragon__avatar" eager />
         <div className="quiz-dragon__talk">
             <small>{dragon.species.shortName} · {dragon.name}</small>

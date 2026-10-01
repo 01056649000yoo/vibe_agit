@@ -10,3 +10,8 @@
 .quiz-dragon.is-large .quiz-dragon__talk small { font-size: var(--ui-text-sm); }
 .quiz-dragon.is-large .quiz-dragon__talk p { padding: 14px 18px; border-radius: var(--ui-radius-lg); font-size: var(--ui-text-xl); }
 @media (max-width: 720px) { .quiz-dragon.is-large .quiz-dragon__avatar { width: 104px; height: 104px; } .quiz-dragon.is-large .quiz-dragon__talk p { font-size: var(--ui-text-lg); } }
+.quiz-dragon.is-hero { flex-direction: column; align-items: stretch; gap: var(--ui-space-3); text-align: center; }
+.quiz-dragon.is-hero .quiz-dragon__avatar { width: min(240px, 100%); height: auto; aspect-ratio: 1; margin: 0 auto; }
+.quiz-dragon.is-hero .quiz-dragon__talk { justify-items: center; gap: 6px; }
+.quiz-dragon.is-hero .quiz-dragon__talk small { font-size: var(--ui-text-md); }
+.quiz-dragon.is-hero .quiz-dragon__talk p { width: 100%; padding: 16px 18px; border-radius: var(--ui-radius-lg); font-size: var(--ui-text-xl); }

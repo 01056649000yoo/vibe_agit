@@ -121,3 +121,9 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(guides, /'spelling-claw': \{/);
     assert.match(guides, /수호룡 상점 아이템 5%/);
 });
+
+test('인형 모델은 브라우저가 묶어 두어 반 전체가 열어도 서버에서 다시 받지 않는다', async () => {
+    const caddy = await readFile('Caddyfile.container', 'utf8');
+    assert.match(caddy, /@clawModels \{\s*path \/assets\/claw\/\*\s*file\s*\}/);
+    assert.match(caddy, /header @clawModels Cache-Control "public, max-age=2592000"/);
+});

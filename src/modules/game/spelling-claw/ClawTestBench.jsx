@@ -105,9 +105,19 @@ export default function ClawTestBench({ activeClass }) {
     const [lastPrize, setLastPrize] = useState('');
     const [book, setBook] = useState({});
     const [thumbs, setThumbs] = useState({});
+    // 뽑기 누적 기록: 아래 띠를 펼쳐 보고, 10초 뒤 저절로 닫힌다. 새로 뽑으면 잠깐 열어 보여 준다.
+    const [history, setHistory] = useState([]);
+    const [recordOpen, setRecordOpen] = useState(false);
+    const [recordHold, setRecordHold] = useState(10000);
     const [perf, setPerf] = useState(null);
     const [consolationGiven, setConsolationGiven] = useState(false);
     const [earnedThisQuiz, setEarnedThisQuiz] = useState(false);
+
+    useEffect(() => {
+        if (!recordOpen) return undefined;
+        const timer = setTimeout(() => setRecordOpen(false), recordHold);
+        return () => clearTimeout(timer);
+    }, [recordOpen, recordHold]);
 
     useEffect(() => {
         if (!classId) return undefined;
@@ -167,7 +177,11 @@ export default function ClawTestBench({ activeClass }) {
         setBook((current) => ({ ...current, [plushId]: (Reflect.get(current, plushId) || 0) + 1 }));
         if (thumb) setThumbs((current) => ({ ...current, [plushId]: thumb }));
         setWinsToday((value) => value + 1);
-        setLastPrize(`${plush?.name || plushId} 인형! 상품: ${prizeText(rollClawPrize({ gifts: SAMPLE_GIFTS, eligibleDecor }))}`);
+        const prize = prizeText(rollClawPrize({ gifts: SAMPLE_GIFTS, eligibleDecor }));
+        setLastPrize(`${plush?.name || plushId} 인형! 상품: ${prize}`);
+        setHistory((rows) => [{ id: `${Date.now()}-${rows.length}`, plushId, name: plush?.name || plushId, prize }, ...rows].slice(0, 30));
+        setRecordHold(6000);
+        setRecordOpen(true);
     };
     const onRoundEnd = (won) => {
         setRoundActive(false);
@@ -227,45 +241,50 @@ export default function ClawTestBench({ activeClass }) {
         </section>
 
         <section className="claw-bench__quiz" aria-label="수호룡의 맞춤법 문제">
-            <div className="claw-bench__host">
-                <QuizDragon speciesId={student.speciesId} writerLevel={student.writerLevel} readerLevel={student.readerLevel} size="large" line={dragonSays} />
-                <div className="claw-bench__score" aria-live="polite">
-                    <strong>{Math.min(index + 1, QUIZ_COUNT)}<small>/{QUIZ_COUNT}</small></strong>
-                    <span>맞힌 문제 <b>{score}</b> · 목표 <b>{passCount}</b></span>
+            <aside className="claw-bench__host">
+                <QuizDragon speciesId={student.speciesId} writerLevel={student.writerLevel} readerLevel={student.readerLevel} size="hero" line={dragonSays} />
+            </aside>
+
+            <div className="claw-bench__main">
+                <div className="claw-bench__progress">
+                    {!finished ? <div className="claw-bench__tags">
+                        <span>{Reflect.get(SPELLING_QUIZ_TYPES, question.type)?.label}</span>
+                        <span>{question.kind === 'write' ? '주관식' : '객관식'}</span>
+                        <span>{Reflect.get(SOURCE_LABELS, question.source)}</span>
+                    </div> : <span />}
+                    <div className="claw-bench__score" aria-live="polite">
+                        <strong>{Math.min(index + 1, QUIZ_COUNT)}<small>/{QUIZ_COUNT}</small></strong>
+                        <span>맞힌 문제 <b>{score}</b> · 목표 <b>{passCount}</b></span>
+                    </div>
                 </div>
+
+                {!finished ? <div className="claw-bench__question">
+                    <p className="claw-bench__prompt"><Highlighted text={question.prompt} part={question.highlight} /></p>
+                    {question.kind === 'choice' ? <div className="claw-bench__choices">
+                        {question.choices.map((choice) => <button key={choice} type="button" onClick={() => submit(choice)}
+                            className={result ? (choice === question.answer ? 'is-right' : choice === picked ? 'is-wrong' : '') : ''}>{choice}</button>)}
+                    </div> : <form className="claw-bench__write" onSubmit={(event) => { event.preventDefault(); submit(typed); }}>
+                        <label><span>{question.hint}</span>
+                            <input value={typed} onChange={(event) => setTyped(event.target.value)} disabled={Boolean(result)} autoComplete="off" autoCapitalize="off" spellCheck={false} />
+                        </label>
+                        <button type="submit" disabled={Boolean(result) || !typed.trim()}>확인</button>
+                    </form>}
+                    {result && <p className={`claw-bench__explain ${result.correct ? 'is-right' : 'is-wrong'}`}>
+                        {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
+                        {question.explanation}
+                    </p>}
+                    <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === QUIZ_COUNT - 1 ? '채점하기' : '다음 문제'}</button>
+                </div> : <div className="claw-bench__question">
+                    <p className="claw-bench__prompt">{score}/{QUIZ_COUNT} 맞혔어요 {score >= passCount ? '🎉' : ''}</p>
+                    <button type="button" className="claw-bench__next" onClick={() => restartQuiz()}>새 문제 10개</button>
+                </div>}
+
+                <footer className="claw-bench__counts">
+                    <span>오늘 코인 <b>{coinsEarned}/{dailyPlays}</b></span>
+                    <span>뽑기 <b>{playsUsed}/{dailyPlays}</b></span>
+                    <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
+                </footer>
             </div>
-
-            {!finished ? <div className="claw-bench__question">
-                <div className="claw-bench__tags">
-                    <span>{Reflect.get(SPELLING_QUIZ_TYPES, question.type)?.label}</span>
-                    <span>{question.kind === 'write' ? '주관식' : '객관식'}</span>
-                    <span>{Reflect.get(SOURCE_LABELS, question.source)}</span>
-                </div>
-                <p className="claw-bench__prompt"><Highlighted text={question.prompt} part={question.highlight} /></p>
-                {question.kind === 'choice' ? <div className="claw-bench__choices">
-                    {question.choices.map((choice) => <button key={choice} type="button" onClick={() => submit(choice)}
-                        className={result ? (choice === question.answer ? 'is-right' : choice === picked ? 'is-wrong' : '') : ''}>{choice}</button>)}
-                </div> : <form className="claw-bench__write" onSubmit={(event) => { event.preventDefault(); submit(typed); }}>
-                    <label><span>{question.hint}</span>
-                        <input value={typed} onChange={(event) => setTyped(event.target.value)} disabled={Boolean(result)} autoComplete="off" autoCapitalize="off" spellCheck={false} />
-                    </label>
-                    <button type="submit" disabled={Boolean(result) || !typed.trim()}>확인</button>
-                </form>}
-                {result && <p className={`claw-bench__explain ${result.correct ? 'is-right' : 'is-wrong'}`}>
-                    {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
-                    {question.explanation}
-                </p>}
-                <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === QUIZ_COUNT - 1 ? '채점하기' : '다음 문제'}</button>
-            </div> : <div className="claw-bench__question">
-                <p className="claw-bench__prompt">{score}/{QUIZ_COUNT} 맞혔어요 {score >= passCount ? '🎉' : ''}</p>
-                <button type="button" className="claw-bench__next" onClick={() => restartQuiz()}>새 문제 10개</button>
-            </div>}
-
-            <footer className="claw-bench__counts">
-                <span>오늘 코인 <b>{coinsEarned}/{dailyPlays}</b></span>
-                <span>뽑기 <b>{playsUsed}/{dailyPlays}</b></span>
-                <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
-            </footer>
         </section>
 
         <section className={`claw-bench__claw${clawOpen ? ' is-open' : ''}`} aria-label="인형뽑기">
@@ -281,12 +300,28 @@ export default function ClawTestBench({ activeClass }) {
                 <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
                 <small>{lastPrize || `문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
             </div>}
-            <div className="claw-bench__book" aria-label="인형 도감">
-                {CLAW_PLUSHES.map((plush) => <div key={plush.id} className={Reflect.get(book, plush.id) ? 'is-got' : ''}>
-                    {Reflect.get(thumbs, plush.id) ? <img src={Reflect.get(thumbs, plush.id)} alt="" /> : <span aria-hidden="true">?</span>}
-                    <small>{Reflect.get(book, plush.id) ? `${plush.name} ×${Reflect.get(book, plush.id)}` : '???'}</small>
-                </div>)}
-            </div>
+        </section>
+
+        <section className={`claw-bench__record${recordOpen ? ' is-open' : ''}`} aria-label="뽑기 기록">
+            <button type="button" className="claw-bench__record-bar" aria-expanded={recordOpen}
+                onClick={() => { setRecordHold(10000); setRecordOpen((open) => !open); }}>
+                <span>🧸 뽑기 기록</span>
+                <span>뽑은 인형 <b>{history.length}</b>개 · 모은 종류 <b>{CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).length}</b>/{CLAW_PLUSHES.length}</span>
+                <span aria-hidden="true">{recordOpen ? '▲ 닫기' : '▼ 펼쳐 보기'}</span>
+            </button>
+            {recordOpen && <div className="claw-bench__record-body">
+                {history.length === 0 ? <p>아직 뽑은 인형이 없어요. 목표를 달성하고 인형을 뽑아 보세요!</p> : <>
+                    <div className="claw-bench__record-plushes">
+                        {CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).map((plush) => <figure key={plush.id}>
+                            {Reflect.get(thumbs, plush.id) && <img src={Reflect.get(thumbs, plush.id)} alt="" />}
+                            <figcaption>{plush.name} ×{Reflect.get(book, plush.id)}</figcaption>
+                        </figure>)}
+                    </div>
+                    <ol className="claw-bench__record-list">
+                        {history.map((row) => <li key={row.id}><span>{row.name}</span><b>{row.prize}</b></li>)}
+                    </ol>
+                </>}
+            </div>}
         </section>
     </div>;
 }
