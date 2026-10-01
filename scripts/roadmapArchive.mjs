@@ -110,7 +110,11 @@ export const planArchive = (roadmap) => {
                 push(`${monthOf([sub.title]) ?? monthOf(sub.lines) ?? 'undated'}.md`, sub.lines);
                 counts.currentSections += 1;
             }
-            const { lead, groups } = splitDatedBullets(intro);
+            // 지난번에 붙인 안내문은 항목이 아니다. 맨 끝 항목에 딸려 함께 옮겨지면(2026-10-01) 줄 수 확인이 깨지므로
+            // 먼저 떼어 두고, 아래에서 한 번만 다시 붙인다.
+            const isArchiveNote = (line) => line.startsWith('> 지난 `현재 위치` 절') || line.startsWith('> [docs/roadmap/BACKLOG');
+            const hadNote = intro.some(isArchiveNote);
+            const { lead, groups } = splitDatedBullets(intro.filter((line) => !isArchiveNote(line)));
             const newest = groups.map((g) => g.date).sort().at(-1);
             const cutoff = newest ? addDays(newest, -KEEP_CURRENT_DAYS) : null;
             const kept = [];
@@ -120,8 +124,11 @@ export const planArchive = (roadmap) => {
                     counts.currentBullets += 1;
                 } else kept.push(...group.lines);
             }
+            const addNote = counts.currentSections || counts.currentBullets || hadNote;
+            // 안내문을 다시 붙일 때는 떼어 낸 자리의 빈 줄이 남지 않게 한다(두 번 돌려도 같은 결과).
+            while (addNote && kept.length && kept.at(-1).trim() === '') kept.pop();
             out.push(title, ...lead, ...kept);
-            if (counts.currentSections || counts.currentBullets) {
+            if (addNote) {
                 out.push('> 지난 `현재 위치` 절·완료 항목은 [docs/roadmap/](docs/roadmap/) 에 달별로 있다. 거기 남은 `[ ]` 는',
                     '> [docs/roadmap/BACKLOG.md](docs/roadmap/BACKLOG.md) 에 모이고, 지금 할 일은 [docs/OPEN_ITEMS.md](docs/OPEN_ITEMS.md) 에 있다.', '');
             }

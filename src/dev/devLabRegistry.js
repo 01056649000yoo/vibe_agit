@@ -24,9 +24,17 @@ const TeacherTourPreview = lazy(() => import('./TeacherTourPreview.jsx'))
 const TeacherLayoutPreview = lazy(() => import('./TeacherLayoutPreview.jsx'))
 const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
 const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.jsx'))
+const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'spelling-claw',
+    icon: '🧸',
+    title: '맞춤법 인형뽑기 (1단계 시제품)',
+    description: '맞춤법 10문제 → 교사 기준 통과 시 코인 → 3D 물리 인형뽑기 → 상품 확률표. 코인·상품은 화면에서만 흉내, 화질·fps 로 태블릿 성능을 본다',
+    Component: SpellingClawPreview,
+  }),
   Object.freeze({
     id: 'teacher-edit-rounds',
     icon: '✏️',

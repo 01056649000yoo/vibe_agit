@@ -1,0 +1,194 @@
+/* 인형뽑기 기계 화면. 오락실 느낌의 기계 색은 3D 장면 안에 있고, 겉 조작부는 디자인 토큰만 쓴다. */
+.claw-stage {
+    position: relative;
+    width: 100%;
+    height: min(72vh, 640px);
+    min-height: 420px;
+    overflow: hidden;
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-ink-strong);
+    touch-action: none;
+    user-select: none;
+}
+
+.claw-stage__canvas {
+    position: absolute;
+    inset: 0;
+}
+
+.claw-stage__canvas canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.claw-stage__loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: var(--ui-space-4);
+    color: var(--ui-surface);
+    font-size: var(--ui-text-md);
+    font-weight: 800;
+    text-align: center;
+}
+
+.claw-stage__hud {
+    position: absolute;
+    top: var(--ui-space-3);
+    left: var(--ui-space-3);
+    right: var(--ui-space-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2);
+    pointer-events: none;
+}
+
+.claw-stage__chip,
+.claw-stage__seg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    box-shadow: var(--ui-shadow-xs);
+    pointer-events: auto;
+}
+
+.claw-stage__chip.is-low {
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+}
+
+.claw-stage__chip--muted {
+    color: var(--ui-ink-muted);
+}
+
+.claw-stage__seg {
+    padding: 3px;
+    gap: 2px;
+}
+
+.claw-stage__seg button {
+    padding: 4px 10px;
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: transparent;
+    color: var(--ui-ink-muted);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.claw-stage__seg button[aria-pressed='true'] {
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+}
+
+.claw-stage__coin {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ui-highlight);
+    box-shadow: inset 0 0 0 2px var(--ui-warning);
+}
+
+.claw-stage__toast {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    box-shadow: var(--ui-shadow-xs);
+}
+
+.claw-stage__controls {
+    position: absolute;
+    left: var(--ui-space-3);
+    right: var(--ui-space-3);
+    bottom: var(--ui-space-3);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    pointer-events: none;
+}
+
+.claw-stage__dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 52px);
+    pointer-events: auto;
+}
+
+.claw-stage__dpad button,
+.claw-stage__go {
+    border: 0;
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    font-weight: 900;
+    box-shadow: var(--ui-shadow-xs);
+    cursor: pointer;
+    touch-action: none;
+}
+
+.claw-stage__dpad button {
+    border-radius: var(--ui-radius-md);
+    font-size: var(--ui-text-lg);
+}
+
+.claw-stage__dpad button:disabled,
+.claw-stage__go:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.claw-stage__dpad .is-u { grid-column: 2; grid-row: 1; }
+.claw-stage__dpad .is-l { grid-column: 1; grid-row: 2; }
+.claw-stage__dpad .is-r { grid-column: 3; grid-row: 2; }
+.claw-stage__dpad .is-d { grid-column: 2; grid-row: 3; }
+
+.claw-stage__go {
+    display: grid;
+    place-items: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+    font-size: var(--ui-text-lg);
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: auto;
+}
+
+.claw-stage__go small {
+    font-size: var(--ui-text-xs);
+}
+
+.claw-stage__dpad button:focus-visible,
+.claw-stage__go:focus-visible,
+.claw-stage__seg button:focus-visible,
+.claw-stage__chip:focus-visible {
+    outline: none;
+    box-shadow: var(--ui-focus-ring);
+}
+
+@media (max-width: 620px) {
+    .claw-stage { height: 70vh; min-height: 380px; }
+    .claw-stage__dpad { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); }
+    .claw-stage__go { width: 96px; height: 96px; }
+}
