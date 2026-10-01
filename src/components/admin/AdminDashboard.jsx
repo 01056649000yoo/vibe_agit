@@ -21,8 +21,6 @@ import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
 // 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
 const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingPromotionPanel'));
-// 맞춤법 인형뽑기 시험대(2026-10-01, 1단계). 관리자만 본다 — 코인·상품·포인트는 화면에서만 흉내 내고 DB 를 건드리지 않는다.
-const ClawTestBench = React.lazy(() => import('../../modules/game/spelling-claw/ClawTestBench.jsx'));
 const AdminNeighborAgitPanel = React.lazy(() => import('./AdminNeighborAgitPanel'));
 // 우리반 아지트 공개 단계는 관리자만 쓰므로 교사 화면이 아니라 여기(기능 공개)에 둔다.
 const ClassAgitRolloutManager = React.lazy(() => import('../../modules/class-agit/teacher/RolloutManager.jsx'));
@@ -60,7 +58,6 @@ const TAB_GROUPS = [
         tabs: [
             { id: 'vocab', label: '어휘 V2' },
             { id: 'spelling', label: '맞춤법 승격' },
-            { id: 'claw-test', label: '🧸 인형뽑기 시험' },
             { id: 'lab', label: '글쓰기 연구소' }
         ]
     },
@@ -888,13 +885,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             <AdminSpellingPromotionPanel />
                         </React.Suspense>
                     </KeepAlivePanel>
-
-                    {/* 3D·물리 엔진이 돌므로 다른 탭으로 가면 내린다(KeepAlive 하지 않음). */}
-                    {currentTab === 'claw-test' && (
-                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>인형뽑기 시험대를 불러오는 중입니다...</div>}>
-                            <ClawTestBench />
-                        </React.Suspense>
-                    )}
 
                     <KeepAlivePanel
                         active={currentTab === 'backup'}

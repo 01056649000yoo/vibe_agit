@@ -47,6 +47,7 @@
  *   오늘 들려줄 글이 없을 때 수호룡이 하루 한 가지 보여 주는 활용 안내. 활성 모듈의 선언만 추천한다.
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [available] false면 코드·데이터는 보존하되 교사·학생 UI에서 숨김
+ * @property {boolean}  [adminOnly] true면 관리자 시험용 — 교사 놀이터 관리 화면에서 관리자에게만 보이고 학생에게는 어떤 설정으로도 안 보임
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
  * @property {boolean}  [toggleable] false면 학급 ON/OFF 대신 자체 조건(예: 미션 생성)으로 활성화
  * @property {string[]} [legacyFields] 기존 노출 상태를 초기값으로 읽을 classes 컬럼

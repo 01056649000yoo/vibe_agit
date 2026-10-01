@@ -72,12 +72,24 @@ test('포켓몬 모델·외부 CDN 을 쓰지 않고, 3D 엔진은 게임을 열
     assert.match(engine, /if \(roundActive\) \{\s*roundWins\.push/);
 });
 
-test('관리자 화면에서만 시험한다 — 열 때만 받고, 다른 탭으로 가면 내린다', async () => {
+test('교사 놀이터에서 관리자만 시험한다 — 학생에게는 어떤 설정으로도 안 보인다', async () => {
+    // 관리자 화면 탭은 놀이터 메뉴로 옮기며 뺐다(2026-10-01) — 들어가는 곳을 하나로.
     const dashboard = await readFile('src/components/admin/AdminDashboard.jsx', 'utf8');
-    assert.match(dashboard, /React\.lazy\(\(\) => import\('\.\.\/\.\.\/modules\/game\/spelling-claw\/ClawTestBench\.jsx'\)\)/);
-    assert.match(dashboard, /\{ id: 'claw-test', label: '🧸 인형뽑기 시험' \}/);
-    assert.match(dashboard, /\{currentTab === 'claw-test' && \(/, '3D 엔진이 숨은 탭에서 계속 돌면 안 됩니다(KeepAlive 금지).');
-    // 학생·교사 화면(놀이터 레지스트리)에는 아직 등록하지 않는다.
-    const registry = await readFile('src/modules/registry.js', 'utf8');
-    assert.doesNotMatch(registry, /spelling-claw/);
+    assert.doesNotMatch(dashboard, /ClawTestBench|claw-test/);
+    // 놀이터에는 관리자만 — adminOnly 모듈은 학생 활성 목록에 어떤 설정으로도 안 들어간다.
+    const [registry, cards, manifest] = await Promise.all([
+        readFile('src/modules/registry.js', 'utf8'),
+        readFile('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/manifest.js', 'utf8')
+    ]);
+    assert.match(manifest, /adminOnly: true/);
+    assert.match(manifest, /audience: 'teacher'/);
+    assert.match(registry, /if \(m\.adminOnly\) return false;/);
+    assert.match(cards, /!module\.adminOnly \|\| isAdmin/);
+    const { getEnabledModules } = await import('../src/modules/registry.js').catch(() => ({}));
+    if (getEnabledModules) {
+        for (const audience of ['student', 'teacher']) {
+            assert.ok(!getEnabledModules(['__configured__', 'spelling-claw'], audience).some((m) => m.id === 'spelling-claw'));
+        }
+    }
 });

@@ -170,7 +170,14 @@ const navStyle = (active, isMobile) => ({
     boxShadow: active ? '0 6px 18px rgba(15,23,42,.06)' : 'none'
 });
 
-const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
+const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled, isAdmin = false }) => {
+    // 관리자 시험 모듈(adminOnly)은 관리자에게만 메뉴로 보인다. 학생 노출 스위치는 달지 않는다.
+    const modules = useMemo(
+        () => TEACHER_GAME_MODULES.filter(({ module }) => !module.adminOnly || isAdmin),
+        [isAdmin]
+    );
+    // 학생 노출 수·빠른 설정은 학생에게 보일 수 있는 콘텐츠만 센다.
+    const studentModules = useMemo(() => modules.filter(({ module }) => !module.adminOnly), [modules]);
     const classId = activeClass?.id;
     const [selectedId, setSelectedId] = useState('overview');
     const [enabledIds, setEnabledIds] = useState([]);
@@ -199,18 +206,18 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
 
     useEffect(() => {
         if (navigationTarget?.tab !== 'playground' || !navigationTarget.requestId) return;
-        if (TEACHER_GAME_MODULES.some(({ module }) => module.id === navigationTarget.module)) {
+        if (modules.some(({ module }) => module.id === navigationTarget.module)) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedId(navigationTarget.module);
         }
         onNavigationHandled?.(navigationTarget.requestId);
-    }, [navigationTarget, onNavigationHandled]);
+    }, [navigationTarget, onNavigationHandled, modules]);
 
     const selected = useMemo(
-        () => TEACHER_GAME_MODULES.find(({ module }) => module.id === selectedId) || null,
-        [selectedId]
+        () => modules.find(({ module }) => module.id === selectedId) || null,
+        [selectedId, modules]
     );
-    const enabledModules = TEACHER_GAME_MODULES.filter(({ module }) => enabledIds.includes(module.id)).map(({ module }) => module);
+    const enabledModules = studentModules.filter(({ module }) => enabledIds.includes(module.id)).map(({ module }) => module);
 
     const handleToggle = async (moduleId) => {
         if (loading || loadError || savingModuleId) return;
@@ -238,9 +245,9 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                 <button type="button" onClick={() => setSelectedId('overview')} style={navStyle(selectedId === 'overview', isMobile)}>
                     <span style={{ fontSize: '1.25rem' }}>🧭</span>
                     <span style={{ flex: 1, whiteSpace: 'nowrap', textAlign: 'left', fontWeight: '950' }}>전체 현황</span>
-                    <span style={{ color: '#64748B', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{enabledModules.length}/{TEACHER_GAME_MODULES.length}</span>
+                    <span style={{ color: '#64748B', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{enabledModules.length}/{studentModules.length}</span>
                 </button>
-                {TEACHER_GAME_MODULES.map(({ module }) => {
+                {modules.map(({ module }) => {
                     const isOn = enabledIds.includes(module.id);
                     return (
                         /*
@@ -285,19 +292,25 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                                 </div>
                                 <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.74rem' }}>{selected.module.description}</p>
                             </div>
-                            <FeatureAvailabilitySwitch
-                                checked={enabledIds.includes(selected.module.id)}
-                                loading={savingModuleId === selected.module.id}
-                                disabled={Boolean(savingModuleId)}
-                                onChange={() => handleToggle(selected.module.id)}
-                                enabledLabel={`${selected.module.name} 사용 중`}
-                                disabledLabel={`${selected.module.name} 사용 안 함`}
-                                enabledDescription="학생 놀이터에 이 콘텐츠가 보입니다."
-                                disabledDescription="기존 기록은 보관하고 학생 화면에서 숨깁니다."
-                                ariaLabel={`학생 ${selected.module.name} 사용`}
-                            />
+                            {selected.module.adminOnly ? (
+                                <span style={{ padding: '6px 12px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontSize: '0.8rem', fontWeight: '900' }}>
+                                    관리자 시험 중 · 학생에게 보이지 않아요
+                                </span>
+                            ) : (
+                                <FeatureAvailabilitySwitch
+                                    checked={enabledIds.includes(selected.module.id)}
+                                    loading={savingModuleId === selected.module.id}
+                                    disabled={Boolean(savingModuleId)}
+                                    onChange={() => handleToggle(selected.module.id)}
+                                    enabledLabel={`${selected.module.name} 사용 중`}
+                                    disabledLabel={`${selected.module.name} 사용 안 함`}
+                                    enabledDescription="학생 놀이터에 이 콘텐츠가 보입니다."
+                                    disabledDescription="기존 기록은 보관하고 학생 화면에서 숨깁니다."
+                                    ariaLabel={`학생 ${selected.module.name} 사용`}
+                                />
+                            )}
                         </div>
-                        <details style={{ marginBottom: '11px', border: '1px solid #FDE68A', borderRadius: '13px', background: '#FFFDF5' }}>
+                        {!selected.module.adminOnly && <details style={{ marginBottom: '11px', border: '1px solid #FDE68A', borderRadius: '13px', background: '#FFFDF5' }}>
                             <summary style={{ padding: '9px 11px', color: '#92400E', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '900' }}>
                                 학생 화면 미리보기 · 필요할 때 펼치기
                             </summary>
@@ -309,7 +322,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                                     disabledPreviewModule={enabledIds.includes(selected.module.id) ? null : selected.module}
                                 />
                             </div>
-                        </details>
+                        </details>}
                         <div>
                             <ModuleErrorBoundary key={selected.module.id} moduleName={selected.module.name}>
                                 <Suspense fallback={<div style={{ padding: '50px', textAlign: 'center', color: '#94A3B8' }}>{selected.module.icon} 세부 설정을 불러오는 중입니다...</div>}>
@@ -320,7 +333,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                     </>
                 ) : (
                     <Overview
-                        modules={TEACHER_GAME_MODULES}
+                        modules={studentModules}
                         enabledIds={enabledIds}
                         savingModuleId={savingModuleId}
                         onToggle={handleToggle}

@@ -25,6 +25,7 @@ import { neighborAgitManifest } from './community/neighbor-agit/manifest';
 import { labActivitiesManifest } from './writing/lab-activities/manifest';
 import { classAgitManifest } from './class-agit/manifest';
 import { classTimetableManifest } from './tool/class-timetable/manifest';
+import { spellingClawManifest } from './game/spelling-claw/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -45,6 +46,7 @@ const manifests = [
   labActivitiesManifest, // src/modules/writing/lab-activities/
   classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
   classTimetableManifest, // src/modules/tool/class-timetable/ (new:module, 공개 전)
+  spellingClawManifest, // src/modules/game/spelling-claw/ (관리자만 시험, 학생 비노출)
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)
@@ -112,6 +114,8 @@ export function getEnabledModules(enabledIds, audience) {
   return manifests.filter((m) => {
     // 보관 중인 모듈은 기존 학급 설정에 ON 값이 남아 있어도 어느 화면에도 노출하지 않는다.
     if (m.available === false) return false;
+    // 관리자 시험 모듈은 학급 설정에 켜져 있어도 학생·교사 활성 목록에 넣지 않는다(교사 놀이터 관리 화면에서 관리자만 연다).
+    if (m.adminOnly) return false;
     if (m.audience !== 'both' && m.audience !== audience) return false;
     if (m.core) return true;
     return list ? list.includes(m.id) : !!m.defaultEnabled;

@@ -7,7 +7,7 @@ import TeacherPageTitle from './TeacherPageTitle';
  *
  * manifest.teacherEntry를 등록한 게임은 같은 카드 그리드에 자동으로 추가된다.
  */
-const GameManager = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
+const GameManager = ({ activeClass, isMobile, navigationTarget, onNavigationHandled, isAdmin = false }) => {
     if (!activeClass) return <div style={{ padding: '60px', textAlign: 'center', color: '#7F8C8D' }}>학급을 먼저 선택해주세요.</div>;
 
     return (
@@ -21,6 +21,7 @@ const GameManager = ({ activeClass, isMobile, navigationTarget, onNavigationHand
                 isMobile={isMobile}
                 navigationTarget={navigationTarget}
                 onNavigationHandled={onNavigationHandled}
+                isAdmin={isAdmin}
             />
         </div>
     );

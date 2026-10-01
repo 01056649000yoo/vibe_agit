@@ -704,6 +704,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             isMobile={isMobile}
                             navigationTarget={workspaceTarget}
                             onNavigationHandled={handleWorkspaceNavigationHandled}
+                            isAdmin={isAdmin}
                         />
                     ) : visibleTab === 'tools' ? (
                         <TeachingToolsHub
