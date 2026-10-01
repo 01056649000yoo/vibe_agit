@@ -179,6 +179,10 @@ test('학생 로그인 코드는 localStorage 세션에 보관하지 않는다',
 
 test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
     assert.match(caddy, /Content-Security-Policy/);
+    // 2026-10-01: 수호룡의 인형뽑기 물리 엔진(Rapier)이 WebAssembly 라 'wasm-unsafe-eval' 만 연다.
+    //   이것은 WebAssembly 컴파일만 허락한다. 자바스크립트 eval 을 여는 'unsafe-eval' 은 계속 막는다.
+    assert.equal(caddy.match(/script-src ([^;"]+)/)?.[1], "'self' 'wasm-unsafe-eval' https://accounts.google.com");
+    assert.doesNotMatch(caddy, /'unsafe-eval'/);
     assert.match(caddy, /Permissions-Policy/);
     assert.match(caddy, /frame-ancestors 'none'/);
     const frameSources = caddy.match(/frame-src ([^;"]+)/)?.[1];
