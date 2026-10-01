@@ -72,3 +72,10 @@
     .claw-bench__tools { margin-left: 0; }
 }
 .claw-bench__host .quiz-dragon__talk p { background: var(--ui-surface); box-shadow: var(--ui-shadow-xs); }
+.claw-bench__notice-preview { display: grid; gap: 6px; padding: var(--ui-space-3) var(--ui-space-4); border: 2px dashed var(--ui-border-strong); border-radius: var(--ui-radius-lg); background: var(--ui-surface); }
+.claw-bench__notice-preview small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 800; }
+.claw-bench__notice-preview div { display: flex; align-items: center; gap: var(--ui-space-3); }
+.claw-bench__notice-preview span { font-size: var(--ui-text-2xl); }
+.claw-bench__notice-preview p { flex: 1; display: grid; gap: 2px; margin: 0; font-size: var(--ui-text-md); }
+.claw-bench__notice-preview b { font-size: var(--ui-text-lg); }
+.claw-bench__notice-preview button { padding: 8px 14px; border: 0; border-radius: var(--ui-radius-md); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-weight: 900; cursor: pointer; }

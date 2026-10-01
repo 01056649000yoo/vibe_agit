@@ -17,5 +17,21 @@ export const spellingClawManifest = {
   defaultEnabled: false,
   performance: { home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 0 },
   teacherEntry: () => import('./ClawTestBench'),
-  management: { order: 90, badge: '관리자 시험' }
+  management: { order: 90, badge: '관리자 시험' },
+  /*
+   * 학생 홈 활동 알림(2026-10-02 선생님 요청). 하루 기회를 다 쓰고 하나도 못 뽑아 최소 포인트를 받으면 알린다.
+   * 2단계 서버가 포인트를 줄 때 **같은 트랜잭션에서** notification_emit_v1 로 이 eventType 을 남긴다
+   * (event_key 는 학생·날짜로 하루 한 번). payload: { points, plays }. 홈은 폴링 없이 다음 접속·새로고침 때 받는다.
+   */
+  notifications: [
+    {
+      eventType: 'spelling-claw.consolation_awarded',
+      icon: '🐉',
+      tone: 'points',
+      title: '수호룡이 포인트를 줬어요',
+      message: (payload) => `오늘 인형뽑기 기회 ${Number(payload?.plays) || ''}번을 다 썼어요. 맞춤법 문제를 푼 상으로 ${Number(payload?.points) || 0}P를 받았어요.`.replace('기회 번', '기회'),
+      action: 'confirm',
+      actionLabel: '확인했어요'
+    }
+  ]
 };

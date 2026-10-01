@@ -127,3 +127,12 @@ test('인형 모델은 브라우저가 묶어 두어 반 전체가 열어도 서
     assert.match(caddy, /@clawModels \{\s*path \/assets\/claw\/\*\s*file\s*\}/);
     assert.match(caddy, /header @clawModels Cache-Control "public, max-age=2592000"/);
 });
+
+test('하루 기회를 다 쓰고 최소 포인트를 받으면 학생 홈 알림 계약이 있다', async () => {
+    const { spellingClawManifest } = await import('../src/modules/game/spelling-claw/manifest.js');
+    const notice = spellingClawManifest.notifications.find((item) => item.eventType === 'spelling-claw.consolation_awarded');
+    assert.ok(notice, '최소 포인트 알림 정의가 없습니다.');
+    assert.equal(notice.message({ points: 20, plays: 3 }), '오늘 인형뽑기 기회 3번을 다 썼어요. 맞춤법 문제를 푼 상으로 20P를 받았어요.');
+    const readme = await readFile('src/modules/game/spelling-claw/README.md', 'utf8');
+    assert.match(readme, /같은 트랜잭션에서 `notification_emit_v1`/);
+});

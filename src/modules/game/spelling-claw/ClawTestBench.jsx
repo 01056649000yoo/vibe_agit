@@ -13,6 +13,7 @@ import { getDragonStage } from '../dragon/presentation';
 import { getReaderLevel, getWriterLevel } from '../../../constants/writerLevels';
 import { getElementarySpellingEntries } from '../../writing/tools/spelling-lookup/elementarySpellingEntries';
 import { supabase } from '../../../lib/supabaseClient';
+import { resolveActivityNotification } from '../../notifications/registry';
 import './clawTestBench.css';
 
 /*
@@ -112,6 +113,8 @@ export default function ClawTestBench({ activeClass }) {
     const [perf, setPerf] = useState(null);
     const [consolationGiven, setConsolationGiven] = useState(false);
     const [earnedThisQuiz, setEarnedThisQuiz] = useState(false);
+    // 시험대에서만: 최소 포인트를 받을 때 학생 홈에 갈 알림이 어떻게 보일지 미리 보여 준다(2단계에서 서버가 실제로 보낸다).
+    const [notificationPreview, setNotificationPreview] = useState(null);
 
     useEffect(() => {
         if (!recordOpen) return undefined;
@@ -191,10 +194,14 @@ export default function ClawTestBench({ activeClass }) {
         if (used >= dailyPlays && winsToday + won.length === 0 && !consolationGiven) {
             setConsolationGiven(true);
             setLastPrize(`오늘 기회를 다 썼어요 — 문제를 풀었으니 ${minPoints}P를 받아요`);
+            setNotificationPreview(resolveActivityNotification({
+                event_type: 'spelling-claw.consolation_awarded', payload: { points: minPoints, plays: dailyPlays }
+            }));
         }
     };
     const resetDay = () => {
         setCoins(0); setCoinsEarned(0); setPlaysUsed(0); setWinsToday(0); setConsolationGiven(false); setLastPrize(''); setRoundActive(false);
+        setNotificationPreview(null);
     };
     const closeIntro = () => { markIntroSeen(); setIntroOpen(false); };
 
@@ -301,6 +308,15 @@ export default function ClawTestBench({ activeClass }) {
                 <small>{lastPrize || `문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
             </div>}
         </section>
+
+        {notificationPreview && <section className="claw-bench__notice-preview" aria-label="학생 홈 알림 미리보기">
+            <small>학생 홈 활동 알림으로 이렇게 가요(시험 중이라 실제로는 보내지 않아요)</small>
+            <div>
+                <span aria-hidden="true">{notificationPreview.icon}</span>
+                <p><b>{notificationPreview.title}</b>{notificationPreview.message}</p>
+                <button type="button" onClick={() => setNotificationPreview(null)}>{notificationPreview.actionLabel}</button>
+            </div>
+        </section>}
 
         <section className={`claw-bench__record${recordOpen ? ' is-open' : ''}`} aria-label="뽑기 기록">
             <button type="button" className="claw-bench__record-bar" aria-expanded={recordOpen}
