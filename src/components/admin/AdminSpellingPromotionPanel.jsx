@@ -4,11 +4,11 @@ import { supabase } from '../../lib/supabaseClient';
 import { spellingLearningApi } from '../../modules/writing/spelling-learning/api';
 import './AdminSpellingPromotionPanel.css';
 
-const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], common_entries: [] };
+const EMPTY_DATA = { latest_run: null, candidate_week: null, weekly_candidates: [], auto_closed: [], auto_closed_count: 0, common_entries: [] };
 const EMPTY_INTAKE = {
     week_start: null, source_since_at: null, current_status: null, can_run: false,
     is_resuming: false, current_total_count: 0, current_done_count: 0,
-    ai_finding_count: 0, search_count: 0, teacher_entry_count: 0
+    ai_finding_count: 0, priority_ai_finding_count: 0, reused_count: 0, search_count: 0, teacher_entry_count: 0
 };
 
 /**
@@ -55,13 +55,19 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
 const normalize = (value) => String(value || '').normalize('NFC').trim();
 const formatDate = (value) => value ? DATE_FORMATTER.format(new Date(value)) : '기록 없음';
 const formatDateTime = (value) => value ? DATE_TIME_FORMATTER.format(new Date(value)) : '아직 없음';
+/*
+ * 자동으로 뺀 까닭(2026-10-01, `20261362`). 서버가 정하고 화면은 이름만 붙인다.
+ * 사람이 고를 것만 남기려고 AI `제외 권장`·이미 공통 자료인 표현·같은 표현의 옛 주 후보는 저절로 뺀다.
+ */
+const AUTO_REASON_LABELS = { ai_reject: 'AI 제외 권장', already_common: '이미 공통 자료', duplicate: '같은 표현 중복' };
 const verdictLabel = (value) => value === 'recommend' ? '반영 권장' : value === 'caution' ? '주의 검토' : '제외 권장';
 const sourceLabel = (value) => value === 'ai' ? '학생 AI 검사' : value === 'search' ? '학생 검색' : value === 'teacher' ? '교사 학급 자료' : value;
 
 /** 매주 자동 검수된 맞춤법 후보 중 관리자가 고른 것만 모든 학급의 공통 자료로 게시한다. */
 const AdminSpellingPromotionPanel = () => {
     const [activeView, setActiveView] = useState('candidates');
-    const [verdictFilter, setVerdictFilter] = useState('recommend');
+    // 기본은 `먼저 볼 것`(두 학급 이상·세 번 이상, 기준은 서버 spelling_weekly_item_is_priority).
+    const [verdictFilter, setVerdictFilter] = useState('priority');
     const [commonFilter, setCommonFilter] = useState('enabled');
     // 검수 결과와 공통 자료는 각각 수백 건까지 늘어난다. 목록을 눈으로 훑는 대신 찾아 들어간다.
     const [candidateQuery, setCandidateQuery] = useState('');
@@ -337,22 +343,18 @@ const AdminSpellingPromotionPanel = () => {
     const commonEntries = data.common_entries || [];
     const enabledCommonCount = commonEntries.filter((entry) => entry.status === 'approved').length;
     const disabledCommonCount = commonEntries.length - enabledCommonCount;
+    const autoClosed = useMemo(() => data.auto_closed || [], [data.auto_closed]);
     /*
-     * 반영 권장이 비었는데 기본 화면이 거기에 머무르면 **일감이 없는 것처럼** 보인다.
-     * 실제로는 주의 검토에 대부분이 기다린다(2026-08-28: 권장 0 · 주의 99 · 제외 28).
-     * 관리자가 손으로 탭을 옮기지 않아도 볼 것이 보이게 한다.
+     * 관리자는 **넣을지 말지 정해야 하는 것만** 본다(2026-10-01 요청). `제외 권장`·이미 공통 자료인 것·
+     * 중복은 서버가 저절로 빼서 여기 오지 않는다. 남은 것 중 한 학급·한두 번뿐인 표현은 대개 한 아이의
+     * 일회성 실수라 `나중에 볼 것` 으로 접어 둔다 — 지우지 않고, 다른 학급에서 또 나오면 다시 앞으로 온다.
      */
-    useEffect(() => {
-        if (verdictFilter !== 'recommend') return;
-        if (weeklyCandidates.length === 0) return;
-        if (weeklyCandidates.some((item) => item.ai_verdict === 'recommend')) return;
-        setVerdictFilter('all');
-    }, [verdictFilter, weeklyCandidates]);
-
+    const isPriority = (item) => item.is_priority === true || item.ai_verdict === 'recommend';
     const verdictCounts = useMemo(() => ({
+        priority: weeklyCandidates.filter(isPriority).length,
+        later: weeklyCandidates.filter((item) => !isPriority(item)).length,
         recommend: weeklyCandidates.filter((item) => item.ai_verdict === 'recommend').length,
-        caution: weeklyCandidates.filter((item) => item.ai_verdict === 'caution').length,
-        reject: weeklyCandidates.filter((item) => item.ai_verdict === 'reject').length
+        caution: weeklyCandidates.filter((item) => item.ai_verdict === 'caution').length
     }), [weeklyCandidates]);
     /*
      * 찾기는 **띄어쓰기를 무시한다.** 이 화면의 자료 절반이 띄어쓰기 교정이라
@@ -369,7 +371,9 @@ const AdminSpellingPromotionPanel = () => {
     };
 
     const visibleCandidates = weeklyCandidates.filter((item) => (
-        (verdictFilter === 'all' || item.ai_verdict === verdictFilter)
+        (verdictFilter === 'all'
+            || (verdictFilter === 'priority' && isPriority(item))
+            || (verdictFilter === 'later' && !isPriority(item)))
         && matchesQuery(candidateQuery, item.expression, item.ai_correct_expression, item.source_correction, item.ai_label)
     ));
     const visibleCommonEntries = commonEntries.filter((entry) => (
@@ -482,6 +486,21 @@ const AdminSpellingPromotionPanel = () => {
         }
     };
 
+    const restoreCandidate = async (row) => {
+        setLoading(true);
+        setNotice(null);
+        try {
+            const { error } = await supabase.rpc('admin_restore_weekly_spelling_entry_v1', { p_item_id: row.id });
+            if (error) throw error;
+            await load({ keepNotice: true });
+            setNotice({ tone: 'success', text: `'${row.expression}' 을(를) 다시 검수 목록에 올렸습니다. 이제 저절로 빠지지 않습니다.` });
+        } catch (error) {
+            setNotice({ tone: 'error', text: error.message || '되돌리지 못했습니다.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const rejectCandidate = async (row) => {
         setLoading(true);
         setNotice(null);
@@ -533,7 +552,7 @@ const AdminSpellingPromotionPanel = () => {
                 <p>AI 검사·학생 검색·교사 학급 자료가 계속 쌓입니다. 쌓인 양을 보고 관리자가 AI 검수를 돌리면 기존 자료와 겹치는 것을 먼저 뺀 뒤 검수하며, 그중 관리자가 고른 것만 모든 학급에 적용합니다.</p>
             </div>
             <div className="admin-spelling__metrics" aria-label="맞춤법 공통 자료 현황">
-                <Metric label="검토 대기" value={weeklyCandidates.length} detail={`권장 ${verdictCounts.recommend} · 주의 ${verdictCounts.caution}`} tone={weeklyCandidates.length ? 'warning' : 'neutral'} />
+                <Metric label="먼저 볼 것" value={verdictCounts.priority} detail={`나중에 볼 것 ${verdictCounts.later} · 자동으로 뺀 것 ${data.auto_closed_count || 0}`} tone={verdictCounts.priority ? 'warning' : 'neutral'} />
                 <Metric label="전체 적용 중" value={enabledCommonCount} detail="모든 학급" tone="active" />
                 <Metric label="적용 중지" value={disabledCommonCount} detail="되돌릴 수 있음" tone="neutral" />
             </div>
@@ -544,7 +563,7 @@ const AdminSpellingPromotionPanel = () => {
 
         <div className="admin-spelling__view-tabs" role="tablist" aria-label="맞춤법 공통 자료 관리 화면">
             <button type="button" role="tab" aria-selected={activeView === 'candidates'} aria-controls="spelling-candidate-panel" className={activeView === 'candidates' ? 'is-active' : ''} onClick={() => selectView('candidates')}>
-                이번 주 검수 결과 <b>{weeklyCandidates.length}</b>
+                검수 결과 <b>{verdictCounts.priority}</b>
             </button>
             <button type="button" role="tab" aria-selected={activeView === 'common'} aria-controls="spelling-common-panel" className={activeView === 'common' ? 'is-active' : ''} onClick={() => selectView('common')}>
                 전체 공통 자료 <b>{commonEntries.length}</b>
@@ -584,10 +603,10 @@ const AdminSpellingPromotionPanel = () => {
             <RunSummary run={latestRun} candidateWeek={data.candidate_week} />
             <div className="admin-spelling__source-toolbar">
                 <div className="admin-spelling__source-tabs" role="tablist" aria-label="AI 검수 결과 필터">
-                    <FilterButton active={verdictFilter === 'recommend'} onClick={() => setVerdictFilter('recommend')}>반영 권장 {verdictCounts.recommend}</FilterButton>
-                    <FilterButton active={verdictFilter === 'caution'} onClick={() => setVerdictFilter('caution')}>주의 검토 {verdictCounts.caution}</FilterButton>
-                    <FilterButton active={verdictFilter === 'reject'} onClick={() => setVerdictFilter('reject')}>제외 권장 {verdictCounts.reject}</FilterButton>
-                    <FilterButton active={verdictFilter === 'all'} onClick={() => setVerdictFilter('all')}>전체 {weeklyCandidates.length}</FilterButton>
+                    <FilterButton active={verdictFilter === 'priority'} onClick={() => setVerdictFilter('priority')}>먼저 볼 것 {verdictCounts.priority}</FilterButton>
+                    <FilterButton active={verdictFilter === 'later'} onClick={() => setVerdictFilter('later')}>나중에 볼 것 {verdictCounts.later}</FilterButton>
+                    <FilterButton active={verdictFilter === 'all'} onClick={() => setVerdictFilter('all')}>남은 것 전체 {weeklyCandidates.length}</FilterButton>
+                    <FilterButton active={verdictFilter === 'auto'} onClick={() => setVerdictFilter('auto')}>자동으로 뺀 것 {data.auto_closed_count || 0}</FilterButton>
                 </div>
             </div>
 
@@ -599,19 +618,24 @@ const AdminSpellingPromotionPanel = () => {
                 totalCount={weeklyCandidates.length}
             />
 
-            <p className="admin-spelling__source-guide">정확히 같은 기본·공통 자료는 코드가 먼저 제외합니다. AI에는 새 후보와 유사 자료 최대 3개만 전달하며, 이전에 검수한 같은 후보는 저장된 결과를 재사용합니다.</p>
-            <CandidateList
+            <p className="admin-spelling__source-guide">
+                {verdictFilter === 'auto'
+                    ? 'AI가 제외를 권한 것, 이미 공통 자료인 것, 같은 표현이 여러 주에 있던 것은 저절로 뺍니다. 되돌리면 다시 빠지지 않습니다.'
+                    : verdictFilter === 'later'
+                        ? '한 학급에서 한두 번만 나온 표현입니다. 지우지 않고 접어 두며, 다른 학급에서도 나오면 먼저 볼 것으로 올라옵니다.'
+                        : '두 학급 이상이거나 세 번 이상 나온 표현입니다. 넣을지 말지만 골라 주세요. 같은 기본·공통 자료는 미리 빠져 있고, AI에는 새 후보와 유사 자료 최대 3개만 보냅니다.'}
+            </p>
+            {verdictFilter === 'auto' ? <AutoClosedList
+                rows={autoClosed.filter((item) => matchesQuery(candidateQuery, item.expression, item.ai_correct_expression, item.source_correction))}
+                loading={loading} onRestore={restoreCandidate}
+            /> : <CandidateList
                 rows={visibleCandidates} loading={loading}
                 onReview={startCandidateReview} onReject={rejectCandidate}
-                emptyTitle={verdictFilter === 'recommend' && weeklyCandidates.length > 0
-                    ? '여러 학급에서 되풀이된 표현이 아직 없어요'
+                emptyTitle={verdictFilter === 'priority' ? '지금 고를 것이 없어요' : undefined}
+                emptyDescription={verdictFilter === 'priority' && verdictCounts.later > 0
+                    ? `나중에 볼 것 ${verdictCounts.later}건은 한 학급에서 한두 번 나온 표현이에요. 시간 날 때 훑어보셔도 됩니다.`
                     : undefined}
-                emptyDescription={verdictFilter === 'recommend' && weeklyCandidates.length > 0
-                    ? `반영 권장은 두 학급 이상에서 나온 표현만 받습니다. `
-                        + `주의 검토 ${verdictCounts.caution}건과 제외 권장 ${verdictCounts.reject}건은 `
-                        + '내용을 보고 직접 공통 자료로 올릴 수 있어요.'
-                    : undefined}
-            />
+            />}
         </section>}
 
         {activeView === 'common' && <section id="spelling-common-panel" className="admin-spelling__panel" role="tabpanel">
@@ -694,7 +718,9 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onRestart, 
                 {intake.source_since_at
                     ? `지난 검수(${formatDateTime(intake.source_since_at)}) 이후 쌓인 자료입니다.`
                     : '아직 한 번도 검수하지 않아 지금까지 쌓인 전부가 대상입니다.'}
-                {' '}겹치는 자료는 AI 에 보내기 전에 코드가 먼저 뺍니다.
+                {' '}겹치는 자료는 AI 에 보내기 전에 코드가 먼저 뺍니다. AI 는 여러 학급·자주 나온 표현부터 한 번에 200개까지 봅니다
+                {intake.priority_ai_finding_count ? ` (학생 AI 검사 중 먼저 볼 것 ${intake.priority_ai_finding_count}개)` : ''}
+                {intake.reused_count ? `, 이미 본 표현 ${intake.reused_count}개는 저장된 결과를 다시 씁니다` : ''}.
             </p>
             <div className="admin-spelling__intake-buttons">
                 <Button onClick={onRun} disabled={running || loading || !intake.can_run || total === 0}>
@@ -819,6 +845,31 @@ const ReviewEditor = ({ target, draft, setDraft, loading, onCancel, onGenerate, 
 const DraftInput = ({ label, value, onChange }) => <label className="admin-spelling__field">
     {label}<input value={value} maxLength={40} onChange={(event) => onChange(event.target.value)} />
 </label>;
+
+/** 자동으로 뺀 후보. 까닭을 보여 주고 되돌릴 수 있게 한다. */
+const AutoClosedList = ({ rows, loading, onRestore }) => rows.length === 0
+    ? <EmptyState title="자동으로 뺀 것이 없습니다" description="AI 제외 권장·이미 공통 자료인 표현·중복이 생기면 여기에 모입니다." />
+    : <div className="admin-spelling__list">
+        {rows.map((row) => <article className={`admin-spelling__candidate is-${row.ai_verdict}`} key={row.id}>
+            <div className="admin-spelling__candidate-main">
+                <div className="admin-spelling__expression">
+                    <strong>{row.expression}</strong>
+                    {(row.ai_correct_expression || row.source_correction) && <><span aria-hidden="true">→</span><b>{row.ai_correct_expression || row.source_correction}</b></>}
+                </div>
+                <div className="admin-spelling__candidate-badges">
+                    <span className={`is-${row.ai_verdict}`}>{AUTO_REASON_LABELS[row.auto_reason] || '자동 제외'}</span>
+                    <small>{formatDate(row.decided_at)} 뺌</small>
+                </div>
+                {row.ai_reason && <p>{row.ai_reason}</p>}
+            </div>
+            <div className="admin-spelling__evidence">
+                <b>{row.class_count}학급</b><span>{row.hit_count || 0}회</span>
+            </div>
+            <div className="admin-spelling__row-actions">
+                <Button type="button" variant="outline" size="sm" onClick={() => onRestore(row)} disabled={loading}>되돌리기</Button>
+            </div>
+        </article>)}
+    </div>;
 
 const CandidateList = ({ rows, loading, onReview, onReject, emptyTitle, emptyDescription }) => rows.length === 0
     ? <EmptyState

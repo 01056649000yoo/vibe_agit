@@ -343,9 +343,10 @@ test('맞춤법 공통 자료 대시보드는 후보와 게시 자료를 나눠 
     assert.match(adminPromotion, /맞춤법 공통 자료 관리/);
     assert.match(adminPromotion, /activeView === 'candidates'/);
     assert.match(adminPromotion, /activeView === 'common'/);
-    assert.match(adminPromotion, /verdictFilter === 'recommend'/);
-    assert.match(adminPromotion, /verdictFilter === 'caution'/);
-    assert.match(adminPromotion, /verdictFilter === 'reject'/);
+    // 2026-10-01: 판정별 탭 대신 `먼저 볼 것 · 나중에 볼 것 · 남은 것 전체 · 자동으로 뺀 것`.
+    assert.match(adminPromotion, /verdictFilter === 'priority'/);
+    assert.match(adminPromotion, /verdictFilter === 'later'/);
+    assert.match(adminPromotion, /verdictFilter === 'auto'/);
     assert.match(adminPromotion, /commonFilter === 'enabled'/);
     assert.match(adminPromotion, /className="admin-spelling__metrics"/);
     assert.match(adminPromotion, /className="admin-spelling__view-tabs" role="tablist"/);

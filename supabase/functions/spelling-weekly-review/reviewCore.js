@@ -56,24 +56,36 @@ export const normalizeSpellingValue = (value) => String(value || '')
 
 export const trimText = (value, limit) => String(value || '').normalize('NFC').trim().slice(0, limit);
 
-const diceScore = (leftValue, rightValue) => {
-    const left = normalizeSpellingValue(leftValue);
-    const right = normalizeSpellingValue(rightValue);
+/*
+ * ⚠️ 이 파일의 계산은 Edge 함수의 **CPU 시간 제한** 안에서 돈다(2026-10-01). 후보가 2,000개를 넘자
+ *    후보 × 자료 1,300개를 매번 다시 정규화하며 견주느라 준비만 8.8초가 걸려 작업자가 잘렸고,
+ *    관리자 화면에는 `Edge Function returned a non-2xx` 만 떴다. 그래서
+ *      ① 자료 쪽은 정규화·글자쌍을 한 번만 만들어 두고(`prepareKnownRecords`)
+ *      ② 유사 항목은 AI 에 실제로 보내는 상위 MAX_CANDIDATES 개에만 구한다.
+ *    결과는 예전 계산과 같다(tests/weeklySpellingReview.test.mjs 가 견준다).
+ */
+const bigramCounts = (normalized) => {
+    const pairs = new Map();
+    for (let index = 0; index < normalized.length - 1; index += 1) {
+        const pair = normalized.slice(index, index + 2);
+        pairs.set(pair, (pairs.get(pair) || 0) + 1);
+    }
+    return pairs;
+};
+
+/** 이미 정규화한 두 값의 다이스 유사도. 왼쪽 글자쌍은 미리 센 것을 받는다(고치지 않는다). */
+const diceScoreNormalized = (left, leftPairs, right) => {
     if (!left || !right) return 0;
     if (left === right) return 1;
     if (left.length === 1 || right.length === 1) return left.includes(right) || right.includes(left) ? 0.6 : 0;
-    const pairs = new Map();
-    for (let index = 0; index < left.length - 1; index += 1) {
-        const pair = left.slice(index, index + 2);
-        pairs.set(pair, (pairs.get(pair) || 0) + 1);
-    }
+    const remaining = new Map(leftPairs);
     let overlap = 0;
     for (let index = 0; index < right.length - 1; index += 1) {
         const pair = right.slice(index, index + 2);
-        const count = pairs.get(pair) || 0;
+        const count = remaining.get(pair) || 0;
         if (count > 0) {
             overlap += 1;
-            pairs.set(pair, count - 1);
+            remaining.set(pair, count - 1);
         }
     }
     return (2 * overlap) / (left.length + right.length - 2);
@@ -167,13 +179,23 @@ export const mergeWeeklySpellingSources = (payload) => {
     for (const row of payload.ai_findings || []) mergeSource(groups, 'ai', row);
     for (const row of payload.teacher_entries || []) mergeSource(groups, 'teacher', row);
 
+    // 검색 표현마다 모든 묶음을 훑지 않도록 표현 → 묶음 색인을 한 번 만든다(삽입 순서 유지).
+    const groupsByExpression = new Map();
+    for (const entry of groups.entries()) {
+        const key = normalizeSpellingValue(entry[1].expression);
+        const bucket = groupsByExpression.get(key);
+        if (bucket) bucket.push(entry);
+        else groupsByExpression.set(key, [entry]);
+    }
+
     for (const row of payload.searched || []) {
         const expressionKey = normalizeSpellingValue(row.expression);
-        const matching = [...groups.entries()].filter(([, group]) => (
-            normalizeSpellingValue(group.expression) === expressionKey
-        ));
+        const matching = [...(groupsByExpression.get(expressionKey) || [])];
         if (matching.length === 0) {
             mergeSource(groups, 'search', row);
+            // 새로 생긴 검색 묶음도 다음 검색 표현이 찾을 수 있어야 예전과 같다(검색 묶음은 바른 표현이 비어 `표현:` 키).
+            const groupKey = `${normalizeSpellingValue(trimText(row.expression, 40))}:`;
+            if (groups.has(groupKey)) groupsByExpression.set(expressionKey, [[groupKey, groups.get(groupKey)]]);
             continue;
         }
         matching.sort((left, right) => right[1].hit_count - left[1].hit_count);
@@ -190,9 +212,22 @@ export const mergeWeeklySpellingSources = (payload) => {
     }));
 };
 
-const findSimilarMatches = (expression, records) => records
-    .map((record) => ({ ...record, similarity: diceScore(expression, record.expression) }))
-    .filter((record) => record.similarity >= 0.3)
+/** 자료 쪽 정규화·글자쌍을 한 번만 만든다. */
+const prepareKnownRecords = (records) => records.map((record) => {
+    const normalized = normalizeSpellingValue(record.expression);
+    return { record, normalized, pairs: bigramCounts(normalized) };
+});
+
+const findSimilarMatches = (expression, preparedRecords) => {
+    const normalized = normalizeSpellingValue(expression);
+    const pairs = bigramCounts(normalized);
+    return preparedRecords
+        .map((item) => ({
+            ...item.record,
+            // 예전 계산(후보 글자쌍에서 자료 글자쌍을 빼며 센다)과 같은 방향이다.
+            similarity: diceScoreNormalized(normalized, pairs, item.normalized)
+        }))
+        .filter((record) => record.similarity >= 0.3)
     .sort((left, right) => right.similarity - left.similarity)
     .slice(0, 3)
     .map((record) => ({
@@ -202,20 +237,23 @@ const findSimilarMatches = (expression, records) => records
         source: record.source,
         similarity: Math.round(record.similarity * 100)
     }));
+};
 
 export const prepareWeeklyReviewCandidates = (payload, knownIndex, hashFn) => {
     if (typeof hashFn !== 'function') throw new Error('hash_function_required');
     const grouped = mergeWeeklySpellingSources(payload);
     const knownFiltered = grouped.filter((item) => knownIndex.aliases.has(normalizeSpellingValue(item.expression)));
+    // 정렬은 유사 항목과 무관하므로 먼저 자르고, AI 에 보낼 것에만 유사 항목을 구한다.
+    const preparedRecords = prepareKnownRecords(knownIndex.records);
     const candidates = grouped
         .filter((item) => !knownIndex.aliases.has(normalizeSpellingValue(item.expression)))
+        .sort((left, right) => right.class_count - left.class_count || right.hit_count - left.hit_count)
+        .slice(0, MAX_CANDIDATES)
         .map((item) => ({
             ...item,
             review_key: hashFn(`${REVIEW_VERSION}|${normalizeSpellingValue(item.expression)}|${normalizeSpellingValue(item.source_correction)}`),
-            similar_matches: findSimilarMatches(item.expression, knownIndex.records)
-        }))
-        .sort((left, right) => right.class_count - left.class_count || right.hit_count - left.hit_count)
-        .slice(0, MAX_CANDIDATES);
+            similar_matches: findSimilarMatches(item.expression, preparedRecords)
+        }));
     return { candidates, collectedCount: grouped.length, knownFilteredCount: knownFiltered.length };
 };
 

@@ -423,14 +423,14 @@ test('문장형 후보는 AI 검수에 올리지 않는다', () => {
     assert.match(aiBlock, /finding\.expression ~ '\^\[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\( \[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\)\?\$'/);
 });
 
-test('권장이 비어도 일감이 보이고, 권장 아닌 후보도 관리자가 직접 올릴 수 있다', () => {
+test('기본 화면에 먼저 볼 것이 보이고, 권장 아닌 후보도 관리자가 직접 올릴 수 있다', () => {
     /*
      * 반영 권장을 학급 2개 이상으로 제한하면 기본 화면이 자주 빈다(2026-08-28: 권장 0 · 주의 99).
      * 기본 탭에 머무르면 일감이 없는 것처럼 보이는데 실제로는 주의 검토에 다 있다.
      */
-    assert.match(panel, /if \(verdictFilter !== 'recommend'\) return;/);
-    assert.match(panel, /setVerdictFilter\('all'\);/);
-    assert.match(panel, /여러 학급에서 되풀이된 표현이 아직 없어요/);
+    // 2026-10-01: 기본 화면은 `먼저 볼 것`(두 학급 이상·세 번 이상). 판정과 무관하게 일감이 바로 보인다.
+    assert.match(panel, /useState\('priority'\)/);
+    assert.match(panel, /지금 고를 것이 없어요/);
     // 서버도 화면도 판정으로 게시를 막지 않는다 — 관리자 판단으로 올릴 수 있어야 한다.
     assert.match(panel, /target\.verdict !== 'recommend' && <p className="admin-spelling__manual-promote">/);
     assert.match(panel, /되풀이해 만날 규칙이라고 판단하시면 그대로 올릴 수 있어요/);
@@ -466,4 +466,100 @@ test('검수 결과와 공통 자료를 같은 찾기 상자로 검색한다', (
     assert.match(panel, /개 중 \$\{resultCount\}개/);
     assert.match(panel, /찾는 낱말이 없어요/);
     assert.match(panel, />지우기</);
+});
+
+/*
+ * 후보 2,000개를 넘자 준비 계산만 8.8초가 걸려 Edge 함수의 CPU 제한에 잘렸다(2026-10-01).
+ * 빠르게 바꾼 계산이 예전 계산과 **같은 결과**를 내는지, 큰 규모에서도 짧게 끝나는지 함께 본다.
+ * 아래 `naivePrepare` 는 예전 계산을 그대로 옮긴 기준이다(고치지 않는다).
+ */
+const naiveDice = (leftValue, rightValue) => {
+    const left = normalizeSpellingValue(leftValue);
+    const right = normalizeSpellingValue(rightValue);
+    if (!left || !right) return 0;
+    if (left === right) return 1;
+    if (left.length === 1 || right.length === 1) return left.includes(right) || right.includes(left) ? 0.6 : 0;
+    const pairs = new Map();
+    for (let index = 0; index < left.length - 1; index += 1) {
+        const pair = left.slice(index, index + 2);
+        pairs.set(pair, (pairs.get(pair) || 0) + 1);
+    }
+    let overlap = 0;
+    for (let index = 0; index < right.length - 1; index += 1) {
+        const pair = right.slice(index, index + 2);
+        const count = pairs.get(pair) || 0;
+        if (count > 0) { overlap += 1; pairs.set(pair, count - 1); }
+    }
+    return (2 * overlap) / (left.length + right.length - 2);
+};
+
+const syntheticPayload = (count) => {
+    const syllables = ['가', '나', '되', '돼', '안', '않', '몇', '일', '어', '떻', '게', '할', '수', '있', '다', '로', '서', '써'];
+    // 번호를 18진수 음절로 옮겨 겹치지 않는 표현을 만든다(길이는 2~5음절).
+    const word = (seed, length) => {
+        let value = seed;
+        const letters = [];
+        for (let i = 0; i < length; i += 1) { letters.push(syllables[value % syllables.length]); value = Math.floor(value / syllables.length); }
+        return letters.join('');
+    };
+    const ai = Array.from({ length: count }, (_, i) => ({ expression: word(i, 3 + (i % 3)), correction: word(i + 1, 3 + (i % 2)), hit_count: i % 9, class_count: i % 5 }));
+    const searched = Array.from({ length: Math.round(count / 3) }, (_, i) => ({ expression: word(i * 2, 3 + (i % 3)), search_count: i % 7, class_count: i % 4 }));
+    return { ai_findings: ai, searched, teacher_entries: [] };
+};
+
+test('후보 준비는 예전 계산과 같은 결과를 내고, 2,000개 규모에서도 짧게 끝난다', async () => {
+    const { createHash } = await import('node:crypto');
+    const hash = (value) => createHash('sha256').update(value).digest('hex');
+    const knownIndex = buildKnownSpellingIndex(lookupPayload, detectionPayload, []);
+
+    // 예전 계산: 모두에게 유사 항목을 구한 뒤 정렬·자르기. 같은 묶음 결과에서 출발해 마지막 단계만 견준다.
+    const small = syntheticPayload(300);
+    const grouped = mergeWeeklySpellingSources(small);
+    const naive = grouped
+        .filter((item) => !knownIndex.aliases.has(normalizeSpellingValue(item.expression)))
+        .map((item) => ({
+            ...item,
+            similar: knownIndex.records
+                .map((record) => ({ expression: record.expression, similarity: naiveDice(item.expression, record.expression) }))
+                .filter((record) => record.similarity >= 0.3)
+                .sort((left, right) => right.similarity - left.similarity)
+                .slice(0, 3)
+                .map((record) => `${record.expression.normalize('NFC').trim().slice(0, 40)}:${Math.round(record.similarity * 100)}`)
+        }))
+        .sort((left, right) => right.class_count - left.class_count || right.hit_count - left.hit_count)
+        .slice(0, 200);
+    const fast = prepareWeeklyReviewCandidates(small, knownIndex, hash).candidates;
+    assert.deepEqual(
+        fast.map((item) => [item.expression, item.similar_matches.map((m) => `${m.expression}:${m.similarity}`)]),
+        naive.map((item) => [item.expression, item.similar])
+    );
+
+    const started = performance.now();
+    const big = prepareWeeklyReviewCandidates(syntheticPayload(2200), knownIndex, hash);
+    const elapsed = performance.now() - started;
+    assert.equal(big.candidates.length, 200);
+    assert.ok(elapsed < 1500, `후보 준비가 ${Math.round(elapsed)}ms 걸렸습니다 — Edge 함수 CPU 제한에 잘립니다.`);
+});
+
+/*
+ * 사람이 고를 것만 남긴다(2026-10-01, `20261362`). 제외 권장·이미 공통 자료·중복은 서버가 저절로 빼고,
+ * 화면은 그것을 `자동으로 뺀 것` 에 모아 되돌릴 수 있게 한다. 기준은 서버 한 곳에 둔다.
+ */
+test('자동 정리는 서버가 하고, 화면은 먼저 볼 것·나중에 볼 것·자동으로 뺀 것으로 나눈다', async () => {
+    const triage = await readFile('supabase/migrations/20261362_spelling_weekly_auto_triage.sql', 'utf8');
+    for (const reason of ['ai_reject', 'already_common', 'duplicate']) assert.match(triage, new RegExp(`auto_reason = '${reason}'`));
+    assert.match(triage, /AFTER INSERT ON public\.spelling_weekly_review_items/);
+    assert.match(triage, /AFTER INSERT OR UPDATE ON public\.spelling_learning_entries/);
+    assert.match(triage, /triage_locked IS FALSE/);
+    assert.match(triage, /CREATE OR REPLACE FUNCTION public\.spelling_weekly_item_is_priority/);
+    // 최신 주만 보이던 것을 모든 주로 넓혔다.
+    assert.doesNotMatch(triage, /WHERE item\.week_start = v_candidate_week\s+AND item\.decision = 'pending'/);
+    // 화면은 기준을 다시 계산하지 않고 서버가 준 표시를 쓴다.
+    assert.match(panel, /item\.is_priority === true/);
+    assert.doesNotMatch(panel, /class_count >= 2|hit_count >= 3/);
+    assert.match(panel, /admin_restore_weekly_spelling_entry_v1/);
+    assert.match(panel, /<AutoClosedList/);
+    // 정규화 규칙이 reviewCore 와 같다(공백·문장부호 제거).
+    assert.match(triage, /\[\[:space:\]\/·,\?!\."''’“”\(\)_-\]/);
+    assert.match(reviewCore, /replace\(\/\[\\s\/·,\?!\."'’“”\(\)_-\]\/g, ''\)/);
 });
