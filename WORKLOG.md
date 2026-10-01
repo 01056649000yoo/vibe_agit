@@ -30,7 +30,7 @@
   `com.jarvis.survival` plist·로그 삭제, `~/.runner-guard/guard.sh` 목록에서 뺌. 저장소: 서비스 목록·RPC 허용 목록·Caddy 사본·검사에서 뺌.
 - **결과/검증**: survival 502, 아지트 200, 연구소 3001 정상, guard.sh 문법 통과, 검사 통과.
 - **남은 것 / 다음**: 운영 Caddy survival 블록은 선생님이 sudo 로 지움(백업 `/etc/caddy/Caddyfile.bak-20261001`, survival 응답 없음·아지트·연구소 200).
-  GitHub 의 classroom-tools 실행기 등록은 오프라인으로 남음(저장소 설정에서 지우면 됨).
+  GitHub classroom-tools 저장소의 오프라인 실행기(id 21)도 `gh api` 로 삭제 — 등록 0개.
 
 ## 2026-09-30 — 연구소 질문 만들기에 선생님 질문 추가, 학생 불러오기까지(v1.21) (Claude)
 - **한 일**: 선생님 요청 — 학생 질문이 모자랄 때 선생님이 질문을 더하고 학생들이 불러올 수 있게. 실시간 보기에 `+ 선생님 질문 추가`(고치기·지우기).
