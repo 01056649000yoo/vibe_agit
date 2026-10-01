@@ -93,3 +93,24 @@ test('교사 놀이터에서 관리자만 시험한다 — 학생에게는 어�
         }
     }
 });
+
+test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, 처음 안내와 도움말에 상품 확률을 알린다', async () => {
+    const [bench, quizDragon, intro, guides, manifest] = await Promise.all([
+        readFile('src/modules/game/spelling-claw/ClawTestBench.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/QuizDragon.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/ClawIntroDialog.jsx', 'utf8'),
+        readFile('src/constants/teacherGuides.js', 'utf8'),
+        readFile('src/modules/game/spelling-claw/manifest.js', 'utf8')
+    ]);
+    assert.match(manifest, /name: '수호룡의 인형뽑기'/);
+    // 학생이 키운 수호룡(종류·작가 단계)을 수호룡 모듈 한 곳의 그림 규칙으로 그린다.
+    assert.match(quizDragon, /getDragonStage\(writerLevel, speciesId\)/);
+    assert.match(bench, /<QuizDragon speciesId=\{speciesId\} writerLevel=\{writerLevel\}/);
+    // 처음 들어오면 한 번, 그리고 다시 보기로 언제든 — 포인트부터 수호룡 상점 아이템까지 무작위·확률 공개.
+    assert.match(bench, /useState\(\(\) => !readIntroSeen\(\)\)/);
+    assert.match(bench, /처음 안내 다시 보기/);
+    assert.match(intro, /포인트<\/b>부터 <b>선생님 선물<\/b>, 드물게 <b>수호룡 상점 아이템<\/b>까지/);
+    assert.match(intro, /상품이 나올 확률 보기/);
+    assert.match(guides, /'spelling-claw': \{/);
+    assert.match(guides, /수호룡 상점 아이템 5%/);
+});

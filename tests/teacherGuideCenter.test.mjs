@@ -75,8 +75,11 @@ test('교사 도움말 29개는 빠짐없이 활용 안내서의 큰 흐름과 �
     // 2026-09-13 에 26 → 27: `writing-lab`(글쓰기 연구소)가 상단 메뉴에 있는데 안내서에 없었다.
     // 2026-09-16 에 27 → 28: `settings:dahandin`(다했니 쿠키 연동)을 포인트·동기부여 흐름에 연결했다.
     // 2026-09-29 에 28 → 29: `class-timetable`(학급 시간표 관리)을 새로 넣고 학급 운영 흐름에 연결했다.
-    assert.equal(Object.keys(TEACHER_GUIDES).length, 29);
-    for (const guideId of Object.keys(TEACHER_GUIDES)) {
+    // 2026-10-01: 관리자 시험 모듈의 도움말(`adminOnly`, 수호룡의 인형뽑기)은 공개 전이라 세지도 잇지도 않는다.
+    //   공개할 때 adminOnly 를 떼면 이 검사가 안내서 연결과 숫자 30을 요구한다.
+    const publicGuideIds = Object.keys(TEACHER_GUIDES).filter((guideId) => !Reflect.get(TEACHER_GUIDES, guideId).adminOnly);
+    assert.equal(publicGuideIds.length, 29);
+    for (const guideId of publicGuideIds) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);
         assert.ok(Reflect.get(TEACHER_GUIDE_TARGETS, guideId), `${guideId}: 실제 화면 이동 대상이 없다`);
     }

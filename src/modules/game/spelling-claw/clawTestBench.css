@@ -39,3 +39,5 @@
 .claw-preview__write button:disabled { opacity: 0.5; }
 .claw-preview__explain.is-right { color: var(--ui-success); }
 .claw-preview__explain.is-wrong { color: var(--ui-danger); }
+.claw-preview__card footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-2); }
+.claw-preview__intro-link { padding: 0; border: 0; background: none; color: var(--ui-primary); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }

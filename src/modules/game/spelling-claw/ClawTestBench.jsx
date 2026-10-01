@@ -1,4 +1,8 @@
 import { useMemo, useState } from 'react';
+import ClawIntroDialog from './ClawIntroDialog';
+import QuizDragon from './QuizDragon';
+import { dragonLine } from './dragonLines';
+import { DRAGON_SPECIES, getDragonStage } from '../dragon/presentation';
 import ClawMachineStage from './ClawMachineStage';
 import { CLAW_PLUSHES } from './plushCatalog';
 import { describeClawOdds, eligibleClawDecor, rollClawPrize, decorTierOf } from './prizeTable';
@@ -10,7 +14,8 @@ import {
 import './clawTestBench.css';
 
 /*
- * 맞춤법 인형뽑기 1단계 시제품(2026-10-01). DB 없이 한 화면에서 흐름과 태블릿 성능을 본다.
+ * 수호룡의 인형뽑기 1단계 시제품(2026-10-01). DB 없이 한 화면에서 흐름과 태블릿 성능을 본다.
+ * 문제는 학생이 키운 수호룡이 낸다(작가 단계에 따라 그림·말투가 자란다). 처음 들어오면 수호룡이 놀이와 상품 확률을 알려 준다.
  * 실험실(`?dev-lab=spelling-claw`)과 관리자 화면 `📚 검수 → 🧸 인형뽑기 시험` 이 같은 부품을 쓴다(관리자만 시험).
  *   맞춤법 10문제(기본 500개에서) → 교사가 정한 개수 이상 맞히면 코인 1개(하루 기회 수까지)
  *   → 인형뽑기 → 인형을 뽑으면 상품 추첨(확률표 기본안) → 하루 기회를 다 쓰고 하나도 못 뽑았으면 최소 포인트.
@@ -47,6 +52,11 @@ const Highlighted = ({ text, part }) => {
     return <>{text.slice(0, at)}<mark>{part}</mark>{text.slice(at + part.length)}</>;
 };
 
+// 처음 들어온 사람에게 한 번 수호룡이 놀이와 상품 확률을 알려 준다. 이 브라우저에만 기억한다.
+const INTRO_SEEN_KEY = 'spelling-claw-intro-seen-v1';
+const readIntroSeen = () => { try { return window.localStorage.getItem(INTRO_SEEN_KEY) === '1'; } catch { return false; } };
+const markIntroSeen = () => { try { window.localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch { /* 저장 못 해도 다음에 한 번 더 보일 뿐 */ } };
+
 const prizeText = (prize) => prize.kind === 'points' ? `${prize.points}P`
     : prize.kind === 'gift' ? `🎁 ${prize.gift.name}` : `🐉 ${prize.item.name}`;
 
@@ -58,6 +68,10 @@ export default function ClawTestBench() {
     const [quality, setQuality] = useState('auto');
     const [writerLevel, setWriterLevel] = useState(3);
     const [level, setLevel] = useState('normal');
+    // 2단계에서는 학생이 키운 수호룡(종류·작가 단계)이 그대로 들어온다. 시험대에서는 골라서 자라는 모습을 본다.
+    const [speciesId, setSpeciesId] = useState('forest');
+    const [introOpen, setIntroOpen] = useState(() => !readIntroSeen());
+    const closeIntro = () => { markIntroSeen(); setIntroOpen(false); };
 
     const makeQuiz = (levelId) => createSpellingQuiz(QUIZ_POOL, { writeCount: Reflect.get(SPELLING_QUIZ_LEVELS, levelId)?.writeCount ?? 4 });
     const [quiz, setQuiz] = useState(() => makeQuiz('normal'));
@@ -134,7 +148,13 @@ export default function ClawTestBench() {
     };
     const resetDay = () => { setCoins(0); setCoinsEarned(0); setPlaysUsed(0); setWinsToday(0); setConsolationGiven(false); setLog([]); };
 
+    const dragonForm = getDragonStage(writerLevel, speciesId).form;
+
     return <div className="claw-preview">
+        {introOpen && <ClawIntroDialog
+            speciesId={speciesId} writerLevel={writerLevel} passCount={passCount} dailyPlays={dailyPlays}
+            minPoints={minPoints} odds={odds} onClose={closeIntro}
+        />}
         <section className="claw-preview__settings" aria-label="교사 설정(시제품)">
             <strong>교사 설정</strong>
             <label>통과 기준 <select value={passCount} onChange={(e) => setPassCount(Number(e.target.value))}>{[5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}/10</option>)}</select></label>
@@ -144,7 +164,10 @@ export default function ClawTestBench() {
             </select></label>
             <label>최소 포인트 <select value={minPoints} onChange={(e) => setMinPoints(Number(e.target.value))}>{[10, 20, 30, 50].map((n) => <option key={n} value={n}>{n}P</option>)}</select></label>
             <label>집게 힘 <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}><option value="easy">튼튼</option><option value="normal">보통</option><option value="hard">흐물</option></select></label>
-            <label>학생 작가 단계 <select value={writerLevel} onChange={(e) => setWriterLevel(Number(e.target.value))}>{[1, 3, 5, 7, 10].map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
+            <label>수호룡 <select value={speciesId} onChange={(e) => setSpeciesId(e.target.value)}>
+                {DRAGON_SPECIES.map((species) => <option key={species.id} value={species.id}>{species.shortName}</option>)}
+            </select></label>
+            <label>학생 작가 단계 <select value={writerLevel} onChange={(e) => setWriterLevel(Number(e.target.value))}>{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
             <label>화질 <select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="auto">보통</option><option value="low">가볍게(태블릿)</option></select></label>
             <span className="claw-preview__perf">{perf ? `${perf.fps}fps · 물리 ${perf.stepMs}ms` : '측정 중…'}</span>
             <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
@@ -153,8 +176,13 @@ export default function ClawTestBench() {
 
         <div className="claw-preview__main">
             <aside className="claw-preview__side">
-                <section className="claw-preview__card" aria-label="맞춤법 퀴즈">
-                    <header><b>맞춤법 퀴즈</b><span>{Math.min(index + 1, 10)}/10 · 맞힘 {score} · 기준 {passCount}</span></header>
+                <section className="claw-preview__card" aria-label="수호룡의 맞춤법 문제">
+                    <header><b>수호룡의 맞춤법 문제</b><span>{Math.min(index + 1, 10)}/10 · 맞힘 {score} · 기준 {passCount}</span></header>
+                    <QuizDragon speciesId={speciesId} writerLevel={writerLevel} compact line={
+                        finished ? (score >= passCount ? dragonLine(dragonForm, 'pass') : `${passCount}개 이상 맞히면 코인을 줄게. 다시 해 보자!`)
+                            : result ? (result.correct ? dragonLine(dragonForm, 'right') : dragonLine(dragonForm, 'wrong'))
+                                : dragonLine(dragonForm, 'ask', question.type)
+                    } />
                     {!finished ? <>
                         <div className="claw-preview__tags">
                             <span>{Reflect.get(SPELLING_QUIZ_TYPES, question.type)?.label}</span>
@@ -172,7 +200,7 @@ export default function ClawTestBench() {
                             <button type="submit" disabled={Boolean(result) || !typed.trim()}>확인</button>
                         </form>}
                         {result && <p className={`claw-preview__explain ${result.correct ? 'is-right' : 'is-wrong'}`}>
-                            {result.correct ? '맞았어요! ' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
+                            {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
                             {question.explanation}
                         </p>}
                         <button type="button" className="claw-preview__next" onClick={next} disabled={!result}>{index === 9 ? '채점' : '다음'}</button>
@@ -180,7 +208,9 @@ export default function ClawTestBench() {
                         <p className="claw-preview__prompt">{score}/10 맞혔어요 {score >= passCount ? '🎉' : ''}</p>
                         <button type="button" className="claw-preview__next" onClick={() => restartQuiz()}>새 10문제</button>
                     </>}
-                    <footer>오늘 코인 {coinsEarned}/{dailyPlays} · 뽑기 {playsUsed}/{dailyPlays}</footer>
+                    <footer>오늘 코인 {coinsEarned}/{dailyPlays} · 뽑기 {playsUsed}/{dailyPlays}
+                        <button type="button" className="claw-preview__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
+                    </footer>
                 </section>
 
                 <section className="claw-preview__card" aria-label="상품 확률(기본안)">
