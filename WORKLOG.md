@@ -22,6 +22,14 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-01 — 옛 교실 도구(survival) 내림 (Claude)
+- **한 일**: 선생님 결정 — 옛 `classroom-tools`(survival.도메인, 자리 배치·역할) 운영 종료. 9/21 종료 예고가 이미 지났고, 아지트 학급운영도구로
+  자리 배치를 쓰는 교사 15명, 옛 앱 백업 불러오기는 0건. 옛 앱 자료는 교사 브라우저(IndexedDB)에만 있어 서버에 지울 자료는 없음.
+- **변경(git 밖)**: `docker stop classroom-tools`(restart=unless-stopped 라 재부팅에도 꺼진 채), 실행기 서비스
+  `actions.runner.01056649000yoo-classroom-tools.…` bootout + `launchctl disable`(푸시로 다시 뜨지 않게). 이미지·코드·실행기 폴더는 남김.
+- **결과/검증**: survival 주소 502, 아지트 200. 되살리기: `docker start classroom-tools` + `launchctl enable gui/501/<라벨>` 후 bootstrap.
+- **남은 것 / 다음**: `/etc/caddy/Caddyfile` 의 survival 블록을 아지트 도구 주소로 넘기기(sudo 필요). 한 달 문의 없으면 이미지·실행기 폴더 삭제.
+
 ## 2026-09-30 — 연구소 질문 만들기에 선생님 질문 추가, 학생 불러오기까지(v1.21) (Claude)
 - **한 일**: 선생님 요청 — 학생 질문이 모자랄 때 선생님이 질문을 더하고 학생들이 불러올 수 있게. 실시간 보기에 `+ 선생님 질문 추가`(고치기·지우기).
   학생 제출에 끼우면 제출 수가 어긋나 방에 딸린 표로 따로 둠. 좋은 질문 고르기 후보에 담긴 채 올라가 개요 짜기 `친구들과 만든 질문` 으로 이어짐
