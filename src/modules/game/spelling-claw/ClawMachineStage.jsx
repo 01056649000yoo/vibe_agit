@@ -120,8 +120,8 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
                 >{item.mark}</button>)}
             </div>
             <button type="button" className="claw-stage__go" onClick={press} disabled={Boolean(loading || error) || (!playing && hud.mode !== 'ready')}>
-                {playing ? '뽑기!' : '코인 넣기'}
-                <small>{playing ? 'DROP' : `코인 ${coins}개`}</small>
+                {playing ? '뽑기!' : hud.mode === 'ready' ? '코인 넣기' : '집게가 움직여요'}
+                <small>{playing ? 'DROP' : hud.mode === 'ready' ? `코인 ${coins}개` : '잠깐만요'}</small>
             </button>
         </div>
     </div>;

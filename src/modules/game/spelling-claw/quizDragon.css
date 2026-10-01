@@ -5,3 +5,8 @@
 .quiz-dragon__talk { display: grid; gap: 2px; min-width: 0; }
 .quiz-dragon__talk small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 800; }
 .quiz-dragon__talk p { position: relative; margin: 0; padding: 8px 12px; border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); color: var(--ui-ink-strong); font-size: var(--ui-text-sm); font-weight: 800; line-height: 1.45; }
+.quiz-dragon.is-large { gap: var(--ui-space-4); }
+.quiz-dragon.is-large .quiz-dragon__avatar { width: 150px; height: 150px; }
+.quiz-dragon.is-large .quiz-dragon__talk small { font-size: var(--ui-text-sm); }
+.quiz-dragon.is-large .quiz-dragon__talk p { padding: 14px 18px; border-radius: var(--ui-radius-lg); font-size: var(--ui-text-xl); }
+@media (max-width: 720px) { .quiz-dragon.is-large .quiz-dragon__avatar { width: 104px; height: 104px; } .quiz-dragon.is-large .quiz-dragon__talk p { font-size: var(--ui-text-lg); } }

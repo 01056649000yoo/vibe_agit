@@ -105,7 +105,14 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(manifest, /name: '수호룡의 인형뽑기'/);
     // 학생이 키운 수호룡(종류·작가 단계)을 수호룡 모듈 한 곳의 그림 규칙으로 그린다.
     assert.match(quizDragon, /getDragonStage\(writerLevel, speciesId\)/);
-    assert.match(bench, /<QuizDragon speciesId=\{speciesId\} writerLevel=\{writerLevel\}/);
+    // 2026-10-02: 교사가 수호룡을 고르지 않는다 — 대상 학생이 지금 키우는 수호룡(학생 아지트 화면과 같은 RPC)이 문제를 낸다.
+    assert.match(bench, /<QuizDragon speciesId=\{student\.speciesId\} writerLevel=\{student\.writerLevel\}/);
+    assert.match(bench, /rpc\('get_teacher_dragon_growth_dashboard', \{ p_class_id: classId \}\)/);
+    assert.doesNotMatch(bench, /DRAGON_SPECIES/, '교사가 수호룡 종류를 고르는 칸이 남아 있습니다.');
+    // 문제가 위, 목표를 달성하면(코인이 있거나 한 판 중) 아래에 뽑기 창이 열린다. 확률·기록 칸은 화면에 두지 않는다.
+    assert.match(bench, /const clawOpen = coins > 0 \|\| roundActive;/);
+    assert.ok(bench.indexOf('claw-bench__quiz') < bench.indexOf('claw-bench__claw'), '문제가 뽑기 창보다 위에 있어야 합니다.');
+    assert.doesNotMatch(bench, /상품 확률<\/b>|claw-preview__log/);
     // 처음 들어오면 한 번, 그리고 다시 보기로 언제든 — 포인트부터 수호룡 상점 아이템까지 무작위·확률 공개.
     assert.match(bench, /useState\(\(\) => !readIntroSeen\(\)\)/);
     assert.match(bench, /처음 안내 다시 보기/);

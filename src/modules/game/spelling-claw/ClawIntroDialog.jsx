@@ -23,7 +23,7 @@ const ClawIntroDialog = ({ speciesId, writerLevel, passCount, dailyPlays, minPoi
                 <li>인형을 뽑으면 <b>상품이 무작위로</b> 나와요 — <b>포인트</b>부터 <b>선생님 선물</b>, 드물게 <b>수호룡 상점 아이템</b>까지!</li>
                 <li>오늘 기회를 다 썼는데 하나도 못 뽑았다면, 문제를 푼 상으로 <b>{minPoints}P</b>를 받아요.</li>
             </ol>
-            <details className="claw-intro__odds" open>
+            <details className="claw-intro__odds">
                 <summary>상품이 나올 확률 보기</summary>
                 <ul>
                     {odds.points.map((row) => <li key={row.label}><span>{row.label}</span><b>{row.percent}%</b></li>)}
