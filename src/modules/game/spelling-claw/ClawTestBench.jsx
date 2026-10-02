@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import ClawCelebration from './ClawCelebration';
 import ClawIntroDialog from './ClawIntroDialog';
 import ClawMachineStage from './ClawMachineStage';
 import QuizDragon from './QuizDragon';
@@ -74,10 +75,11 @@ const savePrizeSettings = (draft) => { try { window.localStorage.setItem(PRIZE_S
 // 탭: 교사 관리(학급 전체 설정·상품 설정) / 학생 화면(학생이 보는 그대로 미리 해 보기). 마지막 탭을 이 브라우저에 기억한다.
 const BENCH_TABS = [
     { id: 'manage', icon: '🛠️', label: '교사 관리' },
-    { id: 'student', icon: '🧒', label: '학생 화면' }
+    { id: 'student', icon: '🧒', label: '학생 화면' },
+    { id: 'history', icon: '📜', label: '뽑기 내역' }
 ];
 const TAB_KEY = 'spelling-claw-bench-tab-v1';
-const readTab = () => { try { return window.localStorage.getItem(TAB_KEY) === 'student' ? 'student' : 'manage'; } catch { return 'manage'; } };
+const readTab = () => { try { const saved = window.localStorage.getItem(TAB_KEY); return BENCH_TABS.some((item) => item.id === saved) ? saved : 'manage'; } catch { return 'manage'; } };
 const saveTab = (id) => { try { window.localStorage.setItem(TAB_KEY, id); } catch { /* 다음에 교사 관리부터 보일 뿐 */ } };
 
 /** 학급의 수호룡 현황(교사 학생 아지트 화면과 같은 RPC). 학생이 지금 키우는 수호룡의 종류·작가 단계를 얻는다. */
@@ -132,6 +134,11 @@ export default function ClawTestBench({ activeClass }) {
     const [thumbs, setThumbs] = useState({});
     // 뽑기 누적 기록: 아래 띠를 펼쳐 보고, 10초 뒤 저절로 닫힌다. 새로 뽑으면 잠깐 열어 보여 준다.
     const [history, setHistory] = useState([]);
+    // 큰 상품(선생님 선물·수호룡 아이템) 당첨 축하 화면.
+    const [celebration, setCelebration] = useState(null);
+    const [historyFilter, setHistoryFilter] = useState('all');
+    // 시험용 축하 미리보기: 누를 때마다 선물·수호룡 아이템을 번갈아 보인다.
+    const [celebrationSample, setCelebrationSample] = useState(0);
     const [recordOpen, setRecordOpen] = useState(false);
     const [recordHold, setRecordHold] = useState(10000);
     const [perf, setPerf] = useState(null);
@@ -209,9 +216,14 @@ export default function ClawTestBench({ activeClass }) {
         setBook((current) => ({ ...current, [plushId]: (Reflect.get(current, plushId) || 0) + 1 }));
         if (thumb) setThumbs((current) => ({ ...current, [plushId]: thumb }));
         setWinsToday((value) => value + 1);
-        const prize = prizeText(rollClawPrize({ settings: prizeSettings, eligibleDecor }));
+        const rolled = rollClawPrize({ settings: prizeSettings, eligibleDecor });
+        const prize = prizeText(rolled);
         setLastPrize(`${plush?.name || plushId} 인형! 상품: ${prize}`);
-        setHistory((rows) => [{ id: `${Date.now()}-${rows.length}`, plushId, name: plush?.name || plushId, prize }, ...rows].slice(0, 30));
+        setHistory((rows) => [{
+            id: `${Date.now()}-${rows.length}`, at: new Date(), studentName: student.name, kind: rolled.kind,
+            plushId, name: plush?.name || plushId, prize
+        }, ...rows].slice(0, 100));
+        if (rolled.kind === 'gift' || rolled.kind === 'decor') setCelebration({ prize: rolled, plushName: plush?.name || plushId });
         setRecordHold(6000);
         setRecordOpen(true);
     };
@@ -232,6 +244,7 @@ export default function ClawTestBench({ activeClass }) {
         setCoins(0); setCoinsEarned(0); setPlaysUsed(0); setWinsToday(0); setConsolationGiven(false); setLastPrize(''); setRoundActive(false);
         setNotificationPreview(null);
     };
+    const closeCelebration = useCallback(() => { setCelebration(null); setCelebrationSample((value) => value + 1); }, []);
     const closeIntro = () => { markIntroSeen(); setIntroOpen(false); };
 
     const dragonSays = finished
@@ -241,6 +254,7 @@ export default function ClawTestBench({ activeClass }) {
         : result ? dragonLine(dragonForm, result.correct ? 'right' : 'wrong') : dragonLine(dragonForm, 'ask', question.type);
 
     return <div className="claw-bench">
+        {celebration && <ClawCelebration prize={celebration.prize} plushName={celebration.plushName} onClose={closeCelebration} />}
         {tab === 'student' && introOpen && <ClawIntroDialog
             speciesId={student.speciesId} writerLevel={student.writerLevel} passCount={passCount} dailyPlays={dailyPlays}
             minPoints={minPoints} odds={odds} onClose={closeIntro}
@@ -274,6 +288,10 @@ export default function ClawTestBench({ activeClass }) {
                 </select></label>
                 {perf && <span className="claw-bench__perf">{perf.fps}fps</span>}
                 <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
+                <button type="button" onClick={() => setCelebration({
+                    prize: celebrationSample % 2 === 0 ? { kind: 'gift', gift: { name: '자리 고르기권' } } : { kind: 'decor', item: { name: '구름 프레임' } },
+                    plushName: '시바견'
+                })}>큰 상품 축하 보기 (시험용)</button>
                 <button type="button" onClick={resetDay}>하루 새로 시작</button>
                 {studentsNote && <p className="claw-bench__note">{studentsNote}</p>}
             </section>}
@@ -305,6 +323,36 @@ export default function ClawTestBench({ activeClass }) {
             <section className="claw-bench__panel claw-bench__prizes" aria-label="상품 설정">
                 <header><b>상품 설정</b><span>인형 하나를 뽑았을 때 각 상품이 나올 확률 · 합계 100% · 학생은 처음 안내의 ‘상품이 나올 확률 보기’로 봐요</span></header>
                 <ClawPrizeSettings draft={prizeDraft} onChange={changePrizeDraft} />
+            </section>
+        </div>
+
+        <div id="claw-bench-panel-history" role="tabpanel" aria-labelledby="claw-bench-tab-history" className="claw-bench__history" hidden={tab !== 'history'}>
+            <section className="claw-bench__panel" aria-label="뽑기 내역">
+                <header><b>뽑기 내역</b><span>누가 언제 무엇을 받았는지 한곳에서 봐요</span></header>
+                <div className="claw-bench__history-summary">
+                    <div><small>뽑은 인형</small><strong>{history.length}</strong></div>
+                    <div><small>🎁 선생님 선물</small><strong>{history.filter((row) => row.kind === 'gift').length}</strong></div>
+                    <div><small>🐉 수호룡 아이템</small><strong>{history.filter((row) => row.kind === 'decor').length}</strong></div>
+                    <div><small>포인트</small><strong>{history.filter((row) => row.kind === 'points').length}</strong></div>
+                </div>
+                <div className="claw-bench__history-filter" role="group" aria-label="내역 거르기">
+                    {[['all', '전체'], ['gift', '🎁 선물만'], ['decor', '🐉 수호룡 아이템만'], ['points', '포인트만']].map(([id, label]) => (
+                        <button key={id} type="button" aria-pressed={historyFilter === id} onClick={() => setHistoryFilter(id)}>{label}</button>
+                    ))}
+                </div>
+                {history.length === 0 ? <p className="claw-bench__note-muted">아직 뽑은 내역이 없어요. 학생 화면 탭에서 뽑아 보면 여기에 쌓여요.</p>
+                    : <table className="claw-bench__history-table">
+                        <thead><tr><th>시각</th><th>학생</th><th>뽑은 인형</th><th>상품</th></tr></thead>
+                        <tbody>
+                            {history.filter((row) => historyFilter === 'all' || row.kind === historyFilter).map((row) => <tr key={row.id} className={`is-${row.kind}`}>
+                                <td>{row.at.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</td>
+                                <td>{row.studentName}</td>
+                                <td>{row.name}</td>
+                                <td><b>{row.prize}</b></td>
+                            </tr>)}
+                        </tbody>
+                    </table>}
+                <p className="claw-bench__note-muted">시험 단계라 이 화면에서 뽑은 것만 보여요. 학생에게 열면 우리 반 전체 내역이 서버에 쌓이고, 이 탭을 보고 있는 동안 12초마다 저절로 새로 고쳐져요.</p>
             </section>
         </div>
 
@@ -367,7 +415,9 @@ export default function ClawTestBench({ activeClass }) {
                 </> : <div className="claw-bench__locked">
                     <span aria-hidden="true">🔒</span>
                     <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
-                    <small>{lastPrize || `문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
+                    {/* 한 판이 끝나 창이 잠겨도 방금 받은 상품은 크게 보인다(2026-10-02 작은 회색 글씨라 안 보였다). */}
+                    {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
+                    <small>{`문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
                 </div>}
             </section>
 

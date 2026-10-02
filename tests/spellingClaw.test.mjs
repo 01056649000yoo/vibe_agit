@@ -231,3 +231,16 @@ test('묶음 전체 %를 바꾸면 안의 상품이 원래 비율대로 바뀌�
     const panel = await readFile('src/modules/game/spelling-claw/ClawPrizeSettings.jsx', 'utf8');
     assert.match(panel, /<GroupInput label=\{kindLabel\('gift'\)\}/);
 });
+
+test('큰 상품(선물·수호룡 아이템)만 화면 가득 축하하고, 교사에게 뽑기 내역 탭이 있다', async () => {
+    const [bench, celebrate, readme] = await Promise.all([
+        readFile('src/modules/game/spelling-claw/ClawTestBench.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/ClawCelebration.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/README.md', 'utf8')
+    ]);
+    assert.match(bench, /if \(rolled\.kind === 'gift' \|\| rolled\.kind === 'decor'\) setCelebration/);
+    assert.match(celebrate, /setTimeout\(onClose, 4500\)/);
+    assert.match(await readFile('src/modules/game/spelling-claw/clawCelebration.css', 'utf8'), /prefers-reduced-motion: reduce/);
+    assert.match(bench, /\{ id: 'history', icon: '📜', label: '뽑기 내역' \}/);
+    assert.match(readme, /탭이 보이는 동안만 12초마다/);
+});

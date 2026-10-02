@@ -1,0 +1,22 @@
+.claw-celebrate { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: var(--ui-space-4); background: rgba(15, 23, 42, 0.6); overflow: hidden; }
+.claw-celebrate__card { position: relative; display: grid; justify-items: center; gap: var(--ui-space-2); width: min(460px, 100%); padding: var(--ui-space-6) var(--ui-space-5); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-modal); text-align: center; animation: claw-celebrate-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.claw-celebrate__card.is-gift { border: 4px solid var(--ui-danger); }
+.claw-celebrate__card.is-decor { border: 4px solid var(--ui-primary); }
+.claw-celebrate__icon { font-size: 5rem; line-height: 1; animation: claw-celebrate-bounce 1s ease-in-out infinite; }
+.claw-celebrate__card small { color: var(--ui-ink-muted); font-size: var(--ui-text-md); font-weight: 800; }
+.claw-celebrate__card h3 { margin: 0; color: var(--ui-ink-strong); font-size: var(--ui-text-3xl); }
+.claw-celebrate__card strong { padding: 8px 18px; border-radius: var(--ui-radius-pill); background: var(--ui-highlight); color: var(--ui-highlight-ink); font-size: var(--ui-text-2xl); }
+.claw-celebrate__card p { margin: 0; color: var(--ui-ink); font-size: var(--ui-text-md); }
+.claw-celebrate__card button { margin-top: var(--ui-space-2); padding: 12px 28px; border: 0; border-radius: var(--ui-radius-md); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-size: var(--ui-text-lg); font-weight: 900; cursor: pointer; }
+.claw-celebrate__card button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.claw-celebrate__confetti i { position: absolute; top: -20px; left: calc((var(--piece) * 37) % 100 * 1%); width: 10px; height: 16px; border-radius: 2px; background: var(--ui-highlight); animation: claw-celebrate-fall calc(2.2s + (var(--piece) % 5) * 0.35s) linear calc((var(--piece) % 7) * 0.12s) infinite; }
+.claw-celebrate__confetti i:nth-child(4n+1) { background: var(--ui-danger); }
+.claw-celebrate__confetti i:nth-child(4n+2) { background: var(--ui-primary); }
+.claw-celebrate__confetti i:nth-child(4n+3) { background: var(--ui-success); }
+@keyframes claw-celebrate-pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes claw-celebrate-bounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-10px) rotate(6deg); } }
+@keyframes claw-celebrate-fall { to { transform: translateY(110vh) rotate(540deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .claw-celebrate__card, .claw-celebrate__icon, .claw-celebrate__confetti i { animation: none; }
+    .claw-celebrate__confetti { display: none; }
+}
