@@ -6,5 +6,6 @@ export const POINT_ACTIVITY_TYPES = Object.freeze({
     HIDEOUT_PURCHASE: 'hideout_purchase',
     STARTING_BONUS: 'starting_bonus',
     TITLE_REWARD: 'title_reward',
+    SPELLING_CLAW: 'spelling_claw',
     PRIVATE_ADJUSTMENT: 'private_adjustment'
 });

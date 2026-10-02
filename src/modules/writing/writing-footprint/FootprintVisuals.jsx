@@ -15,6 +15,7 @@ const POINT_LABELS = {
     meeting_activity: '회의 활동',
     starting_bonus: '시작 보너스',
     title_reward: '칭호 단계 보상',
+    spelling_claw: '수호룡의 인형뽑기',
     private_adjustment: '선생님 조정',
     etc: '기타'
 };

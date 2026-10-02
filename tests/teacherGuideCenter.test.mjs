@@ -68,17 +68,17 @@ test('활용 안내서는 교사의 목적에 따른 아홉 개 큰 흐름을 �
     }
 });
 
-test('교사 도움말 29개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
+test('교사 도움말 30개는 빠짐없이 활용 안내서의 큰 흐름과 연결된다', () => {
     // 개수를 못 박는 이유는 도움말이 조용히 사라지는 것을 잡기 위해서다.
     // 아래 반복문이 "새로 넣고 연결 안 함"을 잡고, 이 숫자가 "있던 것이 없어짐"을 잡는다.
     // 2026-09-07 에 27 → 26: `reading-events` 를 `reading-logs` 의 세부 탭으로 합쳤다.
     // 2026-09-13 에 26 → 27: `writing-lab`(글쓰기 연구소)가 상단 메뉴에 있는데 안내서에 없었다.
     // 2026-09-16 에 27 → 28: `settings:dahandin`(다했니 쿠키 연동)을 포인트·동기부여 흐름에 연결했다.
     // 2026-09-29 에 28 → 29: `class-timetable`(학급 시간표 관리)을 새로 넣고 학급 운영 흐름에 연결했다.
-    // 2026-10-01: 관리자 시험 모듈의 도움말(`adminOnly`, 수호룡의 인형뽑기)은 공개 전이라 세지도 잇지도 않는다.
-    //   공개할 때 adminOnly 를 떼면 이 검사가 안내서 연결과 숫자 30을 요구한다.
+    // 2026-10-01: 관리자 시험 모듈의 도움말(`adminOnly`)은 공개 전이라 세지도 잇지도 않는다.
+    // 2026-10-02 에 29 → 30: `spelling-claw`(수호룡의 인형뽑기)를 학생에게 열며 포인트·동기부여 흐름에 연결했다.
     const publicGuideIds = Object.keys(TEACHER_GUIDES).filter((guideId) => !Reflect.get(TEACHER_GUIDES, guideId).adminOnly);
-    assert.equal(publicGuideIds.length, 29);
+    assert.equal(publicGuideIds.length, 30);
     for (const guideId of publicGuideIds) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);
         assert.ok(Reflect.get(TEACHER_GUIDE_TARGETS, guideId), `${guideId}: 실제 화면 이동 대상이 없다`);

@@ -180,3 +180,21 @@
 .claw-bench__history-table th { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
 .claw-bench__history-table tr.is-gift td { background: var(--ui-danger-soft); }
 .claw-bench__history-table tr.is-decor td { background: var(--ui-surface-muted); }
+
+/* 학생에게 열린 뒤(2026-10-02): 불러오는 중·오류, 학생 전체 화면 머리띠, 교사 저장 띠 */
+.claw-bench__state { display: grid; justify-items: center; gap: var(--ui-space-2); padding: var(--ui-space-10) var(--ui-space-4); color: var(--ui-ink-muted); font-size: var(--ui-text-lg); font-weight: 800; text-align: center; }
+.claw-bench__state span { font-size: var(--ui-text-3xl); }
+.claw-bench__error { margin: 0; padding: 10px 14px; border-radius: var(--ui-radius-md); background: var(--ui-danger-soft); color: var(--ui-danger); font-size: var(--ui-text-md); font-weight: 800; }
+.claw-bench__error button { margin-left: var(--ui-space-2); padding: 6px 12px; border: 0; border-radius: var(--ui-radius-md); background: var(--ui-danger); color: var(--ui-surface); font: inherit; font-weight: 900; cursor: pointer; }
+.claw-entry { min-height: 100vh; background: var(--ui-page); }
+.claw-entry__bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: var(--ui-space-3); padding: var(--ui-space-3) var(--ui-space-4); background: var(--ui-surface); box-shadow: var(--ui-shadow-xs); }
+.claw-entry__bar h1 { margin: 0; font-size: var(--ui-text-xl); }
+.claw-entry__bar button { min-height: var(--ui-control-md); padding: 0 16px; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-pill); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; font-weight: 900; cursor: pointer; }
+.claw-entry__points { margin-left: auto; color: var(--ui-ink-muted); font-size: var(--ui-text-md); font-weight: 800; }
+.claw-entry__points b { color: var(--ui-ink-strong); }
+.claw-bench__savebar { position: sticky; bottom: 0; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2) var(--ui-space-3); padding: var(--ui-space-3) var(--ui-space-4); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-md); font-size: var(--ui-text-md); font-weight: 800; }
+.claw-bench__savebar.is-dirty { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.claw-bench__savebar button { min-height: var(--ui-control-md); padding: 0 22px; border: 0; border-radius: var(--ui-radius-md); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-weight: 900; cursor: pointer; }
+.claw-bench__savebar button:disabled { background: var(--ui-border-strong); color: var(--ui-ink-muted); cursor: default; }
+.claw-bench__savebar .is-secondary { background: var(--ui-surface-muted); color: var(--ui-ink-strong); }
+.claw-bench__savebar span { margin-right: auto; }

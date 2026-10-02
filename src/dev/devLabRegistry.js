@@ -31,8 +31,8 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
   Object.freeze({
     id: 'spelling-claw',
     icon: '🧸',
-    title: '수호룡의 인형뽑기 (1단계 시제품)',
-    description: '맞춤법 10문제 → 교사 기준 통과 시 코인 → 3D 물리 인형뽑기 → 상품 확률표. 코인·상품은 화면에서만 흉내, 화질·fps 로 태블릿 성능을 본다',
+    title: '수호룡의 인형뽑기 (교사 화면)',
+    description: '학급 없이 여는 교사 화면 — 설정은 저장하지 않고, 학생 화면 미리보기는 이 브라우저 안에서만 흉내(실제 학생은 서버가 문제·상품을 정한다). 화질·fps 로 태블릿 성능을 본다',
     Component: SpellingClawPreview,
   }),
   Object.freeze({

@@ -98,7 +98,14 @@ test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차�
 });
 
 test('포인트 활동 유형 계약은 DB 엔진 허용 목록과 같다', async () => {
-    const migration = await read('supabase/migrations/20261206_title_season_rewards.sql');
+    // 포인트 엔진을 마지막으로 다시 만든 마이그레이션이 정본이다(20261206 칭호 보상 → 20261363 인형뽑기).
+    const { readdir } = await import('node:fs/promises');
+    const files = (await readdir(path.join(root, 'supabase/migrations'))).filter((file) => file.endsWith('.sql')).sort();
+    let migration = '';
+    for (const file of files) {
+        const sql = await read(`supabase/migrations/${file}`);
+        if (sql.includes('CREATE OR REPLACE FUNCTION public.point_engine_apply')) migration = sql;
+    }
     const pointEngine = migration.slice(
         migration.indexOf('CREATE OR REPLACE FUNCTION public.point_engine_apply'),
         migration.indexOf('REVOKE ALL ON FUNCTION public.point_engine_apply')

@@ -38,7 +38,8 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     'meal-board': { tab: 'tools', tool: 'meal-board' },
     'classroom-arrangement': { tab: 'tools', tool: 'classroom-arrangement' },
     dragon: { tab: 'playground', module: 'dragon' },
-    'vocab-tower': { tab: 'playground', module: 'vocab-tower' }
+    'vocab-tower': { tab: 'playground', module: 'vocab-tower' },
+    'spelling-claw': { tab: 'playground', module: 'spelling-claw' }
 });
 
 export const getTeacherGuide = (guideId) => Reflect.get(TEACHER_GUIDES, guideId) || null;

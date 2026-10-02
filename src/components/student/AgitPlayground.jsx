@@ -34,6 +34,7 @@ const ACTIVITY_LABELS = Object.freeze({
     hideout_purchase: '아지트 꾸미기',
     starting_bonus: '첫 포인트',
     title_reward: '칭호 단계 보상',
+    spelling_claw: '수호룡의 인형뽑기',
     private_adjustment: '선생님 포인트 조정'
 });
 const VISIBLE_ACTIVITY_TYPES = new Set(Object.keys(ACTIVITY_LABELS));

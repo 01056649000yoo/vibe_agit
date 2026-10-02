@@ -89,6 +89,9 @@ test('새로 게시된 공통 자료와 학급 자료는 저절로 출제되고,
 });
 
 test('문제 만들기는 앱 전용 코드를 부르지 않는다(서버 Deno 에서도 돈다)', async () => {
-    const source = await readFile('src/modules/game/spelling-claw/quiz/spellingQuizBuilder.js', 'utf8');
-    assert.doesNotMatch(source, /^import /m);
+    // 원본은 서버 함수 폴더에 있고(2026-10-02), 앱 쪽 파일은 그곳을 다시 내보내기만 한다.
+    for (const file of ['supabase/functions/spelling-claw/spellingQuizBuilder.js', 'supabase/functions/spelling-claw/prizeTable.js']) {
+        const source = await readFile(file, 'utf8');
+        assert.doesNotMatch(source, /^import /m, `${file} 가 다른 파일을 부릅니다(Edge 함수 폴더 밖은 운영에 올라가지 않습니다).`);
+    }
 });

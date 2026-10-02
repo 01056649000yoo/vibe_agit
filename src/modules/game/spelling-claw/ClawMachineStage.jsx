@@ -69,17 +69,20 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
 
     useEffect(() => { engineRef.current?.setDifficulty(difficulty); }, [difficulty]);
 
-    const press = useCallback(() => {
+    // 코인 넣기는 서버가 코인을 쓴 뒤에 판을 시작한다(학생 화면). onSpendCoin 은 참/거짓 또는 그 약속을 돌려준다.
+    const [spending, setSpending] = useState(false);
+    const press = useCallback(async () => {
         const engine = engineRef.current;
-        if (!engine) return;
+        if (!engine || spending) return;
         if (engine.getMode() === 'play') { engine.pressDrop(); return; }
         if (engine.getMode() !== 'ready') return;
-        if (coins <= 0 || !onSpendCoin?.()) {
-            setToast('맞춤법 퀴즈를 통과하면 코인을 받아요');
-            return;
-        }
-        engine.startRound();
-    }, [coins, onSpendCoin]);
+        if (coins <= 0) { setToast('맞춤법 퀴즈를 통과하면 코인을 받아요'); return; }
+        setSpending(true);
+        let ok = false;
+        try { ok = Boolean(await onSpendCoin?.()); } finally { setSpending(false); }
+        if (!ok) { setToast('코인을 넣지 못했어요. 다시 해 보세요'); return; }
+        if (engineRef.current?.getMode() === 'ready') engineRef.current.startRound();
+    }, [coins, onSpendCoin, spending]);
 
     const setDirection = (dir, on) => engineRef.current?.setInput(dir, on);
     const playing = hud.mode === 'play';
@@ -119,7 +122,7 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
                     onLostPointerCapture={() => setDirection(item.dir, false)}
                 >{item.mark}</button>)}
             </div>
-            <button type="button" className="claw-stage__go" onClick={press} disabled={Boolean(loading || error) || (!playing && hud.mode !== 'ready')}>
+            <button type="button" className="claw-stage__go" onClick={press} disabled={Boolean(loading || error) || spending || (!playing && hud.mode !== 'ready')}>
                 {/* 원(120px, 폰 96px) 안에 들어가게 큰 글은 네 글자 안으로(2026-10-02 `집게가 움직여요` 가 원 밖으로 나갔다). */}
                 {playing ? '뽑기!' : hud.mode === 'ready' ? '코인 넣기' : '잠깐만요'}
                 <small>{playing ? 'DROP' : hud.mode === 'ready' ? `코인 ${coins}개` : '집게 이동 중'}</small>

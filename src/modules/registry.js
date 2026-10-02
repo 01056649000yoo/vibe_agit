@@ -46,7 +46,7 @@ const manifests = [
   labActivitiesManifest, // src/modules/writing/lab-activities/
   classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
   classTimetableManifest, // src/modules/tool/class-timetable/ (new:module, 공개 전)
-  spellingClawManifest, // src/modules/game/spelling-claw/ (관리자만 시험, 학생 비노출)
+  spellingClawManifest, // src/modules/game/spelling-claw/ (학급별 켜기, 기본 꺼짐)
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)
