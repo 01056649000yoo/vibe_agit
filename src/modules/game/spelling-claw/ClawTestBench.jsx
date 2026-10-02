@@ -224,6 +224,14 @@ export default function ClawTestBench({ activeClass }) {
             plushId, name: plush?.name || plushId, prize
         }, ...rows].slice(0, 100));
         if (rolled.kind === 'gift' || rolled.kind === 'decor') setCelebration({ prize: rolled, plushName: plush?.name || plushId });
+        // 학생 홈 알림 미리보기: 본인 상품 알림, 선생님 선물이면 반 전체 알림도(2단계에서 서버가 실제로 보낸다).
+        const own = resolveActivityNotification({ event_type: 'spelling-claw.prize_awarded', payload: {
+            kind: rolled.kind, points: rolled.points, gift_name: rolled.gift?.name, item_name: rolled.item?.name, plush_name: plush?.name
+        } });
+        setNotificationPreview(rolled.kind === 'gift'
+            ? { ...resolveActivityNotification({ event_type: 'spelling-claw.class_gift_won', payload: { winner_name: student.name, gift_name: rolled.gift?.name } }),
+                audience: `반 친구 모두에게 이렇게 가요 · ${student.name}에게는 “${own.message}”` }
+            : { ...own, audience: `${student.name}의 학생 홈 활동 알림으로 이렇게 가요` });
         setRecordHold(6000);
         setRecordOpen(true);
     };
@@ -422,7 +430,7 @@ export default function ClawTestBench({ activeClass }) {
             </section>
 
             {notificationPreview && <section className="claw-bench__notice-preview" aria-label="학생 홈 알림 미리보기">
-                <small>학생 홈 활동 알림으로 이렇게 가요(시험 중이라 실제로는 보내지 않아요)</small>
+                <small>{notificationPreview.audience || '학생 홈 활동 알림으로 이렇게 가요'} (시험 중이라 실제로는 보내지 않아요)</small>
                 <div>
                     <span aria-hidden="true">{notificationPreview.icon}</span>
                     <p><b>{notificationPreview.title}</b>{notificationPreview.message}</p>

@@ -244,3 +244,23 @@ test('큰 상품(선물·수호룡 아이템)만 화면 가득 축하하고, 교
     assert.match(bench, /\{ id: 'history', icon: '📜', label: '뽑기 내역' \}/);
     assert.match(readme, /탭이 보이는 동안만 12초마다/);
 });
+
+test('상품 알림: 뽑은 본인과, 선생님 선물이면 반 전체에게 간다', async () => {
+    const { spellingClawManifest } = await import('../src/modules/game/spelling-claw/manifest.js');
+    const byType = new Map(spellingClawManifest.notifications.map((item) => [item.eventType, item]));
+    const own = byType.get('spelling-claw.prize_awarded');
+    assert.equal(own.message({ kind: 'points', points: 30, plush_name: '시바견' }), '시바견 인형을 뽑아 30P를 받았어요.');
+    assert.match(own.message({ kind: 'gift', gift_name: '자리 고르기권' }), /선생님 선물 ‘자리 고르기권’에 당첨/);
+    const classWide = byType.get('spelling-claw.class_gift_won');
+    assert.equal(classWide.message({ winner_name: '김하늘', gift_name: '자리 고르기권' }), '김하늘이 수호룡의 인형뽑기에서 ‘자리 고르기권’에 당첨됐어요! 축하해 주세요.');
+    assert.match(classWide.message({ winner_name: '이서아', gift_name: '급식 먼저 먹기권' }), /^이서아가 /);
+    const readme = await readFile('src/modules/game/spelling-claw/README.md', 'utf8');
+    assert.match(readme, /같은 반 다른 학생마다 한 건/);
+});
+
+test('집으로 돌아온 집게는 흔들림을 빨리 가라앉힌다(기다릴 때만 감쇠를 높인다)', async () => {
+    const engine = await readFile('src/modules/game/spelling-claw/engine/clawEngine.js', 'utf8');
+    assert.match(engine, /hubBody\.setLinearDamping\(calm \? 4 : 0\.4\)/);
+    assert.match(engine, /roundActive = true;\s*setClawCalm\(false\);/);
+    assert.match(engine, /claw\.mode = 'ready'; claw\.weak = false; setClawCalm\(true\);/);
+});

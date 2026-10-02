@@ -415,6 +415,13 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
     .setLinearDamping(0.4).setAngularDamping(1.5).setCanSleep(false).setCcdEnabled(true));
   const hubCol = world.createCollider(RAPIER.ColliderDesc.cylinder(0.028, 0.032).setDensity(1600).setFriction(0.6), hubBody);
   clawColliders.add(hubCol.handle);
+  // 기다릴 때(ready)는 흔들림을 빨리 가라앉힌다. 원본 감쇠(0.4)로는 집으로 돌아온 집게가 3~4cm 폭으로
+  // 계속 그네를 타 화면이 흔들려 보였다(2026-10-02 점검). 움직이는 동안은 원본 그대로 흔들린다.
+  const setClawCalm = (calm) => {
+    hubBody.setLinearDamping(calm ? 4 : 0.4);
+    hubBody.setAngularDamping(calm ? 6 : 1.5);
+  };
+  setClawCalm(true);
   // 줄: 길이를 바꿀 때마다 밧줄 관절을 새로 건다 (윈치)
   let rope = null, ropeLen = -1;
   function setRope(len) {
@@ -659,6 +666,8 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
   }
 
   const plushBodies = [];
+  // 점검용 수(2026-10-02 인형 떨림 조사): 끼인 인형을 들어 옮긴 횟수.
+  const debugCounters = { unstickMoves: 0, resizes: 0 };
   const byCollider = new Map();
   function spawnPlush(typeId, x, y, z) {
     const T = TYPES[typeId];
@@ -835,6 +844,7 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
     if (claw.mode !== 'ready') return false;
     roundWins = [];
     roundActive = true;
+    setClawCalm(false);
     claw.mode = 'play'; claw.timer = PLAY_TIME;
     sfx.coin(); renderHud();
     return true;
@@ -936,7 +946,7 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
       case 'release': {
         claw.t += dt;
         if (claw.t > 1.3) {
-          claw.mode = 'ready'; claw.weak = false; renderHud(); maybeRefill();
+          claw.mode = 'ready'; claw.weak = false; setClawCalm(true); renderHud(); maybeRefill();
           roundActive = false;
           emit({ type: 'roundEnd', won: roundWins.slice() });
         }
@@ -1006,6 +1016,7 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
         p.body.setTranslation({ x: THREE.MathUtils.clamp(nx, X0 + 0.07, X1 - 0.07), y: t.y + 0.05, z: THREE.MathUtils.clamp(nz, Z0 + 0.07, Z1 - 0.07) }, true);
         p.body.setLinvel({ x: 0, y: 0, z: 0 }, true); p.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
         p.stuck = 0;
+        debugCounters.unstickMoves += 1;
       }
     }
   }
@@ -1074,6 +1085,7 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
 
   function resize() {
     const w = Math.max(1, container.clientWidth), h = Math.max(1, container.clientHeight);
+    debugCounters.resizes += 1;
     renderer.setSize(w, h);
     camera.aspect = w / h;
     // 세로 화면에서도 기계 전체 폭이 보이도록 화각 보정
@@ -1140,6 +1152,24 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
     setDifficulty(next) { if (DIFF[next]) { state.diff = next; renderHud(); } },
     setSound(on) { state.sound = Boolean(on); },
     getMode: () => claw.mode,
+    /** 점검용: 인형이 가만히 있는지(떨림) 잰다. 화면에는 쓰지 않는다. */
+    getDebugSnapshot() {
+      let moving = 0, sleeping = 0, maxSpeed = 0, wobbling = 0;
+      for (const p of plushBodies) {
+        if (p.won) continue;
+        const v = p.body.linvel(), w = p.body.angvel();
+        const speed = Math.hypot(v.x, v.y, v.z) + Math.hypot(w.x, w.y, w.z) * 0.05;
+        if (p.body.isSleeping()) sleeping += 1;
+        if (speed > 0.02) moving += 1;
+        if (p.soft && (p.soft.wob.lengthSq() > 1e-7 || Math.abs(p.soft.sq) > 0.002)) wobbling += 1;
+        maxSpeed = Math.max(maxSpeed, speed);
+      }
+      const movers = plushBodies.filter((p) => !p.won).map((p) => {
+        const v = p.body.linvel(), t = p.body.translation();
+        return { type: p.type, speed: Math.round(Math.hypot(v.x, v.y, v.z) * 1000) / 1000, x: Math.round(t.x * 1000) / 1000, y: Math.round(t.y * 1000) / 1000, z: Math.round(t.z * 1000) / 1000, pen: Math.round(penetration(p) * 10000) / 10000, stuck: p.stuck, lifted: Boolean(p.lifted) };
+      }).filter((m) => m.speed > 0.02);
+      return { movers, chute: CHUTE, hub: { x: Math.round(claw.hubPos.x * 1000) / 1000, y: Math.round(claw.hubPos.y * 1000) / 1000, z: Math.round(claw.hubPos.z * 1000) / 1000 }, count: plushBodies.filter((p) => !p.won).length, moving, sleeping, wobbling, maxSpeed: Math.round(maxSpeed * 1000) / 1000, unstickMoves: debugCounters.unstickMoves, resizes: debugCounters.resizes, mode: claw.mode };
+    },
     dispose() {
       disposed = true;
       cancelAnimationFrame(rafId);
