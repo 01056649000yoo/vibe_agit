@@ -64,7 +64,13 @@ const MIGRATED = [
     'src/components/student/StudentHomeGrowthPanel.css',
     'src/components/student/StudentBottomNav.jsx',
     'src/components/student/ReactionNamesTooltip.jsx',
-    'src/components/teacher/TeacherSubmissionBoard.css'
+    'src/components/teacher/TeacherSubmissionBoard.css',
+    // 수호룡의 인형뽑기(2026-10-02 학생 공개) — 처음부터 계단 토큰으로 만들었다. 큰 이모지(축하 5rem)는 아이콘이라 넘어간다.
+    'src/modules/game/spelling-claw/clawTestBench.css',
+    'src/modules/game/spelling-claw/clawMachineStage.css',
+    'src/modules/game/spelling-claw/clawIntroDialog.css',
+    'src/modules/game/spelling-claw/clawCelebration.css',
+    'src/modules/game/spelling-claw/quizDragon.css'
 ];
 
 /*

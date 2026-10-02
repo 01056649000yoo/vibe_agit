@@ -193,7 +193,7 @@
     box-shadow: var(--ui-focus-ring);
 }
 
-@media (max-width: 620px) {
+@container (max-width: 620px) {
     .claw-stage { height: 70vh; min-height: 380px; }
     .claw-stage__dpad { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); }
     .claw-stage__go { width: 96px; height: 96px; }
