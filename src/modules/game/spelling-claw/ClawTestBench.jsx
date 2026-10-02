@@ -63,7 +63,8 @@ const markIntroSeen = () => { try { window.localStorage.setItem(INTRO_SEEN_KEY, 
 
 // 교사 상품 설정 — 1단계는 이 브라우저에만 둔다. 2단계에서 학급 설정(DB)으로 옮기고 서버가 같은 검증으로 읽는다.
 // v2(2026-10-02): 비중 → 상품마다 확률(%) 합 100. 옛 v1 값은 형식이 달라 읽지 않는다(기본값부터).
-const PRIZE_SETTINGS_KEY = 'spelling-claw-prize-settings-v2';
+// v3(2026-10-02): 기본값을 포인트 90·아이템 9·선물 1%로 바꿔, 예전에 저장한 시험 설정 대신 새 기본값에서 시작한다.
+const PRIZE_SETTINGS_KEY = 'spelling-claw-prize-settings-v3';
 const readPrizeSettings = () => {
     try {
         const saved = window.localStorage.getItem(PRIZE_SETTINGS_KEY);

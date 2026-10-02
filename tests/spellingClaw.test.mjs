@@ -120,7 +120,7 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(intro, /포인트<\/b>부터 <b>선생님 선물<\/b>, <b>수호룡 상점 아이템<\/b>까지/);
     assert.match(intro, /상품이 나올 확률 보기/);
     assert.match(guides, /'spelling-claw': \{/);
-    assert.match(guides, /수호룡 상점 아이템 5%/);
+    assert.match(guides, /수호룡 상점 아이템 9%/);
     // 교사 관리·학생 화면 두 탭 — 상품 설정은 교사 관리 탭에 펼친 채로(단추 뒤에 숨기지 않는다).
     assert.match(guides, /`🛠️ 교사 관리` 탭의 상품 설정/);
     assert.match(bench, /role="tablist"/);
@@ -146,8 +146,8 @@ test('교사가 넣은 확률(%)도 꽝이 없고, 화면의 확률과 실제 �
     assert.equal(safe.decor.hero, 0);
     assert.equal(safe.decor.starter, CLAW_DEFAULT_PRIZE_SETTINGS.decor.starter, '빠진 칸은 기본값이어야 합니다.');
 
-    // 기본값은 합 100%, 선물은 5%(선생님 요청 — 너무 잦지 않게).
-    assert.deepEqual(sumClawPrizeSettings(CLAW_DEFAULT_PRIZE_SETTINGS), { total: 100, kinds: { points: 90, gift: 5, decor: 5 } });
+    // 기본값은 합 100%: 포인트 90 · 아이템 9 · 선물 1(2026-10-02 선생님 결정 — 선물은 드물게).
+    assert.deepEqual(sumClawPrizeSettings(CLAW_DEFAULT_PRIZE_SETTINGS), { total: 100, kinds: { points: 90, gift: 1, decor: 9 } });
 
     // 모든 확률을 0으로 두어도 포인트가 나온다(기본 포인트 표로).
     const allOff = { points: [{ id: 'x', points: 10, percent: 0 }], gifts: [], decor: { starter: 0, common: 0, rare: 0, hero: 0 } };
@@ -201,10 +201,10 @@ test('하루 기회를 다 쓰고 최소 포인트를 받으면 학생 홈 알�
 
 test('종류별 몫은 줄마다 반올림한 값을 더하지 않고 바로 낸다 — 기본값은 이 학생 조건에서 그대로 공개된다', () => {
     const odds = describeClawOdds({ decorTiers: ['starter', 'common', 'rare', 'hero'] });
-    assert.deepEqual(odds.kinds, { points: 90, gift: 5, decor: 5 });
+    assert.deepEqual(odds.kinds, { points: 90, gift: 1, decor: 9 });
     assert.deepEqual(odds.points.map((row) => row.percent), [36, 27, 14, 9, 4]);
-    // 입문 등급만 받을 수 있는 학생: 나머지 등급 몫(2%)은 포인트로, 선물 5%는 그대로.
-    assert.deepEqual(describeClawOdds({ decorTiers: ['starter'] }).kinds, { points: 92, gift: 5, decor: 3 });
+    // 입문 등급만 받을 수 있는 학생: 나머지 등급 몫(3.6%)은 포인트로, 선물 1%는 그대로.
+    assert.deepEqual(describeClawOdds({ decorTiers: ['starter'] }).kinds, { points: 93.6, gift: 1, decor: 5.4 });
     assert.deepEqual(describeClawOdds({ settings: { gifts: [] } }).kinds, { points: 100, gift: 0, decor: 0 });
 });
 

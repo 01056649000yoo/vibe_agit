@@ -41,7 +41,7 @@ export const CLAW_PRIZE_LIMITS = Object.freeze({
     giftName: 30
 });
 
-/** 기본값(합 100%): 포인트 90%(평균 약 24P) · 선생님 선물 5% · 수호룡 아이템 5%. 선물이 너무 잦지 않게(선생님 요청). */
+/** 기본값(합 100%): 포인트 90%(평균 약 24P) · 수호룡 상점 아이템 9% · 선생님 선물 1%(2026-10-02 선생님 결정 — 선물은 드물게). */
 export const CLAW_DEFAULT_PRIZE_SETTINGS = Object.freeze({
     points: Object.freeze([
         { id: 'p10', points: 10, percent: 36 },
@@ -51,10 +51,10 @@ export const CLAW_DEFAULT_PRIZE_SETTINGS = Object.freeze({
         { id: 'p100', points: 100, percent: 4 }
     ].map(Object.freeze)),
     gifts: Object.freeze([
-        { id: 'seat', name: '자리 고르기권', percent: 3 },
-        { id: 'lunch', name: '급식 먼저 먹기권', percent: 2 }
+        { id: 'seat', name: '자리 고르기권', percent: 0.6 },
+        { id: 'lunch', name: '급식 먼저 먹기권', percent: 0.4 }
     ].map(Object.freeze)),
-    decor: Object.freeze({ starter: 3, common: 1.5, rare: 0.4, hero: 0.1 })
+    decor: Object.freeze({ starter: 5.4, common: 2.7, rare: 0.7, hero: 0.2 })
 });
 
 const toInt = (value, min, max, fallback) => {
