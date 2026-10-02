@@ -125,9 +125,20 @@
 .claw-prize-settings legend { padding: 0 6px; font-size: var(--ui-text-lg); font-weight: 900; color: var(--ui-ink-strong); }
 .claw-prize-settings small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
 /* 줄 모양: 종류·등급은 [이름 | 비중 | 확률], 포인트는 [금액 P | 비중 | 확률 | 빼기], 선물은 [이름 | 비중 | 확률 | 빼기](좁으면 이름을 한 줄 위로). */
-.claw-prize-settings__row { display: grid; grid-template-columns: minmax(6.5rem, 1fr) 5rem 4.5rem; gap: var(--ui-space-2); align-items: center; }
-.claw-prize-settings__row--points { grid-template-columns: 5.5rem 4.5rem minmax(3.5rem, 1fr) 2.25rem; }
-.claw-prize-settings__row--gift { grid-template-columns: minmax(7rem, 1fr) 4.5rem 3.5rem 2.25rem; }
+.claw-prize-settings__row { display: grid; grid-template-columns: minmax(5rem, 1fr) 6.5rem; gap: var(--ui-space-2); align-items: center; }
+.claw-prize-settings__row--points { grid-template-columns: minmax(5.5rem, 1fr) 6.5rem 2.25rem; }
+.claw-prize-settings__row--gift { grid-template-columns: minmax(7rem, 1fr) 6.5rem 2.25rem; }
+.claw-prize-settings__percent { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; color: var(--ui-ink-muted); }
+.claw-prize-settings__percent input { text-align: right; font-weight: 800; color: var(--ui-primary); }
+/* 묶음 전체 칸: 묶음 맨 위, 안의 줄보다 굵게. */
+.claw-prize-settings__group { display: grid; grid-template-columns: minmax(0, 1fr) 5rem auto; gap: 6px; align-items: center; padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); font-weight: 900; color: var(--ui-ink-strong); }
+.claw-prize-settings__group input { text-align: right; font-size: var(--ui-text-lg); font-weight: 900; color: var(--ui-ink-strong); }
+/* 합계 줄: 100% 면 성공색, 아니면 경고색 — 아이콘·글자와 함께(색만으로 알리지 않는다). */
+.claw-prize-settings__total { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2) var(--ui-space-3); padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-md); font-size: var(--ui-text-md); }
+.claw-prize-settings__total b { font-size: var(--ui-text-lg); }
+.claw-prize-settings__total.is-ok { background: var(--ui-success-soft); color: var(--ui-success); }
+.claw-prize-settings__total.is-off { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.claw-prize-settings__total button { margin-left: auto; padding: 6px 12px; border: 1px solid currentColor; border-radius: var(--ui-radius-md); background: var(--ui-surface); color: inherit; font: inherit; font-weight: 900; cursor: pointer; }
 .claw-prize-settings__row > span, .claw-prize-settings__amount { grid-column: 1; font-weight: 800; white-space: nowrap; }
 .claw-prize-settings__row > b { text-align: right; font-size: var(--ui-text-md); color: var(--ui-primary); }
 .claw-prize-settings__amount { display: inline-flex; gap: 6px; align-items: center; }
@@ -149,6 +160,7 @@
 }
 @container (max-width: 639px) {
     .claw-prize-settings__avg { margin-left: 0; }
-    .claw-prize-settings__row--gift { grid-template-columns: 4.5rem minmax(3.5rem, 1fr) 2.25rem; }
+    .claw-prize-settings__row--gift { grid-template-columns: minmax(0, 1fr) 6.5rem 2.25rem; }
     .claw-prize-settings__row--gift > input[type="text"] { grid-column: 1 / -1; }
+    .claw-prize-settings__row--gift > .claw-prize-settings__percent { grid-column: 2; }
 }

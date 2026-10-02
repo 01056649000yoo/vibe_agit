@@ -61,7 +61,8 @@ const readIntroSeen = () => { try { return window.localStorage.getItem(INTRO_SEE
 const markIntroSeen = () => { try { window.localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch { /* 저장 못 해도 다음에 한 번 더 보일 뿐 */ } };
 
 // 교사 상품 설정 — 1단계는 이 브라우저에만 둔다. 2단계에서 학급 설정(DB)으로 옮기고 서버가 같은 검증으로 읽는다.
-const PRIZE_SETTINGS_KEY = 'spelling-claw-prize-settings-v1';
+// v2(2026-10-02): 비중 → 상품마다 확률(%) 합 100. 옛 v1 값은 형식이 달라 읽지 않는다(기본값부터).
+const PRIZE_SETTINGS_KEY = 'spelling-claw-prize-settings-v2';
 const readPrizeSettings = () => {
     try {
         const saved = window.localStorage.getItem(PRIZE_SETTINGS_KEY);
@@ -302,8 +303,8 @@ export default function ClawTestBench({ activeClass }) {
             </section>
 
             <section className="claw-bench__panel claw-bench__prizes" aria-label="상품 설정">
-                <header><b>상품 설정</b><span>인형을 뽑았을 때 나올 상품과 확률 · 학생은 처음 안내의 ‘상품이 나올 확률 보기’로 봐요</span></header>
-                <ClawPrizeSettings draft={prizeDraft} odds={odds} onChange={changePrizeDraft} />
+                <header><b>상품 설정</b><span>인형 하나를 뽑았을 때 각 상품이 나올 확률 · 합계 100% · 학생은 처음 안내의 ‘상품이 나올 확률 보기’로 봐요</span></header>
+                <ClawPrizeSettings draft={prizeDraft} onChange={changePrizeDraft} />
             </section>
         </div>
 

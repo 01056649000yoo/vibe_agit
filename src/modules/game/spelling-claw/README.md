@@ -21,11 +21,12 @@
   난이도 쉬움/보통/어려움 = 주관식 3/4/6개. 앱 전용 import 가 없어 2단계 서버(Deno)도 같은 파일을 쓴다.
   앱 사전과 공개 파일(`public/spelling/*.json`)이 같은 문제를 만드는지 검사가 본다.
 - `prizeTable.js` — 상품 설정의 **하나뿐인 원본**: 기본값(`CLAW_DEFAULT_PRIZE_SETTINGS`)·검증(`normalizeClawPrizeSettings`)·
-  추첨(`rollClawPrize`)·확률 공개(`describeClawOdds`). 추첨과 확률 공개는 같은 "지금 나올 수 있는 줄" 계산을 거쳐 어긋나지 않는다.
+  추첨(`rollClawPrize`)·확률 공개(`describeClawOdds`)·합계(`sumClawPrizeSettings`). 설정은 **상품마다 확률(%)**(포인트 금액별·선물별·아이템 등급별, 합 100%).
+  추첨과 확률 공개는 같은 `planOf` 를 거쳐 어긋나지 않고, 그 학생이 받을 아이템이 없는 등급의 몫은 포인트로 간다(다른 상품 확률은 그대로).
   2단계에서 교사 설정은 학급 설정(DB)에 두고, 서버(Deno)도 이 파일로 검증·추첨한다(앱 전용 import 없음).
 - `ClawTestBench.jsx` — 탭 두 개: `🛠️ 교사 관리`(학급 설정·상품 설정을 펼쳐 둠) / `🧒 학생 화면`(학생이 보는 그대로, 탭을 오가도 상태 유지).
-- `ClawPrizeSettings.jsx` — 교사 상품 설정 판(2026-10-02): 종류·포인트 금액·선생님 선물 목록·아이템 등급 비중, 칸마다 실제 확률.
-  1단계는 시험대가 이 브라우저(`spelling-claw-prize-settings-v1`)에만 저장한다.
+- `ClawPrizeSettings.jsx` — 교사 상품 설정 판(2026-10-02): 상품마다 확률(%) 입력, 합계 100% 표시·`100%로 맞추기`, 한눈에 보기 막대.
+  1단계는 시험대가 이 브라우저(`spelling-claw-prize-settings-v2`)에만 저장한다(v1 비중 형식은 읽지 않음).
 
 ## 학생 홈 알림 (2026-10-02 결정)
 - 하루 기회를 다 쓰고 하나도 못 뽑아 **최소 포인트를 받으면** 학생 홈 활동 알림으로 알린다(`spelling-claw.consolation_awarded`,
