@@ -214,4 +214,3 @@
 .claw-bench__gift { min-height: var(--ui-control-sm); padding: 0 14px; border: 0; border-radius: var(--ui-radius-pill); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-size: var(--ui-text-sm); font-weight: 900; cursor: pointer; }
 .claw-bench__gift.is-given { background: var(--ui-success-soft); color: var(--ui-success); }
 .claw-bench__gift:disabled { opacity: 0.6; cursor: default; }
-.claw-bench__credit { margin: 0; color: var(--ui-ink-subtle); font-size: var(--ui-text-xs); text-align: right; }

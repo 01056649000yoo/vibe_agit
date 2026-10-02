@@ -363,6 +363,4 @@ test('인형 도감은 8종을 늘 보여 주고, 그림은 엔진 없이도 보
     }
     assert.match(screen, /className="claw-bench__dex"[\s\S]*CLAW_PLUSHES\.map/);
     assert.match(screen, /is-caught' : 'is-missing'/);
-    // 인형 모델 출처 표시(OI-023 — 무료 요금제 모델은 CC BY 4.0).
-    assert.match(screen, /Tripo AI로 만듦\(CC BY 4\.0\)/);
 });

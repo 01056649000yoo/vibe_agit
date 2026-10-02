@@ -262,8 +262,6 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                     coins={coins} quality={quality} difficulty={settings.grip}
                     onSpendCoin={spendCoin} onWon={onWon} onRoundEnd={onRoundEnd} onPerf={onPerf}
                 />
-                {/* 인형 모델 출처(OI-023). 무료 요금제로 만든 모델은 CC BY 4.0 이라 출처 표시가 필요하다 — 유료 확인 전까지 늘 둔다. */}
-                <p className="claw-bench__credit">인형 3D 모델: Tripo AI로 만듦(CC BY 4.0)</p>
             </> : <div className="claw-bench__locked">
                 <span aria-hidden="true">🔒</span>
                 <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
