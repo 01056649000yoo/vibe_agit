@@ -3,10 +3,20 @@ import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import useNotice from '../../../components/common/useNotice';
 
 // 설정 갈래. 세 벌 모두 같은 `config` 를 저장하므로 순서만 정하면 된다.
+// 맨 위 갈래(2026-10-02 선생님 요청): 운영 설명(한 번 읽는 곳) / 설정(자주 바꾸는 곳) / 학생 현황. 마지막 갈래를 이 브라우저에 기억한다.
 const VIEWS = Object.freeze([
+    { id: 'guide', icon: '📘', label: '운영 설명' },
     { id: 'settings', icon: '⚙️', label: '설정' },
     { id: 'students', icon: '👥', label: '학생 현황' }
 ]);
+const VIEW_KEY = 'vocab-teacher-view-v1';
+const readView = () => {
+    try {
+        const saved = window.localStorage.getItem(VIEW_KEY);
+        return VIEWS.some((item) => item.id === saved) ? saved : 'guide';
+    } catch { return 'guide'; }
+};
+const saveView = (id) => { try { window.localStorage.setItem(VIEW_KEY, id); } catch { /* 다음에 운영 설명부터 보일 뿐 */ } };
 const SETTING_PANELS = Object.freeze([
     { id: 'practice', icon: '📚', label: '개인 연습', hint: '층별 12문항과 층당 보상' },
     { id: 'master', icon: '🏆', label: '덱마스터 도전', hint: '다음 층을 여는 시험 조건' },
@@ -95,8 +105,9 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
      * 갈래를 옮겨도 **적다 만 값이 사라지지 않고** 어느 갈래에서 저장해도 전부 저장된다.
      */
     const [panel, setPanel] = useState('practice');
-    // 맨 위 갈래: 설정 / 학생 현황(2026-10-02 선생님 요청). 학생 현황은 열 때만 불러온다.
-    const [view, setView] = useState('settings');
+    // 학생 현황은 그 갈래를 열 때만 불러온다.
+    const [view, setViewState] = useState(readView);
+    const setView = (id) => { setViewState(id); saveView(id); };
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -270,7 +281,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     </button>
                 ))}
             </nav>
-            {view === 'students' ? <VocabTeacherStudentStatus classId={classId} /> : <>
+            {view === 'students' && <VocabTeacherStudentStatus classId={classId} />}
+            {view === 'guide' && (
             <section className="vocab-teacher__overview" aria-labelledby="vocab-journey-title">
                 <div className="vocab-teacher__section-heading">
                     <div>
@@ -327,7 +339,9 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div><span>층당 보상</span><strong>{config.perfectRewardPoints}P</strong></div>
                 </div>
             </section>
+            )}
 
+            {view === 'settings' && <>
             <nav className="vocab-teacher__panel-tabs" role="tablist" aria-label="어휘의 탑 설정 갈래">
                 {SETTING_PANELS.map((item) => (
                     <button

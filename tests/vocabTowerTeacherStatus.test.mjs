@@ -8,8 +8,12 @@ test('어휘의 탑 교사 학생 현황: 맨 위 탭, 열 때만 RPC 1회, 학�
         readFile('src/modules/game/vocab-tower/TeacherStudentStatus.jsx', 'utf8'),
         readFile('supabase/migrations/20261366_vocab_tower_teacher_student_status.sql', 'utf8')
     ]);
-    assert.match(manager, /\{ id: 'students', icon: '👥', label: '학생 현황' \}/);
-    assert.match(manager, /view === 'students' \? <VocabTeacherStudentStatus classId=\{classId\} \/>/);
+    assert.match(manager, /\{ id: 'guide', icon: '📘', label: '운영 설명' \},\s*\{ id: 'settings', icon: '⚙️', label: '설정' \},\s*\{ id: 'students', icon: '👥', label: '학생 현황' \}/);
+    // 운영 설명과 설정은 다른 갈래 — 설명 상자는 설정 갈래에 섞이지 않는다.
+    assert.ok(manager.indexOf("view === 'guide'") < manager.indexOf('vocab-teacher__overview'));
+    assert.ok(manager.indexOf("view === 'settings'") > manager.indexOf('vocab-teacher__overview'));
+    assert.ok(manager.indexOf("view === 'settings'") < manager.indexOf('vocab-teacher__panel-tabs'));
+    assert.match(manager, /view === 'students' && <VocabTeacherStudentStatus classId=\{classId\} \/>/);
     assert.match(status, /rpc\('get_teacher_vocab_tower_student_status_v1', \{ p_class_id: classId \}\)/);
     assert.doesNotMatch(status, /setInterval|\.channel\(/, '학생 현황은 폴링·Realtime 을 쓰지 않는다.');
     // 학생 지도와 같은 상태 이름.
