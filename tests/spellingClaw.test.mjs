@@ -125,6 +125,10 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(bench, /role="tablist"/);
     assert.match(bench, /id="claw-bench-panel-manage"[\s\S]*<ClawPrizeSettings[\s\S]*id="claw-bench-panel-student"/);
     assert.doesNotMatch(bench, /prizeEditing/);
+    // 학생 화면 탭 안에는 학생에게 보이는 것만 — 대상 학생·화질·시험용 코인은 탭 줄(위)에 둔다.
+    const studentPanel = bench.slice(bench.indexOf('id="claw-bench-panel-student"'));
+    assert.doesNotMatch(studentPanel, /대상 학생|코인 \+1 \(시험용\)|하루 새로 시작|setQuality/);
+    assert.match(bench.slice(0, bench.indexOf('id="claw-bench-panel-manage"')), /claw-bench__preview-tools[\s\S]*코인 \+1 \(시험용\)/);
 });
 
 test('교사가 바꾼 상품 설정도 꽝이 없고, 화면의 확률과 실제 추첨이 같다', () => {
@@ -191,4 +195,10 @@ test('하루 기회를 다 쓰고 최소 포인트를 받으면 학생 홈 알�
     assert.equal(notice.message({ points: 20, plays: 3 }), '오늘 인형뽑기 기회 3번을 다 썼어요. 맞춤법 문제를 푼 상으로 20P를 받았어요.');
     const readme = await readFile('src/modules/game/spelling-claw/README.md', 'utf8');
     assert.match(readme, /같은 트랜잭션에서 `notification_emit_v1`/);
+});
+
+test('종류별 몫은 줄마다 반올림한 값을 더하지 않고 바로 낸다(85.1% 같은 어긋남 없음)', () => {
+    const odds = describeClawOdds({ decorTiers: ['starter', 'common'] });
+    assert.deepEqual(odds.kinds, { points: 85, gift: 10, decor: 5 });
+    assert.deepEqual(describeClawOdds({ settings: { gifts: [] } }).kinds, { points: 100, gift: 0, decor: 0 });
 });

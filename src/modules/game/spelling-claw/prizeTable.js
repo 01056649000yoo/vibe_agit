@@ -185,6 +185,7 @@ export const rollClawPrize = ({ settings = CLAW_DEFAULT_PRIZE_SETTINGS, eligible
 /**
  * 화면의 `확률 보기`·교사 설정 판용: 지금 조건에서 각 상품이 나올 실제 확률(%).
  * `points`·`gifts` 줄은 `id` 를 달고 오며, 확률 0인 줄은 빠진다. `gift` 는 선물 전체 합.
+ * `kinds` 는 종류별 몫(반올림 전 값으로 계산 — 줄마다 반올림한 값을 더하면 85.1% 처럼 어긋난다).
  */
 export const describeClawOdds = ({ settings = CLAW_DEFAULT_PRIZE_SETTINGS, decorTiers = [] } = {}) => {
     const safe = normalizeClawPrizeSettings(settings);
@@ -201,6 +202,7 @@ export const describeClawOdds = ({ settings = CLAW_DEFAULT_PRIZE_SETTINGS, decor
         points: spread(livePoints(safe), shareOf('points')).map(({ row, percent }) => ({ id: row.id, label: `${row.points}P`, percent })),
         gifts,
         gift: Math.round(shareOf('gift') * 1000) / 10,
+        kinds: Object.fromEntries(CLAW_PRIZE_KINDS.map(({ kind }) => [kind, Math.round(shareOf(kind) * 1000) / 10])),
         decor: spread(liveDecorTiers(safe, decorTiers), shareOf('decor')).map(({ row, percent }) => ({ id: row.rarity, label: row.label, percent }))
     };
 };

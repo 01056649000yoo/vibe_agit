@@ -38,6 +38,11 @@
   --ui-danger-hover: #991b1b;
   --ui-danger-soft: #fef2f2;
 
+  /* 그래프 범주 색 — 순서대로만 쓴다(색약 구분·밝기 검사 통과: 파랑·주황·청록). 상태색(성공·경고)과 섞지 않고, 범례에 이름을 함께 쓴다. */
+  --ui-chart-1: #2a78d6;
+  --ui-chart-2: #eb6834;
+  --ui-chart-3: #1baf7a;
+
   /* 고친 글 비교 — 형광펜(새로 쓰거나 고친 곳)과 지운 곳 */
   --ui-highlight: #fde68a;
   --ui-highlight-ink: #422006;

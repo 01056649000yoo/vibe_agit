@@ -245,22 +245,37 @@ export default function ClawTestBench({ activeClass }) {
             minPoints={minPoints} odds={odds} onClose={closeIntro}
         />}
 
-        <div className="claw-bench__tabs" role="tablist" aria-label="인형뽑기 화면 선택">
-            {BENCH_TABS.map((item, index) => <button key={item.id} id={`claw-bench-tab-${item.id}`} type="button" role="tab"
-                aria-selected={tab === item.id} aria-controls={`claw-bench-panel-${item.id}`} tabIndex={tab === item.id ? 0 : -1}
-                className={tab === item.id ? 'is-active' : ''} onClick={() => changeTab(item.id)}
-                onKeyDown={(event) => {
-                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-                    event.preventDefault();
-                    const last = BENCH_TABS.length - 1;
-                    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? last
-                        : event.key === 'ArrowRight' ? (index === last ? 0 : index + 1) : (index === 0 ? last : index - 1);
-                    const nextTab = BENCH_TABS.at(nextIndex).id;
-                    changeTab(nextTab);
-                    event.currentTarget.parentElement?.querySelector(`#claw-bench-tab-${nextTab}`)?.focus();
-                }}>
-                <span aria-hidden="true">{item.icon}</span>{item.label}
-            </button>)}
+        {/* 탭과 미리보기 도구는 학생 화면 밖(위)에 둔다 — 탭 안에는 학생에게 보이는 내용만. */}
+        <div className="claw-bench__topbar">
+            <div className="claw-bench__tabs" role="tablist" aria-label="인형뽑기 화면 선택">
+                {BENCH_TABS.map((item, index) => <button key={item.id} id={`claw-bench-tab-${item.id}`} type="button" role="tab"
+                    aria-selected={tab === item.id} aria-controls={`claw-bench-panel-${item.id}`} tabIndex={tab === item.id ? 0 : -1}
+                    className={tab === item.id ? 'is-active' : ''} onClick={() => changeTab(item.id)}
+                    onKeyDown={(event) => {
+                        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                        event.preventDefault();
+                        const last = BENCH_TABS.length - 1;
+                        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? last
+                            : event.key === 'ArrowRight' ? (index === last ? 0 : index + 1) : (index === 0 ? last : index - 1);
+                        const nextTab = BENCH_TABS.at(nextIndex).id;
+                        changeTab(nextTab);
+                        event.currentTarget.parentElement?.querySelector(`#claw-bench-tab-${nextTab}`)?.focus();
+                    }}>
+                    <span aria-hidden="true">{item.icon}</span>{item.label}
+                </button>)}
+            </div>
+            {tab === 'student' && <section className="claw-bench__preview-tools" aria-label="학생 화면 미리보기 도구">
+                <label>대상 학생 <select value={student.id} onChange={(event) => setStudentId(event.target.value)}>
+                    {students.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select></label>
+                <label>화질 <select value={quality} onChange={(event) => setQuality(event.target.value)}>
+                    <option value="auto">보통</option><option value="low">가볍게(태블릿)</option>
+                </select></label>
+                {perf && <span className="claw-bench__perf">{perf.fps}fps</span>}
+                <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
+                <button type="button" onClick={resetDay}>하루 새로 시작</button>
+                {studentsNote && <p className="claw-bench__note">{studentsNote}</p>}
+            </section>}
         </div>
 
         <div id="claw-bench-panel-manage" role="tabpanel" aria-labelledby="claw-bench-tab-manage" className="claw-bench__manage" hidden={tab !== 'manage'}>
@@ -293,21 +308,6 @@ export default function ClawTestBench({ activeClass }) {
         </div>
 
         <div id="claw-bench-panel-student" role="tabpanel" aria-labelledby="claw-bench-tab-student" className="claw-bench__student" hidden={tab !== 'student'}>
-            <section className="claw-bench__settings" aria-label="학생 화면 미리보기 도구">
-                <label>대상 학생 <select value={student.id} onChange={(event) => setStudentId(event.target.value)}>
-                    {students.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                </select></label>
-                <label>화질 <select value={quality} onChange={(event) => setQuality(event.target.value)}>
-                    <option value="auto">보통</option><option value="low">가볍게(태블릿)</option>
-                </select></label>
-                <div className="claw-bench__tools">
-                    {perf && <span className="claw-bench__perf">{perf.fps}fps</span>}
-                    <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
-                    <button type="button" onClick={resetDay}>하루 새로 시작</button>
-                </div>
-                {studentsNote && <p className="claw-bench__note">{studentsNote}</p>}
-            </section>
-
             <section className="claw-bench__quiz" aria-label="수호룡의 맞춤법 문제">
                 <aside className="claw-bench__host">
                     <QuizDragon speciesId={student.speciesId} writerLevel={student.writerLevel} readerLevel={student.readerLevel} size="hero" line={dragonSays} />
