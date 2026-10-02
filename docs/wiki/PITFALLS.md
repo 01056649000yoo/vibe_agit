@@ -68,6 +68,8 @@
 - **`window.confirm`·`prompt`·`alert` 를 띄우면 크롬은 전체화면을 강제로 푼다.** 교실 스크린에서 자료 하나 지우다
   전체화면이 풀렸다. 전체화면이 될 수 있는 화면은 앱 안 창(`useConfirmDialog`)만 쓰고, 자동 전체화면은 한 번만 시도한다.
   전체화면의 Esc 는 브라우저가 먼저 가져간다. (2026-09-29) [경로: src/modules/tool/class-board/**] [검사: tests/classBoardFullscreen.test.mjs]
+- **실험실(`?dev-lab=`)에는 운영 보안 정책(CSP)이 없다.** 실험실에서 잘 돌던 인형뽑기가 운영에서 `WebAssembly.instantiate() … violates … script-src` 로
+  멈췄다. WebAssembly·워커·외부 주소처럼 새 실행 방식을 들이면 `Caddyfile.container` 의 CSP 와 함께 확인한다(WebAssembly 는 `'wasm-unsafe-eval'` 만, `'unsafe-eval'` 은 열지 않는다). (2026-10-01) [경로: Caddyfile.container, src/modules/game/spelling-claw/**] [검사: tests/securityArchitecture.test.mjs]
 
 ## 크기를 재서 그릴 때 (화면이 떨리면 여기부터)
 

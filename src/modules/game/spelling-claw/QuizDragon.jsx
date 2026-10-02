@@ -6,9 +6,9 @@ import './quizDragon.css';
  * 문제를 내는 수호룡. **학생이 키운 수호룡**(종류·작가 단계)을 그대로 보여 주므로, 수호룡이 자라면
  * 문제를 내는 수호룡도 함께 자란다. 그림·이름은 수호룡 모듈(getDragonStage) 한 곳에서 정한다.
  */
-const QuizDragon = ({ speciesId, writerLevel = 1, readerLevel = 1, line, compact = false }) => {
+const QuizDragon = ({ speciesId, writerLevel = 1, readerLevel = 1, line, compact = false, size = 'normal' }) => {
     const dragon = getDragonStage(writerLevel, speciesId);
-    return <div className={`quiz-dragon${compact ? ' is-compact' : ''}`}>
+    return <div className={`quiz-dragon${compact ? ' is-compact' : ''}${size === 'large' ? ' is-large' : ''}${size === 'hero' ? ' is-hero' : ''}`}>
         <DragonAvatar dragon={dragon} readerLevel={readerLevel} alt={`${dragon.species.shortName} ${dragon.name}`} className="quiz-dragon__avatar" eager />
         <div className="quiz-dragon__talk">
             <small>{dragon.species.shortName} · {dragon.name}</small>

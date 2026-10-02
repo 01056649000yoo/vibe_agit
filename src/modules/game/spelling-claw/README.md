@@ -26,6 +26,11 @@
 - `ClawPrizeSettings.jsx` — 교사 상품 설정 판(2026-10-02): 종류·포인트 금액·선생님 선물 목록·아이템 등급 비중, 칸마다 실제 확률.
   1단계는 시험대가 이 브라우저(`spelling-claw-prize-settings-v1`)에만 저장한다.
 
+## 학생 홈 알림 (2026-10-02 결정)
+- 하루 기회를 다 쓰고 하나도 못 뽑아 **최소 포인트를 받으면** 학생 홈 활동 알림으로 알린다(`spelling-claw.consolation_awarded`,
+  표시는 `manifest.notifications`). 2단계 서버가 포인트를 줄 때 같은 트랜잭션에서 `notification_emit_v1` 을 부르고,
+  `event_key` 는 학생·날짜로 정해 하루 한 번만 남긴다. 폴링·Realtime 은 더하지 않는다(`modules/notifications/README.md`).
+
 ## 다음 단계
 2. 서버: 퀴즈 출제·채점, 코인 장부, 코인 쓸 때 상품 추첨, 포인트 엔진(게임 공용 상한), 교사 설정, 학급별 켜기(기본 꺼짐).
 3. 교사 선물함(교사가 `줬어요`), 수호룡 아이템 지급(구매 RPC 와 같은 검증), 도감 서버 저장.
