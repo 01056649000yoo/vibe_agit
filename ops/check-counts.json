@@ -1,11 +1,11 @@
 {
   "counts": {
-    "unitFiles": 209,
-    "unitTests": 1462,
-    "sqlSmokes": 179,
+    "unitFiles": 212,
+    "unitTests": 1494,
+    "sqlSmokes": 184,
     "e2eFiles": 4,
     "e2eTests": 9,
     "skipped": 0
   },
-  "lastChange": "늘림: 단위 검사 파일 208→209, 단위 검사 선언 1460→1462, SQL 롤백 스모크 178→179"
+  "lastChange": "늘림: 단위 검사 파일 209→212, 단위 검사 선언 1462→1494, SQL 롤백 스모크 179→184"
 }
