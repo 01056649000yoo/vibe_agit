@@ -1,0 +1,37 @@
+/* 어휘의 탑 교사 학생 현황 — 토큰만 쓴다(2026-10-02). 폭은 상자 기준. */
+.vocab-status { container-type: inline-size; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); color: var(--ui-ink-strong); }
+.vocab-status__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ui-space-3); }
+.vocab-status__head h3 { margin: 0; font-size: var(--ui-text-xl); }
+.vocab-status__head p { margin: 4px 0 0; color: var(--ui-ink-muted); font-size: var(--ui-text-md); }
+.vocab-status__head button { min-height: var(--ui-control-md); padding: 0 var(--ui-space-4); border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; font-weight: 800; cursor: pointer; }
+.vocab-status__head button:disabled { cursor: default; opacity: 0.6; }
+.vocab-status__summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ui-space-2); }
+.vocab-status__summary div { display: grid; gap: 2px; padding: var(--ui-space-3); border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); }
+.vocab-status__summary small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 800; }
+.vocab-status__summary strong { font-size: var(--ui-text-2xl); }
+.vocab-status__tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2); font-size: var(--ui-text-md); font-weight: 800; }
+.vocab-status__tools label { display: inline-flex; align-items: center; gap: var(--ui-space-2); }
+.vocab-status__tools select { min-height: var(--ui-control-sm); padding: 0 var(--ui-space-2); border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-xs); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; }
+.vocab-status__tools small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.vocab-status__error { margin: 0; padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-md); background: var(--ui-danger-soft); color: var(--ui-danger); font-size: var(--ui-text-md); font-weight: 800; }
+.vocab-status__empty, .vocab-status__note { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.vocab-status__table-wrap { overflow-x: auto; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.vocab-status__table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: var(--ui-text-md); }
+.vocab-status__table th, .vocab-status__table td { padding: var(--ui-space-2) var(--ui-space-3); border-bottom: 1px solid var(--ui-border); text-align: left; vertical-align: middle; white-space: nowrap; }
+.vocab-status__table thead th { position: sticky; top: 0; background: var(--ui-surface-muted); color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 900; }
+.vocab-status__table small { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+.vocab-status__row th button { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--ui-ink-strong); font: inherit; font-weight: 900; cursor: pointer; }
+.vocab-status__row th button:focus-visible, .vocab-status__head button:focus-visible, .vocab-status__tools select:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.vocab-status__row.is-open { background: var(--ui-primary-soft); }
+.vocab-status__row.is-quiet { color: var(--ui-ink-muted); }
+.vocab-status__table .is-review { color: var(--ui-warning); font-weight: 900; }
+.vocab-status__bar { width: 100%; max-width: 120px; height: 8px; margin-bottom: 4px; border-radius: var(--ui-radius-pill); background: var(--ui-surface-muted); overflow: hidden; }
+.vocab-status__bar i { display: block; height: 100%; border-radius: inherit; background: var(--ui-success); }
+.vocab-status__detail td { background: var(--ui-page); white-space: normal; }
+.vocab-status__decks { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--ui-space-2); margin: 0; padding: 0; list-style: none; }
+.vocab-status__decks li { display: grid; gap: 2px; padding: var(--ui-space-2); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); font-size: var(--ui-text-sm); }
+.vocab-status__decks li.is-passed { border-color: var(--ui-success); }
+.vocab-status__decks li.is-locked { opacity: 0.6; }
+.vocab-status__decks strong { font-size: var(--ui-text-md); }
+.vocab-status__decks .is-review { color: var(--ui-warning); font-weight: 800; }
+@container (max-width: 520px) { .vocab-status { padding: var(--ui-space-3); } }

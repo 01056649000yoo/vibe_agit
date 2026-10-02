@@ -70,7 +70,8 @@ const MIGRATED = [
     'src/modules/game/spelling-claw/clawMachineStage.css',
     'src/modules/game/spelling-claw/clawIntroDialog.css',
     'src/modules/game/spelling-claw/clawCelebration.css',
-    'src/modules/game/spelling-claw/quizDragon.css'
+    'src/modules/game/spelling-claw/quizDragon.css',
+    'src/modules/game/vocab-tower/vocabStudentStatus.css'
 ];
 
 /*

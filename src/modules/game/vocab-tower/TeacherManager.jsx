@@ -3,12 +3,17 @@ import useConfirmDialog from '../../../components/common/useConfirmDialog';
 import useNotice from '../../../components/common/useNotice';
 
 // 설정 갈래. 세 벌 모두 같은 `config` 를 저장하므로 순서만 정하면 된다.
+const VIEWS = Object.freeze([
+    { id: 'settings', icon: '⚙️', label: '설정' },
+    { id: 'students', icon: '👥', label: '학생 현황' }
+]);
 const SETTING_PANELS = Object.freeze([
     { id: 'practice', icon: '📚', label: '개인 연습', hint: '층별 12문항과 층당 보상' },
     { id: 'master', icon: '🏆', label: '덱마스터 도전', hint: '다음 층을 여는 시험 조건' },
     { id: 'summit', icon: '👑', label: '어휘 마스터 관문', hint: '정상에서 치르는 마지막 시험' }
 ]);
 import Button from '../../../components/common/Button';
+import VocabTeacherStudentStatus from './TeacherStudentStatus';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
 import {
@@ -90,6 +95,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
      * 갈래를 옮겨도 **적다 만 값이 사라지지 않고** 어느 갈래에서 저장해도 전부 저장된다.
      */
     const [panel, setPanel] = useState('practice');
+    // 맨 위 갈래: 설정 / 학생 현황(2026-10-02 선생님 요청). 학생 현황은 열 때만 불러온다.
+    const [view, setView] = useState('settings');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -255,6 +262,15 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
     return (
         <div className="vocab-teacher">
+            <nav className="vocab-teacher__views" role="tablist" aria-label="어휘의 탑 관리 화면">
+                {VIEWS.map((item) => (
+                    <button key={item.id} type="button" role="tab" aria-selected={view === item.id}
+                            className={view === item.id ? 'is-active' : ''} onClick={() => setView(item.id)}>
+                        <span aria-hidden="true">{item.icon}</span>{item.label}
+                    </button>
+                ))}
+            </nav>
+            {view === 'students' ? <VocabTeacherStudentStatus classId={classId} /> : <>
             <section className="vocab-teacher__overview" aria-labelledby="vocab-journey-title">
                 <div className="vocab-teacher__section-heading">
                     <div>
@@ -527,6 +543,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 </div>
             </section>
             )}
+            </>}
             {confirmDialog}
             {notice}
         </div>

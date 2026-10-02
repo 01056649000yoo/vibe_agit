@@ -19,6 +19,8 @@
   `finish_my_vocab_tower_v2_practice_v1`
 - V2 낱말 카드함 RPC: `get_my_vocab_tower_v2_card_box_v1` — 학생이 고른 한 층에서 이미 만난 낱말만
   최대 100개 반환한다. 지도 상태의 `확인`은 이 응답에서 `learning_state='needs_review'`인 낱말만 모아 보여 준다.
+- 교사 학생 현황 RPC: `get_teacher_vocab_tower_student_status_v1(class_id)` — `TeacherStudentStatus.jsx`(`👥 학생 현황` 탭)가 열 때만 1회.
+  학생 지도(`get_my_vocab_tower_v2_overview_base_v1`)와 같은 원장(`learning_item_progress`·`learning_collection_progress`·`learning_challenge_attempts`)을 같은 키로 읽는다.
 - 조회는 항상 모듈을 연 학급의 `class_id`로 직접 제한하고 반환 상한을 둔다.
 
 한 층은 뜻·문장·구별의 방 세 개로 구성하며 5층·10층 마지막 방은 복습 보스가 된다. 층을 통과하면
