@@ -13,4 +13,5 @@ export const CLAW_PLUSHES = Object.freeze([
     { id: 'panda', name: '판다', color: '#2c2a2d', size: 0.15 },
     { id: 'penguin', name: '펭귄', color: '#344565', size: 0.135 },
     { id: 'hamster', name: '햄스터', color: '#e9b477', size: 0.12 }
-].map((plush) => Object.freeze({ ...plush, file: `/assets/claw/plush/${plush.id}.glb` })));
+// `thumb` 은 도감용 그림(160px) — 3D 엔진이 그리는 썸네일과 같은 장면을 한 번 찍어 둔 것이라 엔진 없이도 보인다(2026-10-02).
+].map((plush) => Object.freeze({ ...plush, file: `/assets/claw/plush/${plush.id}.glb`, thumb: `/assets/claw/thumbs/${plush.id}.png` })));

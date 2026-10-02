@@ -333,3 +333,36 @@ test('집으로 돌아온 집게는 흔들림을 빨리 가라앉힌다(기다�
     assert.match(engine, /roundActive = true;\s*setClawCalm\(false\);/);
     assert.match(engine, /claw\.mode = 'ready'; claw\.weak = false; setClawCalm\(true\);/);
 });
+
+test('선생님 선물 줬어요: 교사가 표시하면 학생에게 알리고, 아직 안 준 선물은 따로 모은다(OI-024)', async () => {
+    const [migration, manager, screen] = await Promise.all([
+        readFile('supabase/migrations/20261364_spelling_claw_gift_handover.sql', 'utf8'),
+        readFile('src/modules/game/spelling-claw/TeacherManager.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/ClawPlayScreen.jsx', 'utf8')
+    ]);
+    assert.match(migration, /PERFORM public\.spelling_claw_assert_teacher_v1\(p_class_id\)/);
+    assert.match(migration, /'spelling-claw\.gift_given'/);
+    assert.match(migration, /'pending_gifts', v_pending/);
+    assert.match(manager, /rpc\('set_teacher_spelling_claw_gift_given_v1'/);
+    assert.match(manager, /아직 안 준 선생님 선물/);
+    assert.match(screen, /선생님이 줬어요/);
+    const { spellingClawManifest } = await import('../src/modules/game/spelling-claw/manifest.js');
+    const given = spellingClawManifest.notifications.find((item) => item.eventType === 'spelling-claw.gift_given');
+    assert.match(given.message({ gift_name: '자리 고르기권' }), /‘자리 고르기권’을 선생님이 챙겨 주셨어요/);
+});
+
+test('인형 도감은 8종을 늘 보여 주고, 그림은 엔진 없이도 보이는 파일이다', async () => {
+    const [{ CLAW_PLUSHES }, thumbs, screen] = await Promise.all([
+        import('../supabase/functions/spelling-claw/plushCatalog.js'),
+        readdir('public/assets/claw/thumbs'),
+        readFile('src/modules/game/spelling-claw/ClawPlayScreen.jsx', 'utf8')
+    ]);
+    for (const plush of CLAW_PLUSHES) {
+        assert.equal(plush.thumb, `/assets/claw/thumbs/${plush.id}.png`);
+        assert.ok(thumbs.includes(`${plush.id}.png`), `${plush.id} 도감 그림이 없습니다.`);
+    }
+    assert.match(screen, /className="claw-bench__dex"[\s\S]*CLAW_PLUSHES\.map/);
+    assert.match(screen, /is-caught' : 'is-missing'/);
+    // 인형 모델 출처 표시(OI-023 — 무료 요금제 모델은 CC BY 4.0).
+    assert.match(screen, /Tripo AI로 만듦\(CC BY 4\.0\)/);
+});

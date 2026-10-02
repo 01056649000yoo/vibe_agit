@@ -198,3 +198,20 @@
 .claw-bench__savebar button:disabled { background: var(--ui-border-strong); color: var(--ui-ink-muted); cursor: default; }
 .claw-bench__savebar .is-secondary { background: var(--ui-surface-muted); color: var(--ui-ink-strong); }
 .claw-bench__savebar span { margin-right: auto; }
+
+/* 인형 도감 — 8종 늘 보이고, 못 뽑은 인형은 그림자 */
+.claw-bench__dex { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--ui-space-2); margin: var(--ui-space-3) 0; padding: 0; list-style: none; }
+.claw-bench__dex li { display: grid; justify-items: center; gap: 2px; padding: 8px 6px; border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); font-size: var(--ui-text-sm); font-weight: 800; }
+.claw-bench__dex img { width: 72px; height: 72px; }
+.claw-bench__dex .is-missing img { filter: brightness(0); opacity: 0.18; }
+.claw-bench__dex .is-missing span { color: var(--ui-ink-subtle); }
+.claw-bench__dex b { color: var(--ui-primary); }
+
+/* 선생님 선물 `줬어요` — 아직 안 준 선물은 내역 위에 따로 모은다 */
+.claw-bench__pending { display: grid; gap: var(--ui-space-2); padding: var(--ui-space-3) var(--ui-space-4); border-radius: var(--ui-radius-lg); background: var(--ui-warning-soft); color: var(--ui-ink-strong); font-size: var(--ui-text-md); }
+.claw-bench__pending ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.claw-bench__pending li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2); padding: 6px 10px; border-radius: var(--ui-radius-md); background: var(--ui-surface); }
+.claw-bench__gift { min-height: var(--ui-control-sm); padding: 0 14px; border: 0; border-radius: var(--ui-radius-pill); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-size: var(--ui-text-sm); font-weight: 900; cursor: pointer; }
+.claw-bench__gift.is-given { background: var(--ui-success-soft); color: var(--ui-success); }
+.claw-bench__gift:disabled { opacity: 0.6; cursor: default; }
+.claw-bench__credit { margin: 0; color: var(--ui-ink-subtle); font-size: var(--ui-text-xs); text-align: right; }

@@ -48,7 +48,6 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const [lastPrize, setLastPrize] = useState('');
     const [pendingFinish, setPendingFinish] = useState(null);
     const [celebration, setCelebration] = useState(null);
-    const [thumbs, setThumbs] = useState({});
     const [recordOpen, setRecordOpen] = useState(false);
     const [recordHold, setRecordHold] = useState(10000);
     const [introOpen, setIntroOpen] = useState(() => !readIntroSeen());
@@ -143,9 +142,8 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
             return false;
         }
     };
-    const onWon = (plushId, thumb) => {
+    const onWon = (plushId) => {
         playRef.current.caught = [...playRef.current.caught, plushId];
-        if (thumb) setThumbs((current) => ({ ...current, [plushId]: thumb }));
         setLastPrize(`${plushName(plushId)} 인형을 잡았어요! 상품을 확인하는 중…`);
     };
     const finishPlay = async ({ playId, caught }) => {
@@ -264,6 +262,8 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                     coins={coins} quality={quality} difficulty={settings.grip}
                     onSpendCoin={spendCoin} onWon={onWon} onRoundEnd={onRoundEnd} onPerf={onPerf}
                 />
+                {/* 인형 모델 출처(OI-023). 무료 요금제로 만든 모델은 CC BY 4.0 이라 출처 표시가 필요하다 — 유료 확인 전까지 늘 둔다. */}
+                <p className="claw-bench__credit">인형 3D 모델: Tripo AI로 만듦(CC BY 4.0)</p>
             </> : <div className="claw-bench__locked">
                 <span aria-hidden="true">🔒</span>
                 <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
@@ -283,20 +283,24 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                 <span aria-hidden="true">{recordOpen ? '▲ 닫기' : '▼ 펼쳐 보기'}</span>
             </button>
             {recordOpen && <div className="claw-bench__record-body">
-                {data.recent.length === 0 ? <p>아직 뽑은 인형이 없어요. 목표를 달성하고 인형을 뽑아 보세요!</p> : <>
-                    <div className="claw-bench__record-plushes">
-                        {CLAW_PLUSHES.filter((plush) => Reflect.get(data.collection, plush.id)).map((plush) => <figure key={plush.id}>
-                            {Reflect.get(thumbs, plush.id) && <img src={Reflect.get(thumbs, plush.id)} alt="" />}
-                            <figcaption>{plush.name} ×{Reflect.get(data.collection, plush.id)}</figcaption>
-                        </figure>)}
-                    </div>
-                    <ol className="claw-bench__record-list">
+                {/* 인형 도감(2026-10-02): 8종을 늘 보여 주고, 아직 못 뽑은 인형은 그림자와 `?` 로. 수는 서버 장부(모든 날)에서. */}
+                <ul className="claw-bench__dex" aria-label="인형 도감">
+                    {CLAW_PLUSHES.map((plush) => {
+                        const count = Number(Reflect.get(data.collection, plush.id)) || 0;
+                        return <li key={plush.id} className={count ? 'is-caught' : 'is-missing'}>
+                            <img src={plush.thumb} alt="" loading="lazy" />
+                            <span>{count ? plush.name : '?'}</span>
+                            {count > 0 && <b>×{count}</b>}
+                        </li>;
+                    })}
+                </ul>
+                {data.recent.length === 0 ? <p>아직 뽑은 인형이 없어요. 목표를 달성하고 인형을 뽑아 보세요!</p>
+                    : <ol className="claw-bench__record-list">
                         {data.recent.map((row) => <li key={row.id}>
                             <span>{row.caught.length ? row.caught.map(plushName).join(' · ') : '하루 기회를 다 씀'}</span>
-                            <b>{row.prizes.length ? row.prizes.map(clawPrizeText).join(' · ') : `${row.consolationPoints}P`}</b>
+                            <b>{row.prizes.length ? row.prizes.map((prize) => `${clawPrizeText(prize)}${prize.given_at ? ' (선생님이 줬어요)' : ''}`).join(' · ') : `${row.consolationPoints}P`}</b>
                         </li>)}
-                    </ol>
-                </>}
+                    </ol>}
             </div>}
         </section>
     </div>;

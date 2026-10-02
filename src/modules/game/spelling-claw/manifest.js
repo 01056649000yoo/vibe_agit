@@ -74,6 +74,19 @@ export const spellingClawManifest = {
      * 2단계 서버가 선물을 줄 때 같은 트랜잭션에서 **같은 반 다른 학생마다** 한 건씩 남긴다(event_key = 판 id).
      * 교사 설정 `선물 당첨을 반 전체에 알리기`(기본 켬)로 끌 수 있다. payload: { winner_name, gift_name }.
      */
+    /*
+     * 선생님이 선물을 챙겨 주고 뽑기 내역에서 `줬어요` 를 누르면 그 학생에게 한 번(2026-10-02, OI-024).
+     * set_teacher_spelling_claw_gift_given_v1 이 같은 트랜잭션에서 남긴다(event_key = 판·상품 순번). payload: { gift_name }.
+     */
+    {
+      eventType: 'spelling-claw.gift_given',
+      icon: '🎁',
+      tone: 'positive',
+      title: '선생님이 선물을 줬어요',
+      message: (payload) => `인형뽑기에서 당첨된 ‘${payload?.gift_name || '선생님 선물'}’을 선생님이 챙겨 주셨어요.`,
+      action: 'confirm',
+      actionLabel: '고마워요!'
+    },
     {
       eventType: 'spelling-claw.class_gift_won',
       icon: '🎉',

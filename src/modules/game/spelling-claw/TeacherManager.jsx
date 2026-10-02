@@ -117,7 +117,8 @@ export default function SpellingClawTeacherManager({ activeClass }) {
     }, [classId, dirty]);
 
     // ── 뽑기 내역(보이는 동안만 12초)
-    const [history, setHistory] = useState({ rows: [], today: null, error: '' });
+    const [history, setHistory] = useState({ rows: [], today: null, pendingGifts: [], error: '' });
+    const [giftSaving, setGiftSaving] = useState('');
     const [localRows, setLocalRows] = useState([]);
     const [historyFilter, setHistoryFilter] = useState('all');
     useEffect(() => {
@@ -137,7 +138,7 @@ export default function SpellingClawTeacherManager({ activeClass }) {
                 setHistory((current) => ({ ...current, error: '내역을 불러오지 못했어요. 잠시 뒤 다시 해 볼게요.' }));
             } else {
                 failures = 0;
-                setHistory({ rows: data?.rows || [], today: data?.today || null, error: '' });
+                setHistory({ rows: data?.rows || [], today: data?.today || null, pendingGifts: data?.pending_gifts || [], error: '' });
             }
             timer = setTimeout(run, failures ? Math.min(HISTORY_MAX_BACKOFF_MS, 30000 * (2 ** Math.min(2, failures - 1))) : HISTORY_POLL_MS);
         };
@@ -148,8 +149,32 @@ export default function SpellingClawTeacherManager({ activeClass }) {
     }, [classId, tab]);
     const historyRows = classId ? history.rows : localRows;
     const prizeRows = historyRows.flatMap((row) => (row.prizes?.length ? row.prizes : [{ kind: 'consolation', points: row.consolation_points }])
-        .map((prize, index) => ({ key: `${row.play_id}-${index}`, at: new Date(row.finished_at), studentName: row.student_name, prize })));
+        .map((prize, index) => ({ key: `${row.play_id}-${index}`, playId: row.play_id, index, at: new Date(row.finished_at), studentName: row.student_name, prize })));
     const countKind = (kind) => prizeRows.filter((row) => row.prize.kind === kind).length;
+    // 선생님 선물을 챙겨 준 뒤 `줬어요`(OI-024). 서버가 시각을 남기고 학생에게 한 번 알린다. 응답으로 이 화면을 바로 고친다.
+    const markGift = async (playId, index, given) => {
+        const key = `${playId}-${index}`;
+        setGiftSaving(key);
+        const { data, error } = await supabase.rpc('set_teacher_spelling_claw_gift_given_v1', {
+            p_class_id: classId, p_play_id: playId, p_prize_index: index, p_given: given
+        });
+        setGiftSaving('');
+        if (error) { setHistory((current) => ({ ...current, error: messageOf(error, '줬어요를 남기지 못했어요. 다시 눌러 주세요.') })); return; }
+        setHistory((current) => ({
+            ...current,
+            error: '',
+            rows: current.rows.map((row) => (row.play_id === playId
+                ? { ...row, prizes: row.prizes.map((prize, position) => (position === index ? data.prize : prize)) } : row)),
+            pendingGifts: given
+                ? current.pendingGifts.filter((gift) => !(gift.play_id === playId && gift.prize_index === index))
+                : current.pendingGifts
+        }));
+    };
+    const giftButton = (playId, index, prize) => (prize.given_at
+        ? <button type="button" className="claw-bench__gift is-given" disabled={giftSaving === `${playId}-${index}`}
+            onClick={() => markGift(playId, index, false)} title="눌러서 되돌리기">✔ 줬어요</button>
+        : <button type="button" className="claw-bench__gift" disabled={giftSaving === `${playId}-${index}`}
+            onClick={() => markGift(playId, index, true)}>줬어요</button>);
 
     // ── 학생 화면 미리보기(이 브라우저 안에서만)
     const [students, setStudents] = useState(classId ? [] : SAMPLE_STUDENTS);
@@ -310,6 +335,15 @@ export default function SpellingClawTeacherManager({ activeClass }) {
                     ))}
                 </div>
                 {history.error && classId && <p className="claw-bench__error" role="alert">{history.error}</p>}
+                {classId && history.pendingGifts.length > 0 && <section className="claw-bench__pending" aria-label="아직 안 준 선생님 선물">
+                    <b>🎁 아직 안 준 선생님 선물 {history.pendingGifts.length}개</b>
+                    <ul>
+                        {history.pendingGifts.map((gift) => <li key={`${gift.play_id}-${gift.prize_index}`}>
+                            <span>{new Date(gift.finished_at).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} · <b>{gift.student_name}</b> · {gift.gift_name}</span>
+                            {giftButton(gift.play_id, gift.prize_index, gift)}
+                        </li>)}
+                    </ul>
+                </section>}
                 {prizeRows.length === 0 ? <p className="claw-bench__note-muted">{classId ? '아직 우리 반 뽑기 내역이 없어요.' : '아직 뽑은 내역이 없어요. 학생 화면 미리보기 탭에서 뽑아 보면 여기에 쌓여요.'}</p>
                     : <table className="claw-bench__history-table">
                         <thead><tr><th>시각</th><th>학생</th><th>뽑은 인형</th><th>상품</th></tr></thead>
@@ -318,7 +352,8 @@ export default function SpellingClawTeacherManager({ activeClass }) {
                                 <td>{row.at.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                                 <td>{row.studentName}</td>
                                 <td>{row.prize.kind === 'consolation' ? '—' : (row.prize.plush_name || CLAW_PLUSHES.find((plush) => plush.id === row.prize.plush_id)?.name || '')}</td>
-                                <td><b>{row.prize.kind === 'consolation' ? `${row.prize.points}P (기회를 다 쓰고 못 뽑음)` : clawPrizeText(row.prize)}</b></td>
+                                <td><b>{row.prize.kind === 'consolation' ? `${row.prize.points}P (기회를 다 쓰고 못 뽑음)` : clawPrizeText(row.prize)}</b>
+                                    {classId && row.prize.kind === 'gift' && <> {giftButton(row.playId, row.index, row.prize)}</>}</td>
                             </tr>)}
                         </tbody>
                     </table>}
