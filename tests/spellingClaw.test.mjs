@@ -120,8 +120,11 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(intro, /상품이 나올 확률 보기/);
     assert.match(guides, /'spelling-claw': \{/);
     assert.match(guides, /수호룡 상점 아이템 5%/);
-    assert.match(guides, /`⚙️ 상품 설정`/);
-    assert.match(bench, /⚙️ 상품 설정<\/button>/);
+    // 교사 관리·학생 화면 두 탭 — 상품 설정은 교사 관리 탭에 펼친 채로(단추 뒤에 숨기지 않는다).
+    assert.match(guides, /`🛠️ 교사 관리` 탭의 상품 설정/);
+    assert.match(bench, /role="tablist"/);
+    assert.match(bench, /id="claw-bench-panel-manage"[\s\S]*<ClawPrizeSettings[\s\S]*id="claw-bench-panel-student"/);
+    assert.doesNotMatch(bench, /prizeEditing/);
 });
 
 test('교사가 바꾼 상품 설정도 꽝이 없고, 화면의 확률과 실제 추첨이 같다', () => {

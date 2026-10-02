@@ -79,17 +79,12 @@
 .claw-bench__notice-preview p { flex: 1; display: grid; gap: 2px; margin: 0; font-size: var(--ui-text-md); }
 .claw-bench__notice-preview b { font-size: var(--ui-text-lg); }
 .claw-bench__notice-preview button { padding: 8px 14px; border: 0; border-radius: var(--ui-radius-md); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-weight: 900; cursor: pointer; }
-.claw-bench__prizes { display: grid; gap: var(--ui-space-3); max-width: 640px; padding: var(--ui-space-4); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-sm); font-size: var(--ui-text-sm); }
-.claw-bench__prizes header { display: grid; gap: 2px; }
-.claw-bench__prizes header b { font-size: var(--ui-text-lg); }
-.claw-bench__prizes header span { color: var(--ui-ink-muted); }
-.claw-bench__prizes-close { justify-self: end; padding: 8px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; font-weight: 800; cursor: pointer; }
 .claw-prize-settings { display: grid; gap: var(--ui-space-2); }
 .claw-prize-settings__help { margin: 0; color: var(--ui-ink-muted); }
 .claw-prize-settings fieldset { display: grid; gap: 6px; margin: 0; padding: var(--ui-space-2); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
 .claw-prize-settings legend { padding: 0 4px; font-weight: 900; color: var(--ui-ink-strong); }
 .claw-prize-settings small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
-.claw-prize-settings__row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem 3.5rem auto; gap: 6px; align-items: center; }
+.claw-prize-settings__row { display: grid; grid-template-columns: minmax(0, 1fr) 5rem 4rem 2.25rem; max-width: 34rem; gap: 6px; align-items: center; }
 .claw-prize-settings__row > span, .claw-prize-settings__amount { grid-column: 1; font-weight: 700; }
 .claw-prize-settings__row > b { text-align: right; color: var(--ui-primary); }
 .claw-prize-settings__amount { display: inline-flex; gap: 4px; align-items: center; }
@@ -98,3 +93,25 @@
 .claw-prize-settings__row button:disabled { opacity: 0.4; cursor: default; }
 .claw-prize-settings__add, .claw-prize-settings__reset { justify-self: start; padding: 6px 10px; border: 1px dashed var(--ui-border-strong); border-radius: var(--ui-radius-md); background: none; color: var(--ui-primary); font: inherit; font-weight: 800; cursor: pointer; }
 .claw-prize-settings__reset { border-style: solid; color: var(--ui-ink-muted); }
+
+/* 탭: 교사 관리 / 학생 화면. 패널에 display 를 주면 hidden 이 풀리므로 따로 막는다. */
+.claw-bench__tabs { display: inline-flex; justify-self: start; gap: 6px; padding: 6px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface-muted); }
+.claw-bench__tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 18px; border: 1px solid transparent; border-radius: var(--ui-radius-md); background: transparent; color: var(--ui-ink-muted); font: inherit; font-size: var(--ui-text-md); font-weight: 900; cursor: pointer; }
+.claw-bench__tabs button.is-active { border-color: var(--ui-border); background: var(--ui-surface); color: var(--ui-primary); box-shadow: var(--ui-shadow-xs); }
+.claw-bench__tabs button:focus-visible { outline: 3px solid var(--ui-primary); outline-offset: 2px; }
+.claw-bench__manage, .claw-bench__student { display: grid; gap: var(--ui-space-4); }
+.claw-bench__manage { grid-template-columns: minmax(260px, 380px) minmax(0, 720px); align-items: start; }
+.claw-bench__manage[hidden], .claw-bench__student[hidden] { display: none; }
+.claw-bench__panel { display: grid; gap: var(--ui-space-3); padding: var(--ui-space-4); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-sm); font-size: var(--ui-text-sm); }
+.claw-bench__panel header { display: grid; gap: 2px; }
+.claw-bench__panel header b { font-size: var(--ui-text-lg); }
+.claw-bench__panel header span { color: var(--ui-ink-muted); }
+.claw-bench__fields { display: grid; gap: var(--ui-space-3); }
+.claw-bench__fields label { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ui-space-2); align-items: center; font-size: var(--ui-text-md); font-weight: 800; }
+.claw-bench__fields label > span { display: grid; gap: 2px; }
+.claw-bench__fields small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); font-weight: 700; }
+.claw-bench__fields select { padding: 6px 10px; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; }
+.claw-bench__note-muted { margin: 0; color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+@media (max-width: 900px) {
+    .claw-bench__manage { grid-template-columns: 1fr; }
+}

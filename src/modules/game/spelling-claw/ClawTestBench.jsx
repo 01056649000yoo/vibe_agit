@@ -70,6 +70,15 @@ const readPrizeSettings = () => {
 };
 const savePrizeSettings = (draft) => { try { window.localStorage.setItem(PRIZE_SETTINGS_KEY, JSON.stringify(draft)); } catch { /* 저장 못 해도 이번 화면에서는 쓴다 */ } };
 
+// 탭: 교사 관리(학급 전체 설정·상품 설정) / 학생 화면(학생이 보는 그대로 미리 해 보기). 마지막 탭을 이 브라우저에 기억한다.
+const BENCH_TABS = [
+    { id: 'manage', icon: '🛠️', label: '교사 관리' },
+    { id: 'student', icon: '🧒', label: '학생 화면' }
+];
+const TAB_KEY = 'spelling-claw-bench-tab-v1';
+const readTab = () => { try { return window.localStorage.getItem(TAB_KEY) === 'student' ? 'student' : 'manage'; } catch { return 'manage'; } };
+const saveTab = (id) => { try { window.localStorage.setItem(TAB_KEY, id); } catch { /* 다음에 교사 관리부터 보일 뿐 */ } };
+
 /** 학급의 수호룡 현황(교사 학생 아지트 화면과 같은 RPC). 학생이 지금 키우는 수호룡의 종류·작가 단계를 얻는다. */
 const toStudent = (raw) => ({
     id: raw.student_id,
@@ -102,6 +111,8 @@ export default function ClawTestBench({ activeClass }) {
     const [quality, setQuality] = useState('auto');
     const [level, setLevel] = useState('normal');
     const [introOpen, setIntroOpen] = useState(() => !readIntroSeen());
+    const [tab, setTab] = useState(readTab);
+    const changeTab = (next) => { setTab(next); saveTab(next); };
 
     const makeQuiz = (levelId) => createSpellingQuiz(QUIZ_POOL, { count: QUIZ_COUNT, writeCount: Reflect.get(SPELLING_QUIZ_LEVELS, levelId)?.writeCount ?? 4 });
     const [quiz, setQuiz] = useState(() => makeQuiz('normal'));
@@ -130,7 +141,6 @@ export default function ClawTestBench({ activeClass }) {
 
     // 교사 상품 설정: 입력 중인 그대로(draft)를 두고, 추첨·확률에는 검증한 값(prizeSettings)만 쓴다.
     const [prizeDraft, setPrizeDraft] = useState(readPrizeSettings);
-    const [prizeEditing, setPrizeEditing] = useState(false);
     const changePrizeDraft = (next) => { setPrizeDraft(next); savePrizeSettings(next); };
 
     useEffect(() => {
@@ -230,139 +240,166 @@ export default function ClawTestBench({ activeClass }) {
         : result ? dragonLine(dragonForm, result.correct ? 'right' : 'wrong') : dragonLine(dragonForm, 'ask', question.type);
 
     return <div className="claw-bench">
-        {introOpen && <ClawIntroDialog
+        {tab === 'student' && introOpen && <ClawIntroDialog
             speciesId={student.speciesId} writerLevel={student.writerLevel} passCount={passCount} dailyPlays={dailyPlays}
             minPoints={minPoints} odds={odds} onClose={closeIntro}
         />}
 
-        <section className="claw-bench__settings" aria-label="교사 설정(시험)">
-            <label>대상 학생 <select value={student.id} onChange={(event) => setStudentId(event.target.value)}>
-                {students.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select></label>
-            <label>목표 <select value={passCount} onChange={(event) => setPassCount(Number(event.target.value))}>
-                {[5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}/10</option>)}
-            </select></label>
-            <label>하루 기회 <select value={dailyPlays} onChange={(event) => setDailyPlays(Number(event.target.value))}>
-                {[1, 2, 3, 5].map((n) => <option key={n} value={n}>{n}번</option>)}
-            </select></label>
-            <label>난이도 <select value={level} onChange={(event) => { setLevel(event.target.value); restartQuiz(event.target.value); }}>
-                {Object.values(SPELLING_QUIZ_LEVELS).map((item) => <option key={item.id} value={item.id}>{item.label}(주관식 {item.writeCount})</option>)}
-            </select></label>
-            <label>최소 포인트 <select value={minPoints} onChange={(event) => setMinPoints(Number(event.target.value))}>
-                {[10, 20, 30, 50].map((n) => <option key={n} value={n}>{n}P</option>)}
-            </select></label>
-            <label>집게 힘 <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
-                <option value="easy">튼튼</option><option value="normal">보통</option><option value="hard">흐물</option>
-            </select></label>
-            <label>화질 <select value={quality} onChange={(event) => setQuality(event.target.value)}>
-                <option value="auto">보통</option><option value="low">가볍게(태블릿)</option>
-            </select></label>
-            <div className="claw-bench__tools">
-                {perf && <span className="claw-bench__perf">{perf.fps}fps</span>}
-                <button type="button" aria-expanded={prizeEditing} onClick={() => setPrizeEditing((open) => !open)}>⚙️ 상품 설정</button>
-                <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
-                <button type="button" onClick={resetDay}>하루 새로 시작</button>
-            </div>
-            {studentsNote && <p className="claw-bench__note">{studentsNote}</p>}
-        </section>
+        <div className="claw-bench__tabs" role="tablist" aria-label="인형뽑기 화면 선택">
+            {BENCH_TABS.map((item, index) => <button key={item.id} id={`claw-bench-tab-${item.id}`} type="button" role="tab"
+                aria-selected={tab === item.id} aria-controls={`claw-bench-panel-${item.id}`} tabIndex={tab === item.id ? 0 : -1}
+                className={tab === item.id ? 'is-active' : ''} onClick={() => changeTab(item.id)}
+                onKeyDown={(event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    event.preventDefault();
+                    const last = BENCH_TABS.length - 1;
+                    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? last
+                        : event.key === 'ArrowRight' ? (index === last ? 0 : index + 1) : (index === 0 ? last : index - 1);
+                    const nextTab = BENCH_TABS.at(nextIndex).id;
+                    changeTab(nextTab);
+                    event.currentTarget.parentElement?.querySelector(`#claw-bench-tab-${nextTab}`)?.focus();
+                }}>
+                <span aria-hidden="true">{item.icon}</span>{item.label}
+            </button>)}
+        </div>
 
-        {prizeEditing && <section className="claw-bench__prizes" aria-label="상품 설정">
-            <header><b>상품 설정</b><span>인형을 뽑았을 때 나올 상품과 확률 · 학생은 처음 안내의 ‘상품이 나올 확률 보기’로 봐요</span></header>
-            <ClawPrizeSettings draft={prizeDraft} odds={odds} onChange={changePrizeDraft} />
-            <button type="button" className="claw-bench__prizes-close" onClick={() => setPrizeEditing(false)}>설정 닫기</button>
-        </section>}
-
-        <section className="claw-bench__quiz" aria-label="수호룡의 맞춤법 문제">
-            <aside className="claw-bench__host">
-                <QuizDragon speciesId={student.speciesId} writerLevel={student.writerLevel} readerLevel={student.readerLevel} size="hero" line={dragonSays} />
-            </aside>
-
-            <div className="claw-bench__main">
-                <div className="claw-bench__progress">
-                    {!finished ? <div className="claw-bench__tags">
-                        <span>{Reflect.get(SPELLING_QUIZ_TYPES, question.type)?.label}</span>
-                        <span>{question.kind === 'write' ? '주관식' : '객관식'}</span>
-                        <span>{Reflect.get(SOURCE_LABELS, question.source)}</span>
-                    </div> : <span />}
-                    <div className="claw-bench__score" aria-live="polite">
-                        <strong>{Math.min(index + 1, QUIZ_COUNT)}<small>/{QUIZ_COUNT}</small></strong>
-                        <span>맞힌 문제 <b>{score}</b> · 목표 <b>{passCount}</b></span>
-                    </div>
+        <div id="claw-bench-panel-manage" role="tabpanel" aria-labelledby="claw-bench-tab-manage" className="claw-bench__manage" hidden={tab !== 'manage'}>
+            <section className="claw-bench__panel" aria-label="학급 설정">
+                <header><b>학급 설정</b><span>우리 반 학생 모두에게 같이 적용돼요</span></header>
+                <div className="claw-bench__fields">
+                    <label><span>목표 <small>문제 10개 중 이만큼 맞히면 코인 1개</small></span><select value={passCount} onChange={(event) => setPassCount(Number(event.target.value))}>
+                        {[5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}/10</option>)}
+                    </select></label>
+                    <label><span>하루 기회 <small>하루에 받을 수 있는 코인(뽑기) 수</small></span><select value={dailyPlays} onChange={(event) => setDailyPlays(Number(event.target.value))}>
+                        {[1, 2, 3, 5].map((n) => <option key={n} value={n}>{n}번</option>)}
+                    </select></label>
+                    <label><span>난이도 <small>직접 고쳐 쓰는 문제 수</small></span><select value={level} onChange={(event) => { setLevel(event.target.value); restartQuiz(event.target.value); }}>
+                        {Object.values(SPELLING_QUIZ_LEVELS).map((item) => <option key={item.id} value={item.id}>{item.label}(주관식 {item.writeCount})</option>)}
+                    </select></label>
+                    <label><span>최소 포인트 <small>기회를 다 쓰고 하나도 못 뽑았을 때</small></span><select value={minPoints} onChange={(event) => setMinPoints(Number(event.target.value))}>
+                        {[10, 20, 30, 50].map((n) => <option key={n} value={n}>{n}P</option>)}
+                    </select></label>
+                    <label><span>집게 힘 <small>튼튼할수록 잘 잡혀요</small></span><select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+                        <option value="easy">튼튼</option><option value="normal">보통</option><option value="hard">흐물</option>
+                    </select></label>
                 </div>
+                <p className="claw-bench__note-muted">시험 단계라 학생에게는 아직 보이지 않고, 상품 설정은 이 브라우저에만 저장돼요.</p>
+            </section>
 
-                {!finished ? <div className="claw-bench__question">
-                    <p className="claw-bench__prompt"><Highlighted text={question.prompt} part={question.highlight} /></p>
-                    {question.kind === 'choice' ? <div className="claw-bench__choices">
-                        {question.choices.map((choice) => <button key={choice} type="button" onClick={() => submit(choice)}
-                            className={result ? (choice === question.answer ? 'is-right' : choice === picked ? 'is-wrong' : '') : ''}>{choice}</button>)}
-                    </div> : <form className="claw-bench__write" onSubmit={(event) => { event.preventDefault(); submit(typed); }}>
-                        <label><span>{question.hint}</span>
-                            <input value={typed} onChange={(event) => setTyped(event.target.value)} disabled={Boolean(result)} autoComplete="off" autoCapitalize="off" spellCheck={false} />
-                        </label>
-                        <button type="submit" disabled={Boolean(result) || !typed.trim()}>확인</button>
-                    </form>}
-                    {result && <p className={`claw-bench__explain ${result.correct ? 'is-right' : 'is-wrong'}`}>
-                        {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
-                        {question.explanation}
-                    </p>}
-                    <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === QUIZ_COUNT - 1 ? '채점하기' : '다음 문제'}</button>
-                </div> : <div className="claw-bench__question">
-                    <p className="claw-bench__prompt">{score}/{QUIZ_COUNT} 맞혔어요 {score >= passCount ? '🎉' : ''}</p>
-                    <button type="button" className="claw-bench__next" onClick={() => restartQuiz()}>새 문제 10개</button>
-                </div>}
+            <section className="claw-bench__panel claw-bench__prizes" aria-label="상품 설정">
+                <header><b>상품 설정</b><span>인형을 뽑았을 때 나올 상품과 확률 · 학생은 처음 안내의 ‘상품이 나올 확률 보기’로 봐요</span></header>
+                <ClawPrizeSettings draft={prizeDraft} odds={odds} onChange={changePrizeDraft} />
+            </section>
+        </div>
 
-                <footer className="claw-bench__counts">
-                    <span>오늘 코인 <b>{coinsEarned}/{dailyPlays}</b></span>
-                    <span>뽑기 <b>{playsUsed}/{dailyPlays}</b></span>
-                    <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
-                </footer>
-            </div>
-        </section>
+        <div id="claw-bench-panel-student" role="tabpanel" aria-labelledby="claw-bench-tab-student" className="claw-bench__student" hidden={tab !== 'student'}>
+            <section className="claw-bench__settings" aria-label="학생 화면 미리보기 도구">
+                <label>대상 학생 <select value={student.id} onChange={(event) => setStudentId(event.target.value)}>
+                    {students.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select></label>
+                <label>화질 <select value={quality} onChange={(event) => setQuality(event.target.value)}>
+                    <option value="auto">보통</option><option value="low">가볍게(태블릿)</option>
+                </select></label>
+                <div className="claw-bench__tools">
+                    {perf && <span className="claw-bench__perf">{perf.fps}fps</span>}
+                    <button type="button" onClick={() => setCoins((value) => value + 1)}>코인 +1 (시험용)</button>
+                    <button type="button" onClick={resetDay}>하루 새로 시작</button>
+                </div>
+                {studentsNote && <p className="claw-bench__note">{studentsNote}</p>}
+            </section>
 
-        <section className={`claw-bench__claw${clawOpen ? ' is-open' : ''}`} aria-label="인형뽑기">
-            {clawOpen ? <>
-                {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
-                <ClawMachineStage
-                    coins={coins} quality={quality} difficulty={difficulty}
-                    onSpendCoin={() => { if (coins <= 0) return false; setCoins((value) => value - 1); setRoundActive(true); return true; }}
-                    onWon={onWon} onRoundEnd={onRoundEnd} onPerf={setPerf}
-                />
-            </> : <div className="claw-bench__locked">
-                <span aria-hidden="true">🔒</span>
-                <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
-                <small>{lastPrize || `문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
-            </div>}
-        </section>
+            <section className="claw-bench__quiz" aria-label="수호룡의 맞춤법 문제">
+                <aside className="claw-bench__host">
+                    <QuizDragon speciesId={student.speciesId} writerLevel={student.writerLevel} readerLevel={student.readerLevel} size="hero" line={dragonSays} />
+                </aside>
 
-        {notificationPreview && <section className="claw-bench__notice-preview" aria-label="학생 홈 알림 미리보기">
-            <small>학생 홈 활동 알림으로 이렇게 가요(시험 중이라 실제로는 보내지 않아요)</small>
-            <div>
-                <span aria-hidden="true">{notificationPreview.icon}</span>
-                <p><b>{notificationPreview.title}</b>{notificationPreview.message}</p>
-                <button type="button" onClick={() => setNotificationPreview(null)}>{notificationPreview.actionLabel}</button>
-            </div>
-        </section>}
-
-        <section className={`claw-bench__record${recordOpen ? ' is-open' : ''}`} aria-label="뽑기 기록">
-            <button type="button" className="claw-bench__record-bar" aria-expanded={recordOpen}
-                onClick={() => { setRecordHold(10000); setRecordOpen((open) => !open); }}>
-                <span>🧸 뽑기 기록</span>
-                <span>뽑은 인형 <b>{history.length}</b>개 · 모은 종류 <b>{CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).length}</b>/{CLAW_PLUSHES.length}</span>
-                <span aria-hidden="true">{recordOpen ? '▲ 닫기' : '▼ 펼쳐 보기'}</span>
-            </button>
-            {recordOpen && <div className="claw-bench__record-body">
-                {history.length === 0 ? <p>아직 뽑은 인형이 없어요. 목표를 달성하고 인형을 뽑아 보세요!</p> : <>
-                    <div className="claw-bench__record-plushes">
-                        {CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).map((plush) => <figure key={plush.id}>
-                            {Reflect.get(thumbs, plush.id) && <img src={Reflect.get(thumbs, plush.id)} alt="" />}
-                            <figcaption>{plush.name} ×{Reflect.get(book, plush.id)}</figcaption>
-                        </figure>)}
+                <div className="claw-bench__main">
+                    <div className="claw-bench__progress">
+                        {!finished ? <div className="claw-bench__tags">
+                            <span>{Reflect.get(SPELLING_QUIZ_TYPES, question.type)?.label}</span>
+                            <span>{question.kind === 'write' ? '주관식' : '객관식'}</span>
+                            <span>{Reflect.get(SOURCE_LABELS, question.source)}</span>
+                        </div> : <span />}
+                        <div className="claw-bench__score" aria-live="polite">
+                            <strong>{Math.min(index + 1, QUIZ_COUNT)}<small>/{QUIZ_COUNT}</small></strong>
+                            <span>맞힌 문제 <b>{score}</b> · 목표 <b>{passCount}</b></span>
+                        </div>
                     </div>
-                    <ol className="claw-bench__record-list">
-                        {history.map((row) => <li key={row.id}><span>{row.name}</span><b>{row.prize}</b></li>)}
-                    </ol>
-                </>}
-            </div>}
-        </section>
+
+                    {!finished ? <div className="claw-bench__question">
+                        <p className="claw-bench__prompt"><Highlighted text={question.prompt} part={question.highlight} /></p>
+                        {question.kind === 'choice' ? <div className="claw-bench__choices">
+                            {question.choices.map((choice) => <button key={choice} type="button" onClick={() => submit(choice)}
+                                className={result ? (choice === question.answer ? 'is-right' : choice === picked ? 'is-wrong' : '') : ''}>{choice}</button>)}
+                        </div> : <form className="claw-bench__write" onSubmit={(event) => { event.preventDefault(); submit(typed); }}>
+                            <label><span>{question.hint}</span>
+                                <input value={typed} onChange={(event) => setTyped(event.target.value)} disabled={Boolean(result)} autoComplete="off" autoCapitalize="off" spellCheck={false} />
+                            </label>
+                            <button type="submit" disabled={Boolean(result) || !typed.trim()}>확인</button>
+                        </form>}
+                        {result && <p className={`claw-bench__explain ${result.correct ? 'is-right' : 'is-wrong'}`}>
+                            {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${question.answer}. `}
+                            {question.explanation}
+                        </p>}
+                        <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === QUIZ_COUNT - 1 ? '채점하기' : '다음 문제'}</button>
+                    </div> : <div className="claw-bench__question">
+                        <p className="claw-bench__prompt">{score}/{QUIZ_COUNT} 맞혔어요 {score >= passCount ? '🎉' : ''}</p>
+                        <button type="button" className="claw-bench__next" onClick={() => restartQuiz()}>새 문제 10개</button>
+                    </div>}
+
+                    <footer className="claw-bench__counts">
+                        <span>오늘 코인 <b>{coinsEarned}/{dailyPlays}</b></span>
+                        <span>뽑기 <b>{playsUsed}/{dailyPlays}</b></span>
+                        <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
+                    </footer>
+                </div>
+            </section>
+
+            <section className={`claw-bench__claw${clawOpen ? ' is-open' : ''}`} aria-label="인형뽑기">
+                {clawOpen ? <>
+                    {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
+                    <ClawMachineStage
+                        coins={coins} quality={quality} difficulty={difficulty}
+                        onSpendCoin={() => { if (coins <= 0) return false; setCoins((value) => value - 1); setRoundActive(true); return true; }}
+                        onWon={onWon} onRoundEnd={onRoundEnd} onPerf={setPerf}
+                    />
+                </> : <div className="claw-bench__locked">
+                    <span aria-hidden="true">🔒</span>
+                    <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
+                    <small>{lastPrize || `문제 ${QUIZ_COUNT}개 중 ${passCount}개 이상 맞히면 코인 1개!`}</small>
+                </div>}
+            </section>
+
+            {notificationPreview && <section className="claw-bench__notice-preview" aria-label="학생 홈 알림 미리보기">
+                <small>학생 홈 활동 알림으로 이렇게 가요(시험 중이라 실제로는 보내지 않아요)</small>
+                <div>
+                    <span aria-hidden="true">{notificationPreview.icon}</span>
+                    <p><b>{notificationPreview.title}</b>{notificationPreview.message}</p>
+                    <button type="button" onClick={() => setNotificationPreview(null)}>{notificationPreview.actionLabel}</button>
+                </div>
+            </section>}
+
+            <section className={`claw-bench__record${recordOpen ? ' is-open' : ''}`} aria-label="뽑기 기록">
+                <button type="button" className="claw-bench__record-bar" aria-expanded={recordOpen}
+                    onClick={() => { setRecordHold(10000); setRecordOpen((open) => !open); }}>
+                    <span>🧸 뽑기 기록</span>
+                    <span>뽑은 인형 <b>{history.length}</b>개 · 모은 종류 <b>{CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).length}</b>/{CLAW_PLUSHES.length}</span>
+                    <span aria-hidden="true">{recordOpen ? '▲ 닫기' : '▼ 펼쳐 보기'}</span>
+                </button>
+                {recordOpen && <div className="claw-bench__record-body">
+                    {history.length === 0 ? <p>아직 뽑은 인형이 없어요. 목표를 달성하고 인형을 뽑아 보세요!</p> : <>
+                        <div className="claw-bench__record-plushes">
+                            {CLAW_PLUSHES.filter((plush) => Reflect.get(book, plush.id)).map((plush) => <figure key={plush.id}>
+                                {Reflect.get(thumbs, plush.id) && <img src={Reflect.get(thumbs, plush.id)} alt="" />}
+                                <figcaption>{plush.name} ×{Reflect.get(book, plush.id)}</figcaption>
+                            </figure>)}
+                        </div>
+                        <ol className="claw-bench__record-list">
+                            {history.map((row) => <li key={row.id}><span>{row.name}</span><b>{row.prize}</b></li>)}
+                        </ol>
+                    </>}
+                </div>}
+            </section>
+        </div>
     </div>;
 }

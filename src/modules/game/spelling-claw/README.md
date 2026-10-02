@@ -23,6 +23,7 @@
 - `prizeTable.js` — 상품 설정의 **하나뿐인 원본**: 기본값(`CLAW_DEFAULT_PRIZE_SETTINGS`)·검증(`normalizeClawPrizeSettings`)·
   추첨(`rollClawPrize`)·확률 공개(`describeClawOdds`). 추첨과 확률 공개는 같은 "지금 나올 수 있는 줄" 계산을 거쳐 어긋나지 않는다.
   2단계에서 교사 설정은 학급 설정(DB)에 두고, 서버(Deno)도 이 파일로 검증·추첨한다(앱 전용 import 없음).
+- `ClawTestBench.jsx` — 탭 두 개: `🛠️ 교사 관리`(학급 설정·상품 설정을 펼쳐 둠) / `🧒 학생 화면`(학생이 보는 그대로, 탭을 오가도 상태 유지).
 - `ClawPrizeSettings.jsx` — 교사 상품 설정 판(2026-10-02): 종류·포인트 금액·선생님 선물 목록·아이템 등급 비중, 칸마다 실제 확률.
   1단계는 시험대가 이 브라우저(`spelling-claw-prize-settings-v1`)에만 저장한다.
 
