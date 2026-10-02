@@ -61,7 +61,7 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
             }),
             Object.freeze({
                 id: 'playground', icon: '🎡', title: '아지트 놀이터',
-                description: '어휘의 탑과 수호룡처럼 선생님이 열어 준 활동을 골라 해요.',
+                description: '어휘의 탑·수호룡의 인형뽑기처럼 선생님이 열어 준 활동을 골라 해요.',
                 ctaLabel: '놀이터 가기', destination: Object.freeze({ type: 'tab', tabId: 'playground' })
             })
         ])

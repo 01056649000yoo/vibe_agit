@@ -397,3 +397,17 @@ test('인형 도감은 8종을 늘 보여 주고, 그림은 엔진 없이도 보
     assert.match(screen, /className="claw-bench__dex"[\s\S]*CLAW_PLUSHES\.map/);
     assert.match(screen, /is-caught' : 'is-missing'/);
 });
+
+test('놀이터 카드에 학생 도움말이 붙고, 만점 코인 2개·상품·최소 포인트를 선생님 설정 말투로 알린다', async () => {
+    const { SPELLING_CLAW_STUDENT_GUIDE } = await import('../src/modules/game/spelling-claw/clawGuide.js');
+    const manifest = await readFile('src/modules/game/spelling-claw/manifest.js', 'utf8');
+    assert.match(manifest, /guide: SPELLING_CLAW_STUDENT_GUIDE/);
+    const text = SPELLING_CLAW_STUDENT_GUIDE.sections.flatMap((section) => section.lines).join('\n');
+    assert.match(text, /10개를 모두 맞히면 코인 2개/);
+    assert.match(text, /선생님이 정한 개수 이상/);
+    assert.match(text, /꽝은 없어요/);
+    assert.match(text, /상품이 나올 확률 보기/);
+    assert.match(text, /살 수 있는 것 중 아직 없는 것만/);
+    assert.match(text, /오늘 기회와 받은 코인을 다 썼는데/);
+    assert.match(await readFile('src/components/student/studentGuide.js', 'utf8'), /수호룡의 인형뽑기/);
+});

@@ -6,6 +6,8 @@
  * 문제·채점·코인·상품은 서버가 정한다(Edge 함수 `spelling-claw` + `20261363_spelling_claw_server.sql`).
  * 이름은 이 파일 한 곳에서만 정한다(놀이터 메뉴·카드가 여기서 읽는다).
  */
+import { SPELLING_CLAW_STUDENT_GUIDE } from './clawGuide.js';
+
 /** 이름 뒤 조사 이/가 — 받침이 있으면 `이`. */
 const subjectParticle = (name) => {
   const code = String(name || '').charCodeAt(String(name || '').length - 1) - 0xac00;
@@ -33,7 +35,9 @@ export const spellingClawManifest = {
     pointLabel: '포인트 얻기',
     ctaLabel: '도전하기',
     order: 25,
-    entryMode: 'standard'
+    entryMode: 'standard',
+    // 놀이터 카드의 학생 도움말(공용 StudentModuleGuide). 내용은 clawGuide.js 한 곳.
+    guide: SPELLING_CLAW_STUDENT_GUIDE
   },
   management: { order: 90 },
   /*
