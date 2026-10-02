@@ -290,10 +290,10 @@ export default function SpellingClawTeacherManager({ activeClass }) {
             <section className="claw-bench__panel" aria-label="학급 설정">
                 <header><b>학급 설정</b><span>우리 반 학생 모두에게 같이 적용돼요</span></header>
                 <div className="claw-bench__fields">
-                    {selectField('passCount', '목표', '문제 10개 중 이만큼 맞히면 코인 1개', (n) => `${n}/10`)}
-                    {selectField('dailyPlays', '하루 기회', '하루에 받을 수 있는 코인(뽑기) 수', (n) => `${n}번`)}
+                    {selectField('passCount', '목표', '이만큼 맞히면 코인 1개 · 10개 모두면 2개', (n) => `${n}/10`)}
+                    {selectField('dailyPlays', '하루 기회', '코인을 받을 수 있는 퀴즈 수 · 만점이면 2판씩', (n) => `${n}번(최대 ${n * 2}판)`)}
                     {selectField('quizLevel', '난이도', '직접 고쳐 쓰는 문제 수', (id) => `${Reflect.get(SPELLING_QUIZ_LEVELS, id).label}(주관식 ${Reflect.get(SPELLING_QUIZ_LEVELS, id).writeCount})`)}
-                    {selectField('minPoints', '최소 포인트', '기회를 다 쓰고 하나도 못 뽑았을 때', (n) => `${n}P`)}
+                    {selectField('minPoints', '최소 포인트', '기회·코인을 다 쓰고 하나도 못 뽑았을 때', (n) => `${n}P`)}
                     {selectField('grip', '집게 힘', '튼튼할수록 잘 잡혀요', (id) => Reflect.get({ easy: '튼튼', normal: '보통', hard: '흐물' }, id))}
                     <label className="claw-bench__check"><span>선물 알림 <small>선생님 선물이 나오면 반 친구 모두에게 알려요</small></span>
                         <input type="checkbox" checked={classDraft.announceGifts} disabled={settingsLocked}

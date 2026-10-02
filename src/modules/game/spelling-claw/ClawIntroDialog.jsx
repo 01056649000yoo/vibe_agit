@@ -1,6 +1,7 @@
 import QuizDragon from './QuizDragon';
 import { dragonToneOf } from './dragonLines';
 import { getDragonStage } from '../dragon/presentation';
+import { CLAW_PERFECT_COINS } from './prizeTable';
 import './clawIntroDialog.css';
 
 /**
@@ -18,10 +19,10 @@ const ClawIntroDialog = ({ speciesId, writerLevel, passCount, dailyPlays, minPoi
             <QuizDragon speciesId={speciesId} writerLevel={writerLevel} line={greeting} />
             <ol className="claw-intro__steps">
                 <li>수호룡이 맞춤법 문제 <b>10개</b>를 내요. 고르는 문제와 직접 고쳐 쓰는 문제가 섞여 있어요.</li>
-                <li><b>{passCount}개 이상</b> 맞히면 <b>코인 1개</b>! 하루에 <b>{dailyPlays}번</b>까지 받을 수 있어요.</li>
+                <li><b>{passCount}개 이상</b> 맞히면 <b>코인 1개</b>, <b>10개 모두 맞히면 코인 {CLAW_PERFECT_COINS}개</b>! 코인은 하루에 <b>{dailyPlays}번</b> 받을 수 있어서, 다 만점이면 <b>{dailyPlays * CLAW_PERFECT_COINS}번</b>까지 뽑아요.</li>
                 <li>코인을 넣고 집게를 움직여 인형을 뽑아요.</li>
                 <li>인형을 뽑으면 <b>상품이 무작위로</b> 나와요 — <b>포인트</b>부터 <b>선생님 선물</b>, <b>수호룡 상점 아이템</b>까지! 확률은 선생님이 정해요.</li>
-                <li>오늘 기회를 다 썼는데 하나도 못 뽑았다면, 문제를 푼 상으로 <b>{minPoints}P</b>를 받아요.</li>
+                <li>오늘 기회와 코인을 다 썼는데 하나도 못 뽑았다면, 문제를 푼 상으로 <b>{minPoints}P</b>를 받아요.</li>
             </ol>
             <details className="claw-intro__odds">
                 <summary>상품이 나올 확률 보기</summary>

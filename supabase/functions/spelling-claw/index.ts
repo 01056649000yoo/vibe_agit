@@ -153,6 +153,9 @@ const quizAnswer = async (
         finished: result.finished,
         passed: result.passed,
         coinGranted: Boolean(result.coin_granted),
+        coinsGranted: Number(result.coins_granted) || 0,
+        perfect: Boolean(result.perfect),
+        rewardedQuizzes: Number(result.rewarded_quizzes) || 0,
         coinsLeft: result.coins_left,
         coinsEarned: result.coins_earned
     }

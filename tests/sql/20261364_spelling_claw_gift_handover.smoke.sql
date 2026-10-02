@@ -26,7 +26,7 @@ BEGIN
 
     v_attempt := public.spelling_claw_issue_quiz_v1(v_student, '[{"id":"q1","answer":"정답"}]'::JSONB, 1::SMALLINT);
     PERFORM public.spelling_claw_answer_v1(v_attempt, v_student, 0, '정답', true, 5::SMALLINT);
-    UPDATE public.spelling_claw_plays SET status = 'playing' WHERE attempt_id = v_attempt RETURNING id INTO v_play;
+    UPDATE public.spelling_claw_plays SET status = 'playing' WHERE attempt_id = v_attempt AND coin_index = 0 RETURNING id INTO v_play;
     PERFORM public.spelling_claw_finish_play_v1(v_play, v_student, '["shiba","cat"]'::JSONB,
         '[{"kind":"points","points":10,"plush_id":"shiba","plush_name":"시바견"},{"kind":"gift","gift_id":"seat","gift_name":"자리 고르기권","plush_id":"cat","plush_name":"고양이"}]'::JSONB,
         1, 1, 5::SMALLINT, 20::SMALLINT, false);

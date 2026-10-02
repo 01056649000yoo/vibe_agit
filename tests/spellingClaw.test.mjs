@@ -167,6 +167,39 @@ test('미리보기 세션도 서버와 같은 규칙: 목표를 넘으면 코인
     assert.equal(many.prizes.length, 2);
 });
 
+test('10문제를 모두 맞히면 코인 2개 — 하루 기회는 코인 받는 퀴즈 수(3번이면 최대 6판), 학생에게 안내한다', async () => {
+    const { createLocalClawSession } = await import('../src/modules/game/spelling-claw/clawSession.js');
+    const { CLAW_PERFECT_COINS } = await import('../supabase/functions/spelling-claw/prizeTable.js');
+    assert.equal(CLAW_PERFECT_COINS, 2);
+    const pool = Array.from({ length: 30 }, (_, n) => ({
+        id: `q${n}`, entryKey: `e${n}`, kind: n % 3 ? 'choice' : 'write', type: 'choose', prompt: '문제', answer: '정답',
+        choices: ['정답', '오답'], strictSpacing: true
+    }));
+    const session = createLocalClawSession({
+        student: { name: '견본', writerLevel: 1, readerLevel: 1, owned: [] },
+        classSettings: { passCount: 7, dailyPlays: 3, minPoints: 20 }, prizeSettings: undefined, catalog: [], quizPool: pool
+    });
+    const solve = async (rightCount) => {
+        const { attemptId, questions } = await session.startQuiz();
+        let last = null;
+        for (let index = 0; index < questions.length; index += 1) last = await session.answer(attemptId, index, index < rightCount ? '정답' : '틀림');
+        return last;
+    };
+    const coins = [];
+    for (const right of [10, 10, 10, 10]) coins.push((await solve(right)).coinsGranted);
+    assert.deepEqual(coins, [2, 2, 2, 0], '기회 3번·만점 2개면 하루 6판, 네 번째는 없음');
+    assert.equal((await session.load()).today.coinsLeft, 6);
+    const [screen, intro, migration] = await Promise.all([
+        readFile('src/modules/game/spelling-claw/ClawPlayScreen.jsx', 'utf8'),
+        readFile('src/modules/game/spelling-claw/ClawIntroDialog.jsx', 'utf8'),
+        readFile('supabase/migrations/20261365_spelling_claw_perfect_bonus.sql', 'utf8')
+    ]);
+    assert.match(screen, /10개 모두 맞히면 코인 \{CLAW_PERFECT_COINS\}개!/);
+    assert.match(intro, /10개 모두 맞히면 코인 \{CLAW_PERFECT_COINS\}개/);
+    assert.match(migration, /CASE WHEN v_attempt\.correct_count >= v_total THEN 2 ELSE 1 END/);
+    assert.match(migration, /COUNT\(DISTINCT attempt_id\)/);
+});
+
 test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, 처음 안내와 도움말에 상품 확률을 알린다', async () => {
     const [screen, manager, quizDragon, intro, guides, manifest] = await Promise.all([
         readFile('src/modules/game/spelling-claw/ClawPlayScreen.jsx', 'utf8'),

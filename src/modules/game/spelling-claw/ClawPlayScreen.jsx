@@ -8,6 +8,7 @@ import { CLAW_PLUSHES } from './plushCatalog';
 import { SPELLING_QUIZ_TYPES } from './quiz/spellingQuizBuilder';
 import { getDragonStage } from '../dragon/presentation';
 import { clawPrizeText } from './clawSession';
+import { CLAW_PERFECT_COINS } from './prizeTable';
 import './clawTestBench.css';
 
 /*
@@ -112,8 +113,8 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
             setResult(graded);
             setScore(graded.correctCount);
             if (graded.finished) {
-                setSummary({ passed: graded.passed, coinGranted: graded.coinGranted });
-                patchToday({ coinsLeft: graded.coinsLeft, coinsEarned: graded.coinsEarned });
+                setSummary({ passed: graded.passed, coinGranted: graded.coinGranted, coinsGranted: graded.coinsGranted, perfect: graded.perfect });
+                patchToday({ coinsLeft: graded.coinsLeft, coinsEarned: graded.coinsEarned, rewardedQuizzes: graded.rewardedQuizzes });
             }
         } catch (error) {
             setQuizError(error.message);
@@ -188,7 +189,9 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const dragonSays = !quiz ? '문제를 준비하고 있어…'
         : finished
             ? (summary?.passed
-                ? (summary.coinGranted ? dragonLine(dragonForm, 'pass') : '오늘 받을 코인은 다 받았어. 내일 또 하자!')
+                ? (summary.coinGranted
+                    ? (summary.perfect ? `만점이야! 약속대로 코인 ${summary.coinsGranted || CLAW_PERFECT_COINS}개를 줄게!` : dragonLine(dragonForm, 'pass'))
+                    : '오늘 받을 코인은 다 받았어. 내일 또 하자!')
                 : `${settings.passCount}개 이상 맞히면 코인을 줄게. 다시 해 보자!`)
             : result ? dragonLine(dragonForm, result.correct ? 'right' : 'wrong') : dragonLine(dragonForm, 'ask', question?.type);
     const plushesCaught = Object.values(data.collection).reduce((sum, count) => sum + Number(count || 0), 0);
@@ -217,6 +220,8 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                         <span>맞힌 문제 <b>{score}</b> · 목표 <b>{settings.passCount}</b></span>
                     </div>
                 </div>
+                {/* 만점 보너스 안내(2026-10-02 선생님 요청 — 학생이 알 수 있게). */}
+                <p className="claw-bench__bonus">🎯 {settings.passCount}개 이상 맞히면 코인 1개 · <b>10개 모두 맞히면 코인 {CLAW_PERFECT_COINS}개!</b></p>
 
                 {quizError && <p className="claw-bench__error" role="alert">{quizError}</p>}
 
@@ -241,12 +246,16 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                     <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === questions.length - 1 ? '채점하기' : '다음 문제'}</button>
                 </div> : <div className="claw-bench__question">
                     <p className="claw-bench__prompt">{score}/{questions.length} 맞혔어요 {summary?.passed ? '🎉' : ''}</p>
+                    {summary?.coinGranted && <p className="claw-bench__bonus is-earned">{summary.perfect
+                        ? `💯 만점! 코인 ${summary.coinsGranted}개를 받았어요`
+                        : `코인 1개를 받았어요 · 다음엔 10개 모두 맞혀서 코인 ${CLAW_PERFECT_COINS}개에 도전해 봐요!`}</p>}
                     <button type="button" className="claw-bench__next" onClick={startQuiz} disabled={busy}>새 문제 10개</button>
                 </div>}
 
                 <footer className="claw-bench__counts">
-                    <span>오늘 코인 <b>{today.coinsEarned}/{settings.dailyPlays}</b></span>
-                    <span>뽑기 <b>{today.playsDone}/{settings.dailyPlays}</b></span>
+                    <span>오늘 기회 <b>{today.rewardedQuizzes}/{settings.dailyPlays}</b></span>
+                    <span>남은 코인 <b>{coins}</b></span>
+                    <span>뽑기 <b>{today.playsDone}</b>번</span>
                     <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
                 </footer>
             </div>
@@ -267,9 +276,9 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                 <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
                 {/* 한 판이 끝나 창이 잠겨도 방금 받은 상품은 크게 보인다(2026-10-02 작은 회색 글씨라 안 보였다). */}
                 {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
-                <small>{today.coinsEarned >= settings.dailyPlays
+                <small>{today.rewardedQuizzes >= settings.dailyPlays
                     ? '오늘 받을 수 있는 코인을 다 받았어요. 내일 또 만나요!'
-                    : `문제 ${questions.length || 10}개 중 ${settings.passCount}개 이상 맞히면 코인 1개!`}</small>
+                    : `문제 ${questions.length || 10}개 중 ${settings.passCount}개 이상 맞히면 코인 1개, 10개 모두 맞히면 코인 ${CLAW_PERFECT_COINS}개!`}</small>
             </div>}
         </section>
 

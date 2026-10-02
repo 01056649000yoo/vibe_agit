@@ -214,3 +214,8 @@
 .claw-bench__gift { min-height: var(--ui-control-sm); padding: 0 14px; border: 0; border-radius: var(--ui-radius-pill); background: var(--ui-primary); color: var(--ui-surface); font: inherit; font-size: var(--ui-text-sm); font-weight: 900; cursor: pointer; }
 .claw-bench__gift.is-given { background: var(--ui-success-soft); color: var(--ui-success); }
 .claw-bench__gift:disabled { opacity: 0.6; cursor: default; }
+
+/* 만점 보너스 안내 — 문제 위, 채점 뒤 */
+.claw-bench__bonus { margin: 0; padding: 8px 14px; border-radius: var(--ui-radius-md); background: var(--ui-primary-soft); color: var(--ui-ink-strong); font-size: var(--ui-text-md); font-weight: 800; }
+.claw-bench__bonus b { color: var(--ui-primary); }
+.claw-bench__bonus.is-earned { background: var(--ui-highlight); color: var(--ui-highlight-ink); font-size: var(--ui-text-lg); }

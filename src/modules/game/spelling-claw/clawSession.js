@@ -10,7 +10,7 @@
  * 화면에 오는 상품 모양: { kind:'points', points } | { kind:'gift', gift_name } | { kind:'decor', item_name } (+ plush_id·plush_name)
  */
 import {
-    CLAW_MAX_PRIZES_PER_PLAY, decorTierOf, describeClawOdds, eligibleClawDecor,
+    CLAW_MAX_PRIZES_PER_PLAY, CLAW_PERFECT_COINS, decorTierOf, describeClawOdds, eligibleClawDecor,
     normalizeClawClassSettings, normalizeClawPrizeSettings, rollClawPrize
 } from './prizeTable.js';
 import {
@@ -39,8 +39,10 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
     const decorNow = () => eligibleClawDecor(catalog, {
         writerLevel: student.writerLevel, readerLevel: student.readerLevel, owned
     });
+    const rewardedQuizzes = () => new Set(plays.map((play) => play.attemptId)).size;
     const today = () => ({
         coinsEarned: plays.length,
+        rewardedQuizzes: rewardedQuizzes(),
         coinsLeft: plays.filter((play) => play.status === 'coin').length,
         playsDone: plays.filter((play) => play.status === 'done').length,
         prizes: plays.reduce((sum, play) => sum + (play.prizes?.length || 0), 0),
@@ -78,18 +80,21 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
             if (graded.correct) attempt.correct += 1;
             const finished = attempt.answers.length >= attempt.questions.length;
             const passed = finished && attempt.correct >= settings.passCount;
-            let coinGranted = false;
+            const perfect = finished && attempt.correct >= attempt.questions.length;
+            let coinsGranted = 0;
             if (finished) {
                 attempt.done = true;
-                if (passed && plays.length < settings.dailyPlays) {
-                    plays = [...plays, { id: nextId(), status: 'coin' }];
-                    coinGranted = true;
+                // 하루 기회 = 코인 받는 퀴즈 수, 만점이면 코인 2개(서버 20261365 와 같은 규칙).
+                if (passed && rewardedQuizzes() < settings.dailyPlays) {
+                    coinsGranted = perfect ? CLAW_PERFECT_COINS : 1;
+                    plays = [...plays, ...Array.from({ length: coinsGranted }, () => ({ id: nextId(), status: 'coin', attemptId: attempt.id }))];
                 }
             }
             return {
                 correct: graded.correct, nearMiss: graded.nearMiss, answer: question.answer, solution: question.solution,
                 explanation: question.explanation, answered: attempt.answers.length, correctCount: attempt.correct,
-                finished, passed, coinGranted, coinsLeft: today().coinsLeft, coinsEarned: plays.length
+                finished, passed, coinGranted: coinsGranted > 0, coinsGranted, perfect, rewardedQuizzes: rewardedQuizzes(),
+                coinsLeft: today().coinsLeft, coinsEarned: plays.length
             };
         },
         async startPlay() {
@@ -117,7 +122,9 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
             won.forEach((id) => { collection = { ...collection, [id]: (Reflect.get(collection, id) || 0) + 1 }; });
             let consolationPoints = 0;
             const state = today();
-            if (!given.length && !consolationGiven && state.playsDone >= settings.dailyPlays && state.prizes === 0) {
+            // 하루 기회를 다 쓰고 받은 코인도 모두 쓴 뒤에만(서버와 같은 규칙).
+            const coinsLeft = plays.some((item) => item.status !== 'done');
+            if (!given.length && !consolationGiven && state.rewardedQuizzes >= settings.dailyPlays && !coinsLeft && state.prizes === 0) {
                 consolationGiven = true;
                 consolationPoints = settings.minPoints;
             }
@@ -127,7 +134,7 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
             return { prizes: given, consolationPoints, totalPoints: null };
         },
         /** 미리보기 도구 */
-        addCoin() { plays = [...plays, { id: nextId(), status: 'coin' }]; },
+        addCoin() { plays = [...plays, { id: nextId(), status: 'coin', attemptId: nextId() }]; },
         resetDay() { plays = []; attempt = null; consolationGiven = false; }
     };
 };

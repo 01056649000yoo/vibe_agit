@@ -253,6 +253,8 @@ export const CLAW_CLASS_SETTING_OPTIONS = Object.freeze({
 export const CLAW_DEFAULT_CLASS_SETTINGS = Object.freeze({
     passCount: 7, dailyPlays: 3, quizLevel: 'normal', minPoints: 20, grip: 'easy', announceGifts: true
 });
+/** 10문제를 모두 맞히면 그 퀴즈에서 받는 코인 수(2026-10-02 선생님 결정 — 하루 기회 3번이면 최대 6판). 목표만 넘으면 1개. */
+export const CLAW_PERFECT_COINS = 2;
 /** 한 판에 상품을 주는 인형 수 상한. 한 번에 둘을 집는 일은 드물고, 화면이 보낸 값만 믿는 곳이라 묶어 둔다. */
 export const CLAW_MAX_PRIZES_PER_PLAY = 2;
 

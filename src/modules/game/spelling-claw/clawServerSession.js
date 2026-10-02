@@ -31,6 +31,7 @@ const rpc = async (name, args) => {
 
 const toToday = (today = {}) => ({
     coinsEarned: Number(today.coins_earned) || 0,
+    rewardedQuizzes: Number(today.rewarded_quizzes) || 0,
     coinsLeft: Number(today.coins_left) || 0,
     playsDone: Number(today.plays_done) || 0,
     prizes: Number(today.prizes) || 0,

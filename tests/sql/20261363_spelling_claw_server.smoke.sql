@@ -144,11 +144,11 @@ BEGIN
         RAISE EXCEPTION '6/10 인데 코인을 받았습니다.';
     END IF;
 
-    -- 코인 두 개 더(하루 3개) → 네 번째 통과는 코인 없음.
+    -- 코인 두 개 더(하루 3개, 만점이 아닌 9/10) → 네 번째 통과는 코인 없음.
     FOR n IN 1..3 LOOP
         v_attempt := public.spelling_claw_issue_quiz_v1(current_setting('test.sc_a')::UUID, v_questions, 7::SMALLINT);
         FOR n2 IN 0..9 LOOP
-            v_result := public.spelling_claw_answer_v1(v_attempt, current_setting('test.sc_a')::UUID, n2, '답', true, 3::SMALLINT);
+            v_result := public.spelling_claw_answer_v1(v_attempt, current_setting('test.sc_a')::UUID, n2, '답', n2 < 9, 3::SMALLINT);
         END LOOP;
     END LOOP;
     IF (v_result ->> 'coin_granted')::BOOLEAN OR (v_result ->> 'coins_earned')::INTEGER <> 3 THEN
@@ -262,7 +262,7 @@ DECLARE
 BEGIN
     v_attempt := public.spelling_claw_issue_quiz_v1(current_setting('test.sc_b')::UUID, v_questions, 7::SMALLINT);
     FOR n IN 0..9 LOOP
-        PERFORM public.spelling_claw_answer_v1(v_attempt, current_setting('test.sc_b')::UUID, n, '답', true, 1::SMALLINT);
+        PERFORM public.spelling_claw_answer_v1(v_attempt, current_setting('test.sc_b')::UUID, n, '답', n < 9, 1::SMALLINT);
     END LOOP;
     PERFORM set_config('request.jwt.claims', json_build_object('sub', current_setting('test.sc_b_auth'), 'role', 'authenticated')::TEXT, true);
     PERFORM set_config('role', 'authenticated', true);
