@@ -23,3 +23,14 @@ test('어휘의 탑 교사 학생 현황: 맨 위 탭, 열 때만 RPC 1회, 학�
         assert.match(migration, new RegExp(`public\\.${ledger}`));
     }
 });
+
+test('학생 현황 포인트는 지금 탑의 층 익힘 보상만 세고, 예전 탑 일일 미션 보상은 따로 적는다', async () => {
+    const [migration, status] = await Promise.all([
+        readFile('supabase/migrations/20261367_vocab_tower_status_current_points.sql', 'utf8'),
+        readFile('src/modules/game/vocab-tower/TeacherStudentStatus.jsx', 'utf8')
+    ]);
+    assert.match(migration, /FILTER \(WHERE point_log\.event_key LIKE 'vocab-v2-%'\), 0\)::INTEGER AS vocab_points/);
+    assert.match(migration, /'legacy_vocab_points'/);
+    assert.match(status, /층 익힘 포인트/);
+    assert.match(status, /예전 탑/);
+});

@@ -35,3 +35,4 @@
 .vocab-status__decks strong { font-size: var(--ui-text-md); }
 .vocab-status__decks .is-review { color: var(--ui-warning); font-weight: 800; }
 @container (max-width: 520px) { .vocab-status { padding: var(--ui-space-3); } }
+.vocab-status__legacy { display: block; }

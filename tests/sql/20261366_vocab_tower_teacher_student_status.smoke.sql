@@ -48,6 +48,13 @@ BEGIN
         RAISE EXCEPTION '익힌 낱말 수가 원장과 다릅니다: % ≠ %', v_got, v_expected;
     END IF;
 
+    -- 포인트는 지금 탑의 층 익힘 보상(vocab-v2-…)만(20261367).
+    SELECT COALESCE(SUM(amount), 0) INTO v_expected FROM public.point_logs
+    WHERE student_id = (v_row ->> 'student_id')::UUID AND amount > 0 AND event_key LIKE 'vocab-v2-%';
+    IF (v_row ->> 'vocab_points')::INTEGER IS DISTINCT FROM v_expected THEN
+        RAISE EXCEPTION '층 익힘 포인트가 원장과 다릅니다: % ≠ %', v_row ->> 'vocab_points', v_expected;
+    END IF;
+
     PERFORM set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'role', 'authenticated')::TEXT, true);
     PERFORM set_config('role', 'authenticated', true);
     BEGIN

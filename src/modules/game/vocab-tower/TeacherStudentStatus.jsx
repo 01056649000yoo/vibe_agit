@@ -105,7 +105,7 @@ export default function VocabTeacherStudentStatus({ classId }) {
                 <thead><tr>
                     <th scope="col">학생</th><th scope="col">열린 층</th><th scope="col">완전히 익힘</th>
                     <th scope="col">다시 볼 낱말</th><th scope="col">최근 7일</th><th scope="col">마지막 연습</th>
-                    <th scope="col">정상 관문</th><th scope="col">받은 포인트</th>
+                    <th scope="col">정상 관문</th><th scope="col">층 익힘 포인트</th>
                 </tr></thead>
                 <tbody>
                     {rows.map((row) => {
@@ -126,7 +126,8 @@ export default function VocabTeacherStudentStatus({ classId }) {
                                 <td>{row.runs_7d}판</td>
                                 <td>{dayText(row.last)}</td>
                                 <td>{row.summit_level > 0 ? `${'⭐'.repeat(Math.min(3, row.summit_level))} ${row.summit_level}단계` : '—'}</td>
-                                <td>{row.vocab_points.toLocaleString('ko-KR')}P</td>
+                                <td>{row.vocab_points.toLocaleString('ko-KR')}P
+                                    {row.legacy_vocab_points > 0 && <small className="vocab-status__legacy"> 예전 탑 {row.legacy_vocab_points.toLocaleString('ko-KR')}P</small>}</td>
                             </tr>
                             {open && <tr className="vocab-status__detail"><td colSpan={8}>
                                 <ol className="vocab-status__decks" aria-label={`${row.name} 층별 진도`}>
@@ -148,6 +149,7 @@ export default function VocabTeacherStudentStatus({ classId }) {
                 </tbody>
             </table>
         </div>}
-        <p className="vocab-status__note">🏆 덱마스터 통과 · 🔒 아직 안 열린 층. 최근 7일에 한 판도 하지 않은 학생은 줄이 옅게 보여요.</p>
+        <p className="vocab-status__note">🏆 덱마스터 통과 · 🔒 아직 안 열린 층. 최근 7일에 한 판도 하지 않은 학생은 줄이 옅게 보여요.
+            `층 익힘 포인트`는 지금 탑에서 낱말을 익혀 받은 포인트만이에요(2026년 8월 개편 전 `일일 미션 보상`은 `예전 탑`으로 따로 적어요).</p>
     </section>;
 }
