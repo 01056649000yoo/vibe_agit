@@ -35,6 +35,12 @@ export const SPELLING_QUIZ_LEVELS = Object.freeze({
 });
 
 export const QUIZ_BLANK = '＿＿＿';
+/**
+ * 퀴즈마다 꼭 넣는 재료 수(2026-10-03 선생님 결정): 관리자가 게시한 **공통 자료**에서 2문제는 무조건.
+ * 공통 자료는 학생들이 실제로 자주 틀린 표현이라 기본 사전 486개 사이에 묻혀 평균 1.3문제만 나왔다.
+ * 나머지 칸은 전처럼 무작위라 공통 자료가 더 나올 수도 있다. 공통 자료가 모자라면 있는 만큼만.
+ */
+export const SPELLING_QUIZ_GUARANTEED = Object.freeze({ common: 2 });
 const MAX_WRITE_LENGTH = 10;
 
 const nfc = (value) => String(value ?? '').normalize('NFC');
@@ -205,10 +211,16 @@ const shuffle = (list, random) => {
  * 10문제 뽑기. 한 항목에서는 한 문제만, 주관식은 `writeCount` 개.
  * `preferredEntryKeys` 는 먼저 낼 항목(내가 헷갈린 말·우리 반이 자주 틀린 말) — 2단계에서 서버가 채운다.
  */
-export const createSpellingQuiz = (pool, { count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [] } = {}) => {
+export const createSpellingQuiz = (pool, {
+    count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED
+} = {}) => {
     const byEntry = new Map();
     for (const item of pool) byEntry.set(item.entryKey, [...(byEntry.get(item.entryKey) || []), item]);
-    const preferred = preferredEntryKeys.filter((key) => byEntry.has(key));
+    // 꼭 넣을 재료(공통 자료 2개)를 무작위로 골라 먼저 낼 항목 앞에 둔다 — 아래 take 가 먼저 낼 항목부터 쓰므로 반드시 들어간다.
+    const mustKeys = Object.entries(guaranteed || {}).flatMap(([source, need]) => shuffle(
+        [...byEntry.keys()].filter((key) => byEntry.get(key)[0]?.source === source && !preferredEntryKeys.includes(key)), random
+    ).slice(0, Math.max(0, Number(need) || 0)));
+    const preferred = [...mustKeys, ...preferredEntryKeys].filter((key) => byEntry.has(key));
     const rest = shuffle([...byEntry.keys()].filter((key) => !preferred.includes(key)), random);
     const order = [...preferred, ...rest];
     const picked = [];

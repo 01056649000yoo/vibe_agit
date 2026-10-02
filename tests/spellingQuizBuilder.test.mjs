@@ -95,3 +95,23 @@ test('문제 만들기는 앱 전용 코드를 부르지 않는다(서버 Deno �
         assert.doesNotMatch(source, /^import /m, `${file} 가 다른 파일을 부릅니다(Edge 함수 폴더 밖은 운영에 올라가지 않습니다).`);
     }
 });
+
+test('퀴즈마다 공통 자료 문제는 무조건 2개(2026-10-03 선생님 결정) — 모자라면 있는 만큼, 나머지는 무작위', async () => {
+    const { buildSpellingQuizPool, createSpellingQuiz, spellingSourcesFromLearningEntries, SPELLING_QUIZ_GUARANTEED } =
+        await import('../supabase/functions/spelling-claw/spellingQuizBuilder.js');
+    assert.deepEqual({ ...SPELLING_QUIZ_GUARANTEED }, { common: 2 });
+    const row = (id, source) => ({ id, status: 'approved', wrong_expression: `틀${id}`, correct_expression: `바${id}`, label: id, explanation: '', examples: [] });
+    const many = Array.from({ length: 40 }, (_, n) => row(`b${n}`));
+    const make = (commonCount) => buildSpellingQuizPool([
+        ...spellingSourcesFromLearningEntries(Array.from({ length: commonCount }, (_, n) => row(`c${n}`)), 'common'),
+        ...spellingSourcesFromLearningEntries(many, 'class')
+    ]);
+    for (let round = 0; round < 200; round += 1) {
+        const quiz = createSpellingQuiz(make(5), { count: 10, writeCount: 0 });
+        assert.equal(quiz.length, 10);
+        assert.ok(quiz.filter((item) => item.source === 'common').length >= 2, '공통 자료가 2문제보다 적습니다.');
+    }
+    // 공통 자료가 1개뿐이면 그 1개는 꼭, 없으면 그냥 10문제.
+    assert.ok(createSpellingQuiz(make(1), { count: 10, writeCount: 0 }).some((item) => item.source === 'common'));
+    assert.equal(createSpellingQuiz(make(0), { count: 10, writeCount: 0 }).length, 10);
+});
