@@ -5,7 +5,10 @@ import { dragonLine } from './dragonLines';
 import { DRAGON_SPECIES, getDragonStage } from '../dragon/presentation';
 import ClawMachineStage from './ClawMachineStage';
 import { CLAW_PLUSHES } from './plushCatalog';
-import { describeClawOdds, eligibleClawDecor, rollClawPrize, decorTierOf } from './prizeTable';
+import ClawPrizeSettings from './ClawPrizeSettings';
+import {
+    CLAW_DEFAULT_PRIZE_SETTINGS, describeClawOdds, eligibleClawDecor, normalizeClawPrizeSettings, rollClawPrize, decorTierOf
+} from './prizeTable';
 import { getElementarySpellingEntries } from '../../writing/tools/spelling-lookup/elementarySpellingEntries';
 import {
     buildSpellingQuizPool, createSpellingQuiz, gradeSpellingAnswer, SPELLING_QUIZ_LEVELS, SPELLING_QUIZ_TYPES,
@@ -21,7 +24,6 @@ import './clawTestBench.css';
  *   → 인형뽑기 → 인형을 뽑으면 상품 추첨(확률표 기본안) → 하루 기회를 다 쓰고 하나도 못 뽑았으면 최소 포인트.
  * ⚠️ 여기서는 코인·상품·포인트를 **화면에서만** 흉내 낸다. 2단계에서 서버가 코인을 세고 상품을 뽑는다.
  */
-const SAMPLE_GIFTS = [{ id: 'seat', name: '자리 고르기권' }, { id: 'lunch', name: '급식 먼저 먹기권' }];
 // 수호룡 상점 견본(실제 카탈로그의 등급·가격 구성). 작가 단계 3 학생 기준으로 거른다.
 const SAMPLE_DECOR = [
     { id: 'starter-a', name: '새싹 받침대', rarity: 'starter', price: 300, requiredWriterLevel: 1 },
@@ -57,7 +59,17 @@ const INTRO_SEEN_KEY = 'spelling-claw-intro-seen-v1';
 const readIntroSeen = () => { try { return window.localStorage.getItem(INTRO_SEEN_KEY) === '1'; } catch { return false; } };
 const markIntroSeen = () => { try { window.localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch { /* 저장 못 해도 다음에 한 번 더 보일 뿐 */ } };
 
-const prizeText = (prize) => prize.kind === 'points' ? `${prize.points}P`
+// 교사 상품 설정 — 1단계는 이 브라우저에만 둔다. 2단계에서 학급 설정(DB)으로 옮기고 서버가 같은 검증으로 읽는다.
+const PRIZE_SETTINGS_KEY = 'spelling-claw-prize-settings-v1';
+const readPrizeSettings = () => {
+    try {
+        const saved = window.localStorage.getItem(PRIZE_SETTINGS_KEY);
+        return saved ? normalizeClawPrizeSettings(JSON.parse(saved)) : structuredClone(CLAW_DEFAULT_PRIZE_SETTINGS);
+    } catch { return structuredClone(CLAW_DEFAULT_PRIZE_SETTINGS); }
+};
+const savePrizeSettings = (draft) => { try { window.localStorage.setItem(PRIZE_SETTINGS_KEY, JSON.stringify(draft)); } catch { /* 저장 못 해도 이번 화면에서는 쓴다 */ } };
+
+const prizeText =(prize) => prize.kind === 'points' ? `${prize.points}P`
     : prize.kind === 'gift' ? `🎁 ${prize.gift.name}` : `🐉 ${prize.item.name}`;
 
 export default function ClawTestBench() {
@@ -90,11 +102,17 @@ export default function ClawTestBench() {
     const [perf, setPerf] = useState(null);
     const [consolationGiven, setConsolationGiven] = useState(false);
 
+    // 입력 중인 그대로(draft)를 두고, 추첨·확률에는 검증한 값(prizeSettings)만 쓴다.
+    const [prizeDraft, setPrizeDraft] = useState(readPrizeSettings);
+    const [prizeEditing, setPrizeEditing] = useState(false);
+    const prizeSettings = useMemo(() => normalizeClawPrizeSettings(prizeDraft), [prizeDraft]);
+    const changePrizeDraft = (next) => { setPrizeDraft(next); savePrizeSettings(next); };
+
     const eligibleDecor = useMemo(() => eligibleClawDecor(SAMPLE_DECOR, { writerLevel, readerLevel: 7 }), [writerLevel]);
     const odds = useMemo(() => describeClawOdds({
-        hasGifts: SAMPLE_GIFTS.length > 0,
+        settings: prizeSettings,
         decorTiers: [...new Set(eligibleDecor.map(decorTierOf))]
-    }), [eligibleDecor]);
+    }), [prizeSettings, eligibleDecor]);
     const finished = index >= quiz.length;
     const question = quiz.at(index);
     const addLog = (text) => setLog((rows) => [{ id: `${Date.now()}-${Math.random()}`, text }, ...rows].slice(0, 12));
@@ -134,7 +152,7 @@ export default function ClawTestBench() {
         setBook((current) => ({ ...current, [plushId]: (Reflect.get(current, plushId) || 0) + 1 }));
         if (thumb) setThumbs((current) => ({ ...current, [plushId]: thumb }));
         setWinsToday((value) => value + 1);
-        const prize = rollClawPrize({ gifts: SAMPLE_GIFTS, eligibleDecor });
+        const prize = rollClawPrize({ settings: prizeSettings, eligibleDecor });
         addLog(`${plush?.name || plushId} 인형! 상품: ${prizeText(prize)}`);
     };
     const onRoundEnd = (won) => {
@@ -213,13 +231,17 @@ export default function ClawTestBench() {
                     </footer>
                 </section>
 
-                <section className="claw-preview__card" aria-label="상품 확률(기본안)">
+                <section className="claw-preview__card" aria-label="상품 확률">
                     <header><b>상품 확률</b><span>인형을 뽑았을 때</span></header>
-                    <ul className="claw-preview__odds">
-                        {odds.points.map((row) => <li key={row.label}><span>{row.label}</span><b>{row.percent}%</b></li>)}
-                        {odds.gift > 0 && <li><span>🎁 선생님 선물</span><b>{odds.gift}%</b></li>}
-                        {odds.decor.map((row) => <li key={row.label}><span>🐉 수호룡 {row.label}</span><b>{row.percent}%</b></li>)}
-                    </ul>
+                    {prizeEditing ? <ClawPrizeSettings draft={prizeDraft} odds={odds} onChange={changePrizeDraft} />
+                        : <ul className="claw-preview__odds">
+                            {odds.points.map((row) => <li key={row.id}><span>{row.label}</span><b>{row.percent}%</b></li>)}
+                            {odds.gifts.map((row) => <li key={row.id}><span>🎁 {row.label}</span><b>{row.percent}%</b></li>)}
+                            {odds.decor.map((row) => <li key={row.id}><span>🐉 수호룡 {row.label}</span><b>{row.percent}%</b></li>)}
+                        </ul>}
+                    <button type="button" className="claw-preview__edit" onClick={() => setPrizeEditing((value) => !value)}>
+                        {prizeEditing ? '설정 닫기' : '⚙️ 상품 설정 바꾸기(교사)'}
+                    </button>
                 </section>
 
                 <section className="claw-preview__card" aria-label="기록">

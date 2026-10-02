@@ -41,3 +41,18 @@
 .claw-preview__explain.is-wrong { color: var(--ui-danger); }
 .claw-preview__card footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-2); }
 .claw-preview__intro-link { padding: 0; border: 0; background: none; color: var(--ui-primary); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.claw-preview__edit { justify-self: start; padding: 6px 10px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; font-weight: 800; cursor: pointer; }
+.claw-prize-settings { display: grid; gap: var(--ui-space-2); }
+.claw-prize-settings__help { margin: 0; color: var(--ui-ink-muted); }
+.claw-prize-settings fieldset { display: grid; gap: 6px; margin: 0; padding: var(--ui-space-2); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.claw-prize-settings legend { padding: 0 4px; font-weight: 900; color: var(--ui-ink-strong); }
+.claw-prize-settings small { color: var(--ui-ink-muted); font-size: var(--ui-text-xs); }
+.claw-prize-settings__row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem 3.5rem auto; gap: 6px; align-items: center; }
+.claw-prize-settings__row > span, .claw-prize-settings__amount { grid-column: 1; font-weight: 700; }
+.claw-prize-settings__row > b { text-align: right; color: var(--ui-primary); }
+.claw-prize-settings__amount { display: inline-flex; gap: 4px; align-items: center; }
+.claw-prize-settings input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-strong); font: inherit; }
+.claw-prize-settings__row button { padding: 4px 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink-muted); font: inherit; cursor: pointer; }
+.claw-prize-settings__row button:disabled { opacity: 0.4; cursor: default; }
+.claw-prize-settings__add, .claw-prize-settings__reset { justify-self: start; padding: 6px 10px; border: 1px dashed var(--ui-border-strong); border-radius: var(--ui-radius-md); background: none; color: var(--ui-primary); font: inherit; font-weight: 800; cursor: pointer; }
+.claw-prize-settings__reset { border-style: solid; color: var(--ui-ink-muted); }

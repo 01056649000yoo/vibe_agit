@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 import {
-    CLAW_POINT_WEIGHTS, describeClawOdds, eligibleClawDecor, rollClawPrize
+    CLAW_DEFAULT_PRIZE_SETTINGS, CLAW_PRIZE_LIMITS, describeClawOdds, eligibleClawDecor, normalizeClawPrizeSettings, rollClawPrize
 } from '../src/modules/game/spelling-claw/prizeTable.js';
 
 /*
@@ -31,7 +31,7 @@ test('수호룡 아이템은 지금 단계에서 살 수 있는 상점 물건만
     const eligible = eligibleClawDecor(CATALOG, { writerLevel: 3 });
     const random = seeded(7);
     for (let i = 0; i < 5000; i += 1) {
-        const prize = rollClawPrize({ gifts: [], eligibleDecor: eligible, random });
+        const prize = rollClawPrize({ settings: { gifts: [] }, eligibleDecor: eligible, random });
         if (prize.kind === 'decor') assert.ok(eligible.includes(prize.item));
         assert.notEqual(prize.kind, 'gift', '선물이 없는데 선물이 나왔습니다.');
     }
@@ -40,15 +40,15 @@ test('수호룡 아이템은 지금 단계에서 살 수 있는 상점 물건만
 test('꽝이 없고, 공개하는 확률의 합이 100%이며 줄 수 없는 몫은 포인트로 간다', () => {
     const random = seeded(11);
     for (let i = 0; i < 2000; i += 1) {
-        const prize = rollClawPrize({ random });
+        const prize = rollClawPrize({ settings: { gifts: [] }, random });
         assert.equal(prize.kind, 'points');
-        assert.ok(CLAW_POINT_WEIGHTS.some((row) => row.points === prize.points));
+        assert.ok(CLAW_DEFAULT_PRIZE_SETTINGS.points.some((row) => row.points === prize.points));
     }
     for (const odds of [
-        describeClawOdds({ hasGifts: true, decorTiers: ['starter', 'common', 'rare', 'hero'] }),
-        describeClawOdds({ hasGifts: false, decorTiers: [] })
+        describeClawOdds({ decorTiers: ['starter', 'common', 'rare', 'hero'] }),
+        describeClawOdds({ settings: { gifts: [] }, decorTiers: [] })
     ]) {
-        const total = [...odds.points, ...odds.decor].reduce((sum, row) => sum + row.percent, 0) + odds.gift;
+        const total = [...odds.points, ...odds.gifts, ...odds.decor].reduce((sum, row) => sum + row.percent, 0);
         assert.ok(Math.abs(total - 100) < 0.5, `확률 합이 ${total}% 입니다.`);
     }
 });
@@ -109,8 +109,60 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     // 처음 들어오면 한 번, 그리고 다시 보기로 언제든 — 포인트부터 수호룡 상점 아이템까지 무작위·확률 공개.
     assert.match(bench, /useState\(\(\) => !readIntroSeen\(\)\)/);
     assert.match(bench, /처음 안내 다시 보기/);
-    assert.match(intro, /포인트<\/b>부터 <b>선생님 선물<\/b>, 드물게 <b>수호룡 상점 아이템<\/b>까지/);
+    assert.match(intro, /포인트<\/b>부터 <b>선생님 선물<\/b>, <b>수호룡 상점 아이템<\/b>까지/);
     assert.match(intro, /상품이 나올 확률 보기/);
     assert.match(guides, /'spelling-claw': \{/);
     assert.match(guides, /수호룡 상점 아이템 5%/);
+    assert.match(guides, /상품 설정 바꾸기/);
+});
+
+test('교사가 바꾼 상품 설정도 꽝이 없고, 화면의 확률과 실제 추첨이 같다', () => {
+    // 이상한 값이 와도 범위 안으로 고친다.
+    const safe = normalizeClawPrizeSettings({
+        kinds: { points: -5, gift: '30', decor: 99999 },
+        points: [{ points: 500, weight: 3 }, { points: 0, weight: 9 }, { points: '20', weight: 1.7 }],
+        gifts: [{ name: '  ', weight: 5 }, { name: '숙제 면제권'.repeat(10), weight: 2 }],
+        decorRarities: { hero: -1 }
+    });
+    assert.deepEqual(safe.kinds, { points: 0, gift: 30, decor: CLAW_PRIZE_LIMITS.weightMax });
+    assert.deepEqual(safe.points.map((row) => [row.points, row.weight]), [[CLAW_PRIZE_LIMITS.pointMax, 3], [20, 1]]);
+    assert.equal(safe.gifts.length, 1, '이름 없는 선물이 남았습니다.');
+    assert.equal(safe.gifts[0].name.length, CLAW_PRIZE_LIMITS.giftName);
+    assert.equal(safe.decorRarities.hero, 0);
+    assert.equal(safe.decorRarities.starter, CLAW_DEFAULT_PRIZE_SETTINGS.decorRarities.starter, '빠진 칸은 기본값이어야 합니다.');
+    // 포인트 표가 모두 0이면 기본 포인트 표 — 꽝 없음의 마지막 자리.
+    assert.deepEqual(normalizeClawPrizeSettings({ points: [{ points: 10, weight: 0 }] }).points, CLAW_DEFAULT_PRIZE_SETTINGS.points);
+
+    // 모든 종류를 0으로 두어도 포인트가 나온다.
+    const allOff = { kinds: { points: 0, gift: 0, decor: 0 } };
+    assert.equal(rollClawPrize({ settings: allOff, random: seeded(3) }).kind, 'points');
+    assert.equal(describeClawOdds({ settings: allOff }).points.reduce((sum, row) => sum + row.percent, 0), 100);
+
+    // 교사 설정(선물 비중 2:1, 포인트 0, 아이템 영웅만)에서 화면의 확률과 실제 추첨 비율이 맞는다.
+    const settings = {
+        kinds: { points: 0, gift: 50, decor: 50 },
+        gifts: [{ id: 'a', name: '자리 고르기권', weight: 2 }, { id: 'b', name: '급식 먼저 먹기권', weight: 1 }],
+        decorRarities: { starter: 0, common: 0, rare: 0, hero: 1 }
+    };
+    const eligible = eligibleClawDecor(CATALOG, { writerLevel: 10, readerLevel: 7 });
+    const odds = describeClawOdds({ settings, decorTiers: ['starter', 'common', 'rare', 'hero'] });
+    assert.deepEqual(odds.gifts.map((row) => [row.id, row.percent]), [['a', 33.3], ['b', 16.7]]);
+    assert.deepEqual(odds.decor.map((row) => [row.id, row.percent]), [['hero', 50]]);
+    assert.deepEqual(odds.points, []);
+    const counts = {};
+    const random = seeded(19);
+    const rolls = 20000;
+    for (let i = 0; i < rolls; i += 1) {
+        const prize = rollClawPrize({ settings, eligibleDecor: eligible, random });
+        const key = prize.kind === 'gift' ? prize.gift.id : prize.kind === 'decor' ? prize.item.rarity : 'points';
+        counts[key] = (counts[key] || 0) + 1;
+    }
+    assert.equal(counts.points, undefined, '포인트 비중 0인데 포인트가 나왔습니다.');
+    for (const [key, percent] of [['a', 33.3], ['b', 16.7], ['hero', 50]]) {
+        assert.ok(Math.abs(counts[key] / rolls * 100 - percent) < 1.5, `${key}: 화면 ${percent}% · 실제 ${counts[key] / rolls * 100}%`);
+    }
+    // 아이템 영웅 등급만 켰는데 받을 영웅 아이템이 없으면 그 몫은 다른 상품으로 간다.
+    const lowLevel = describeClawOdds({ settings, decorTiers: ['starter'] });
+    assert.deepEqual(lowLevel.decor, []);
+    assert.equal(lowLevel.gift, 100);
 });
