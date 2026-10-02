@@ -17,13 +17,19 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
+// 교사 화면은 관리 셸(TeacherManager)과 운영 설명 탭(VocabTeacherGuide, 2026-10-02 분리) 두 파일이다. 설명 문구 검사는 둘을 함께 본다.
+const readVocabTeacherScreen = async () => (await Promise.all([
+    'src/modules/game/vocab-tower/TeacherManager.jsx',
+    'src/modules/game/vocab-tower/VocabTeacherGuide.jsx'
+].map((file) => readFile(file, 'utf8')))).join('\n');
+
 const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, learningStateGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration, conflictMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
     readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/StudentEntry.jsx', 'utf8'),
-    readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
+    readVocabTeacherScreen(),
     readFile('src/modules/game/vocab-tower/teacherManager.css', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
@@ -271,9 +277,10 @@ test('교사 화면은 V1 선택을 없애고 현재 잠긴 덱을 기본 출제
 });
 
 test('교사 어휘 설정은 운영 요약과 핵심 입력을 한 화면에 밀도 있게 배치한다', () => {
-    assert.match(teacherManager, /vocab-teacher__overview/);
+    // 2026-10-02: 운영 설명은 `📘 운영 설명` 탭(vocab-guide, 쉬운 네 덩어리)으로, 설정 입력은 `⚙️ 설정` 탭으로 나눴다.
+    assert.match(teacherManager, /className="vocab-guide"/);
     assert.match(teacherManager, /vocab-teacher__controls/);
-    assert.match(teacherManager, /현재 운영 요약/);
+    assert.match(teacherManager, /어휘의 탑은 이렇게 돌아가요/);
     assert.match(teacherManagerStyles, /\.vocab-teacher\s*\{[\s\S]*?gap:\s*10px;/);
     assert.match(teacherManagerStyles, /\.vocab-teacher__overview, \.vocab-teacher__panel\s*\{[\s\S]*?padding:\s*13px 14px;/);
     assert.match(teacherManagerStyles, /\.vocab-teacher__summary\s*\{[\s\S]*?margin-top:\s*7px;/);
@@ -587,15 +594,15 @@ test('게임 모듈은 도움말을 따로 그리지 않는다 — 공통 셸이
  *    `쓰임 구별` 의 차이를 적어 두는지 본다.
  */
 test('어휘의 탑 교사 화면은 실제 출제 형태를 설명한다', async () => {
-    const source = await readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8');
+    const source = await readVocabTeacherScreen();
 
     // V1 방 이름을 현재 흐름으로 다시 적으면 안 된다.
     for (const stale of ['뜻의 방', '문장의 방', '구별의 방']) {
         assert.ok(!source.includes(`<strong>${stale}</strong>`), `교사 화면이 V1 방 이름(${stale})을 흐름으로 쓴다`);
     }
 
-    // 개인 연습이 실제로 내는 다섯 형태가 모두 드러나야 한다.
-    for (const form of ['뜻 선택', '문맥 선택', '쓰임 구별', '직접 입력']) {
+    // 개인 연습이 실제로 내는 형태가 모두 드러나야 한다 — 이름은 학생 도움말(learningStateGuide)과 같은 말(2026-10-02 쉽게 다시 씀).
+    for (const form of ['뜻 고르기', '문맥 고르기', '쓰임 구별', '직접 입력']) {
         assert.ok(source.includes(form), `개인 연습 설명에 ${form}이 없다`);
     }
     // 낱말 고르는 순서(덜 익힌 것 우선)도 적어 둔다 — 교사가 가장 궁금해하는 부분이다.
@@ -617,7 +624,7 @@ test('어휘의 탑 교사 화면은 실제 출제 형태를 설명한다', asyn
  */
 test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화면이 같은 원본으로 설명한다', async () => {
     const [teacher, student, stateGuide] = await Promise.all([
-        readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
+        readVocabTeacherScreen(),
         readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
         readFile('src/modules/game/vocab-tower/learningStateGuide.js', 'utf8')
     ]);

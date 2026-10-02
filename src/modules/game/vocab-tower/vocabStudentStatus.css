@@ -1,5 +1,5 @@
 /* 어휘의 탑 교사 학생 현황 — 토큰만 쓴다(2026-10-02). 폭은 상자 기준. */
-.vocab-status { container-type: inline-size; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); color: var(--ui-ink-strong); }
+.vocab-status { container-type: inline-size; width: 100%; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); color: var(--ui-ink-strong); }
 .vocab-status__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ui-space-3); }
 .vocab-status__head h3 { margin: 0; font-size: var(--ui-text-xl); }
 .vocab-status__head p { margin: 4px 0 0; color: var(--ui-ink-muted); font-size: var(--ui-text-md); }

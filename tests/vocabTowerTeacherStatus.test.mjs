@@ -10,8 +10,9 @@ test('어휘의 탑 교사 학생 현황: 맨 위 탭, 열 때만 RPC 1회, 학�
     ]);
     assert.match(manager, /\{ id: 'guide', icon: '📘', label: '운영 설명' \},\s*\{ id: 'settings', icon: '⚙️', label: '설정' \},\s*\{ id: 'students', icon: '👥', label: '학생 현황' \}/);
     // 운영 설명과 설정은 다른 갈래 — 설명 상자는 설정 갈래에 섞이지 않는다.
-    assert.ok(manager.indexOf("view === 'guide'") < manager.indexOf('vocab-teacher__overview'));
-    assert.ok(manager.indexOf("view === 'settings'") > manager.indexOf('vocab-teacher__overview'));
+    // 운영 설명은 따로 떼어 낸 부품(VocabTeacherGuide)이고, 설정 갈래와 섞이지 않는다.
+    assert.match(manager, /view === 'guide' && <VocabTeacherGuide /);
+    assert.ok(manager.indexOf("view === 'settings'") > manager.indexOf("view === 'guide'"));
     assert.ok(manager.indexOf("view === 'settings'") < manager.indexOf('vocab-teacher__panel-tabs'));
     assert.match(manager, /view === 'students' && <VocabTeacherStudentStatus classId=\{classId\} \/>/);
     assert.match(status, /rpc\('get_teacher_vocab_tower_student_status_v1', \{ p_class_id: classId \}\)/);

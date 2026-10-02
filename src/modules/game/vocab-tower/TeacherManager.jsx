@@ -24,6 +24,7 @@ const SETTING_PANELS = Object.freeze([
 ]);
 import Button from '../../../components/common/Button';
 import VocabTeacherStudentStatus from './TeacherStudentStatus';
+import VocabTeacherGuide from './VocabTeacherGuide';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
 import {
@@ -282,64 +283,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 ))}
             </nav>
             {view === 'students' && <VocabTeacherStudentStatus classId={classId} />}
-            {view === 'guide' && (
-            <section className="vocab-teacher__overview" aria-labelledby="vocab-journey-title">
-                <div className="vocab-teacher__section-heading">
-                    <div>
-                        <span className="vocab-teacher__eyebrow">현재 운영 요약</span>
-                        <h3 id="vocab-journey-title">덱마스터를 통과하며 10개 층을 오르는 개인 어휘 연습</h3>
-                        <p>학생은 1층부터 12문항씩 연습하고, 덱마스터를 통과할 때마다 다음 층을 엽니다. 각 층 낱말을 익힌 진도가 25·50·75·100%를 넘으면 층당 {config.perfectRewardPoints}P를 나눠 받습니다.</p>
-                    </div>
-                    <span className="vocab-teacher__version">현재 운영 중</span>
-                </div>
-
-                {/*
-                 * ⚠️ 여기에 `뜻의 방 → 문장의 방 → 구별의 방` 이 적혀 있었다(2026-08-24 지적으로 확인).
-                 *    그 방 표시는 V1 화면에서만 나오고(`{!isV2 && ...}`), 지금 전체 학급이 V2라
-                 *    **학생은 방을 아예 보지 않는다**. 교사 화면만 옛 구조를 설명하고 있었다.
-                 *    실제 출제 형태 5가지로 바꾼다 — 출제 규칙은
-                 *    `get_next_my_vocab_tower_v2_practice_question_v1` 이 원본이다.
-                 */}
-                <div className="vocab-teacher__journey-flow">
-                    <div><span>📖</span><strong>뜻 선택</strong><small>뜻에 맞는 낱말 고르기</small></div>
-                    <div><span>✍️</span><strong>문맥 선택</strong><small>빈칸에 맞는 낱말 고르기</small></div>
-                    <div><span>🔎</span><strong>쓰임 구별</strong><small>문맥에 어울리는 말 고르기</small></div>
-                    <div><span>⌨️</span><strong>직접 입력</strong><small>익힌 낱말은 뜻·빈칸을 직접</small></div>
-                </div>
-                <p className="vocab-teacher__flow-note">
-                    12문항은 <strong>덜 익힌 낱말 5 · 복습할 낱말 4 · 처음 보는 낱말 3</strong> 순으로 골라 냅니다.
-                    한 번 힌트 없이 맞힌 낱말은 다음부터 <strong>직접 입력</strong>으로 올라가고, 틀린 낱말은 3문항 뒤에
-                    <strong> 방금과 다른 형태</strong>로 한 번 더 나옵니다.
-                </p>
-
-                {/*
-                 * 학생 지도 카드에 뜨는 네 상태를 교사 화면에도 같은 이름·같은 뜻으로 적는다(2026-08-24 요청).
-                 * 덱마스터 도전 조건이 `익힘 %` 인데 정작 교사 화면에 익힘이 무엇인지 설명이 없었다.
-                 * ⚠️ 상태 이름은 학생 화면(`V2DeckMap`)과 **같은 말**을 써야 한다. 다르면 교사와 학생이
-                 *    서로 다른 화면을 보며 이야기하게 된다.
-                 */}
-                <div className="vocab-teacher__states" aria-label="낱말 학습 상태">
-                    <div className="is-new"><strong>처음 볼 낱말</strong><small>아직 만나지 않음</small></div>
-                    <div className="is-learning"><strong>연습 중</strong><small>만났지만 익히는 중</small></div>
-                    <div className="is-review"><strong>다시 볼 낱말</strong><small>틀린 낱말 · 다음 연습에 먼저 나옴</small></div>
-                    <div className="is-mastered"><strong>완전히 익힘</strong><small>다른 두 형태를 힌트 없이 연속 정답</small></div>
-                </div>
-                <p className="vocab-teacher__flow-note">
-                    아래 <strong>덱마스터 도전 자격의 “익힘 %”</strong>와 포인트는 모두 <strong>완전히 익힘</strong> 낱말 수로 셉니다.
-                    포인트는 통과할 때 한 번에 주는 것이 아니라, 완전히 익힘이 <strong>25 · 50 · 75 · 100%</strong>를 넘을 때마다
-                    층당 총액을 <strong>20 · 20 · 30 · 30%</strong>로 <strong>네 번 나눠</strong> 줍니다
-                    (층당 {config.perfectRewardPoints}P면 {Math.round(config.perfectRewardPoints * 0.2)} · {Math.round(config.perfectRewardPoints * 0.2)} · {Math.round(config.perfectRewardPoints * 0.3)} · {config.perfectRewardPoints - Math.round(config.perfectRewardPoints * 0.2) * 2 - Math.round(config.perfectRewardPoints * 0.3)}P).
-                    같은 구간은 한 번만 주고, <strong>덱마스터 통과로는 포인트가 나오지 않습니다</strong>.
-                </p>
-                <div className="vocab-teacher__summary">
-                    <div><span>출제 범위</span><strong>{config.grade}학년</strong></div>
-                    <div><span>기본 자료</span><strong>현재 덱 10개</strong></div>
-                    <div><span>연습 횟수</span><strong>제한 없음</strong></div>
-                    <div><span>연습 시간</span><strong>제한 없음</strong></div>
-                    <div><span>층당 보상</span><strong>{config.perfectRewardPoints}P</strong></div>
-                </div>
-            </section>
-            )}
+            {view === 'guide' && <VocabTeacherGuide grade={config.grade} perfectRewardPoints={config.perfectRewardPoints} />}
 
             {view === 'settings' && <>
             <nav className="vocab-teacher__panel-tabs" role="tablist" aria-label="어휘의 탑 설정 갈래">
