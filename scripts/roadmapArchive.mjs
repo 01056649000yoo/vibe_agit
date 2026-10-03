@@ -68,11 +68,17 @@ const splitHeading = (lines, marker) => {
 const splitH3 = (lines) => splitHeading(lines, '### ');
 
 /** 머리 항목 묶음: 날짜가 붙은 최상위 `- ` 줄에서 다음 날짜 붙은 최상위 줄 앞까지. */
+// 결정 기록 끝의 안내 줄(`> 14일보다 오래된 결정은 …`). 마지막 결정의 이어지는 줄로 딸려 가지 않게 따로 모은다
+// (2026-10-03: 가장 아래 결정을 옮길 때 이 안내 줄까지 보관 파일로 쓸려 가 줄 수 검사가 막았다).
+const POINTER_NOTE = /^> \d+일보다 오래된 결정은/;
+
 const splitDatedBullets = (lines) => {
     const lead = [];
     const groups = [];
+    const notes = [];
     let current = null;
     for (const line of lines) {
+        if (POINTER_NOTE.test(line)) { notes.push(line); continue; }
         const dated = /^- /.test(line) && line.match(DATE);
         if (dated) {
             current = { date: dated[1], lines: [line] };
@@ -80,7 +86,7 @@ const splitDatedBullets = (lines) => {
         } else if (current) current.lines.push(line);
         else lead.push(line);
     }
-    return { lead, groups };
+    return { lead, groups, notes };
 };
 
 const hasOpen = (lines) => lines.some((line) => OPEN.test(line));
@@ -165,7 +171,7 @@ export const planArchive = (roadmap) => {
         }
 
         if (/^## .*결정 기록/.test(title)) {
-            const { lead, groups } = splitDatedBullets(section.lines.slice(1));
+            const { lead, groups, notes } = splitDatedBullets(section.lines.slice(1));
             const newest = groups.map((g) => g.date).sort().at(-1);
             const cutoff = newest ? addDays(newest, -KEEP_DECISION_DAYS) : null;
             const kept = [];
@@ -178,7 +184,7 @@ export const planArchive = (roadmap) => {
             out.push(title, ...lead, ...kept);
             if (counts.decisions) {
                 out.push('', `> ${KEEP_DECISION_DAYS}일보다 오래된 결정은 [docs/roadmap/](docs/roadmap/) 의 \`decisions-YYYY-MM.md\` 에 있다. \`grep -n "말" docs/roadmap/decisions-*.md\`.`);
-            }
+            } else out.push(...notes);
             continue;
         }
 

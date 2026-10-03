@@ -81,3 +81,19 @@ test('실제 ROADMAP 은 상한 안이고 더 옮길 것이 없으며, BACKLOG �
     assert.equal(readLf('docs/roadmap/BACKLOG.md'), buildBacklog(archives),
         'BACKLOG.md 를 직접 고쳤거나 보관 파일이 바뀌었다. `npm run roadmap:archive` 를 돌리세요.');
 });
+
+test('가장 아래 결정을 옮겨도 안내 줄(`> 14일보다 오래된 결정은`)은 ROADMAP 에 남고 보관 파일로 딸려 가지 않는다', async () => {
+    const { planArchive } = await import('../scripts/roadmapArchive.mjs');
+    const roadmap = [
+        '# ROADMAP', '', '## 📝 결정 기록', '',
+        '- **2026-10-03**: 새 결정.',
+        '- **2026-09-01**: 오래된 결정 첫 줄', '  이어지는 줄',
+        '', '> 14일보다 오래된 결정은 [docs/roadmap/](docs/roadmap/) 의 `decisions-YYYY-MM.md` 에 있다. `grep -n "말" docs/roadmap/decisions-*.md`.',
+        ''
+    ].join('\n');
+    const { roadmap: next, moves } = planArchive(roadmap);
+    const moved = Object.values(moves).flat().join('\n');
+    assert.match(moved, /오래된 결정 첫 줄/);
+    assert.doesNotMatch(moved, /일보다 오래된 결정은/, '안내 줄이 보관 파일로 딸려 갔습니다.');
+    assert.equal((next.match(/일보다 오래된 결정은/g) || []).length, 1);
+});
