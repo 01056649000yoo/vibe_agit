@@ -26,3 +26,4 @@
 | OI-020 | 운영 | Codex 에서 `/hooks` 를 열어 바뀐 세션 시작 훅을 한 번 다시 신뢰(주석이 바뀌어 해시가 달라졌다) | WORKLOG 2026-09-28 작업 기억 | 2026-09-28 |
 | OI-022 | 실기기 | 수호룡의 인형뽑기 학생 태블릿 한 판 — 문제 10개 → 코인 → 뽑기 → 포인트·아이템 지급·홈 알림, 가볍게 화질 fps | WORKLOG 2026-10-02 학생 공개 | 2026-10-02 |
 | OI-025 | 운영 | **2026-10-11(일) 0~2시** Supabase 묶음 `self-hosted/v0.8.0 → v0.8.2` 업데이트 — **선생님이 직접**(그날 알려 드리기). DB 버전은 그대로, Auth·PostgREST·Realtime·Storage·Edge·imgproxy 갱신. 전에 적용 스크립트를 v0.8.2 용으로·격리 리허설(SUPABASE_RELEASE_POLICY·UPDATE_RUNBOOK) | WORKLOG 2026-10-03 CVE 조치 | 2026-10-03 |
+| OI-027 | 운영 | **2026-10-04 정리하기로**(선생님): Supabase 밖 도커 이미지 취약점 — 자비스 `jarvis-caddy`(caddy 2.11.4→최신, 39건)·템플릿 서버(옛 caddy:2-alpine 사본, 39건) 새 이미지로 다시 띄우기(몇 초 끊김), 쌤링크 정리용 `curlimages/curl:8.12.1`(32건) 최신으로 | WORKLOG 2026-10-03 CVE 조치 | 2026-10-03 |
