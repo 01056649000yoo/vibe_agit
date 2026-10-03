@@ -50,7 +50,7 @@ test('저장된 SESSION_CONTEXT 는 생성 결과와 같고, 상한 안이며, �
     assert.match(saved, /## 최근 작업 \d건/);
 });
 
-// 배포 관문(node:20-alpine)에는 bash 도 .git 도 없어 훅을 돌릴 수 없다. 로컬·푸시 전 검사에서 돈다.
+// 배포 관문(node:22-alpine)에는 bash 도 .git 도 없어 훅을 돌릴 수 없다. 로컬·푸시 전 검사에서 돈다.
 const canRunHooks = spawnSync('bash', ['-c', 'git rev-parse --show-toplevel'], { stdio: 'ignore' }).status === 0;
 
 test('두 세션 시작 훅이 같은 내용을 넣고, Codex 상한 안이다', { skip: canRunHooks ? false : 'bash·git 없음(배포 관문)' }, () => {

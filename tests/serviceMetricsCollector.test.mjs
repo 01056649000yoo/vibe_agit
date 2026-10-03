@@ -30,7 +30,7 @@ const AWK_PROGRAM = extractDayDeltaProgram(script);
 /**
  * 지난 값은 파일로, 오늘 값은 표준 입력으로 넣는다(스크립트가 하는 것과 같은 방식).
  *
- * 셸 기능은 쓰지 않는다. 검사는 배포 관문인 도커 이미지(`node:20-alpine`) 안에서도 도는데
+ * 셸 기능은 쓰지 않는다. 검사는 배포 관문인 도커 이미지(`node:22-alpine`) 안에서도 도는데
  * 거기에는 bash 가 없다. 처음에 bash 의 프로세스 치환을 썼다가 배포가 막혔다.
  */
 const dayDelta = (previousLines, currentLines) => {

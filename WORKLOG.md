@@ -22,13 +22,20 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-03 — 앱 빌드·연구소를 Node 22 로 (Node 20 지원 종료) (Claude)
+- **한 일**: 선생님 요청. 앱은 빌드 단계만 Node(실행은 Caddy) → `node:22-alpine`. 연구소는 빌드·실행·CI 를 22 로 —
+  푸시 전에 테스트 태그로 빌드해 같은 네트워크·환경으로 띄워 확인(`/lab` 307·로그인 200·sharp 0.35.5 로드, 운영과 같은 반응).
+- **변경**: 이 저장소 `Dockerfile`(빌드 단계)·검사 주석 2곳. writing-helper `2446aeb`(Dockerfile 두 단계·deploy.yml node-version 22).
+- **결과/검증**: 앱 이미지 안 검사 1,495 통과·배포 200. 연구소 자동 배포 성공(54초), 운영 컨테이너 Node v22.23.3·로그인 200.
+- **남은 것 / 다음**: 없음.
+
 ## 2026-10-03 — Docker 이미지 CVE 조치: 긴급 4 → 0 (연구소·쌤링크 Next.js 16.3.8, 앱 Caddy 새 베이스) (Claude)
 - **한 일**: 선생님 요청. 긴급 4건 = 공개 서비스의 Next.js 원격 코드 실행(이미지 최적화 AVIF·next/og). [원인: 떠 있는 태그(node:20-alpine·caddy:2-alpine)를 맥미니에 남은 옛 사본으로 계속 빌드, Node 20 은 지원 끝나 이미지 갱신 없음]
   writing-helper(`ae215e3`)·URL(`656b69d`) next 16.3.8 + 푸시 자동 배포 성공, 연구소 실행 단계 `apk upgrade`, 쌤링크 baseline-browser-mapping 패치. 앱은 caddy:2-alpine 새로 받아 Caddy 2.11.6·openssl 3.5.8.
   배포 중 ROADMAP 정리 도구가 안내 줄을 결정과 함께 옮기려다 막혀 고침(`83c4087b`, 검사 추가).
 - **변경**: 다른 저장소 2곳(위 커밋), 맥미니 베이스 이미지 pull. 이 저장소는 `scripts/roadmapArchive.mjs`·검사.
 - **결과/검증**: 재검사 긴급 0·조치 466(우리 이미지 5개 모두 0건 — agit-app·연구소·쌤링크 CRITICAL/HIGH 0). 남은 것은 Supabase 묶음·imgproxy·자비스/Supabase 의 Caddy 이미지.
-- **남은 것 / 다음**: Supabase 묶음은 SUPABASE_RELEASE_POLICY 정기 업데이트 때. Node 20 지원 종료 — 연구소·앱 빌드의 Node 22 전환 검토.
+- **남은 것 / 다음**: Supabase 묶음은 SUPABASE_RELEASE_POLICY 정기 업데이트 때. Node 22 전환은 같은 날 끝냄(위 항목).
 
 ## 2026-10-03 — 오래된 열린 일 정리: 옛 방 만료 유지(OI-013 닫음), 도구함·질문에 답 나누기 보류 (Claude)
 - **한 일**: 선생님 결정 — 연구소 옛 방은 만료 처리 그대로, 학급 활동 도구함·질문에 답 나누기는 보류.

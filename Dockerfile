@@ -1,7 +1,7 @@
 # 끄적끄적 아지트 — 정적 빌드 후 Caddy로 서빙
 # build-arg로 공개 Supabase URL/anon 키와 Google OAuth 클라이언트 ID를 주입
 # (Vite는 빌드 타임에 VITE_*를 인라인하므로 OAuth 시크릿은 절대 넣지 않는다.)
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
