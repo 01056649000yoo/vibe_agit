@@ -45,6 +45,9 @@ BEGIN
         RAISE EXCEPTION '주간 맞춤법 스모크용 관리자·교사 fixture가 없습니다.';
     END IF;
 
+    -- 이번 주에 실제 회차가 이미 있으면(진행 중·끝남) 같은 주 키가 겹친다(2026-10-03 smoke:all 실패).
+    -- 롤백되는 스모크라 이 트랜잭션 안에서만 비우고 시작한다 — 실제 기록은 그대로 남는다.
+    DELETE FROM public.spelling_weekly_review_runs WHERE week_start = v_week;
     INSERT INTO public.spelling_weekly_review_runs(
         week_start, status, source_since_at, collected_count, ai_reviewed_count,
         catalog_version, model, finished_at

@@ -40,7 +40,10 @@ BEGIN
         RAISE EXCEPTION '스크린 위젯 검증이 자리·역할 배치 위젯을 모릅니다.';
     END IF;
     -- 예전 위젯 검증으로 넘기면 허용 목록에 없어 거부된다. 여기서 직접 봐야 한다.
-    IF v_def NOT LIKE '%NOT IN (''meal-board'', ''notice-board'', ''arrangement-board'')%' THEN
+    -- 2026-10-03 갱신: 시간표 위젯(20261358 무렵)이 들어오며 이 목록이 `IN (… 'arrangement-board', 'timetable')` 로 바뀌어
+    --   글자 그대로 비교하던 검사가 깨졌다. 목록의 모양이 아니라 **배치 위젯이 직접 검증 목록 안에 있는지**를 본다.
+    --   실제로 받아들이는지는 아래 3) 에서 저장 검증으로 확인한다.
+    IF v_def !~ 'IN \(([^)]*,\s*)?''arrangement-board''' THEN
         RAISE EXCEPTION '새 위젯이 옛 검증으로 넘어가 거부됩니다.';
     END IF;
 
