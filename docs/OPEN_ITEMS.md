@@ -19,9 +19,6 @@
 | OI-009 | 후속 | 과제 만들기 화면의 색 72곳(보라·분홍·주황) — 맞는 `--ui-*` 토큰을 먼저 정하고 옮기기 | WORKLOG 2026-09-26 | 2026-09-26 |
 | OI-010 | 후속 | 교사 도움말 원본 합치기·학습 콘텐츠 데이터화 — 다음 콘텐츠가 정해지면 | WORKLOG 2026-09-27 확장 지점 | 2026-09-27 |
 | OI-012 | 결정 | 작가 칭호 급간 조정(Lv7→8 간격이 Lv8→9 보다 큼) — 한 학기 사용량을 보고 **방학 중에** `writerLevels.js` 한 곳에서 | [옛 SESSION_CONTEXT](wiki/archive/SESSION_CONTEXT-2026-09-28.md) 1-2 | 2026-08-24 |
-| OI-013 | 결정 | 연구소 옛 방 `expires_at` — 기한 개념은 없앴는데 학생 목록 RPC 는 만료된 옛 방을 거른다. 다시 보일지(재확인 전) | [옛 SESSION_CONTEXT](wiki/archive/SESSION_CONTEXT-2026-09-28.md) 1-3 | 2026-08-24 |
-| OI-014 | 후속 | 학급 활동 도구함 T0~T9(공통 수업 모달 셸 → 타이머 → … → 모둠 대항 미션) | [CLASS_ACTIVITY_TOOLS_PLAN.md](../CLASS_ACTIVITY_TOOLS_PLAN.md) | 2026-08-23 |
-| OI-015 | 후속 | 연구소 `질문에 답 나누기` 활동(계획 확정, 미착수) | [docs/roadmap/2026-08.md](roadmap/2026-08.md) `질문에 답 나누기` | 2026-08-28 |
 | OI-016 | 운영 | 맥미니 전체 장애 때 점검 안내 이중화(Cloudflare Worker → Caddy 원본 우선안) — 겨울방학 | [docs/roadmap/undated.md](roadmap/undated.md) `맥미니 전체 장애` | 2026-09-28 |
 | OI-017 | 결정 | 학생 글쓰기 성장 리포트 — 보류. 다음 학기 학생당 글 수를 보고 다시 판단 | [STUDENT_GROWTH_REPORT_PLAN.md](../STUDENT_GROWTH_REPORT_PLAN.md) | 2026-09-26 |
 | OI-018 | 실기기 | 9월 기능 실기 점검 — `MANUAL_ACCEPTANCE_CHECKLIST.md` **1-2절**(30분) 먼저, 그다음 12~19절 | WORKLOG 2026-09-23~28 | 2026-09-28 |
