@@ -34,6 +34,14 @@
   `app.끄적끄적.kr` 은 자비스다 — 셋 다 같은 맥미니라 아무 주소나 200 이 돌아온다. 2026-09-13 에
   엉뚱한 주소로 "운영 정상" 이라 보고했다. 배포 확인은 `agit-app` 컨테이너의 `/srv/assets` 를 직접 본다. [경로: scripts/deploy*, .github/workflows/**]
 
+## 맥미니 실행환경(Node·도커 베이스·launchd)
+
+- **떠 있는 도커 태그(`node:22-alpine`·`caddy:2-alpine`)는 맥미니에 남은 옛 사본으로 빌드된다.** 2026-10-03 CVE 점검에서
+  openssl·curl 이 오래돼 있었다. 베이스 받기는 주간 루틴(`npm run node:runtime`)이 하고, 큰 버전 이동은 사람이 한다
+  ([NODE_RUNTIME_POLICY.md](../NODE_RUNTIME_POLICY.md)). [경로: Dockerfile, ops/node-runtime/**, scripts/node-runtime-update.mjs]
+- **plist 배열 칸은 `plutil -replace` 로 바꾸지 않는다** — 바꾸지 않고 끼워 넣어 오픈클로 게이트웨이 인자가 둘이 됐다(2026-10-03).
+  `-remove` 뒤 `-insert`. [경로: ops/launchd/**, scripts/openclaw-autoupdate.sh, scripts/node-runtime-update.mjs]
+
 ## DB·권한
 
 - **`SECURITY DEFINER` 를 anon 에 열지 않는다** — RLS 를 우회한다. "내부 전용"이라 적힌

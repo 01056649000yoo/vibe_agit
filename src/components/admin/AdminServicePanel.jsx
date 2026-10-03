@@ -34,7 +34,9 @@ const ALERT_LABELS = {
     container_down: '컨테이너 꺼짐',
     db_down: 'DB 응답 없음',
     docker_memory_pressure: '도커 메모리 압박',
-    host_memory_pressure: '맥 메모리 압박'
+    host_memory_pressure: '맥 메모리 압박',
+    // Node 실행환경 주간 점검(scripts/node-runtime-update.mjs·openclaw-autoupdate.sh): 패치 실패·지원 종료 임박·요구 Node 미달
+    node_runtime: 'Node 실행환경 확인 필요'
 };
 
 const formatWhen = (value) => {

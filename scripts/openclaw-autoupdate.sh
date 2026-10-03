@@ -5,7 +5,9 @@
 set -Eeuo pipefail
 umask 077
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# 오픈클로는 2026.9.7 부터 Node 24.16+ 를 요구한다(2026-10-03). brew node@24 를 먼저 둬서 node·npm 이 24 로 돈다.
+# 게이트웨이도 같은 node@24 로 띄운다(plist). Node 24 패치는 scripts/node-runtime-update.mjs 가 맡는다.
+export PATH="/opt/homebrew/opt/node@24/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_HOME="/Users/seunghyeonmaegmini"
 CONFIG="$USER_HOME/.openclaw/openclaw.json"
 STATUS="$USER_HOME/backups/auto/openclaw-update-status.txt"
@@ -46,6 +48,19 @@ if [ "$installed" = "$latest" ]; then
 fi
 
 log "새 버전 발견: $installed → $latest"
+
+# 새 판이 요구하는 Node 를 지금 node 가 못 맞추면 설치를 시도하지 않는다(9/23~10/3 매일 "설치 실패" 로 남던 원인).
+# 판정 못 하는 모양도 시도하지 않는다. 관리자 `서비스 현황` 의 node_runtime 경고로 알린다.
+required="$(npm view "openclaw@$latest" engines.node 2>/dev/null | tr -d '\n' || echo "")"
+node_now="$(node -v | tr -d v)"
+engine_ok="$(node --input-type=module -e "import { satisfiesRange } from '$USER_HOME/vibe_agit/scripts/lib/nodeRuntimePolicy.mjs'; process.stdout.write(String(satisfiesRange('$node_now', process.argv[1] || '>=0')));" "$required" 2>/dev/null || echo null)"
+if [ "$engine_ok" != "true" ]; then
+  write_status NEEDS_NODE "$installed → $latest 는 Node '$required' 필요, 지금 $node_now — 설치 안 함"
+  log "NEEDS_NODE $latest 요구 Node '$required', 지금 $node_now"
+  /Applications/Docker.app/Contents/Resources/bin/docker exec -i agit-db psql -U supabase_admin -d postgres -t -A -c \
+    "SELECT public.record_system_alert_v1('node_runtime', true, \$d\$오픈클로 $latest 는 Node $required 필요(지금 $node_now)\$d\$);" >/dev/null 2>&1 || true
+  exit 0
+fi
 
 if [ "$MODE" = "--check-only" ]; then
   write_status AVAILABLE "$installed → $latest (확인만)"

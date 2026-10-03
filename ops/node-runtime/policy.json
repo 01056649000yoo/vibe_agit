@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "quarantineDays": 7,
+  "eolWarnDays": 90,
+  "brewFormulas": [
+    {
+      "formula": "node@22",
+      "major": 22,
+      "role": "맥미니 기본 Node — 이 저장소 검사·스크립트·연구소/쌤링크 개발",
+      "check": "default-node"
+    },
+    {
+      "formula": "node@24",
+      "major": 24,
+      "role": "오픈클로 게이트웨이 전용 Node(2026-10-03, 오픈클로 2026.9.7+ 가 Node 24.16+ 요구)",
+      "check": "openclaw-gateway"
+    }
+  ],
+  "dockerBaseImages": ["node:22-alpine", "caddy:2-alpine"],
+  "dockerMajors": [22],
+  "openclaw": {
+    "gatewayLabel": "gui/501/ai.openclaw.gateway",
+    "gatewayPlist": "~/Library/LaunchAgents/ai.openclaw.gateway.plist",
+    "gatewayUrl": "http://127.0.0.1:18789/",
+    "nodeBin": "/opt/homebrew/opt/node@24/bin/node"
+  }
+}

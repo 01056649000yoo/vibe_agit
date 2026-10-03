@@ -22,6 +22,15 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-03 — 오픈클로만 Node 24 로, Node 자동 패치 규칙·주간 루틴 — OI-026 닫음 (Claude)
+- **한 일**: 선생님 결정. 게이트웨이 plist 의 node 를 brew `node@24` 경로로(오픈클로도 node@24 를 찾아 쓴다), 업데이트 스크립트 PATH 를 24 로 + 새 판 `engines.node` 를
+  먼저 보고 못 맞추면 설치 안 함(NEEDS_NODE·경고). 규칙: 같은 큰 버전 LTS 패치만·7일 격리·올린 즉시 확인·실패 시 되돌림+`brew pin`·큰 버전은 경고만(90일 전)·도커 베이스 매주 받기.
+  [원인: `plutil -replace` 가 배열 칸을 끼워 넣어 인자가 둘이 됨 — 바로 고침, PITFALLS 새 갈래]
+- **변경**: `docs/NODE_RUNTIME_POLICY.md`·`ops/node-runtime/policy.json`·`scripts/lib/nodeRuntimePolicy.mjs`·`scripts/node-runtime-update.mjs`(npm `node:runtime`)·
+  `ops/launchd/com.agit.node-runtime-update.plist`(설치·로드, 일 05:10)·`scripts/openclaw-autoupdate.sh`·관리자 경고 이름 `node_runtime`·검사 7개. git 밖 — 게이트웨이 plist, brew node@22/24.
+- **결과/검증**: 루틴 첫 실행 node@22 22.23.2→22.23.3·node@24 24.19.0→24.21.0, 게이트웨이 확인 통과. 오픈클로 2026.9.6→**2026.9.8**(상태 DB 정리 13분 뒤 게이트웨이 200, node@24 로 실행). 검사 1,501·린트 통과.
+- **남은 것 / 다음**: 없음(지원 종료 경고는 Node 22 기준 2027-01-30 무렵 저절로 뜬다).
+
 ## 2026-10-03 — 자비스 오픈클로 게이트웨이 멈춤 복구 · 10/11 Supabase 업데이트 예정 기록 (Claude)
 - **한 일**: 선생님 제보(업데이트 중 멈춘 듯). [원인: 오늘 10:48~10:57 오픈클로 자체 업데이트가 마지막 재시작 단계에서 "상태 저장소 점검 중"으로 실패하며 게이트웨이를 launchd 에서 내린 채 끝남]
   남아 있던 2026.9.6(오늘 아침까지 정상) 그대로 `launchctl bootstrap` → 실행·연결 검사 ok. 자동 업데이트는 9/23 부터 매일 실패 — 새 판이 Node 24.16+ 요구(맥미니 Node 22).

@@ -30,6 +30,7 @@
 | RLS·인증·RPC·Edge 함수·외부 API | [SECURITY_HARNESS.md](../../SECURITY_HARNESS.md) | AGENTS의 DB 마이그레이션 규칙 |
 | 보안 점검(날짜별 기록) | [docs/security-audits/](../security-audits/README.md) | SECURITY_HARNESS(정본 규칙) |
 | 맥미니 내부 장애 점검 화면 | [OUTAGE_PLAN.md](../OUTAGE_PLAN.md) | 운영 Caddy·상태 기록 스크립트 |
+| Node 버전·자동 패치·도커 베이스 이미지 | [NODE_RUNTIME_POLICY.md](../NODE_RUNTIME_POLICY.md) | `ops/node-runtime/policy.json`·`scripts/node-runtime-update.mjs` |
 | 백업·복구·자동 리허설 | [backup.md](../../backup.md) | git 밖 변경도 WORKLOG에 기록 |
 | 브라우저 실기기 검증 | [MANUAL_ACCEPTANCE_CHECKLIST.md](../../MANUAL_ACCEPTANCE_CHECKLIST.md) | 관련 WORKLOG 항목 |
 

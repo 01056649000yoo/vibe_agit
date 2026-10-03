@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.node-runtime-update</string>
+    <!--
+      Node 실행환경 주간 점검·자동 패치 (2026-10-03, 규칙: docs/NODE_RUNTIME_POLICY.md).
+      brew node@22(기본)·node@24(오픈클로 전용)를 같은 큰 버전 안에서만 7일 지난 LTS 패치로 올리고,
+      올린 뒤 확인해 실패하면 되돌리고 묶는다. 도커 베이스 이미지도 새로 받아 둔다. 큰 버전은 알리기만 한다.
+      일요일 05:10 — 03:30·04:00 백업과 05:50 오픈클로 업데이트 사이.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/opt/node@22/bin/node</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/node-runtime-update.mjs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>10</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-node-runtime.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-node-runtime.stderr.log</string>
+</dict>
+</plist>
