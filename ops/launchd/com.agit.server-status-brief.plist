@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.server-status-brief</string>
+    <!--
+      서버 점검 알림 (2026-10-04, 선생님 결정: 오픈클로는 ① 알림 ② 묻고 답하기까지만). 매일 07:30 서버 점검 요약을 텔레그램(오픈클로)으로 보낸다.
+      scripts/server-status-summary.mjs 는 읽기만 한다. AI 를 부르지 않아 토큰이 들지 않는다.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/opt/node@22/bin/node</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/server-status-summary.mjs</string>
+        <string>--send</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-server-status-brief.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-server-status-brief.log</string>
+</dict>
+</plist>

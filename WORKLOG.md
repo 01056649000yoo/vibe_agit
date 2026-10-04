@@ -22,6 +22,14 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-04 — 오픈클로로 서버 점검 알림(① 매일 아침·문제 즉시) ② 텔레그램 묻고 답하기 (Claude)
+- **한 일**: 선생님 결정 — ①②만. 읽기 전용 점검 요약 스크립트(11항목, 1.2초, AI 안 씀) + LaunchAgent 둘(07:30 요약, 30분마다 문제 생김·풀림만) + 오픈클로 스킬 `server-status`.
+  텔레그램 시험 발송·오픈클로 에이전트 질문("서버 괜찮아?") 둘 다 요약 그대로 답함.
+  [원인: 스킬의 "하지 않는다" 는 강제가 아님 — 거절 시험에서 오픈클로가 실제로 `jarvis-caddy` 를 재시작(도구 정책 full). 자비스 200 확인, 허용 목록 전환은 OI-029]
+- **변경**: `scripts/server-status-summary.mjs`·`scripts/lib/serverStatus.mjs`·`ops/openclaw/skills/server-status/SKILL.md`(설치)·`ops/launchd/com.agit.server-status-{brief,watch}.plist`(설치·로드)·검사·SERVICE_MANAGEMENT 절.
+- **결과/검증**: 지금 요약 "✅ 모두 정상"(백업·복구 시험·경고 0·서비스 5개·컨테이너 15·디스크 77GB/도커 63%·업데이트 3종·긴급 0·인증서 63일). 검사 1,509 통과.
+- **남은 것 / 다음**: OI-029(오픈클로 실행 권한 좁히기 결정).
+
 ## 2026-10-04 — Supabase self-hosted v0.8.0 → v0.8.2 반영(선생님 결정, 연휴에 앞당김) · 남은 이미지 3개 정리 — OI-025·027 닫음 (Claude)
 - **한 일**: 공식 CHANGELOG 확인 — 우리 영향은 이미지 태그·서버 함수 메인 워커(`main/index.ts`, 새 `deno.jsonc`, 오류 응답 모양)뿐. Kong 파일·Postgres 버전 같음, DB 초기화 변경은 새 DB 에만.
   v0.8.0 스크립트를 본떠 prepare·rehearse·apply v082 를 만들고 리허설에 **서버 함수 전부 응답** 검사를 더함. 리허설 PASS(오늘 백업, 154|16|9) → 별도 전체 덤프(58MB) → 적용 PASS 46초.

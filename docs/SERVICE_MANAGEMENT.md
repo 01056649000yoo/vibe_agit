@@ -68,6 +68,17 @@ N건`과 이미지 표의 `숨김` 열로 보여 주고, 원본 보고서에는 
 - CVE 개수는 취약 패키지 탐지 횟수이며 원격 공격 가능한 취약점 수와 같지 않다. 분기 점검에서 사용 경로와
   예외 사유를 다시 판정한다.
 
+## 텔레그램 점검 알림 — 오픈클로 (2026-10-04)
+
+선생님 결정: 오픈클로에는 **① 알림 ② 묻고 답하기**만 맡긴다. 조치(재시작·업데이트·삭제)는 맥미니에서 관문·되돌림이 있는 스크립트로.
+
+- `scripts/server-status-summary.mjs` — 백업·복구 점검·관리자 경고·서비스 5개 응답·컨테이너·디스크·자동 업데이트 3종·보안 취약점·인증서를 **읽기만** 해서 한 장으로. AI 를 안 불러 토큰 0.
+- ① `com.agit.server-status-brief`(매일 07:30, `--send`) · `com.agit.server-status-watch`(30분마다, `--alert-only` — 문제 항목이 새로 생기거나 풀릴 때만).
+- ② 오픈클로 스킬 `server-status`(원본 `ops/openclaw/skills/server-status/SKILL.md` → `~/.openclaw/workspace/skills/`에 복사). "서버 괜찮아?" 에 위 스크립트 결과를 그대로 답한다.
+- 텔레그램 받는 사람은 오픈클로에 짝지은 사용자를 그때 읽는다(번호를 저장소에 적지 않는다).
+- ⚠️ 스킬의 "하지 않는다" 는 **글로 된 약속일 뿐**이다. 오픈클로 도구 정책이 `profile: full` 이라 시키면 `docker restart` 도 실행된다
+  (2026-10-04 시험에서 실제로 자비스 caddy 를 재시작함). 막으려면 실행 허용 목록(`exec-approvals`) 전환 — OI-029.
+
 ## 관련 파일
 
 - 화면: `src/components/admin/AdminServiceManagementPanel.jsx`
