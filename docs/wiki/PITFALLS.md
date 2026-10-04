@@ -137,3 +137,8 @@
   판단을 남길 때는 근거와 **유효기간**을 함께 적는다(`src/constants/serviceFindingNotes.js`). (2026-09-02) [경로: src/constants/serviceFindingNotes.js, package.json, package-lock.json]
 - **도움말·활용 안내서 문구는 도움말 검색 점수에 들어간다.** 특히 활용 안내서 단계 설명(`purpose`)은 제목처럼 무겁게 센다.
   흔한 낱말(코드·학생·확인)을 넣으면 다른 메뉴의 "어디서 확인해?" 바로 답이 흐려진다(`teacherGuideAssistant` 검사). (2026-09-25) [경로: src/constants/teacherGuides.js, src/guides/**] [검사: tests/teacherGuideAssistant.test.mjs]
+
+## 같은 DB 를 쓰는 다른 앱
+
+- **다른 앱 스키마를 아지트 DB 로 옮기면 함수 권한을 다시 잠근다.** 새 스키마의 함수는 기본으로 PUBLIC 실행이고, PostgREST 노출 스키마면
+  공개 anon 키로 SECURITY DEFINER 를 부를 수 있다(쌤링크 08-28 이전 → 10-04 발견). [경로: supabase/migrations/**] [검사: npm run check:rpc-surface]

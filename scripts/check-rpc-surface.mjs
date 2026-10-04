@@ -81,6 +81,24 @@ WHERE n.nspname = 'public'
   AND has_function_privilege('anon', p.oid, 'EXECUTE')
 ORDER BY 1;`;
 
+/**
+ * public 밖의 스키마 중 anon 이 들어갈 수 있는 곳(쌤링크 `samlink`·자비스 `app`·글쓰기 도우미 등, 같은 DB·같은 공개 키).
+ * 2026-10-04: 쌤링크를 아지트 DB 로 옮길 때(08-28) revoke 가 빠져 `samlink.admin_delete_short_links` 같은
+ * SECURITY DEFINER 함수를 공개 anon 키로 부를 수 있었다. 이 저장소 코드가 아니라서 위 검사(public 만)가 못 봤다.
+ * 이름은 `스키마.함수` 로 나온다 — 열어 둬야 하면 anonExecute 에 그 이름으로 이유를 적는다.
+ */
+const ANON_DEFINER_OTHER_SCHEMAS_SQL = `
+SELECT DISTINCT n.nspname || '.' || p.proname
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname NOT IN ('public', 'pg_catalog', 'information_schema',
+    -- Supabase 가 판마다 관리하는 스키마(우리가 만든 함수가 아님)
+    'auth', 'storage', 'realtime', 'graphql', 'graphql_public', 'extensions', 'vault', 'pgbouncer', '_realtime', 'supabase_functions')
+  AND has_schema_privilege('anon', n.oid, 'USAGE')
+  AND p.prosecdef
+  AND p.prorettype <> 'trigger'::regtype
+  AND has_function_privilege('anon', p.oid, 'EXECUTE')
+ORDER BY 1;`;
+
 /** DB 에 있는 모든 함수 이름. 허용 목록이 이미 없는 이름을 가리키는지 볼 때 쓴다. */
 const ALL_FUNCTIONS_SQL = `
 SELECT DISTINCT p.proname
@@ -187,7 +205,7 @@ const main = async () => {
     // anon 에 열린 SECURITY DEFINER 는 이유를 적지 않으면 막는다.
     // 여기서만은 "참조가 있으니 괜찮다"로 넘어가지 않는다 — 쓰이는 함수라도 anon 에게까지
     // 열어 둘 이유는 따로 있어야 하기 때문이다.
-    for (const name of parseNames(psql(ANON_DEFINER_SQL))) {
+    for (const name of [...parseNames(psql(ANON_DEFINER_SQL)), ...parseNames(psql(ANON_DEFINER_OTHER_SCHEMAS_SQL))]) {
         if (anonAllowed.has(name)) continue;
         problems.push({
             name,
