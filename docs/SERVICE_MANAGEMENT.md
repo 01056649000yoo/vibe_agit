@@ -76,8 +76,14 @@ N건`과 이미지 표의 `숨김` 열로 보여 주고, 원본 보고서에는 
 - ① `com.agit.server-status-brief`(매일 07:30, `--send`) · `com.agit.server-status-watch`(30분마다, `--alert-only` — 문제 항목이 새로 생기거나 풀릴 때만).
 - ② 오픈클로 스킬 `server-status`(원본 `ops/openclaw/skills/server-status/SKILL.md` → `~/.openclaw/workspace/skills/`에 복사). "서버 괜찮아?" 에 위 스크립트 결과를 그대로 답한다.
 - 텔레그램 받는 사람은 오픈클로에 짝지은 사용자를 그때 읽는다(번호를 저장소에 적지 않는다).
-- ⚠️ 스킬의 "하지 않는다" 는 **글로 된 약속일 뿐**이다. 오픈클로 도구 정책이 `profile: full` 이라 시키면 `docker restart` 도 실행된다
-  (2026-10-04 시험에서 실제로 자비스 caddy 를 재시작함). 막으려면 실행 허용 목록(`exec-approvals`) 전환 — OI-029.
+- **실행 제한(2026-10-04, 선생님 결정: 텔레그램에서 끄적끄적아지트·자비스·쌤링크 재시작·종료 금지)** — 두 겹.
+  1. 오픈클로 실행 허용 목록 `ops/openclaw/exec-approvals.json` + `tools.exec.mode ask` + `channels.telegram.execApprovals.enabled false`
+     → 목록 밖 명령은 **승인 카드 없이 자동 거절**(받을 곳이 없어 `askFallback: deny`). docker·python3·curl·node 는 인자까지 제한(DB 조회·자비스 스크립트·노션·서버 점검만).
+     적용: `openclaw approvals set --gateway --file ops/openclaw/exec-approvals.json`. 검사 `tests/openclawExecPolicy.test.mjs`.
+  2. docker 앞문 `ops/docker-guard/docker` → `/opt/homebrew/bin/docker` 에 복사 설치. 오픈클로가 부를 때만 세 앱 restart·stop·kill·rm·compose up/down 등을 막는다(로그 `~/Library/Logs/agit-docker-guard.log`).
+  - ⚠️ `tools.exec.mode allowlist`(카드 없음)로 두면 **자비스(Codex 엔진)가 아예 실행을 거부**한다 — 반드시 `ask` + 텔레그램 카드 끄기 조합.
+  - 자비스 기능이 "실행 정책에 막혔다" 고 답하면, 그 명령을 확인해 목록에 좁게 더한다(셸·인터프리터 전체 허용 금지).
+    막힌 명령 기록: `sqlite3 ~/.openclaw/state/openclaw.sqlite "select json_extract(presentation_json,'$.commandText') from operator_approvals order by rowid desc limit 10"`.
 
 ## 관련 파일
 

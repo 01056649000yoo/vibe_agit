@@ -1,0 +1,84 @@
+#!/bin/bash
+# 오픈클로(텔레그램)에서 세 앱을 강제 재시작·종료하지 못하게 막는 docker 앞문 (2026-10-04, 선생님 결정).
+#
+# 설치 위치: /opt/homebrew/bin/docker  (로그인 PATH 에서 진짜 docker(/usr/local/bin)보다 앞) — ops/docker-guard/install.sh
+# 지키는 앱: 끄적끄적아지트(agit-*·Supabase 묶음), 자비스(jarvis*), 쌤링크(samlink*)
+# 막는 것(오픈클로가 부를 때만): restart·stop·kill·rm·pause·rename·update 와 `container …` 같은 일,
+#   compose down·stop·restart·kill·rm·up·pause·create, system/container prune, 컨테이너 안 kill·reboot 류.
+# 오픈클로가 아닌 호출(선생님·Claude·자동 배포·LaunchAgent 스크립트)은 **그대로 진짜 docker** 로 넘긴다.
+# 오픈클로 판별: 게이트웨이가 자식 명령에 물려주는 OPENCLAW_SERVICE_MARKER·OPENCLAW_LAUNCHD_LABEL.
+# ⚠️ 진짜 docker 를 전체 경로로 부르면 이 앞문을 지나지 않는다 — 실수·지시에 의한 재시작을 막는 장치이지 완전한 보안 경계는 아니다.
+set -u
+REAL="${AGIT_DOCKER_REAL:-/Applications/Docker.app/Contents/Resources/bin/docker}"
+PROTECTED='^/?(agit-|jarvis|samlink)'
+LOG="${HOME}/Library/Logs/agit-docker-guard.log"
+
+if [ -z "${OPENCLAW_SERVICE_MARKER:-}${OPENCLAW_LAUNCHD_LABEL:-}${AGIT_DOCKER_GUARD_TEST:-}" ]; then
+  exec "$REAL" "$@"
+fi
+
+refuse() {
+  printf '%s 막음: docker %s\n' "$(date '+%F %T')" "$*" >>"$LOG" 2>/dev/null || true
+  echo "⛔ 오픈클로에서는 서버 앱(끄적끄적아지트·자비스·쌤링크)을 재시작·종료할 수 없어요. 맥미니에서 Claude 와 함께 하기로 정해 두었습니다." >&2
+  exit 77
+}
+
+# 전역 옵션을 건너뛰고 하위 명령을 찾는다.
+args=("$@")
+i=0
+while [ $i -lt ${#args[@]} ]; do
+  case "${args[$i]}" in
+    --context|-c|--host|-H|--config|--log-level|-l|--tlscacert|--tlscert|--tlskey) i=$((i + 2)) ;;
+    -*) i=$((i + 1)) ;;
+    *) break ;;
+  esac
+done
+sub="${args[$i]:-}"
+rest=("${args[@]:$((i + 1))}")
+
+# `docker container restart …` 꼴은 한 단계 더 들어간다.
+if [ "$sub" = container ] || [ "$sub" = compose ] || [ "$sub" = system ]; then
+  group="$sub"
+  # compose 는 하위 명령 앞에 -f·-p 같은 자기 옵션이 온다(`docker compose -f x.yml down`).
+  j=0
+  if [ "$group" = compose ]; then
+    while [ $j -lt ${#rest[@]} ]; do
+      case "${rest[$j]}" in
+        -f|--file|-p|--project-name|--project-directory|--env-file|--profile|--ansi|--parallel|--progress) j=$((j + 2)) ;;
+        -*) j=$((j + 1)) ;;
+        *) break ;;
+      esac
+    done
+  fi
+  sub="${rest[$j]:-}"
+  rest=("${rest[@]:$((j + 1))}")
+else
+  group=""
+fi
+
+is_protected_target() {
+  local target="$1" name
+  [[ "$target" == -* ]] && return 1
+  if [[ "$target" =~ $PROTECTED ]]; then return 0; fi
+  # 컨테이너 ID 로 부르면 이름을 알아본다.
+  name="$("$REAL" inspect --format '{{.Name}}' "$target" 2>/dev/null || true)"
+  [[ -n "$name" && "$name" =~ $PROTECTED ]]
+}
+
+case "$group:$sub" in
+  compose:down|compose:stop|compose:restart|compose:kill|compose:rm|compose:up|compose:pause|compose:create)
+    refuse "$@" ;;
+  system:prune|container:prune)
+    refuse "$@" ;;
+  :restart|:stop|:kill|:rm|:pause|:rename|:update|container:restart|container:stop|container:kill|container:rm|container:pause|container:rename|container:update)
+    for target in "${rest[@]}"; do
+      if is_protected_target "$target"; then refuse "$@"; fi
+    done ;;
+  :exec|container:exec)
+    # 컨테이너 안에서 프로세스를 죽이거나 끄는 명령.
+    for word in "${rest[@]}"; do
+      case "$word" in kill|pkill|killall|reboot|shutdown|halt|poweroff|*"kill "*|*"pkill "*|*"killall "*) refuse "$@" ;; esac
+    done ;;
+esac
+
+exec "$REAL" "$@"

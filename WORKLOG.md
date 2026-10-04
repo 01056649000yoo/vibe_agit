@@ -22,6 +22,15 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-04 — 오픈클로(텔레그램)에서 세 앱 재시작·종료 막기 — OI-029 닫음 (Claude)
+- **한 일**: 선생님 결정 — 끄적끄적아지트·자비스·쌤링크 강제 재시작·종료 금지. ① docker 앞문(`/opt/homebrew/bin/docker`, 오픈클로가 부를 때만 막음)
+  ② 오픈클로 실행 허용 목록 17개(docker·python3·curl·node 는 인자 제한) + `tools.exec.mode ask` + 텔레그램 승인 카드 끔 → 목록 밖은 자동 거절.
+  [원인: 앞문만으로는 `/usr/local/bin/docker` 전체 경로로 우회됨. 또 승인 카드를 휴대폰에서 '허용' 하면 재시작이 실행됨(시험 중 실제 1회, 자비스 200)]
+  `mode allowlist`(카드 없음)는 자비스 Codex 엔진이 실행 자체를 거부해 쓰지 않는다. jarvis-pdf 스킬의 `$R` 변수를 경로로 풀어 목록에 맞춤.
+- **변경**: `ops/docker-guard/docker`(설치)·`ops/openclaw/exec-approvals.json`(적용)·검사 2개·SERVICE_MANAGEMENT·PITFALLS·ROADMAP 결정. git 밖: 오픈클로 설정 `tools.exec.mode=ask`·`channels.telegram.execApprovals.enabled=false`, 상태 백업 `~/backups/auto/openclaw.sqlite.before-exec-allowlist-20261004`.
+- **결과/검증**: 재시작 요청(이름·전체 경로) 둘 다 자동 거절, jarvis-caddy 시작 시각 그대로. "오늘 일정"(DB)·"서식 목록"(python3)·"서버 괜찮아?" 거절 0건으로 정상.
+- **남은 것 / 다음**: 없음(자비스 기능이 막혔다고 하면 그 명령만 목록에 좁게 추가).
+
 ## 2026-10-04 — 오픈클로로 서버 점검 알림(① 매일 아침·문제 즉시) ② 텔레그램 묻고 답하기 (Claude)
 - **한 일**: 선생님 결정 — ①②만. 읽기 전용 점검 요약 스크립트(11항목, 1.2초, AI 안 씀) + LaunchAgent 둘(07:30 요약, 30분마다 문제 생김·풀림만) + 오픈클로 스킬 `server-status`.
   텔레그램 시험 발송·오픈클로 에이전트 질문("서버 괜찮아?") 둘 다 요약 그대로 답함.

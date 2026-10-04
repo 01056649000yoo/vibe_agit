@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "socket": {
+    "path": "/Users/seunghyeonmaegmini/.openclaw/exec-approvals.sock"
+  },
+  "defaults": {
+    "security": "allowlist",
+    "ask": "on-miss",
+    "askFallback": "deny",
+    "autoAllowSkills": false
+  },
+  "agents": {
+    "main": {
+      "security": "allowlist",
+      "ask": "on-miss",
+      "askFallback": "deny",
+      "autoAllowSkills": false,
+      "allowlist": [
+        {
+          "pattern": "docker",
+          "argPattern": "^(exec agit-db psql |ps( |$)|logs |inspect |stats --no-stream)"
+        },
+        {
+          "pattern": "python3",
+          "argPattern": "^(-B )?(~|/Users/seunghyeonmaegmini)/Jarvis_Brain_Local/scripts/[A-Za-z0-9_]+\\.py( |$)"
+        },
+        {
+          "pattern": "curl",
+          "argPattern": "^(?!.*(--unix-socket|--abstract-unix-socket|file:|--config|(^| )-K( |$)|(^| )-o( |$)|--output)).*(https://api\\.notion\\.com/v1/|http://127\\.0\\.0\\.1:8765/api/)"
+        },
+        {
+          "pattern": "/opt/homebrew/Cellar/node@22/*/bin/node",
+          "argPattern": "^/Users/seunghyeonmaegmini/vibe_agit/scripts/server-status-summary\\.mjs$"
+        },
+        {
+          "pattern": "/opt/homebrew/opt/node@22/bin/node",
+          "argPattern": "^/Users/seunghyeonmaegmini/vibe_agit/scripts/server-status-summary\\.mjs$"
+        },
+        {
+          "pattern": "cat"
+        },
+        {
+          "pattern": "printf"
+        },
+        {
+          "pattern": "echo"
+        },
+        {
+          "pattern": "mkdir"
+        },
+        {
+          "pattern": "sed",
+          "argPattern": "^-n '?[0-9]+(,[0-9$]+)?p'? [^;|&<>`$]+$"
+        },
+        {
+          "pattern": "head"
+        },
+        {
+          "pattern": "tail"
+        },
+        {
+          "pattern": "ls"
+        },
+        {
+          "pattern": "wc"
+        },
+        {
+          "pattern": "grep"
+        },
+        {
+          "pattern": "pwd"
+        },
+        {
+          "pattern": "date"
+        }
+      ]
+    }
+  }
+}
