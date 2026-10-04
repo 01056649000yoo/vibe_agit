@@ -36,7 +36,9 @@ const ALERT_LABELS = {
     docker_memory_pressure: '도커 메모리 압박',
     host_memory_pressure: '맥 메모리 압박',
     // Node 실행환경 주간 점검(scripts/node-runtime-update.mjs·openclaw-autoupdate.sh): 패치 실패·지원 종료 임박·요구 Node 미달
-    node_runtime: 'Node 실행환경 확인 필요'
+    node_runtime: 'Node 실행환경 확인 필요',
+    // 쌤링크 매일 다시 검사(URL 저장소 app/api/rescan-links): 목적지가 악성으로 바뀐 링크를 자동으로 멈춤. 다음 깨끗한 검사에서 저절로 닫힘
+    samlink_unsafe_link: '쌤링크 위험 링크 자동 중지'
 };
 
 const formatWhen = (value) => {
