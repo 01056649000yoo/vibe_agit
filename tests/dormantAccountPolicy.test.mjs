@@ -35,8 +35,12 @@ test('휴면 분류는 데이터 이관·자동 삭제가 아니며 로그인하
 test('개정 정책은 7일 고지 기간을 둔 시행일을 밝힌다', () => {
     // 2026-09-11 개정: 학생 개인정보 처리 근거·수집 항목 정정, 동의 기록. 시행 2026-09-21.
     // 시행일의 원본은 src/constants/policyVersion.js 이고 tests/policyConsent.test.mjs 가 본문과 대조한다.
+    // 2026-10-05 개정(쌤링크 계정 연결, 시행 2026-10-12)부터 날짜를 박지 않고 "수정일 + 7일 ≤ 시행일" 을 본다.
     assert.match(terms, /개정일: 2026년 9월 11일 · 개정 시행일: 2026년 9월 21일/);
-    assert.match(privacy, /최종 수정일: 2026년 9월 11일 · 시행일: 2026년 9월 21일/);
-    assert.match(privacy, /2026년 9월 21일부터 적용/);
+    const toDate = (y, m, d) => Date.UTC(Number(y), Number(m) - 1, Number(d));
+    const [, uy, um, ud, ey, em, ed] = privacy.match(/최종 수정일: (\d{4})년 (\d{1,2})월 (\d{1,2})일 · 시행일: (\d{4})년 (\d{1,2})월 (\d{1,2})일/) || [];
+    assert.ok(uy, '처리방침 머리말에 최종 수정일·시행일이 없습니다');
+    assert.ok(toDate(ey, em, ed) - toDate(uy, um, ud) >= 7 * 86400000, '시행일은 수정일로부터 7일 이상 뒤여야 합니다');
+    assert.match(privacy, new RegExp(`${ey}년 ${em}월 ${ed}일부터 적용`));
     assert.match(privacy, /시행 7일 전부터 공지사항을 통해 고지/);
 });
