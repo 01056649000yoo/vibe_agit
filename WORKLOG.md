@@ -22,6 +22,14 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-05 — 쌤링크 링크 목록을 아지트 선생님 계정에 연결 (v1.24) (Claude)
+- **한 일**: 선생님 결정. 아지트가 1분·한 번 쓰는 연결표(`issue_samlink_connect_ticket_v1`, 승인된 선생님만)를 주고 쌤링크 서버가 `redeem_…`(service_role 전용)으로 누구인지만 받아 자기 서명 쿠키를 만든다 — 로그인 토큰은 안 넘김.
+  `URL 단축하기`(iframe)는 postMessage 로 저절로, 쌤링크.kr 은 `아지트 계정으로 연결` → `/?samlink-connect=1` → `/connect#ticket=`. 처음 연결하면 그 기기 링크를 계정에 담고(주인 표시 유지), 연결된 채 만든 링크는 계정에도.
+  관리 권한(연장·이름·통계·지우기)은 기기 또는 계정, 지우기는 주인만(나머지는 내 목록에서 빼기). 연결 요청엔 IP 제한을 안 둠(학교 공용 IP·192비트 연결표).
+- **변경**: `20261368`(+스모크), `samlinkConnect.js`·`TeacherEntry`·`App`·검사·FEATURE_MAP·교사 도움말. URL: `samlink.short_link_account_access`(migration `20261005090000`), `lib/account-session.ts`·`lib/link-ownership.ts`·`/api/account/*`·`/connect`·`account-bar.tsx`, 예약어 `connect`.
+- **결과/검증**: 실제 운영에서 끝까지 시험(관리자 계정): 연결 전 만든 링크 1개를 계정에 담음 → 다른 기기(아지트 iframe 흉내)에서 자동 연결·목록·주인 표시·연장 200 → 해제하면 그 기기 목록에서 빠짐 → 남의 기기 지우기 403 → 주인 지우기 후 남은 줄 0. 연결표 재사용 401, 주소에 연결표 안 남음. 스모크·검사 1,519 통과. [원인(같이 고침): 10/4 자동 배포가 docker 앞문 검사(배포 이미지에 bash 없음)로 실패 → 없으면 건너뜀]
+- **남은 것 / 다음**: OI-030(개인정보처리방침 문구), OI-022(아이패드 사파리 iframe 쿠키 실기 함께).
+
 ## 2026-10-04 — 쌤링크 링크 묶음 알기 쉽게 · 악성 주소 매일 다시 검사 (Claude)
 - **한 일**: 선생님 결정 — 묶음은 지우지 않고 알기 쉽게(탭마다 한 줄 설명, 묶음 탭 제목·학생 화면 예시, 일반 링크 화면에 "여러 개인가요?" 안내, 기능 소개 칩). 신고 버튼은 안 만듦.
   매일 다시 검사: 사용 중인 링크 목적지 전부(묶음 안 주소 포함)를 Safe Browsing 으로 → 걸리면 곧바로 멈춤 + 아지트 관리자 경고 `samlink_unsafe_link`(텔레그램 점검에도 뜸, 다음 깨끗한 검사에서 닫힘). 검사 실패한 날은 링크를 건드리지 않음.
@@ -504,105 +512,6 @@
 - **결과/검증**: 검사 1420·lint·build·렌더 스모크 82 통과. 새 브라우저 검사(고정 → 전체화면에 급식 → 닫으면 다시 안 열림 → 메뉴로는 일반 화면), 매니페스트 줄을 빼면 실패함 확인.
 - **남은 것 / 다음**: OI-018(실기 점검표 14절에 한 줄 더함).
 
-## 2026-09-28 — 머리말 단축 단추에 학급운영도구 고정(v1.14) + 실기 점검표 9월 기능 반영 (Kiro)
-- **한 일**: 선생님 요청 — `우리 반 스크린` 옆 ▾ 로 학급운영도구를 펼쳐 하나를 고르면 단축 단추에 고정. 처음 값은 우리 반 스크린(동행 모드 자리 유지).
-  실기 점검표가 8/23 에 멈춰 9월 기능이 빠져 있어 FEATURE_MAP·WORKLOG 와 대조해 12~19절·1-2절(30분 빠른 점검)을 더함.
-- **변경**: `TeacherToolPinMenu.jsx`(새)·`headerToolShortcut.js`(순수 도우미)·`teacherTools.js`(도구 목록 원본, 허브와 공유)·`TeacherDashboard.jsx/.css`.
-  고른 도구는 이 기기 localStorage. 도움말 2곳·FEATURE_MAP v1.14·`package.json` 1.14.0. `MANUAL_ACCEPTANCE_CHECKLIST.md`, OI-008·OI-018 사실대로 고침.
-- **결과/검증**: 검사 1419·lint·build·렌더 스모크 81 통과. 새 브라우저 검사(▾ → 알림장 고정 → 열기 → 새로고침 유지), `verify:guard` 로 새 검사가 옛 코드에서 실패함 확인.
-  360·820·1280px 캡처로 확인 — 폰에서 메뉴가 왼쪽 밖으로 잘려 좁은 화면은 머리말 아래 오른쪽 정렬·최대 360px 로 고침.
-- **남은 것 / 다음**: OI-018(점검표 1-2절부터 실기 점검). 다른 도구를 고정한 뒤 동행 모드를 다시 보면 안내 문구(`우리 반 스크린`)와 단추 이름이 다르다 — 처음 값에서는 같다.
-
-## 2026-09-28 — 작업 기억 정리: 열린 일 한 곳·ROADMAP 857줄·SESSION_CONTEXT 생성·마감 한 명령 (Kiro)
-- **한 일**: 기록이 쌓이기만 하고 다음 작업에 안 쓰였다(ROADMAP 4,307줄, SESSION_CONTEXT 12,757자로 Codex 상한 초과, 남은 것 71곳 흩어짐).
-  역할별로 나누고 정리를 스크립트로 옮겼다. 계획·진행표는 `WORKFLOW_MEMORY_PLAN.md`.
-- **변경**: 새 명령 `worklog:rotate`·`worklog:lint`·`roadmap:archive`·`context:build`·`checks:count`·`wrap`·`test:related`·`recall`·`verify:guard`·`retro`.
-  WORKLOG 1,926→868줄(49항목 이동), ROADMAP 4,307→858줄(`docs/roadmap/`, 옛 `[ ]` 128건 → BACKLOG), SESSION_CONTEXT 생성 파일(원본
-  `docs/wiki/SESSION_RULES.md`, 옛것 `docs/wiki/archive/`), `docs/OPEN_ITEMS.md` 20행, PITFALLS 32줄에 `[경로: …]`, 보안 점검 표 `막는 검사` 칸,
-  장부 `ops/check-counts.json`, 첫 회고 `docs/retro/2026-09.md`. 푸시 전 훅이 실패한 검사 이름을 `~/.agit/check-failures.log` 에(git 밖).
-- **결과/검증**: 전체 검사 1414 통과·lint 0·build 통과. 새 검사마다 일부러 망가뜨려 실패 확인(순환 안 된 WORKLOG, SESSION_CONTEXT·BACKLOG 손 편집,
-  스모크 하나 숨김, 종류 틀린 열린 일, 꼬리표 없는 교훈, 보안 검사 파일 삭제). 옮기기 전후 줄 내용 비교 일치. `verify:guard 2ad31482` 가 두 검사 모두 잡음 확인.
-  도커 배포 관문(node:20-alpine)은 bash·git·e2e 가 없어 훅 비교 검사는 건너뛰고 e2e 수는 "못 셈"으로 둔다.
-- **남은 것 / 다음**: OI-019(BACKLOG 재확인), OI-020(Codex `/hooks` 재신뢰). 푸시 전 훅 변경은 기기마다 `npm run hooks:install`.
-
-## 2026-09-28 — 점검 후속: 보안 구멍·알림 잔존·폰 하단 메뉴 고침, 스모크 174개·화면 스모크 80개 상시 검사로 (Kiro)
-- **한 일**: 세 갈래 점검. ① 브라우저 공개 RPC 334호출을 네 신원으로 전수 호출(롤백) ② 롤백 스모크 전체를 현행 기준으로
-  ③ 로그인해야 보이는 교사·학생·관리자 화면을 가짜 Supabase 로 띄워 메뉴를 전부 눌러 봄. 보안 기록은 `docs/security-audits/2026-09-28.md`.
-- **찾아서 고친 실제 오류 4건**
-  - 보안: `setup_teacher_profile` 이 익명 세션을 안 걸러 익명 로그인만으로 승인 교사가 됐다(`auto_approval` 켬). 악용 흔적 0.
-    → `20261355_setup_teacher_profile_rejects_anonymous.sql`(+스모크, 수정 전 정의에서 실패 확인). 운영 적용(아래 배포).
-  - 알림: `20261262` 가 반응 알림 함수의 DELETE 분기를 빠뜨려, 반응을 취소해도 알림이 남았다(725건). 스모크 `20261116` ② 가
-    잡고 있었는데 아무도 안 돌렸다. → `20261356_reaction_cancel_removes_notification.sql`(함수 복구 + 고아 알림 정리). 운영 적용(아래 배포).
-  - 학생 하단 메뉴: 여섯 칸 라벨 `nowrap` 때문에 360~430px 폰에서 `아지트 놀이터`·`친구 아지트` 칸이 화면 밖으로 밀렸다
-    → `StudentBottomNav.jsx` 칸 `min-width:0`, 라벨 낱말 단위 두 줄.
-  - 교사 놀이터: 학급 설정 행이 안 보여 `maybeSingle()` 이 null 을 주면 `resolveEnabledModuleIds` 의 `Reflect.get` 이 던져
-    "불러오는 중"에 멈췄다 → `registry.js` 에서 null 을 `{}` 로.
-  - 위 두 화면 수정은 되돌리면 렌더 스모크 4건이 실패하는 것을 확인했다.
-- **검사 정리**
-  - `scripts/run-all-smokes.mjs` = `npm run smoke:all`: `tests/sql/*.smoke.sql` 전부를 파일마다 BEGIN…ROLLBACK, 적용 전 마이그레이션을
-    먼저 싣는다. `npm run test:security` 가 이것을 부른다(옛 네 묶음 대신). 맥미니에서 **174/174**, 두 번 연속 통과.
-  - 낡은 스모크 47개(오전 46 + 픽스처가 흔들린 `20261139`)를 근거 마이그레이션에 맞춰 고침. 고친 파일마다 첫머리에 근거 한 줄.
-    `20261241` 뒤쪽 외부 공유 부분(옛 anon 직접 읽기·pilot 흐름)은 퇴역 — 새 스모크 20261243/48/50/52/57 이 본다.
-    정적 검사 6곳(모두의 아지트 상한 4→10, 초대 24시간→7일·여러 반, 학생 회수·검토 폐지, 발자국 `spelling_labels` 최상위)도 같이 맞춤.
-  - `e2e/render-smoke.spec.cjs`(미리보기 26) + `e2e/app-render-smoke.spec.cjs`(로그인 화면 54, 가짜 Supabase `e2e/fixtures/`)
-    = `npm run test:render` **80/80**. 가짜 주소는 `playwright.config.cjs` 의 webServer env 가 넣는다(이미 떠 있는 5173 서버는 재사용되니 끄고 돌린다).
-  - `types.js` 매니페스트 검증: 학생 콘텐츠를 교사가 관리하는 모듈(수호룡·독서록·일기)을 잘못 짚던 조건을 "학생 진입점이 없을 때만"으로.
-- **결과/검증**: lint 0·0, `test:all` 1,387/1,387, `test:architecture` 399/399, 빌드, `test:render` 80/80, 맥미니 `test:security` 통과
-  (정적 351, RPC 표면 정상, `migrate:check` 20261355·20261356 통과, 스모크 174/174, 운영 설정).
-- **배포**: 커밋 `86fa37bf`(보안)·`c7f69e3f`(알림)·`780c6b0f`(화면·렌더 스모크)·`34b1d366`(스모크 정리) 푸시 → Actions
-  `36416580953` 성공. 배포가 마이그레이션 롤백 검증·적용을 먼저 해 운영 기록 **402개**(400 + 2). 적용 뒤 확인: `setup_teacher_profile`
-  에 익명 거절이 들어 있음, 취소된 반응의 남은 알림 725 → **0**, 운영 HTTP 200, `agit-app` 새 컨테이너.
-  이 PC의 푸시 전 훅은 도커가 없어 DB 확인을 건너뛴다 — DB 확인은 배포 단계(맥미니)가 한다.
-- **남은 것 / 다음**
-  - **선생님 결정**: `auto_approval`(구글 계정이면 곧바로 승인 교사) 유지 여부.
-  - 폰에서 학생 하단 메뉴 여섯 칸이 다 보이는지 실제 기기로 한 번 확인(렌더 스모크는 360·390·430px 통과).
-  - 다음 정리 때: 옛 판 함수 5개(보안 기록 참고). (`TECH_GLOSSARY.md` 미커밋 수정은 `c5ee61a6` 으로 해결)
-  - 실제 수업 흐름 E2E(시험 학급 필요)는 아직.
-
-## 2026-09-28 — 전체 점검: 린트 경고 0, 기능 지도를 코드·운영 DB와 맞춤 (Kiro)
-- **한 일**: 첫 세션 전체 점검. 검사 1,387/1,387·빌드·`npm audit --omit=dev` 0건. 린트는 오류 0·**경고 63**(0경고 기준 초과)이었다.
-- **알게 된 것**:
-  - 경고 63건은 모두 `security/*` 오탐 — 58건은 `tests/` 가 소스를 경로·패턴 변수로 읽는 것, 5건은 `src/` 의 배열 번호·고정 키 접근.
-    pre-push 훅이 경고를 통과시키고(주석엔 "30건") Dockerfile·Actions 는 린트를 안 돌려 조용히 불어났다.
-  - 운영 DB(Tailscale `ssh macmini`, 읽기만): 마이그레이션 400/400 적용·유령 기록 0·내용 변경 0(**git 원본 기준** — 윈도우 체크아웃은
-    CRLF 라 파일 그대로 해시하면 거의 전부 불일치로 보인다). 우리반 아지트 `open`·외부 공유 켬, 모두의 아지트 `public_beta`.
-  - 맥미니 `~/vibe_agit` 은 `aa24249f`(한 커밋 뒤)이고 `docs/TECH_GLOSSARY.md` 에 커밋 안 된 수정이 있다 — 건드리지 않았다.
-- **변경**:
-  - `eslint.config.js`: `tests/**` 에 한해 `detect-non-literal-fs-filename`·`detect-non-literal-regexp`·`detect-object-injection` 끔.
-    검사 파일 43개에서 쓸모없어진 `eslint-disable` 주석 48줄 제거(다른 규칙이 섞인 한 줄은 남은 규칙만 유지).
-  - `src/` 5곳: `classBoards.at(i)`, `sectionPosts.at(i)`, `Reflect.get(...)`, `Object.fromEntries(...)` — 동작 같음.
-  - `npm run lint` = `eslint . --max-warnings 0`. pre-push 훅이 경고도 막는다(설치된 훅은 `npm run hooks:install` 로 다시 복사해야 반영).
-  - `FEATURE_MAP.md` v1.13.1(기능 변화 없음, 문서 바로잡기 8곳), `teacherNav.js` 놀이터 카드 `드래곤 키우기 관리` → `작가 수호룡 관리`.
-- **결과/검증**: lint 0오류·0경고, 검사 전체·빌드 통과(커밋 전 실행).
-- **남은 것 / 다음**: 맥미니의 `TECH_GLOSSARY.md` 로컬 수정 → **해결**: 같은 날 저녁 선생님 "동기화" 지시로 `c5ee61a6` `[skip ci]` 커밋·푸시(용어 4단계 설명 구조, `glossary:check` 통과).
-
-## 2026-09-28 — 글자 수가 부풀려지던 것 고침: 학생이 쓴 글자만, 줄바꿈 빼고 (Claude)
-- **제보**: 학생이 몇 자 안 썼는데 900자로 보인다.
-- **알게 된 것**: 세는 함수·화면·포인트 계산은 정상이었고 **무엇을 세느냐**가 문제였다. ① 보고서는 칸 제목(선생님이 정한 질문)까지
-  본문에 이어 붙이고 그 본문을 셌다 — 비운 칸 제목도. 칸 제목 80자×최대 12칸이라 질문형 12칸이면 학생 5자가 724자로 보였다(재현).
-  서버 `char_count`·최소 글자 수 판정·추가 분량 보너스도 같은 수를 썼다. ② 줄바꿈도 한 글자로 셌다 — 엔터를 누르고 있으면 수백 자.
-  제보된 글이 어느 쪽인지는 운영 DB 읽기가 권한에서 막혀 확인하지 못했다.
-- **결정(선생님)**: ①은 고친다. ②는 **줄바꿈은 세지 않고 띄어쓰기는 몇 칸이든 한 칸**(앞뒤 빈칸 제외). 모든 빈칸을 빼는 안은 숫자가 크게 줄어 택하지 않음.
-- **변경**:
-  - `src/lib/textMetrics.js` 규칙 원본(코드 포인트 단위 — 이모지 1자, 서버 `char_length` 와 같게). 세 글자 묶음을 상수로 내보냄.
-  - 장르 `countWrittenChars` 끼울 자리: 보고서(칸 내용만, 비었으면 사진 설명)·편지(네 칸, `에게`·빈 줄 제외)·시(연만).
-    `registry.countWrittenChars` 가 고르고, 칸 값이 본문보다 커지지 않게 작은 값. 학생 글쓰기 화면·제출 검사·편지 본문 카운터가 씀.
-  - `20261354_student_written_char_count.sql`(**미적용**): `writing_content_char_count` 새 규칙, `writing_post_char_count(content, structured)` 신설,
-    저장 트리거 `guard_student_post_server_columns`(20261230 그대로 + 한 줄)·제출 `writing_engine_submit_assignment`(20261170 그대로 + 한 줄).
-    이미 저장된 글의 `char_count` 는 다시 세지 않음(이미 준 보상과 맞춤). 다음 저장 때 새 규칙.
-  - 검사 `tests/charCountParity.test.mjs` — 화면·서버 글자 묶음 문자열 대조, 장르 목록 ↔ SQL 갈래, 최신 트리거·제출 정의, 예시 값.
-    SQL 줄을 옛 방식으로 되돌리거나 글자 묶음 한 글자를 바꾸면 실패하는 것 확인. 롤백 스모크 `tests/sql/20261354_*.smoke.sql`(같은 예시).
-    `writingPolicy.test.mjs` 첫 예시 11 → 9자.
-- **주의(도구)**: 이 PC의 Bash·Edit 도구가 `\u200B` 같은 표기를 **보이지 않는 실제 글자로 바꿔** 파일에 쓴다. SQL 은 `\x200B`, JS 는 백슬래시를 두 번 쓴 문자열로 적었다(검사가 둘을 맞춰 대조).
-- **결과/검증**: 검사 1,386/1,387(실패 1건은 `revisionTracking.test.mjs` — 이 PC 줄 끝(CRLF) 탓, 변경 전에도 실패), lint 오류 0, 빌드 통과.
-  SQL 실행 검증(`migrate:check`)은 이 PC에 Docker 가 없어 **아직**.
-- **배포**: 맥미니에서 `migrate:check` 롤백 검증 통과(스모크 예시 포함) → 커밋 `2ad31482`·`aa24249f` 푸시 → 자동 배포 성공.
-  **자동 배포가 `migrate:check`·`migrate` 를 앱 빌드보다 먼저 돌려** 01:37 에 20261354 가 적용됐다(손으로 적용할 것 없음).
-  운영 DB 확인: 엔터 900번 0자, `가     나` 3자, 보고서 칸 제목 제외 5자, 트리거·제출이 `writing_post_char_count` 사용. 앱 200, 새 `textMetrics` 번들 확인.
-  `revisionTracking.test.mjs` 의 줄 끝 검사를 CRLF 도 받게 고침(윈도우에서 푸시 전 검사가 막던 것).
-- **남은 것 / 다음**: 배포 전에 열어 둔 학생 화면은 새로고침 전까지 옛 방식으로 세서, 최소 글자 수 경계의 글은 서버가 거절할 수 있다(새로고침하면 해결).
-  브라우저로 보고서·편지·자유 글 글자 수 한 번 확인.
-
 ## 지난 기록
 
 이 파일에는 **최근 것만** 둔다. 통째로 읽으면 한 세션 예산을 통째로 쓴다.
@@ -610,7 +519,7 @@
 
 | 기간 | 보관소 |
 |---|---|
-| 2026년 9월 27일까지 | [docs/worklog/2026-09.md](docs/worklog/2026-09.md) |
+| 2026년 9월 28일까지 | [docs/worklog/2026-09.md](docs/worklog/2026-09.md) |
 | 2026년 8월 | [docs/worklog/2026-08.md](docs/worklog/2026-08.md) |
 | 2026년 7월 | [docs/worklog/2026-07.md](docs/worklog/2026-07.md) |
 

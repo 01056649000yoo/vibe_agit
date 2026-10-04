@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { supabase } from '../../../lib/supabaseClient';
+import { SAMLINK_ORIGIN, isSamlinkTicketRequest, issueSamlinkTicket } from './samlinkConnect';
 
 const SAMLINK_URL = 'https://샘링크.kr';
 const SAMLINK_EMBED_URL = `${SAMLINK_URL}/?embed=agit`;
@@ -12,6 +14,19 @@ const floatingControlStyle = {
 const SamlinkTeacherEntry = ({ isMobile }) => {
     const [frameKey, setFrameKey] = useState(0);
     const [loaded, setLoaded] = useState(false);
+    const frameRef = useRef(null);
+    // 쌤링크 화면이 아지트 선생님 계정 연결표를 달라고 하면 1분짜리 연결표만 건넨다(로그인 토큰은 안 넘김).
+    useEffect(() => {
+        const onMessage = (event) => {
+            const frameWindow = frameRef.current?.contentWindow;
+            if (!isSamlinkTicketRequest(event, frameWindow)) return;
+            issueSamlinkTicket(supabase)
+                .then((ticket) => frameWindow.postMessage({ type: 'samlink:ticket', ticket }, SAMLINK_ORIGIN))
+                .catch(() => { /* 연결이 안 돼도 쌤링크는 기기 목록으로 그대로 쓴다 */ });
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, []);
 
     const reload = () => {
         setLoaded(false);
@@ -33,6 +48,7 @@ const SamlinkTeacherEntry = ({ isMobile }) => {
                 )}
                 <iframe
                     key={frameKey}
+                    ref={frameRef}
                     title="쌤링크 수업 링크 관리"
                     src={SAMLINK_EMBED_URL}
                     onLoad={() => setLoaded(true)}

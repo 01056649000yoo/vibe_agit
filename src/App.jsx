@@ -15,6 +15,7 @@ import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
 import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
 import PriorityWritingNotificationBanner from './modules/notifications/PriorityWritingNotificationBanner';
+import { captureSamlinkConnectRequest, isApprovedTeacherProfile, issueSamlinkTicket, samlinkConnectReturnUrl, takeSamlinkConnectRequest } from './modules/tool/samlink/samlinkConnect';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
 import { DEFAULT_WRITING_EDITOR_SETTINGS } from './modules/writing/editor-settings/settings';
 import {
@@ -173,6 +174,17 @@ function App() {
   const lastStudentRouteRef = useRef(null);
   const previousStudentHomePageRef = useRef(null);
   const studentDeepLinkHandledRef = useRef(false);
+
+  // 쌤링크.kr 에서 "아지트 계정으로 연결" 을 누르고 온 선생님: 로그인을 마치면 1분짜리 연결표를 들고 쌤링크로 돌려보낸다.
+  // 신호는 첫 화면에서 sessionStorage 에 기억해 두므로 구글 로그인을 거쳐도 남는다(samlinkConnect.js).
+  useEffect(() => { captureSamlinkConnectRequest(); }, []);
+  useEffect(() => {
+    if (!session || !isApprovedTeacherProfile(profile)) return;
+    if (!takeSamlinkConnectRequest()) return;
+    issueSamlinkTicket(supabase)
+      .then((ticket) => window.location.replace(samlinkConnectReturnUrl(ticket)))
+      .catch(() => window.alert('쌤링크 연결을 준비하지 못했습니다. 쌤링크에서 다시 눌러 주세요.'));
+  }, [session, profile]);
 
   // 연구소에서 돌아온 학생을 글쓰기 연구소 목록으로 바로 연결한다.
   // 허용한 단일 화면만 처리하고 URL의 신호는 한 번 사용한 뒤 제거한다.

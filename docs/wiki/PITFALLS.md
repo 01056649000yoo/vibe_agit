@@ -43,6 +43,7 @@
   `-remove` 뒤 `-insert`. [경로: ops/launchd/**, scripts/openclaw-autoupdate.sh, scripts/node-runtime-update.mjs]
 - **오픈클로 스킬의 "하지 않는다" 는 강제가 아니다.** 실행 제한은 허용 목록(`exec-approvals`)으로만 걸린다. 또 `tools.exec.mode allowlist` 는
   Codex 엔진이 실행을 거부해 자비스가 멈춘다 → `ask` + 텔레그램 승인 카드 끄기(자동 거절). 승인 카드는 휴대폰에서 무심코 '허용' 을 누르기 쉽다(2026-10-04 실제로 재시작됨). [경로: ops/openclaw/**] [검사: tests/openclawExecPolicy.test.mjs]
+- **검사는 배포 이미지(alpine, bash 없음) 안에서도 돈다.** 맥에서만 되는 bash·도구를 부르는 검사는 없으면 건너뛰게 한다 — 10/4 자동 배포가 docker 앞문 검사로 실패했다. [경로: tests/**] [검사: npm run deploy:local]
 
 ## DB·권한
 
