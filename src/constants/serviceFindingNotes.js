@@ -18,6 +18,29 @@
  */
 
 export const SERVICE_FINDING_NOTES = Object.freeze([
+    // 2026-10-04 Supabase v0.8.2 반영 뒤 Realtime 이미지(데비안 13)의 perl-base 세 건. 실행 중 프로세스는 Erlang VM(beam.smp)·보조 프로그램뿐이고
+    // 시작 스크립트(/app/run.sh·/app/bin/*)도 perl 을 부르지 않음을 컨테이너 안에서 직접 확인했다. 상류 다음 묶음에서 갱신되면 사라진다.
+    Object.freeze({
+        id: 'CVE-2026-13221',
+        title: 'Perl 큰 정규식 처리 오류',
+        reason: '실시간 서버 이미지 안의 perl 은 패키지 관리용으로만 들어 있다. 실행 중인 프로세스는 Erlang VM 과 그 보조 프로그램뿐이고 시작 스크립트도 perl 을 부르지 않아, 요청이 perl 정규식에 닿는 경로가 없다.',
+        checkedAt: '2026-10-04',
+        expiresAt: '2027-01-04'
+    }),
+    Object.freeze({
+        id: 'CVE-2026-42496',
+        title: 'Perl Archive::Tar 심볼릭 링크 경로 탈출',
+        reason: '위와 같은 perl 이다. 이 서버는 압축 파일을 받아 풀지 않고 perl 을 실행하지도 않아, 남이 건넨 tar 파일이 Archive::Tar 에 닿는 경로가 없다.',
+        checkedAt: '2026-10-04',
+        expiresAt: '2027-01-04'
+    }),
+    Object.freeze({
+        id: 'CVE-2026-8376',
+        title: 'Perl 정규식 컴파일 힙 넘침(32비트)',
+        reason: '32비트 빌드에서만 생기는 문제이고 이 이미지는 64비트(arm64)다. 게다가 위와 같이 perl 이 실행되는 경로가 없다.',
+        checkedAt: '2026-10-04',
+        expiresAt: '2027-01-04'
+    }),
     Object.freeze({
         id: 'CVE-2026-56854',
         title: 'x/crypto SSH 인증 우회',

@@ -14,6 +14,16 @@
 
 ---
 
+## 판마다 새로 만들 것 (2026-10-04 v0.8.2 때 정리)
+
+새 묶음(`self-hosted/vX.Y.Z`)마다 세 스크립트를 앞 판에서 복사해 **버전·날짜만** 바꾼다. 앞 판 스크립트는 기록으로 남긴다.
+
+1. `scripts/prepare-supabase-vXYZ.mjs` — 라이브 스택에서 출발해 이미지 태그를 공식 묶음 태그로 바꾸고, 공식 파일(메인 워커·업데이트 도구)을 가져온다.
+   공식 CHANGELOG 에서 `requires … update` 라고 적힌 파일만 가져온다. 라이브 스택은 묶음 뒤에도 고쳐지므로(예: 10/1 templates-server `restart`) **앞 판 staging 이 아니라 라이브에서** 출발한다.
+2. `scripts/rehearse-supabase-vXYZ.sh` — 오늘 백업으로 격리 스택(18100)을 띄워 스모크 + **서버 함수 전부 응답(401·vibe-ai 400)**.
+3. `scripts/apply-supabase-vXYZ.sh` — `EXPECTED_DAY` 를 그날로, `EXPECTED_IMAGES` 를 새 태그로, 새로 생기는 파일은 `NEW_FILES`(되돌릴 때 지움)에.
+4. `tests/supabaseUpgradeVXYZ.test.mjs` 로 태그·관문을 못 박는다.
+
 ## 1. 실행 전 체크리스트
 
 붙여넣고 한 번에 확인한다.
@@ -22,10 +32,10 @@
 cd ~/vibe_agit
 
 # ① 비파괴 사전점검 — 여기서 걸리면 실행하지 않는다
-./scripts/apply-supabase-v080.sh --preflight-only; tail -1 ~/backups/auto/supabase-upgrade-status.txt
+./scripts/apply-supabase-v082.sh --preflight-only   # 다음 판은 이 스크립트를 복사해 버전만 바꾼다(아래 `판마다 새로 만들 것`); tail -1 ~/backups/auto/supabase-upgrade-status.txt
 
 # ② 잠금 폴더 (실패·성공 뒤 남는다. 남아 있으면 재실행이 막힌다)
-ls -d ~/backups/auto/.supabase-upgrade-v080.lock 2>/dev/null && echo "잠금 있음 → 지워야 재실행" || echo "잠금 없음"
+ls -d ~/backups/auto/.supabase-upgrade-v082.lock 2>/dev/null && echo "잠금 있음 → 지워야 재실행" || echo "잠금 없음"
 
 # ③ 관문 둘
 grep -c "^PASS .*$(date +%Y-%m-%d)" ~/backups/auto/backup-status.txt      # 1 이어야 함
@@ -54,7 +64,7 @@ docker exec agit-db psql -U postgres -d postgres -tAc \
 ## 2. 실행
 
 ```bash
-./scripts/apply-supabase-v080.sh --apply 2>&1 | tail -20
+./scripts/apply-supabase-v082.sh --apply 2>&1 | tail -20
 ```
 
 - 화면의 `curl: (28) ... 10004 milliseconds` 는 **WebSocket 검사의 정상 소음**이다.
