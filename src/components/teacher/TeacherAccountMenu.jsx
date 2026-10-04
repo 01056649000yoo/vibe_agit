@@ -16,7 +16,11 @@ import { useEffect, useRef, useState } from 'react';
  *
  * 기본 `select` 를 쓰지 않으므로 바깥 누름·Esc 는 여기서 직접 처리한다(ClassSwitcher 와 같은 방식).
  */
-const TeacherAccountMenu = ({ teacherName, isAdmin, onOpenAdmin, onEditProfile, onLogout }) => {
+/*
+ * 관리자에게 안 본 선생님 문의가 있으면 이름 옆에 빨간 불(2026-10-05, 선생님 요청).
+ * 위에서 강조를 줄인 이유와 부딪히지 않게 **관리자에게만, 문의가 있을 때만** 켠다.
+ */
+const TeacherAccountMenu = ({ teacherName, isAdmin, inquiryCount = 0, onOpenAdmin, onEditProfile, onLogout }) => {
     const [open, setOpen] = useState(false);
     const wrapRef = useRef(null);
 
@@ -41,11 +45,12 @@ const TeacherAccountMenu = ({ teacherName, isAdmin, onOpenAdmin, onEditProfile, 
                 className="teacher-account__trigger"
                 aria-haspopup="menu"
                 aria-expanded={open}
-                aria-label={`${teacherName || '선생님'} 계정 메뉴`}
+                aria-label={`${teacherName || '선생님'} 계정 메뉴${inquiryCount > 0 ? ` · 새 문의 ${inquiryCount}건` : ''}`}
                 onClick={() => setOpen((value) => !value)}
             >
                 <span aria-hidden="true">🙂</span>
                 <span className="teacher-account__name">{teacherName || '선생님'}</span>
+                {inquiryCount > 0 && <span className="teacher-account__alert" aria-hidden="true" title={`새 문의 ${inquiryCount}건`} />}
                 <span aria-hidden="true">▾</span>
             </button>
             {open && (
@@ -53,6 +58,7 @@ const TeacherAccountMenu = ({ teacherName, isAdmin, onOpenAdmin, onEditProfile, 
                     {isAdmin && (
                         <button type="button" role="menuitem" className="teacher-account__item is-admin" onClick={() => pick(onOpenAdmin)}>
                             🛡️ 관리자
+                            {inquiryCount > 0 && <span className="teacher-account__alert-count">새 문의 {inquiryCount}</span>}
                         </button>
                     )}
                     <button type="button" role="menuitem" className="teacher-account__item" onClick={() => pick(onEditProfile)}>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { takeAdminInitialTab } from '../../hooks/useAdminInquiryAlert';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -268,7 +269,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
     const [pendingGroup, setPendingGroup] = useState('new'); // 'new' | 'revoked'
-    const [currentTab, setCurrentTab] = useState('active');
+    // 교사 화면 이름 옆 빨간 불(새 문의)로 들어오면 `의견 제보` 탭으로 바로 연다(useAdminInquiryAlert).
+    const [currentTab, setCurrentTab] = useState(() => takeAdminInitialTab('active'));
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 25;

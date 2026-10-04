@@ -25,9 +25,17 @@ const TeacherLayoutPreview = lazy(() => import('./TeacherLayoutPreview.jsx'))
 const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
 const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.jsx'))
 const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
+const TeacherAccountMenuPreview = lazy(() => import('./TeacherAccountMenuPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'teacher-account-menu',
+    icon: '🔴',
+    title: '계정 메뉴 · 관리자 새 문의 빨간 불',
+    description: '관리자에게 안 본 선생님 문의(의견 제보 open)가 있으면 이름 옆 빨간 불, 메뉴의 관리자 줄에 `새 문의 N` — 일반 교사·문의 없음에는 안 보인다',
+    Component: TeacherAccountMenuPreview,
+  }),
   Object.freeze({
     id: 'spelling-claw',
     icon: '🧸',

@@ -45,6 +45,7 @@ import TeacherToolPinMenu from './TeacherToolPinMenu';
 import { TEACHER_TOOL_IDS, TEACHER_TOOL_MODULES } from './teacherTools.js';
 import { HEADER_TOOL_SHORTCUT_STORAGE_KEY, resolveHeaderToolShortcut } from './headerToolShortcut.js';
 import TeacherAccountMenu from './TeacherAccountMenu.jsx';
+import { rememberAdminInitialTab, useAdminInquiryAlert } from '../../hooks/useAdminInquiryAlert';
 import AnnouncementSpotlight from './AnnouncementSpotlight';
 import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
@@ -327,11 +328,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         setWorkspaceTarget((current) => current?.requestId === requestId ? null : current);
     }, []);
 
+    const adminInquiryCount = useAdminInquiryAlert(isAdmin);
+
     const handleOpenAdminPasswordModal = useCallback(() => {
+        // 새 문의가 있으면 관리자 화면을 `의견 제보` 탭으로 바로 연다.
+        if (adminInquiryCount > 0) rememberAdminInitialTab('feedback');
         setAdminPassword('');
         setAdminPasswordError('');
         setIsAdminPasswordOpen(true);
-    }, []);
+    }, [adminInquiryCount]);
 
     const handleOpenDefaultClassBoard = useCallback(async () => {
         if (!activeClass?.id || openingClassBoard) return;
@@ -563,6 +568,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     <TeacherAccountMenu
                         teacherName={isMobile ? '' : (teacherInfo.name || profile?.full_name)}
                         isAdmin={isAdmin}
+                        inquiryCount={adminInquiryCount}
                         onOpenAdmin={handleOpenAdminPasswordModal}
                         onEditProfile={() => setIsEditProfileOpen(true)}
                         onLogout={onLogout}

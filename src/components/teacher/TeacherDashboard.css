@@ -557,3 +557,13 @@
    메뉴 안에서 마지막 자리와 옅은 선으로 충분히 구분된다. */
 .teacher-account__item.is-leave { margin-top: 4px; border-top: 1px solid var(--ui-border); border-radius: 0 0 var(--ui-radius-sm) var(--ui-radius-sm); color: var(--ui-ink-muted); }
 .teacher-account__item.is-admin { color: #B45309; }
+/* 관리자 새 문의 빨간 불(2026-10-05) — 관리자에게만, 문의가 있을 때만 */
+.teacher-account__trigger { position: relative; }
+.teacher-account__alert {
+    width: 10px; height: 10px; flex: none; border-radius: 50%;
+    background: var(--ui-danger); box-shadow: 0 0 0 2px var(--ui-surface, #fff);
+}
+.teacher-account__alert-count {
+    margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+    background: var(--ui-danger); color: #fff; font-size: var(--ui-text-xs); font-weight: 800;
+}
