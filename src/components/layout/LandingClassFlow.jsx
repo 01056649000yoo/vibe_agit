@@ -4,7 +4,8 @@ import './LandingClassFlow.css';
 /*
  * 첫 화면 "수업 한 바퀴" (2026-10-05, 선생님 요청: "이 앱이 뭘 하는 앱인지 확 드러나는 게 없다").
  *
- * 로그인 카드 아래로 내리면 과제 → 쓰기 → 고쳐 주기 → 자라기 네 단계가 차례로 보인다.
+ * 로그인 카드 아래로 내리면 과제 → 생각 키우기(글쓰기 연구소) → 쓰기 → 고쳐 주기 → 스스로 쓰기(독서록·일기) → 자라기
+ * 여섯 단계가 차례로 보인다(10-05 선생님 요청으로 연구소·독서록·일기 추가).
  * 그림은 실제 화면을 **단순하게 옮겨 그린 것**이다 — 실험실 화면을 찍으면 개발용 표시가 섞이고,
  * 진짜 학생 글을 쓰면 개인정보가 된다. 글·이름은 모두 지어낸 견본이다.
  * 한 번에 한 페이지씩 넘기는 스크롤은 쓰지 않는다(매일 로그인하는 선생님이 답답해진다).
@@ -19,6 +20,12 @@ const STEPS = [
         body: '주제와 글자 수·문단 수, 마감을 정해 과제를 내면 우리 반 학생 화면에 바로 떠요.',
     },
     {
+        id: 'lab',
+        badge: '선생님 · 학생',
+        title: '글쓰기 연구소에서 생각 키우기',
+        body: '쓰기 전에 글 개요 짜기·질문 만들기·좋은 질문 고르기·한줄모아로 생각을 모으고, 그 결과를 보며 이어 써요.',
+    },
+    {
         id: 'write',
         badge: '학생',
         title: '내 아지트에서 글쓰기',
@@ -29,6 +36,12 @@ const STEPS = [
         badge: '선생님',
         title: '읽고 고쳐 주기',
         body: '자주 쓰는 피드백 문장으로 빠르게 다시 쓰기를 요청하고, 고쳐 준 곳은 빨간 펜 교정 부호로 보여 줘요.',
+    },
+    {
+        id: 'self',
+        badge: '학생',
+        title: '독서록·일기는 스스로',
+        body: '과제가 없어도 읽은 책과 하루를 독서록·일기로 남기고, 친구들이 공개한 글을 읽으며 생각을 나눠요.',
     },
     {
         id: 'grow',
@@ -48,6 +61,18 @@ const MissionMock = () => (
             </div>
         </div>
         <div className="flow-mock__foot">👀 학생 24명 화면에 올라감</div>
+    </div>
+);
+
+const LabMock = () => (
+    <div className="flow-mock flow-mock--lab" aria-hidden="true">
+        <div className="flow-mock__bar"><span>🔬 글쓰기 연구소 · 질문 만들기</span><em>모둠 3</em></div>
+        <div className="flow-questions">
+            <span>운동회는 왜 할까?</span>
+            <span className="is-picked">⭐ 우리 반이 이긴 비결은 무엇일까?</span>
+            <span>내년엔 무엇을 하고 싶을까?</span>
+        </div>
+        <div className="flow-outline"><b>처음</b><b>가운데</b><b>끝</b></div>
     </div>
 );
 
@@ -76,6 +101,17 @@ const FeedbackMock = () => (
     </div>
 );
 
+const SelfMock = () => (
+    <div className="flow-mock flow-mock--self" aria-hidden="true">
+        <div className="flow-mock__bar"><span>📚 내 독서록 · 일기</span><em>이번 주 3편</em></div>
+        <div className="flow-entries">
+            <span><i>📖 독서록</i>『마당을 나온 암탉』 잎싹이 대단했다</span>
+            <span><i>📔 일기</i>비 오는 날, 우산을 같이 썼다</span>
+        </div>
+        <div className="flow-mock__foot">👀 친구가 공개한 글 2편 새로 올라옴</div>
+    </div>
+);
+
 const GrowMock = () => (
     <div className="flow-mock flow-mock--grow" aria-hidden="true">
         <div className="flow-grow">
@@ -92,7 +128,7 @@ const GrowMock = () => (
     </div>
 );
 
-const MOCKS = { mission: MissionMock, write: WriteMock, feedback: FeedbackMock, grow: GrowMock };
+const MOCKS = { mission: MissionMock, lab: LabMock, write: WriteMock, feedback: FeedbackMock, self: SelfMock, grow: GrowMock };
 
 const LandingClassFlow = ({ open = false }) => {
     const sectionRef = useRef(null);
@@ -106,7 +142,7 @@ const LandingClassFlow = ({ open = false }) => {
     <section className="landing-flow" id="landing-flow" aria-labelledby="landing-flow-title" ref={sectionRef} hidden={!open}>
         <div className="landing-flow__heading">
             <h2 id="landing-flow-title">아지트 수업 한 바퀴</h2>
-            <p>과제를 내고, 쓰고, 고치고, 자라는 흐름이 한곳에서 이어져요.</p>
+            <p>과제부터 생각 키우기, 쓰고 고치기, 스스로 쓰기, 자라기까지 한곳에서 이어져요.</p>
         </div>
         <ol className="landing-flow__steps">
             {STEPS.map((step, index) => {

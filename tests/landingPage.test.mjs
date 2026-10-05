@@ -20,7 +20,10 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 펼쳐 보는 수�
   assert.match(landing, /aria-expanded=\{flowOpen\}[\s\S]*aria-controls="landing-flow"/);
   assert.match(landing, /<LandingClassFlow open=\{flowOpen\} \/>/);
   assert.match(flow, /hidden=\{!open\}/);
-  assert.deepEqual([...flow.matchAll(/id: '(mission|write|feedback|grow)'/g)].map((m) => m[1]), ['mission', 'write', 'feedback', 'grow']);
+  // 10-05 선생님 요청: 교사의 글쓰기 도움(글쓰기 연구소)·학생 개별 활동(독서록·일기)도 흐름에 넣어 여섯 단계.
+  assert.deepEqual([...flow.matchAll(/id: '(mission|lab|write|feedback|self|grow)'/g)].map((m) => m[1]), ['mission', 'lab', 'write', 'feedback', 'self', 'grow']);
+  assert.match(flow, /글쓰기 연구소/);
+  assert.match(flow, /독서록·일기/);
   assert.match(flow, /id="landing-flow"/);
   assert.match(landing, /학생으로 들어가기/);
   assert.match(landing, /선생님으로 들어가기/);

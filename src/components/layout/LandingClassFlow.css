@@ -249,6 +249,42 @@
   font-weight: 800;
 }
 
+.flow-questions { display: grid; gap: 4px; }
+.flow-questions span {
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-weight: 700;
+  word-break: keep-all;
+}
+.flow-questions .is-picked { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+
+.flow-outline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.flow-outline b {
+  padding: 4px 0;
+  border-radius: 6px;
+  background: #e0f2f1;
+  color: #0f766e;
+  text-align: center;
+  font-weight: 800;
+}
+
+.flow-entries { display: grid; gap: 4px; }
+.flow-entries span {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-weight: 700;
+  word-break: keep-all;
+  min-width: 0;
+}
+.flow-entries i { flex: none; font-style: normal; color: #7c3aed; font-weight: 800; }
+
 .flow-grow { display: flex; align-items: center; gap: var(--ui-space-3); }
 .flow-grow img { width: 64px; height: 64px; object-fit: contain; }
 .flow-grow__copy { display: grid; gap: 2px; }
