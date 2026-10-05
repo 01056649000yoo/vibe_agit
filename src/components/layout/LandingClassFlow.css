@@ -3,22 +3,65 @@
 .landing-flow-hint {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 4px auto 0;
-  padding: 7px 16px;
-  border: 1px solid rgba(31, 122, 104, 0.28);
+  gap: var(--ui-space-2);
+  margin: 6px auto 0;
+  padding: 8px 8px 8px 14px;
+  border: 1.5px solid rgba(31, 122, 104, 0.45);
   border-radius: 999px;
-  background: rgba(31, 122, 104, 0.06);
-  color: #1f7a68;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(31, 122, 104, 0.14);
+  color: #1f5f52;
   font: inherit;
   font-size: var(--ui-text-sm);
   font-weight: 800;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.landing-flow-hint:hover { background: rgba(31, 122, 104, 0.12); }
+.landing-flow-hint:hover {
+  transform: translateY(-1px);
+  background: #f2fbf8;
+  box-shadow: 0 10px 22px rgba(31, 122, 104, 0.2);
+}
+
 .landing-flow-hint:focus-visible { outline: 3px solid rgba(31, 131, 117, 0.3); outline-offset: 3px; }
-.landing-flow-hint__arrow { font-size: var(--ui-text-xs); }
+.landing-flow-hint__icon { font-size: var(--ui-text-md); }
+.landing-flow-hint__label { word-break: keep-all; }
+
+.landing-flow-hint__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #1f7a68;
+  color: #fff;
+  font-size: var(--ui-text-xs);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.landing-flow-hint__chevron {
+  display: inline-block;
+  font-size: var(--ui-text-sm);
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .landing-flow-hint { gap: 6px; padding: 7px 7px 7px 10px; font-size: var(--ui-text-xs); }
+  .landing-flow-hint__label { white-space: nowrap; }
+  .landing-flow-hint__action { padding: 4px 8px; }
+}
+
+.landing-flow-hint[aria-expanded="false"] .landing-flow-hint__chevron {
+  animation: landing-flow-nudge 1.6s ease-in-out infinite;
+}
+
+@keyframes landing-flow-nudge {
+  0%, 100% { transform: translateY(-3px); }
+  50% { transform: translateY(0); }
+}
 
 .landing-flow[hidden] { display: none; }
 
@@ -251,5 +294,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flow-caret { animation: none; }
+  .flow-caret,
+  .landing-flow-hint[aria-expanded="false"] .landing-flow-hint__chevron { animation: none; }
 }

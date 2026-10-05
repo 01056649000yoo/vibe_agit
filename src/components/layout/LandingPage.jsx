@@ -99,8 +99,13 @@ const LandingPage = ({ onStudentLoginClick }) => {
             aria-controls="landing-flow"
             onClick={() => setFlowOpen((open) => !open)}
           >
-            <span className="landing-flow-hint__arrow" aria-hidden="true">{flowOpen ? '▲' : '▼'}</span>
-            {flowOpen ? '수업 흐름 접기' : '아지트 수업은 이렇게 흘러가요'}
+            <span className="landing-flow-hint__icon" aria-hidden="true">👆</span>
+            <span className="landing-flow-hint__label">{flowOpen ? '수업 흐름 접기' : '아지트 수업은 이렇게 흘러가요'}</span>
+            {/* 누르는 단추라는 것이 보이게(2026-10-05 선생님 요청): 오른쪽에 `펼쳐 보기 ⌄` 칩, 화살표가 살짝 움직인다. */}
+            <span className="landing-flow-hint__action" aria-hidden="true">
+              {flowOpen ? '접기' : '펼쳐 보기'}
+              <span className="landing-flow-hint__chevron">{flowOpen ? '▴' : '▾'}</span>
+            </span>
           </button>
         </section>
 

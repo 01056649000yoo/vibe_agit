@@ -192,4 +192,5 @@
 /*
  [4] `.landing-flow-hint` — 로그인 아래 `수업 한 바퀴` 펼치기 안내(2026-10-05).
  */
-.search-intro__flow-hint { margin: 2px auto 0; text-align: center; color: #1f7a68; font-size: 0.8rem; font-weight: 800; }
+.search-intro__flow-hint { margin: 6px auto 0; text-align: center; color: #1f5f52; font-size: 0.9rem; font-weight: 800; }
+.search-intro__flow-hint b { margin-left: 6px; padding: 3px 10px; border-radius: 999px; background: #1f7a68; color: #fff; font-size: 0.8rem; }
