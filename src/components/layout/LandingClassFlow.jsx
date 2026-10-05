@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import './LandingClassFlow.css';
 
 /*
@@ -7,6 +8,8 @@ import './LandingClassFlow.css';
  * 그림은 실제 화면을 **단순하게 옮겨 그린 것**이다 — 실험실 화면을 찍으면 개발용 표시가 섞이고,
  * 진짜 학생 글을 쓰면 개인정보가 된다. 글·이름은 모두 지어낸 견본이다.
  * 한 번에 한 페이지씩 넘기는 스크롤은 쓰지 않는다(매일 로그인하는 선생님이 답답해진다).
+ * 처음엔 접혀 있고 `아지트 수업은 이렇게 흘러가요` 를 누르면 펼쳐지며 그 자리로 내려간다(선생님 결정).
+ * 접혀 있어도 내용은 문서에 남는다(hidden) — 검색엔진·화면 읽기 프로그램이 읽을 수 있게.
  */
 const STEPS = [
     {
@@ -91,8 +94,16 @@ const GrowMock = () => (
 
 const MOCKS = { mission: MissionMock, write: WriteMock, feedback: FeedbackMock, grow: GrowMock };
 
-const LandingClassFlow = () => (
-    <section className="landing-flow" id="landing-flow" aria-labelledby="landing-flow-title">
+const LandingClassFlow = ({ open = false }) => {
+    const sectionRef = useRef(null);
+    useEffect(() => {
+        if (!open || !sectionRef.current) return;
+        const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        sectionRef.current.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }, [open]);
+
+    return (
+    <section className="landing-flow" id="landing-flow" aria-labelledby="landing-flow-title" ref={sectionRef} hidden={!open}>
         <div className="landing-flow__heading">
             <h2 id="landing-flow-title">아지트 수업 한 바퀴</h2>
             <p>과제를 내고, 쓰고, 고치고, 자라는 흐름이 한곳에서 이어져요.</p>
@@ -116,6 +127,7 @@ const LandingClassFlow = () => (
             })}
         </ol>
     </section>
-);
+    );
+};
 
 export default LandingClassFlow;

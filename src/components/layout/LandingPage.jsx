@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import LandingFeatureModal, { landingExperiences } from './LandingFeatureModal';
-import { AGIT_MEANING, HERO_IMAGE_ALT, SERVICE_IDENTITY_LINE } from '../../constants/serviceIdentity';
+import { HERO_IMAGE_ALT, SERVICE_IDENTITY_LINE } from '../../constants/serviceIdentity';
 import './LandingPage.css';
 import LandingServiceStats from './LandingServiceStats';
 import LandingClassFlow from './LandingClassFlow';
@@ -9,7 +8,7 @@ import LandingClassFlow from './LandingClassFlow';
 const LandingPage = ({ onStudentLoginClick }) => {
   const [teacherLoginPending, setTeacherLoginPending] = useState(false);
   const [teacherLoginError, setTeacherLoginError] = useState('');
-  const [activeExperienceId, setActiveExperienceId] = useState(null);
+  const [flowOpen, setFlowOpen] = useState(false);
 
   const handleTeacherLogin = async () => {
     if (teacherLoginPending) return;
@@ -27,8 +26,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
       setTeacherLoginPending(false);
     }
   };
-
-  const closeExperienceModal = useCallback(() => setActiveExperienceId(null), []);
 
   return (
     <section className="landing-shell">
@@ -94,38 +91,20 @@ const LandingPage = ({ onStudentLoginClick }) => {
           <p className="landing-login-error" role="alert" aria-live="polite">
             {teacherLoginError}
           </p>
-          {/* 처음 온 분이 아래로 내려 "수업 한 바퀴" 를 보게 하는 작은 안내(2026-10-05). */}
-          <a className="landing-flow-hint" href="#landing-flow">↓ 아지트 수업은 이렇게 흘러가요</a>
+          {/* "수업 한 바퀴" 는 눌러야 펼쳐진다(2026-10-05 선생님 결정) — 매일 로그인하는 화면은 짧게 둔다. */}
+          <button
+            className="landing-flow-hint"
+            type="button"
+            aria-expanded={flowOpen}
+            aria-controls="landing-flow"
+            onClick={() => setFlowOpen((open) => !open)}
+          >
+            <span className="landing-flow-hint__arrow" aria-hidden="true">{flowOpen ? '▲' : '▼'}</span>
+            {flowOpen ? '수업 흐름 접기' : '아지트 수업은 이렇게 흘러가요'}
+          </button>
         </section>
 
-        <LandingClassFlow />
-
-        <section className="landing-experiences" aria-labelledby="landing-experiences-title">
-          <div className="landing-experiences-heading">
-            <h2 id="landing-experiences-title">아지트에서는 이렇게 활동해요</h2>
-            <span>{AGIT_MEANING}</span>
-          </div>
-          <div className="landing-experience-grid">
-            {landingExperiences.map((experience) => (
-              <button
-                className={`landing-experience-button landing-experience-button--${experience.tone}`}
-                type="button"
-                key={experience.id}
-                onClick={() => setActiveExperienceId(experience.id)}
-                aria-haspopup="dialog"
-                aria-expanded={activeExperienceId === experience.id}
-                aria-label={`${experience.title} 자세히 보기`}
-              >
-                <span className="landing-experience-icon" aria-hidden="true">{experience.icon}</span>
-                <span className="landing-experience-copy" aria-hidden="true">
-                  <small>{experience.shortLead}</small>
-                  <strong>{experience.shortNoun}</strong>
-                </span>
-                <span className="landing-experience-more" aria-hidden="true">→</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        <LandingClassFlow open={flowOpen} />
 
         <LandingServiceStats />
 
@@ -135,12 +114,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
           </nav>
         </footer>
       </main>
-
-      <LandingFeatureModal
-        activeExperienceId={activeExperienceId}
-        onSelect={setActiveExperienceId}
-        onClose={closeExperienceModal}
-      />
     </section>
   );
 };

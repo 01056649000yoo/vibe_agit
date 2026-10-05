@@ -94,7 +94,8 @@ test('자바스크립트 전에도 첫 화면의 서비스 설명과 공개 안�
   assert.ok(identityLine);
   assert.match(index, /<main class="search-intro"/);
   assert.ok(index.includes(identityLine));
-  assert.match(index, /선생님 과제와 피드백으로 글쓰기 배우기/);
+  // 2026-10-05: 소개 카드 대신 `수업 한 바퀴` 네 단계(접힌 채 문서에 남음)로 서비스 설명을 읽힌다.
+  assert.match(index, /<ol class="search-intro__flow" hidden>[\s\S]*과제 내기[\s\S]*내 아지트에서 글쓰기[\s\S]*읽고 고쳐 주기[\s\S]*쓴 만큼 자라기/);
   assert.match(index, /href="\/learning-support-software"/);
   assert.doesNotMatch(index, /style="display:none;"/);
   assert.match(styles, /\.search-intro\s*\{/);
