@@ -66,7 +66,7 @@ const MissionMock = () => (
 
 const LabMock = () => (
     <div className="flow-mock flow-mock--lab" aria-hidden="true">
-        <div className="flow-mock__bar"><span>🔬 글쓰기 연구소 · 질문 만들기</span><em>모둠 3</em></div>
+        <div className="flow-mock__bar"><span>🔬 글쓰기 연구소 · 질문 만들기</span><em>내 질문 3개</em></div>
         <div className="flow-questions">
             <span>운동회는 왜 할까?</span>
             <span className="is-picked">⭐ 우리 반이 이긴 비결은 무엇일까?</span>

@@ -23,6 +23,8 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 펼쳐 보는 수�
   // 10-05 선생님 요청: 교사의 글쓰기 도움(글쓰기 연구소)·학생 개별 활동(독서록·일기)도 흐름에 넣어 여섯 단계.
   assert.deepEqual([...flow.matchAll(/id: '(mission|lab|write|feedback|self|grow)'/g)].map((m) => m[1]), ['mission', 'lab', 'write', 'feedback', 'self', 'grow']);
   assert.match(flow, /글쓰기 연구소/);
+  // 글쓰기 연구소에는 모둠 활동이 없다(10-05 선생님 지적) — 그림에도 `모둠` 을 쓰지 않는다.
+  assert.doesNotMatch(flow, /모둠/);
   assert.match(flow, /독서록·일기/);
   assert.match(flow, /id="landing-flow"/);
   assert.match(landing, /학생으로 들어가기/);
