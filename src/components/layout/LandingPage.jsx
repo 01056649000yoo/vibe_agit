@@ -4,6 +4,7 @@ import LandingFeatureModal, { landingExperiences } from './LandingFeatureModal';
 import { AGIT_MEANING, HERO_IMAGE_ALT, SERVICE_IDENTITY_LINE } from '../../constants/serviceIdentity';
 import './LandingPage.css';
 import LandingServiceStats from './LandingServiceStats';
+import LandingClassFlow from './LandingClassFlow';
 
 const LandingPage = ({ onStudentLoginClick }) => {
   const [teacherLoginPending, setTeacherLoginPending] = useState(false);
@@ -48,7 +49,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
 
         <section className="landing-promise" aria-labelledby="landing-promise-title">
           <h1 id="landing-promise-title">
-            쓰고, 읽고, 키우며 <span>함께 자라는 우리 반 아지트</span>
+            과제 내고, 쓰고, 고치며 <span>함께 자라는 초등 글쓰기 교실</span>
           </h1>
           {/* 분위기만 전하던 큰 제목 아래에 **이 앱이 무엇인지**를 눈에 보이게 둔다.
               전에는 이 문장이 히어로 이미지의 alt 안에만 있어 화면에 `글쓰기` 가 없었다. */}
@@ -93,7 +94,11 @@ const LandingPage = ({ onStudentLoginClick }) => {
           <p className="landing-login-error" role="alert" aria-live="polite">
             {teacherLoginError}
           </p>
+          {/* 처음 온 분이 아래로 내려 "수업 한 바퀴" 를 보게 하는 작은 안내(2026-10-05). */}
+          <a className="landing-flow-hint" href="#landing-flow">↓ 아지트 수업은 이렇게 흘러가요</a>
         </section>
+
+        <LandingClassFlow />
 
         <section className="landing-experiences" aria-labelledby="landing-experiences-title">
           <div className="landing-experiences-heading">

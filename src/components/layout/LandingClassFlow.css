@@ -1,0 +1,248 @@
+/* 첫 화면 "수업 한 바퀴" (2026-10-05) — 로그인 카드 아래로 내리면 보이는 네 단계 */
+
+.landing-flow-hint {
+  display: flex;
+  justify-content: center;
+  margin: 2px auto 0;
+  padding: var(--ui-space-1) var(--ui-space-3);
+  width: fit-content;
+  border-radius: 999px;
+  color: #1f7a68;
+  font-size: var(--ui-text-xs);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.landing-flow-hint:hover { background: rgba(31, 122, 104, 0.08); }
+
+.landing-flow {
+  container-type: inline-size;
+  margin-top: var(--ui-space-4);
+  padding: var(--ui-space-5) var(--ui-space-4);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fff7ec 0%, #f3fbf8 100%);
+  border: 1px solid rgba(240, 220, 194, 0.8);
+  scroll-margin-top: 16px;
+}
+
+.landing-flow__heading { text-align: center; margin-bottom: var(--ui-space-4); }
+
+.landing-flow__heading h2 {
+  margin: 0;
+  color: #3a2a1a;
+  font-size: var(--ui-text-xl);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.landing-flow__heading p {
+  margin: var(--ui-space-1) 0 0;
+  color: #6b5a48;
+  font-size: var(--ui-text-sm);
+  font-weight: 600;
+}
+
+.landing-flow__steps {
+  display: grid;
+  gap: var(--ui-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-flow__step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: var(--ui-space-4);
+  padding: var(--ui-space-4);
+  border-radius: var(--ui-radius-lg);
+  background: #fff;
+  border: 1px solid rgba(232, 218, 200, 0.9);
+  box-shadow: 0 8px 22px rgba(139, 104, 65, 0.07);
+}
+
+.landing-flow__copy { display: flex; gap: var(--ui-space-3); align-items: flex-start; }
+
+.landing-flow__num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1f7a68;
+  color: #fff;
+  font-size: var(--ui-text-md);
+  font-weight: 900;
+}
+
+.landing-flow__badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fff1dc;
+  color: #a5600b;
+  font-size: var(--ui-text-xs);
+  font-weight: 800;
+}
+
+.landing-flow__step h3 {
+  margin: var(--ui-space-1) 0 2px;
+  color: #2f2416;
+  font-size: var(--ui-text-lg);
+  font-weight: 900;
+  word-break: keep-all;
+}
+
+.landing-flow__step p {
+  margin: 0;
+  color: #5b4b3a;
+  font-size: var(--ui-text-sm);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+/* 작은 화면 그림 공통 */
+.flow-mock {
+  display: grid;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-radius-md);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: var(--ui-text-xs);
+  color: #334155;
+  min-width: 0;
+}
+
+.flow-mock__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.flow-mock__bar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flow-mock__bar em { flex: none; font-style: normal; color: #64748b; font-weight: 700; }
+.flow-mock__foot { color: #1f7a68; font-weight: 800; }
+
+.flow-mission-card {
+  display: grid;
+  gap: 6px;
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  background: #fff;
+  border-left: 4px solid #f59e0b;
+}
+
+.flow-mission-card strong { font-size: var(--ui-text-sm); color: #1e293b; }
+.flow-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.flow-chips span { padding: 1px 8px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-weight: 700; }
+
+.flow-paper {
+  display: grid;
+  gap: 4px;
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  background: #fff;
+  background-image: repeating-linear-gradient(180deg, transparent 0 21px, #eef2f7 21px 22px);
+  line-height: 22px;
+}
+
+.flow-paper p { margin: 0; color: #334155; font-size: var(--ui-text-xs); line-height: 22px; word-break: keep-all; }
+
+.flow-caret {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: #1f7a68;
+  animation: flow-caret-blink 1s steps(1) infinite;
+}
+
+@keyframes flow-caret-blink { 50% { opacity: 0; } }
+
+.flow-ai {
+  padding: 6px 10px;
+  border-radius: 12px 12px 12px 2px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.flow-paper del { color: #dc2626; text-decoration-thickness: 2px; }
+.flow-paper ins { color: #dc2626; text-decoration: none; font-weight: 800; border-bottom: 2px solid #fca5a5; }
+
+.flow-feedback-row { display: flex; gap: 6px; align-items: center; }
+
+.flow-feedback-chip {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.flow-approve {
+  flex: none;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 800;
+}
+
+.flow-grow { display: flex; align-items: center; gap: var(--ui-space-3); }
+.flow-grow img { width: 64px; height: 64px; object-fit: contain; }
+.flow-grow__copy { display: grid; gap: 2px; }
+.flow-grow__copy strong { color: #b45309; font-size: var(--ui-text-lg); font-weight: 900; }
+.flow-grow__copy span { font-weight: 700; color: #334155; }
+
+.flow-shelf {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  padding: 6px 8px 0;
+  height: 62px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #8b5a2b 0%, #6f4520 100%);
+  overflow: hidden;
+}
+
+.flow-shelf span {
+  writing-mode: vertical-rl;
+  height: 52px;
+  padding: 3px 2px;
+  border-radius: 3px 3px 0 0;
+  background: #2f6f5e;
+  color: #fff;
+  font-size: var(--ui-text-xs);
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.flow-shelf span:nth-child(2) { background: #b45309; height: 46px; }
+.flow-shelf span:nth-child(3) { background: #4338ca; }
+.flow-shelf span:nth-child(4) { background: #be185d; height: 48px; }
+.flow-shelf span:nth-child(5) { background: #0f766e; height: 42px; }
+
+/* 좁은 폭: 설명 위, 그림 아래 */
+@container (max-width: 520px) {
+  .landing-flow__step { grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); }
+}
+
+@media (max-width: 720px) {
+  .landing-flow { padding: var(--ui-space-4) var(--ui-space-3); }
+  .landing-flow__heading h2 { font-size: var(--ui-text-lg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-caret { animation: none; }
+}

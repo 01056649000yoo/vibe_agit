@@ -12,7 +12,14 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 세 가지 아지�
   const identity = await read('src/constants/serviceIdentity.js');
   const modal = await read('src/components/layout/LandingFeatureModal.jsx');
 
-  assert.match(landing, /쓰고, 읽고, 키우며[\s\S]*함께 자라는 우리 반 아지트/);
+  // 2026-10-05 선생님 요청("무슨 앱인지 확 드러나지 않는다"): 제목이 수업 흐름과 `초등 글쓰기 교실` 을 바로 말한다.
+  assert.match(landing, /과제 내고, 쓰고, 고치며[\s\S]*함께 자라는 초등 글쓰기 교실/);
+  // 로그인 아래로 내리면 과제 → 쓰기 → 고쳐 주기 → 자라기 네 단계가 실제 화면을 옮긴 그림과 함께 보인다.
+  const flow = await read('src/components/layout/LandingClassFlow.jsx');
+  assert.match(landing, /<LandingClassFlow \/>/);
+  assert.match(landing, /href="#landing-flow"/);
+  assert.deepEqual([...flow.matchAll(/id: '(mission|write|feedback|grow)'/g)].map((m) => m[1]), ['mission', 'write', 'feedback', 'grow']);
+  assert.match(flow, /id="landing-flow"/);
   assert.match(landing, /학생으로 들어가기/);
   assert.match(landing, /선생님으로 들어가기/);
   assert.match(landing, /아지트에서는 이렇게 활동해요/);
