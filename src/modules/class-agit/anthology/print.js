@@ -3,11 +3,21 @@ import { escapePdfHtml, PDF_KICKER_CLASSES } from '../../writing/export/pdfRende
 import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS, bookCoverKicker } from './contract.js';
 import { getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
 import { paginateAnthology } from './pagination.js';
+import { coverSource } from './coverImage.js';
 
 export async function buildAnthologyHtml(edition) {
     assertBookEdition(edition);
     const book = edition.book;
     const paper = getBookPaper(book.print.paper), design = getBookDesign(book.print.design);
+    /*
+     * 그림 표지(2026-10-06): 첫 쪽은 올린 그림으로 꽉 채우고, 속지는 고른 속지 스타일(디자인 색을 쓰지 않음).
+     * 그림은 인쇄 창 안에 데이터 주소로 넣는다 — 서명 주소는 시간이 지나면 끊기고, 인쇄 전에 다 불러와야 한다.
+     * coverImageApi 는 브라우저 전용이라 그림 표지일 때만 불러온다(검사는 node 에서 이 파일을 읽는다).
+     */
+    const cover = coverSource(book);
+    const inner = cover.innerStyle;
+    const coverData = cover.kind === 'image' ? await (await import('../api/coverImageApi.js')).coverImageDataUrl(cover.path) : '';
+    const imageCover = cover.kind === 'image' && Boolean(coverData);
     /*
      * 쪽 배치. 이어붙이기(`continuous`)면 주제가 바뀌는 자리마다 간지를 넣고,
      * 목차도 **주제 아래 작품**으로 들여쓴다. 예전 확정판에는 이 값이 없어 기본(작품마다 새 쪽)이다.
@@ -92,14 +102,29 @@ ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{displa
 .anthology-cover[data-design="modern"]{background-image:linear-gradient(135deg,transparent 0 73%,${design.accent} 73% 100%)}
 .anthology-cover[data-design="hanji"]{background-image:repeating-linear-gradient(90deg,#ffffff25 0 .3mm,transparent .3mm 1.5mm)}
 .anthology-personal .pdf-entry__author,.anthology-personal .poem-sheet__author{display:none}
-.anthology-page:not(.anthology-cover) h1{color:${design.id === 'constellation' ? '#3b4b68' : design.accent}}
-.anthology-page:not(.anthology-cover) .pdf-entry__rule{border-color:${design.id === 'constellation' ? '#8c784e' : design.accent}}
+.anthology-page:not(.anthology-cover) h1{color:${imageCover ? inner.heading : design.id === 'constellation' ? '#3b4b68' : design.accent}}
+.anthology-page:not(.anthology-cover) .pdf-entry__rule{border-color:${imageCover ? inner.rule : design.id === 'constellation' ? '#8c784e' : design.accent}}${imageCover ? `
+/* 그림 표지: 표지 쪽은 그림 한 장, 속지는 ${inner.label} 스타일 */
+.anthology-cover:has([data-cover-image]){background:#fff;padding:0}
+.anthology-cover [data-cover-image]{position:absolute;inset:0;padding:0}
+.anthology-cover [data-cover-image]::before{display:none}
+.anthology-cover [data-cover-image] img{display:block;width:100%;height:100%;object-fit:cover}
+.anthology-cover:has([data-cover-image]) .anthology-page-number{display:none}
+[data-toc-row]{border-bottom:${inner.ruleWidth}mm ${inner.ruleStyle} ${inner.rule}}
+[data-toc-group]{border-bottom-width:${inner.ruleWidth * 2}mm}
+.anthology-colophon [data-colophon]{border-top:${inner.ruleWidth * 2}mm ${inner.ruleStyle} ${inner.rule}}
+.anthology-page:not(.anthology-cover) .pdf-entry__rule{background:${inner.rule}}` : ''}
 .anthology-cover .anthology-page-number{color:${design.ink};border:0}
-.anthology-page-number{border-top:.2mm solid #cbd5e1;padding-top:2mm;color:#475569}
+.anthology-page-number{border-top:.2mm solid #cbd5e1;padding-top:2mm;color:#475569}${imageCover ? `
+.anthology-page-number{border-top:${inner.ruleWidth}mm ${inner.ruleStyle} ${inner.rule};color:${inner.heading}}${inner.pageNumber === 'dashes' ? `
+.anthology-page-number::before{content:'— '}.anthology-page-number::after{content:' —'}` : ''}${inner.pageNumber === 'bold' ? `
+.anthology-page-number{font-weight:800}` : ''}` : ''}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
     const kicker = bookCoverKicker(book);
-    const front = `<div data-cover data-design="${design.id}" data-compact="${[kicker, book.title, book.subtitle, book.class_label].join('').length > 180}">${kicker ? `<p>${e(kicker)}</p>` : ''}<h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div>${personal ? `<p><strong>${e(book.owner_student_name)} 지음</strong></p>` : ''}<p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>
+    // 표지 한 쪽만 그림으로 바꾼다 — 여는 글·차례·간지는 아래 front 에 그대로 이어 붙는다.
+    const coverHtml = imageCover ? `<div data-cover data-cover-image data-design="${design.id}"><img src="${coverData}" alt="${e(book.title)} 표지"></div>` : `<div data-cover data-design="${design.id}" data-compact="${[kicker, book.title, book.subtitle, book.class_label].join('').length > 180}">${kicker ? `<p>${e(kicker)}</p>` : ''}<h1>${e(book.title)}</h1><p>${e(book.subtitle)}</p><div class="cover-mark">${design.mark}</div>${personal ? `<p><strong>${e(book.owner_student_name)} 지음</strong></p>` : ''}<p>${e(book.class_label)}</p><p>${e(book.issue_date)}</p></div>`;
+    const front = `${coverHtml}
 ${book.introduction ? `<section data-introduction><h1>${personal ? '작가의 말' : '여는 글'}</h1>${book.introduction.split(/\n\s*\n/u).map((p) => `<p>${e(p)}</p>`).join('')}</section>` : ''}
 ${book.works.map((w, i) => {
     /*

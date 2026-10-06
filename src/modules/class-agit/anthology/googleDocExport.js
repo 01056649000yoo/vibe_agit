@@ -18,6 +18,7 @@
  */
 
 import { assertBookEdition, bookCoverKicker } from './contract.js';
+import { coverSource } from './coverImage.js';
 import { createGoogleDocument, applyGoogleDocRequests, googleDocEditUrl } from '../../writing/export/googleDocsApi.js';
 
 /** 구글 문서 편집기가 감당할 만한 크기로 제한한다. PDF 와 같은 상한을 쓴다. */
@@ -34,7 +35,7 @@ const documentTitle = (edition) => {
  * 요청은 **앞에서부터 차례로** 적용되므로 `cursor` 를 직접 옮기며 쌓는다.
  * 삽입 위치를 뒤에서부터 계산하는 방식으로 바꾸지 않는다 — 순서가 곧 문서 내용이다.
  */
-export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work' } = {}) {
+export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work', coverImageUri = '' } = {}) {
     assertBookEdition(edition);
     const book = edition.book;
     const personal = book.book_type === 'personal';
@@ -69,15 +70,26 @@ export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work
     };
 
     // ── 표지 ──────────────────────────────────────────────────────────────
-    const kicker = bookCoverKicker(book);
-    if (kicker) write(`${kicker}\n`, { alignment: 'CENTER' });
-    write(`${book.title}\n`, { style: 'TITLE', alignment: 'CENTER' });
-    if (book.subtitle) write(`${book.subtitle}\n`, { alignment: 'CENTER' });
-    if (personal && book.owner_student_name) write(`${book.owner_student_name} 지음\n`, { alignment: 'CENTER' });
-    write('\n', { alignment: 'CENTER' });
-    if (book.class_label) write(`${book.class_label}\n`, { alignment: 'CENTER' });
-    if (book.issue_date) write(`${book.issue_date}\n`, { alignment: 'CENTER' });
-    write(`${edition.draft ? '검토용 초안' : `${edition.number}판`}\n`, { alignment: 'CENTER' });
+    // 그림 표지(2026-10-06): 올린 그림 한 장이 표지(제목·학급·발행일은 그림 안에 있다). 구글이 가져갈
+    // 짧게 유효한 주소(coverImageUri)를 받는다. 폭은 A4 본문 폭(595pt - 여백 72pt×2), 높이는 그림 비율대로.
+    const cover = coverSource(book);
+    if (cover.kind === 'image' && coverImageUri) {
+        const width = 451, height = Math.round(width * ((cover.height / cover.width) || 297 / 210));
+        requests.push({ insertInlineImage: { location: { index: cursor }, uri: coverImageUri, objectSize: { width: { magnitude: width, unit: 'PT' }, height: { magnitude: height, unit: 'PT' } } } });
+        cursor += 1;
+        write('\n', { alignment: 'CENTER' });
+        write(`${edition.draft ? '검토용 초안' : `${edition.number}판`}\n`, { alignment: 'CENTER' });
+    } else {
+        const kicker = bookCoverKicker(book);
+        if (kicker) write(`${kicker}\n`, { alignment: 'CENTER' });
+        write(`${book.title}\n`, { style: 'TITLE', alignment: 'CENTER' });
+        if (book.subtitle) write(`${book.subtitle}\n`, { alignment: 'CENTER' });
+        if (personal && book.owner_student_name) write(`${book.owner_student_name} 지음\n`, { alignment: 'CENTER' });
+        write('\n', { alignment: 'CENTER' });
+        if (book.class_label) write(`${book.class_label}\n`, { alignment: 'CENTER' });
+        if (book.issue_date) write(`${book.issue_date}\n`, { alignment: 'CENTER' });
+        write(`${edition.draft ? '검토용 초안' : `${edition.number}판`}\n`, { alignment: 'CENTER' });
+    }
     pageBreak();
 
     // ── 여는 글 ───────────────────────────────────────────────────────────
@@ -131,7 +143,10 @@ export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work
 
 /** 실제 전송. 토큰은 화면 훅(`useDataExport`)이 얻어서 넘긴다. */
 export async function exportAnthologyToGoogleDoc(edition, accessToken, options = {}) {
-    const { title, requests } = buildAnthologyDocRequests(edition, options);
+    // 그림 표지면 구글이 가져갈 서명 주소를 받는다(브라우저 전용 모듈이라 그때만 불러온다).
+    const cover = coverSource(edition?.book);
+    const coverImageUri = cover.kind === 'image' ? await (await import('../api/coverImageApi.js')).coverImageUrl(cover.path) : '';
+    const { title, requests } = buildAnthologyDocRequests(edition, { ...options, coverImageUri });
     const documentId = await createGoogleDocument(title, accessToken);
     await applyGoogleDocRequests(documentId, requests, accessToken);
     return { documentId, title, url: googleDocEditUrl(documentId) };

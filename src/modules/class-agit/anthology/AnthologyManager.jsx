@@ -15,6 +15,8 @@ import { BOOK_PAPERS, BOOK_DESIGNS, getBookPaper, getBookDesign, getBookPageLayo
 import PageTuner from './PageTuner.jsx';
 import DesignPicker from '../teacher/DesignPicker.jsx';
 import BookCover from './BookCover.jsx';
+import CoverImagePanel from './CoverImagePanel.jsx';
+import { coverSource } from './coverImage.js';
 import SourcePicker from './SourcePicker.jsx';
 import BookOrderEditor from './BookOrderEditor.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
@@ -323,7 +325,11 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                             <strong>{paper.label}</strong><span>{paper.width} × {paper.height} mm</span><small>{paper.description}</small>
                         </label>)}
                     </div><p className="class-agit-canvas-caption">판형에 맞춰 여백과 쪽 나눔을 조정합니다. 본문은 12pt, 시는 14pt를 유지합니다. 인쇄할 때 같은 용지 크기와 실제 크기(100%)를 선택해 주세요.</p></fieldset></div>
-                <DesignPicker label="문집 디자인" type="book" options={BOOK_DESIGNS} value={getBookDesign(book.design_id).id} onChange={(design_id) => edit({ ...book, design_id })} disabled={locked} />
+                {/* 그림 표지를 쓰면 디자인 8종 대신 속지 스타일을 고른다(2026-10-06 선생님 결정). */}
+                {coverSource(book).kind === 'image'
+                    ? <p className="class-agit-canvas-caption">지금은 직접 올린 그림이 표지예요. 목차·속지 모양은 아래 `속지 스타일`에서 골라요. 디자인 8종으로 돌아가려면 `기본 디자인으로 돌아가기`를 누르세요.</p>
+                    : <DesignPicker label="문집 디자인" type="book" options={BOOK_DESIGNS} value={getBookDesign(book.design_id).id} onChange={(design_id) => edit({ ...book, design_id })} disabled={locked} />}
+                <CoverImagePanel classId={classId} book={book} api={api} dirty={dirty} locked={locked} run={run} receive={receive} />
             </div>
 
             <div {...panel('works')}>

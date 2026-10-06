@@ -22,3 +22,16 @@
 .class-agit .class-agit-book-open { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; margin: 12px 0 4px; padding: 0 20px; border: 0; border-radius: 999px; background: #2c8065; color: #fff; font-weight: 900; font-size: 1rem; cursor: pointer; }
 .class-agit .class-agit-book-open:hover:not(:disabled) { background: #236b54; color: #fff; }
 .class-agit .class-agit-book-open:disabled { opacity: .5; cursor: default; }
+/* 그림 표지(2026-10-06): 올린 그림이 표지 칸 전체. 글자는 화면 읽기 프로그램용으로만 남긴다. */
+.class-agit-book-cover[data-cover-image],
+.neighbor-books__mini-cover[data-cover-image] { position: relative; overflow: hidden; }
+.class-agit-book-cover[data-cover-image] > :not(.class-agit-cover-image),
+.neighbor-books__mini-cover[data-cover-image] > :not(.class-agit-cover-image) {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.class-agit-book-cover[data-cover-image]::before,
+.neighbor-books__mini-cover[data-cover-image]::before { display: none; }
+/* 표지 칸의 `:is(span…)` 규칙(position:relative)보다 강하게 — 그렇지 않으면 그림이 여백 안쪽에 들어간다. */
+.class-agit-cover-image,
+.class-agit .class-agit-book-cover[data-design] .class-agit-cover-image { position: absolute; inset: 0; z-index: 2; display: block; margin: 0; background: #f1f5f9; }
+.class-agit-cover-image img { display: block; width: 100%; height: 100%; object-fit: cover; }

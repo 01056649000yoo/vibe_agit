@@ -1,4 +1,5 @@
 import { bookCoverStyle, getBookDesign } from '../designs.js';
+import CoverImageFill, { coverImageProps } from './CoverImageFill.jsx';
 import './cover.css';
 import { useCallback, useState } from 'react';
 import StudentBookReader from './StudentBookReader.jsx';
@@ -21,7 +22,7 @@ export default function StudentBooks({ route, onNavigate, onReplace, onBack, api
         <span className="class-agit-eyebrow">우리반 아지트 · 글꽃 책방</span><h1>{route.mode === 'books' ? '우리 반의 글꽃 책방' : data?.book?.title || '우리 반의 책'}</h1>
         {route.mode === 'books' && <p>확정한 판이 그대로 남아 있어요. 표지를 누르면 그때 담긴 글을 읽을 수 있어요.</p>}
         {state.error && <p role="alert" className="class-agit-error">{state.error}</p>}{state.loading && <p role="status">문집을 불러오고 있어요…</p>}
-        {route.mode === 'books' && data && <><div className="class-agit-student-exhibitions">{data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} onClick={() => navigate({ mode: 'book', editionId: book.id })}><small>{book.number}판</small><h2>{book.title}</h2><p>{book.subtitle}</p><span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong></button>)}</div>{!data.books.length && <p className="class-agit-empty">아직 서가에 문집이 없어요. 함께 쓴 책이 곧 찾아올 거예요.</p>}</>}
+        {route.mode === 'books' && data && <><div className="class-agit-student-exhibitions">{data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} {...coverImageProps(book)} onClick={() => navigate({ mode: 'book', editionId: book.id })}><small>{book.number}판</small><h2>{book.title}</h2><p>{book.subtitle}</p><span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong><CoverImageFill book={book} /></button>)}</div>{!data.books.length && <p className="class-agit-empty">아직 서가에 문집이 없어요. 함께 쓴 책이 곧 찾아올 거예요.</p>}</>}
         {route.mode === 'book' && data && <><p>{data.book.subtitle}</p><div className="class-agit-book-introduction">{data.book.introduction}</div><StudentBookReader key={editionId} book={data.book} works={data.works} loadPrint={loadPrint} loadWork={loadWork} /><p>{data.book.class_label} · {data.book.issue_date} · {data.number}판</p></>}
         {route.mode === 'chapter' && <ArtworkReader work={data?.work || null} hideAuthor={data?.book?.book_type === 'personal'} loading={state.loading} error={state.error} onClose={onBack} footer={<><button type="button" onClick={onBack}>문집 차례로</button>{state.error && <button type="button" onClick={() => onReplace(classAgitRoute({ mode: 'book', editionId }))}>최신 차례 보기</button>}</>} />}
     </main>;

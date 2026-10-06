@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import StudentBookReader from '../../../class-agit/anthology/StudentBookReader.jsx';
 import { bookCoverStyle, getBookDesign } from '../../../class-agit/designs.js';
+import CoverImageFill, { coverImageProps } from '../../../class-agit/anthology/CoverImageFill.jsx';
 import '../../../class-agit/classAgit.css';
 import '../../../class-agit/anthology/cover.css';
 import { neighborBooksApi } from './booksApi';
@@ -168,13 +169,14 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
                 <div className="class-agit neighbor-books__shelf">
                     {books.map((item) => (
                         <button type="button" key={item.shared_book_id} className="class-agit-book-cover" data-design={getBookDesign(item.design).id}
-                            style={bookCoverStyle(item.design, item.paper)} onClick={() => openBook(item.shared_book_id)}>
+                            style={bookCoverStyle(item.design, item.paper)} {...coverImageProps(item)} onClick={() => openBook(item.shared_book_id)}>
                             <small>{item.is_own_class ? '⭐ 우리 반' : item.class_name} · {item.number}판
                                 {item.shared_until && ` · ${new Date(item.shared_until).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지`}</small>
                             <h2>{item.title}</h2>
                             {item.subtitle && <p>{item.subtitle}</p>}
                             <span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(item.design).mark}</span>
                             <strong>책 펼치기 ↗ · 방문록 {item.guestbook_count}{item.my_entry_status === 'pending' ? ' · 내 방문록 확인 중' : ''}</strong>
+                            <CoverImageFill book={item} />
                         </button>
                     ))}
                 </div>

@@ -8,6 +8,7 @@ import { classAgitStudentApi } from '../api/studentApi.js';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
 import { assertStudentBooks } from '../anthology/studentContract.js';
 import { bookCoverStyle, galleryCoverStyle, getBookDesign } from '../designs.js';
+import CoverImageFill, { coverImageProps } from '../anthology/CoverImageFill.jsx';
 import { classAgitRoute, normalizeClassAgitParams } from './navigation.js';
 import useGalleryRead from './useGalleryRead.js';
 import GalleryRoom from '../gallery/GalleryRoom.jsx';
@@ -91,8 +92,8 @@ export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, o
                 <h2 id="class-agit-books-heading">📚 글꽃 책방</h2>
                 <p>우리 반의 글을 한 권으로 묶어 확정한 책이에요. 한번 나온 판은 그대로 남아서 언제든 같은 내용을 다시 읽을 수 있어요.</p>
                 {books.error && <p className="class-agit-error" role="alert">{books.error}</p>}
-                {books.data && <div className="class-agit-student-exhibitions">{books.data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} onClick={() => navigate({ mode: 'book', editionId: book.id })}>
-                    <small>{book.number}판</small><h3>{book.title}</h3>{book.subtitle && <p>{book.subtitle}</p>}<span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong>
+                {books.data && <div className="class-agit-student-exhibitions">{books.data.books.map((book) => <button type="button" className="class-agit-book-cover" data-design={getBookDesign(book.design).id} style={bookCoverStyle(book.design, book.paper)} key={book.id} {...coverImageProps(book)} onClick={() => navigate({ mode: 'book', editionId: book.id })}>
+                    <small>{book.number}판</small><h3>{book.title}</h3>{book.subtitle && <p>{book.subtitle}</p>}<span className="class-agit-cover-mark" aria-hidden="true">{getBookDesign(book.design).mark}</span><strong>책 펼치기 ↗</strong><CoverImageFill book={book} />
                 </button>)}</div>}
                 {books.data?.books.length === 0 && <p className="class-agit-empty">아직 서가에 문집이 없어요. 함께 쓴 책이 곧 찾아올 거예요.</p>}
             </section>
