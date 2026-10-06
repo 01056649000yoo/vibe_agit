@@ -48,3 +48,17 @@ export async function coverImageDataUrl(path) {
         reader.readAsDataURL(blob);
     });
 }
+
+/**
+ * 문집을 지운 직후 그 문집의 표지 그림을 모두 지운다(2026-10-06 선생님 결정: 문집이 있는 동안만 보관).
+ * 실패해도 문집 삭제는 그대로 — 매주 정리(scripts/class-agit-cover-sweep.mjs)가 남은 것을 지운다.
+ */
+export async function removeBookCovers(classId, bookId) {
+    const folder = `${classId}/${bookId}`;
+    const { data, error } = await supabase.storage.from(COVER_BUCKET).list(folder, { limit: 1000 });
+    if (error || !data?.length) return 0;
+    const paths = data.filter((item) => item.name).map((item) => `${folder}/${item.name}`);
+    if (!paths.length) return 0;
+    const { error: removeError } = await supabase.storage.from(COVER_BUCKET).remove(paths);
+    return removeError ? 0 : paths.length;
+}

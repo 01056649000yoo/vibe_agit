@@ -92,3 +92,4 @@ N건`과 이미지 표의 `숨김` 열로 보여 주고, 원본 보고서에는 
 - 호스트 검사기: `scripts/scan-service-images.mjs`
 - 서비스 노출 분류 원본: `ops/service-management/services.json`
 - 정기 작업: `ops/launchd/com.agit.service-vulnerability-scan.plist`
+- 글꽃 책방 표지 그림 정리: `ops/launchd/com.agit.class-agit-cover-sweep.plist`(일요일 05:40, `scripts/class-agit-cover-sweep.mjs`) — 문집이 없어진 표지 그림을 저장소 기능으로 지움. 결과 `~/backups/auto/class-agit-cover-sweep-status.txt`(서버 점검 `문집 표지 정리` 줄).

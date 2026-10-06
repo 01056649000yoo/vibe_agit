@@ -139,3 +139,31 @@ test('구글 문서: 그림 표지면 첫 요청이 그림 넣기이고 제목 �
     assert.ok(!fallback.some((r) => r.insertInlineImage));
     assert.ok(fallback.some((r) => r.insertText?.text === '우리 반 가을 문집\n'));
 });
+
+test('판형·디자인 단계 표지 칸 안에서 캔바 규격 안내를 지금 판형 숫자로 바로 본다', async () => {
+    const panel = await readFile('src/modules/class-agit/anthology/CoverImagePanel.jsx', 'utf8');
+    assert.match(panel, /<GuideInfoButton variant="help"[^>]*캔바로 만드는 법/);
+    assert.match(panel, /const \{ width, height \} = spec\.recommended;/, '숫자는 규격 함수에서');
+    for (const step of ['사용자 지정 크기', '단위를 <b>px</b>', '공유</b> → <b>다운로드', '<b>PDF</b>로는 받지 마세요', '5MB']) assert.ok(panel.includes(step), step);
+    const guides = await readFile('src/constants/teacherGuides.js', 'utf8');
+    assert.match(guides, /캔바로 만드는 법/);
+});
+
+test('보관 규칙: 문집이 있는 동안 보관하고, 문집을 지우면 그 문집의 표지 그림도 지운다(즉시 + 매주 정리)', async () => {
+    const release = await readFile('src/modules/class-agit/api/releaseApi.js', 'utf8');
+    assert.match(release, /if \(action === 'delete' && payload\?\.book_id\) await removeBookCovers\(classId, payload\.book_id\)/);
+    const api = await readFile('src/modules/class-agit/api/coverImageApi.js', 'utf8');
+    assert.match(api, /export async function removeBookCovers\(classId, bookId\)/);
+    const cleanup = await readFile('supabase/migrations/20261370_class_agit_cover_cleanup.sql', 'utf8');
+    assert.match(cleanup, /GRANT EXECUTE ON FUNCTION public\.class_agit_orphan_cover_paths_v1\(\) TO service_role;/);
+    assert.match(cleanup, /REVOKE ALL ON FUNCTION public\.class_agit_orphan_cover_paths_v1\(\) FROM PUBLIC, anon, authenticated;/);
+    const select = await readFile('supabase/migrations/20261371_class_agit_cover_teacher_select.sql', 'utf8');
+    assert.match(select, /can_access_class_agit_cover_v1\(name, FALSE\) OR public\.can_delete_class_agit_cover_v1\(name\)/, '지우기 전 보기 확인을 담당 교사가 통과');
+    const sweep = await readFile('scripts/class-agit-cover-sweep.mjs', 'utf8');
+    assert.match(sweep, /class_agit_orphan_cover_paths_v1/);
+    assert.match(sweep, /storage\/v1\/object\/class-agit-covers`, \{ method: 'DELETE'/, 'DB 줄이 아니라 저장소 기능으로 지움(파일 방식)');
+    assert.doesNotMatch(sweep, /console\.log\([^)]*KEY/, 'service_role 키를 출력하지 않음');
+    const plist = await readFile('ops/launchd/com.agit.class-agit-cover-sweep.plist', 'utf8');
+    assert.match(plist, /scripts\/class-agit-cover-sweep\.mjs/);
+    assert.match(plist, /<key>Weekday<\/key>\s*<integer>0<\/integer>/);
+});

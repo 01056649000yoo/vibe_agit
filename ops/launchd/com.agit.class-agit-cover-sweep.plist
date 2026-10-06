@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.class-agit-cover-sweep</string>
+    <!--
+      글꽃 책방 표지 그림 매주 정리 (2026-10-06, 선생님 결정: 문집이 있는 동안만 보관, 문집을 지우면 함께 삭제).
+      평소엔 문집을 지울 때 화면이 바로 지운다. 이 정리는 학급 삭제처럼 문집이 한꺼번에 사라졌거나 그때 실패한 그림을 지운다.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/opt/node@22/bin/node</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/class-agit-cover-sweep.mjs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>40</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-class-agit-cover-sweep.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-class-agit-cover-sweep.log</string>
+</dict>
+</plist>

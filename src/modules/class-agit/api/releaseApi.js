@@ -2,6 +2,7 @@ import { supabase } from '../../../lib/supabaseClient.js';
 import { dataCache, classScope } from '../../../lib/cache.js';
 import { assertBookEdition, assertBookWorkspace, buildBookSavePayload } from '../anthology/contract.js';
 import { assertClassAgitShareWorkspace } from './contract.js';
+import { removeBookCovers } from './coverImageApi.js';
 const call = async (name, args) => {
     const { data, error } = await supabase.rpc(name, args);
     if (error) throw error;
@@ -15,7 +16,10 @@ export const classAgitReleaseApi = {
     },
     async bookAction(classId, action, payload) {
         const data = assertBookWorkspace(await call('run_class_agit_book_action_v1', { p_class_id: classId, p_action: action, p_payload: payload }), classId);
-        dataCache.invalidatePrefix(classScope(classId)); return data;
+        dataCache.invalidatePrefix(classScope(classId));
+        // 문집을 지우면 그 문집의 표지 그림도 함께 지운다(실패하면 매주 정리가 지운다).
+        if (action === 'delete' && payload?.book_id) await removeBookCovers(classId, payload.book_id).catch(() => 0);
+        return data;
     },
     saveBook(classId, book) { return this.bookAction(classId, 'save', buildBookSavePayload(book)); },
     async getBookPreview(classId, bookId, revision) { return assertBookEdition(await call('get_class_agit_book_preview_v1', { p_class_id: classId, p_book_id: bookId, p_revision: revision })); },

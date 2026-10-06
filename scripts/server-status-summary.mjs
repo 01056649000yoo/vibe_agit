@@ -78,6 +78,7 @@ const collect = async () => {
     lines.push(judgeRoutine('오픈클로 업데이트', lastLine(path.join(HOME, 'backups/auto/openclaw-update-status.txt'))));
     lines.push(judgeRoutine('Node 루틴', lastLine(path.join(HOME, 'backups/auto/node-runtime-status.txt'))));
     lines.push(judgeRoutine('Supabase 업데이트', lastLine(path.join(HOME, 'backups/auto/supabase-upgrade-status.txt'))));
+    lines.push(judgeRoutine('문집 표지 정리', lastLine(path.join(HOME, 'backups/auto/class-agit-cover-sweep-status.txt'))));
 
     const scan = sql("select to_char(finished_at at time zone 'Asia/Seoul','MM/DD')||'|'||urgent_count||'|'||attention_count from public.system_service_scan_runs where status='SUCCEEDED' or finished_at is not null order by finished_at desc nulls last limit 1");
     if (scan) {
