@@ -71,23 +71,6 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         try { await task(); } catch (e) { setError(e.message || '문집을 처리하지 못했습니다.'); } finally { busyRef.current = false; setBusy(false); }
     };
     const edit = (next) => { setBook(next); setDirty(true); };
-    /*
-     * 표지 만들기 방식(2026-10-06 선생님 지적: 디자인 8종 중 첫째가 늘 골라진 채라 그림 표지를 쓰려 해도 디자인으로 정해진 것처럼 보였다).
-     * `디자인 8종` / `내가 만든 표지 그림` 두 갈래로 나누고, 그림 쪽을 고르면 디자인 고르기를 접고 표지 그림 칸으로 내려간다.
-     * 이미 그림 표지인 문집은 그림 쪽으로 열린다. 문집을 바꾸면 다시 그 문집의 상태를 따른다.
-     */
-    const [coverModeState, setCoverModeState] = useState({ bookId: null, mode: null });
-    const coverImagePanelRef = useRef(null);
-    const coverMode = (coverModeState.bookId === book?.id && coverModeState.mode) || (coverSource(book).kind === 'image' ? 'image' : 'design');
-    const chooseCoverMode = async (mode) => {
-        if (mode === coverMode) return;
-        if (mode === 'design' && coverSource(book).kind === 'image') {
-            if (!await ask({ title: '그림 표지를 끄고 디자인 표지로 돌아갈까요?', body: '고른 디자인 표지로 돌아가요. 그림 표지를 다시 쓰려면 그림을 다시 올리면 됩니다. 이미 확정한 판의 표지는 바뀌지 않습니다.' })) return;
-            await run(async () => receive(await api.bookAction(classId, 'clear_cover_image', { book_id: book.id })));
-        }
-        setCoverModeState({ bookId: book.id, mode });
-        if (mode === 'image') requestAnimationFrame(() => coverImagePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    };
     const kindIssue = () => {
         if (book?.book_type !== 'personal') return '';
         if (!book.owner_student_id) return '개인 문집에 담을 학생을 먼저 선택해 주세요.';
@@ -104,6 +87,24 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         try { const data = await api.saveBook(classId, book); receive(data); setMessage('문집 초안을 저장했습니다.'); return data; }
         catch (e) { setError(e.message || '문집을 처리하지 못했습니다.'); return null; }
         finally { busyRef.current = false; setBusy(false); }
+    };
+    /*
+     * 표지 만들기 방식(2026-10-06 선생님 지적: 디자인 8종 중 첫째가 늘 골라진 채라 그림 표지를 쓰려 해도 디자인으로 정해진 것처럼 보였다).
+     * `디자인 8종` / `내가 만든 표지 그림` 두 갈래로 나누고, 그림 쪽을 고르면 디자인 고르기를 접고 표지 그림 칸으로 내려간다.
+     * 이미 그림 표지인 문집은 그림 쪽으로 열린다. 문집을 바꾸면 다시 그 문집의 상태를 따른다.
+     */
+    const [coverModeState, setCoverModeState] = useState({ bookId: null, mode: null });
+    const coverImagePanelRef = useRef(null);
+    const coverMode = (coverModeState.bookId === book?.id && coverModeState.mode) || (coverSource(book).kind === 'image' ? 'image' : 'design');
+    const chooseCoverMode = async (mode) => {
+        if (mode === coverMode) return;
+        if (mode === 'design' && coverSource(book).kind === 'image') {
+            if (dirty && !await saveDraft()) return;
+            if (!await ask({ title: '그림 표지를 끄고 디자인 표지로 돌아갈까요?', body: '고른 디자인 표지로 돌아가요. 그림 표지를 다시 쓰려면 그림을 다시 올리면 됩니다. 이미 확정한 판의 표지는 바뀌지 않습니다.' })) return;
+            await run(async () => receive(await api.bookAction(classId, 'clear_cover_image', { book_id: book.id })));
+        }
+        setCoverModeState({ bookId: book.id, mode });
+        if (mode === 'image') requestAnimationFrame(() => coverImagePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     };
     const stepIndex = BOOK_STEPS.findIndex((entry) => entry.id === step);
     const selectStep = async (nextStep, saveFirst = false) => {
@@ -354,7 +355,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
                 </div>
                 {coverMode === 'design'
                     ? <DesignPicker label="문집 디자인" type="book" options={BOOK_DESIGNS} value={getBookDesign(book.design_id).id} onChange={(design_id) => edit({ ...book, design_id })} disabled={locked} />
-                    : <div ref={coverImagePanelRef}><CoverImagePanel classId={classId} book={book} api={api} dirty={dirty} locked={locked} run={run} receive={receive} onCleared={() => setCoverModeState({ bookId: book.id, mode: 'design' })} /></div>}
+                    : <div ref={coverImagePanelRef}><CoverImagePanel classId={classId} book={book} api={api} dirty={dirty} locked={locked} run={run} receive={receive} ensureSaved={async () => !dirty || Boolean(await saveDraft())} onCleared={() => setCoverModeState({ bookId: book.id, mode: 'design' })} /></div>}
             </div>
 
             <div {...panel('works')}>

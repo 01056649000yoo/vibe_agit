@@ -75,12 +75,13 @@ function InnerStylePreview({ style }) {
     </span>;
 }
 
-export default function CoverImagePanel({ classId, book, api, dirty, locked, run, receive, onCleared }) {
+export default function CoverImagePanel({ classId, book, api, dirty, locked, run, receive, onCleared, ensureSaved = async () => true }) {
     const spec = coverSpec(book.paper_format);
     const active = coverSource(book);
     const [picked, setPicked] = useState(null); // { file, size, check, preview }
     const [style, setStyle] = useState(active.kind === 'image' ? active.innerStyle.id : 'plain');
-    const blocked = locked || dirty;
+    // 저장 안 한 변경이 있어도 잠그지 않는다(10-06 선생님: "표지 그림 고르기가 눌리지 않아") — 올릴 때 먼저 저장한다.
+    const blocked = locked;
     const [guideOpen, setGuideOpen] = useState(false);
     const currentUrl = useCoverImageUrl(book);
 
@@ -94,23 +95,29 @@ export default function CoverImagePanel({ classId, book, api, dirty, locked, run
         setPicked({ file, size, check, preview: check.ok ? URL.createObjectURL(file) : '' });
     };
 
-    const apply = () => run(async () => {
+    const apply = async () => {
+        if (!await ensureSaved()) return;
+        await run(async () => {
         const path = await uploadCoverImage(classId, book.id, picked.file);
         receive(await api.bookAction(classId, 'set_cover_image', { book_id: book.id, path, width: picked.size.width, height: picked.size.height, inner_style: style }));
         setPicked(null);
-    });
+        });
+    };
 
     const changeStyle = (next) => {
         setStyle(next);
         if (active.kind !== 'image' || blocked) return;
-        run(async () => receive(await api.bookAction(classId, 'set_cover_image', { book_id: book.id, path: active.path, width: active.width, height: active.height, inner_style: next })));
+        ensureSaved().then((ok) => ok && run(async () => receive(await api.bookAction(classId, 'set_cover_image', { book_id: book.id, path: active.path, width: active.width, height: active.height, inner_style: next }))));
     };
 
-    const clear = () => run(async () => {
+    const clear = async () => {
+        if (!await ensureSaved()) return;
+        await run(async () => {
         receive(await api.bookAction(classId, 'clear_cover_image', { book_id: book.id }));
         setPicked(null);
         onCleared?.();
-    });
+        });
+    };
 
     return <section className="cover-image-panel" aria-labelledby="cover-image-panel-title">
         <div className="cover-image-panel__head">
@@ -133,7 +140,7 @@ export default function CoverImagePanel({ classId, book, api, dirty, locked, run
         </table>
         <p className="cover-image-panel__note">가장자리 {COVER_SAFE_MARGIN_MM}mm 안쪽에 글자를 두세요(인쇄할 때 잘릴 수 있어요). <strong>학생 얼굴이나 이름이 드러난 사진은 넣지 마세요</strong> — 이 표지는 문집이 보이는 곳(우리 반 서가·모두의 아지트 도서관)에 함께 보여요. 올린 그림은 이 문집이 남아 있는 동안 보관하고, 문집을 지우면 함께 지워져요.</p>
 
-        {dirty && <p className="cover-image-panel__warn" role="status">먼저 위의 변경을 저장한 뒤 표지 그림을 올려 주세요(판형을 바꿨다면 저장한 판형 규격으로 확인해요).</p>}
+        {dirty && <p className="cover-image-panel__note" role="status">저장하지 않은 변경이 있어요. 표지 그림을 바꾸면 그 변경도 함께 저장돼요.</p>}
 
         {/* 왼쪽: 그림 고르기, 오른쪽: 지금 표지(또는 방금 고른 그림과 적용 단추) — 2026-10-06 선생님 지적 "오른쪽이 텅 비어 있다" */}
         <div className="cover-image-panel__upload">
