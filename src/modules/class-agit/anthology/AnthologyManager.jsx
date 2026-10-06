@@ -71,6 +71,23 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
         try { await task(); } catch (e) { setError(e.message || '문집을 처리하지 못했습니다.'); } finally { busyRef.current = false; setBusy(false); }
     };
     const edit = (next) => { setBook(next); setDirty(true); };
+    /*
+     * 표지 만들기 방식(2026-10-06 선생님 지적: 디자인 8종 중 첫째가 늘 골라진 채라 그림 표지를 쓰려 해도 디자인으로 정해진 것처럼 보였다).
+     * `디자인 8종` / `내가 만든 표지 그림` 두 갈래로 나누고, 그림 쪽을 고르면 디자인 고르기를 접고 표지 그림 칸으로 내려간다.
+     * 이미 그림 표지인 문집은 그림 쪽으로 열린다. 문집을 바꾸면 다시 그 문집의 상태를 따른다.
+     */
+    const [coverModeState, setCoverModeState] = useState({ bookId: null, mode: null });
+    const coverImagePanelRef = useRef(null);
+    const coverMode = (coverModeState.bookId === book?.id && coverModeState.mode) || (coverSource(book).kind === 'image' ? 'image' : 'design');
+    const chooseCoverMode = async (mode) => {
+        if (mode === coverMode) return;
+        if (mode === 'design' && coverSource(book).kind === 'image') {
+            if (!await ask({ title: '그림 표지를 끄고 디자인 표지로 돌아갈까요?', body: '고른 디자인 표지로 돌아가요. 그림 표지를 다시 쓰려면 그림을 다시 올리면 됩니다. 이미 확정한 판의 표지는 바뀌지 않습니다.' })) return;
+            await run(async () => receive(await api.bookAction(classId, 'clear_cover_image', { book_id: book.id })));
+        }
+        setCoverModeState({ bookId: book.id, mode });
+        if (mode === 'image') requestAnimationFrame(() => coverImagePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    };
     const kindIssue = () => {
         if (book?.book_type !== 'personal') return '';
         if (!book.owner_student_id) return '개인 문집에 담을 학생을 먼저 선택해 주세요.';
@@ -318,18 +335,26 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
 
             <div {...panel('design')}>
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>어떤 책으로 인쇄할지 골라요</h2><p>판형과 표지 디자인을 고르면 표지 미리보기가 바로 바뀝니다.</p></div>
-                <div className="class-agit-book-layout"><BookCover book={book} />
+                <div className="class-agit-book-layout">{coverMode === 'image' && coverSource(book).kind !== 'image'
+                    ? <figure className="class-agit-book-preview"><div className="anthology-cover-placeholder" style={{ aspectRatio: `${getBookPaper(book.paper_format).width} / ${getBookPaper(book.paper_format).height}` }}><span>🖼️</span><strong>표지 그림을 올리면<br />여기에 보여요</strong></div><figcaption>{getBookPaper(book.paper_format).label} · {getBookPaper(book.paper_format).width} × {getBookPaper(book.paper_format).height} mm</figcaption></figure>
+                    : <BookCover book={book} />}
                     <fieldset className="class-agit-design-picker" disabled={locked}><legend>판형 · 실제 출력 크기</legend><div className="class-agit-paper-options">
                         {BOOK_PAPERS.map((paper) => <label key={paper.id} className={`class-agit-paper-option${getBookPaper(book.paper_format).id === paper.id ? ' is-selected' : ''}`}>
                             <input type="radio" name="문집 판형" checked={getBookPaper(book.paper_format).id === paper.id} onChange={() => edit({ ...book, paper_format: paper.id })} />
                             <strong>{paper.label}</strong><span>{paper.width} × {paper.height} mm</span><small>{paper.description}</small>
                         </label>)}
                     </div><p className="class-agit-canvas-caption">판형에 맞춰 여백과 쪽 나눔을 조정합니다. 본문은 12pt, 시는 14pt를 유지합니다. 인쇄할 때 같은 용지 크기와 실제 크기(100%)를 선택해 주세요.</p></fieldset></div>
-                {/* 그림 표지를 쓰면 디자인 8종 대신 속지 스타일을 고른다(2026-10-06 선생님 결정). */}
-                {coverSource(book).kind === 'image'
-                    ? <p className="class-agit-canvas-caption">지금은 직접 올린 그림이 표지예요. 목차·속지 모양은 아래 `속지 스타일`에서 골라요. 디자인 8종으로 돌아가려면 `기본 디자인으로 돌아가기`를 누르세요.</p>
-                    : <DesignPicker label="문집 디자인" type="book" options={BOOK_DESIGNS} value={getBookDesign(book.design_id).id} onChange={(design_id) => edit({ ...book, design_id })} disabled={locked} />}
-                <CoverImagePanel classId={classId} book={book} api={api} dirty={dirty} locked={locked} run={run} receive={receive} />
+                <div className="anthology-cover-mode" role="radiogroup" aria-label="표지 만들기 방식">
+                    <button type="button" role="radio" aria-checked={coverMode === 'design'} className={coverMode === 'design' ? 'is-selected' : ''} disabled={locked} onClick={() => chooseCoverMode('design')}>
+                        <span aria-hidden="true">🎨</span><strong>디자인 8종에서 고르기</strong><small>고른 디자인이 표지와 속지에 함께 쓰여요</small>
+                    </button>
+                    <button type="button" role="radio" aria-checked={coverMode === 'image'} className={coverMode === 'image' ? 'is-selected' : ''} disabled={locked} onClick={() => chooseCoverMode('image')}>
+                        <span aria-hidden="true">🖼️</span><strong>내가 만든 표지 그림 쓰기</strong><small>캔바 등에서 만든 그림이 표지 전체, 속지는 3가지 중에서</small>
+                    </button>
+                </div>
+                {coverMode === 'design'
+                    ? <DesignPicker label="문집 디자인" type="book" options={BOOK_DESIGNS} value={getBookDesign(book.design_id).id} onChange={(design_id) => edit({ ...book, design_id })} disabled={locked} />
+                    : <div ref={coverImagePanelRef}><CoverImagePanel classId={classId} book={book} api={api} dirty={dirty} locked={locked} run={run} receive={receive} onCleared={() => setCoverModeState({ bookId: book.id, mode: 'design' })} /></div>}
             </div>
 
             <div {...panel('works')}>

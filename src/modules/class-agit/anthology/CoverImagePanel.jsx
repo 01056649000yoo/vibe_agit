@@ -3,6 +3,7 @@ import Button from '../../../components/common/Button.jsx';
 import GuideInfoButton from '../../../components/common/GuideInfoButton.jsx';
 import { BOOK_INNER_STYLES, COVER_SAFE_MARGIN_MM, COVER_SPECS, checkCoverImage, coverSource, coverSpec } from './coverImage.js';
 import { readImageSize, uploadCoverImage } from '../api/coverImageApi.js';
+import { useCoverImageUrl } from './CoverImageFill.jsx';
 import './coverImagePanel.css';
 
 /*
@@ -74,13 +75,14 @@ function InnerStylePreview({ style }) {
     </span>;
 }
 
-export default function CoverImagePanel({ classId, book, api, dirty, locked, run, receive }) {
+export default function CoverImagePanel({ classId, book, api, dirty, locked, run, receive, onCleared }) {
     const spec = coverSpec(book.paper_format);
     const active = coverSource(book);
     const [picked, setPicked] = useState(null); // { file, size, check, preview }
     const [style, setStyle] = useState(active.kind === 'image' ? active.innerStyle.id : 'plain');
     const blocked = locked || dirty;
     const [guideOpen, setGuideOpen] = useState(false);
+    const currentUrl = useCoverImageUrl(book);
 
     useEffect(() => () => { if (picked?.preview) URL.revokeObjectURL(picked.preview); }, [picked]);
 
@@ -107,13 +109,14 @@ export default function CoverImagePanel({ classId, book, api, dirty, locked, run
     const clear = () => run(async () => {
         receive(await api.bookAction(classId, 'clear_cover_image', { book_id: book.id }));
         setPicked(null);
+        onCleared?.();
     });
 
     return <section className="cover-image-panel" aria-labelledby="cover-image-panel-title">
         <div className="cover-image-panel__head">
             <h3 id="cover-image-panel-title">🖼️ 내가 만든 표지 그림 쓰기</h3>
             {active.kind === 'image' && <span className="cover-image-panel__badge">그림 표지 사용 중</span>}
-            <GuideInfoButton variant="help" size="sm" text={guideOpen ? '캔바 안내 닫기' : '캔바로 만드는 법'} label="캔바로 표지 만드는 법" onClick={() => setGuideOpen((open) => !open)} />
+            <GuideInfoButton variant="help" text={guideOpen ? '캔바 안내 닫기' : '캔바로 만드는 법'} label="캔바로 표지 만드는 법" onClick={() => setGuideOpen((open) => !open)} />
         </div>
         {guideOpen && <CanvaGuide spec={spec} />}
         <p className="cover-image-panel__lead">캔바 같은 곳에서 표지를 만들어 올리면 그 그림이 표지 전체가 돼요. 목차·여는 글·작품 쪽은 아래 속지 스타일로 나와요.</p>
@@ -132,19 +135,39 @@ export default function CoverImagePanel({ classId, book, api, dirty, locked, run
 
         {dirty && <p className="cover-image-panel__warn" role="status">먼저 위의 변경을 저장한 뒤 표지 그림을 올려 주세요(판형을 바꿨다면 저장한 판형 규격으로 확인해요).</p>}
 
-        <label className="cover-image-panel__file">
-            <span>{spec.label} 표지 그림 고르기</span>
-            <input type="file" accept="image/png,image/jpeg" disabled={blocked} onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ''; }} />
-        </label>
-        {picked && !picked.check.ok && <p className="cover-image-panel__error" role="alert">⚠️ {picked.check.error}</p>}
-        {picked?.check.ok && <div className="cover-image-panel__preview">
-            <img src={picked.preview} alt="올릴 표지 그림 미리보기" style={{ aspectRatio: `${spec.widthMm} / ${spec.heightMm}` }} />
-            <div>
-                <p>✅ {spec.label} 규격에 맞아요 ({picked.size.width}×{picked.size.height}px).</p>
-                {picked.check.warning && <p className="cover-image-panel__warn">{picked.check.warning}</p>}
-                <Button type="button" disabled={blocked} onClick={apply}>이 그림으로 표지 바꾸기</Button>
+        {/* 왼쪽: 그림 고르기, 오른쪽: 지금 표지(또는 방금 고른 그림과 적용 단추) — 2026-10-06 선생님 지적 "오른쪽이 텅 비어 있다" */}
+        <div className="cover-image-panel__upload">
+            <label className={`cover-image-panel__drop${blocked ? ' is-disabled' : ''}`}>
+                <input type="file" accept="image/png,image/jpeg" disabled={blocked} onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ''; }} />
+                <span className="cover-image-panel__drop-icon" aria-hidden="true">🖼️</span>
+                <strong>{spec.label} 표지 그림 고르기</strong>
+                <small>JPG·PNG · 권장 {spec.recommended.width}×{spec.recommended.height}px · 5MB 이하</small>
+                <span className="cover-image-panel__drop-button" aria-hidden="true">파일 선택</span>
+            </label>
+            <div className="cover-image-panel__side" aria-live="polite">
+                {picked?.check.ok ? <>
+                    <img className="cover-image-panel__thumb" src={picked.preview} alt="올릴 표지 그림 미리보기" style={{ aspectRatio: `${spec.widthMm} / ${spec.heightMm}` }} />
+                    <div className="cover-image-panel__side-copy">
+                        <p className="cover-image-panel__ok">✅ {spec.label} 규격에 맞아요 ({picked.size.width}×{picked.size.height}px)</p>
+                        {picked.check.warning && <p className="cover-image-panel__warn">{picked.check.warning}</p>}
+                        <Button type="button" disabled={blocked} onClick={apply}>이 그림으로 표지 바꾸기</Button>
+                    </div>
+                </> : active.kind === 'image' ? <>
+                    {currentUrl ? <img className="cover-image-panel__thumb" src={currentUrl} alt="지금 표지 그림" style={{ aspectRatio: `${spec.widthMm} / ${spec.heightMm}` }} /> : <span className="cover-image-panel__thumb is-empty" style={{ aspectRatio: `${spec.widthMm} / ${spec.heightMm}` }} />}
+                    <div className="cover-image-panel__side-copy">
+                        <p className="cover-image-panel__ok">지금 표지로 쓰는 그림이에요.</p>
+                        <small>{active.width}×{active.height}px · 바꾸려면 새 그림을 고르세요.</small>
+                    </div>
+                </> : <>
+                    <span className="cover-image-panel__thumb is-empty" style={{ aspectRatio: `${spec.widthMm} / ${spec.heightMm}` }}><span>{spec.label}<br />{spec.widthMm}×{spec.heightMm}mm</span></span>
+                    <div className="cover-image-panel__side-copy">
+                        <p>아직 올린 그림이 없어요.</p>
+                        <small>규격에 맞는 그림을 고르면 여기에서 미리 보고 표지로 바꿀 수 있어요. 처음이면 제목 옆 <b>캔바로 만드는 법</b>을 눌러 보세요.</small>
+                    </div>
+                </>}
             </div>
-        </div>}
+        </div>
+        {picked && !picked.check.ok && <p className="cover-image-panel__error" role="alert">⚠️ {picked.check.error}</p>}
 
         <fieldset className="cover-image-panel__styles" disabled={blocked}>
             <legend>속지 스타일 (그림 표지일 때 목차·여는 글·작품 쪽)</legend>

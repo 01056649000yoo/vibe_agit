@@ -167,3 +167,16 @@ test('보관 규칙: 문집이 있는 동안 보관하고, 문집을 지우면 �
     assert.match(plist, /scripts\/class-agit-cover-sweep\.mjs/);
     assert.match(plist, /<key>Weekday<\/key>\s*<integer>0<\/integer>/);
 });
+
+test('2단계는 표지 만들기 방식을 두 갈래로 고르고, 그림 쪽은 디자인 8종을 접고 표지 칸으로 내려간다', async () => {
+    const manager = await readFile('src/modules/class-agit/anthology/AnthologyManager.jsx', 'utf8');
+    assert.match(manager, /role="radiogroup" aria-label="표지 만들기 방식"/);
+    assert.match(manager, /디자인 8종에서 고르기[\s\S]*내가 만든 표지 그림 쓰기/);
+    assert.match(manager, /coverMode === 'design'\s*\? <DesignPicker/);
+    assert.match(manager, /coverImagePanelRef\.current\?\.scrollIntoView/);
+    assert.match(manager, /clear_cover_image/, '디자인으로 돌아가면 그림 표지를 끈다');
+    const css = await readFile('src/modules/class-agit/anthology/coverImagePanel.css', 'utf8');
+    // 숨긴 라디오가 카드 밖(페이지 아래)에 놓이면 누를 때 화면이 그리로 튄다(10-06 선생님 지적)
+    assert.match(css, /\.cover-image-panel__style-options label \{ position: relative;/);
+    assert.match(css, /\.cover-image-panel__style-options input \{ position: absolute; inset: 0;/);
+});
