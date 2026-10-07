@@ -14,11 +14,11 @@ export const PAST_MISSION_PAGE_SIZE = 20;
 export const PAST_MISSION_EXCLUDED_TYPES = Object.freeze(['meeting']);
 
 /*
- * 모두의 아지트 활동이 만든 과제에 서버가 붙이는 표시 태그(20261237~20261344 의 jsonb_build_array, 지금 이름 `같이 쓰기 광장`).
+ * 모두의 아지트 활동이 만든 과제에 서버가 붙이는 표시 태그(20261237~20261344 의 jsonb_build_array — 운영 DB 에 실제로 남은 값만, 2026-10-07 확인).
  * 화면은 `이웃 아지트` 태그로 "지우면 그 활동에서 우리 반이 빠진다" 경고를 띄운다(MissionList·ArchiveConfirmModal) —
  * 우리 반 과제로 다시 낼 때 따라오면 그 경고가 엉뚱하게 붙으므로 뗀다.
  */
-export const NEIGHBOR_ACTIVITY_TAGS = Object.freeze(['이웃 아지트', '같이 쓰기 광장', '같이 쓰는 주제', '함께 쓰는 주제', '글짝 교환', '글짝 교환 활동']);
+export const NEIGHBOR_ACTIVITY_TAGS = Object.freeze(['이웃 아지트', '같이 쓰기 광장', '같이 쓰는 주제', '글짝 교환']);
 
 /** 다시 낼 수 있는 과제인지 — 옛 회의 과제 중 input_template 이 freeform 으로 남은 것도 거른다. */
 export const isReusablePastMission = (mission) => !PAST_MISSION_EXCLUDED_TYPES.includes(resolveGenreMissionTypeId(mission));
