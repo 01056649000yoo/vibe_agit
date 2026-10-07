@@ -1,15 +1,20 @@
 /**
- * 선생님이 승인한 기본 자료 늘리기 묶음을 카탈로그에 합친다(2026-10-07).
+ * 기본 맞춤법 자료 늘리기 묶음을 카탈로그에 합친다(2026-10-07~08).
  *
- *   node scripts/merge-spelling-expansion.mjs --batch 01 [--exclude 키,키] [--dry-run]
+ *   node scripts/merge-spelling-expansion.mjs --batch 01,02 [--exclude 틀린꼴,틀린꼴] [--dry-run]
  *
- * docs/spelling-expansion/batch-<번호>.json 의 `kept` 를 분류 파일(catalog/*Catalog.js)에 reference(...) 줄로 덧붙인다.
- * `--exclude` 는 선생님이 표본에서 빼라고 한 항목의 key. 합친 뒤 `npm run spelling:check`·`spelling:export` 를 돌린다.
- * 규칙(README): exact 는 틀린 꼴 자체를, context 는 앞뒤 말(text) 안의 틀린 꼴(target)을, phrase 는 공백이 든 어구를 잡는다.
+ * 묶음 하나는 세 파일로 이뤄진다(docs/spelling-expansion/):
+ *   batch-NN.check.json     기계 점검 결과(scripts/expand-spelling-base.mjs)
+ *   batch-NN.decisions.json 모의 실행을 보고 사람이 뺀 것과 까닭
+ *   batch-NN.content*.json|tsv  Claude 가 직접 쓴 아이용 설명·예문(GPT 쓰지 않음)
+ * 남은 것을 분류 파일(catalog/*Catalog.js)에 reference(...) 줄로 덧붙인다.
+ * **선생님 승인 뒤에만** 실제로 합친다. 모의 실행 때는 합친 뒤 검사하고 git 으로 되돌린다.
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { getElementarySpellingEntries } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
 
+const DIR = 'docs/spelling-expansion';
 const CATALOG_FILES = Object.freeze({
     grammar: 'grammarCatalog.js',
     conjugation: 'conjugationCatalog.js',
@@ -23,59 +28,90 @@ const arg = (name, fallback) => {
     return index >= 0 ? process.argv[index + 1] : fallback;
 };
 
-/** 후보 하나를 reference(...) 줄로. 규칙에 맞지 않으면 null(빼고 이유를 알린다). */
-export const toReferenceLine = (item, sortOrder, id) => {
-    const wrong = String(item.wrong || '').trim();
-    const right = String(item.right || '').trim();
-    let mode = item.detection_mode;
-    if (mode === 'phrase' && !/\s/.test(wrong)) mode = 'exact';
-    const options = { searchable: [...new Set([right, wrong])], sourceQuery: right.split(/\s+/)[0] };
-    if (mode === 'context') {
-        const text = String(item.context_text || '').trim();
-        if (!text.includes(wrong)) return null;
-        options.detectionPatterns = [{ text, target: wrong, right, lookup: right }];
+// 같은 꼴이 되풀이되는 갈래의 설명 틀(content.tsv 의 설명 칸이 한 글자 기호일 때)
+const TEMPLATES = Object.freeze({
+    P: (answer) => `지난 일을 말할 때는 받침에 ‘ㅆ’을 써서 ‘${answer}’예요.`,
+    L: (answer) => `외래어 표기법에 따라 ‘${answer}’라고 써요.`,
+    S: (answer) => `두 낱말이 합쳐지며 뒷소리가 세게 나거나 ‘ㄴ’ 소리가 덧나서 사이시옷을 넣어 ‘${answer}’라고 써요.`,
+    N: (answer) => `뒤 글자가 된소리·거센소리이거나 한자어끼리 합친 말이라 사이시옷을 쓰지 않아서 ‘${answer}’예요.`
+});
+
+/** 묶음 하나에서 합칠 것들 — 점검 통과 + 사람이 빼지 않음 + 설명 있음. */
+export const loadBatch = async (batch) => {
+    const check = JSON.parse(await readFile(`${DIR}/batch-${batch}.check.json`, 'utf8'));
+    const decisions = JSON.parse(await readFile(`${DIR}/batch-${batch}.decisions.json`, 'utf8'));
+    const content = {};
+    for (const file of (await readdir(DIR)).filter((name) => name.startsWith(`batch-${batch}.content`)).sort()) {
+        const text = await readFile(`${DIR}/${file}`, 'utf8');
+        if (file.endsWith('.json')) Object.assign(content, JSON.parse(text));
+        else {
+            for (const line of text.split('\n').filter((row) => row && !row.startsWith('#'))) {
+                const [wrong, label, answer, explanation, ...examples] = line.split('|');
+                content[wrong] = {
+                    label, answer,
+                    explanation: Reflect.get(TEMPLATES, explanation)?.(answer) || explanation,
+                    examples
+                };
+            }
+        }
     }
-    const examples = (item.examples || []).map((example) => String(example).trim()).filter(Boolean).slice(0, 4);
-    if (examples.length === 0 || examples.some((example) => example.includes(wrong) && !example.includes(right))) return null;
-    return `        reference(${sortOrder}, ${JSON.stringify(id)}, ${JSON.stringify(item.subcategoryId)}, ${JSON.stringify(mode)}, "catalog", ${JSON.stringify(`${right} / ${wrong}`)}, ${JSON.stringify(right)}, ${JSON.stringify(String(item.explanation || '').trim())}, ${JSON.stringify(examples)}, ${JSON.stringify(options)}),`;
+    const items = [];
+    const problems = [];
+    for (const result of check.results) {
+        if (result.status !== 'pass' || Reflect.get(decisions.drop || {}, result.wrong)) continue;
+        const text = Reflect.get(content, result.wrong);
+        if (!text) { problems.push(`${result.wrong}: 설명 없음`); continue; }
+        items.push({ batch, ...result, ...text });
+    }
+    return { items, problems, decisions };
 };
 
-const main = async () => {
-    const batch = arg('--batch', '01');
-    const exclude = new Set(String(arg('--exclude', '')).split(',').map((key) => key.trim()).filter(Boolean));
-    const dryRun = process.argv.includes('--dry-run');
-    const data = JSON.parse(await readFile(`docs/spelling-expansion/batch-${batch}.json`, 'utf8'));
+/** 후보 하나를 reference(...) 줄로. */
+export const toReferenceLine = (item, sortOrder, id) => {
+    const mode = item.mode === 'phrase' && !/\s/.test(item.wrong) ? 'exact' : item.mode;
+    const text = mode === 'context' ? item.context : item.wrong;
+    const options = {
+        searchable: [...new Set([item.answer, item.wrong, ...String(item.label).split('/').map((part) => part.trim())])].filter(Boolean),
+        sourceQuery: String(item.answer).replace(/^-/, '').split(/\s+/)[0],
+        detectionPatterns: [{ text, target: item.wrong, right: item.right, lookup: String(item.answer).replace(/^-/, '') }]
+    };
+    return `        reference(${sortOrder}, ${JSON.stringify(id)}, ${JSON.stringify(item.subcategoryId)}, ${JSON.stringify(mode)}, "catalog", ${JSON.stringify(item.label)}, ${JSON.stringify(item.answer)}, ${JSON.stringify(item.explanation)}, ${JSON.stringify(item.examples)}, ${JSON.stringify(options)}),`;
+};
+
+export const mergeBatches = async (batches, { exclude = new Set(), dryRun = false } = {}) => {
     const existing = getElementarySpellingEntries();
     let sortOrder = Math.max(...existing.map((entry) => entry.sortOrder));
-    const usedIds = new Set(existing.map((entry) => entry.id));
     const linesByCategory = new Map();
-    const skipped = [];
-    for (const item of data.kept) {
-        if (exclude.has(item.key)) continue;
-        let id = String(item.id || item.key).toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || item.key;
-        while (usedIds.has(id)) id = `${id}-${item.key.slice(0, 4)}`;
-        const line = toReferenceLine(item, sortOrder + 1, id);
-        if (!line) { skipped.push(`${item.wrong} → ${item.right}`); continue; }
-        sortOrder += 1;
-        usedIds.add(id);
-        linesByCategory.set(item.categoryId, [...(linesByCategory.get(item.categoryId) || []), line]);
+    const all = [];
+    for (const batch of batches) {
+        const { items, problems } = await loadBatch(batch);
+        if (problems.length) throw new Error(`묶음 ${batch}: ${problems.join(', ')}`);
+        for (const item of items) {
+            if (exclude.has(item.wrong)) continue;
+            sortOrder += 1;
+            const id = `x-${createHash('sha256').update(item.wrong).digest('hex').slice(0, 10)}`;
+            linesByCategory.set(item.categoryId, [...(linesByCategory.get(item.categoryId) || []), toReferenceLine(item, sortOrder, id)]);
+            all.push({ ...item, id });
+        }
     }
     for (const [categoryId, lines] of linesByCategory) {
-        const file = `src/modules/writing/tools/spelling-lookup/catalog/${CATALOG_FILES[categoryId]}`;
+        const file = `src/modules/writing/tools/spelling-lookup/catalog/${Reflect.get(CATALOG_FILES, categoryId)}`;
         const source = await readFile(file, 'utf8');
-        const end = source.lastIndexOf(']);');
+        // 파일 끝은 `    ]\n);` 꼴이다 — 마지막 `]` 앞에 덧붙인다.
+        const match = source.match(/\n\s*\]\s*\)\s*;\s*$/);
+        const end = match ? match.index : -1;
         if (end < 0) throw new Error(`catalog_end_missing:${file}`);
         const before = source.slice(0, end).replace(/\s*$/, '');
-        const joined = `${before.endsWith(',') ? before : `${before},`}\n        // ── 기본 자료 늘리기 묶음 ${batch} (${data.created_at.slice(0, 10)}, AI 초안 + 검증 AI + 표준국어대사전 + 선생님 표본 확인) ──\n${lines.join('\n')}\n`;
+        const joined = `${before.endsWith(',') ? before : `${before},`}\n        // ── 기본 자료 늘리기 ${batches.join('·')}(Claude 초안 + 표준국어대사전 + 학생 글 모의 실행 + 선생님 확인) ──\n${lines.join('\n')}\n`;
         if (!dryRun) await writeFile(file, `${joined}${source.slice(end)}`);
-        console.log(`${CATALOG_FILES[categoryId]}: ${lines.length}개`);
     }
-    if (skipped.length) console.log(`규칙에 맞지 않아 뺀 것 ${skipped.length}개: ${skipped.join(' · ')}`);
+    return all;
 };
 
 if (process.argv[1]?.endsWith('merge-spelling-expansion.mjs')) {
-    main().catch((error) => {
-        console.error(`합치기 실패 — ${error.message}`);
-        process.exitCode = 1;
-    });
+    const batches = String(arg('--batch', '01')).split(',').map((value) => value.trim()).filter(Boolean);
+    const exclude = new Set(String(arg('--exclude', '')).split(',').map((value) => value.trim()).filter(Boolean));
+    mergeBatches(batches, { exclude, dryRun: process.argv.includes('--dry-run') })
+        .then((all) => console.log(`합칠 항목 ${all.length}개${process.argv.includes('--dry-run') ? '(미리 보기, 파일은 그대로)' : ''}`))
+        .catch((error) => { console.error(`합치기 실패 — ${error.message}`); process.exitCode = 1; });
 }
