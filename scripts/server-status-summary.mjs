@@ -14,11 +14,11 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
+import { sendTelegram } from './lib/telegram.mjs';
 import { buildSummary, judgeBackup, judgeCertificates, judgeDisk, judgeRoutine, line } from './lib/serverStatus.mjs';
 
 const HOME = homedir();
 const DOCKER = existsSync('/Applications/Docker.app/Contents/Resources/bin/docker') ? '/Applications/Docker.app/Contents/Resources/bin/docker' : 'docker';
-const OPENCLAW = existsSync('/opt/homebrew/bin/openclaw') ? '/opt/homebrew/bin/openclaw' : 'openclaw';
 const STATE = path.join(HOME, 'backups/auto/server-status-alert.state');
 const mode = process.argv.includes('--alert-only') ? 'alert' : process.argv.includes('--send') ? 'send' : 'print';
 
@@ -79,6 +79,7 @@ const collect = async () => {
     lines.push(judgeRoutine('Node 루틴', lastLine(path.join(HOME, 'backups/auto/node-runtime-status.txt'))));
     lines.push(judgeRoutine('Supabase 업데이트', lastLine(path.join(HOME, 'backups/auto/supabase-upgrade-status.txt'))));
     lines.push(judgeRoutine('문집 표지 정리', lastLine(path.join(HOME, 'backups/auto/class-agit-cover-sweep-status.txt'))));
+    lines.push(judgeRoutine('맞춤법 자동 검수', lastLine(path.join(HOME, 'backups/auto/spelling-review-auto-status.txt'))));
 
     const scan = sql("select to_char(finished_at at time zone 'Asia/Seoul','MM/DD')||'|'||urgent_count||'|'||attention_count from public.system_service_scan_runs where status='SUCCEEDED' or finished_at is not null order by finished_at desc nulls last limit 1");
     if (scan) {
@@ -94,16 +95,6 @@ const collect = async () => {
     }
     lines.push(judgeCertificates(certs));
     return lines;
-};
-
-/** 오픈클로로 텔레그램 보내기 — 받는 사람은 짝지은 사용자. */
-const sendTelegram = (text) => {
-    const target = run('/usr/bin/sqlite3', ['-readonly', path.join(HOME, '.openclaw/state/openclaw.sqlite'),
-        "select entry from channel_pairing_allow_entries where channel_key='telegram' order by sort_order limit 1"]);
-    if (!target) { console.error('텔레그램 받는 사람을 찾지 못함(오픈클로 짝짓기 확인)'); return false; }
-    const result = run(OPENCLAW, ['message', 'send', '--channel', 'telegram', '--target', target, '-m', text], 90000);
-    if (result === null) { console.error('텔레그램 보내기 실패(오픈클로 게이트웨이 확인)'); return false; }
-    return true;
 };
 
 const summary = buildSummary(await collect(), { at });

@@ -20,7 +20,7 @@ import {
     REVIEW_VERSION,
     buildKnownSpellingIndex,
     cleanReview,
-    getMonday,
+    getReviewRunDate,
     missingReview,
     prepareWeeklyReviewCandidates
 } from './reviewCore.js'
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
         const body = await req.json().catch(() => ({}))
         weekStart = typeof body?.weekStart === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.weekStart)
             ? body.weekStart
-            : getMonday()
+            : getReviewRunDate()
 
         const { lookupPayload, detectionPayload, catalogVersion } = await loadCatalogs()
 

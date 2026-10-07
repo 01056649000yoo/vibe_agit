@@ -4,19 +4,31 @@
 <dict>
     <key>Label</key>
     <string>com.agit.weekly-spelling-review</string>
+    <!--
+      맞춤법 AI 자동 검수 (2026-10-07, 선생님 결정 — 학생 표현을 OpenAI 로 자동으로 보내는 것 승인).
+      매일 05:10 에 깨어 새로 볼 표현이 50개 이상이면 검수한다. 화요일은 1개 이상이면 검수하고
+      `먼저 볼 것`(반영할 것)이 있으면 텔레그램으로 알린다. 게시는 늘 관리자가 화면에서 한다.
+      기록: ~/backups/auto/spelling-review-auto-status.txt (서버 상태 알림 `맞춤법 자동 검수` 줄)
+    -->
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/bin/node</string>
+        <string>/opt/homebrew/opt/node@22/bin/node</string>
         <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/run-weekly-spelling-review.mjs</string>
+        <string>--auto</string>
     </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
     <key>WorkingDirectory</key>
     <string>/Users/seunghyeonmaegmini/vibe_agit</string>
     <key>RunAtLoad</key>
     <false/>
     <key>StartCalendarInterval</key>
     <dict>
-        <key>Weekday</key>
-        <integer>2</integer>
         <key>Hour</key>
         <integer>5</integer>
         <key>Minute</key>

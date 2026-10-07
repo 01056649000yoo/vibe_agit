@@ -299,9 +299,8 @@ export const missingReview = (candidate) => cleanReview(candidate, {
     reason: 'AI가 이 후보의 판정을 주지 않았습니다. 필요하면 직접 등록해 주세요.'
 }, false);
 
-export const getMonday = (date = new Date()) => {
-    const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const day = local.getDay() || 7;
-    local.setDate(local.getDate() - day + 1);
-    return [local.getFullYear(), String(local.getMonth() + 1).padStart(2, '0'), String(local.getDate()).padStart(2, '0')].join('-');
-};
+/*
+ * 검수 회차 날짜 = 서울 기준 오늘(2026-10-07~). 예전에는 그 주 월요일이었는데, 50개가 모이면 자동으로
+ * 돌게 하면서 한 주에 여러 번 돌 수 있게 하루 단위가 됐다. DB 의 spelling_review_run_date_v1() 와 같은 값.
+ */
+export const getReviewRunDate = (date = new Date()) => new Date(date.getTime() + 9 * 3600000).toISOString().slice(0, 10);

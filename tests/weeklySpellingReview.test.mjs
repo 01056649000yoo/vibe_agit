@@ -5,8 +5,10 @@ import {
     buildKnownSpellingIndex,
     mergeWeeklySpellingSources,
     normalizeSpellingValue,
-    prepareWeeklyReviewCandidates
+    prepareWeeklyReviewCandidates,
+    AUTO_MIN_NEW, DIGEST_WEEKDAY, decideAutoRun, buildDigestText
 } from '../scripts/run-weekly-spelling-review.mjs';
+import { getReviewRunDate } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
 
 const [
     runner, reviewCore, edgeFunction, deployWorkflow, multiClassMigration, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, restartMigration, restartSmoke, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
@@ -101,11 +103,43 @@ test('관리자 화면은 주간 검수 결과와 캐시 절약 수를 보여 �
     assert.doesNotMatch(panel, /getElementarySpellingEntries|admin_get_spelling_promotion_workspace_v2/);
 });
 
-test('예약 작업은 매주 월요일 05:10 한 번 실행한다', () => {
-    assert.match(plist, /<key>Weekday<\/key>\s*<integer>2<\/integer>/);
+test('자동 검수는 매일 05:10 깨어 50개 이상이면 돌고, 화요일엔 요약을 보낸다', () => {
     assert.match(plist, /<key>Hour<\/key>\s*<integer>5<\/integer>/);
     assert.match(plist, /<key>Minute<\/key>\s*<integer>10<\/integer>/);
-    assert.match(plist, /run-weekly-spelling-review\.mjs/);
+    assert.doesNotMatch(plist, /<key>Weekday<\/key>/);
+    assert.match(plist, /run-weekly-spelling-review\.mjs<\/string>\s*<string>--auto<\/string>/);
+    assert.match(plist, /node@22\/bin\/node/);
+    // 화면 안내 문구의 숫자와 실제 기준이 같아야 한다
+    assert.equal(AUTO_MIN_NEW, 50);
+    assert.match(panel, new RegExp(`새로 볼 표현이 ${AUTO_MIN_NEW}개 모이면`));
+    assert.equal(DIGEST_WEEKDAY, 2);
+    assert.match(panel, /화요일에는/);
+});
+
+test('자동 검수 판단: 오늘 끝났으면 쉼, 50개 이상이면 돎, 화요일은 1개만 있어도 돎', () => {
+    assert.deepEqual(decideAutoRun({ current_status: 'ready', new_count: 500 }, 3), { run: false, reason: 'today_done' });
+    assert.deepEqual(decideAutoRun({ current_status: null, new_count: 50 }, 3), { run: true, reason: 'threshold' });
+    assert.deepEqual(decideAutoRun({ current_status: 'failed', new_count: 49 }, 3), { run: false, reason: 'below_threshold' });
+    assert.deepEqual(decideAutoRun({ current_status: null, new_count: 1 }, 2), { run: true, reason: 'weekly' });
+    assert.deepEqual(decideAutoRun({ current_status: null, new_count: 0 }, 2), { run: false, reason: 'nothing_new' });
+    // 실패한 회차는 다시 돌 수 있다(이어받기)
+    assert.equal(decideAutoRun({ current_status: 'failed', new_count: 80 }, 4).run, true);
+});
+
+test('화요일 요약은 반영할 것이 있을 때만 보내고 게시는 관리자가 한다', () => {
+    assert.equal(buildDigestText({ priority_pending: 0, later_pending: 340 }), '');
+    const text = buildDigestText({ priority_pending: 4, later_pending: 340, runs_last_7_days: 2, ai_reviewed_last_7_days: 120 });
+    assert.match(text, /반영할 것\(먼저 볼 것\) 4개/);
+    assert.match(text, /340개는 접어 두었어요/);
+    assert.match(text, /맞춤법 승격/);
+    assert.doesNotMatch(runner, /admin_publish_weekly_spelling_entry/);
+});
+
+test('회차 날짜는 서울 오늘 — 브라우저·엣지 함수·DB 가 같은 날을 쓴다', () => {
+    assert.equal(getReviewRunDate(new Date('2026-10-06T20:30:00Z')), '2026-10-07');
+    assert.equal(getReviewRunDate(new Date('2026-10-07T14:59:00Z')), '2026-10-07');
+    assert.match(edgeFunction, /getReviewRunDate\(\)/);
+    assert.doesNotMatch(reviewCore, /getMonday/);
 });
 
 test('관리자 실행 엣지 함수는 관리자만 통과시키고 실패한 회차를 반드시 기록한다', () => {

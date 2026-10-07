@@ -9,7 +9,7 @@ import {
     REVIEW_VERSION,
     buildKnownSpellingIndex,
     cleanReview,
-    getMonday,
+    getReviewRunDate,
     mergeWeeklySpellingSources,
     missingReview,
     normalizeSpellingValue,
@@ -18,6 +18,7 @@ import {
 } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
 // 모델과 매개변수는 _shared/model.js 한 곳에서만 정한다(엣지 함수와 같은 파일).
 import { buildChatRequest } from '../supabase/functions/_shared/model.js';
+import { sendTelegram } from './lib/telegram.mjs';
 
 /*
  * 거르는 계산의 **원본은 엣지 함수 폴더가 갖는다**(`supabase/functions/spelling-weekly-review/reviewCore.js`).
@@ -27,6 +28,7 @@ import { buildChatRequest } from '../supabase/functions/_shared/model.js';
 export { buildKnownSpellingIndex, mergeWeeklySpellingSources, normalizeSpellingValue };
 
 const DEFAULT_DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
+const STATUS_FILE = '/Users/seunghyeonmaegmini/backups/auto/spelling-review-auto-status.txt';
 const DEFAULT_SECRETS_FILE = '/Users/seunghyeonmaegmini/agit-supabase/secrets.agit.env';
 const lookupUrl = new URL('../public/spelling/elementary-lookup-v1.json', import.meta.url);
 const detectionUrl = new URL('../public/spelling/elementary-detection-v1.json', import.meta.url);
@@ -51,7 +53,9 @@ const parseSecretValue = (contents, name) => {
 const runDatabaseFunction = (functionName, payload) => {
     const docker = process.env.AGIT_DOCKER_PATH || DEFAULT_DOCKER;
     const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
-    const sql = functionName === 'start_spelling_weekly_review_v1'
+    const sql = functionName === 'spelling_review_auto_status_v1'
+        ? 'SELECT public.spelling_review_auto_status_v1();'
+        : functionName === 'start_spelling_weekly_review_v1'
         ? `SELECT public.${functionName}((convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'week_start')::date, convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'catalog_version');`
         : functionName === 'finish_spelling_weekly_review_v1'
             ? `SELECT public.${functionName}((convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'week_start')::date, convert_from(decode(:'payload','base64'),'UTF8')::jsonb->'items', convert_from(decode(:'payload','base64'),'UTF8')::jsonb->'summary');`
@@ -131,17 +135,33 @@ const main = async () => {
         return;
     }
 
+    if (process.argv.includes('--auto')) {
+        await runAuto({ lookupPayload, detectionPayload, catalogVersion });
+        return;
+    }
+
     const weekStartArgumentIndex = process.argv.indexOf('--week-start');
-    const weekStart = weekStartArgumentIndex >= 0 ? process.argv[weekStartArgumentIndex + 1] : getMonday();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart || '')) throw new Error('invalid_week_start');
+    const weekStart = weekStartArgumentIndex >= 0 ? process.argv[weekStartArgumentIndex + 1] : getReviewRunDate();
+    try {
+        const summary = await runReview({ weekStart, lookupPayload, detectionPayload, catalogVersion });
+        if (summary.skipped) console.log(`주간 맞춤법 검수 건너뜀 — ${summary.reason}`);
+    } catch (error) {
+        console.error(`주간 맞춤법 검수 실패 — ${error.code || 'unknown'}`);
+        process.exitCode = 1;
+    }
+};
+
+/**
+ * 한 회차 검수. 끝나면 요약을, 돌 필요가 없으면 `{ skipped, reason }` 을 돌려준다.
+ * 실패하면 회차를 failed 로 적고 `error.code`(영문·숫자만, 비밀 없음)를 단 오류를 던진다.
+ */
+export const runReview = async ({ weekStart, lookupPayload, detectionPayload, catalogVersion }) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart || '')) throw Object.assign(new Error('invalid_week_start'), { code: 'invalid_week_start' });
 
     let started = false;
     try {
         const sourcePayload = runDatabaseFunction('start_spelling_weekly_review_v1', { week_start: weekStart, catalog_version: catalogVersion });
-        if (!sourcePayload?.should_run) {
-            console.log(`주간 맞춤법 검수 건너뜀 — ${sourcePayload?.reason || 'not_required'}`);
-            return;
-        }
+        if (!sourcePayload?.should_run) return { skipped: true, reason: sourcePayload?.reason || 'not_required' };
         started = true;
         if (sourcePayload.public_api_enabled !== true) throw new Error('public_api_disabled');
 
@@ -191,6 +211,7 @@ const main = async () => {
         };
         runDatabaseFunction('finish_spelling_weekly_review_v1', { week_start: weekStart, items: completed, summary });
         console.log(`주간 맞춤법 검수 완료 ${weekStart} — 수집 ${summary.collected_count} · 기존 제외 ${summary.known_filtered_count} · 캐시 ${summary.cache_hit_count} · AI ${summary.ai_reviewed_count} · 관리자 후보 ${completed.length}`);
+        return { ...summary, item_count: completed.length };
     } catch (error) {
         const errorCode = trimText(error instanceof Error ? error.message : 'unknown', 80).replace(/[^a-zA-Z0-9_-]/g, '_') || 'unknown';
         if (started) {
@@ -200,8 +221,73 @@ const main = async () => {
                 // 원래 오류를 유지한다. DB 실패 상세나 시크릿은 로그에 쓰지 않는다.
             }
         }
-        console.error(`주간 맞춤법 검수 실패 — ${errorCode}`);
-        process.exitCode = 1;
+        throw Object.assign(new Error(errorCode), { code: errorCode });
+    }
+};
+
+/*
+ * 자동 검수(2026-10-07, 선생님 결정). launchd 가 매일 05:10 부른다.
+ * - 새로 볼 표현이 AUTO_MIN_NEW(50)개 이상 모였으면 그날 검수한다. AI 판정은 저장해 두고 다시 쓰므로 자주 돌아도 비용은 같다.
+ * - 화요일은 50개가 안 돼도 1개 이상이면 검수하고, 관리자에게 텔레그램으로 `먼저 볼 것`(반영할 것) 수를 알린다.
+ *   알림은 반영할 것이 있을 때만 보낸다. 반영(게시)은 늘 관리자가 화면에서 한다 — 자동으로 게시하지 않는다.
+ */
+export const AUTO_MIN_NEW = 50;
+export const DIGEST_WEEKDAY = 2; // 화요일(서울)
+
+export const decideAutoRun = (status, weekday) => {
+    const newCount = Number(status?.new_count || 0);
+    if (['ready', 'empty'].includes(status?.current_status)) return { run: false, reason: 'today_done' };
+    if (newCount >= AUTO_MIN_NEW) return { run: true, reason: 'threshold' };
+    if (weekday === DIGEST_WEEKDAY && newCount >= 1) return { run: true, reason: 'weekly' };
+    return { run: false, reason: newCount ? 'below_threshold' : 'nothing_new' };
+};
+
+export const buildDigestText = (status) => {
+    const priority = Number(status?.priority_pending || 0);
+    if (priority < 1) return '';
+    return [
+        '📚 맞춤법 주간 정리',
+        `반영할 것(먼저 볼 것) ${priority}개가 기다려요.`,
+        `지난 7일 자동 검수 ${Number(status?.runs_last_7_days || 0)}회 · AI가 새로 본 표현 ${Number(status?.ai_reviewed_last_7_days || 0)}개`,
+        `한 학급에서 한두 번 나온 ${Number(status?.later_pending || 0)}개는 접어 두었어요(또 나오면 앞으로 올라와요).`,
+        '→ 관리자 › 맞춤법 승격 › 먼저 볼 것'
+    ].join('\n');
+};
+
+const writeStatus = async (line) => {
+    try {
+        const { appendFile, mkdir } = await import('node:fs/promises');
+        await mkdir(STATUS_FILE.slice(0, STATUS_FILE.lastIndexOf('/')), { recursive: true });
+        await appendFile(STATUS_FILE, `${line}\n`);
+    } catch {
+        // 기록 실패는 검수 결과를 바꾸지 않는다.
+    }
+};
+
+const runAuto = async ({ lookupPayload, detectionPayload, catalogVersion }) => {
+    const at = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 16).replace('T', ' ');
+    const runDate = getReviewRunDate();
+    const weekday = new Date(`${runDate}T00:00:00Z`).getUTCDay();
+    let status = runDatabaseFunction('spelling_review_auto_status_v1', {});
+    const decision = decideAutoRun(status, weekday);
+    if (decision.run) {
+        try {
+            const summary = await runReview({ weekStart: runDate, lookupPayload, detectionPayload, catalogVersion });
+            await writeStatus(summary.skipped
+                ? `SKIPPED ${at} reason=${summary.reason}`
+                : `OK ${at} why=${decision.reason} new=${status.new_count} ai=${summary.ai_reviewed_count} items=${summary.item_count}`);
+        } catch (error) {
+            await writeStatus(`FAILED ${at} code=${error.code || 'unknown'}`);
+            sendTelegram(`⚠️ 맞춤법 자동 검수 실패 (${at})\n오류: ${error.code || 'unknown'}\n관리자 › 맞춤법 승격에서 검수를 다시 누르면 이어서 합니다.`);
+            process.exitCode = 1;
+        }
+        status = runDatabaseFunction('spelling_review_auto_status_v1', {});
+    } else {
+        await writeStatus(`OK ${at} skipped=${decision.reason} new=${status.new_count}`);
+    }
+    if (weekday === DIGEST_WEEKDAY) {
+        const text = buildDigestText(status);
+        if (text) sendTelegram(text);
     }
 };
 

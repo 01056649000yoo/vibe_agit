@@ -171,7 +171,7 @@ const AdminSpellingPromotionPanel = () => {
                     setNotice({
                         tone: 'error',
                         text: result.reason === 'already_finished'
-                            ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+                            ? '오늘은 이미 검수를 마쳤습니다. 새 자료는 내일 다시 돌릴 수 있습니다.'
                             : '방금 다른 곳에서 검수가 시작됐어요. 잠시 뒤 새로고침해 주세요.'
                     });
                     await load({ keepNotice: true });
@@ -228,7 +228,7 @@ const AdminSpellingPromotionPanel = () => {
      */
     const restartWeeklyReview = async () => {
         const confirmed = window.confirm(
-            '이번 주 검수 결과를 지우고 처음부터 다시 검수합니다.\n\n'
+            '오늘 검수 결과를 지우고 처음부터 다시 검수합니다.\n\n'
             + '이미 게시하거나 뺀 것은 그대로 남습니다.\n'
             + '검수 기준이 바뀌었다면 AI를 다시 부르므로 비용이 발생합니다.\n\n계속할까요?'
         );
@@ -243,7 +243,7 @@ const AdminSpellingPromotionPanel = () => {
             if (error) throw error;
             setNotice({
                 tone: 'success',
-                text: `이번 주 결과 ${result?.removed_item_count ?? 0}건을 지웠습니다.`
+                text: `오늘 결과 ${result?.removed_item_count ?? 0}건을 지웠습니다.`
                     + ' 아래에서 다시 검수를 시작해 주세요.'
             });
             await load({ keepNotice: true });
@@ -671,7 +671,7 @@ const Metric = ({ label, value, detail, tone }) => <div className={`admin-spelli
 const FilterButton = ({ active, children, onClick }) => <button type="button" className={active ? 'is-active' : ''} aria-pressed={active} onClick={onClick}>{children}</button>;
 
 /**
- * 이번 주에 쌓인 원자료의 양과 실행 단추.
+ * 지난 검수 뒤 쌓인 원자료의 양과 실행 단추(회차는 하루 단위, 2026-10-07~).
  *
  * 여기 수는 **거르기 전**이다. 기본 500개·공통 자료와 겹치는 것은 실행할 때 코드가 빼므로
  * 실제로 AI 에 가는 수는 이보다 적다. 관리자가 "돌릴 만한가"를 가늠하는 용도다.
@@ -684,7 +684,7 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onRestart, 
     const progressTotal = Number(intake.current_total_count) || 0;
     const progressDone = Number(intake.current_done_count) || 0;
     const reason = alreadyDone
-        ? '이번 주는 이미 검수를 마쳤습니다. 다음 주에 다시 돌릴 수 있습니다.'
+        ? '오늘은 이미 검수를 마쳤습니다. 새 자료는 내일 다시 돌릴 수 있습니다.'
         : resuming
             ? '지난번에 다 못 끝냈어요. 이어서 하면 하던 곳부터 계속합니다.'
             : total === 0
@@ -734,6 +734,8 @@ const WeeklyIntakeCard = ({ intake, running, loading, onRun, onStop, onRestart, 
                 )}
             </div>
             {reason && <small>{reason}</small>}
+            {/* 자동 검수(2026-10-07): scripts/run-weekly-spelling-review.mjs --auto 의 AUTO_MIN_NEW·DIGEST_WEEKDAY 와 같은 말 */}
+            <small>🤖 새로 볼 표현이 50개 모이면 매일 새벽 5시 10분에 저절로 검수합니다. 화요일에는 50개가 안 돼도 검수하고, 반영할 것(먼저 볼 것)이 있으면 텔레그램으로 알려 드립니다. 게시는 여기서 직접 합니다.</small>
         </div>
     </div>;
 };
