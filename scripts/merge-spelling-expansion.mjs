@@ -83,11 +83,14 @@ export const mergeBatches = async (batches, { exclude = new Set(), dryRun = fals
     let sortOrder = Math.max(...existing.map((entry) => entry.sortOrder));
     const linesByCategory = new Map();
     const all = [];
+    const seenWrong = new Set();
     for (const batch of batches) {
         const { items, problems } = await loadBatch(batch);
         if (problems.length) throw new Error(`묶음 ${batch}: ${problems.join(', ')}`);
         for (const item of items) {
-            if (exclude.has(item.wrong)) continue;
+            // 묶음끼리 같은 틀린 꼴이 있으면 먼저 나온 것만(묶음 안 겹침은 점검 단계가 이미 뺀다).
+            if (exclude.has(item.wrong) || seenWrong.has(item.wrong)) continue;
+            seenWrong.add(item.wrong);
             sortOrder += 1;
             const id = `x-${createHash('sha256').update(item.wrong).digest('hex').slice(0, 10)}`;
             linesByCategory.set(item.categoryId, [...(linesByCategory.get(item.categoryId) || []), toReferenceLine(item, sortOrder, id)]);

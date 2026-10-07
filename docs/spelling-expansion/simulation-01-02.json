@@ -1,0 +1,27 @@
+{
+  "simulated_at": "2026-10-08",
+  "batches": [
+    "01",
+    "02"
+  ],
+  "merged_entries": 464,
+  "base_before": 500,
+  "base_after": 964,
+  "checker": {
+    "false_underlines": "정상 문장 73개 중 0건",
+    "misses": "오류 문장 62개 중 0건",
+    "examples": "바른 예문 오탐 0건(964개 모두)",
+    "classification": "분류·순서·검출 방식 오류 0",
+    "pinned_counts": "500/400 고정 수는 합칠 때 갱신 필요"
+  },
+  "student_writing": {
+    "documents": 4000,
+    "underlines_before": 48,
+    "underlines_after": "약 1,000(새 항목 139개가 걸림)"
+  },
+  "quiz": {
+    "pool_before": 500,
+    "pool_after": 964
+  },
+  "reverted": true
+}
