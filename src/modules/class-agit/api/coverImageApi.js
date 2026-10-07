@@ -62,3 +62,16 @@ export async function removeBookCovers(classId, bookId) {
     const { error: removeError } = await supabase.storage.from(COVER_BUCKET).remove(paths);
     return removeError ? 0 : paths.length;
 }
+
+/**
+ * 표지를 바꾸거나 끈 뒤, 이 문집에서 아무 데서도 쓰지 않게 된 그림을 지운다(2026-10-07 선생님 결정).
+ * 남기는 것(지금 표지·확정판이 쓰는 표지)은 서버 `get_class_agit_unused_cover_paths_v1` 이 고른다.
+ * 실패해도 표지 바꾸기는 그대로 — 매주 정리가 하루 지난 것을 지운다.
+ */
+export async function removeUnusedCovers(classId, bookId) {
+    const { data, error } = await supabase.rpc('get_class_agit_unused_cover_paths_v1', { p_class_id: classId, p_book_id: bookId });
+    const paths = Array.isArray(data) ? data.filter((path) => typeof path === 'string' && path) : [];
+    if (error || !paths.length) return 0;
+    const { error: removeError } = await supabase.storage.from(COVER_BUCKET).remove(paths);
+    return removeError ? 0 : paths.length;
+}

@@ -180,3 +180,13 @@ test('2단계는 표지 만들기 방식을 두 갈래로 고르고, 그림 쪽�
     assert.match(css, /\.cover-image-panel__style-options label \{ position: relative;/);
     assert.match(css, /\.cover-image-panel__style-options input \{ position: absolute; inset: 0;/);
 });
+
+test('안 쓰는 그림 자동 지우기: 표지를 바꾸거나 끄면 바로, 실패분은 매주 정리가 하루 지난 것만', async () => {
+    const release = await readFile('src/modules/class-agit/api/releaseApi.js', 'utf8');
+    assert.match(release, /\(action === 'set_cover_image' \|\| action === 'clear_cover_image'\) && payload\?\.book_id\) await removeUnusedCovers\(classId, payload\.book_id\)/);
+    const sql = await readFile('supabase/migrations/20261372_class_agit_unused_cover_cleanup.sql', 'utf8');
+    assert.match(sql, /b\.cover_image->>'path' = o\.name/, '지금 표지는 남김');
+    assert.match(sql, /e\.snapshot->'cover_image'->>'path' = o\.name/, '확정판 표지는 남김');
+    assert.match(sql, /o\.created_at < NOW\(\) - INTERVAL '1 day'/, '올리는 중인 그림은 건드리지 않음');
+    assert.match(sql, /PERFORM public\.assert_class_agit_manager_v1\(p_class_id\);/);
+});
