@@ -1,0 +1,244 @@
+# 분류	검출	틀린 꼴	바른 꼴	문맥(문맥 검출일 때만)
+# Claude 초안(2026-10-07). 기존 기본 500개·공통 자료와 겹치지 않게 골랐다. 검증 스크립트를 지나야 남는다.
+word/general	exact	설레이	설레
+word/general	exact	쑥쓰럽	쑥스럽
+word/general	exact	궁굼	궁금
+word/general	exact	제미있	재미있
+word/general	exact	잼있	재밌
+word/general	exact	씁슬	씁쓸
+word/general	exact	어께	어깨
+word/general	exact	얼릉	얼른
+word/general	exact	드디여	드디어
+word/general	exact	곳바로	곧바로
+word/general	exact	그리구	그리고
+word/general	exact	디게	되게
+word/general	exact	히망	희망
+word/general	exact	띠어쓰기	띄어쓰기
+word/general	exact	삼춘	삼촌
+word/general	exact	곰팽이	곰팡이
+word/general	exact	올창이	올챙이
+word/general	exact	다람지	다람쥐
+word/general	exact	호랭이	호랑이
+word/general	exact	진달레	진달래
+word/general	exact	상치	상추
+word/general	exact	깍뚜기	깍두기
+word/general	exact	낙시	낚시
+word/general	exact	부억	부엌
+word/general	exact	팔굼치	팔꿈치
+word/general	exact	발굼치	발꿈치
+word/general	exact	안밖	안팎
+word/general	exact	업드리	엎드리
+word/general	exact	부셔지	부서지
+word/general	exact	너머지	넘어지
+word/general	exact	없에	없애
+word/general	exact	싱기	신기
+word/general	exact	햇갈리	헷갈리
+word/general	exact	헤깔리	헷갈리
+word/general	exact	해매	헤매
+word/general	exact	배끼	베끼
+word/general	exact	해엄	헤엄
+word/general	exact	찟	찢
+word/general	exact	썪	썩
+word/general	exact	구시렁	구시렁
+word/general	exact	궁시렁	구시렁
+word/general	exact	숨키	숨기
+word/general	exact	기달려	기다려
+word/general	exact	기달리	기다리
+word/general	exact	잠구	잠그
+word/general	exact	담구	담그
+word/general	exact	요쿠르트	요구르트
+conjugation/inflection	exact	알맞는	알맞은
+conjugation/inflection	exact	걸맞는	걸맞은
+conjugation/inflection	exact	날으는	나는
+conjugation/inflection	exact	녹슬은	녹슨
+conjugation/inflection	exact	거칠은	거친
+conjugation/inflection	exact	낯설은	낯선
+conjugation/inflection	exact	길다란	기다란
+conjugation/inflection	exact	만들은	만든
+conjugation/inflection	exact	서툴은	서툰
+conjugation/inflection	exact	힘들은	힘든
+conjugation/inflection	exact	졸리운	졸린
+word/adverb	exact	조용이	조용히
+word/adverb	exact	꾸준이	꾸준히
+word/adverb	exact	넉넉이	넉넉히
+word/adverb	exact	똑같히	똑같이
+word/adverb	exact	따뜻히	따뜻이
+word/adverb	exact	만히	많이
+word/adverb	exact	괜이	괜히
+word/adverb	exact	깊히	깊이
+word/adverb	exact	느긋히	느긋이
+word/adverb	exact	고요이	고요히
+word/adverb	exact	가득이	가득
+word/adverb	exact	특별이	특별히
+word/adverb	exact	열심이도	열심히도
+word/adverb	exact	당연이	당연히
+word/adverb	exact	무사이	무사히
+word/adverb	exact	간단이	간단히
+word/adverb	exact	완전이	완전히
+compound/saisiot	exact	시내물	시냇물
+compound/saisiot	exact	비물	빗물
+compound/saisiot	exact	코구멍	콧구멍
+compound/saisiot	exact	혀바닥	혓바닥
+compound/saisiot	exact	비자루	빗자루
+compound/saisiot	exact	바다물	바닷물
+compound/saisiot	exact	고기국	고깃국
+compound/saisiot	exact	김치국	김칫국
+compound/saisiot	exact	북어국	북엇국
+compound/saisiot	exact	해빛	햇빛
+compound/saisiot	exact	해살	햇살
+compound/saisiot	exact	숫가락	숟가락
+compound/saisiot	exact	젖가락	젓가락
+compound/saisiot	exact	코노래	콧노래
+compound/saisiot	exact	웃사람	윗사람
+compound/saisiot	exact	아래사람	아랫사람
+compound/saisiot	exact	뒤문	뒷문
+compound/saisiot	exact	뒤모습	뒷모습
+compound/saisiot	exact	뒤산	뒷산
+compound/saisiot	exact	뒤자리	뒷자리
+compound/saisiot	exact	위입술	윗입술
+compound/saisiot	exact	아래입술	아랫입술
+compound/saisiot	exact	비방울	빗방울
+compound/saisiot	exact	바다바람	바닷바람
+compound/saisiot	exact	시계바늘	시곗바늘
+compound/saisiot	exact	혼자말	혼잣말
+compound/saisiot	exact	고추가루	고춧가루
+compound/saisiot	exact	후추가루	후춧가루
+compound/saisiot	exact	갈비집	갈빗집
+compound/saisiot	exact	국수집	국숫집
+compound/saisiot	exact	콧수염	콧수염
+compound/saisiot	exact	코수염	콧수염
+compound/saisiot	exact	윗어른	웃어른
+compound/no-saisiot	exact	인삿말	인사말
+compound/no-saisiot	exact	머릿말	머리말
+compound/no-saisiot	exact	윗층	위층
+compound/no-saisiot	exact	윗쪽	위쪽
+compound/no-saisiot	exact	아랫층	아래층
+compound/no-saisiot	exact	뒷쪽	뒤쪽
+compound/no-saisiot	exact	뒷편	뒤편
+compound/no-saisiot	exact	뒷풀이	뒤풀이
+compound/no-saisiot	exact	나뭇꾼	나무꾼
+loanword/loanword	exact	케찹	케첩
+loanword/loanword	exact	소세지	소시지
+loanword/loanword	exact	돈까스	돈가스
+loanword/loanword	exact	마요네스	마요네즈
+loanword/loanword	exact	바베큐	바비큐
+loanword/loanword	exact	까페	카페
+loanword/loanword	exact	수퍼	슈퍼
+loanword/loanword	exact	스케쥴	스케줄
+loanword/loanword	exact	로케트	로켓
+loanword/loanword	exact	카페트	카펫
+loanword/loanword	exact	커피샵	커피숍
+loanword/loanword	exact	프라스틱	플라스틱
+loanword/loanword	exact	알콜	알코올
+loanword/loanword	exact	타겟	타깃
+loanword/loanword	exact	레포트	리포트
+loanword/loanword	exact	케릭터	캐릭터
+loanword/loanword	exact	캐롤	캐럴
+loanword/loanword	exact	산타크로스	산타클로스
+loanword/loanword	exact	쵸콜릿	초콜릿
+loanword/loanword	exact	쵸코	초코
+loanword/loanword	exact	라이타	라이터
+loanword/loanword	exact	블럭	블록
+loanword/loanword	exact	써비스	서비스
+loanword/loanword	exact	앰블런스	앰뷸런스
+loanword/loanword	exact	엘레베이터	엘리베이터
+loanword/loanword	exact	에스카레이터	에스컬레이터
+loanword/loanword	exact	패스트후드	패스트푸드
+loanword/loanword	exact	헬맷	헬멧
+loanword/loanword	exact	맛사지	마사지
+loanword/loanword	exact	환타지	판타지
+conjugation/doe-dwae	exact	되서	돼서
+conjugation/doe-dwae	exact	돼어	되어
+conjugation/doe-dwae	exact	돼다	되다
+conjugation/doe-dwae	exact	돼고	되고
+conjugation/doe-dwae	exact	돼는	되는
+conjugation/doe-dwae	exact	돼면	되면
+conjugation/doe-dwae	exact	돼니까	되니까
+conjugation/contraction	exact	쟎	잖
+conjugation/contraction	exact	괜챦	괜찮
+conjugation/contraction	exact	귀챦	귀찮
+conjugation/contraction	exact	있엇	있었
+conjugation/contraction	exact	없엇	없었
+conjugation/contraction	exact	먹엇	먹었
+conjugation/contraction	exact	썻다	썼다
+conjugation/contraction	exact	좋앗	좋았
+conjugation/contraction	exact	아팟	아팠
+conjugation/contraction	exact	기뻣	기뻤
+conjugation/contraction	exact	몰랏	몰랐
+conjugation/contraction	exact	놀랏	놀랐
+conjugation/contraction	exact	무서웟	무서웠
+conjugation/contraction	exact	알앗	알았
+conjugation/contraction	exact	같애	같아
+conjugation/inflection	exact	할려고	하려고
+conjugation/inflection	exact	갈려고	가려고
+conjugation/inflection	exact	볼려고	보려고
+conjugation/inflection	exact	먹을려고	먹으려고
+conjugation/inflection	exact	할려면	하려면
+conjugation/inflection	exact	할라고	하려고
+conjugation/inflection	exact	잠궈	잠가
+conjugation/inflection	exact	담궈	담가
+conjugation/inflection	exact	치뤄	치러
+conjugation/inflection	exact	가까와	가까워
+conjugation/inflection	exact	고마와	고마워
+conjugation/inflection	exact	아름다와	아름다워
+conjugation/inflection	exact	사겼	사귀었
+conjugation/inflection	exact	바껴	바뀌어
+conjugation/inflection	exact	몰르	모르
+conjugation/inflection	exact	달르	다르
+conjugation/inflection	exact	흘르	흐르
+conjugation/inflection	exact	올르	오르
+conjugation/inflection	exact	말르	마르
+conjugation/inflection	exact	서둘르	서두르
+conjugation/inflection	exact	굴르	구르
+conjugation/inflection	exact	일르	이르
+conjugation/inflection	exact	질르	지르
+conjugation/inflection	exact	찔르	찌르
+conjugation/inflection	exact	깍아	깎아
+conjugation/inflection	exact	닥아	닦아
+conjugation/inflection	exact	석어	섞어
+conjugation/inflection	exact	복아	볶아
+conjugation/passive-causative	exact	녹히	녹이
+grammar/ending	exact	함니다	합니다
+grammar/ending	exact	감니다	갑니다
+grammar/ending	exact	됨니다	됩니다
+grammar/ending	exact	했서	했어
+grammar/ending	exact	있서	있어
+grammar/ending	exact	가주고	가지고
+grammar/ending	exact	탠데	텐데
+grammar/ending	exact	할레	할래
+grammar/ending	exact	했구요	했고요
+grammar/ending	exact	있구요	있고요
+grammar/ending	exact	거에요	거예요
+grammar/ending	exact	뭐에요	뭐예요
+grammar/dependent	exact	할테니까	할 테니까
+grammar/particle	context	나에	나의	나에 꿈
+grammar/negation	exact	않해	안 해
+grammar/negation	exact	않하	안 하
+grammar/negation	exact	않되	안 되
+grammar/negation	exact	않먹	안 먹
+grammar/negation	exact	않가	안 가
+grammar/negation	exact	않좋	안 좋
+grammar/negation	exact	않와	안 와
+grammar/negation	exact	않보	안 보
+grammar/joined-word	phrase	오랫 동안	오랫동안
+grammar/joined-word	phrase	지난 번	지난번
+grammar/joined-word	phrase	그 다음	그다음
+grammar/joined-word	phrase	이런 저런	이런저런
+grammar/joined-word	phrase	이곳 저곳	이곳저곳
+grammar/joined-word	phrase	내일 모레	내일모레
+grammar/spacing	exact	오늘밤	오늘 밤
+grammar/spacing	exact	다같이	다 같이
+grammar/spacing	exact	다함께	다 함께
+grammar/spacing	exact	좀더	좀 더
+grammar/spacing	exact	조금더	조금 더
+grammar/spacing	exact	방과후	방과 후
+grammar/spacing	exact	쉬는시간	쉬는 시간
+meaning/context	context	다쳤	닫혔	문이 다쳤
+meaning/context	context	짓	짖	개가 짓
+meaning/context	context	젓	젖	비에 젓
+meaning/context	context	부셨	부쉈	창문을 부셨
+meaning/context	context	놀랬	놀랐	깜짝 놀랬
+meaning/context	context	적	작	키가 적
+meaning/context	context	작	적	양이 작
+meaning/context	context	날라	날아	하늘로 날라
+meaning/context	context	무릅	무릎	무릅을
