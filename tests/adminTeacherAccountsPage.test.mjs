@@ -18,7 +18,7 @@ test('관리자 교사 목록 RPC는 실제 관리자만 호출하고 검색·�
 });
 
 test('브라우저는 현재 페이지 RPC만 호출하고 profiles 전체 목록을 직접 읽지 않는다', () => {
-    assert.match(hook, /rpc\('admin_get_teacher_accounts_page_v1'/);
+    assert.match(hook, /rpc\('admin_get_teacher_accounts_page_v2'/);
     assert.match(hook, /p_limit: pageSize/);
     assert.match(hook, /p_offset: \(page - 1\) \* pageSize/);
     assert.match(hook, /SEARCH_DEBOUNCE_MS = 300/);

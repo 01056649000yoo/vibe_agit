@@ -156,7 +156,7 @@ test('첫 화면 요약은 항목마다 무엇을 센 숫자인지 밝힌다', a
     assert.deepEqual(missing, [], `기준을 안 적은 요약 항목이 있다:\n  ${missing.join('\n  ')}`);
 
     // 누적과 기간을 섞어 놓은 묶음은 머리말에 한 기간만 적지 않는다.
-    assert.match(dashboard, /title: '이용 현황',[\s\S]{0,300}description: '항목마다 기준이 다릅니다'/);
+    assert.match(dashboard, /title: '이용 현황',[\s\S]{0,300}description: [^\n]*항목마다 기준이 다릅니다/);
     assert.ok(dashboard.includes("basis: '지금까지 전체'"), '누적 항목에 누적이라고 적어야 한다');
     assert.match(dashboard, /basis: `최근 \$\{usage\.activityDays\}일`/);
 

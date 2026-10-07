@@ -5,6 +5,13 @@ const SEARCH_DEBOUNCE_MS = 300;
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const REFRESH_COOLDOWN_MS = 3000;
 
+// 정렬 값은 서버 admin_get_teacher_accounts_page_v2 의 p_sort 와 같다(처음 값: 최근 접속순).
+export const TEACHER_ACCOUNT_SORTS = Object.freeze([
+    Object.freeze({ id: 'login', label: '최근 접속순' }),
+    Object.freeze({ id: 'joined_desc', label: '가입 최신순' }),
+    Object.freeze({ id: 'joined_asc', label: '가입 오래된순' })
+]);
+
 const EMPTY_COUNTS = Object.freeze({ approved: 0, pending_new: 0, pending_revoked: 0 });
 
 const normalizeItem = (item) => ({
@@ -20,7 +27,7 @@ const normalizeItem = (item) => ({
  * 관리자 교사 계정 목록은 서버에서 검색·상태 필터·페이지 상한을 모두 적용한다.
  * 브라우저는 현재 10명만 보관하며, 포커스 복귀와 5분 갱신도 같은 페이지 RPC만 다시 부른다.
  */
-const useAdminTeacherAccountsPage = ({ status, search, page, pageSize = 10, enabled = true }) => {
+const useAdminTeacherAccountsPage = ({ status, search, page, pageSize = 10, sort = 'login', enabled = true }) => {
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [items, setItems] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -39,11 +46,12 @@ const useAdminTeacherAccountsPage = ({ status, search, page, pageSize = 10, enab
         setError(null);
 
         try {
-            const { data, error: fetchError } = await supabase.rpc('admin_get_teacher_accounts_page_v1', {
+            const { data, error: fetchError } = await supabase.rpc('admin_get_teacher_accounts_page_v2', {
                 p_status: status,
                 p_search: debouncedSearch || null,
                 p_limit: pageSize,
-                p_offset: (page - 1) * pageSize
+                p_offset: (page - 1) * pageSize,
+                p_sort: sort
             });
             if (fetchError) throw fetchError;
 
@@ -62,7 +70,7 @@ const useAdminTeacherAccountsPage = ({ status, search, page, pageSize = 10, enab
         } finally {
             if (showLoading) setLoading(false);
         }
-    }, [debouncedSearch, enabled, page, pageSize, status]);
+    }, [debouncedSearch, enabled, page, pageSize, sort, status]);
 
     useEffect(() => {
         refresh();

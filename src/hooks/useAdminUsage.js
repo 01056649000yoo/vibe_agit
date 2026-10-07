@@ -7,6 +7,10 @@ import { supabase } from '../lib/supabaseClient';
  * 집계는 전부 DB(admin_get_teacher_usage / admin_get_usage_overview)에서 수행한다.
  * 예전처럼 classes·students 전 row를 프론트로 끌어와 세면 계정이 늘수록 타임아웃이 나므로,
  * 여기서는 RPC 결과만 받아 화면 상태로 보관한다.
+ *
+ * 두 집계는 합쳐 10초쯤 걸려 관리자 화면이 늦게 떴다(2026-10-07). 실시간일 필요가 없어
+ * DB가 2시간마다 미리 계산해 둔 값(admin_get_dashboard_cache_v1)을 읽고 `computedAt`(기준 시각)을 함께 보여 준다.
+ * `refresh({ recompute: true })` 일 때만 그 자리에서 다시 계산한다(지금 새로 계산 단추·승인/취소 뒤).
  */
 
 export const USAGE_STATUS = {
@@ -40,35 +44,33 @@ const useAdminUsage = ({
     const [activityDays, setActivityDays] = useState(initialActivityDays);
     const [teachers, setTeachers] = useState([]);
     const [overview, setOverview] = useState(null);
+    const [computedAt, setComputedAt] = useState(null);
+    const [recomputing, setRecomputing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchUsage = useCallback(async ({ showLoading = true } = {}) => {
+    const fetchUsage = useCallback(async ({ showLoading = true, recompute = false } = {}) => {
         if (!enabled) return;
         if (showLoading) setLoading(true);
+        if (recompute) setRecomputing(true);
         setError(null);
 
         try {
-            const [usageResult, overviewResult] = await Promise.all([
-                supabase.rpc('admin_get_teacher_usage', {
-                    p_dormant_days: DORMANT_DAYS,
-                    p_activity_days: activityDays
-                }),
-                supabase.rpc('admin_get_usage_overview', {
-                    p_dormant_days: DORMANT_DAYS,
-                    p_activity_days: activityDays
-                })
-            ]);
+            const { data, error: fetchError } = await supabase.rpc('admin_get_dashboard_cache_v1', {
+                p_dormant_days: DORMANT_DAYS,
+                p_activity_days: activityDays,
+                p_refresh: recompute
+            });
+            if (fetchError) throw fetchError;
 
-            if (usageResult.error) throw usageResult.error;
-            if (overviewResult.error) throw overviewResult.error;
-
-            setTeachers(usageResult.data || []);
-            setOverview(overviewResult.data || null);
+            setTeachers(Array.isArray(data?.teachers) ? data.teachers : []);
+            setOverview(data?.overview || null);
+            setComputedAt(data?.computed_at || null);
         } catch (err) {
             setError(err.message || '사용량 데이터를 불러오지 못했습니다.');
         } finally {
             if (showLoading) setLoading(false);
+            if (recompute) setRecomputing(false);
         }
     }, [enabled, activityDays]);
 
@@ -110,6 +112,8 @@ const useAdminUsage = ({
     return {
         teachers,
         overview,
+        computedAt,
+        recomputing,
         inactiveTeachers,
         longInactiveTeachers,
         dormantAccounts,

@@ -50,7 +50,7 @@ const sortRows = (rows, sortBy) => {
  */
 const AdminUsagePanel = ({
     teachers, loading, error,
-    dormantDays, dormantAccountDays, activityDays, setActivityDays, onRefresh
+    dormantDays, dormantAccountDays, activityDays, setActivityDays, computedAt, recomputing, onRefresh
 }) => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [sortBy, setSortBy] = useState('last_login');
@@ -81,7 +81,7 @@ const AdminUsagePanel = ({
             <SectionCard>
                 <PanelHeader
                     title="📊 선생님별 사용량"
-                    description={`학급 개설·학생 등록·미션·학생 글까지 한 줄로 봅니다. 활동 여부는 학생 글 작성 이력(방학 고려) 또는 최근 ${activityDays}일 활동, 장기 미접속은 ${dormantDays}일, 휴면계정은 ${dormantAccountDays}일 기준입니다.`}
+                    description={`학급 개설·학생 등록·미션·학생 글까지 한 줄로 봅니다. 활동 여부는 학생 글 작성 이력(방학 고려) 또는 최근 ${activityDays}일 활동, 장기 미접속은 ${dormantDays}일, 휴면계정은 ${dormantAccountDays}일 기준입니다. 숫자는 2시간마다 미리 계산해 둔 값입니다${computedAt ? `(${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }).format(new Date(computedAt))} 계산)` : ''}.`}
                     right={(
                         <>
                             <DayRangeSelect
@@ -93,11 +93,11 @@ const AdminUsagePanel = ({
                             />
                             <Button
                                 size="sm"
-                                onClick={() => onRefresh()}
-                                disabled={loading}
+                                onClick={() => onRefresh({ showLoading: false, recompute: true })}
+                                disabled={loading || recomputing}
                                 style={{ background: '#EDF2F7', color: '#2D3748', boxShadow: 'none', padding: '8px 14px', fontSize: '0.85rem' }}
                             >
-                                🔄 새로고침
+                                {recomputing ? '계산 중… (10초쯤)' : '🔄 지금 새로 계산'}
                             </Button>
                         </>
                     )}

@@ -17,7 +17,7 @@ import AdminHomeButton from './AdminHomeButton';
 import { useAdminHealthSummary } from './useAdminHealthSummary';
 import { useAdminServiceManagement } from './useAdminServiceManagement';
 import useAdminUsage from '../../hooks/useAdminUsage';
-import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
+import useAdminTeacherAccountsPage, { TEACHER_ACCOUNT_SORTS } from '../../hooks/useAdminTeacherAccountsPage';
 
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
 // 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
@@ -272,6 +272,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     // 교사 화면 이름 옆 빨간 불(새 문의)로 들어오면 `의견 제보` 탭으로 바로 연다(useAdminInquiryAlert).
     const [currentTab, setCurrentTab] = useState(() => takeAdminInitialTab('active'));
     const [searchTerm, setSearchTerm] = useState('');
+    const [teacherSort, setTeacherSort] = useState('login');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 25;
 
@@ -281,6 +282,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const teacherPage = useAdminTeacherAccountsPage({
         status: teacherStatus,
         search: searchTerm,
+        sort: teacherSort,
         page: currentPage,
         pageSize: ITEMS_PER_PAGE,
         enabled: currentTab === 'active' || currentTab === 'pending'
@@ -336,6 +338,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul'
         }).format(new Date(health.summary.resourceSampledAt))
         : '';
+    // 이용 현황은 DB가 2시간마다 미리 계산한 값이다(useAdminUsage) — 언제 계산한 값인지 적는다.
+    const usageComputedLabel = usage.computedAt
+        ? new Intl.DateTimeFormat('ko-KR', {
+            month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul'
+        }).format(new Date(usage.computedAt))
+        : '';
 
     const overviewGroups = [
         {
@@ -366,7 +374,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             title: '이용 현황',
             // 이 묶음은 기준이 하나가 아니다 — 누적과 최근 N일이 섞여 있어 머리말에 한 기간만 적으면
             // 누적 숫자를 그 기간의 숫자로 잘못 읽는다. 기준은 항목마다 적는다.
-            description: '항목마다 기준이 다릅니다',
+            description: usageComputedLabel ? `항목마다 기준이 다릅니다 · ${usageComputedLabel}에 계산(2시간마다)` : '항목마다 기준이 다릅니다',
             tone: 'usage',
             items: [
                 { id: 'teachers', label: '가입 선생님', basis: '지금까지 전체', value: usage.overview ? `${usage.overview.teacher_total}명` : '확인 중', color: '#2D3748', icon: '👩‍🏫', onOpen: () => setCurrentTab('usage') },
@@ -485,7 +493,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     // 탭이나 검색어가 바뀔 때 페이지 리셋
     useEffect(() => {
         setCurrentPage(1);
-    }, [currentTab, searchTerm]);
+    }, [currentTab, searchTerm, teacherSort]);
 
     useEffect(() => {
         if (currentPage > teacherPageCount) setCurrentPage(teacherPageCount);
@@ -505,7 +513,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
             alert(`✅ '${teacherName}' 선생님이 승인되었습니다!`);
             teacherPage.refresh();
-            usage.refresh({ showLoading: false });
+            usage.refresh({ showLoading: false, recompute: true });
         } catch (err) { alert('오류: ' + err.message); }
     };
 
@@ -523,7 +531,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
             alert(`🚫 승인 취소 완료`);
             teacherPage.refresh();
-            usage.refresh({ showLoading: false });
+            usage.refresh({ showLoading: false, recompute: true });
         } catch (err) { alert('오류: ' + err.message); }
     };
 
@@ -545,7 +553,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
             alert(`🗑️ 삭제 완료`);
             teacherPage.refresh();
-            usage.refresh({ showLoading: false });
+            usage.refresh({ showLoading: false, recompute: true });
         } catch (err) { alert('삭제 실패: ' + err.message); }
     };
 
@@ -617,7 +625,17 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {(currentTab === 'active' || currentTab === 'pending') && (
+                        <select
+                            aria-label="선생님 목록 정렬"
+                            value={teacherSort}
+                            onChange={(e) => setTeacherSort(e.target.value)}
+                            style={{ padding: '9px 12px', borderRadius: '20px', border: '1px solid #CBD5E0', fontSize: '0.9rem', background: 'white' }}
+                        >
+                            {TEACHER_ACCOUNT_SORTS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+                        </select>
+                    )}
                     {(currentTab === 'active' || currentTab === 'pending') && (
                         <input
                             type="text"
@@ -829,6 +847,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             dormantAccountDays={usage.dormantAccountDays}
                             activityDays={usage.activityDays}
                             setActivityDays={usage.setActivityDays}
+                            computedAt={usage.computedAt}
+                            recomputing={usage.recomputing}
                             onRefresh={usage.refresh}
                         />
                     )}
@@ -858,7 +878,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             dormantAccountDays={usage.dormantAccountDays}
                             loading={usage.loading}
                             onRefresh={async (options) => {
-                                await usage.refresh(options);
+                                await usage.refresh({ ...options, recompute: true });
                             }}
                         />
                     </KeepAlivePanel>

@@ -39,7 +39,8 @@ test('관리자 대시보드는 정리 후보를 노출하지 않고 장기 미�
 test('장기 미접속과 휴면계정은 모든 가입 교사를 90일·365일 고정 기준으로 나눈다', () => {
     assert.match(usageHook, /export const DORMANT_DAYS = 90/);
     assert.match(usageHook, /export const DORMANT_ACCOUNT_DAYS = 365/);
-    assert.ok((usageHook.match(/p_dormant_days: DORMANT_DAYS/g) || []).length === 2);
+    // 미리 계산한 값 읽기 한 번(admin_get_dashboard_cache_v1, 2026-10-07)
+    assert.ok((usageHook.match(/p_dormant_days: DORMANT_DAYS/g) || []).length === 1);
     assert.match(usageHook, /inactiveDays >= DORMANT_DAYS && inactiveDays < DORMANT_ACCOUNT_DAYS/);
     assert.match(usageHook, /teachers\.filter\(t => Number\(t\.days_since_login\) >= DORMANT_ACCOUNT_DAYS\)/);
     assert.doesNotMatch(usageHook, /DORMANT_DAY_OPTIONS/);
