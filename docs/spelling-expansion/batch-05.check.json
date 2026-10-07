@@ -1,0 +1,2108 @@
+{
+  "batch": "05",
+  "checked_at": "2026-10-07T22:57:44.851Z",
+  "corpus_documents": 22739,
+  "results": [
+    {
+      "no": 1,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "나발꽃",
+      "right": "나팔꽃",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 2,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "삵괭이",
+      "right": "살쾡이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 3,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "강남콩",
+      "right": "강낭콩",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 4,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "삭월세",
+      "right": "사글세",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 5,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "돐",
+      "right": "돌",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 첫돐"
+      ],
+      "dictionary": {
+        "right": 3,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "첫돐"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1110
+      }
+    },
+    {
+      "no": 6,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "세째",
+      "right": "셋째",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 두세째"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "두세째"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 165
+      }
+    },
+    {
+      "no": 7,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "네째",
+      "right": "넷째",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 66
+      }
+    },
+    {
+      "no": 8,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫놈",
+      "right": "수놈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 9,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫소",
+      "right": "수소",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 9,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 10
+      }
+    },
+    {
+      "no": 10,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫닭",
+      "right": "수탉",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 11,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫개",
+      "right": "수캐",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 12,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫돼지",
+      "right": "수퇘지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 13,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫병아리",
+      "right": "수평아리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 14,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫강아지",
+      "right": "수캉아지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 15,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숫것",
+      "right": "수컷",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: 손을 대거나 변하지 아니한 본디의 순수한 것."
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 10
+      }
+    },
+    {
+      "no": 16,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "수쥐",
+      "right": "숫쥐",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 17,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "암닭",
+      "right": "암탉",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 18,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "암돼지",
+      "right": "암퇘지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 19,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "암병아리",
+      "right": "암평아리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 20,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "오똑이",
+      "right": "오뚝이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 2,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 21,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "발가송이",
+      "right": "발가숭이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 22,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "사둔",
+      "right": "사돈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 23,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "풋나기",
+      "right": "풋내기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 24,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "남비",
+      "right": "냄비",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: 시간이나 재물 따위를 헛되이 헤프게 씀.",
+        "품은 표제어: 공작동남비, 남비니, 남비징청, 여존남비"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": true,
+        "containing": [
+          "공작동남비",
+          "남비니",
+          "남비징청",
+          "여존남비",
+          "행안남비"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 25,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "동당이치",
+      "right": "동댕이치",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 내동당이치다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "내동당이치다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 26,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "미쟁이",
+      "right": "미장이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 할미쟁이"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "할미쟁이"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 27,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "소금장이",
+      "right": "소금쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 28,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "담장이덩굴",
+      "right": "담쟁이덩굴",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 29,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "괴퍅",
+      "right": "괴팍",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 괴퍅하다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "괴퍅하다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 30,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "미류나무",
+      "right": "미루나무",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 31,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "으례",
+      "right": "으레",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 32,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "켸켸묵",
+      "right": "케케묵",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 33,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "허위대",
+      "right": "허우대",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 34,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "허위적",
+      "right": "허우적",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 허위적허위적"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "허위적허위적"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 35,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "나무래",
+      "right": "나무라",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 눈먼탓이나하지개천나무래무엇하나"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "눈먼탓이나하지개천나무래무엇하나"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 14
+      }
+    },
+    {
+      "no": 36,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "주착",
+      "right": "주책",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: 무엇에 마음을 붙임. / 일정한 곳에 머물러 있음. / 잘못인 줄 알면서 저지른 과실.",
+        "품은 표제어: 주착하다"
+      ],
+      "dictionary": {
+        "right": 3,
+        "wrong": 4,
+        "wrong_points_to_right": true,
+        "containing": [
+          "주착하다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 37,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "지리하",
+      "right": "지루하",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 하달지리하다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "하달지리하다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 27
+      }
+    },
+    {
+      "no": 38,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "허드래",
+      "right": "허드레",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 39,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "호루루기",
+      "right": "호루라기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 40,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃니",
+      "right": "윗니",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 41,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃도리",
+      "right": "윗도리",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 동자기둥에 얹어서 서까래나 지붕널을 받치는 가로재."
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 42,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃입술",
+      "right": "윗입술",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 43,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃목",
+      "right": "윗목",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 44,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃눈썹",
+      "right": "윗눈썹",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 45,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃층",
+      "right": "위층",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 46,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃쪽",
+      "right": "위쪽",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 47,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃턱",
+      "right": "위턱",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 48,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "웃팔",
+      "right": "위팔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 49,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "윗돈",
+      "right": "웃돈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 50,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "귀절",
+      "right": "구절",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 4,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 51,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "문귀",
+      "right": "문구",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 권문귀족, 문귀무천, 문귀틀"
+      ],
+      "dictionary": {
+        "right": 3,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "권문귀족",
+          "문귀무천",
+          "문귀틀"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 38
+      }
+    },
+    {
+      "no": 52,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "싯귀",
+      "right": "시구",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 9,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 53,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "인용귀",
+      "right": "인용구",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 54,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "글구",
+      "right": "글귀",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 글구멍"
+      ],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "글구멍"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 55,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "또아리",
+      "right": "똬리",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 갈큇발의 다른 끝을 모아 휘감아 잡아맨 부분."
+      ],
+      "warnings": [
+        "품은 표제어: 또아리물달팽이, 또아리샅[눈]가린다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "또아리물달팽이",
+          "또아리샅[눈]가린다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 56,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "무우",
+      "right": "무",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: ‘무우하다’의 어근. / 기우제(祈雨祭). 또는 기우제를 지내는 제단(祭壇). / 내리는 빗줄기가 매우 가늘어서 안개처럼 부옇게 보이는 ",
+        "품은 표제어: 고무우카, 나무우듬지, 무우귀영, 무우삼밭"
+      ],
+      "dictionary": {
+        "right": 10,
+        "wrong": 4,
+        "wrong_points_to_right": true,
+        "containing": [
+          "고무우카",
+          "나무우듬지",
+          "무우귀영",
+          "무우삼밭",
+          "무우석",
+          "무우수"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "너어무우",
+            1
+          ]
+        ],
+        "right_uses": 4983
+      }
+    },
+    {
+      "no": 57,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "배암",
+      "right": "뱀",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 배암장어, 배암차즈기, 배암톱, 배암투명"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "배암장어",
+          "배암차즈기",
+          "배암톱",
+          "배암투명",
+          "배암투명하다",
+          "양배암"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 68
+      }
+    },
+    {
+      "no": 58,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "새앙쥐",
+      "right": "생쥐",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 땃쥣과의 하나. 생쥐와 비슷하나 몸의 길이는 13cm, 꼬리는 7cm 정"
+      ],
+      "warnings": [
+        "품은 표제어: 고양이죽쑤어줄것없고새앙쥐볼가심할것없다, 나무새앙쥐, 등겻섬에새앙쥐엉기듯, 새앙쥐치"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "고양이죽쑤어줄것없고새앙쥐볼가심할것없다",
+          "나무새앙쥐",
+          "등겻섬에새앙쥐엉기듯",
+          "새앙쥐치"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 39
+      }
+    },
+    {
+      "no": 59,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "소리개",
+      "right": "솔개",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 60,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "온가지",
+      "right": "온갖",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 13
+      }
+    },
+    {
+      "no": 61,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "귀에지",
+      "right": "귀지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 4,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 62,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "귀엣고리",
+      "right": "귀고리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 63,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "꼭둑각시",
+      "right": "꼭두각시",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 꼭둑각시놀음"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "꼭둑각시놀음"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 64,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "내흉",
+      "right": "내숭",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 남의흉이한가지면내흉은몇가지냐"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "남의흉이한가지면내흉은몇가지냐"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 65,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "며루치",
+      "right": "멸치",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 66,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "봉숭화",
+      "right": "봉숭아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 67,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "뽄새",
+      "right": "본새",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 68,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "쌍판대기",
+      "right": "상판대기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 69,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "아궁지",
+      "right": "아궁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 70,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "자봉틀",
+      "right": "재봉틀",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 손자봉틀"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "손자봉틀"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 71,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "애닯",
+      "right": "애달프",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 72,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "잇솔",
+      "right": "칫솔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 73,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "알타리무",
+      "right": "총각무",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 74,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "빈자떡",
+      "right": "빈대떡",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 75,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "게시리",
+      "right": "게끔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 76,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "광우리",
+      "right": "광주리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 77,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "부스럭지",
+      "right": "부스러기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 78,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "부지팽이",
+      "right": "부지깽이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 79,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "손구루마",
+      "right": "손수레",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 80,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "전선대",
+      "right": "전봇대",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: 전선의 폭을 특히 강조하여 이르는 말."
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 81,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "지만서도",
+      "right": "지만",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 5,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3113
+      }
+    },
+    {
+      "no": 82,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "안절부절하",
+      "right": "안절부절못하",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "안절부절하던",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 83,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "끄나불",
+      "right": "끄나풀",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    }
+  ]
+}
