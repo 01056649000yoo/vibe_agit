@@ -358,16 +358,20 @@ test('맞춤법 공통 자료 대시보드는 후보와 게시 자료를 나눠 
     assert.doesNotMatch(adminPromotion, /style=\{\{/);
 });
 
-test('공통·학급 자료는 학생에게 한 목록으로 합치고 짧은 캐시 뒤 자동 갱신한다', () => {
-    assert.match(learningApi, /get_student_spelling_entries_v2/);
-    assert.match(learningApi, /STUDENT_ENTRIES_CACHE_MS = 60_000/);
+test('공통·학급 자료는 학생에게 한 목록으로 합치고, 공통 자료는 기기에 두고 바뀐 것만 받는다', async () => {
+    // 2026-10-07: 한도 100 → 3000, 1분마다 전체 받기 → 기기 저장 + 바뀐 줄만(v3)
+    const deltaMigration = await readFile('supabase/migrations/20261376_student_spelling_entries_delta.sql', 'utf8');
+    assert.match(learningApi, /get_student_spelling_entries_v3/);
+    assert.doesNotMatch(learningApi, /get_student_spelling_entries_v2/);
+    assert.match(learningApi, /COMMON_SPELLING_CACHE_KEY/);
+    assert.match(learningApi, /!consistent && !response\?\.full/);
     assert.match(learningApi, /supabase\.auth\.getSession\(\)/);
     assert.match(learningApi, /studentEntriesCacheUserId !== currentUserId/);
     assert.match(learningApi, /studentEntriesCacheUserId === requestUserId/);
     assert.doesNotMatch(learningApi, /setInterval|postgres_changes/);
-    assert.match(dynamicCommonMigration, /PARTITION BY lower\(btrim\(entry\.wrong_expression\)\)/);
-    assert.match(dynamicCommonMigration, /CASE WHEN entry\.scope = 'common' THEN 0 ELSE 1 END/);
-    assert.match(dynamicCommonMigration, /LIMIT 100/);
+    assert.match(deltaMigration, /SELECT 3000/);
+    assert.match(deltaMigration, /DROP FUNCTION IF EXISTS public\.get_student_spelling_entries_v2\(\)/);
+    assert.match(deltaMigration, /REVOKE ALL ON FUNCTION public\.get_student_spelling_entries_v3\(TIMESTAMPTZ\) FROM PUBLIC, anon/);
     assert.match(underlineTextarea, /findClassSpellingIssues\(scannedValue, classEntries, remaining\)/);
     assert.match(underlineInput, /findClassSpellingIssues\(normalizedValue, dynamicEntries, remaining\)/);
     assert.match(lookup, /entry\.scope === 'common' \? '공통 맞춤법 자료'/);

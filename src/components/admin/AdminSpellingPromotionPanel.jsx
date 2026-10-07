@@ -341,8 +341,16 @@ const AdminSpellingPromotionPanel = () => {
 
     const weeklyCandidates = useMemo(() => data.weekly_candidates || [], [data.weekly_candidates]);
     const commonEntries = data.common_entries || [];
-    const enabledCommonCount = commonEntries.filter((entry) => entry.status === 'approved').length;
-    const disabledCommonCount = commonEntries.length - enabledCommonCount;
+    // 목록(common_entries)은 최근 100개까지라 개수는 서버가 센 값을 쓴다 — 100개에서 멈춰 보이지 않게.
+    const listedEnabledCount = commonEntries.filter((entry) => entry.status === 'approved').length;
+    const enabledCommonCount = Number(data.common_approved_count ?? listedEnabledCount);
+    const disabledCommonCount = commonEntries.length - listedEnabledCount;
+    /*
+     * 학생 글쓰기 밑줄은 공통 자료를 한도(student_entry_limit, 3000)까지만 받는다. 넘으면 오래된 것부터
+     * 밑줄에서 빠지므로 80% 에서 미리 알린다(2026-10-07, 선생님 결정).
+     */
+    const studentEntryLimit = Number(data.student_entry_limit) || 0;
+    const nearStudentLimit = studentEntryLimit > 0 && enabledCommonCount >= studentEntryLimit * 0.8;
     const autoClosed = useMemo(() => data.auto_closed || [], [data.auto_closed]);
     /*
      * 관리자는 **넣을지 말지 정해야 하는 것만** 본다(2026-10-01 요청). `제외 권장`·이미 공통 자료인 것·
@@ -559,6 +567,9 @@ const AdminSpellingPromotionPanel = () => {
         </header>
 
         {notice && <p className={`admin-spelling__notice is-${notice.tone}`} role="status">{notice.text}</p>}
+        {nearStudentLimit && <p className="admin-spelling__notice is-error" role="status">
+            ⚠️ 공통 자료가 {enabledCommonCount}개로 학생 글쓰기 밑줄 한도({studentEntryLimit}개)의 80%를 넘었습니다. 한도를 넘으면 오래전에 게시한 맞춤법부터 밑줄에서 빠집니다(퀴즈에는 계속 나옵니다). 개발자에게 한도 조정을 요청해 주세요.
+        </p>}
         {latestRun?.status === 'failed' && <p className="admin-spelling__notice is-error" role="status">최근 주간 검수가 완료되지 않았습니다. 오류 코드: {latestRun.error_code || 'unknown'}</p>}
 
         <div className="admin-spelling__view-tabs" role="tablist" aria-label="맞춤법 공통 자료 관리 화면">
