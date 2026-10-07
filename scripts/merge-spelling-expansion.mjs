@@ -32,6 +32,7 @@ const arg = (name, fallback) => {
 const TEMPLATES = Object.freeze({
     P: (answer) => `지난 일을 말할 때는 받침에 ‘ㅆ’을 써서 ‘${answer}’예요.`,
     L: (answer) => `외래어 표기법에 따라 ‘${answer}’라고 써요.`,
+    D: (answer) => `외래어는 된소리(ㄲ·ㄸ·ㅃ·ㅆ·ㅉ)로 적지 않는 것이 원칙이라 ‘${answer}’라고 써요.`,
     S: (answer) => `두 낱말이 합쳐지며 뒷소리가 세게 나거나 ‘ㄴ’ 소리가 덧나서 사이시옷을 넣어 ‘${answer}’라고 써요.`,
     N: (answer) => `뒤 글자가 된소리·거센소리이거나 한자어끼리 합친 말이라 사이시옷을 쓰지 않아서 ‘${answer}’예요.`
 });

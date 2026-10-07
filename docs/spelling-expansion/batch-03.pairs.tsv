@@ -1,0 +1,181 @@
+# 분류	검출	틀린 꼴	바른 꼴	문맥(문맥 검출일 때만)
+# Claude 초안 묶음 03(2026-10-08 새벽). 학생 AI 검사가 모은 실제 오류 가운데 되풀이될 만한 것 + 아이들이 자주 틀리는 놀이·생활 낱말.
+# 학생 AI 검사의 교정이 틀린 것은 넣지 않았다: 따듯하다·쓰러트리다·재밌게·줬다는 표준.
+grammar/spacing	exact	우리반	우리 반
+grammar/spacing	exact	우리집	우리 집
+grammar/spacing	exact	우리가족	우리 가족
+grammar/spacing	exact	우리모둠	우리 모둠
+grammar/spacing	exact	내친구	내 친구
+grammar/spacing	exact	내동생	내 동생
+grammar/spacing	exact	내짝	내 짝
+grammar/spacing	exact	이번년도	이번 연도
+grammar/spacing	exact	방학동안	방학 동안
+grammar/spacing	exact	느낀점	느낀 점
+grammar/spacing	exact	배울점	배울 점
+grammar/spacing	exact	그후	그 후
+grammar/spacing	exact	또다른	또 다른
+grammar/spacing	exact	한뒤	한 뒤
+grammar/spacing	exact	하기전	하기 전
+grammar/spacing	exact	첫째날	첫째 날
+grammar/spacing	exact	잘먹	잘 먹
+grammar/spacing	exact	교장선생님	교장 선생님
+grammar/spacing	exact	담임선생님	담임 선생님
+grammar/spacing	exact	보건선생님	보건 선생님
+grammar/spacing	exact	영어선생님	영어 선생님
+grammar/spacing	exact	할뻔	할 뻔
+grammar/spacing	exact	죽을뻔	죽을 뻔
+grammar/spacing	exact	넘어질뻔	넘어질 뻔
+grammar/spacing	exact	다칠뻔	다칠 뻔
+grammar/spacing	exact	할수도	할 수도
+grammar/spacing	exact	갈수도	갈 수도
+grammar/spacing	exact	을텐데	을 텐데
+grammar/spacing	exact	할텐데	할 텐데
+grammar/spacing	exact	갈텐데	갈 텐데
+grammar/joined-word	phrase	가위 바위 보	가위바위보
+word/general	exact	재대로	제대로
+word/general	exact	함게	함께
+word/general	exact	한태	한테
+word/general	exact	그치만	그렇지만
+word/general	exact	무족건	무조건
+word/general	exact	조금식	조금씩
+word/general	exact	했드시	했듯이
+word/general	exact	남여	남녀
+word/general	exact	몇칠	며칠
+word/general	exact	꽃봉우리	꽃봉오리
+word/general	exact	숨박꼭질	숨바꼭질
+word/general	exact	끝말이기	끝말잇기
+word/general	exact	사움	싸움
+word/general	exact	깡총	깡충
+word/general	exact	비들기	비둘기
+word/general	exact	번게	번개
+word/general	exact	저녘	저녁
+word/general	exact	어재	어제
+word/general	exact	목구녕	목구멍
+word/general	exact	복숭화	복숭아
+word/general	exact	앵도	앵두
+word/general	exact	모듬	모둠
+word/general	exact	짝궁	짝꿍
+word/general	exact	친찬	칭찬
+word/general	exact	짜르	자르
+word/general	exact	짤리	잘리
+word/general	exact	딲	닦
+word/general	exact	열쇄	열쇠
+word/general	exact	자물쇄	자물쇠
+word/general	exact	쌍동이	쌍둥이
+word/general	exact	막동이	막둥이
+word/general	exact	귀염동이	귀염둥이
+word/general	exact	겁장이	겁쟁이
+word/general	exact	욕심장이	욕심쟁이
+word/general	exact	심술장이	심술쟁이
+word/general	exact	고집장이	고집쟁이
+word/general	exact	거짓말장이	거짓말쟁이
+word/general	exact	수다장이	수다쟁이
+word/general	exact	놀래키	놀래
+word/general	exact	은행닢	은행잎
+word/general	exact	단풍닢	단풍잎
+word/general	exact	꽃닢	꽃잎
+word/general	exact	나무닢	나뭇잎
+word/general	exact	쫒겨	쫓겨
+word/general	exact	쫒아	쫓아
+word/general	exact	오뎅	어묵
+grammar/ending	exact	거던	거든
+grammar/ending	exact	할가	할까
+grammar/ending	exact	갈가	갈까
+grammar/ending	exact	먹을가	먹을까
+loanword/loanword	exact	할로윈	핼러윈
+loanword/loanword	exact	마쉬멜로	마시멜로
+loanword/loanword	exact	마시멜로우	마시멜로
+loanword/loanword	exact	애너지	에너지
+loanword/loanword	exact	크리스마쓰	크리스마스
+loanword/loanword	exact	싸이렌	사이렌
+loanword/loanword	exact	써클	서클
+loanword/loanword	exact	썬크림	선크림
+loanword/loanword	exact	썬글라스	선글라스
+loanword/loanword	exact	쎈스	센스
+loanword/loanword	exact	쎄일	세일
+loanword/loanword	exact	쎄트	세트
+loanword/loanword	exact	셋트	세트
+loanword/loanword	exact	씨디	시디
+loanword/loanword	exact	싸이즈	사이즈
+loanword/loanword	exact	쏘세지	소시지
+loanword/loanword	exact	쏘스	소스
+loanword/loanword	exact	쑈	쇼
+loanword/loanword	exact	썸머	서머
+loanword/loanword	exact	땐스	댄스
+loanword/loanword	exact	딸러	달러
+loanword/loanword	exact	빵꾸	펑크
+loanword/loanword	exact	빠따	배트
+loanword/loanword	exact	까운	가운
+loanword/loanword	exact	꽁트	콩트
+loanword/loanword	exact	까페라테	카페라테
+loanword/loanword	exact	카페라떼	카페라테
+loanword/loanword	exact	바게뜨	바게트
+loanword/loanword	exact	크로와상	크루아상
+loanword/loanword	exact	브로컬리	브로콜리
+loanword/loanword	exact	스프	수프
+loanword/loanword	exact	스테잌	스테이크
+loanword/loanword	exact	베이콘	베이컨
+loanword/loanword	exact	쨈	잼
+loanword/loanword	exact	빠다	버터
+loanword/loanword	exact	씨리얼	시리얼
+loanword/loanword	exact	콘프레이크	콘플레이크
+loanword/loanword	exact	젤라또	젤라토
+loanword/loanword	exact	샤베트	셔벗
+loanword/loanword	exact	샤벳	셔벗
+loanword/loanword	exact	쉐이크	셰이크
+loanword/loanword	exact	밀크쉐이크	밀크셰이크
+loanword/loanword	exact	쉐프	셰프
+loanword/loanword	exact	쉬림프	슈림프
+loanword/loanword	exact	쉬폰	시폰
+loanword/loanword	exact	랍스타	랍스터
+loanword/loanword	exact	로브스터	랍스터
+loanword/loanword	exact	스넥	스낵
+loanword/loanword	exact	블루투쓰	블루투스
+loanword/loanword	exact	이모티컨	이모티콘
+loanword/loanword	exact	다운로드	내려받기
+loanword/loanword	exact	크릭	클릭
+loanword/loanword	exact	스크린샷	스크린숏
+loanword/loanword	exact	스샷	스크린숏
+loanword/loanword	exact	밧데리	배터리
+loanword/loanword	exact	바테리	배터리
+loanword/loanword	exact	리모콘	리모컨
+loanword/loanword	exact	아람	알람
+loanword/loanword	exact	타이마	타이머
+loanword/loanword	exact	스탑워치	스톱워치
+loanword/loanword	exact	스탑	스톱
+loanword/loanword	exact	화이또	파이팅
+loanword/loanword	exact	뽀너스	보너스
+loanword/loanword	exact	뽀인트	포인트
+loanword/loanword	exact	렝킹	랭킹
+loanword/loanword	exact	짠스	찬스
+loanword/loanword	exact	라이발	라이벌
+loanword/loanword	exact	메너	매너
+loanword/loanword	exact	에티켙	에티켓
+loanword/loanword	exact	이티켓	에티켓
+loanword/loanword	exact	아이디아	아이디어
+loanword/loanword	exact	아이데어	아이디어
+loanword/loanword	exact	프로잭트	프로젝트
+loanword/loanword	exact	프로젝뜨	프로젝트
+loanword/loanword	exact	프리젠테이션	프레젠테이션
+loanword/loanword	exact	인터부	인터뷰
+loanword/loanword	exact	퀴스	퀴즈
+loanword/loanword	exact	오디숀	오디션
+loanword/loanword	exact	컨서트	콘서트
+loanword/loanword	exact	뮤지칼	뮤지컬
+loanword/loanword	exact	삐아노	피아노
+loanword/loanword	exact	드롬	드럼
+loanword/loanword	exact	하모니까	하모니카
+loanword/loanword	exact	오까리나	오카리나
+loanword/loanword	exact	우크렐레	우쿨렐레
+loanword/loanword	exact	쳴로	첼로
+loanword/loanword	exact	플룻	플루트
+loanword/loanword	exact	후루트	플루트
+loanword/loanword	exact	트럼팻	트럼펫
+loanword/loanword	exact	섹소폰	색소폰
+loanword/loanword	exact	심볼즈	심벌즈
+loanword/loanword	exact	메로디	멜로디
+loanword/loanword	exact	리둠	리듬
+loanword/loanword	exact	땜포	템포
+loanword/loanword	exact	듀옛	듀엣
+loanword/loanword	exact	앵콜	앙코르
+loanword/loanword	exact	앙콜	앙코르

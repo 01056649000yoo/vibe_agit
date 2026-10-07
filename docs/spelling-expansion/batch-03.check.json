@@ -1,0 +1,5331 @@
+{
+  "batch": "03",
+  "checked_at": "2026-10-07T15:11:22.253Z",
+  "corpus_documents": 22739,
+  "results": [
+    {
+      "no": 1,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "우리반",
+      "right": "우리 반",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 248,
+        "words": [
+          [
+            "우리반",
+            126
+          ],
+          [
+            "우리반이",
+            35
+          ],
+          [
+            "우리반은",
+            23
+          ],
+          [
+            "우리반에서",
+            12
+          ],
+          [
+            "우리반에",
+            10
+          ],
+          [
+            "우리반의",
+            7
+          ],
+          [
+            "우리반을",
+            4
+          ],
+          [
+            "우리반에는",
+            4
+          ],
+          [
+            "우리반과",
+            3
+          ],
+          [
+            "우리반도",
+            3
+          ],
+          [
+            "우리반친구들에게",
+            2
+          ],
+          [
+            "우리반만",
+            2
+          ]
+        ],
+        "right_uses": 144
+      }
+    },
+    {
+      "no": 2,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "우리집",
+      "right": "우리 집",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 남의집금송아지가우리집송아지만못하다, 남의집소경은쓸어나보는데우리집소경은쓸어도못본다"
+      ],
+      "dictionary": {
+        "containing": [
+          "남의집금송아지가우리집송아지만못하다",
+          "남의집소경은쓸어나보는데우리집소경은쓸어도못본다"
+        ]
+      },
+      "simulation": {
+        "hits": 50,
+        "words": [
+          [
+            "우리집에",
+            11
+          ],
+          [
+            "우리집에서",
+            10
+          ],
+          [
+            "우리집",
+            8
+          ],
+          [
+            "우리집의",
+            5
+          ],
+          [
+            "우리집과",
+            2
+          ],
+          [
+            "우리집으로",
+            2
+          ],
+          [
+            "우리집은",
+            2
+          ],
+          [
+            "우리집이고",
+            1
+          ],
+          [
+            "우리집컴퓨터로도",
+            1
+          ],
+          [
+            "우리집까지",
+            1
+          ],
+          [
+            "(우리집",
+            1
+          ],
+          [
+            "우리집에서는",
+            1
+          ]
+        ],
+        "right_uses": 43
+      }
+    },
+    {
+      "no": 3,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "우리가족",
+      "right": "우리 가족",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 50,
+        "words": [
+          [
+            "우리가족은",
+            21
+          ],
+          [
+            "우리가족",
+            10
+          ],
+          [
+            "우리가족이",
+            5
+          ],
+          [
+            "우리가족의",
+            4
+          ],
+          [
+            "우리가족을",
+            3
+          ],
+          [
+            "우리가족과",
+            3
+          ],
+          [
+            "우리가족에게",
+            1
+          ],
+          [
+            "우리가족에는",
+            1
+          ],
+          [
+            "우리가족들은",
+            1
+          ],
+          [
+            "우리가족들의",
+            1
+          ]
+        ],
+        "right_uses": 91
+      }
+    },
+    {
+      "no": 4,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "우리모둠",
+      "right": "우리 모둠",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 4,
+        "words": [
+          [
+            "우리모둠은",
+            2
+          ],
+          [
+            "우리모둠에",
+            2
+          ]
+        ],
+        "right_uses": 55
+      }
+    },
+    {
+      "no": 5,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "내친구",
+      "right": "내 친구",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "내친구가",
+            1
+          ],
+          [
+            "내친구네",
+            1
+          ],
+          [
+            "내친구들이긴",
+            1
+          ]
+        ],
+        "right_uses": 35
+      }
+    },
+    {
+      "no": 6,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "내동생",
+      "right": "내 동생",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 6,
+        "words": [
+          [
+            "내동생은",
+            3
+          ],
+          [
+            "내동생도",
+            2
+          ],
+          [
+            "내동생의",
+            1
+          ]
+        ],
+        "right_uses": 11
+      }
+    },
+    {
+      "no": 7,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "내짝",
+      "right": "내 짝",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "내짝",
+            2
+          ],
+          [
+            "내짝은",
+            1
+          ]
+        ],
+        "right_uses": 40
+      }
+    },
+    {
+      "no": 8,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "이번년도",
+      "right": "이번 연도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "이번년도",
+            1
+          ],
+          [
+            "이번년도와",
+            1
+          ],
+          [
+            "이번년도에",
+            1
+          ]
+        ],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 9,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "방학동안",
+      "right": "방학 동안",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "방학동안",
+            3
+          ]
+        ],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 10,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "느낀점",
+      "right": "느낀 점",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 58,
+        "words": [
+          [
+            "느낀점",
+            48
+          ],
+          [
+            "느낀점이",
+            3
+          ],
+          [
+            "느낀점을",
+            2
+          ],
+          [
+            "느낀점이나",
+            2
+          ],
+          [
+            "느낀점:",
+            1
+          ],
+          [
+            "느낀점:젠인가는",
+            1
+          ],
+          [
+            "느낀점:어진이가",
+            1
+          ]
+        ],
+        "right_uses": 65
+      }
+    },
+    {
+      "no": 11,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "배울점",
+      "right": "배울 점",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 12,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "그후",
+      "right": "그 후",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 16,
+        "words": [
+          [
+            "그후",
+            13
+          ],
+          [
+            "그후에",
+            1
+          ],
+          [
+            "그후론",
+            1
+          ],
+          [
+            "그후로",
+            1
+          ]
+        ],
+        "right_uses": 41
+      }
+    },
+    {
+      "no": 13,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "또다른",
+      "right": "또 다른",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 11,
+        "words": [
+          [
+            "또다른",
+            8
+          ],
+          [
+            "높이러Hey또다른",
+            1
+          ],
+          [
+            ":/또다른이야기",
+            1
+          ],
+          [
+            "또다른거는",
+            1
+          ]
+        ],
+        "right_uses": 56
+      }
+    },
+    {
+      "no": 14,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "한뒤",
+      "right": "한 뒤",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 궁한뒤에행세를본다"
+      ],
+      "dictionary": {
+        "containing": [
+          "궁한뒤에행세를본다"
+        ]
+      },
+      "simulation": {
+        "hits": 29,
+        "words": [
+          [
+            "한뒤",
+            14
+          ],
+          [
+            "도착한뒤",
+            5
+          ],
+          [
+            "말한뒤",
+            2
+          ],
+          [
+            "전투를한뒤",
+            1
+          ],
+          [
+            "한뒤선택해",
+            1
+          ],
+          [
+            "회피한뒤",
+            1
+          ],
+          [
+            "산책을한뒤",
+            1
+          ],
+          [
+            "하교한뒤",
+            1
+          ],
+          [
+            "한뒤에",
+            1
+          ],
+          [
+            "협박한뒤",
+            1
+          ],
+          [
+            "도착한뒤에는",
+            1
+          ]
+        ],
+        "right_uses": 56
+      }
+    },
+    {
+      "no": 15,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "하기전",
+      "right": "하기 전",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 벼슬하기전에일산준비"
+      ],
+      "dictionary": {
+        "containing": [
+          "벼슬하기전에일산준비"
+        ]
+      },
+      "simulation": {
+        "hits": 13,
+        "words": [
+          [
+            "하기전에",
+            4
+          ],
+          [
+            "하기전",
+            4
+          ],
+          [
+            "말하기전에",
+            2
+          ],
+          [
+            "1교시하기전에",
+            1
+          ],
+          [
+            "시작하기전에",
+            1
+          ],
+          [
+            "결혼하기전",
+            1
+          ]
+        ],
+        "right_uses": 28
+      }
+    },
+    {
+      "no": 16,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "첫째날",
+      "right": "첫째 날",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 첫째날개깃, 첫째날개덮깃"
+      ],
+      "dictionary": {
+        "containing": [
+          "첫째날개깃",
+          "첫째날개덮깃"
+        ]
+      },
+      "simulation": {
+        "hits": 10,
+        "words": [
+          [
+            "첫째날",
+            6
+          ],
+          [
+            "첫째날이",
+            1
+          ],
+          [
+            "첫째날에는",
+            1
+          ],
+          [
+            "첫째날엔",
+            1
+          ],
+          [
+            "첫째날은",
+            1
+          ]
+        ],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 17,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "잘먹",
+      "right": "잘 먹",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 담배잘먹기는용귀돌(龍貴乭)일세, 마음한번잘먹으면북두칠성이굽어보신다, 생일날잘먹으려고이레를굶는다, 잘먹고잘입어못난놈없다"
+      ],
+      "dictionary": {
+        "containing": [
+          "담배잘먹기는용귀돌(龍貴乭)일세",
+          "마음한번잘먹으면북두칠성이굽어보신다",
+          "생일날잘먹으려고이레를굶는다",
+          "잘먹고잘입어못난놈없다",
+          "철록어미냐용귀돌이냐담배도잘먹는다"
+        ]
+      },
+      "simulation": {
+        "hits": 11,
+        "words": [
+          [
+            "잘먹었습니다",
+            2
+          ],
+          [
+            "잘먹었다",
+            2
+          ],
+          [
+            "잘먹을것이다",
+            1
+          ],
+          [
+            "잘먹었다고양이",
+            1
+          ],
+          [
+            "잘먹진",
+            1
+          ],
+          [
+            "잘먹었다면서",
+            1
+          ],
+          [
+            "잘먹을게",
+            1
+          ],
+          [
+            "잘먹고",
+            1
+          ],
+          [
+            "잘먹지",
+            1
+          ]
+        ],
+        "right_uses": 15
+      }
+    },
+    {
+      "no": 18,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "교장선생님",
+      "right": "교장 선생님",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 21,
+        "words": [
+          [
+            "교장선생님",
+            13
+          ],
+          [
+            "교장선생님께",
+            4
+          ],
+          [
+            "교장선생님을",
+            1
+          ],
+          [
+            "교장선생님이",
+            1
+          ],
+          [
+            "교장선생님인",
+            1
+          ],
+          [
+            "교장선생님은",
+            1
+          ]
+        ],
+        "right_uses": 13
+      }
+    },
+    {
+      "no": 19,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "담임선생님",
+      "right": "담임 선생님",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 10,
+        "words": [
+          [
+            "담임선생님이",
+            4
+          ],
+          [
+            "담임선생님에",
+            1
+          ],
+          [
+            "담임선생님을",
+            1
+          ],
+          [
+            "담임선생님의",
+            1
+          ],
+          [
+            "담임선생님이셨다",
+            1
+          ],
+          [
+            "담임선생님",
+            1
+          ],
+          [
+            "담임선생님께",
+            1
+          ]
+        ],
+        "right_uses": 13
+      }
+    },
+    {
+      "no": 20,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "보건선생님",
+      "right": "보건 선생님",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "보건선생님",
+            1
+          ]
+        ],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 21,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "영어선생님",
+      "right": "영어 선생님",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "영어선생님이",
+            3
+          ]
+        ],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 22,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "할뻔",
+      "right": "할 뻔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "할뻔했지만",
+            2
+          ],
+          [
+            "기절할뻔했다",
+            1
+          ],
+          [
+            "할뻔했다",
+            1
+          ],
+          [
+            "포기할뻔했지만",
+            1
+          ]
+        ],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 23,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "죽을뻔",
+      "right": "죽을 뻔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 죽을뻔댁"
+      ],
+      "dictionary": {
+        "containing": [
+          "죽을뻔댁"
+        ]
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "죽을뻔",
+            1
+          ],
+          [
+            "죽을뻔한",
+            1
+          ]
+        ],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 24,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "넘어질뻔",
+      "right": "넘어질 뻔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "넘어질뻔",
+            2
+          ]
+        ],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 25,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "다칠뻔",
+      "right": "다칠 뻔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 26,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "할수도",
+      "right": "할 수도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 할수도움줄기"
+      ],
+      "dictionary": {
+        "containing": [
+          "할수도움줄기"
+        ]
+      },
+      "simulation": {
+        "hits": 18,
+        "words": [
+          [
+            "할수도",
+            5
+          ],
+          [
+            "못할수도",
+            2
+          ],
+          [
+            "말할수도",
+            1
+          ],
+          [
+            "부족할수도",
+            1
+          ],
+          [
+            "지루할수도",
+            1
+          ],
+          [
+            "못할수도있고",
+            1
+          ],
+          [
+            "출출할수도",
+            1
+          ],
+          [
+            "잘할수도",
+            1
+          ],
+          [
+            "못할수도있었다",
+            1
+          ],
+          [
+            "무시할수도",
+            1
+          ],
+          [
+            "불편할수도",
+            1
+          ],
+          [
+            "생존을할수도",
+            1
+          ]
+        ],
+        "right_uses": 30
+      }
+    },
+    {
+      "no": 27,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "갈수도",
+      "right": "갈 수도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "놀러갈수도",
+            1
+          ]
+        ],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 28,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "을텐데",
+      "right": "을 텐데",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 13,
+        "words": [
+          [
+            "좋았을텐데",
+            2
+          ],
+          [
+            "좋을텐데",
+            2
+          ],
+          [
+            "샀을텐데",
+            1
+          ],
+          [
+            "수있었을텐데",
+            1
+          ],
+          [
+            "밀려왓을텐데",
+            1
+          ],
+          [
+            "료해주시면아무것도남지많을텐데오직사람들의웃는얼굴을보기",
+            1
+          ],
+          [
+            "더할머니콜레라병이무서웠을텐데어떨게위험을극복하고열심히",
+            1
+          ],
+          [
+            "찍을텐데",
+            1
+          ],
+          [
+            "화났을텐데",
+            1
+          ],
+          [
+            "많았을텐데",
+            1
+          ],
+          [
+            "힘들었을텐데",
+            1
+          ]
+        ],
+        "right_uses": 20
+      }
+    },
+    {
+      "no": 29,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "할텐데",
+      "right": "할 텐데",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "결혼할텐데",
+            1
+          ]
+        ],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 30,
+      "categoryId": "grammar",
+      "subcategoryId": "spacing",
+      "slot": "grammar/spacing",
+      "mode": "exact",
+      "wrong": "갈텐데",
+      "right": "갈 텐데",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 31,
+      "categoryId": "grammar",
+      "subcategoryId": "joined-word",
+      "slot": "grammar/joined-word",
+      "mode": "phrase",
+      "wrong": "가위 바위 보",
+      "right": "가위바위보",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {},
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "가위 바위 보를",
+            1
+          ]
+        ],
+        "right_uses": 28
+      }
+    },
+    {
+      "no": 32,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "재대로",
+      "right": "제대로",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "재대로",
+            1
+          ]
+        ],
+        "right_uses": 66
+      }
+    },
+    {
+      "no": 33,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "함게",
+      "right": "함께",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 730
+      }
+    },
+    {
+      "no": 34,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "한태",
+      "right": "한테",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 쟁기, 극젱이 따위의 봇줄을 잡아매는 줄. 왼쪽 봇줄에 매어서 소의 등을"
+      ],
+      "warnings": [
+        "품은 표제어: 한태동"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "한태동"
+        ]
+      },
+      "simulation": {
+        "hits": 26,
+        "words": [
+          [
+            "엄마한태",
+            4
+          ],
+          [
+            "나한태",
+            3
+          ],
+          [
+            "한태",
+            3
+          ],
+          [
+            "친구들한태",
+            3
+          ],
+          [
+            "동생한태",
+            2
+          ],
+          [
+            "애들한태",
+            2
+          ],
+          [
+            "동생한태서",
+            1
+          ],
+          [
+            "마루한태",
+            1
+          ],
+          [
+            "아빠한태",
+            1
+          ],
+          [
+            "친구한태",
+            1
+          ],
+          [
+            "한태갔다",
+            1
+          ],
+          [
+            "토끼한태",
+            1
+          ]
+        ],
+        "right_uses": 585
+      }
+    },
+    {
+      "no": 35,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "그치만",
+      "right": "그렇지만",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "이미 있는 자료와 겹침"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 6,
+        "words": [
+          [
+            "그치만",
+            6
+          ]
+        ],
+        "right_uses": 49
+      }
+    },
+    {
+      "no": 36,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "무족건",
+      "right": "무조건",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "무족건",
+            1
+          ]
+        ],
+        "right_uses": 46
+      }
+    },
+    {
+      "no": 37,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "조금식",
+      "right": "조금씩",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "조금조금식",
+            1
+          ]
+        ],
+        "right_uses": 70
+      }
+    },
+    {
+      "no": 38,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "했드시",
+      "right": "했듯이",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "말했드시",
+            1
+          ]
+        ],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 39,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "남여",
+      "right": "남녀",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 고조선 때의 예맥의 족장(?~?). 우거왕을 배반한 뒤 28만 명을 이끌"
+      ],
+      "warnings": [
+        "품은 표제어: 남여완보, 남여완보하다, 맞남여, 사린남여"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": false,
+        "containing": [
+          "남여완보",
+          "남여완보하다",
+          "맞남여",
+          "사린남여",
+          "사인남여"
+        ]
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "남여",
+            2
+          ]
+        ],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 40,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "몇칠",
+      "right": "며칠",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 4,
+        "words": [
+          [
+            "몇칠후",
+            2
+          ],
+          [
+            "몇칠이",
+            2
+          ]
+        ],
+        "right_uses": 40
+      }
+    },
+    {
+      "no": 41,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "꽃봉우리",
+      "right": "꽃봉오리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 42,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "숨박꼭질",
+      "right": "숨바꼭질",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "숨박꼭질",
+            1
+          ],
+          [
+            "숨박꼭질을",
+            1
+          ]
+        ],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 43,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "끝말이기",
+      "right": "끝말잇기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 44,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "사움",
+      "right": "싸움",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 이슬람교에서, 이슬람력 9월의 30일 동안 단식을 지키는 일."
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "개속사움",
+            1
+          ]
+        ],
+        "right_uses": 162
+      }
+    },
+    {
+      "no": 45,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "깡총",
+      "right": "깡충",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "드문 다른 뜻: ‘깡총하다’의 어근.",
+        "품은 표제어: 깡총깡총, 깡총하다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": true,
+        "containing": [
+          "깡총깡총",
+          "깡총하다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 46,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "비들기",
+      "right": "비둘기",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 22
+      }
+    },
+    {
+      "no": 47,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "번게",
+      "right": "번개",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 48,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "저녘",
+      "right": "저녁",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 7,
+        "words": [
+          [
+            "저녘을",
+            3
+          ],
+          [
+            "저녘",
+            1
+          ],
+          [
+            "저녘이",
+            1
+          ],
+          [
+            "저녘때",
+            1
+          ],
+          [
+            "저녘에는",
+            1
+          ]
+        ],
+        "right_uses": 234
+      }
+    },
+    {
+      "no": 49,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "어재",
+      "right": "어제",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 살을 발라내었거나 기름을 짜고 난 물고기의 찌꺼기. 주로 비료로 쓴다."
+      ],
+      "warnings": [
+        "품은 표제어: 논어재, 어재실, 어재연, 열어재끼다"
+      ],
+      "dictionary": {
+        "right": 4,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "논어재",
+          "어재실",
+          "어재연",
+          "열어재끼다",
+          "열어재치다"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "어재",
+            1
+          ]
+        ],
+        "right_uses": 182
+      }
+    },
+    {
+      "no": 50,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "목구녕",
+      "right": "목구멍",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 10
+      }
+    },
+    {
+      "no": 51,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "복숭화",
+      "right": "복숭아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 52,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "앵도",
+      "right": "앵두",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 물앵도, 앵도병, 앵도숙, 앵도창"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "물앵도",
+          "앵도병",
+          "앵도숙",
+          "앵도창",
+          "앵도화"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 53,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "모듬",
+      "right": "모둠",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 심마니들의 은어로, ‘산막’을 이르는 말."
+      ],
+      "warnings": [
+        "품은 표제어: 모듬걸이, 모듬날, 모듬연장, 유물모듬새"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 2,
+        "wrong_points_to_right": false,
+        "containing": [
+          "모듬걸이",
+          "모듬날",
+          "모듬연장",
+          "유물모듬새",
+          "자모듬",
+          "자모듬하다"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "모듬은",
+            1
+          ]
+        ],
+        "right_uses": 114
+      }
+    },
+    {
+      "no": 54,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "짝궁",
+      "right": "짝꿍",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 살짝궁"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "살짝궁"
+        ]
+      },
+      "simulation": {
+        "hits": 4,
+        "words": [
+          [
+            "짝궁이",
+            2
+          ],
+          [
+            "짝궁을",
+            1
+          ],
+          [
+            "짝궁",
+            1
+          ]
+        ],
+        "right_uses": 15
+      }
+    },
+    {
+      "no": 55,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "친찬",
+      "right": "칭찬",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 임금이 시문을 몸소 지음. 또는 그 글."
+      ],
+      "warnings": [
+        "품은 표제어: 친찬하다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "친찬하다"
+        ]
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "친찬을많이해주셨다",
+            1
+          ],
+          [
+            "친찬을",
+            1
+          ]
+        ],
+        "right_uses": 56
+      }
+    },
+    {
+      "no": 56,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "짜르",
+      "right": "자르",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 짜르랑, 짜르랑거리다, 짜르랑대다, 짜르랑짜르랑"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "짜르랑",
+          "짜르랑거리다",
+          "짜르랑대다",
+          "짜르랑짜르랑",
+          "짜르랑짜르랑하다",
+          "짜르랑하다"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "짜르라는",
+            1
+          ]
+        ],
+        "right_uses": 13
+      }
+    },
+    {
+      "no": 57,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "짤리",
+      "right": "잘리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 58,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "딲",
+      "right": "닦",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 딲쇠, 딲음대패"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "딲쇠",
+          "딲음대패"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 27
+      }
+    },
+    {
+      "no": 59,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "열쇄",
+      "right": "열쇠",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 한창 더울 때에, 그 더위를 초월하여 덥다고 할 것이 없는 데까지 이르는"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 15
+      }
+    },
+    {
+      "no": 60,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "자물쇄",
+      "right": "자물쇠",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 61,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "쌍동이",
+      "right": "쌍둥이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 쌍동이강"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "쌍동이강"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 17
+      }
+    },
+    {
+      "no": 62,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "막동이",
+      "right": "막둥이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "막동이는",
+            1
+          ],
+          [
+            "할매와막동이랑",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 63,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "귀염동이",
+      "right": "귀염둥이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 64,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "겁장이",
+      "right": "겁쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 65,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "욕심장이",
+      "right": "욕심쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 66,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "심술장이",
+      "right": "심술쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 67,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "고집장이",
+      "right": "고집쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 68,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "거짓말장이",
+      "right": "거짓말쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 69,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "수다장이",
+      "right": "수다쟁이",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 70,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "놀래키",
+      "right": "놀래",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 71,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "은행닢",
+      "right": "은행잎",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "은행닢과",
+            1
+          ],
+          [
+            "은행닢은",
+            1
+          ]
+        ],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 72,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "단풍닢",
+      "right": "단풍잎",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "단풍닢을",
+            1
+          ],
+          [
+            "단풍닢은",
+            1
+          ]
+        ],
+        "right_uses": 32
+      }
+    },
+    {
+      "no": 73,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "꽃닢",
+      "right": "꽃잎",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 15
+      }
+    },
+    {
+      "no": 74,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "나무닢",
+      "right": "나뭇잎",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 35
+      }
+    },
+    {
+      "no": 75,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "쫒겨",
+      "right": "쫓겨",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "쫒겨나게",
+            1
+          ]
+        ],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 76,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "쫒아",
+      "right": "쫓아",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 6,
+        "words": [
+          [
+            "쫒아가고",
+            1
+          ],
+          [
+            "뒤쫒아",
+            1
+          ],
+          [
+            "쫒아갔다",
+            1
+          ],
+          [
+            "쫒아낸",
+            1
+          ],
+          [
+            "쫒아왔지",
+            1
+          ],
+          [
+            "쫒아오기",
+            1
+          ]
+        ],
+        "right_uses": 12
+      }
+    },
+    {
+      "no": 77,
+      "categoryId": "word",
+      "subcategoryId": "general",
+      "slot": "word/general",
+      "mode": "exact",
+      "wrong": "오뎅",
+      "right": "어묵",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 오뎅이"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "오뎅이"
+        ]
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "오뎅이나",
+            1
+          ],
+          [
+            "오뎅",
+            1
+          ],
+          [
+            "어묵(오뎅)이",
+            1
+          ],
+          [
+            "오뎅을",
+            1
+          ],
+          [
+            "오뎅탕",
+            1
+          ]
+        ],
+        "right_uses": 55
+      }
+    },
+    {
+      "no": 78,
+      "categoryId": "grammar",
+      "subcategoryId": "ending",
+      "slot": "grammar/ending",
+      "mode": "exact",
+      "wrong": "거던",
+      "right": "거든",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "말렸거던요",
+            1
+          ]
+        ],
+        "right_uses": 30
+      }
+    },
+    {
+      "no": 79,
+      "categoryId": "grammar",
+      "subcategoryId": "ending",
+      "slot": "grammar/ending",
+      "mode": "exact",
+      "wrong": "할가",
+      "right": "할까",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 할가이"
+      ],
+      "dictionary": {
+        "containing": [
+          "할가이"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "멸종할가봐'",
+            1
+          ]
+        ],
+        "right_uses": 57
+      }
+    },
+    {
+      "no": 80,
+      "categoryId": "grammar",
+      "subcategoryId": "ending",
+      "slot": "grammar/ending",
+      "mode": "exact",
+      "wrong": "갈가",
+      "right": "갈까",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 갈가리, 갈가외, 갈가위, 갈가자미"
+      ],
+      "dictionary": {
+        "containing": [
+          "갈가리",
+          "갈가외",
+          "갈가위",
+          "갈가자미",
+          "갈가치다",
+          "산갈가마귀"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 16
+      }
+    },
+    {
+      "no": 81,
+      "categoryId": "grammar",
+      "subcategoryId": "ending",
+      "slot": "grammar/ending",
+      "mode": "exact",
+      "wrong": "먹을가",
+      "right": "먹을까",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 먹을가까이하면검어진다"
+      ],
+      "dictionary": {
+        "containing": [
+          "먹을가까이하면검어진다"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 82,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "할로윈",
+      "right": "핼러윈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "할로윈",
+            2
+          ],
+          [
+            "할로윈도",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 83,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "마쉬멜로",
+      "right": "마시멜로",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "마쉬멜로를",
+            2
+          ],
+          [
+            "마쉬멜로우",
+            1
+          ],
+          [
+            "초코마쉬멜로를",
+            1
+          ],
+          [
+            "초고마쉬멜로를",
+            1
+          ]
+        ],
+        "right_uses": 53
+      }
+    },
+    {
+      "no": 84,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "마시멜로우",
+      "right": "마시멜로",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "마시멜로우를",
+            3
+          ],
+          [
+            "마시멜로우",
+            1
+          ],
+          [
+            "마시멜로우도",
+            1
+          ]
+        ],
+        "right_uses": 53
+      }
+    },
+    {
+      "no": 85,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "애너지",
+      "right": "에너지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "애너지를",
+            1
+          ]
+        ],
+        "right_uses": 81
+      }
+    },
+    {
+      "no": 86,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "크리스마쓰",
+      "right": "크리스마스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 33
+      }
+    },
+    {
+      "no": 87,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "싸이렌",
+      "right": "사이렌",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 88,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "써클",
+      "right": "서클",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 89,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "썬크림",
+      "right": "선크림",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 90,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "썬글라스",
+      "right": "선글라스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 91,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쎈스",
+      "right": "센스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 92,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쎄일",
+      "right": "세일",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 93,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쎄트",
+      "right": "세트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 94,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "셋트",
+      "right": "세트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 95,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "씨디",
+      "right": "시디",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 96,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "싸이즈",
+      "right": "사이즈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 97,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쏘세지",
+      "right": "소시지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 98,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쏘스",
+      "right": "소스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 27
+      }
+    },
+    {
+      "no": 99,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쑈",
+      "right": "쇼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 쑈리"
+      ],
+      "dictionary": {
+        "right": 4,
+        "wrong": 0,
+        "containing": [
+          "쑈리"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "쑈를",
+            1
+          ]
+        ],
+        "right_uses": 67
+      }
+    },
+    {
+      "no": 100,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "썸머",
+      "right": "서머",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "썸머가해줬다",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 101,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "땐스",
+      "right": "댄스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 18
+      }
+    },
+    {
+      "no": 102,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "딸러",
+      "right": "달러",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 103,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "빵꾸",
+      "right": "펑크",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 104,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "빠따",
+      "right": "배트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 빠따니"
+      ],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": [
+          "빠따니"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 105,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "까운",
+      "right": "가운",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 가까운남이먼일가보다낫다, 가까운데를가도점심밥을싸가지고가거라, 가까운데집은깎이고먼데절[집]은비친다, 가까운무당보다먼데무당이영하다"
+      ],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": [
+          "가까운남이먼일가보다낫다",
+          "가까운데를가도점심밥을싸가지고가거라",
+          "가까운데집은깎이고먼데절[집]은비친다",
+          "가까운무당보다먼데무당이영하다",
+          "가까운집며느리일수록흉이많다",
+          "먼데것을얻으려고가까운것을버린다"
+        ]
+      },
+      "simulation": {
+        "hits": 32,
+        "words": [
+          [
+            "가까운",
+            22
+          ],
+          [
+            "안타까운",
+            5
+          ],
+          [
+            "아까운",
+            4
+          ],
+          [
+            "가장가까운",
+            1
+          ]
+        ],
+        "right_uses": 92
+      }
+    },
+    {
+      "no": 106,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "꽁트",
+      "right": "콩트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 107,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "까페라테",
+      "right": "카페라테",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 108,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카페라떼",
+      "right": "카페라테",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 109,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "바게뜨",
+      "right": "바게트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 110,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "크로와상",
+      "right": "크루아상",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 111,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "브로컬리",
+      "right": "브로콜리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 112,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스프",
+      "right": "수프",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 인조 섬유를 짧게 잘라 양털이나 솜과 같은 모양으로 정제(精製)방사(紡"
+      ],
+      "warnings": [
+        "품은 표제어: 겹판스프링, 공기스프링, 데일리스프레드, 디스프로슘"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "겹판스프링",
+          "공기스프링",
+          "데일리스프레드",
+          "디스프로슘",
+          "리스프",
+          "릴리스프린트"
+        ]
+      },
+      "simulation": {
+        "hits": 37,
+        "words": [
+          [
+            "스프를",
+            10
+          ],
+          [
+            "스프랑",
+            2
+          ],
+          [
+            "스프링",
+            2
+          ],
+          [
+            "코스프레",
+            2
+          ],
+          [
+            "모니모익스프레스(구티익스프레스)",
+            2
+          ],
+          [
+            "제너럴엠페러마제스티골져스프레셔스뷰리풀하이클래스엘레강",
+            2
+          ],
+          [
+            "티-익스프레스라는",
+            1
+          ],
+          [
+            "T익스프레스가",
+            1
+          ],
+          [
+            "스프링이",
+            1
+          ],
+          [
+            "미니햄버거와양송이스프를",
+            1
+          ],
+          [
+            "스프)",
+            1
+          ],
+          [
+            "스프레이를",
+            1
+          ]
+        ],
+        "right_uses": 14
+      }
+    },
+    {
+      "no": 113,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스테잌",
+      "right": "스테이크",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 11
+      }
+    },
+    {
+      "no": 114,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "베이콘",
+      "right": "베이컨",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 115,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쨈",
+      "right": "잼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 쨈빛, 쨈새"
+      ],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": [
+          "쨈빛",
+          "쨈새"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 24
+      }
+    },
+    {
+      "no": 116,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "빠다",
+      "right": "버터",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "아빠다",
+            1
+          ]
+        ],
+        "right_uses": 30
+      }
+    },
+    {
+      "no": 117,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "씨리얼",
+      "right": "시리얼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "씨리얼",
+            2
+          ]
+        ],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 118,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "콘프레이크",
+      "right": "콘플레이크",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 119,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "젤라또",
+      "right": "젤라토",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "젤라또를",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 120,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "샤베트",
+      "right": "셔벗",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "샤베트",
+            2
+          ],
+          [
+            "샤베트말랑이를",
+            1
+          ],
+          [
+            "샤베트가",
+            1
+          ],
+          [
+            "샤베트나",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 121,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "샤벳",
+      "right": "셔벗",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 122,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쉐이크",
+      "right": "셰이크",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "쉐이크가",
+            1
+          ],
+          [
+            "쉐이크를",
+            1
+          ]
+        ],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 123,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "밀크쉐이크",
+      "right": "밀크셰이크",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 124,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쉐프",
+      "right": "셰프",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 125,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쉬림프",
+      "right": "슈림프",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 126,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쉬폰",
+      "right": "시폰",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 127,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "랍스타",
+      "right": "랍스터",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 128,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "로브스터",
+      "right": "랍스터",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 서양 요리에 사용하는 커다란 새우류를 통틀어 이르는 말."
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 129,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스넥",
+      "right": "스낵",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 130,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "블루투쓰",
+      "right": "블루투스",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 131,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "이모티컨",
+      "right": "이모티콘",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 132,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "다운로드",
+      "right": "내려받기",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 컴퓨터 통신망을 통하여 파일이나 자료를 받아 오는 것. 멀리 떨어져 있는"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "다운로드",
+            2
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 133,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "크릭",
+      "right": "클릭",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 왓슨·크릭의모델"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "왓슨·크릭의모델"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 134,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스크린샷",
+      "right": "스크린숏",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "스크린샷을",
+            1
+          ],
+          [
+            "스크린샷과",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 135,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스샷",
+      "right": "스크린숏",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 136,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "밧데리",
+      "right": "배터리",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "이미 있는 자료와 겹침"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 18
+      }
+    },
+    {
+      "no": 137,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "바테리",
+      "right": "배터리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 18
+      }
+    },
+    {
+      "no": 138,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "리모콘",
+      "right": "리모컨",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "이미 있는 자료와 겹침"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 139,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아람",
+      "right": "알람",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 밤이나 상수리 따위가 충분히 익어 저절로 떨어질 정도가 된 상태. 또는 "
+      ],
+      "warnings": [
+        "품은 표제어: 기년아람, 아람(이)불다, 아람문자, 아람바"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "기년아람",
+          "아람(이)불다",
+          "아람문자",
+          "아람바",
+          "아람어",
+          "아람족"
+        ]
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "서아람",
+            1
+          ],
+          [
+            "아람치",
+            1
+          ]
+        ],
+        "right_uses": 19
+      }
+    },
+    {
+      "no": 140,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "타이마",
+      "right": "타이머",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 141,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스탑워치",
+      "right": "스톱워치",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 142,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스탑",
+      "right": "스톱",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 143,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "화이또",
+      "right": "파이팅",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 31
+      }
+    },
+    {
+      "no": 144,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뽀너스",
+      "right": "보너스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 145,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뽀인트",
+      "right": "포인트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 42
+      }
+    },
+    {
+      "no": 146,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "렝킹",
+      "right": "랭킹",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 147,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "짠스",
+      "right": "찬스",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 148,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "라이발",
+      "right": "라이벌",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 17
+      }
+    },
+    {
+      "no": 149,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "메너",
+      "right": "매너",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "메너무",
+            1
+          ]
+        ],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 150,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "에티켙",
+      "right": "에티켓",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 151,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "이티켓",
+      "right": "에티켓",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 152,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아이디아",
+      "right": "아이디어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 21
+      }
+    },
+    {
+      "no": 153,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아이데어",
+      "right": "아이디어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 21
+      }
+    },
+    {
+      "no": 154,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프로잭트",
+      "right": "프로젝트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 11
+      }
+    },
+    {
+      "no": 155,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프로젝뜨",
+      "right": "프로젝트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 11
+      }
+    },
+    {
+      "no": 156,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프리젠테이션",
+      "right": "프레젠테이션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 157,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "인터부",
+      "right": "인터뷰",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 15
+      }
+    },
+    {
+      "no": 158,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "퀴스",
+      "right": "퀴즈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 애스퀴스"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "애스퀴스"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 42
+      }
+    },
+    {
+      "no": 159,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "오디숀",
+      "right": "오디션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 19
+      }
+    },
+    {
+      "no": 160,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "컨서트",
+      "right": "콘서트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 161,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뮤지칼",
+      "right": "뮤지컬",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 162,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "삐아노",
+      "right": "피아노",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 27
+      }
+    },
+    {
+      "no": 163,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "드롬",
+      "right": "드럼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 신드롬, 피터팬신드롬"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "신드롬",
+          "피터팬신드롬"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 164,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "하모니까",
+      "right": "하모니카",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 165,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "오까리나",
+      "right": "오카리나",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 166,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "우크렐레",
+      "right": "우쿨렐레",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 167,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쳴로",
+      "right": "첼로",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 168,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "플룻",
+      "right": "플루트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 169,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "후루트",
+      "right": "플루트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "후루트링",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 170,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "트럼팻",
+      "right": "트럼펫",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 171,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "섹소폰",
+      "right": "색소폰",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 172,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "심볼즈",
+      "right": "심벌즈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 173,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "메로디",
+      "right": "멜로디",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 174,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "리둠",
+      "right": "리듬",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 175,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "땜포",
+      "right": "템포",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 176,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "듀옛",
+      "right": "듀엣",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 177,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "앵콜",
+      "right": "앙코르",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "앵콜을",
+            1
+          ]
+        ],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 178,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "앙콜",
+      "right": "앙코르",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    }
+  ]
+}
