@@ -1,0 +1,3401 @@
+{
+  "batch": "06",
+  "checked_at": "2026-10-07T23:00:46.005Z",
+  "corpus_documents": 22739,
+  "results": [
+    {
+      "no": 1,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "세익스피어",
+      "right": "셰익스피어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 2,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "피라밋",
+      "right": "피라미드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 3,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "오리엔테이숀",
+      "right": "오리엔테이션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 4,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "앙케이트",
+      "right": "앙케트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 5,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "플래쉬",
+      "right": "플래시",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 6,
+        "words": [
+          [
+            "스플래쉬",
+            3
+          ],
+          [
+            "스플래쉬라는",
+            2
+          ],
+          [
+            "라온스플래쉬",
+            1
+          ]
+        ],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 6,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프로포즈",
+      "right": "프러포즈",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "프로포즈하는",
+            2
+          ],
+          [
+            "두사람(프로포즈",
+            1
+          ]
+        ],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 7,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "비지니스",
+      "right": "비즈니스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 8,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "포탈",
+      "right": "포털",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 도망하여 피함."
+      ],
+      "warnings": [
+        "품은 표제어: 관세포탈범, 관세포탈죄, 마포탈, 포탈되다"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": [
+          "관세포탈범",
+          "관세포탈죄",
+          "마포탈",
+          "포탈되다",
+          "포탈라궁",
+          "포탈범"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 9,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "렌트카",
+      "right": "렌터카",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 10,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쇼파",
+      "right": "소파",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 6,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "쇼파에서",
+            2
+          ],
+          [
+            "쇼파에",
+            1
+          ]
+        ],
+        "right_uses": 21
+      }
+    },
+    {
+      "no": 11,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "티켙",
+      "right": "티켓",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 12,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뱃지",
+      "right": "배지",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 뱃지게, 뱃지붕"
+      ],
+      "dictionary": {
+        "right": 6,
+        "wrong": 0,
+        "containing": [
+          "뱃지게",
+          "뱃지붕"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "뱃지도",
+            1
+          ]
+        ],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 13,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "째즈",
+      "right": "재즈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 14,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "데뷰",
+      "right": "데뷔",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 15,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스티로폴",
+      "right": "스티로폼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 16,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아이섀도우",
+      "right": "아이섀도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 17,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "윈도우",
+      "right": "윈도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 18,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "쇼윈도우",
+      "right": "쇼윈도",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 19,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "옐로우",
+      "right": "옐로",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 20,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "레인보우",
+      "right": "레인보",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "레인보우",
+            1
+          ]
+        ],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 21,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "매니아",
+      "right": "마니아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 22,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "미스테리",
+      "right": "미스터리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 미스테리오소"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "미스테리오소"
+        ]
+      },
+      "simulation": {
+        "hits": 4,
+        "words": [
+          [
+            "미스테리가",
+            1
+          ],
+          [
+            "미스테리다",
+            1
+          ],
+          [
+            "미스테리로",
+            1
+          ],
+          [
+            "미스테리라는",
+            1
+          ]
+        ],
+        "right_uses": 14
+      }
+    },
+    {
+      "no": 23,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "심볼",
+      "right": "심벌",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 24,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "클라이막스",
+      "right": "클라이맥스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 25,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "헐리우드",
+      "right": "할리우드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 26,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "지그자그",
+      "right": "지그재그",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 27,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카스테라",
+      "right": "카스텔라",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "카스테라",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 28,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "크리스탈",
+      "right": "크리스털",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 29,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "알루미니움",
+      "right": "알루미늄",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 30,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "다이어몬드",
+      "right": "다이아몬드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 31,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "사파이아",
+      "right": "사파이어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 32,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "에머랄드",
+      "right": "에메랄드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 33,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "토나먼트",
+      "right": "토너먼트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 34,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "콘디션",
+      "right": "컨디션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 35,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아마츄어",
+      "right": "아마추어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 36,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "코메디",
+      "right": "코미디",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 코메디아델라르테"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "코메디아델라르테"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 37,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "나레이션",
+      "right": "내레이션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "나레이션",
+            1
+          ],
+          [
+            "나레이션인",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 38,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "다큐멘타리",
+      "right": "다큐멘터리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 39,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "소프트웨아",
+      "right": "소프트웨어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 40,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "메뉴얼",
+      "right": "매뉴얼",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 41,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "라쟈냐",
+      "right": "라자냐",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 42,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "리조또",
+      "right": "리소토",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 43,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "또띠아",
+      "right": "토르티야",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 44,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "티라미스",
+      "right": "티라미수",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 45,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "캬라멜",
+      "right": "캐러멜",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 46,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카라멜",
+      "right": "캐러멜",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 3,
+        "words": [
+          [
+            "카라멜땅콩",
+            1
+          ],
+          [
+            "카라멜(외국어)",
+            1
+          ],
+          [
+            "카라멜",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 47,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "커스타드",
+      "right": "커스터드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 48,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "모짜렐라",
+      "right": "모차렐라",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 5,
+        "words": [
+          [
+            "모짜렐라",
+            5
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 49,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "핫독",
+      "right": "핫도그",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 10
+      }
+    },
+    {
+      "no": 50,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "후라이드치킨",
+      "right": "프라이드치킨",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 51,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "너겟",
+      "right": "너깃",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "너겟이랑",
+            1
+          ],
+          [
+            "너겟",
+            1
+          ]
+        ],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 52,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "머스타드",
+      "right": "머스터드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 53,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아스파라가스",
+      "right": "아스파라거스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 54,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "샐러리",
+      "right": "셀러리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 샐러리맨"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "샐러리맨"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 55,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "코코낫",
+      "right": "코코넛",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 56,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "말레시아",
+      "right": "말레이시아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 57,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "싱가폴",
+      "right": "싱가포르",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 58,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "필립핀",
+      "right": "필리핀",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 59,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뉴질렌드",
+      "right": "뉴질랜드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 24
+      }
+    },
+    {
+      "no": 60,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아르헨띠나",
+      "right": "아르헨티나",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 61,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "포르투칼",
+      "right": "포르투갈",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 62,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "네델란드",
+      "right": "네덜란드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 63,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "핀랜드",
+      "right": "핀란드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 배핀랜드"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "배핀랜드"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 64,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스코트랜드",
+      "right": "스코틀랜드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 65,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "로스엔젤레스",
+      "right": "로스앤젤레스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 66,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "라스베가스",
+      "right": "라스베이거스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 67,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "모짜르트",
+      "right": "모차르트",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 68,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "차이코프스키",
+      "right": "차이콥스키",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 69,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "미켈란제로",
+      "right": "미켈란젤로",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 70,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아인시타인",
+      "right": "아인슈타인",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 71,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "뉴톤",
+      "right": "뉴턴",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 4
+      }
+    },
+    {
+      "no": 72,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "콜롬버스",
+      "right": "콜럼버스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 73,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "안데르슨",
+      "right": "안데르센",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 74,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "엘리스",
+      "right": "앨리스",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음",
+        "틀린 꼴이 다른 뜻의 표제어로 있음: 그리스 남부, 펠로폰네소스반도 서북쪽에 있는 지방. 고대 올림픽 경기의 "
+      ],
+      "warnings": [
+        "품은 표제어: 엘리스제도"
+      ],
+      "dictionary": {
+        "right": 0,
+        "wrong": 2,
+        "wrong_points_to_right": false,
+        "containing": [
+          "엘리스제도"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 75,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "피터펜",
+      "right": "피터 팬",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 76,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "홈즈",
+      "right": "홈스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "홈즈",
+            1
+          ]
+        ],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 77,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프로펠라",
+      "right": "프로펠러",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 78,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "모타",
+      "right": "모터",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 79,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "센써",
+      "right": "센서",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 80,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "레이져",
+      "right": "레이저",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 81,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프러그",
+      "right": "플러그",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 82,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스윗치",
+      "right": "스위치",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 83,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스노우보드",
+      "right": "스노보드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 84,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스노우",
+      "right": "스노",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 2,
+        "words": [
+          [
+            "스노우볼이",
+            1
+          ],
+          [
+            "스노우볼로",
+            1
+          ]
+        ],
+        "right_uses": 10
+      }
+    },
+    {
+      "no": 85,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "휘트니스",
+      "right": "피트니스",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 86,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "메트리스",
+      "right": "매트리스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 87,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "팬션",
+      "right": "펜션",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 31
+      }
+    },
+    {
+      "no": 88,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "렌턴",
+      "right": "랜턴",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 트렌턴"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": [
+          "트렌턴"
+        ]
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 89,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "테이불",
+      "right": "테이블",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 90,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "올림삑",
+      "right": "올림픽",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 8
+      }
+    },
+    {
+      "no": 91,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카톨릭",
+      "right": "가톨릭",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 92,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "크리스찬",
+      "right": "크리스천",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 93,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "알카리",
+      "right": "알칼리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 94,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "암모니야",
+      "right": "암모니아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 95,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카로리",
+      "right": "칼로리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 96,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "박테리야",
+      "right": "박테리아",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 97,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프랑크톤",
+      "right": "플랑크톤",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 98,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "맘모스",
+      "right": "매머드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 99,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "브라키오사우르스",
+      "right": "브라키오사우루스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 100,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스테고사우르스",
+      "right": "스테고사우루스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 101,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "벨로시랩터",
+      "right": "벨로키랍토르",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 102,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "랩터",
+      "right": "랍토르",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 103,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "알파벧",
+      "right": "알파벳",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 9
+      }
+    },
+    {
+      "no": 104,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "이니샬",
+      "right": "이니셜",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 105,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카렌다",
+      "right": "캘린더",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "틀린 꼴이 다른 뜻의 표제어로 있음: "
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 1,
+        "wrong_points_to_right": false,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 106,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "다이아리",
+      "right": "다이어리",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 1
+      }
+    },
+    {
+      "no": 107,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "엘범",
+      "right": "앨범",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 5
+      }
+    },
+    {
+      "no": 108,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "싸인",
+      "right": "사인",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 네온싸인"
+      ],
+      "dictionary": {
+        "right": 15,
+        "wrong": 0,
+        "containing": [
+          "네온싸인"
+        ]
+      },
+      "simulation": {
+        "hits": 7,
+        "words": [
+          [
+            "휩싸인",
+            2
+          ],
+          [
+            "싸인",
+            2
+          ],
+          [
+            "둘러싸인",
+            1
+          ],
+          [
+            "싸인받을려는",
+            1
+          ],
+          [
+            "싸인도",
+            1
+          ]
+        ],
+        "right_uses": 17
+      }
+    },
+    {
+      "no": 109,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "포스타",
+      "right": "포스터",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 발포스타이렌, 발포스타이렌수지, 발포스타이롤"
+      ],
+      "dictionary": {
+        "right": 3,
+        "wrong": 0,
+        "containing": [
+          "발포스타이렌",
+          "발포스타이렌수지",
+          "발포스타이롤"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "포스타",
+            1
+          ]
+        ],
+        "right_uses": 20
+      }
+    },
+    {
+      "no": 110,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "팜플렛",
+      "right": "팸플릿",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "이미 있는 자료와 겹침"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 111,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "브로셔",
+      "right": "브로슈어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 112,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "카다로그",
+      "right": "카탈로그",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 113,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "까탈로그",
+      "right": "카탈로그",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 114,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "마아크",
+      "right": "마크",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 7
+      }
+    },
+    {
+      "no": 115,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아이꼰",
+      "right": "아이콘",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 2,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 116,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "디자이나",
+      "right": "디자이너",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 31
+      }
+    },
+    {
+      "no": 117,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "파일롯",
+      "right": "파일럿",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 118,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "파이롯트",
+      "right": "파일럿",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 119,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스튜디어스",
+      "right": "스튜어디스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 120,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "아나운사",
+      "right": "아나운서",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 121,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "프로그래마",
+      "right": "프로그래머",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 122,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "엔지니아",
+      "right": "엔지니어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 123,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "빠띠시에",
+      "right": "파티시에",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 124,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "모댈",
+      "right": "모델",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 11
+      }
+    },
+    {
+      "no": 125,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "까이드",
+      "right": "가이드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 126,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "메니큐어",
+      "right": "매니큐어",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 127,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "헤어벤드",
+      "right": "헤어밴드",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 128,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "헤아핀",
+      "right": "헤어핀",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 129,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스까프",
+      "right": "스카프",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 130,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "부라우스",
+      "right": "블라우스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 131,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "원피쓰",
+      "right": "원피스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 2
+      }
+    },
+    {
+      "no": 132,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "래깅스",
+      "right": "레깅스",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 133,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "빠자마",
+      "right": "파자마",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 6
+      }
+    },
+    {
+      "no": 134,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "스니커스",
+      "right": "스니커즈",
+      "context": "",
+      "status": "drop",
+      "problems": [
+        "바른 꼴이 표준국어대사전 표제어에 없음"
+      ],
+      "warnings": [],
+      "dictionary": {
+        "right": 0,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 135,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "런닝셔츠",
+      "right": "러닝셔츠",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 0
+      }
+    },
+    {
+      "no": 136,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "런닝머신",
+      "right": "러닝머신",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [],
+      "dictionary": {
+        "right": 1,
+        "wrong": 0,
+        "containing": []
+      },
+      "simulation": {
+        "hits": 0,
+        "words": [],
+        "right_uses": 3
+      }
+    },
+    {
+      "no": 137,
+      "categoryId": "loanword",
+      "subcategoryId": "loanword",
+      "slot": "loanword/loanword",
+      "mode": "exact",
+      "wrong": "런닝",
+      "right": "러닝",
+      "context": "",
+      "status": "pass",
+      "problems": [],
+      "warnings": [
+        "품은 표제어: 런닝샤쯔"
+      ],
+      "dictionary": {
+        "right": 1,
+        "wrong": 1,
+        "wrong_points_to_right": true,
+        "containing": [
+          "런닝샤쯔"
+        ]
+      },
+      "simulation": {
+        "hits": 1,
+        "words": [
+          [
+            "가벼운런닝",
+            1
+          ]
+        ],
+        "right_uses": 6
+      }
+    }
+  ]
+}
