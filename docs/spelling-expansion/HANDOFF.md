@@ -8,12 +8,11 @@
 ## 지금 상태
 - batch-01: 초안 242 → 점검·모의 실행 뒤 210개 남김.
   - 초안 `batch-01.pairs.tsv`, 점검 결과 `batch-01.check.json`, 뺀 것과 까닭 `batch-01.decisions.json`(drop 키 = 틀린 꼴)
-  - 설명·예문: `batch-01.content-1.json`, `batch-01.content-2.json` 작성 완료.
-    **아직 안 쓴 것**: 문장 규칙(함니다·감니다·됨니다·했서·있서·탠데·할레·했구요·있구요·뭐에요·할테니까·나에·않해~않보·지난 번·그 다음·이런 저런·이곳 저곳·내일 모레·오늘밤·다같이·다함께·좀더·조금더·방과후·쉬는시간)과 뜻 구별(다쳤·짓·젓·부셨·놀랬·적·날라·무릅) → `batch-01.content-3.json`
+  - 설명·예문: `batch-01.content-1/2/3.json` — **210개 모두 작성 완료**(23:15).
   - "그 다음 → 그다음"은 넣기로 선생님이 정함.
 
 ## 남은 순서
-1. batch-01 content-3 쓰기.
+1. ~~batch-01 content-3 쓰기~~ 끝.
 2. batch-02 ~ (합쳐 2,000개 목표, 정확성이 먼저 — 모자라면 모자란 대로 보고):
    - `batch-NN.pairs.tsv` 초안(형식은 batch-01 과 같음: `분류/세부\t검출\t틀린 꼴\t바른 꼴\t문맥`)
    - `node scripts/expand-spelling-base.mjs --batch NN --corpus <학생 글 csv>`
