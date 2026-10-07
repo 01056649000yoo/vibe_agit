@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-07 — 내가 낸 과제 다시 내기 (v1.26) (Claude)
+- **한 일**: 선생님 요청(A안 결정) — 새 표 없이 이미 있는 내 과제에서 골라 폼을 채움. `미션 만들기` 맨 위 `📂 내가 낸 과제 다시 내기` 창(다른 학급·보관함 포함, 최신순 20개, 찾기). 기본 글쓰기는 새 과제 폼, 시·편지·보고서는 전용 화면 `만들기`. id·학급·공개/보관 상태·모두의 아지트 표시 태그는 뗌, 안건 의견 모으기는 회의방과 묶여 제외. 선생님 진남초 문집 3권은 직접 지우셨음(되살리지 않음).
+- **변경**: `mission-form/pastMission.js`(순수 함수), `useMyPastMissions`, `PastMissionPicker`, `MissionTypePicker`·`MissionManager`·`useMissionManager.startFromPastMission`, 도움말·검사 `pastMissionReuse`. DB 변경 없음.
+- **결과/검증**: 실제 화면(선생님 계정, 저장 안 함): 목록 20개·찾기 1개·기본 글쓰기 폼 채움(수정 모드 아님)·보고서 전용 화면 `만들기`로 채움·표시 태그 안 따라옴·과제 수 그대로. 시험 중 잡은 것: 학급 이름 붙이기가 관계 두 개라 실패 → 외래 키 이름으로 지정. 휴대폰 폭 확인.
+- **남은 것 / 다음**: 로컬 배포(선생님 `배포` 뒤, 관리자 화면 v1.25.1 과 함께).
+
 ## 2026-10-07 — 관리자 화면 미리 계산(2시간)·가입일 정렬 (v1.25.1) (Claude)
 - **한 일**: 선생님 요청 — 관리자 화면이 늦게 뜸 [원인: 이용 현황 6.4초 + 선생님별 사용량 3.2초 집계를 열 때마다 계산]. DB가 2시간마다(짝수 시 5분) 활동 7·30·90일 세 가지를 미리 계산해 두고 화면은 그 값을 읽음, 계산 시각 표시, `지금 새로 계산`·승인/취소 뒤엔 즉시 계산. 선생님 명단에 정렬 칸(최근 접속·가입 최신·가입 오래된).
 - **변경**: `20261373`(캐시 표·`admin_get_dashboard_cache_v1`·pg_cron `admin-dashboard-cache`·`admin_get_teacher_accounts_page_v2`, v1 삭제)+스모크, `useAdminUsage`·`useAdminTeacherAccountsPage`·`AdminDashboard`·`AdminUsagePanel`, 검사 `adminDashboardCache`.

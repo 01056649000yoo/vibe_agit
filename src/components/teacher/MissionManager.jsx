@@ -12,6 +12,8 @@ import {
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionTypePicker from './MissionTypePicker';
+import PastMissionPicker from './PastMissionPicker';
+import { pastMissionKind, toReusableMission } from '../../modules/writing/mission-form/pastMission';
 import MissionList from './MissionList';
 import { applyMissionStarter } from '../../constants/missionStarters.js';
 import SubmissionStatusModal from './SubmissionStatusModal';
@@ -53,6 +55,7 @@ const MissionManager = ({
     const [highlightedMissionId, setHighlightedMissionId] = useState(null);
     const [labSourceMission, setLabSourceMission] = useState(null);
     const [presetGenre, setPresetGenre] = useState(null);
+    const [isPastMissionPickerOpen, setIsPastMissionPickerOpen] = useState(false);
     const handledNavigationRef = useRef(null);
 
     const {
@@ -68,6 +71,7 @@ const MissionManager = ({
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
         editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission, handleOpenScheduledMission,
+        startFromPastMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
@@ -165,6 +169,22 @@ const MissionManager = ({
         setIsMissionTypePickerOpen(false);
         setPresetGenre(null);
         handleEditClick(mission);
+    };
+
+    // 내가 낸 과제 다시 내기: 시·편지·보고서는 그 전용 화면을 `만들기` 로(id 를 뗀 값), 나머지는 기본 폼을 채워 연다.
+    const handlePickPastMission = (mission) => {
+        setIsPastMissionPickerOpen(false);
+        setIsMissionTypePickerOpen(false);
+        const kind = pastMissionKind(mission);
+        if (kind !== 'freeform') {
+            setEditingGenreMission(toReusableMission(mission));
+            setActiveGenreMissionId(kind);
+            setActiveGenreMode('create');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        setPresetGenre(null);
+        startFromPastMission(toReusableMission(mission));
     };
 
     const handleReviewMission = (mission, postId = null) => {
@@ -383,10 +403,18 @@ const MissionManager = ({
                 hidden={isSubmissionBoardView}
                 {...(isFormOpen || isMissionTypePickerOpen ? tourAnchor(TEACHER_TOUR_ANCHORS.MISSION_CREATE) : {})}
             >
+                <PastMissionPicker
+                    isOpen={isPastMissionPickerOpen}
+                    onClose={() => setIsPastMissionPickerOpen(false)}
+                    onPick={handlePickPastMission}
+                    activeClassId={activeClass?.id}
+                />
+
                 {isMissionTypePickerOpen && (
                     <MissionTypePicker
                         isMobile={isMobile}
                         onClose={() => setIsMissionTypePickerOpen(false)}
+                        onOpenPastMissions={() => setIsPastMissionPickerOpen(true)}
                         onSelectFreeform={(genreId) => {
                             setIsMissionTypePickerOpen(false);
                             if (genreId) {

@@ -24,7 +24,7 @@ const entryIcon = (entry) => (
  * `embedded` 를 주면 자기 머리말·테두리를 그리지 않는다 — 창 안에 넣을 때 제목과 닫기 단추가
  * 두 번 나오는 것을 막는다(모두의 아지트의 `같이 쓰기 광장`이 이렇게 쓴다).
  */
-const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose, embedded = false }) => {
+const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose, onOpenPastMissions, embedded = false }) => {
     const choices = getGenreCategories().flatMap((category) => (
         category.entries.map((entry) => ({ ...entry, categoryLabel: category.label }))
     ));
@@ -91,6 +91,28 @@ const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose,
             )}
 
             <div style={{ display: 'grid', gap: isMobile ? '12px' : '14px' }}>
+                {/* 내가 낸 과제 다시 내기(2026-10-07) — 과제 만들기 화면만 준다(모두의 아지트 창에는 없음) */}
+                {onOpenPastMissions && (
+                    <motion.button
+                        type="button"
+                        whileHover={{ y: -2 }}
+                        onClick={onOpenPastMissions}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '10px', width: '100%', textAlign: 'left', cursor: 'pointer',
+                            padding: isMobile ? '10px 12px' : '12px 14px', borderRadius: '13px',
+                            border: '1px dashed #F59E0B', background: '#FFFBEB'
+                        }}
+                    >
+                        <span aria-hidden="true" style={{ fontSize: isMobile ? '1.2rem' : '1.35rem' }}>📂</span>
+                        <span style={{ minWidth: 0 }}>
+                            <strong style={{ display: 'block', color: '#92400E', fontSize: isMobile ? '0.88rem' : '0.96rem' }}>내가 낸 과제 다시 내기</strong>
+                            <span style={{ display: 'block', marginTop: '2px', color: '#64748B', fontSize: '0.72rem' }}>
+                                예전에 낸 과제를 골라 불러오고, 고쳐서 이 학급에 새로 냅니다.
+                            </span>
+                        </span>
+                    </motion.button>
+                )}
+
                 <section aria-labelledby="template-writing-types-heading">
                     <div style={{
                         display: 'flex', alignItems: 'baseline', gap: '7px', marginBottom: '7px',

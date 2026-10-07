@@ -410,6 +410,20 @@ export const useMissionManager = (
         }
     };
 
+    /*
+     * 내가 낸 과제 다시 내기(2026-10-07): 고른 과제로 **새 과제 폼을 채워 연다.**
+     * 수정 상태를 끄고 공개 날짜는 비운다 — 저장하면 지금 학급에 새 과제로 들어간다.
+     */
+    const startFromPastMission = (mission) => {
+        if (!mission) return;
+        setIsEditing(false);
+        setEditingMissionId(null);
+        setEditingMissionSchedule(null);
+        setFormData({ ...buildMissionFormData(mission), schedule_at: '' });
+        setIsFormOpen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditingMissionId(null);
@@ -1565,6 +1579,7 @@ ${postArray.map((p, idx) => {
         postOutlineReference, postDetailLoading, refreshSelectedPostDetail,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission, handleOpenScheduledMission,
+        startFromPastMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleRecallPosts, handleUndoRecall,
