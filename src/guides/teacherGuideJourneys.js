@@ -67,7 +67,8 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         steps: [
             step('enable-spelling-ai', 'AI 맞춤법 검사 사용 조건 확인', '다시 쓰기 단계에서만 열리는 검사 조건과 외부 전송 범위를 확인합니다.', 'settings:writing-editor'),
             step('curate-spelling', '맞춤법 배움 데이터 운영', '학생 검색과 AI 검사 결과의 주간 정선, 공통 반영, 학급별 추가 흐름을 확인합니다.', 'settings:module:spelling-learning'),
-            step('review-ai-standards', 'AI 기준과 결과 확인', 'AI 결과는 자동 확정하지 않고 교사가 기준과 실제 결과를 함께 검토합니다.', 'settings:ai-prompts')
+            step('review-ai-standards', 'AI 기준과 결과 확인', 'AI 결과는 자동 확정하지 않고 교사가 기준과 실제 결과를 함께 검토합니다.', 'settings:ai-prompts'),
+            step('spelling-claw-practice', '🧸 수호룡의 인형뽑기로 맞춤법 다지기', '학생이 키운 수호룡이 맞춤법 10문제를 내고, 목표만큼 맞히면 코인으로 인형뽑기를 합니다. 정선한 공통 자료가 퀴즈마다 2문제씩 들어가 자주 틀린 표현을 놀이로 다시 익힙니다. 학급마다 켜야 보입니다(처음에는 꺼짐).', 'spelling-claw')
         ]
     },
     {
@@ -108,7 +109,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
         id: 'motivation',
         icon: '🎡',
         title: '포인트와 동기부여 기능 활용하기',
-        summary: '학생 화면 노출을 조절하고 성장·학습 보상의 기준을 오해 없이 운영합니다.',
+        summary: '학생 화면 노출을 조절하고 작가 수호룡·어휘의 탑·수호룡의 인형뽑기 같은 성장·학습 보상의 기준을 오해 없이 운영합니다.',
         estimatedTime: '학기 초 설정',
         steps: [
             step('playground-modules', '놀이 활동 켜고 끄기', '학급 학생에게 보여 줄 놀이 활동을 고르고 각 활동 설정으로 들어갑니다.', 'playground'),
