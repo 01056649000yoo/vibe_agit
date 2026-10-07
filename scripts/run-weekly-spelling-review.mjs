@@ -52,21 +52,34 @@ const parseSecretValue = (contents, name) => {
 
 const runDatabaseFunction = (functionName, payload) => {
     const docker = process.env.AGIT_DOCKER_PATH || DEFAULT_DOCKER;
+    /*
+     * 값은 base64 로 SQL 안에 넣고 SQL 은 **표준 입력**으로 보낸다(2026-10-07 첫 자동 실행에서 발견).
+     * - psql 은 `-c` 명령 안의 :'변수' 를 풀지 않아 문법 오류가 났다.
+     * - 검수 결과 200개를 명령줄 인자로 넘기면 macOS 인자 길이 제한을 넘는다.
+     * base64 글자(A–Z a–z 0–9 + / =)는 작은따옴표를 깨지 못한다.
+     */
     const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
-    const sql = functionName === 'spelling_review_auto_status_v1'
-        ? 'SELECT public.spelling_review_auto_status_v1();'
-        : functionName === 'start_spelling_weekly_review_v1'
-        ? `SELECT public.${functionName}((convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'week_start')::date, convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'catalog_version');`
-        : functionName === 'finish_spelling_weekly_review_v1'
-            ? `SELECT public.${functionName}((convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'week_start')::date, convert_from(decode(:'payload','base64'),'UTF8')::jsonb->'items', convert_from(decode(:'payload','base64'),'UTF8')::jsonb->'summary');`
-            : `SELECT public.${functionName}((convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'week_start')::date, convert_from(decode(:'payload','base64'),'UTF8')::jsonb->>'error_code');`;
+    const arg = `convert_from(decode('${encoded}','base64'),'UTF8')::jsonb`;
+    const calls = {
+        spelling_review_auto_status_v1: 'SELECT public.spelling_review_auto_status_v1();',
+        start_spelling_weekly_review_v1: `SELECT public.start_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->>'catalog_version', TRUE);`,
+        save_spelling_weekly_ai_cache_v1: `SELECT public.save_spelling_weekly_ai_cache_v1(${arg}->'items');`,
+        finish_spelling_weekly_review_v1: `SELECT public.finish_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->'items', ${arg}->'summary');`,
+        fail_spelling_weekly_review_v1: `SELECT public.fail_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->>'error_code');`
+    };
+    const sql = Reflect.get(calls, functionName);
+    if (!sql) throw new Error(`unknown_function_${functionName}`);
     const result = spawnSync(docker, [
-        'exec', '-i', 'agit-db', 'psql', '-U', 'supabase_admin', '-d', 'postgres',
-        '-v', 'ON_ERROR_STOP=1', '-v', `payload=${encoded}`, '-t', '-A', '-c', sql
-    ], { encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 });
-    if (result.status !== 0) throw new Error(`database_${functionName}_failed`);
+        'exec', '-i', 'agit-db', 'psql', '-U', 'supabase_admin', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-t', '-A'
+    ], { encoding: 'utf8', input: sql, maxBuffer: 16 * 1024 * 1024 });
+    if (result.status !== 0) {
+        // DB 오류 문장은 비밀을 담지 않는다 — 원인을 알 수 있게 한 줄 남긴다.
+        const reason = String(result.stderr || result.error?.message || '').split('\n').find((line) => /ERROR|error|E2BIG/.test(line)) || '';
+        if (reason) console.error(`[${functionName}] ${reason.slice(0, 300)}`);
+        throw new Error(`database_${functionName}_failed`);
+    }
     const output = result.stdout.trim();
-    if (!output || functionName === 'fail_spelling_weekly_review_v1') return null;
+    if (!output || functionName === 'fail_spelling_weekly_review_v1' || functionName === 'save_spelling_weekly_ai_cache_v1') return null;
     return JSON.parse(output);
 };
 
@@ -193,11 +206,17 @@ export const runReview = async ({ weekStart, lookupPayload, detectionPayload, ca
                     similar_matches: candidate.similar_matches
                 })));
                 const reviewByKey = new Map(reviews.map((review) => [review.review_key, review]));
+                const done = [];
                 for (const candidate of batch) {
                     const review = reviewByKey.get(candidate.review_key);
                     // 판정이 빠진 후보 하나 때문에 배치 전체를 버리지 않는다.
-                    completed.push(review ? cleanReview(candidate, review, false) : missingReview(candidate));
+                    done.push(review ? cleanReview(candidate, review, false) : missingReview(candidate));
                 }
+                // 배치가 끝나는 즉시 AI 판정을 저장한다(엣지 함수와 같다). 마무리가 실패해도 낸 AI 비용은 남는다.
+                runDatabaseFunction('save_spelling_weekly_ai_cache_v1', {
+                    items: done.map((item) => ({ ...item, model: MODEL, review_version: REVIEW_VERSION }))
+                });
+                completed.push(...done);
             }
         }
 
