@@ -613,3 +613,12 @@ test('띄어쓰기 규칙이 잡는 표현은 검수 전에 빠지고, 맥미니
     assert.match(panel, /base_rule: '기본 규칙이 잡음'/);
     assert.match(reviewCore, /제47항/);
 });
+
+test('쌓인 대기 후보는 새 지시문으로 다시 물어 제외 권장만 닫고, 닫기 전에 미리 볼 수 있다', () => {
+    assert.match(runner, /--rejudge-pending/);
+    assert.match(runner, /--dry-run/);
+    assert.match(runner, /review\?\.verdict === 'reject'/);
+    assert.match(runner, /close_rejudged_spelling_items_v1/);
+    // 이미 제외 권장인 것은 다시 묻지 않는다(비용)
+    assert.match(runner, /item\.ai_verdict !== 'reject'/);
+});

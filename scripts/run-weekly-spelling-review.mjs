@@ -64,6 +64,7 @@ const runDatabaseFunction = (functionName, payload) => {
     const calls = {
         spelling_review_auto_status_v1: 'SELECT public.spelling_review_auto_status_v1();',
         spelling_weekly_pending_expressions_v1: 'SELECT public.spelling_weekly_pending_expressions_v1();',
+        close_rejudged_spelling_items_v1: `SELECT public.close_rejudged_spelling_items_v1(${arg}->'items');`,
         close_rule_covered_spelling_items_v1: `SELECT public.close_rule_covered_spelling_items_v1(ARRAY(SELECT jsonb_array_elements_text(${arg}->'ids'))::uuid[]);`,
         start_spelling_weekly_review_v1: `SELECT public.start_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->>'catalog_version', TRUE);`,
         save_spelling_weekly_ai_cache_v1: `SELECT public.save_spelling_weekly_ai_cache_v1(${arg}->'items');`,
@@ -83,7 +84,7 @@ const runDatabaseFunction = (functionName, payload) => {
     }
     const output = result.stdout.trim();
     if (!output || functionName === 'fail_spelling_weekly_review_v1' || functionName === 'save_spelling_weekly_ai_cache_v1') return null;
-    if (functionName === 'close_rule_covered_spelling_items_v1') return Number(output);
+    if (functionName === 'close_rule_covered_spelling_items_v1' || functionName === 'close_rejudged_spelling_items_v1') return Number(output);
     return JSON.parse(output);
 };
 
@@ -149,6 +150,11 @@ const main = async () => {
     if (process.argv.includes('--self-check')) {
         const index = buildKnownSpellingIndex(lookupPayload, detectionPayload);
         console.log(`주간 맞춤법 검수기 확인 완료 — 기본 별칭 ${index.aliases.size}개`);
+        return;
+    }
+
+    if (process.argv.includes('--rejudge-pending')) {
+        await rejudgePending({ dryRun: process.argv.includes('--dry-run') });
         return;
     }
 
@@ -302,6 +308,46 @@ export const closeRuleCovered = ({ lookupPayload, detectionPayload }) => {
     const pending = runDatabaseFunction('spelling_weekly_pending_expressions_v1', {}) || [];
     const ids = pending.filter((item) => isKnownSpelling(knownIndex, item.expression)).map((item) => item.id).slice(0, 2000);
     return ids.length ? runDatabaseFunction('close_rule_covered_spelling_items_v1', { ids }) : 0;
+};
+
+/*
+ * 이미 쌓인 대기 후보를 지금 지시문으로 다시 묻는다(2026-10-07). 지시문에 제47항 허용·알 수 없는 오타는
+ * `제외 권장` 이라는 줄을 더했는데 그것은 새 검수부터 적용되기 때문이다. 이번에 제외 권장이 된 것만 닫는다
+ * (관리자 화면 `자동으로 뺀 것` 에서 되돌릴 수 있다). --dry-run 은 닫지 않고 무엇이 닫힐지만 보여 준다.
+ */
+const rejudgePending = async ({ dryRun }) => {
+    const pending = (runDatabaseFunction('spelling_weekly_pending_expressions_v1', {}) || [])
+        .filter((item) => item.ai_verdict !== 'reject');
+    const secrets = await readFile(process.env.AGIT_SECRETS_FILE || DEFAULT_SECRETS_FILE, 'utf8');
+    const apiKey = (process.env.OPENAI_API_KEY || parseSecretValue(secrets, 'OPENAI_API_KEY')).trim();
+    if (!apiKey) throw new Error('openai_key_missing');
+    const rejected = [];
+    for (let offset = 0; offset < pending.length; offset += AI_BATCH_SIZE) {
+        const batch = pending.slice(offset, offset + AI_BATCH_SIZE);
+        const reviews = await reviewWithOpenAI(apiKey, batch.map((item) => ({
+            review_key: item.id,
+            expression: item.expression,
+            source_correction: item.source_correction || '',
+            source_kinds: item.source_kinds || [],
+            hit_count: item.hit_count,
+            class_count: item.class_count,
+            similar_matches: []
+        })));
+        for (const review of reviews) {
+            if (review?.verdict === 'reject' && batch.some((item) => item.id === review.review_key)) {
+                rejected.push({ id: review.review_key, reason: trimText(review.reason, 300) || '다시 판정에서 제외 권장', expression: batch.find((item) => item.id === review.review_key).expression });
+            }
+        }
+    }
+    console.log(`대기 ${pending.length}개 중 다시 판정에서 제외 권장 ${rejected.length}개`);
+    if (dryRun) {
+        for (const item of rejected) console.log(`  ${item.expression} — ${item.reason}`);
+        return;
+    }
+    const closed = rejected.length
+        ? runDatabaseFunction('close_rejudged_spelling_items_v1', { items: rejected.map(({ id, reason }) => ({ id, reason })) })
+        : 0;
+    console.log(`닫음 ${closed}개(관리자 화면 \`자동으로 뺀 것\` 에서 되돌릴 수 있음)`);
 };
 
 const runAuto = async ({ lookupPayload, detectionPayload, catalogVersion }) => {
