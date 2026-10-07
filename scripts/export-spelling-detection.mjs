@@ -52,7 +52,8 @@ const lookupPayload = {
         explanation: entry.explanation,
         examples: entry.examples,
         searchable: entry.searchable,
-        source: entry.source
+        source: entry.source,
+        ...(entry.level === 'book' ? { level: 'book' } : {})
     }))
 };
 

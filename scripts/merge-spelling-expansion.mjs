@@ -62,7 +62,8 @@ export const loadBatch = async (batch) => {
         if (result.status !== 'pass' || Reflect.get(decisions.drop || {}, result.wrong)) continue;
         const text = Reflect.get(content, result.wrong);
         if (!text) { problems.push(`${result.wrong}: 설명 없음`); continue; }
-        items.push({ batch, ...result, ...text });
+        const level = decisions.book_words?.includes(result.wrong) || decisions.level === 'book' ? 'book' : 'daily';
+        items.push({ batch, ...result, ...text, level });
     }
     return { items, problems, decisions };
 };
@@ -74,7 +75,9 @@ export const toReferenceLine = (item, sortOrder, id) => {
     const options = {
         searchable: [...new Set([item.answer, item.wrong, ...String(item.label).split('/').map((part) => part.trim())])].filter(Boolean),
         sourceQuery: String(item.answer).replace(/^-/, '').split(/\s+/)[0],
-        detectionPatterns: [{ text, target: item.wrong, right: item.right, lookup: String(item.answer).replace(/^-/, '') }]
+        detectionPatterns: [{ text, target: item.wrong, right: item.right, lookup: String(item.answer).replace(/^-/, '') }],
+        // 책 낱말: 묶음의 decisions.json `level: "book"` 이거나 항목별 notes 의 `level`
+        ...(item.level === 'book' ? { level: 'book' } : {})
     };
     return `        reference(${sortOrder}, ${JSON.stringify(id)}, ${JSON.stringify(item.subcategoryId)}, ${JSON.stringify(mode)}, "catalog", ${JSON.stringify(item.label)}, ${JSON.stringify(item.answer)}, ${JSON.stringify(item.explanation)}, ${JSON.stringify(item.examples)}, ${JSON.stringify(options)}),`;
 };

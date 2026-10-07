@@ -133,6 +133,8 @@ export const reference = (
     detectionMode,
     origin,
     contentType: 'reference',
+    // 책 낱말(2026-10-08): 아이가 책에서 보고 쓸 수 있지만 생활에서는 드문 말. 밑줄은 같고 퀴즈에서만 드물게 낸다.
+    level: options.level === 'book' ? 'book' : 'daily',
     learningLabel: options.learningLabel || question,
     question,
     answer,

@@ -101,7 +101,7 @@ const baseSource = (entry, patterns = []) => {
         addPair(pairs, { wrong, right: entry.answer, focusWrong: wrong, focusRight: entry.answer });
     }
     return {
-        key: `base:${entry.id}`, source: 'base', entryId: entry.id,
+        key: `base:${entry.id}`, source: 'base', entryId: entry.id, level: entry.level === 'book' ? 'book' : 'daily',
         label: entry.learningLabel || entry.question, explanation: entry.explanation || '',
         examples: (entry.examples || []).map(nfc), pairs
     };
@@ -137,7 +137,7 @@ export const spellingSourcesFromLearningEntries = (rows, source = 'common') => r
 /** 재료 하나에서 만들 수 있는 문제를 모두 만든다. */
 const itemsFromSource = (src) => {
     const items = [];
-    const base = { entryKey: src.key, source: src.source, label: src.label, explanation: src.explanation };
+    const base = { entryKey: src.key, source: src.source, label: src.label, explanation: src.explanation, level: src.level || 'daily' };
     src.pairs.forEach((pair, pairIndex) => {
         const spacing = isSpacingOnly(pair.focusWrong, pair.focusRight);
         // 문맥 항목(검출 패턴이 `숙제하는 데 한 시간이 걸` 처럼 낱말 중간에서 끊긴 조각)은 그대로 보이면 어색하다.
@@ -211,8 +211,15 @@ const shuffle = (list, random) => {
  * 10문제 뽑기. 한 항목에서는 한 문제만, 주관식은 `writeCount` 개.
  * `preferredEntryKeys` 는 먼저 낼 항목(내가 헷갈린 말·우리 반이 자주 틀린 말) — 2단계에서 서버가 채운다.
  */
+/*
+ * 책 낱말(level: 'book', 2026-10-08 선생님 결정): 책에서 보고 쓸 수 있지만 생활에서는 드문 말(사글세·괴팍하다 같은 것).
+ * 밑줄은 똑같이 긋되 퀴즈에는 한 번에 이만큼까지만 섞는다 — 아이들이 모르는 말만 나오면 어렵고 재미가 없다.
+ */
+export const SPELLING_QUIZ_BOOK_LIMIT = 1;
+
 export const createSpellingQuiz = (pool, {
-    count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED
+    count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED,
+    bookLimit = SPELLING_QUIZ_BOOK_LIMIT
 } = {}) => {
     const byEntry = new Map();
     for (const item of pool) byEntry.set(item.entryKey, [...(byEntry.get(item.entryKey) || []), item]);
@@ -221,8 +228,13 @@ export const createSpellingQuiz = (pool, {
         [...byEntry.keys()].filter((key) => byEntry.get(key)[0]?.source === source && !preferredEntryKeys.includes(key)), random
     ).slice(0, Math.max(0, Number(need) || 0)));
     const preferred = [...mustKeys, ...preferredEntryKeys].filter((key) => byEntry.has(key));
-    const rest = shuffle([...byEntry.keys()].filter((key) => !preferred.includes(key)), random);
-    const order = [...preferred, ...rest];
+    const isBook = (key) => byEntry.get(key)[0]?.level === 'book';
+    const restKeys = [...byEntry.keys()].filter((key) => !preferred.includes(key));
+    // 책 낱말은 bookLimit 개만 생활 낱말 사이 아무 자리에 끼운다(먼저 낼 항목은 그대로 앞에).
+    const daily = shuffle(restKeys.filter((key) => !isBook(key)), random);
+    const books = shuffle(restKeys.filter(isBook), random).slice(0, Math.max(0, bookLimit));
+    for (const key of books) daily.splice(Math.floor(random() * Math.min(daily.length + 1, count)), 0, key);
+    const order = [...preferred, ...daily];
     const picked = [];
     const used = new Set();
     const take = (kind, limit) => {

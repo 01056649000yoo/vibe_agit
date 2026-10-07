@@ -115,3 +115,24 @@ test('퀴즈마다 공통 자료 문제는 무조건 2개(2026-10-03 선생님 �
     assert.ok(createSpellingQuiz(make(1), { count: 10, writeCount: 0 }).some((item) => item.source === 'common'));
     assert.equal(createSpellingQuiz(make(0), { count: 10, writeCount: 0 }).length, 10);
 });
+
+test('책 낱말은 퀴즈 한 판에 한 개까지만 섞이고 나머지는 생활 낱말이다', async () => {
+    const { createSpellingQuiz, buildSpellingQuizPool, spellingSourcesFromEntries, SPELLING_QUIZ_BOOK_LIMIT } = await import('../supabase/functions/spelling-claw/spellingQuizBuilder.js');
+    const entry = (id, right, wrong, level) => ({
+        id, question: `${right} / ${wrong}`, answer: right, level, explanation: '설명',
+        examples: [`나는 ${right}을 보았다.`], detectionPatterns: [{ text: wrong, target: wrong, right, lookup: right }]
+    });
+    const entries = [
+        ...Array.from({ length: 30 }, (_, i) => entry(`d${i}`, `생활${i}가`, `생활${i}까`, 'daily')),
+        ...Array.from({ length: 30 }, (_, i) => entry(`b${i}`, `책${i}가`, `책${i}까`, 'book'))
+    ];
+    const pool = buildSpellingQuizPool(spellingSourcesFromEntries(entries));
+    let seed = 3;
+    const random = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let round = 0; round < 40; round += 1) {
+        const quiz = createSpellingQuiz(pool, { random, guaranteed: {} });
+        assert.equal(quiz.length, 10);
+        assert.ok(quiz.filter((item) => item.level === 'book').length <= SPELLING_QUIZ_BOOK_LIMIT);
+    }
+    assert.equal(SPELLING_QUIZ_BOOK_LIMIT, 1);
+});
