@@ -513,6 +513,186 @@
       "right": "것 같다",
       "lookup": "같다",
       "source": "(?:것|거)같"
+    },
+    {
+      "id": "ji-anh",
+      "entryId": "ji-anh",
+      "label": "-지않다 / -지 않다",
+      "wrong": "-지않다",
+      "right": "-지 않다",
+      "lookup": "않다",
+      "source": "[가-맇막-힣]지않"
+    },
+    {
+      "id": "ji-mot",
+      "entryId": "ji-mot",
+      "label": "-지못하다 / -지 못하다",
+      "wrong": "-지못하다",
+      "right": "-지 못하다",
+      "lookup": "못하다",
+      "source": "[가-맇막-힣]지못(?=하|해|했|할|한|함|합)"
+    },
+    {
+      "id": "go-sip",
+      "entryId": "go-sip",
+      "label": "-고싶다 / -고 싶다",
+      "wrong": "-고싶다",
+      "right": "-고 싶다",
+      "lookup": "싶다",
+      "source": "[가-힣]고싶"
+    },
+    {
+      "id": "eoya-hada",
+      "entryId": "eoya-hada",
+      "label": "-어야하다 / -어야 하다",
+      "wrong": "-어야하다",
+      "right": "-어야 하다",
+      "lookup": "하다",
+      "source": "(?:해|가|와|봐|줘|돼|써|자|사|서|타|켜|꺼|껴|져|워|러|려|어|내|세|쳐|겨|봬|해내)야(?:하|합|했|해|할|한|함)"
+    },
+    {
+      "id": "neun-ge",
+      "entryId": "neun-ge",
+      "label": "-는게 / -는 게",
+      "wrong": "-는게",
+      "right": "-는 게",
+      "lookup": "것",
+      "source": "[가-힣]는게"
+    },
+    {
+      "id": "neun-geo",
+      "entryId": "neun-geo",
+      "label": "-는거 / -는 거",
+      "wrong": "-는거",
+      "right": "-는 거",
+      "lookup": "것",
+      "source": "[가-힣]는거"
+    },
+    {
+      "id": "ttaemun",
+      "entryId": "ttaemun",
+      "label": "-때문 / - 때문",
+      "wrong": "-때문",
+      "right": "- 때문",
+      "lookup": "때문",
+      "source": "[가-힣]때문"
+    },
+    {
+      "id": "hal-geot",
+      "entryId": "hal-geot",
+      "label": "-ㄹ것 / -ㄹ 것",
+      "wrong": "-ㄹ것",
+      "right": "-ㄹ 것",
+      "lookup": "것",
+      "source": "(?:할|갈|볼|올|줄|될|쓸|쉴|잘|놀|울|알|만들|먹을|있을|없을|잡을|읽을|찾을|배울|그릴|마실|앉을)것"
+    },
+    {
+      "id": "hal-ttae",
+      "entryId": "hal-ttae",
+      "label": "-ㄹ때 / -ㄹ 때",
+      "wrong": "-ㄹ때",
+      "right": "-ㄹ 때",
+      "lookup": "때",
+      "source": "(?:할|갈|볼|올|줄|될|들|쓸|쉴|잘|클|놀|울|알|만들|먹을|있을|없을|잡을|읽을|걸을|찾을|배울|그릴|마실|앉을|어릴|아플|힘들|심심할|화날|슬플|기쁠)때"
+    },
+    {
+      "id": "hal-jul",
+      "entryId": "hal-jul",
+      "label": "-ㄹ줄 알다 / -ㄹ 줄 알다",
+      "wrong": "-ㄹ줄 알다",
+      "right": "-ㄹ 줄 알다",
+      "lookup": "줄",
+      "source": "(?:할|갈|볼|올|될|쓸|탈|놀|만들|먹을|읽을|찾을|그릴|칠|잘)줄(?=\\s*(?:알|몰))"
+    },
+    {
+      "id": "hal-geoya",
+      "entryId": "hal-geoya",
+      "label": "-ㄹ거야 / -ㄹ 거야",
+      "wrong": "-ㄹ거야",
+      "right": "-ㄹ 거야",
+      "lookup": "것",
+      "source": "(?:할|갈|볼|올|줄|될|들|쓸|쉴|잘|놀|울|알|만들|먹을|있을|없을|잡을|읽을|찾을|배울|그릴|마실|앉을)거(?=야|예|에요|다|라|면|지|니|든|고|잖|래|요)"
+    },
+    {
+      "id": "neun-geot",
+      "entryId": "neun-geot",
+      "label": "-는것 / -는 것",
+      "wrong": "-는것",
+      "right": "-는 것",
+      "lookup": "것",
+      "source": "(?:는|던|된|운)것"
+    },
+    {
+      "id": "ge-doeda",
+      "entryId": "ge-doeda",
+      "label": "-게되다 / -게 되다",
+      "wrong": "-게되다",
+      "right": "-게 되다",
+      "lookup": "되다",
+      "source": "[가-힣]게(?:되|돼|됐|됩|될|된)"
+    },
+    {
+      "id": "myeot-unit",
+      "entryId": "myeot-unit",
+      "label": "몇개 / 몇 개",
+      "wrong": "몇개",
+      "right": "몇 개",
+      "lookup": "몇",
+      "source": "몇(?:개|가지|번|명|시간|살|권|마리|장|층|학년|사람|년|달|주일|등)"
+    },
+    {
+      "id": "yeoreo-gaji",
+      "entryId": "yeoreo-gaji",
+      "label": "여러가지 / 여러 가지",
+      "wrong": "여러가지",
+      "right": "여러 가지",
+      "lookup": "여러",
+      "source": "여러(?:가지|개|번|명|사람|곳|나라|모로|날|색|종류)"
+    },
+    {
+      "id": "amu-mal",
+      "entryId": "amu-mal",
+      "label": "아무말 / 아무 말",
+      "wrong": "아무말",
+      "right": "아무 말",
+      "lookup": "아무",
+      "source": "아무(?:말|일|때|곳|사람|생각|소리|짓|이유|데)"
+    },
+    {
+      "id": "number-unit",
+      "entryId": "number-unit",
+      "label": "두개 / 두 개",
+      "wrong": "두개",
+      "right": "두 개",
+      "lookup": "개",
+      "source": "(?:한(?=개|명|마리|권|장|살)|두|세|네|다섯|여섯|일곱|여덟|아홉|열)(?:개|가지|명|마리|권|장|살)(?=[\\s.,!?을를이가은는도만씩에의와과로랑]|$)"
+    },
+    {
+      "id": "ye-reul-deul",
+      "entryId": "ye-reul-deul",
+      "label": "예를들어 / 예를 들어",
+      "wrong": "예를들어",
+      "right": "예를 들어",
+      "lookup": "들다",
+      "source": "예를들"
+    },
+    {
+      "id": "jal-moreu",
+      "entryId": "jal-moreu",
+      "label": "잘모르다 / 잘 모르다",
+      "wrong": "잘모르다",
+      "right": "잘 모르다",
+      "lookup": "모르다",
+      "source": "잘모르"
+    },
+    {
+      "id": "deon-jung",
+      "entryId": "deon-jung",
+      "label": "-던중 / -던 중",
+      "wrong": "-던중",
+      "right": "-던 중",
+      "lookup": "중",
+      "source": "(?:던|는)중(?=에|이|$|[\\s.,])"
     }
   ],
   "elementaryRules": [

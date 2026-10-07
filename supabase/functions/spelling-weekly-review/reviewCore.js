@@ -40,6 +40,9 @@ export const REVIEW_INSTRUCTIONS = [
     'caution: 틀린 것은 맞지만 이 아이 한 명의 오타나 활용 실수라 다른 학급에서 되풀이될 것 같지 않은 것.',
     '  보기 — 즐거워더, 븍지런함, 잔고 싶어. 문맥에 따라 맞을 수 있거나 고유명사 가능성이 있는 것도 여기다.',
     'reject: 틀린 표현이 아니거나, 낱말·짧은 구가 아니라 문장 전체인 것.',
+    '  붙여 써도 허용되는 것은 틀린 표현이 아니므로 reject다(한글 맞춤법 제47항) — -아/-어 뒤 보조 용언',
+    '  (참아주다·해보다·먹어버리다·살아계시다), 듯하다·만하다·척하다·성싶다 앞, 붙여 써도 되는 고유명사·전문 용어.',
+    '  소리가 크게 달라 무슨 낱말인지 알기 어려운 오타·없는 낱말(갠로피다, 바구면은)도 규칙이 없으므로 reject다.',
     'class_count가 1이면 아직 한 학급에서만 나온 것이라 recommend가 아니라 caution이다.',
     '입력은 기본 500개와 현재 공통 자료의 정확 일치를 코드로 제거한 뒤의 후보다.',
     'similar_matches는 전체 자료가 아니라 코드가 고른 유사 항목 최대 3개이므로 참고만 한다.',
@@ -151,8 +154,26 @@ export const buildKnownSpellingIndex = (lookupPayload, detectionPayload, commonE
             source: '공통 자료'
         });
     }
-    return { aliases, records: [...records.values()] };
+    /*
+     * 빠른 검사 규칙의 정규식(띄어쓰기 규칙처럼 낱말 목록이 아니라 꼴로 잡는 것)도 "이미 아는 것"으로 본다
+     * (2026-10-07). `당황하지않고`·`참지않고` 는 낱말로는 서로 다르지만 규칙 하나(-지 않다)가 둘 다 잡는다.
+     */
+    const patterns = [];
+    for (const rule of detectionPayload?.quickRules || []) {
+        try {
+            if (rule.source) patterns.push(new RegExp(rule.source));
+        } catch {
+            // 깨진 규칙 하나 때문에 검수가 멈추지 않게 건너뛴다.
+        }
+    }
+    return { aliases, records: [...records.values()], patterns };
 };
+
+/** 기본 자료·공통 자료에 이미 있거나, 기본 규칙(정규식)이 이미 밑줄을 긋는 표현인지. */
+export const isKnownSpelling = (knownIndex, expression) => (
+    knownIndex.aliases.has(normalizeSpellingValue(expression))
+    || (knownIndex.patterns || []).some((pattern) => pattern.test(String(expression || '')))
+);
 
 const mergeSource = (groups, sourceKind, row) => {
     const expression = trimText(row.expression, 40);
@@ -242,11 +263,11 @@ const findSimilarMatches = (expression, preparedRecords) => {
 export const prepareWeeklyReviewCandidates = (payload, knownIndex, hashFn) => {
     if (typeof hashFn !== 'function') throw new Error('hash_function_required');
     const grouped = mergeWeeklySpellingSources(payload);
-    const knownFiltered = grouped.filter((item) => knownIndex.aliases.has(normalizeSpellingValue(item.expression)));
+    const knownFiltered = grouped.filter((item) => isKnownSpelling(knownIndex, item.expression));
     // 정렬은 유사 항목과 무관하므로 먼저 자르고, AI 에 보낼 것에만 유사 항목을 구한다.
     const preparedRecords = prepareKnownRecords(knownIndex.records);
     const candidates = grouped
-        .filter((item) => !knownIndex.aliases.has(normalizeSpellingValue(item.expression)))
+        .filter((item) => !isKnownSpelling(knownIndex, item.expression))
         .sort((left, right) => right.class_count - left.class_count || right.hit_count - left.hit_count)
         .slice(0, MAX_CANDIDATES)
         .map((item) => ({

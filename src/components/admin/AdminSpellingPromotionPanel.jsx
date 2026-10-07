@@ -59,7 +59,7 @@ const formatDateTime = (value) => value ? DATE_TIME_FORMATTER.format(new Date(va
  * 자동으로 뺀 까닭(2026-10-01, `20261362`). 서버가 정하고 화면은 이름만 붙인다.
  * 사람이 고를 것만 남기려고 AI `제외 권장`·이미 공통 자료인 표현·같은 표현의 옛 주 후보는 저절로 뺀다.
  */
-const AUTO_REASON_LABELS = { ai_reject: 'AI 제외 권장', already_common: '이미 공통 자료', duplicate: '같은 표현 중복' };
+const AUTO_REASON_LABELS = { ai_reject: 'AI 제외 권장', already_common: '이미 공통 자료', duplicate: '같은 표현 중복', base_rule: '기본 규칙이 잡음' };
 const verdictLabel = (value) => value === 'recommend' ? '반영 권장' : value === 'caution' ? '주의 검토' : '제외 권장';
 const sourceLabel = (value) => value === 'ai' ? '학생 AI 검사' : value === 'search' ? '학생 검색' : value === 'teacher' ? '교사 학급 자료' : value;
 

@@ -8,7 +8,7 @@ import {
     prepareWeeklyReviewCandidates,
     AUTO_MIN_NEW, DIGEST_WEEKDAY, decideAutoRun, buildDigestText
 } from '../scripts/run-weekly-spelling-review.mjs';
-import { getReviewRunDate } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
+import { getReviewRunDate, isKnownSpelling } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
 
 const [
     runner, reviewCore, edgeFunction, deployWorkflow, multiClassMigration, intakeMigration, candidateMigration, resumeMigration, resumableIntakeMigration, progressMigration, restartMigration, restartSmoke, candidateSmoke, migration, panel, plist, lookupPayload, detectionPayload] = await Promise.all([
@@ -550,7 +550,8 @@ test('후보 준비는 예전 계산과 같은 결과를 내고, 2,000개 규모
     const small = syntheticPayload(300);
     const grouped = mergeWeeklySpellingSources(small);
     const naive = grouped
-        .filter((item) => !knownIndex.aliases.has(normalizeSpellingValue(item.expression)))
+        // "이미 아는 것"의 기준은 검수와 같은 하나(2026-10-07~ 규칙 정규식 포함)를 쓴다 — 여기서 견주는 것은 유사 항목 계산이다.
+        .filter((item) => !isKnownSpelling(knownIndex, item.expression))
         .map((item) => ({
             ...item,
             similar: knownIndex.records
@@ -596,4 +597,19 @@ test('자동 정리는 서버가 하고, 화면은 먼저 볼 것·나중에 볼
     // 정규화 규칙이 reviewCore 와 같다(공백·문장부호 제거).
     assert.match(triage, /\[\[:space:\]\/·,\?!\."''’“”\(\)_-\]/);
     assert.match(reviewCore, /replace\(\/\[\\s\/·,\?!\."'’“”\(\)_-\]\/g, ''\)/);
+});
+
+test('띄어쓰기 규칙이 잡는 표현은 검수 전에 빠지고, 맥미니 자동 검수가 쌓인 대기 후보도 닫는다', () => {
+    const knownIndex = buildKnownSpellingIndex(lookupPayload, detectionPayload, []);
+    for (const expression of ['당황하지않고', '해야합니다', '노는게', '너때문에', '가고싶다', '여러가지', '세명이']) {
+        assert.equal(isKnownSpelling(knownIndex, expression), true, expression);
+    }
+    // 붙여 써도 맞는 것·한 낱말은 "아는 것"으로 치지 않는다(규칙이 잡지 않는다).
+    for (const expression of ['축하해 마지않습니다', '마지못해', '먹을거리', '두개골', '해야겠다']) {
+        assert.equal(isKnownSpelling(knownIndex, expression), false, expression);
+    }
+    assert.match(runner, /closeRuleCovered/);
+    assert.match(runner, /close_rule_covered_spelling_items_v1/);
+    assert.match(panel, /base_rule: '기본 규칙이 잡음'/);
+    assert.match(reviewCore, /제47항/);
 });

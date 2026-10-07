@@ -10,6 +10,7 @@ import {
     buildKnownSpellingIndex,
     cleanReview,
     getReviewRunDate,
+    isKnownSpelling,
     mergeWeeklySpellingSources,
     missingReview,
     normalizeSpellingValue,
@@ -62,6 +63,8 @@ const runDatabaseFunction = (functionName, payload) => {
     const arg = `convert_from(decode('${encoded}','base64'),'UTF8')::jsonb`;
     const calls = {
         spelling_review_auto_status_v1: 'SELECT public.spelling_review_auto_status_v1();',
+        spelling_weekly_pending_expressions_v1: 'SELECT public.spelling_weekly_pending_expressions_v1();',
+        close_rule_covered_spelling_items_v1: `SELECT public.close_rule_covered_spelling_items_v1(ARRAY(SELECT jsonb_array_elements_text(${arg}->'ids'))::uuid[]);`,
         start_spelling_weekly_review_v1: `SELECT public.start_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->>'catalog_version', TRUE);`,
         save_spelling_weekly_ai_cache_v1: `SELECT public.save_spelling_weekly_ai_cache_v1(${arg}->'items');`,
         finish_spelling_weekly_review_v1: `SELECT public.finish_spelling_weekly_review_v1((${arg}->>'week_start')::date, ${arg}->'items', ${arg}->'summary');`,
@@ -80,6 +83,7 @@ const runDatabaseFunction = (functionName, payload) => {
     }
     const output = result.stdout.trim();
     if (!output || functionName === 'fail_spelling_weekly_review_v1' || functionName === 'save_spelling_weekly_ai_cache_v1') return null;
+    if (functionName === 'close_rule_covered_spelling_items_v1') return Number(output);
     return JSON.parse(output);
 };
 
@@ -145,6 +149,12 @@ const main = async () => {
     if (process.argv.includes('--self-check')) {
         const index = buildKnownSpellingIndex(lookupPayload, detectionPayload);
         console.log(`주간 맞춤법 검수기 확인 완료 — 기본 별칭 ${index.aliases.size}개`);
+        return;
+    }
+
+    if (process.argv.includes('--close-covered')) {
+        const closed = closeRuleCovered({ lookupPayload, detectionPayload });
+        console.log(`기본 규칙이 이미 잡는 대기 후보 ${closed}개를 닫았습니다.`);
         return;
     }
 
@@ -283,6 +293,17 @@ const writeStatus = async (line) => {
     }
 };
 
+/*
+ * 기본 규칙(띄어쓰기 규칙처럼 꼴로 잡는 정규식)이 이미 밑줄을 긋는 대기 후보를 닫는다(2026-10-07).
+ * 규칙이 늘면 예전에 쌓인 후보도 저절로 정리된다. 판정은 검수와 같은 isKnownSpelling 하나로 한다.
+ */
+export const closeRuleCovered = ({ lookupPayload, detectionPayload }) => {
+    const knownIndex = buildKnownSpellingIndex(lookupPayload, detectionPayload);
+    const pending = runDatabaseFunction('spelling_weekly_pending_expressions_v1', {}) || [];
+    const ids = pending.filter((item) => isKnownSpelling(knownIndex, item.expression)).map((item) => item.id).slice(0, 2000);
+    return ids.length ? runDatabaseFunction('close_rule_covered_spelling_items_v1', { ids }) : 0;
+};
+
 const runAuto = async ({ lookupPayload, detectionPayload, catalogVersion }) => {
     const at = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 16).replace('T', ' ');
     const runDate = getReviewRunDate();
@@ -303,6 +324,15 @@ const runAuto = async ({ lookupPayload, detectionPayload, catalogVersion }) => {
         status = runDatabaseFunction('spelling_review_auto_status_v1', {});
     } else {
         await writeStatus(`OK ${at} skipped=${decision.reason} new=${status.new_count}`);
+    }
+    try {
+        const closed = closeRuleCovered({ lookupPayload, detectionPayload });
+        if (closed) {
+            await writeStatus(`OK ${at} rule_closed=${closed}`);
+            status = runDatabaseFunction('spelling_review_auto_status_v1', {});
+        }
+    } catch {
+        // 정리 실패는 검수 결과를 바꾸지 않는다. 다음 날 다시 한다.
     }
     if (weekday === DIGEST_WEEKDAY) {
         const text = buildDigestText(status);
