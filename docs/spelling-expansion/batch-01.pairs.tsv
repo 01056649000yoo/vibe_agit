@@ -234,11 +234,11 @@ grammar/spacing	exact	조금더	조금 더
 grammar/spacing	exact	방과후	방과 후
 grammar/spacing	exact	쉬는시간	쉬는 시간
 meaning/context	context	다쳤	닫혔	문이 다쳤
-meaning/context	context	짓	짖	개가 짓
-meaning/context	context	젓	젖	비에 젓
+meaning/context	context	짓	짖	개가 짓는
+meaning/context	context	젓	젖	비에 젓어
 meaning/context	context	부셨	부쉈	창문을 부셨
 meaning/context	context	놀랬	놀랐	깜짝 놀랬
-meaning/context	context	적	작	키가 적
+meaning/context	context	적	작	키가 적다
 meaning/context	context	작	적	양이 작
 meaning/context	context	날라	날아	하늘로 날라
 meaning/context	context	무릅	무릎	무릅을
