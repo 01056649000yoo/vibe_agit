@@ -1,0 +1,30 @@
+{
+  "simulated_at": "2026-10-08",
+  "batches": [
+    "01",
+    "02",
+    "03",
+    "04"
+  ],
+  "merged_entries": 667,
+  "base_before": 500,
+  "base_after": 1167,
+  "checker": {
+    "false_underlines": "정상 문장 77개 중 0건",
+    "misses": "오류 문장 66개 중 0건",
+    "examples": "바른 예문 오탐 0건(1,167개 모두)",
+    "quiz_bank": "문제은행·랜덤 퀴즈 통과",
+    "classification": "분류·순서·검출 방식 오류 0",
+    "pinned_counts": "500/400 고정 수와 분류별 수는 합칠 때 갱신 필요"
+  },
+  "student_writing": {
+    "documents": 4000,
+    "underlines_before": 48,
+    "underlines_after": 1676
+  },
+  "quiz": {
+    "pool_before": 500,
+    "pool_after": 1167
+  },
+  "reverted": true
+}
