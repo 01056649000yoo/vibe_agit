@@ -424,4 +424,26 @@ if (
     process.exit(1);
 }
 console.log('랜덤 퀴즈  500개 후보 · 열 때마다 중복 없는 5문제');
+
+// 검토 중 자료(pending/) — 스위치가 꺼져 있어도 켜는 날 바로 쓸 수 있게 같은 기준으로 지킨다.
+const { PENDING_SPELLING_ENTRIES } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingEntries.js');
+const { findPendingSpellingIssues } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingDetector.js');
+const 검토중오탐 = [
+    ...정상.flatMap((문장) => findPendingSpellingIssues(문장).map((issue) => `"${문장}"에서 "${issue.text}"`)),
+    ...PENDING_SPELLING_ENTRIES.flatMap((entry) => entry.examples.flatMap((example) => (
+        [...findSpellingIssues(example), ...findElementarySpellingIssues(example), ...findPendingSpellingIssues(example)]
+            .map((issue) => `${entry.id} 예문 "${example}"에서 "${issue.text}"`)
+    )))
+];
+const 검토중미탐 = PENDING_SPELLING_ENTRIES.filter((entry) => !entry.detectionPatterns.some((item) => (
+    findPendingSpellingIssues(item.text, 500).some((issue) => issue.entryId === entry.id)
+)));
+const 검토중아이디겹침 = PENDING_SPELLING_ENTRIES.filter((entry) => ELEMENTARY_SPELLING_DETECTION_RULES.some((rule) => rule.entryId === entry.id));
+if (검토중오탐.length || 검토중미탐.length || 검토중아이디겹침.length) {
+    console.error(`\n실패 — 검토 중 자료: 오탐 ${검토중오탐.length}건, 자기 틀린 꼴을 못 찾음 ${검토중미탐.length}개, 기본 자료와 ID 겹침 ${검토중아이디겹침.length}개`);
+    for (const line of 검토중오탐.slice(0, 10)) console.error(`  ${line}`);
+    for (const entry of 검토중미탐.slice(0, 10)) console.error(`  ${entry.id} ${entry.learningLabel}`);
+    process.exit(1);
+}
+console.log(`검토 중 자료  ${PENDING_SPELLING_ENTRIES.length}개 · 정상 문장·예문 오탐 0 · 모두 자기 틀린 꼴을 찾음(학생에게는 스위치를 켜야 보인다)`);
 console.log('\n통과');

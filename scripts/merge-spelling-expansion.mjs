@@ -2,6 +2,7 @@
  * 기본 맞춤법 자료 늘리기 묶음을 카탈로그에 합친다(2026-10-07~08).
  *
  *   node scripts/merge-spelling-expansion.mjs --batch 01,02 [--exclude 틀린꼴,틀린꼴] [--dry-run]
+ *   node scripts/merge-spelling-expansion.mjs --batch 01,...,06 --pending   ← 검토 중 자료 파일만 만든다
  *
  * 묶음 하나는 세 파일로 이뤄진다(docs/spelling-expansion/):
  *   batch-NN.check.json     기계 점검 결과(scripts/expand-spelling-base.mjs)
@@ -9,6 +10,11 @@
  *   batch-NN.content*.json|tsv  Claude 가 직접 쓴 아이용 설명·예문(GPT 쓰지 않음)
  * 남은 것을 분류 파일(catalog/*Catalog.js)에 reference(...) 줄로 덧붙인다.
  * **선생님 승인 뒤에만** 실제로 합친다. 모의 실행 때는 합친 뒤 검사하고 git 으로 되돌린다.
+ *
+ * `--pending`(2026-10-08, 선생님 결정 '넣되 꺼 둠'): 분류 파일은 그대로 두고 같은 항목을
+ * `student-input/checker/pending/pendingSpellingEntries.js` 한 파일로 만든다. 학생 입력기는
+ * `pending/config.js` 의 스위치가 꺼져 있으면 이 자료를 받지도 않는다. 검토가 끝나면 `--pending` 없이 합치고
+ * 이 파일은 다시 `--pending` 으로(남은 묶음만) 만들거나 비운다.
  */
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -83,7 +89,9 @@ export const toReferenceLine = (item, sortOrder, id) => {
     return `        reference(${sortOrder}, ${JSON.stringify(id)}, ${JSON.stringify(item.subcategoryId)}, ${JSON.stringify(mode)}, "catalog", ${JSON.stringify(item.label)}, ${JSON.stringify(item.answer)}, ${JSON.stringify(item.explanation)}, ${JSON.stringify(item.examples)}, ${JSON.stringify(options)}),`;
 };
 
-export const mergeBatches = async (batches, { exclude = new Set(), dryRun = false } = {}) => {
+export const PENDING_FILE = 'src/modules/writing/student-input/checker/pending/pendingSpellingEntries.js';
+
+export const mergeBatches = async (batches, { exclude = new Set(), dryRun = false, pending = false } = {}) => {
     const existing = getElementarySpellingEntries();
     let sortOrder = Math.max(...existing.map((entry) => entry.sortOrder));
     const linesByCategory = new Map();
@@ -102,6 +110,25 @@ export const mergeBatches = async (batches, { exclude = new Set(), dryRun = fals
             all.push({ ...item, id });
         }
     }
+    if (pending) {
+        const blocks = [...linesByCategory].map(([categoryId, lines]) => (
+            `    ...defineSpellingEntries(${JSON.stringify(categoryId)}, [\n${lines.join('\n')}\n    ])`
+        ));
+        const source = `/**
+ * ⚙️ 생성 파일 — 직접 고치지 않는다. \`node scripts/merge-spelling-expansion.mjs --batch ${batches.join(',')} --pending\` 가 만든다.
+ * 검토 중 맞춤법 자료(기본 자료 늘리기 묶음 ${batches.join('·')}, ${all.length}개). 학생에게는 pending/config.js 스위치를 켜야 보인다.
+ */
+import { defineSpellingEntries, reference } from '../catalog/schema.js';
+
+export const PENDING_SPELLING_BATCHES = Object.freeze(${JSON.stringify(batches)});
+
+export const PENDING_SPELLING_ENTRIES = Object.freeze([
+${blocks.join(',\n')}
+].sort((left, right) => left.sortOrder - right.sortOrder));
+`;
+        if (!dryRun) await writeFile(PENDING_FILE, source);
+        return all;
+    }
     for (const [categoryId, lines] of linesByCategory) {
         const file = `src/modules/writing/student-input/checker/catalog/${Reflect.get(CATALOG_FILES, categoryId)}`;
         const source = await readFile(file, 'utf8');
@@ -119,7 +146,8 @@ export const mergeBatches = async (batches, { exclude = new Set(), dryRun = fals
 if (process.argv[1]?.endsWith('merge-spelling-expansion.mjs')) {
     const batches = String(arg('--batch', '01')).split(',').map((value) => value.trim()).filter(Boolean);
     const exclude = new Set(String(arg('--exclude', '')).split(',').map((value) => value.trim()).filter(Boolean));
-    mergeBatches(batches, { exclude, dryRun: process.argv.includes('--dry-run') })
-        .then((all) => console.log(`합칠 항목 ${all.length}개${process.argv.includes('--dry-run') ? '(미리 보기, 파일은 그대로)' : ''}`))
+    const pending = process.argv.includes('--pending');
+    mergeBatches(batches, { exclude, dryRun: process.argv.includes('--dry-run'), pending })
+        .then((all) => console.log(`${pending ? '검토 중 자료로 만든' : '합칠'} 항목 ${all.length}개${process.argv.includes('--dry-run') ? '(미리 보기, 파일은 그대로)' : ''}`))
         .catch((error) => { console.error(`합치기 실패 — ${error.message}`); process.exitCode = 1; });
 }

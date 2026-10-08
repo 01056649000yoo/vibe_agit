@@ -4,6 +4,7 @@
  * 세 겹을 이 순서로 합친다. 앞 겹이 찾은 자리와 겹치는 뒤 겹의 밑줄은 버린다.
  *   ① 빠른 규칙(spellingDetectionRules) — 늘 바로 쓸 수 있다
  *   ② 기본 자료 500개(elementarySpellingEntries) — 첫 화면을 막지 않게 뒤에서 받는 청크
+ *   ②′ 검토 중 자료(pending/, 스위치가 켜졌을 때만 pendingDetector 로 넘어온다)
  *   ③ 공통·반별 자료(서버에서 받은 entries)
  * 입력기 부품·채점표·회색 줄 기록이 모두 이 함수 하나로 "학생에게 보이는 빨간 줄"을 구한다.
  * 노드 스크립트에서도 불러 쓰므로 React·브라우저·Supabase 를 가져오지 않는다.
@@ -25,14 +26,15 @@ const appendNonOverlapping = (current, candidates, limit) => {
 /**
  * 글에서 빨간 밑줄 자리를 찾는다. 글은 완성형(NFC)으로 맞춰 넘긴다.
  * @param {string} text
- * @param {{ elementaryDetector?: Function|null, entries?: Array, limit?: number }} options
+ * @param {{ elementaryDetector?: Function|null, pendingDetector?: Function|null, entries?: Array, limit?: number }} options
  * @returns {Array<{ id, entryId, start, end, text, wrong, right, lookup, label }>} 시작 위치 순
  */
-export const checkSpelling = (text, { elementaryDetector = null, entries = [], limit = MAX_SPELLING_ISSUES } = {}) => {
+export const checkSpelling = (text, { elementaryDetector = null, pendingDetector = null, entries = [], limit = MAX_SPELLING_ISSUES } = {}) => {
     const value = String(text || '');
     if (!value) return [];
     let found = findSpellingIssues(value, limit);
     if (elementaryDetector) found = appendNonOverlapping(found, elementaryDetector(value, limit), limit);
+    if (pendingDetector) found = appendNonOverlapping(found, pendingDetector(value, limit), limit);
     const remaining = Math.max(0, limit - found.length);
     if (remaining > 0 && entries?.length) {
         found = appendNonOverlapping(found, findClassSpellingIssues(value, entries, remaining), limit);

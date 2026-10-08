@@ -1,7 +1,7 @@
 /**
  * 맞춤법 검사기 채점표(2026-10-08) — 선생님이 학생 글을 직접 고쳐 준 기록(student_post_teacher_edits)을 정답지로 쓴다.
  *
- *   node scripts/spelling-scorecard.mjs [--out <스크래치 파일>]
+ *   node scripts/spelling-scorecard.mjs [--pending] [--out <스크래치 파일>]
  *
  * ① 고치기 전·후 글을 글자 단위로 견줘 고친 자리를 찾고, 그중 **맞춤법·띄어쓰기 수정**만 남긴다
  *    (짧고, 고치기 전·후가 비슷한 것 — 문장을 새로 쓴 것은 뺀다).
@@ -14,12 +14,16 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { findElementarySpellingIssues } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import { checkSpelling } from '../src/modules/writing/student-input/checker/spellingEngine.js';
+import { PENDING_SPELLING_ENABLED } from '../src/modules/writing/student-input/checker/pending/config.js';
+import { findPendingSpellingIssues } from '../src/modules/writing/student-input/checker/pending/pendingSpellingDetector.js';
 
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
 const arg = (name, fallback) => {
     const index = process.argv.indexOf(name);
     return index >= 0 ? process.argv[index + 1] : fallback;
 };
+// 학생에게 보이는 그대로가 기본. --pending 을 주면 검토 중 자료까지 켰을 때를 잰다(검토 도우미).
+const WITH_PENDING = PENDING_SPELLING_ENABLED || process.argv.includes('--pending');
 const psqlJson = (sql) => {
     const result = spawnSync(DOCKER, ['exec', '-i', 'agit-db', 'psql', '-U', 'postgres', '-d', 'postgres', '-At'], { input: sql, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     if (result.status !== 0) throw new Error('database_read_failed');
@@ -80,7 +84,7 @@ export const isSpellingEdit = (wrong, right) => {
     return distance <= (Math.max(w.length, r.length) <= 3 ? 1 : 2) && distance < Math.max(w.length, r.length);
 };
 
-export const scoreDocuments = (docs, commonEntries) => {
+export const scoreDocuments = (docs, commonEntries, { pending = WITH_PENDING } = {}) => {
     let edits = 0, caught = 0, issues = 0, hitIssues = 0;
     const missed = [], falseAlarms = [];
     for (const doc of docs) {
@@ -99,7 +103,7 @@ export const scoreDocuments = (docs, commonEntries) => {
             spans.push({ s, e, wrong: wrong.trim(), right });
         }
         // 학생 입력기와 같은 엔진 — 학생에게 실제로 보이는 빨간 줄로 채점한다
-        const found = checkSpelling(before, { elementaryDetector: findElementarySpellingIssues, entries: commonEntries, limit: 200 });
+        const found = checkSpelling(before, { elementaryDetector: findElementarySpellingIssues, pendingDetector: pending ? findPendingSpellingIssues : null, entries: commonEntries, limit: 200 });
         for (const span of spans) {
             edits += 1;
             if (found.some((issue) => issue.start < span.e && issue.end > span.s)) caught += 1;

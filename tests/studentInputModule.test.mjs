@@ -57,3 +57,21 @@ test('글을 쓰는 칸은 학생 입력기 모듈 하나로만 만든다(옛 �
         assert.doesNotMatch(source, /findClassSpellingIssues/, `${script} 가 빨간 줄을 따로 합치고 있다`);
     }
 });
+
+test('검토 중 자료 862개: 스위치는 꺼져 있고(선생님 검토 전), 켜면 엔진이 같은 자리에서 찾는다', async () => {
+    const { PENDING_SPELLING_ENABLED } = await import('../src/modules/writing/student-input/checker/pending/config.js');
+    const { findPendingSpellingIssues } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingDetector.js');
+    const { PENDING_SPELLING_ENTRIES } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingEntries.js');
+    assert.equal(PENDING_SPELLING_ENABLED, false, '선생님 검토 전에는 학생에게 보이지 않아야 한다');
+    assert.equal(PENDING_SPELLING_ENTRIES.length, 862);
+    const sentence = '이집트의 피라밋을 보았다.';
+    assert.ok(!engine(sentence).some((issue) => issue.right === '피라미드'));
+    const withPending = checkSpelling(sentence, { elementaryDetector: findElementarySpellingIssues, pendingDetector: findPendingSpellingIssues });
+    const found = withPending.find((issue) => issue.right === '피라미드');
+    assert.equal(found?.source, 'pending');
+    // 검토 중 자료는 첫 화면 청크에 섞이지 않는다 — 훅은 스위치가 켜졌을 때만 뒤에서 받는다
+    const hook = await readFile('src/modules/writing/student-input/checker/useSpellingCheck.js', 'utf8');
+    assert.match(hook, /if \(!enabled \|\| !pending\) return undefined;/);
+    const config = await readFile('src/modules/writing/student-input/checker/pending/config.js', 'utf8');
+    assert.match(config, /import\('\.\/pendingSpellingDetector\.js'\)/);
+});

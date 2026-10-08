@@ -18,6 +18,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findElementarySpellingIssues } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import { checkSpelling } from '../src/modules/writing/student-input/checker/spellingEngine.js';
+import { PENDING_SPELLING_ENABLED } from '../src/modules/writing/student-input/checker/pending/config.js';
+import { findPendingSpellingIssues } from '../src/modules/writing/student-input/checker/pending/pendingSpellingDetector.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
@@ -72,7 +74,7 @@ export const toCodePointIndex = (text) => {
 export const redSpans = (text, commonEntries) => {
     const map = toCodePointIndex(text);
     // 학생 입력기와 같은 엔진 — 학생에게 실제로 보이는 빨간 줄
-    return checkSpelling(text, { elementaryDetector: findElementarySpellingIssues, entries: commonEntries, limit: 200 })
+    return checkSpelling(text, { elementaryDetector: findElementarySpellingIssues, pendingDetector: PENDING_SPELLING_ENABLED ? findPendingSpellingIssues : null, entries: commonEntries, limit: 200 })
         .map((issue) => [map[issue.start], map[issue.end]]);
 };
 

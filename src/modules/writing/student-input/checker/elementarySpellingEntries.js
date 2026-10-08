@@ -6,10 +6,7 @@
  */
 import { findDetectedEntryIds } from './spellingDetectionRules.js';
 import { ELEMENTARY_SPELLING_CATALOG } from './catalog/index.js';
-import {
-    collectSpellingCandidates,
-    createSpellingCandidateIndex
-} from './candidateIndex.js';
+import { createCatalogDetector } from './catalogDetector.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 
@@ -24,39 +21,10 @@ const POPULAR_SPELLING_ENTRY_IDS = [
 
 const ELEMENTARY_SPELLING_ENTRIES = ELEMENTARY_SPELLING_CATALOG;
 
-export const ELEMENTARY_SPELLING_DETECTION_RULES = Object.freeze(
-    ELEMENTARY_SPELLING_ENTRIES.map((entry) => Object.freeze({
-        id: `elementary-${entry.id}`,
-        entryId: entry.id,
-        label: entry.learningLabel,
-        categoryId: entry.categoryId,
-        category: entry.category,
-        subcategoryId: entry.subcategoryId,
-        subcategory: entry.subcategory,
-        detectionMode: entry.detectionMode,
-        patterns: entry.detectionPatterns
-    }))
-);
-
-const ELEMENTARY_INDEXED_PATTERNS = Object.freeze(
-    ELEMENTARY_SPELLING_DETECTION_RULES.flatMap((rule) => rule.patterns.map((item) => {
-        const target = item.target || item.text;
-        return Object.freeze({
-            rule,
-            item,
-            target,
-            targetOffset: Number.isInteger(item.targetOffset)
-                ? item.targetOffset
-                : Math.max(0, item.text.indexOf(target))
-        });
-    }))
-);
-
-// 분류별 반복 검사를 만들지 않는다. 500개 전체가 이 후보 색인 하나를 공유한다.
-const ELEMENTARY_SPELLING_CANDIDATE_INDEX = createSpellingCandidateIndex(
-    ELEMENTARY_INDEXED_PATTERNS,
-    (indexedPattern) => indexedPattern.target
-);
+// 분류별 반복 검사를 만들지 않는다. 500개 전체가 후보 색인 하나를 공유한다(catalogDetector).
+const ELEMENTARY_DETECTOR = createCatalogDetector(ELEMENTARY_SPELLING_ENTRIES);
+export const ELEMENTARY_SPELLING_DETECTION_RULES = ELEMENTARY_DETECTOR.rules;
+const ELEMENTARY_INDEXED_PATTERNS = ELEMENTARY_DETECTOR.indexedPatterns;
 
 export const ELEMENTARY_SPELLING_DETECTION_RULE_COUNT = ELEMENTARY_SPELLING_DETECTION_RULES.length;
 export const ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS = Object.freeze(
@@ -70,49 +38,7 @@ export const ELEMENTARY_SPELLING_TRIGGER_COUNT = new Set(
 ).size;
 
 /** 500개 기본 자료에서 본문 후보를 한 번 찾은 뒤 해당 규칙의 문맥만 확인한다. */
-export const findElementarySpellingIssues = (value, limit = 50) => {
-    const text = String(value || '').normalize('NFC');
-    const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 50;
-    if (!text || safeLimit === 0) return [];
-
-    const issues = [];
-    const candidates = collectSpellingCandidates(text, ELEMENTARY_SPELLING_CANDIDATE_INDEX);
-    for (const { item: indexedPattern, starts } of candidates) {
-        const { rule, item, target, targetOffset } = indexedPattern;
-        let nextAllowedMatchStart = 0;
-        for (const targetStart of starts) {
-            const matchStart = targetStart - targetOffset;
-            if (
-                matchStart < nextAllowedMatchStart
-                || !text.startsWith(item.text, matchStart)
-            ) continue;
-
-            const start = matchStart + targetOffset;
-            issues.push({
-                id: `${rule.id}-${start}`,
-                ruleId: rule.id,
-                entryId: rule.entryId,
-                label: rule.label,
-                categoryId: rule.categoryId,
-                category: rule.category,
-                subcategoryId: rule.subcategoryId,
-                subcategory: rule.subcategory,
-                detectionMode: rule.detectionMode,
-                start,
-                end: start + target.length,
-                text: text.slice(start, start + target.length),
-                wrong: target,
-                right: item.right,
-                lookup: item.lookup || item.right
-            });
-            nextAllowedMatchStart = matchStart + item.text.length;
-            if (issues.length >= safeLimit) break;
-        }
-        if (issues.length >= safeLimit) break;
-    }
-
-    return issues.sort((left, right) => left.start - right.start);
-};
+export const findElementarySpellingIssues = (value, limit = 50) => ELEMENTARY_DETECTOR.find(value, limit);
 
 const splitEntryChoices = (entry) => entry.question.split('/').map((choice) => choice.trim());
 

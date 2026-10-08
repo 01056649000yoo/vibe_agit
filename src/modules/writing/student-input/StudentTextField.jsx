@@ -16,10 +16,11 @@ const StudentTextField = forwardRef(function StudentTextField({
     containerStyle = {},
     spelling = 'class',
     spellingEntries = 'student',
+    spellingPending,
     ...props
 }, forwardedRef) {
     const { enabled } = useSpellingSwitch(spelling);
-    const { text, issues } = useSpellingCheck(value, { enabled, entries: spellingEntries, delayMs: 0 });
+    const { text, issues } = useSpellingCheck(value, { enabled, entries: spellingEntries, delayMs: 0, ...(spellingPending === undefined ? {} : { pending: spellingPending }) });
     const inputRef = useRef(null);
     const highlighterRef = useRef(null);
     useImperativeHandle(forwardedRef, () => inputRef.current);

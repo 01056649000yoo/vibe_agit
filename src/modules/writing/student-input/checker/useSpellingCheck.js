@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadElementarySpellingDetector } from './elementarySpellingDetectorLoader';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { checkSpelling, issuesSafeWhileTyping, uniqueSpellingIssues } from './spellingEngine';
+import { loadPendingSpellingDetector, PENDING_SPELLING_ENABLED } from './pending/config';
 
 const NO_ISSUES = Object.freeze([]);
 
@@ -13,15 +14,17 @@ const NO_ISSUES = Object.freeze([]);
  *   배열을 주면 그것을 쓰고, false 면 받지 않는다(교사 화면 미리보기 등).
  * - 글자를 칠 때마다 글 전체를 훑으면 학교 태블릿에서 타이핑이 밀린다. `delayMs` 만큼 손을 멈춘 뒤에만 다시 훑고,
  *   그동안은 직전 밑줄을 겹치는 앞부분까지만 남긴다. 0 이면 바로 훑는다(제목처럼 짧은 칸).
+ * - 검토 중 자료는 `pending`(기본: pending/config.js 스위치)이 참일 때만 뒤에서 받는다.
  * - 모바일 키보드는 같은 글자를 조합형(NFD)으로 넘기기도 해 완성형(NFC)으로 맞춘 글로 찾고 그린다.
  *
  * @returns {{ text: string, issues: Array, uniqueIssues: Array }}
  */
-export function useSpellingCheck(value, { enabled = true, entries = 'student', delayMs = 350 } = {}) {
+export function useSpellingCheck(value, { enabled = true, entries = 'student', delayMs = 350, pending = PENDING_SPELLING_ENABLED } = {}) {
     const text = useMemo(() => String(value || '').normalize('NFC'), [value]);
     const [scannedText, setScannedText] = useState(text);
     const [elementaryDetector, setElementaryDetector] = useState(null);
     const [fetchedEntries, setFetchedEntries] = useState(NO_ISSUES);
+    const [pendingDetector, setPendingDetector] = useState(null);
 
     useEffect(() => {
         if (!enabled) return undefined;
@@ -31,6 +34,15 @@ export function useSpellingCheck(value, { enabled = true, entries = 'student', d
             .catch(() => {});
         return () => { active = false; };
     }, [enabled]);
+
+    useEffect(() => {
+        if (!enabled || !pending) return undefined;
+        let active = true;
+        loadPendingSpellingDetector()
+            .then((detector) => { if (active) setPendingDetector(() => detector); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [enabled, pending]);
 
     useEffect(() => {
         if (!enabled || entries !== 'student') return undefined;
@@ -55,9 +67,9 @@ export function useSpellingCheck(value, { enabled = true, entries = 'student', d
     const issues = useMemo(() => {
         if (!enabled) return NO_ISSUES;
         const scanned = delayMs ? scannedText : text;
-        const found = checkSpelling(scanned, { elementaryDetector, entries: activeEntries });
+        const found = checkSpelling(scanned, { elementaryDetector, pendingDetector: pending ? pendingDetector : null, entries: activeEntries });
         return issuesSafeWhileTyping(found, scanned, text);
-    }, [activeEntries, delayMs, elementaryDetector, enabled, scannedText, text]);
+    }, [activeEntries, delayMs, elementaryDetector, enabled, pending, pendingDetector, scannedText, text]);
     const uniqueIssues = useMemo(() => uniqueSpellingIssues(issues), [issues]);
 
     return { text, issues, uniqueIssues };

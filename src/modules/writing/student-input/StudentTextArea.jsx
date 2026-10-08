@@ -41,12 +41,13 @@ const StudentTextArea = forwardRef(function StudentTextArea({
     autoGrow = false,
     spelling = 'class',
     spellingEntries = 'student',
+    spellingPending,
     onIssueClick,
     showIssueNotice = true,
     ...props
 }, forwardedRef) {
     const { enabled, openIssue } = useSpellingSwitch(spelling, onIssueClick);
-    const { text, issues, uniqueIssues } = useSpellingCheck(value, { enabled, entries: spellingEntries, delayMs: 350 });
+    const { text, issues, uniqueIssues } = useSpellingCheck(value, { enabled, entries: spellingEntries, delayMs: 350, ...(spellingPending === undefined ? {} : { pending: spellingPending }) });
     const textareaRef = useRef(null);
     const highlighterRef = useRef(null);
     const scrollFrameRef = useRef(0);
