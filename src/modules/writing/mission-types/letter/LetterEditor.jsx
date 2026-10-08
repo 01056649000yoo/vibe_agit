@@ -1,6 +1,5 @@
 import React from 'react';
-import SpellingUnderlineInput from '../../tools/spelling-lookup/SpellingUnderlineInput';
-import SpellingUnderlineTextarea from '../../tools/spelling-lookup/SpellingUnderlineTextarea';
+import { StudentTextArea, StudentTextField } from '../../student-input';
 import { countContentChars } from '../../../../lib/textMetrics.js';
 import {
     LETTER_PARTS,
@@ -38,7 +37,7 @@ const LetterEditor = ({
 
     return (
         <div>
-            <SpellingUnderlineInput
+            <StudentTextField
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -64,7 +63,7 @@ const LetterEditor = ({
                             )}
                         </div>
                         {part.rows === 1 ? (
-                            <SpellingUnderlineInput
+                            <StudentTextField
                                 type="text"
                                 value={parts[part.key]}
                                 onChange={(event) => updatePart(part.key, event.target.value)}
@@ -75,7 +74,7 @@ const LetterEditor = ({
                                 style={inputStyle}
                             />
                         ) : (
-                            <SpellingUnderlineTextarea
+                            <StudentTextArea
                                 value={parts[part.key]}
                                 onChange={(event) => updatePart(part.key, event.target.value)}
                                 placeholder={part.placeholder}

@@ -1,6 +1,5 @@
 import React from 'react';
-import SpellingUnderlineInput from '../../tools/spelling-lookup/SpellingUnderlineInput';
-import SpellingUnderlineTextarea from '../../tools/spelling-lookup/SpellingUnderlineTextarea';
+import { StudentTextArea, StudentTextField } from '../../student-input';
 
 const parseLegacyStanzas = (content) => (
     content?.trim() ? content.split(/\n\s*\n/).map((stanza) => stanza.trim()) : []
@@ -24,7 +23,7 @@ const PoemEditor = ({
 
     return (
         <div>
-            <SpellingUnderlineInput
+            <StudentTextField
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -45,7 +44,7 @@ const PoemEditor = ({
                                 <button type="button" onClick={() => updateStanzas(stanzas.filter((_, stanzaIndex) => stanzaIndex !== index))} style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer' }}>연 삭제</button>
                             )}
                         </div>
-                        <SpellingUnderlineTextarea
+                        <StudentTextArea
                             value={stanza}
                             onChange={(event) => {
                                 const next = [...stanzas];

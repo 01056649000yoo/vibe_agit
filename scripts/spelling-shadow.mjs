@@ -16,9 +16,8 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findSpellingIssues } from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
 import { findElementarySpellingIssues } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
-import { findClassSpellingIssues } from '../src/modules/writing/spelling-learning/detection.js';
+import { checkSpelling } from '../src/modules/writing/student-input/spellingEngine.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
@@ -72,11 +71,9 @@ export const toCodePointIndex = (text) => {
 /** 빨간 줄 자리(코드 포인트 [start, end)) — 앱과 같은 세 검사. */
 export const redSpans = (text, commonEntries) => {
     const map = toCodePointIndex(text);
-    return [
-        ...findSpellingIssues(text, 200),
-        ...findElementarySpellingIssues(text, 200),
-        ...findClassSpellingIssues(text, commonEntries, 200)
-    ].map((issue) => [map[issue.start], map[issue.end]]);
+    // 학생 입력기와 같은 엔진 — 학생에게 실제로 보이는 빨간 줄
+    return checkSpelling(text, { elementaryDetector: findElementarySpellingIssues, entries: commonEntries, limit: 200 })
+        .map((issue) => [map[issue.start], map[issue.end]]);
 };
 
 /** 첫 제출본에서 찾은 자리를 나중 글(다시 쓴 글·선생님이 고친 글)이 어떻게 했는지. */

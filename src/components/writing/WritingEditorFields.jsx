@@ -1,6 +1,5 @@
 import React, { forwardRef, useId } from 'react';
-import SpellingUnderlineInput from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineInput';
-import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
+import { StudentTextArea, StudentTextField } from '../../modules/writing/student-input';
 import './WritingEditorFields.css';
 
 const CONTENT_LINE_HEIGHT = 1.8;
@@ -44,7 +43,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
         <div className={`writing-editor-fields ${disabled ? 'is-disabled' : ''}`.trim()}>
             <div className="writing-editor-fields__field writing-editor-fields__field--title">
                 <label htmlFor={titleId}>글 제목</label>
-                <SpellingUnderlineInput
+                <StudentTextField
                     id={titleId}
                     type="text"
                     value={title}
@@ -68,7 +67,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
             </div>
             <div className="writing-editor-fields__field writing-editor-fields__field--body">
                 <label htmlFor={contentId}>글 내용</label>
-                <SpellingUnderlineTextarea
+                <StudentTextArea
                     id={contentId}
                     ref={ref}
                     value={content}

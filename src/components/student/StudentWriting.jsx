@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import { StudentTextArea } from '../../modules/writing/student-input';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
@@ -33,7 +34,6 @@ import {
     WritingWorkspaceHeader,
     WritingWorkspacePath
 } from '../writing/WritingWorkspace';
-import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyProgress';
 import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
 import { getReactionOptions } from '../../modules/writing/reactions/registry';
@@ -714,7 +714,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     <span>{q}</span>
                                 </div>
                                 <div className="writing-question__answer">
-                                    <SpellingUnderlineTextarea
+                                    <StudentTextArea
                                         value={Reflect.get(studentAnswers, idx) || ''}
                                         onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                         placeholder="여기에 생각을 적어보세요..."

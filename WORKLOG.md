@@ -22,6 +22,11 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-08 — 학생 입력기 모듈: 입력창 + 맞춤법 검사기 한 부품 (Claude)
+- **한 일**: 선생님 요청(학생이 글을 쓰는 칸을 넣고 싶은 화면에 그대로 가져다 넣기). `src/modules/writing/student-input/` 에 `StudentTextArea`·`StudentTextField`(밑줄·칩·학급 설정·태블릿 정렬 포함), 훅 `useSpellingCheck`, 순수 엔진 `checkSpelling` 을 두고 과제·시·편지·보고서·자율 글쓰기 5개 파일이 이 부품을 씀. 옛 `SpellingUnderlineTextarea`·`Input` 은 지움. [원인: 세 겹 밑줄 합치기가 두 부품·두 스크립트에 따로 복사돼 있었음]
+- **변경**: 새 모듈 7개 파일(README 포함), 부르는 곳 5개, `spelling-scorecard.mjs`·`spelling-shadow.mjs` 가 같은 엔진, 실험실 `?dev-lab=student-input`, 검사 `studentInputModule`, FEATURE_MAP 한 줄·v1.26.4.
+- **결과/검증**: 학생 화면 변화 없음. 채점표 잡아낸 비율 7.2%(89곳) 그대로(맞힌 비율 53.3 → 53.9%, 겹친 밑줄을 하나로 셈). 빌드·렌더 검사 88개·관련 검사 통과, 실험실 화면에서 PC·태블릿 밑줄·칩·고친 뒤 따라오기 확인.
+- **남은 것 / 다음**: 회색 점선은 이 모듈의 `useSpellingCheck` 에 서버 결과를 더해 붙인다(화면은 고칠 필요 없음). 배포는 선생님 `배포` 뒤.
 ## 2026-10-08 — 맞춤법 회색 줄 교차 확인: hunspell·MeCab-ko 붙이기 + 서버 부담 점검 (Claude)
 - **한 일**: 선생님 결정(Kiwi 와 다른 오픈소스를 겹쳐 쓰기). 분석기가 제안마다 hunspell 한국어 사전·MeCab-ko 의 판정(같은 말/반대/모름)을 붙이고, 표본 채점으로 보일 규칙을 정함(꾸밈말+명사는 사전 반대면 뺌·토씨는 그대로·오타는 사전이 같은 고칠 말을 낼 때만). 후보 만들기가 느려(모르는 말마다 20~130ms) 빠른 사전(후보 끔)과 원래 사전을 나누고, 후보는 8자 이하·한 번에 80ms까지. [원인: 사전 후보 만들기가 긴 붙여 쓴 어절에서 수백 ms]
 - **변경**: `analyze.py`(Hunspell·Mecab·cross_check), `spelling-shadow.mjs`(`isShown`·두 칸 기록), `20261382`(agree_hunspell·agree_mecab), `setup.sh`, 검사 2개. git 밖: brew `mecab-ko`·`mecab-ko-dic`·`hunspell`, `~/agit-kiwi/hunspell-ko/`(hunspell-dict-ko 0.7.94, GPL-3, ko-fast.aff).

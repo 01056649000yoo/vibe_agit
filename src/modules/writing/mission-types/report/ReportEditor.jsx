@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import SpellingUnderlineInput from '../../tools/spelling-lookup/SpellingUnderlineInput';
-import SpellingUnderlineTextarea from '../../tools/spelling-lookup/SpellingUnderlineTextarea';
+import { StudentTextArea, StudentTextField } from '../../student-input';
 import {
     buildReportStructuredContent,
     createReportSection,
@@ -191,7 +190,7 @@ const ReportEditor = ({
 
     return (
         <div className="report-editor">
-            <SpellingUnderlineInput
+            <StudentTextField
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -319,7 +318,7 @@ const ReportEditor = ({
                                         className="report-editor__writing-label"
                                         htmlFor={`report-observation-${section.id}`}
                                     >사진에 대한 관찰 결과</label>
-                                    <SpellingUnderlineTextarea
+                                    <StudentTextArea
                                         id={`report-observation-${section.id}`}
                                         value={observation}
                                         onChange={(event) => updateObservation(section, event.target.value)}

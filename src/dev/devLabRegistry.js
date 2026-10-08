@@ -26,9 +26,17 @@ const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
 const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.jsx'))
 const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
 const TeacherAccountMenuPreview = lazy(() => import('./TeacherAccountMenuPreview.jsx'))
+const StudentInputPreview = lazy(() => import('./StudentInputPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'student-input',
+    icon: '✏️',
+    title: '학생 입력기 · 입력창 + 맞춤법 밑줄 한 부품',
+    description: '`student-input` 모듈을 화면에 그대로 넣은 모습 — 제목·본문 빨간 밑줄, 아래 `확인해 볼 표현` 칩(누르면 고른 표현 표시). 서버 자료 없이 빠른 규칙·기본 500개만',
+    Component: StudentInputPreview,
+  }),
   Object.freeze({
     id: 'teacher-account-menu',
     icon: '🔴',

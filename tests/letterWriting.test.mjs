@@ -283,8 +283,8 @@ test('교사는 글 없이 편지지만 인쇄할 수 있다', () => {
 });
 
 test('학생 편집기는 맞춤법 입력창을 쓰고 받는 사람을 따로 담는다', () => {
-    assert.match(letterEditor, /SpellingUnderlineInput/);
-    assert.match(letterEditor, /SpellingUnderlineTextarea/);
+    assert.match(letterEditor, /StudentTextField/);
+    assert.match(letterEditor, /StudentTextArea/);
     assert.match(letterEditor, /createLetterStructuredContent/);
     // 받는 사람이 본문 속 문장이 아니라 칸이어야 나중에 편지를 전할 수 있다.
     assert.match(letterEditor, /받는 사람을 적어 두면/);

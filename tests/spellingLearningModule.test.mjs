@@ -11,8 +11,10 @@ const learningApi = await readFile('src/modules/writing/spelling-learning/api.js
 const searchSession = await readFile('src/modules/writing/spelling-learning/searchSession.js', 'utf8');
 const lookup = await readFile('src/modules/writing/tools/spelling-lookup/SpellingLookupTool.jsx', 'utf8');
 const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup/manifest.js', 'utf8');
-const underlineTextarea = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea.jsx', 'utf8');
-const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
+const underlineTextarea = await readFile('src/modules/writing/student-input/StudentTextArea.jsx', 'utf8');
+const underlineInput = await readFile('src/modules/writing/student-input/StudentTextField.jsx', 'utf8');
+const spellingHook = await readFile('src/modules/writing/student-input/useSpellingCheck.js', 'utf8');
+const spellingEngine = await readFile('src/modules/writing/student-input/spellingEngine.js', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
 const adminPromotion = await readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8');
 const adminPromotionStyles = await readFile('src/components/admin/AdminSpellingPromotionPanel.css', 'utf8');
@@ -169,8 +171,10 @@ test('기본 자료 500개는 모두 글쓰기 밑줄 규칙을 가진다', () =
     assert.equal(findElementarySpellingIssues('책을 반드시 놓아야 해요.').length, 0);
     assert.ok(findElementarySpellingIssues('선생님 말씀데로 따라 했다.')
         .some((issue) => issue.entryId === 'practice-spelling-quiz-100'));
-    assert.match(underlineTextarea, /loadElementarySpellingDetector/);
-    assert.match(underlineInput, /loadElementarySpellingDetector/);
+    // 두 입력기 모두 같은 훅이 기본 자료를 뒤에서 받는다
+    assert.match(spellingHook, /loadElementarySpellingDetector/);
+    assert.match(underlineTextarea, /useSpellingCheck\(/);
+    assert.match(underlineInput, /useSpellingCheck\(/);
 });
 
 test('후보 색인 검사는 500개 순차 검사와 같은 결과를 낸다', () => {
@@ -372,8 +376,8 @@ test('공통·학급 자료는 학생에게 한 목록으로 합치고, 공통 �
     assert.match(deltaMigration, /SELECT 3000/);
     assert.match(deltaMigration, /DROP FUNCTION IF EXISTS public\.get_student_spelling_entries_v2\(\)/);
     assert.match(deltaMigration, /REVOKE ALL ON FUNCTION public\.get_student_spelling_entries_v3\(TIMESTAMPTZ\) FROM PUBLIC, anon/);
-    assert.match(underlineTextarea, /findClassSpellingIssues\(scannedValue, classEntries, remaining\)/);
-    assert.match(underlineInput, /findClassSpellingIssues\(normalizedValue, dynamicEntries, remaining\)/);
+    assert.match(spellingEngine, /findClassSpellingIssues\(value, entries, remaining\)/);
+    assert.match(spellingHook, /spellingLearningApi\.getStudentEntries\(\)/);
     assert.match(lookup, /entry\.scope === 'common' \? '공통 맞춤법 자료'/);
 });
 

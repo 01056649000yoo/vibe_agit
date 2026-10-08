@@ -5,16 +5,15 @@
  *
  * ① 고치기 전·후 글을 글자 단위로 견줘 고친 자리를 찾고, 그중 **맞춤법·띄어쓰기 수정**만 남긴다
  *    (짧고, 고치기 전·후가 비슷한 것 — 문장을 새로 쓴 것은 뺀다).
- * ② 고치기 전 글에 지금 검사기(빠른 규칙 + 기본 자료 + 공통 자료)를 돌려 밑줄을 얻는다.
+ * ② 고치기 전 글에 학생 입력기와 같은 검사 엔진(빠른 규칙 + 기본 자료 + 공통 자료)을 돌려 밑줄을 얻는다.
  * ③ 잡아낸 비율 = 선생님 수정 중 밑줄과 겹친 것 / 선생님 수정
  *    맞힌 비율   = 밑줄 중 선생님 수정과 겹친 것 / 밑줄 (선생님이 모든 틀린 곳을 고치지는 않으므로 실제보다 낮게 나온다)
  * 학생 글은 맥미니 밖으로 보내지 않는다. 저장소에는 숫자만 남기고, 놓친 예시는 --out(스크래치)에만 쓴다.
  */
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { findSpellingIssues } from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
 import { findElementarySpellingIssues } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
-import { findClassSpellingIssues } from '../src/modules/writing/spelling-learning/detection.js';
+import { checkSpelling } from '../src/modules/writing/student-input/spellingEngine.js';
 
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
 const arg = (name, fallback) => {
@@ -99,11 +98,8 @@ export const scoreDocuments = (docs, commonEntries) => {
             if (spans.some((span) => span.s === s)) continue;
             spans.push({ s, e, wrong: wrong.trim(), right });
         }
-        const found = [
-            ...findSpellingIssues(before, 200),
-            ...findElementarySpellingIssues(before, 200),
-            ...findClassSpellingIssues(before, commonEntries, 200)
-        ];
+        // 학생 입력기와 같은 엔진 — 학생에게 실제로 보이는 빨간 줄로 채점한다
+        const found = checkSpelling(before, { elementaryDetector: findElementarySpellingIssues, entries: commonEntries, limit: 200 });
         for (const span of spans) {
             edits += 1;
             if (found.some((issue) => issue.start < span.e && issue.end > span.s)) caught += 1;
