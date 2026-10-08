@@ -3,10 +3,10 @@ import { fileURLToPath } from 'node:url';
 import {
     ELEMENTARY_SPELLING_DETECTION_RULES,
     getElementarySpellingEntries
-} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+} from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import {
     SPELLING_QUICK_DETECTION_RULES
-} from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
+} from '../src/modules/writing/student-input/checker/spellingDetectionRules.js';
 
 const detectionOutputUrl = new URL('../public/spelling/elementary-detection-v1.json', import.meta.url);
 const lookupOutputUrl = new URL('../public/spelling/elementary-lookup-v1.json', import.meta.url);

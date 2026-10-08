@@ -3,8 +3,8 @@ import test from 'node:test';
 import {
     collectSpellingCandidates,
     createSpellingCandidateIndex
-} from '../src/modules/writing/spelling-learning/candidateIndex.js';
-import { findClassSpellingIssues } from '../src/modules/writing/spelling-learning/detection.js';
+} from '../src/modules/writing/student-input/checker/candidateIndex.js';
+import { findClassSpellingIssues } from '../src/modules/writing/student-input/checker/classSpellingDetection.js';
 
 test('후보 색인은 겹치는 표현과 이모지 뒤의 UTF-16 위치를 보존한다', () => {
     const items = [

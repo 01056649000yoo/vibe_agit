@@ -16,8 +16,8 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findElementarySpellingIssues } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
-import { checkSpelling } from '../src/modules/writing/student-input/spellingEngine.js';
+import { findElementarySpellingIssues } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
+import { checkSpelling } from '../src/modules/writing/student-input/checker/spellingEngine.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';

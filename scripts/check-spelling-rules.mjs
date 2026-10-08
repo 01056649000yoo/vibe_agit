@@ -19,7 +19,7 @@ import {
     MAX_SPELLING_ISSUES,
     SPELLING_DETECTION_ENTRY_IDS,
     SPELLING_DETECTION_RULE_COUNT
-} from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
+} from '../src/modules/writing/student-input/checker/spellingDetectionRules.js';
 import {
     ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS,
     ELEMENTARY_SPELLING_DETECTION_RULE_COUNT,
@@ -30,12 +30,12 @@ import {
     findElementarySpellingIssues,
     getElementarySpellingQuizPool,
     getElementarySpellingEntries
-} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+} from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import {
     ELEMENTARY_SPELLING_CATEGORY_COUNTS,
     SPELLING_CATEGORY_DEFINITIONS,
     SPELLING_DETECTION_MODES
-} from '../src/modules/writing/tools/spelling-lookup/catalog/index.js';
+} from '../src/modules/writing/student-input/checker/catalog/index.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
 const 정상 = [

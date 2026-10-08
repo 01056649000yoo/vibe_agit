@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { renderMarks } from './StudentTextArea';
-import { useSpellingCheck } from './useSpellingCheck';
+import { useSpellingCheck } from './checker/useSpellingCheck';
 import { useSpellingSwitch } from './useSpellingSwitch';
 import './StudentTextInput.css';
 

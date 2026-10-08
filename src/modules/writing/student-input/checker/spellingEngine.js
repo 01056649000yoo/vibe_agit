@@ -8,8 +8,8 @@
  * 입력기 부품·채점표·회색 줄 기록이 모두 이 함수 하나로 "학생에게 보이는 빨간 줄"을 구한다.
  * 노드 스크립트에서도 불러 쓰므로 React·브라우저·Supabase 를 가져오지 않는다.
  */
-import { findSpellingIssues, MAX_SPELLING_ISSUES } from '../tools/spelling-lookup/spellingDetectionRules.js';
-import { findClassSpellingIssues } from '../spelling-learning/detection.js';
+import { findSpellingIssues, MAX_SPELLING_ISSUES } from './spellingDetectionRules.js';
+import { findClassSpellingIssues } from './classSpellingDetection.js';
 
 export { MAX_SPELLING_ISSUES };
 

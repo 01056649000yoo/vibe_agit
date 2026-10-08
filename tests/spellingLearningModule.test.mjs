@@ -13,8 +13,8 @@ const lookup = await readFile('src/modules/writing/tools/spelling-lookup/Spellin
 const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup/manifest.js', 'utf8');
 const underlineTextarea = await readFile('src/modules/writing/student-input/StudentTextArea.jsx', 'utf8');
 const underlineInput = await readFile('src/modules/writing/student-input/StudentTextField.jsx', 'utf8');
-const spellingHook = await readFile('src/modules/writing/student-input/useSpellingCheck.js', 'utf8');
-const spellingEngine = await readFile('src/modules/writing/student-input/spellingEngine.js', 'utf8');
+const spellingHook = await readFile('src/modules/writing/student-input/checker/useSpellingCheck.js', 'utf8');
+const spellingEngine = await readFile('src/modules/writing/student-input/checker/spellingEngine.js', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
 const adminPromotion = await readFile('src/components/admin/AdminSpellingPromotionPanel.jsx', 'utf8');
 const adminPromotionStyles = await readFile('src/components/admin/AdminSpellingPromotionPanel.css', 'utf8');
@@ -35,13 +35,13 @@ const {
     getElementarySpellingQuizPool,
     searchElementarySpelling
 } = await import(
-    '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
+    '../src/modules/writing/student-input/checker/elementarySpellingEntries.js'
 );
 const {
     ELEMENTARY_SPELLING_CATEGORY_COUNTS,
     SPELLING_CATEGORY_DEFINITIONS,
     SPELLING_DETECTION_MODES
-} = await import('../src/modules/writing/tools/spelling-lookup/catalog/index.js');
+} = await import('../src/modules/writing/student-input/checker/catalog/index.js');
 const ALL_ELEMENTARY_SPELLING_ENTRIES = getElementarySpellingEntries();
 const EXPANDED_ELEMENTARY_SPELLING_ENTRIES = ALL_ELEMENTARY_SPELLING_ENTRIES
     .filter((entry) => entry.origin === 'expansion');

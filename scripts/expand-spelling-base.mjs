@@ -16,7 +16,7 @@
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { getElementarySpellingEntries } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+import { getElementarySpellingEntries } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import { normalizeSpellingValue } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
 
 const SECRETS_FILE = process.env.AGIT_SECRETS_FILE || '/Users/seunghyeonmaegmini/agit-supabase/secrets.agit.env';

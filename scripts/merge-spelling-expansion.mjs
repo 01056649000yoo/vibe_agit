@@ -12,7 +12,7 @@
  */
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { getElementarySpellingEntries } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+import { getElementarySpellingEntries } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 
 const DIR = 'docs/spelling-expansion';
 const CATALOG_FILES = Object.freeze({
@@ -103,7 +103,7 @@ export const mergeBatches = async (batches, { exclude = new Set(), dryRun = fals
         }
     }
     for (const [categoryId, lines] of linesByCategory) {
-        const file = `src/modules/writing/tools/spelling-lookup/catalog/${Reflect.get(CATALOG_FILES, categoryId)}`;
+        const file = `src/modules/writing/student-input/checker/catalog/${Reflect.get(CATALOG_FILES, categoryId)}`;
         const source = await readFile(file, 'utf8');
         // 파일 끝은 `    ]\n);` 꼴이다 — 마지막 `]` 앞에 덧붙인다.
         const match = source.match(/\n\s*\]\s*\)\s*;\s*$/);

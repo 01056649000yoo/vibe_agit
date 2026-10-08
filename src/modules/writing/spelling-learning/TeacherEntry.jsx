@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getElementarySpellingEntries } from '../tools/spelling-lookup/elementarySpellingEntries';
+import { getElementarySpellingEntries } from '../student-input/checker/elementarySpellingEntries';
 import {
     ELEMENTARY_SPELLING_CATEGORY_COUNTS,
     SPELLING_CATEGORY_DEFINITIONS
-} from '../tools/spelling-lookup/catalog';
+} from '../student-input/checker/catalog';
 import { spellingLearningApi } from './api';
 import './TeacherEntry.css';
 

@@ -6,8 +6,8 @@ import {
     issuesSafeWhileTyping,
     uniqueSpellingIssues,
     MAX_SPELLING_ISSUES
-} from '../src/modules/writing/student-input/spellingEngine.js';
-import { findElementarySpellingIssues } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+} from '../src/modules/writing/student-input/checker/spellingEngine.js';
+import { findElementarySpellingIssues } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 
 const engine = (text, entries = []) => checkSpelling(text, { elementaryDetector: findElementarySpellingIssues, entries });
 

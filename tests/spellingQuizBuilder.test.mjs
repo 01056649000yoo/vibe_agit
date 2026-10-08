@@ -5,7 +5,7 @@ import {
     buildSpellingQuizPool, createSpellingQuiz, gradeSpellingAnswer, publicQuizQuestion, QUIZ_BLANK,
     SPELLING_QUIZ_LEVELS, spellingSourcesFromCatalog, spellingSourcesFromEntries, spellingSourcesFromLearningEntries
 } from '../src/modules/game/spelling-claw/quiz/spellingQuizBuilder.js';
-import { getElementarySpellingEntries } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+import { getElementarySpellingEntries } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 
 /*
  * 맞춤법 퀴즈 만들기(2026-10-01). 사전 항목에서 문제를 그때그때 만든다 — 공통 자료가 게시되면 저절로 출제된다.

@@ -11,7 +11,7 @@ import { clawPrizeText, createLocalClawSession, previewStudentFromRoster } from 
 import { CLAW_PLUSHES } from './plushCatalog';
 import { DRAGON_DECOR_ITEMS } from '../dragon/decorCatalog';
 import { getReaderLevel, getWriterLevel } from '../../../constants/writerLevels';
-import { getElementarySpellingEntries } from '../../writing/tools/spelling-lookup/elementarySpellingEntries';
+import { getElementarySpellingEntries } from '../../writing/student-input/checker/elementarySpellingEntries';
 import { supabase } from '../../../lib/supabaseClient';
 import { resolveActivityNotification } from '../../notifications/registry';
 import './clawTestBench.css';

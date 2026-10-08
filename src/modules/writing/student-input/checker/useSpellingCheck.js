@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadElementarySpellingDetector } from '../tools/spelling-lookup/elementarySpellingDetectorLoader';
-import { spellingLearningApi } from '../spelling-learning/api';
+import { loadElementarySpellingDetector } from './elementarySpellingDetectorLoader';
+import { spellingLearningApi } from '../../spelling-learning/api';
 import { checkSpelling, issuesSafeWhileTyping, uniqueSpellingIssues } from './spellingEngine';
 
 const NO_ISSUES = Object.freeze([]);

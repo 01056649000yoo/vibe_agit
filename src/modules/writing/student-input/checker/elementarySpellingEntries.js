@@ -9,7 +9,7 @@ import { ELEMENTARY_SPELLING_CATALOG } from './catalog/index.js';
 import {
     collectSpellingCandidates,
     createSpellingCandidateIndex
-} from '../../spelling-learning/candidateIndex.js';
+} from './candidateIndex.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 

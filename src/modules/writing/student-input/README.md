@@ -40,8 +40,8 @@ import { StudentTextArea, StudentTextField } from '../../modules/writing/student
 ## 화면 없이 검사만
 
 ```js
-import { checkSpelling } from './spellingEngine.js';
-import { findElementarySpellingIssues } from '../tools/spelling-lookup/elementarySpellingEntries.js';
+import { checkSpelling } from './checker/spellingEngine.js';
+import { findElementarySpellingIssues } from './checker/elementarySpellingEntries.js';
 
 checkSpelling(text, { elementaryDetector: findElementarySpellingIssues, entries });
 // → [{ start, end, text, wrong, right, label, entryId }]
@@ -53,18 +53,19 @@ React 화면에서 직접 그리고 싶으면 `useSpellingCheck(value, { enabled
 
 ## 파일
 
-| 파일 | 하는 일 |
+| 자리 | 하는 일 |
 |---|---|
 | `index.js` | 공개 창구. 다른 화면은 여기서만 가져온다 |
-| `StudentTextArea.jsx` · `StudentTextField.jsx` | 여러 줄 · 한 줄 입력기 |
-| `useSpellingCheck.js` | 자료 받기·손 멈춤 기다리기·NFC → 밑줄 자리 |
+| `StudentTextArea.jsx` · `StudentTextField.jsx` · `StudentTextInput.css` | 여러 줄 · 한 줄 입력기와 밑줄층 |
 | `useSpellingSwitch.js` | 학급 설정 따르기·칩 누름 동작 |
-| `spellingEngine.js` | 세 겹 합치기(순수 함수, 노드에서도 씀) |
-| `StudentTextInput.css` | 밑줄층 정렬·물결 밑줄·칩 |
+| `checker/spellingEngine.js` | 세 겹 합치기(순수 함수, 노드 스크립트도 씀) |
+| `checker/useSpellingCheck.js` | 자료 받기·손 멈춤 기다리기·NFC → 밑줄 자리 |
+| `checker/spellingDetectionRules.js` | ① 빠른 규칙(띄어쓰기·자주 틀리는 말) |
+| `checker/catalog/` · `elementarySpellingEntries.js` · `elementarySpellingDetectorLoader.js` | ② 기본 자료 500개(분류 파일 여섯 개, 뒤에서 받는 청크) |
+| `checker/classSpellingDetection.js` · `entryCache.js` · `candidateIndex.js` | ③ 공통·반별 자료로 찾기, 기기 저장·바뀐 것만 받기, 공용 후보 색인 |
 
-맞춤법 **자료**(빠른 규칙·기본 500개·공통 자료 받기)는 지금 자리에 그대로 둔다 —
-`tools/spelling-lookup/`(규칙·기본 자료·수첩), `spelling-learning/`(공통·반별 자료, 교사 화면). 자료를 늘리는 규칙은
-`spelling-learning/README.md`. 이 모듈은 자료를 **쓰는** 쪽만 맡는다.
+맞춤법 수첩(`tools/spelling-lookup/`)·교사 자료 화면(`spelling-learning/`)·인형뽑기 퀴즈는 이 모듈의 자료를 **가져다 쓴다**.
+자료를 늘리는 규칙은 `spelling-learning/README.md`, 분류 규칙은 `checker/catalog/README.md`.
 
 ## 다음에 붙일 것
 

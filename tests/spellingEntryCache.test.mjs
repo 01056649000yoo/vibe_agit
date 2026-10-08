@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyCommonResponse, combineStudentEntries } from '../src/modules/writing/spelling-learning/entryCache.js';
+import { applyCommonResponse, combineStudentEntries } from '../src/modules/writing/student-input/checker/entryCache.js';
 
 const entry = (id, wrong, at, extra = {}) => ({ id, wrong_expression: wrong, correct_expression: `${wrong}!`, updated_at: at, ...extra });
 

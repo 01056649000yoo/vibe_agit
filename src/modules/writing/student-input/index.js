@@ -4,5 +4,5 @@
  */
 export { default as StudentTextArea } from './StudentTextArea';
 export { default as StudentTextField } from './StudentTextField';
-export { useSpellingCheck } from './useSpellingCheck';
-export { checkSpelling, uniqueSpellingIssues, MAX_SPELLING_ISSUES } from './spellingEngine';
+export { useSpellingCheck } from './checker/useSpellingCheck';
+export { checkSpelling, uniqueSpellingIssues, MAX_SPELLING_ISSUES } from './checker/spellingEngine';

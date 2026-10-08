@@ -7,7 +7,7 @@ import {
     createOfficialDictionarySearchUrl,
     getPopularSpellingEntries,
     searchElementarySpelling
-} from './elementarySpellingEntries';
+} from '../../student-input/checker/elementarySpellingEntries';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { classifySpellingSearchQuery } from '../../spelling-learning/searchCandidate';
 import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';

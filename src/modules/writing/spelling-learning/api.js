@@ -1,6 +1,6 @@
 import { supabase } from '../../../lib/supabaseClient';
 import { readLocalStorageJson, writeLocalStorageJson } from '../../../lib/browserStorage';
-import { applyCommonResponse, combineStudentEntries, COMMON_SPELLING_CACHE_KEY } from './entryCache';
+import { applyCommonResponse, combineStudentEntries, COMMON_SPELLING_CACHE_KEY } from '../student-input/checker/entryCache';
 
 // 한 화면에서 밑줄 부품 여럿이 동시에 부르므로 잠깐 묶는다. 다음에 글쓰기 화면을 열면 "바뀌었나요?"만 다시 묻는다.
 const STUDENT_ENTRIES_CACHE_MS = 5 * 60_000;

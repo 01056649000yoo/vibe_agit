@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
-import { MAX_SPELLING_ISSUES } from './spellingEngine';
-import { useSpellingCheck } from './useSpellingCheck';
+import { MAX_SPELLING_ISSUES } from './checker/spellingEngine';
+import { useSpellingCheck } from './checker/useSpellingCheck';
 import { useSpellingSwitch } from './useSpellingSwitch';
 import './StudentTextInput.css';
 

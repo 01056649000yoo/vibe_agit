@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
     ELEMENTARY_SPELLING_DETECTION_RULES
-} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+} from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 import {
     SPELLING_QUICK_DETECTION_RULES
-} from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
+} from '../src/modules/writing/student-input/checker/spellingDetectionRules.js';
 
 const sharedCatalog = JSON.parse(await readFile(
     'public/spelling/elementary-detection-v1.json',

@@ -12,8 +12,8 @@
  */
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { findElementarySpellingIssues } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
-import { checkSpelling } from '../src/modules/writing/student-input/spellingEngine.js';
+import { findElementarySpellingIssues } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
+import { checkSpelling } from '../src/modules/writing/student-input/checker/spellingEngine.js';
 
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
 const arg = (name, fallback) => {

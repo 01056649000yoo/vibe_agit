@@ -46,12 +46,12 @@
 
 | 파일 | 큰 분류 | 개수 | 세부 분류 |
 |---|---:|---:|---|
-| `tools/spelling-lookup/catalog/grammarCatalog.js` | 문장 규칙 | 130 | 조사, 어미, 의존 명사·단위, 접두사·접미사, 부정 표현, 일반 띄어쓰기, 붙여 쓰는 낱말 |
-| `tools/spelling-lookup/catalog/conjugationCatalog.js` | 용언 활용 | 55 | 되·돼, 준말, 피동·사동, 활용 형태 |
-| `tools/spelling-lookup/catalog/meaningCatalog.js` | 뜻 구별 | 64 | 뜻과 쓰임 |
-| `tools/spelling-lookup/catalog/wordCatalog.js` | 낱말 표기 | 156 | 일반 낱말, 부사 |
-| `tools/spelling-lookup/catalog/compoundCatalog.js` | 합성어·사이시옷 | 49 | 사이시옷을 쓰는 말, 쓰지 않는 말 |
-| `tools/spelling-lookup/catalog/loanwordCatalog.js` | 외래어 | 46 | 외래어 |
+| `student-input/checker/catalog/grammarCatalog.js` | 문장 규칙 | 130 | 조사, 어미, 의존 명사·단위, 접두사·접미사, 부정 표현, 일반 띄어쓰기, 붙여 쓰는 낱말 |
+| `student-input/checker/catalog/conjugationCatalog.js` | 용언 활용 | 55 | 되·돼, 준말, 피동·사동, 활용 형태 |
+| `student-input/checker/catalog/meaningCatalog.js` | 뜻 구별 | 64 | 뜻과 쓰임 |
+| `student-input/checker/catalog/wordCatalog.js` | 낱말 표기 | 156 | 일반 낱말, 부사 |
+| `student-input/checker/catalog/compoundCatalog.js` | 합성어·사이시옷 | 49 | 사이시옷을 쓰는 말, 쓰지 않는 말 |
+| `student-input/checker/catalog/loanwordCatalog.js` | 외래어 | 46 | 외래어 |
 
 `catalog/index.js`가 여섯 파일을 `sortOrder` 순서의 단일 목록으로 합친다. `elementarySpellingEntries.js`는 이 목록의 모든 검사 표현을 공용 후보 색인 하나로 만들며, 본문을 분류별로 반복해서 훑지 않는다.
 

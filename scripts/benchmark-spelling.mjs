@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks';
 
 const importStartedAt = performance.now();
 const { findElementarySpellingIssues } = await import(
-    '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
+    '../src/modules/writing/student-input/checker/elementarySpellingEntries.js'
 );
 const importDuration = performance.now() - importStartedAt;
 
