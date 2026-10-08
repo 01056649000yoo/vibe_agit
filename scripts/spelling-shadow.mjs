@@ -29,6 +29,20 @@ const KEEP_DAYS = 60;
 // 회색 줄로 먼저 보여 줄 갈래(2026-10-08 선생님 결정: 잘 맞는 갈래만) — 그 밖의 띄어쓰기는 기록만
 export const SHOWN_CATEGORIES = Object.freeze(['particle_attach', 'modifier_noun', 'typo']);
 
+/**
+ * 2단계에서 보였을지 — 고른 갈래 + 거르기 통과 + 교차 확인(2026-10-08, 전체 글 표본 채점으로 정함).
+ *  · 꾸미는 말+명사: hunspell 이 반대하면 뺀다(검은색·저녁때·먹을게처럼 한 낱말·어미인 것). 단 '본 적·한 척·할 뻔·한 체'는
+ *    사전이 본적(本籍) 같은 다른 낱말로 착각하므로 그대로 둔다.
+ *  · 토씨 붙이기: 두 도구가 반대해도 Kiwi 가 대개 맞아(같다 고→같다고) 교차 확인을 쓰지 않는다.
+ *  · 받침 오타: 사전이 스스로 내놓은 고칠 말에 Kiwi 제안이 있을 때만(약 92% 맞음, 나머지는 절반이 엉뚱).
+ */
+export const isShown = (item, filterReason) => {
+    if (!SHOWN_CATEGORIES.includes(item.category) || filterReason) return false;
+    if (item.category === 'typo') return item.hunspell === true;
+    if (item.category === 'modifier_noun' && item.hunspell === false) return /^[^\s]+\s(적|척|뻔|체)/.test(item.suggestion);
+    return true;
+};
+
 const arg = (name, fallback) => {
     const index = process.argv.indexOf(name);
     return index >= 0 ? process.argv[index + 1] : fallback;
@@ -126,9 +140,10 @@ const runShadow = async () => {
                 post_id: job.post.id, class_id: job.post.class_id, text_version: version, kind: item.kind,
                 original: item.original, suggestion: item.suggestion,
                 category: item.category || 'other_spacing', filter_reason: filterReason,
-                // 2단계에서 보였을지: 고른 갈래 + 거르기 통과 + 빨간 줄과 안 겹침
-                shown: SHOWN_CATEGORIES.includes(item.category) && !filterReason,
+                // 2단계에서 보였을지: 고른 갈래 + 거르기 통과 + 빨간 줄과 안 겹침 + 교차 확인
+                shown: isShown(item, filterReason),
                 overlaps_red: overlapsRed,
+                agree_hunspell: item.hunspell ?? null, agree_mecab: item.mecab ?? null,
                 outcome: version === 'original' || job.post.teacher ? outcomeOf(item, later) : 'unknown'
             });
         }
@@ -144,12 +159,13 @@ const runShadow = async () => {
     let saved = 0;
     for (let offset = 0; offset < deduped.length; offset += 2000) {
         const chunk = Buffer.from(JSON.stringify(deduped.slice(offset, offset + 2000)), 'utf8').toString('base64');
-        saved += Number(psql(`with ins as (insert into public.spelling_shadow_suggestions(post_id, class_id, text_version, kind, original, suggestion, overlaps_red, outcome, category, shown, filter_reason)
-            select r.post_id, r.class_id, r.text_version, r.kind, r.original, r.suggestion, r.overlaps_red, r.outcome, r.category, r.shown, r.filter_reason
-            from json_to_recordset(convert_from(decode('${chunk}', 'base64'), 'UTF8')::json) as r(post_id uuid, class_id uuid, text_version text, kind text, original text, suggestion text, overlaps_red boolean, outcome text, category text, shown boolean, filter_reason text)
+        saved += Number(psql(`with ins as (insert into public.spelling_shadow_suggestions(post_id, class_id, text_version, kind, original, suggestion, overlaps_red, outcome, category, shown, filter_reason, agree_hunspell, agree_mecab)
+            select r.post_id, r.class_id, r.text_version, r.kind, r.original, r.suggestion, r.overlaps_red, r.outcome, r.category, r.shown, r.filter_reason, r.agree_hunspell, r.agree_mecab
+            from json_to_recordset(convert_from(decode('${chunk}', 'base64'), 'UTF8')::json) as r(post_id uuid, class_id uuid, text_version text, kind text, original text, suggestion text, overlaps_red boolean, outcome text, category text, shown boolean, filter_reason text, agree_hunspell boolean, agree_mecab boolean)
             where exists (select 1 from public.student_posts p where p.id = r.post_id)
             on conflict (post_id, text_version, kind, original, suggestion) do update set overlaps_red = excluded.overlaps_red, outcome = excluded.outcome,
-                category = excluded.category, shown = excluded.shown, filter_reason = excluded.filter_reason, analyzed_at = now()
+                category = excluded.category, shown = excluded.shown, filter_reason = excluded.filter_reason,
+                agree_hunspell = excluded.agree_hunspell, agree_mecab = excluded.agree_mecab, analyzed_at = now()
             returning 1) select count(*) from ins;`) || 0);
     }
     psql(`delete from public.spelling_shadow_suggestions where analyzed_at < now() - interval '${KEEP_DAYS} days';
