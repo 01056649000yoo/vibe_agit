@@ -92,6 +92,61 @@ def typo_suggestions(kiwi, text):
     return found
 
 
+# 의존 명사처럼 앞말과 늘 띄우는 명사(Kiwi 는 '때·점·뒤'를 일반 명사로 본다)
+BOUND_LIKE = {'때', '점', '후', '전', '뒤', '중', '동안', '사이', '끝', '적', '줄', '뿐', '만큼', '대로', '채', '체', '척', '듯', '뻔', '김'}
+AMBIGUOUS = ('한번', '못하', '못해', '못했', '안되', '안돼', '안됐', '잘하', '잘해', '잘했', '못되', '안하', '안해', '잘되', '잘돼')
+
+
+def boundary_tokens(kiwi, phrase, cut):
+    """phrase 의 cut 자리(공백) 앞 마지막 조각과 뒤 첫 조각."""
+    tokens = kiwi.tokenize(phrase)
+    left = [t for t in tokens if t.start + t.len <= cut]
+    right = [t for t in tokens if t.start >= cut]
+    return tokens, (left[-1] if left else None), (right[0] if right else None)
+
+
+def classify(kiwi, item):
+    """갈래와 거른 까닭. 갈래: particle_attach · modifier_noun · typo · other_spacing"""
+    original, suggestion, kind = item['original'], item['suggestion'], item['kind']
+    if original.startswith(AMBIGUOUS) or original.replace(' ', '').startswith(AMBIGUOUS):
+        reason = 'ambiguous'
+    else:
+        reason = None
+    if kind == 'typo':
+        return 'typo', reason
+    if kind == 'spacing_insert':
+        phrase = suggestion
+        cut = next((i for i, (a, b) in enumerate(zip(original + ' ', suggestion)) if a != b), len(original))
+    else:
+        phrase = original
+        cut = next((i for i, (a, b) in enumerate(zip(original, suggestion + ' ')) if a != b), len(suggestion))
+    tokens, left, right = boundary_tokens(kiwi, phrase, cut)
+    if not left or not right:
+        return 'other_spacing', reason
+    if any(t.tag == 'NNP' for t in tokens):
+        reason = reason or 'proper_noun'
+    left_text, right_text = phrase[:cut].strip(), phrase[cut:].strip()
+    if left_text and right_text and (right_text.startswith(left_text) or left_text == right_text[:len(left_text)]):
+        reason = reason or 'repeat'
+    if kind == 'spacing_insert':
+        if right.tag == 'VX':
+            return 'other_spacing', reason or 'auxiliary'
+        if right.form == '데' and left.tag == 'ETM':
+            return 'other_spacing', reason or 'neunde'
+        # 관형형 어미(-ㄴ·-는·-ㄹ·-던) 뒤의 명사는 늘 띄운다(같은 색·흘릴 때·좋을 것). 굳은 합성어(작은아버지)는 Kiwi 가 한 낱말로 본다.
+        if left.tag == 'ETM' and right.tag.startswith('NN'):
+            return 'modifier_noun', reason
+        if left.tag == 'NNB' and right.tag in ('VA', 'VV', 'VX', 'VCN'):
+            return 'modifier_noun', reason   # 수 있다 · 것 같다 · 적 있다
+        if left.tag.startswith(('NN', 'NP')) and right.form in BOUND_LIKE and right.tag in ('NNG', 'NNB'):
+            return 'modifier_noun', reason   # 방학 때 · 수업 중
+        return 'other_spacing', reason
+    # 붙여 써야 할 듯: 띄운 뒷부분이 조사·서술격 조사·어미·접미사
+    if right.tag.startswith('J') or right.tag in ('VCP', 'XSN', 'XSV', 'XSA') or right.tag.startswith('E'):
+        return 'particle_attach', reason
+    return 'other_spacing', reason
+
+
 def analyze(kiwi, text):
     text = (text or '')[:MAX_TEXT]
     seen, out = set(), []
@@ -105,6 +160,10 @@ def analyze(kiwi, text):
         if key in seen:
             continue
         seen.add(key)
+        try:
+            item['category'], item['filter_reason'] = classify(kiwi, item)
+        except Exception:
+            item['category'], item['filter_reason'] = 'other_spacing', None
         out.append(item)
     return sorted(out, key=lambda item: item['start'])
 

@@ -26,6 +26,8 @@ const PYTHON = path.join(homedir(), 'agit-kiwi/venv/bin/python');
 const ANALYZER = path.join(ROOT, 'services/spelling-analyzer/analyze.py');
 const STATUS = path.join(homedir(), 'backups/auto/spelling-shadow-status.txt');
 const KEEP_DAYS = 60;
+// 회색 줄로 먼저 보여 줄 갈래(2026-10-08 선생님 결정: 잘 맞는 갈래만) — 그 밖의 띄어쓰기는 기록만
+export const SHOWN_CATEGORIES = Object.freeze(['particle_attach', 'modifier_noun', 'typo']);
 
 const arg = (name, fallback) => {
     const index = process.argv.indexOf(name);
@@ -118,10 +120,15 @@ const runShadow = async () => {
         const later = job.post.teacher || (version === 'original' ? job.post.content : null);
         for (const item of results.get(job.id) || []) {
             if (item.original.length > 60 || item.suggestion.length > 60) continue;
+            const overlapsRed = reds.some(([s, e]) => s < item.end && e > item.start);
+            const filterReason = overlapsRed ? 'red_overlap' : item.filter_reason || null;
             rows.push({
                 post_id: job.post.id, class_id: job.post.class_id, text_version: version, kind: item.kind,
                 original: item.original, suggestion: item.suggestion,
-                overlaps_red: reds.some(([s, e]) => s < item.end && e > item.start),
+                category: item.category || 'other_spacing', filter_reason: filterReason,
+                // 2단계에서 보였을지: 고른 갈래 + 거르기 통과 + 빨간 줄과 안 겹침
+                shown: SHOWN_CATEGORIES.includes(item.category) && !filterReason,
+                overlaps_red: overlapsRed,
                 outcome: version === 'original' || job.post.teacher ? outcomeOf(item, later) : 'unknown'
             });
         }
@@ -131,17 +138,18 @@ const runShadow = async () => {
     for (const row of rows) {
         const key = [row.post_id, row.text_version, row.kind, row.original, row.suggestion].join('\u0001');
         const prev = unique.get(key);
-        unique.set(key, prev ? { ...prev, overlaps_red: prev.overlaps_red || row.overlaps_red } : row);
+        unique.set(key, prev ? { ...prev, overlaps_red: prev.overlaps_red || row.overlaps_red, shown: prev.shown && row.shown, filter_reason: prev.filter_reason || row.filter_reason } : row);
     }
     const deduped = [...unique.values()];
     let saved = 0;
     for (let offset = 0; offset < deduped.length; offset += 2000) {
         const chunk = Buffer.from(JSON.stringify(deduped.slice(offset, offset + 2000)), 'utf8').toString('base64');
-        saved += Number(psql(`with ins as (insert into public.spelling_shadow_suggestions(post_id, class_id, text_version, kind, original, suggestion, overlaps_red, outcome)
-            select r.post_id, r.class_id, r.text_version, r.kind, r.original, r.suggestion, r.overlaps_red, r.outcome
-            from json_to_recordset(convert_from(decode('${chunk}', 'base64'), 'UTF8')::json) as r(post_id uuid, class_id uuid, text_version text, kind text, original text, suggestion text, overlaps_red boolean, outcome text)
+        saved += Number(psql(`with ins as (insert into public.spelling_shadow_suggestions(post_id, class_id, text_version, kind, original, suggestion, overlaps_red, outcome, category, shown, filter_reason)
+            select r.post_id, r.class_id, r.text_version, r.kind, r.original, r.suggestion, r.overlaps_red, r.outcome, r.category, r.shown, r.filter_reason
+            from json_to_recordset(convert_from(decode('${chunk}', 'base64'), 'UTF8')::json) as r(post_id uuid, class_id uuid, text_version text, kind text, original text, suggestion text, overlaps_red boolean, outcome text, category text, shown boolean, filter_reason text)
             where exists (select 1 from public.student_posts p where p.id = r.post_id)
-            on conflict (post_id, text_version, kind, original, suggestion) do update set overlaps_red = excluded.overlaps_red, outcome = excluded.outcome, analyzed_at = now()
+            on conflict (post_id, text_version, kind, original, suggestion) do update set overlaps_red = excluded.overlaps_red, outcome = excluded.outcome,
+                category = excluded.category, shown = excluded.shown, filter_reason = excluded.filter_reason, analyzed_at = now()
             returning 1) select count(*) from ins;`) || 0);
     }
     psql(`delete from public.spelling_shadow_suggestions where analyzed_at < now() - interval '${KEEP_DAYS} days';
