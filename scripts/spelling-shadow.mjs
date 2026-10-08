@@ -3,6 +3,7 @@
  *
  *   node scripts/spelling-shadow.mjs              밤 작업: 지난 실행 뒤 바뀐 제출 글
  *   node scripts/spelling-shadow.mjs --days 14    지난 14일치를 한꺼번에(기준선 만들기)
+ *   node scripts/spelling-shadow.mjs --all        지금 있는 모든 글(제출 전 글 포함)
  *   node scripts/spelling-shadow.mjs --report [--days 14]   모인 것 요약
  *
  * 제출된 글을 Kiwi(맥미니 안, services/spelling-analyzer/analyze.py)로 분석해 회색 줄이 생겼을 자리를 적는다.
@@ -93,14 +94,15 @@ const runAnalyzer = (jobs) => new Promise((resolve, reject) => {
 
 const runShadow = async () => {
     const days = Number(arg('--days', '0'));
-    const since = days > 0
+    const all = process.argv.includes('--all');
+    const since = all ? "'-infinity'::timestamptz" : days > 0
         ? `now() - interval '${Math.min(Math.max(days, 1), 60)} days'`
         : "coalesce((select max(source_until) from public.spelling_shadow_runs), now() - interval '1 day')";
     // psql 은 RETURNING 값 뒤에 'INSERT 0 1' 을 한 줄 더 찍는다 — 첫 줄만 쓴다.
-    const runId = Number.parseInt(psql(`insert into public.spelling_shadow_runs(note) values ('${days > 0 ? `backfill ${days}d` : 'nightly'}') returning id;`).split('\n')[0], 10);
+    const runId = Number.parseInt(psql(`insert into public.spelling_shadow_runs(note) values ('${all ? 'all posts' : days > 0 ? `backfill ${days}d` : 'nightly'}') returning id;`).split('\n')[0], 10);
     if (!Number.isInteger(runId)) throw new Error('run_id_missing');
     const posts = JSON.parse(psql(`select coalesce(json_agg(json_build_object('id', id, 'class_id', class_id, 'content', content, 'original', original_content, 'teacher', teacher_edited_content)), '[]')
-        from public.student_posts where is_submitted and updated_at > ${since} and updated_at <= now() and char_length(coalesce(content, '')) > 0;`) || '[]');
+        from public.student_posts where (is_submitted or ${all ? 'true' : 'false'}) and updated_at > ${since} and updated_at <= now() and char_length(coalesce(content, '')) > 0;`) || '[]');
     const common = JSON.parse(psql("select coalesce(json_agg(json_build_object('id', id, 'wrong_expression', wrong_expression, 'correct_expression', correct_expression, 'label', label)), '[]') from public.spelling_learning_entries where scope='common' and status='approved';") || '[]');
 
     const jobs = [];
