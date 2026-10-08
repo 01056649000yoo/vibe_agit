@@ -161,6 +161,7 @@ export const buildKnownSpellingIndex = (lookupPayload, detectionPayload, commonE
     const patterns = [];
     for (const rule of detectionPayload?.quickRules || []) {
         try {
+            // eslint-disable-next-line security/detect-non-literal-regexp -- 앱이 배포한 고정 빠른 규칙(spelling-detection.json)만 받는다. 학생 입력이 아니다.
             if (rule.source) patterns.push(new RegExp(rule.source));
         } catch {
             // 깨진 규칙 하나 때문에 검수가 멈추지 않게 건너뛴다.
