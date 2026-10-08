@@ -18,7 +18,7 @@ import { StudentTextArea, StudentTextField } from '../../modules/writing/student
 |---|---|---|---|
 | 빨간 물결 〰 | **틀렸어요** | ① 빠른 규칙 ② 기본 자료 500개 ③ 공통·반별 자료(관리자가 게시하면 재배포 없이 반영) — 기기 안 | 학급 설정 `맞춤법 수첩`(처음 값 켬) |
 | (빨간 물결) | 검토 중 자료 862개 | ②′ `checker/pending/` | `pending/config.js` 스위치(**꺼짐**, 학생 기기는 받지도 않음) |
-| 회색 점선 ┈ | **한번 살펴볼까요?** | 맥미니 분석 창구(Kiwi·hunspell·MeCab 교차 확인) — 글은 맥미니 밖으로 안 나감 | 학급 설정 `한번 살펴볼까요?`(처음 값 **꺼짐**) |
+| 회색 점선 ┈ | **한번 살펴볼까요?** | 맥미니 분석 창구(Kiwi·hunspell·MeCab 교차 확인) — 글은 맥미니 밖으로 안 나감 | 학급 설정 `한번 살펴볼까요?`(처음 값 켬, 2026-10-08~) |
 
 - 본문 아래 `확인해 볼 표현` 칩(빨간 물결) → 맞춤법 수첩이 열리며 고칠 말을 먼저 보여 준다.
 - 그 아래 `한번 살펴볼까요?` 칩(회색 점선) → 까닭 한 줄과 `[이렇게 고치기]`·`[그대로 두기]`. 처음 한 번은 수호룡이 뜻을 알려 준다.
@@ -43,7 +43,7 @@ import { StudentTextArea, StudentTextField } from '../../modules/writing/student
 | `autoGrow` | 참/거짓 | 거짓 | 글이 길어지는 만큼 세로로 늘릴 때(본문용만) |
 | `containerStyle` | 스타일 | — | 바깥 상자 스타일(제목용만) |
 
-학급 설정을 따르려면 화면이 `WritingEditorSettingsProvider`(`editor-settings/`) 안에 있어야 한다. 밖이면 기본값(빨간 켬·회색 꺼짐)이다.
+학급 설정을 따르려면 화면이 `WritingEditorSettingsProvider`(`editor-settings/`) 안에 있어야 한다. 밖이면 기본값(둘 다 켬)이다.
 직접 써 보기: `?dev-lab=student-input`(검토 중 자료·회색 점선 흉내를 이 화면에서만 켤 수 있다).
 
 ## 화면 없이 검사만

@@ -1,7 +1,7 @@
 export const SPELLING_LOOKUP_TOOL_ID = 'spelling-lookup';
 export const LAB_RESULTS_TOOL_ID = 'lab-results';
 export const AI_SPELL_CHECK_TOOL_ID = 'ai-spell-check';
-// 회색 점선 '한번 살펴볼까요?'(2026-10-08). 시험 중이라 기본 목록에 넣지 않는다 — 학급마다 선생님이 켠다.
+// 회색 점선 '한번 살펴볼까요?'(2026-10-08). 같은 날 선생님 결정으로 기본 켜짐 — 원치 않는 학급은 끈다(20261384).
 export const SPELLING_GRAY_TOOL_ID = 'spelling-gray';
 
 /*
@@ -15,11 +15,14 @@ export const SPELLING_GRAY_TOOL_ID = 'spelling-gray';
  * 아니었다. 이 기능은 교사가 `다시 쓰기` 를 요청한 글에서만 열리고, 켜면 그 글이
  * OpenAI 로 전송된다(개인정보 처리방침 제5조). 원치 않는 학급은 설정에서 끈다.
  *
+ * 회색 점선 '한번 살펴볼까요?'는 2026-10-08부터 기본 켜짐이다(선생님 반에서 시험해 보고 바로 전체 적용).
+ * 글은 우리 서버 안에서만 분석해 외부 전송이 없다.
+ *
  * **DB 기본값과 같아야 한다** — 새 학급은 DB 기본값으로 만들어지고 화면은 이 값을 쓴다.
  * `tests/writingEditorDefaults.test.mjs` 가 두 곳을 함께 본다.
  */
 export const DEFAULT_WRITING_EDITOR_SETTINGS = Object.freeze({
-    enabled_tools: Object.freeze([SPELLING_LOOKUP_TOOL_ID, LAB_RESULTS_TOOL_ID, AI_SPELL_CHECK_TOOL_ID])
+    enabled_tools: Object.freeze([SPELLING_LOOKUP_TOOL_ID, LAB_RESULTS_TOOL_ID, AI_SPELL_CHECK_TOOL_ID, SPELLING_GRAY_TOOL_ID])
 });
 
 export const normalizeWritingEditorSettings = (value) => {

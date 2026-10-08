@@ -102,11 +102,11 @@ test('회색 점선: 바뀐 문단만 보내고, 결과를 지금 글 자리에 
     assert.equal(pickParagraphsToSend([{ start: 0, text: '가'.repeat(GRAY_MAX_PARAGRAPH_CHARS + 1) }], new Map()).length, 0);
 });
 
-test('회색 점선은 처음 값 꺼짐이고, 서버 함수가 학급 켜짐·학생 인증·상한을 다시 본다', async () => {
+test('회색 점선은 기본 켜짐(2026-10-08 선생님 결정)이고, 서버 함수가 학급 켜짐·학생 인증·상한을 다시 본다', async () => {
     const { DEFAULT_WRITING_EDITOR_SETTINGS, SPELLING_GRAY_TOOL_ID } = await import('../src/modules/writing/editor-settings/settings.js');
-    assert.ok(!DEFAULT_WRITING_EDITOR_SETTINGS.enabled_tools.includes(SPELLING_GRAY_TOOL_ID));
+    assert.ok(DEFAULT_WRITING_EDITOR_SETTINGS.enabled_tools.includes(SPELLING_GRAY_TOOL_ID));
     const manifest = await readFile('src/modules/writing/tools/spelling-gray/manifest.js', 'utf8');
-    assert.match(manifest, /defaultEnabled: false/);
+    assert.match(manifest, /defaultEnabled: true/);
     assert.match(manifest, /surface: 'inline'/);
     const fn = await readFile('supabase/functions/spelling-look-closer/index.ts', 'utf8');
     assert.match(fn, /auth\.getUser\(\)/);

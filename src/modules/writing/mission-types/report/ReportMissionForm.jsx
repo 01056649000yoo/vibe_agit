@@ -10,6 +10,7 @@ import {
     REPORT_MAX_SECTIONS,
 } from './reportContent';
 import { REPORT_IMAGE_MAX_EDGE, REPORT_IMAGE_MAX_STORED_BYTES } from './reportImageApi';
+import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
@@ -24,6 +25,7 @@ const getInitialForm = (mission) => {
         min_chars: mission?.min_chars ?? 100,
         base_reward: mission?.base_reward ?? 100,
         allow_comments: mission?.allow_comments ?? true,
+        peer_reading_enabled: mission?.peer_reading_enabled ?? true,
         evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
     };
 };
@@ -149,6 +151,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 bonus_threshold: 0,
                 bonus_reward: 0,
                 allow_comments: form.allow_comments,
+                peer_reading_enabled: form.peer_reading_enabled,
                 guide_questions: [],
                 tags: ['보고하는글쓰기', '보고서'],
                 evaluation_rubric: form.evaluation_rubric,
@@ -189,6 +192,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
         bonus_threshold: 0,
         bonus_reward: 0,
         allow_comments: form.allow_comments,
+        peer_reading_enabled: form.peer_reading_enabled,
         guide_questions: [],
     };
 
@@ -229,7 +233,9 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                         recommendedCodes={['4국03-02', '6국03-01']}
                     />
 
-                    <button type="button" onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #2DD4BF' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDFA' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
+                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+
+                    <button type="button" disabled={!form.peer_reading_enabled} onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #2DD4BF' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDFA' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
                         {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}
                     </button>
 

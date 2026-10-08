@@ -20,6 +20,7 @@ import {
 } from '../../modules/writing/mission-types/genreCatalog';
 import MissionPromptFields from '../../modules/writing/mission-form/MissionPromptFields';
 import { applyGenreToMissionDraft } from '../../modules/writing/mission-form/missionDraft';
+import PeerReadingChoice from '../../modules/writing/mission-form/PeerReadingChoice';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
@@ -128,7 +129,7 @@ const MissionForm = ({
             try {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
+                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric')
                     .eq('id', editingMissionId)
                     .maybeSingle();
 
@@ -156,6 +157,7 @@ const MissionForm = ({
                     repeat_bonus_reward: data.repeat_bonus_reward ?? 10,
                     repeat_bonus_max_count: data.repeat_bonus_max_count ?? 3,
                     allow_comments: data.allow_comments ?? true,
+                    peer_reading_enabled: data.peer_reading_enabled ?? true,
                     mission_type: data.mission_type || data.genre || '글쓰기',
                     guide_questions: data.guide_questions || [],
                     question_count: (data.guide_questions || []).length || 3,
@@ -917,9 +919,19 @@ const MissionForm = ({
                                                 </div>
                                             </div>
 
-                                            {/* 댓글 허용 토글 */}
+                                            {/* 학생끼리 서로의 글 보기(끄면 댓글도 꺼진다) */}
+                                            <PeerReadingChoice
+                                                enabled={formData.peer_reading_enabled ?? true}
+                                                onChange={(patch) => setFormData({ ...formData, ...patch })}
+                                            />
+
+                                            {/* 댓글 허용 토글 — 친구가 글을 못 보면 댓글도 쓸 수 없다 */}
                                             <div
-                                                onClick={() => setFormData({ ...formData, allow_comments: !formData.allow_comments })}
+                                                aria-disabled={formData.peer_reading_enabled === false}
+                                                onClick={() => {
+                                                    if (formData.peer_reading_enabled === false) return;
+                                                    setFormData({ ...formData, allow_comments: !formData.allow_comments });
+                                                }}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -938,7 +950,7 @@ const MissionForm = ({
                                                     {formData.allow_comments ? '💬' : '🔒'}
                                                 </span>
                                                 <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : 'var(--ui-ink-muted)' }}>
-                                                    {formData.allow_comments ? '친구 댓글 허용함' : '댓글 기능 끄기'}
+                                                    {formData.peer_reading_enabled === false ? '선생님만 읽는 과제라 댓글도 꺼져요' : formData.allow_comments ? '친구 댓글 허용함' : '댓글 기능 끄기'}
                                                 </span>
                                             </div>
                                         </div>

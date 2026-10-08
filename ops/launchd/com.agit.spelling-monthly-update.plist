@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.spelling-monthly-update</string>
+    <!--
+      맞춤법 한 달 자동 업데이트(2026-10-09, 선생님 결정) — 매달 1일 05:40 에 지난달 자료로 돈다.
+      회색 점선에서 고친 것·나중에 제안대로 고쳐진 것·선생님이 고쳤는데 두 줄 모두 놓친 것을 모아,
+      엄격한 관문을 지난 것만 공통 자료(빨간 물결)로 게시하고(source_kind=monthly, 한 달 50개까지) 텔레그램으로 알린다.
+      기록: ~/backups/auto/spelling-monthly-status.txt · 설명: docs/SPELLING_MONTHLY_UPDATE.md
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/opt/node@22/bin/node</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/scripts/spelling-monthly-update.mjs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Day</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>40</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-spelling-monthly-update.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-spelling-monthly-update.log</string>
+</dict>
+</plist>

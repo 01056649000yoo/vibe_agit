@@ -8,7 +8,7 @@
 import { getGenreMissionType, resolveGenreMissionTypeId } from '../mission-types/registry.js';
 
 // 불러올 때 필요한 칸만(수정 화면 재조회와 같은 칸 + 목록 표시용 학급·날짜)
-export const PAST_MISSION_FIELDS = 'id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric, created_at, is_archived, class_id, classes!writing_missions_class_id_fkey(name)';
+export const PAST_MISSION_FIELDS = 'id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric, created_at, is_archived, class_id, classes!writing_missions_class_id_fkey(name)';
 
 export const PAST_MISSION_PAGE_SIZE = 20;
 export const PAST_MISSION_EXCLUDED_TYPES = Object.freeze(['meeting']);

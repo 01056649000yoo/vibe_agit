@@ -4,6 +4,7 @@ import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
 import { DEFAULT_LETTER_PAPER, LETTER_PAPERS, getLetterPaper } from './letterPapers';
+import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
 
 const getInitialForm = (mission) => ({
     title: mission?.title || '',
@@ -12,6 +13,7 @@ const getInitialForm = (mission) => ({
     letter_paper: mission?.template_config?.letter_paper ?? DEFAULT_LETTER_PAPER,
     base_reward: mission?.base_reward ?? 100,
     allow_comments: mission?.allow_comments ?? true,
+    peer_reading_enabled: mission?.peer_reading_enabled ?? true,
     evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
 });
 
@@ -78,6 +80,7 @@ const LetterMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 bonus_threshold: 0,
                 bonus_reward: 0,
                 allow_comments: form.allow_comments,
+                peer_reading_enabled: form.peer_reading_enabled,
                 guide_questions: [],
                 tags: ['편지쓰기'],
                 evaluation_rubric: form.evaluation_rubric,
@@ -152,8 +155,9 @@ const LetterMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                         <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>손으로 옮겨 쓰게 할 때 씁니다. 글 없이 편지지만 나옵니다.</span>
                     </div>
 
+                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#334155', fontWeight: '700' }}>
-                        <input type="checkbox" checked={form.allow_comments} onChange={(event) => update('allow_comments', event.target.checked)} />
+                        <input type="checkbox" checked={form.allow_comments} disabled={!form.peer_reading_enabled} onChange={(event) => update('allow_comments', event.target.checked)} />
                         친구들이 이 편지에 댓글을 달 수 있게 하기
                     </label>
 

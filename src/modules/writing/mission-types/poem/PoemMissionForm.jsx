@@ -3,6 +3,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
+import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
@@ -13,6 +14,7 @@ const getInitialForm = (mission) => ({
     min_lines_per_stanza: mission?.template_config?.min_lines_per_stanza ?? 1,
     base_reward: mission?.base_reward ?? 100,
     allow_comments: mission?.allow_comments ?? true,
+    peer_reading_enabled: mission?.peer_reading_enabled ?? true,
     evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
 });
 
@@ -93,6 +95,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                 bonus_threshold: 0,
                 bonus_reward: 0,
                 allow_comments: form.allow_comments,
+                peer_reading_enabled: form.peer_reading_enabled,
                 guide_questions: [],
                 tags: ['시쓰기'],
                 evaluation_rubric: form.evaluation_rubric,
@@ -149,7 +152,9 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                         recommendedCodes={['4국05-04', '6국05-05']}
                     />
 
-                    <button type="button" onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #4ADE80' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDF4' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
+                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+
+                    <button type="button" disabled={!form.peer_reading_enabled} onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #4ADE80' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDF4' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
                         {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}
                     </button>
 
@@ -185,6 +190,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                             bonus_threshold: 0,
                             bonus_reward: 0,
                             allow_comments: form.allow_comments,
+                            peer_reading_enabled: form.peer_reading_enabled,
                             guide_questions: [],
                         }}
                     />

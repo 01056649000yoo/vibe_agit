@@ -91,6 +91,9 @@ const collect = async () => {
             ? line('맞춤법 교차 확인', 'ok', 'hunspell·MeCab 켜짐')
             : line('맞춤법 교차 확인', 'problem', '꺼짐 — bash services/spelling-analyzer/setup.sh 로 다시 설치'));
     }
+    // 한 달 자동 업데이트는 매달 1일에만 돈다 — 첫 실행 전(기록 없음)에는 줄을 띄우지 않는다.
+    const monthlyStatus = lastLine(path.join(HOME, 'backups/auto/spelling-monthly-status.txt'));
+    if (monthlyStatus) lines.push(judgeRoutine('맞춤법 한 달 업데이트', monthlyStatus));
     lines.push(judgeRoutine('맞춤법 살펴볼 곳 기록', lastLine(path.join(HOME, 'backups/auto/spelling-shadow-status.txt'))));
 
     const scan = sql("select to_char(finished_at at time zone 'Asia/Seoul','MM/DD')||'|'||urgent_count||'|'||attention_count from public.system_service_scan_runs where status='SUCCEEDED' or finished_at is not null order by finished_at desc nulls last limit 1");

@@ -8,7 +8,9 @@ import {
     setWritingToolEnabled
 } from '../src/modules/writing/editor-settings/settings.js';
 
-const migration = readFileSync('supabase/migrations/20261286_ai_spell_check_on_by_default.sql', 'utf8');
+// 기본값을 마지막으로 바꾼 마이그레이션(2026-10-08 회색 점선 기본 켜기)
+const migration = readFileSync('supabase/migrations/20261384_spelling_gray_on_by_default.sql', 'utf8');
+const aiMigration = readFileSync('supabase/migrations/20261286_ai_spell_check_on_by_default.sql', 'utf8');
 
 test('화면 기본값과 DB 기본값이 같다', () => {
     /*
@@ -39,7 +41,9 @@ test('교사가 끄면 꺼진 채로 남는다', () => {
 
 test('이미 켠 학급에 두 번 넣지 않는다', () => {
     // 목록에 같은 값이 두 번 들어가면 화면이 중복 항목을 그린다.
-    assert.match(migration, /NOT COALESCE\(writing_editor_settings -> 'enabled_tools', '\[\]'::JSONB\) @> '\["ai-spell-check"\]'::JSONB/);
+    assert.match(aiMigration, /NOT COALESCE\(writing_editor_settings -> 'enabled_tools', '\[\]'::JSONB\) @> '\["ai-spell-check"\]'::JSONB/);
     // 켜지 못한 학급이 남으면 장이 실패해야 한다.
-    assert.match(migration, /RAISE EXCEPTION 'AI 맞춤법 검사가 아직 꺼진 학급이/);
+    assert.match(aiMigration, /RAISE EXCEPTION 'AI 맞춤법 검사가 아직 꺼진 학급이/);
+    // 회색 점선 기본 켜기(20261384)도 이미 켠 학급에는 다시 넣지 않는다.
+    assert.match(migration, /NOT COALESCE\(writing_editor_settings -> 'enabled_tools', '\[\]'::JSONB\) @> '\["spelling-gray"\]'::JSONB/);
 });

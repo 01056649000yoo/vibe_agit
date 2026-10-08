@@ -142,6 +142,7 @@ export const useMissionManager = (
             repeat_bonus_reward: defaults.repeat_bonus_reward ?? 10,
             repeat_bonus_max_count: defaults.repeat_bonus_max_count ?? 3,
             allow_comments: defaults.allow_comments ?? true,
+            peer_reading_enabled: true,
             mission_type: '일기',
             guide_questions: [],
             question_count: 3,
@@ -265,7 +266,7 @@ export const useMissionManager = (
 
         const { data, error } = await supabase
             .from('writing_missions')
-            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, archived_at, open_at, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric')
+            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, archived_at, open_at, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric')
             .eq('id', missionId)
             .maybeSingle();
 
@@ -326,6 +327,7 @@ export const useMissionManager = (
             repeat_bonus_reward: mission.repeat_bonus_reward ?? 10,
             repeat_bonus_max_count: mission.repeat_bonus_max_count ?? 3,
             allow_comments: mission.allow_comments ?? true,
+            peer_reading_enabled: mission.peer_reading_enabled ?? true,
             mission_type: mission.mission_type || mission.genre || '일기',
             schedule_at: toMissionScheduleInput(mission.open_at),
             guide_questions: mission.guide_questions || [],
@@ -357,7 +359,7 @@ export const useMissionManager = (
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, tags, evaluation_rubric, is_archived, archived_at, open_at')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric, is_archived, archived_at, open_at')
                 .eq('id', mission.id)
                 .maybeSingle();
 

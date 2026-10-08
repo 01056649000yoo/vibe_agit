@@ -22,6 +22,11 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-09 — 회색 점선 전체 기본 켬 · 과제 "선생님만 읽기" · 맞춤법 한 달 자동 업데이트 (Claude)
+- **한 일**: 선생님 결정 세 가지. ① 회색 점선 기본 켬 + 기존 827개 학급에 넣음(동시 작성 최대 약 200명 → 초당 15~20건, 창구 여유 8배). ② 과제마다 `선생님만 글을 읽어요`: 과제에 `peer_reading_enabled`, 끄면 서버가 그 과제 글을 visibility=private 로 — 친구 직접 읽기(RLS)·학급 피드·댓글·공감·전시관/이웃 후보가 이미 visibility 로 거르므로 저절로 가려지고 선생님 화면은 그대로. 설정을 바꾸면 이미 낸 글도 따라감, 끄면 친구 댓글도 꺼짐, 학생 과제 카드 `🔒 선생님만 읽어요`. 네 화면(일반·편지·보고서·시)은 공용 단추 하나. ③ 한 달 자동 업데이트: 매달 1일 05:40 회색 점선 고르기·제안대로 고쳐짐·선생님 교정 놓침을 모아 관문(2학급·3번·사전·모의 실행)을 지난 것만 공통 자료로(50개, `monthly`), 텔레그램 요약. 미리 돌림: 후보 2,432 → 게시 50 · 보류 2,382.
+- **변경**: `20261384`~`20261387`(+스모크 1), `PeerReadingChoice`, `MissionList`, `useMissionManager`·`pastMission`, `scripts/spelling-monthly-update.mjs`, `docs/SPELLING_MONTHLY_UPDATE.md`, 관리자 `🗓️ 한 달 자동` 표시, 활용 안내서, 상태 알림 줄, 검사 2개, v1.26.6. git 밖: `~/Library/LaunchAgents/com.agit.spelling-monthly-update.plist`.
+- **결과/검증**: 단위 1,573·렌더 88·맞춤법·운영 보안·스모크(선생님만 읽기: 친구 못 봄·본인/선생님 봄·학생이 못 바꿈·다시 켜면 공개) 통과. [원인: 과제 글은 visibility 가 늘 class 로 고정돼 있었음]
+- **남은 것 / 다음**: 첫 한 달 실행 2026-11-01. 공지 초안 선생님 확인 뒤 게시. 862개 검토.
 ## 2026-10-08 — 맞춤법 검사기 전부를 학생 입력기 모듈로: 검토 중 862개(꺼짐)·회색 점선(학급 켜기, 꺼짐) (Claude)
 - **한 일**: 선생님 결정(오늘 만든 것까지 모두 한 모듈로 · 862개는 넣되 꺼 둠 · 회색 점선은 화면+서버 창구까지, 꺼 둠). ① 규칙·기본 500개·공통 자료·엔진을 `student-input/checker/` 로 옮기고 부르는 곳 30여 곳을 경로 계산 도구로 고침. ② `merge-spelling-expansion.mjs --pending` 으로 862개를 `checker/pending/` 에, 스위치 꺼짐(별도 청크라 학생 기기는 받지 않음). ③ 회색 점선: 입력기 → 서버 함수 `spelling-look-closer`(학생 인증·학급 켜짐·0.5초/1분 40번·12문단 6,000자) → 맥미니 창구 `server.py`(127.0.0.1:8791, 공유 열쇠) → `analyze.py visible()`(밤 기록과 같은 규칙). 칩·까닭·[이렇게 고치기]/[그대로 두기]·수호룡 설명 한 번, 고른 결과만 학급 단위 기록(`20261383`, 학생 식별자 없음, 60일). [원인: 인형뽑기 함수가 보안 허용 목록에 빠져 있었음 — 함께 올림]
 - **변경**: `src/modules/writing/student-input/**`, `tools/spelling-gray/manifest.js`(설정 켜기 줄, 처음 값 꺼짐), `supabase/functions/spelling-look-closer`, `services/spelling-analyzer/server.py`·`setup.sh`, `20261383`+스모크, 상태 알림 두 줄, PERFORMANCE_HARNESS 한 줄, v1.26.5. git 밖: `~/agit-supabase/secrets.agit.env` 에 `SPELLING_ANALYZER_TOKEN`(백업 `.bak-…`), `~/Library/LaunchAgents/com.agit.spelling-analyzer.plist` 설치(상시, 약 455MB).

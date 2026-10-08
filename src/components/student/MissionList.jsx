@@ -258,6 +258,21 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     >
                                         {buttonText}
                                     </Button>
+                                    {mission.peer_reading_enabled === false ? (
+                                        // 선생님만 읽는 과제(20261385) — 친구 글이 서버에서 가려지므로 빈 목록 대신 까닭을 보여 준다.
+                                        <span
+                                            title="이 과제는 선생님만 글을 읽어요. 내 글은 언제든 볼 수 있어요."
+                                            style={{
+                                                flex: isMobile ? '1 1 100%' : '0 0 auto',
+                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                minHeight: '44px', padding: '0 14px', borderRadius: '14px', fontWeight: '900',
+                                                background: 'var(--ui-surface-muted)', color: 'var(--ui-ink-muted)',
+                                                border: '1px solid var(--ui-border)'
+                                            }}
+                                        >
+                                            🔒 선생님만 읽어요
+                                        </span>
+                                    ) : (
                                     <Button
                                         variant="ghost"
                                         onClick={(event) => handleFriendPostsClick(event, mission)}
@@ -271,6 +286,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     >
                                         {isMeetingMission ? '친구 안건 보기 🏛️' : '친구 글 보기 👀'}
                                     </Button>
+                                    )}
                                 </div>
                             </motion.div>
                         );

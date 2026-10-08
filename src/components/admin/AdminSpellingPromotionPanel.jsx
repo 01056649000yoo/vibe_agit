@@ -61,7 +61,7 @@ const formatDateTime = (value) => value ? DATE_TIME_FORMATTER.format(new Date(va
  */
 const AUTO_REASON_LABELS = { ai_reject: 'AI 제외 권장', already_common: '이미 공통 자료', duplicate: '같은 표현 중복', base_rule: '기본 규칙이 잡음' };
 const verdictLabel = (value) => value === 'recommend' ? '반영 권장' : value === 'caution' ? '주의 검토' : '제외 권장';
-const sourceLabel = (value) => value === 'ai' ? '학생 AI 검사' : value === 'search' ? '학생 검색' : value === 'teacher' ? '교사 학급 자료' : value;
+const sourceLabel = (value) => value === 'ai' ? '학생 AI 검사' : value === 'search' ? '학생 검색' : value === 'teacher' ? '교사 학급 자료' : value === 'monthly' ? '한 달 자동' : value;
 
 /** 매주 자동 검수된 맞춤법 후보 중 관리자가 고른 것만 모든 학급의 공통 자료로 게시한다. */
 const AdminSpellingPromotionPanel = () => {
@@ -931,7 +931,7 @@ const CommonEntriesList = ({ entries, loading, onEdit, onSetEnabled }) => entrie
                 </div>
                 <div className="admin-spelling__common-meta">
                     <span className={enabled ? 'is-enabled' : 'is-disabled'}>{enabled ? '전체 적용 중' : '적용 중지'}</span>
-                    <small>{entry.label} · {entry.source_kind === 'ai' ? 'AI 검사' : entry.source_kind === 'search' ? '학생 검색' : '관리자 등록'}</small>
+                    <small>{entry.label} · {entry.source_kind === 'ai' ? 'AI 검사' : entry.source_kind === 'search' ? '학생 검색' : entry.source_kind === 'monthly' ? '🗓️ 한 달 자동' : '관리자 등록'}</small>
                 </div>
                 <div className="admin-spelling__row-actions">
                     <Button type="button" variant="outline" size="sm" onClick={() => onEdit(entry)} disabled={loading}>수정</Button>
