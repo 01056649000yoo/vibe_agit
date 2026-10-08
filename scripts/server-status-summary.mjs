@@ -80,6 +80,7 @@ const collect = async () => {
     lines.push(judgeRoutine('Supabase 업데이트', lastLine(path.join(HOME, 'backups/auto/supabase-upgrade-status.txt'))));
     lines.push(judgeRoutine('문집 표지 정리', lastLine(path.join(HOME, 'backups/auto/class-agit-cover-sweep-status.txt'))));
     lines.push(judgeRoutine('맞춤법 자동 검수', lastLine(path.join(HOME, 'backups/auto/spelling-review-auto-status.txt'))));
+    lines.push(judgeRoutine('맞춤법 살펴볼 곳 기록', lastLine(path.join(HOME, 'backups/auto/spelling-shadow-status.txt'))));
 
     const scan = sql("select to_char(finished_at at time zone 'Asia/Seoul','MM/DD')||'|'||urgent_count||'|'||attention_count from public.system_service_scan_runs where status='SUCCEEDED' or finished_at is not null order by finished_at desc nulls last limit 1");
     if (scan) {
