@@ -1,5 +1,5 @@
 #!/bin/bash
-# 맞춤법 회색 줄 분석기 설치(맥미니, 2026-10-08). 새 기계에서 이 파일 하나로 같은 상태를 만든다.
+# 맞춤법 회색 줄 분석기·실시간 창구 설치(맥미니, 2026-10-08). 새 기계에서 이 파일 하나로 같은 상태를 만든다.
 #   Kiwi(Apache-2.0)        : ~/agit-kiwi/venv
 #   MeCab-ko + 사전(BSD 등) : brew
 #   hunspell(MPL 등) + 한국어 사전 hunspell-dict-ko(GPL-3, 서버 안에서만 쓰고 배포하지 않는다) : ~/agit-kiwi/hunspell-ko
@@ -28,3 +28,11 @@ grep -v -E "^(TRY|MAXCPDSUGS|MAXNGRAMSUGS|REP|MAP|KEY|PHONE)( |$)" ko.aff > ko-f
 printf 'MAXCPDSUGS 0\nMAXNGRAMSUGS 0\nNOSPLITSUGS\n' >> ko-fast.aff
 ln -sf ko.dic ko-fast.dic
 printf '%s\n' '{"id":1,"text":"떄문에 먹을것을 샀다."}' | "$BASE/venv/bin/python" -I "$HERE/analyze.py"
+# 회색 점선 실시간 창구(127.0.0.1:8791)를 늘 켜 둔다. 공유 열쇠 SPELLING_ANALYZER_TOKEN 은 ~/agit-supabase/secrets.agit.env 에 있어야 한다
+# (없으면: printf 'SPELLING_ANALYZER_TOKEN=%s\n' "$(openssl rand -hex 32)" >> ~/agit-supabase/secrets.agit.env 뒤
+#  cd ~/agit-supabase && docker compose up -d --force-recreate --no-deps functions).
+PLIST="$HOME/Library/LaunchAgents/com.agit.spelling-analyzer.plist"
+cp "$HERE/../../ops/launchd/com.agit.spelling-analyzer.plist" "$PLIST"
+launchctl bootout "gui/$(id -u)/com.agit.spelling-analyzer" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$PLIST"
+sleep 5 && curl -s http://127.0.0.1:8791/health

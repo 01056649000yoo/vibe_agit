@@ -140,3 +140,137 @@
         flex: 0 0 auto;
     }
 }
+
+/*
+ * 회색 점선 '한번 살펴볼까요?'(2026-10-08). 빨간 물결(틀렸어요)과 한눈에 달라야 한다 —
+ * 색(회색)과 모양(곧은 점선) 둘 다 다르게. 배경 그림으로 그려 글자 배치가 1픽셀도 바뀌지 않게 한다.
+ */
+.spelling-gray-mark {
+    background-image: radial-gradient(circle, var(--ui-ink-muted, #6b7280) 0.9px, transparent 1.1px);
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+    background-size: 4px 3px;
+}
+
+.spelling-gray-notice {
+    display: grid;
+    gap: var(--ui-space-2, 8px);
+    margin-top: var(--ui-space-2, 8px);
+    padding: 10px 12px;
+    border: 1px dashed var(--ui-border-strong, #c5cbd3);
+    border-radius: var(--ui-radius-lg, 12px);
+    background: var(--ui-surface-muted, #f7f8fa);
+    color: var(--ui-ink, #1f2937);
+    font-size: var(--ui-text-sm, 0.85rem);
+}
+
+.spelling-gray-notice__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--ui-space-2, 8px);
+    font-weight: 800;
+}
+
+.spelling-gray-legend {
+    color: var(--ui-ink-muted, #6b7280);
+    font-size: var(--ui-text-xs, 0.8rem);
+    font-weight: 700;
+}
+
+.spelling-gray-legend__red,
+.spelling-gray-legend__gray {
+    padding-bottom: 2px;
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+}
+
+.spelling-gray-legend__red {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3' viewBox='0 0 6 3'%3E%3Cpath d='M0 2.2 Q1.5 0.2 3 2.2 T6 2.2' fill='none' stroke='%23DC3545' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-size: 6px 3px;
+}
+
+.spelling-gray-legend__gray {
+    background-image: radial-gradient(circle, var(--ui-ink-muted, #6b7280) 0.9px, transparent 1.1px);
+    background-size: 4px 3px;
+}
+
+.spelling-gray-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2, 8px);
+    padding: 8px 10px;
+    border-radius: var(--ui-radius-md, 10px);
+    background: var(--ui-primary-soft, #eef4ff);
+}
+
+.spelling-gray-intro p {
+    flex: 1 1 220px;
+    min-width: 0;
+    margin: 0;
+    line-height: var(--ui-line-body, 1.6);
+}
+
+.spelling-gray-notice__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.spelling-gray-notice button {
+    min-height: 44px;
+    padding: 7px 12px;
+    border: 1px solid var(--ui-border, #d0d7de);
+    border-radius: var(--ui-radius-md, 10px);
+    background: var(--ui-surface, #ffffff);
+    color: var(--ui-ink, #1f2937);
+    font-size: var(--ui-text-sm, 0.85rem);
+    font-weight: 750;
+    box-shadow: none;
+}
+
+.spelling-gray-notice button.is-open,
+.spelling-gray-notice button:hover,
+.spelling-gray-notice button:focus-visible {
+    border-color: var(--ui-border-strong, #9aa4b2);
+}
+
+.spelling-gray-notice button:focus-visible {
+    outline: 3px solid var(--ui-focus-ring, rgba(37, 99, 235, 0.3));
+    outline-offset: 2px;
+}
+
+.spelling-gray-notice button.is-apply {
+    border-color: var(--ui-primary-border, #93b4f5);
+    background: var(--ui-primary-soft, #eef4ff);
+    color: var(--ui-primary, #2563eb);
+}
+
+.spelling-gray-card {
+    display: grid;
+    gap: var(--ui-space-2, 8px);
+    padding: 10px 12px;
+    border-radius: var(--ui-radius-md, 10px);
+    background: var(--ui-surface, #ffffff);
+}
+
+.spelling-gray-card p {
+    margin: 0;
+    line-height: var(--ui-line-body, 1.6);
+}
+
+.spelling-gray-card p span {
+    color: var(--ui-ink-muted, #6b7280);
+}
+
+.spelling-gray-card > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2, 8px);
+}
+
+.spelling-gray-notice small {
+    color: var(--ui-ink-muted, #6b7280);
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agit.spelling-analyzer</string>
+    <!--
+      맞춤법 회색 점선 실시간 창구(2026-10-08) — 127.0.0.1:8791, 맥미니 밖에서는 보이지 않는다.
+      서버 함수 spelling-look-closer 만 공유 열쇠(secrets.agit.env 의 SPELLING_ANALYZER_TOKEN)로 부른다.
+      늘 켜 둔다(꺼지면 저절로 다시 뜬다). 메모리 약 600MB. 학생 글은 기록하지 않고 요청 수·걸린 시간만 남긴다.
+      설치: cp 이 파일 ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.spelling-analyzer.plist
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/seunghyeonmaegmini/agit-kiwi/venv/bin/python</string>
+        <string>-I</string>
+        <string>/Users/seunghyeonmaegmini/vibe_agit/services/spelling-analyzer/server.py</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/seunghyeonmaegmini</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/seunghyeonmaegmini/vibe_agit</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-spelling-analyzer.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/seunghyeonmaegmini/Library/Logs/agit-spelling-analyzer.log</string>
+</dict>
+</plist>

@@ -56,7 +56,9 @@ const collect = async () => {
         ['로그인 서버', await httpCode('http://127.0.0.1:8100/auth/v1/health', { headers: { apikey: anon || '' } }), [200]],
         ['쌤링크', await httpCode('https://xn--9y2br3k43n.kr/'), [200]],
         ['자비스', await httpCode('http://127.0.0.1:8001/'), [200, 307]],
-        ['오픈클로', await httpCode('http://127.0.0.1:18789/'), [200]]
+        ['오픈클로', await httpCode('http://127.0.0.1:18789/'), [200]],
+        // 맞춤법 회색 점선 실시간 창구(com.agit.spelling-analyzer, 맥미니 안에서만)
+        ['맞춤법 회색 점선', await httpCode('http://127.0.0.1:8791/health'), [200]]
     ];
     const down = services.filter(([, code, okCodes]) => !okCodes.includes(code));
     lines.push(down.length
@@ -80,6 +82,15 @@ const collect = async () => {
     lines.push(judgeRoutine('Supabase 업데이트', lastLine(path.join(HOME, 'backups/auto/supabase-upgrade-status.txt'))));
     lines.push(judgeRoutine('문집 표지 정리', lastLine(path.join(HOME, 'backups/auto/class-agit-cover-sweep-status.txt'))));
     lines.push(judgeRoutine('맞춤법 자동 검수', lastLine(path.join(HOME, 'backups/auto/spelling-review-auto-status.txt'))));
+    // 회색 점선 교차 확인(hunspell·MeCab)이 빠지면 오타 점선이 안 보이는 쪽으로 물러난다 — 빠졌는지 알려 준다.
+    const grayHealth = await (async () => {
+        try { return await (await fetch('http://127.0.0.1:8791/health', { signal: AbortSignal.timeout(5000) })).json(); } catch { return null; }
+    })();
+    if (grayHealth) {
+        lines.push(grayHealth.cross_check
+            ? line('맞춤법 교차 확인', 'ok', 'hunspell·MeCab 켜짐')
+            : line('맞춤법 교차 확인', 'problem', '꺼짐 — bash services/spelling-analyzer/setup.sh 로 다시 설치'));
+    }
     lines.push(judgeRoutine('맞춤법 살펴볼 곳 기록', lastLine(path.join(HOME, 'backups/auto/spelling-shadow-status.txt'))));
 
     const scan = sql("select to_char(finished_at at time zone 'Asia/Seoul','MM/DD')||'|'||urgent_count||'|'||attention_count from public.system_service_scan_runs where status='SUCCEEDED' or finished_at is not null order by finished_at desc nulls last limit 1");

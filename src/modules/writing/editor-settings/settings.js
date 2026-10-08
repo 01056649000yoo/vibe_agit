@@ -1,6 +1,8 @@
 export const SPELLING_LOOKUP_TOOL_ID = 'spelling-lookup';
 export const LAB_RESULTS_TOOL_ID = 'lab-results';
 export const AI_SPELL_CHECK_TOOL_ID = 'ai-spell-check';
+// 회색 점선 '한번 살펴볼까요?'(2026-10-08). 시험 중이라 기본 목록에 넣지 않는다 — 학급마다 선생님이 켠다.
+export const SPELLING_GRAY_TOOL_ID = 'spelling-gray';
 
 /*
  * 기본으로 켜 두는 글쓰기 도움 기능.

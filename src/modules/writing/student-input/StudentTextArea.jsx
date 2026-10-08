@@ -1,16 +1,38 @@
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MAX_SPELLING_ISSUES } from './checker/spellingEngine';
 import { useSpellingCheck } from './checker/useSpellingCheck';
+import { useLookCloser } from './checker/gray/useLookCloser';
+import { recordGrayChoice } from './checker/gray/grayApi';
+import { applyGraySuggestion, visibleGrayIssues } from './checker/gray/paragraphs';
+import GrayLinePanel from './GrayLinePanel';
 import { useSpellingSwitch } from './useSpellingSwitch';
 import './StudentTextInput.css';
+
+// 학생이 `그대로 두기` 한 회색 점선은 이 화면을 쓰는 동안 다시 긋지 않는다(새로 고치면 다시 보인다).
+const keptGray = new Set();
+
+/** React 가 onChange 로 알아듣게 입력창 값을 바꾼다 — 부모 화면의 저장·자동 백업 흐름을 그대로 탄다. */
+const setTextareaValue = (textarea, nextValue, caret) => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+    if (!textarea || !setter) return;
+    setter.call(textarea, nextValue);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.focus();
+    textarea.setSelectionRange(caret, caret);
+};
 
 const renderMarks = (text, issues, withTitle) => {
     const content = [];
     let cursor = 0;
     issues.forEach((issue) => {
         if (issue.start > cursor) content.push(text.slice(cursor, issue.start));
+        const gray = issue.kind === 'gray';
         content.push(
-            <span className="spelling-underline-mark" key={issue.id} title={withTitle ? `${issue.wrong} → ${issue.right}` : undefined}>
+            <span
+                className={gray ? 'spelling-gray-mark' : 'spelling-underline-mark'}
+                key={issue.id}
+                title={withTitle ? (gray ? `${issue.original} → ${issue.suggestion}?` : `${issue.wrong} → ${issue.right}`) : undefined}
+            >
                 {text.slice(issue.start, issue.end)}
             </span>
         );
@@ -33,6 +55,8 @@ const renderMarks = (text, issues, withTitle) => {
  * @param {(issue) => void} onIssueClick  칩을 눌렀을 때. 기본은 맞춤법 수첩 열기
  * @param {boolean} showIssueNotice  아래 `확인해 볼 표현` 칩(기본 켬)
  * @param {boolean} autoGrow  글이 길어지는 만큼 세로로 늘어난다
+ * @param {'class'|'on'|'off'} grayLine  회색 점선 '한번 살펴볼까요?'. 'class'(기본) = 학급 설정(처음 값 꺼짐)
+ * @param {Function} grayLineSource  실험실 미리보기 전용 — 서버 대신 부를 함수(학생 화면에서는 주지 않는다)
  */
 const StudentTextArea = forwardRef(function StudentTextArea({
     value = '',
@@ -44,13 +68,35 @@ const StudentTextArea = forwardRef(function StudentTextArea({
     spellingPending,
     onIssueClick,
     showIssueNotice = true,
+    grayLine = 'class',
+    grayLineSource = null,
     ...props
 }, forwardedRef) {
-    const { enabled, openIssue } = useSpellingSwitch(spelling, onIssueClick);
+    const { enabled, grayEnabled, openIssue } = useSpellingSwitch(spelling, onIssueClick, grayLine);
     const { text, issues, uniqueIssues } = useSpellingCheck(value, { enabled, entries: spellingEntries, delayMs: 350, ...(spellingPending === undefined ? {} : { pending: spellingPending }) });
     const textareaRef = useRef(null);
     const highlighterRef = useRef(null);
     const scrollFrameRef = useRef(0);
+    const [keptVersion, setKeptVersion] = useState(0);
+    const grayCandidates = useLookCloser(text, { enabled: grayEnabled, source: grayLineSource });
+    // 빨간 물결이 있는 자리에는 회색 점선을 긋지 않는다(빨간 물결이 먼저다).
+    const grayIssues = useMemo(
+        () => visibleGrayIssues(grayCandidates, issues, keptGray),
+        [grayCandidates, issues, keptVersion] // eslint-disable-line react-hooks/exhaustive-deps
+    );
+    const marks = useMemo(() => [...issues, ...grayIssues].sort((a, b) => a.start - b.start), [grayIssues, issues]);
+
+    const applyGray = (issue) => {
+        const next = applyGraySuggestion(text, issue);
+        if (next === null) return;
+        if (!grayLineSource) recordGrayChoice(issue, 'applied');
+        setTextareaValue(textareaRef.current, next, issue.start + issue.suggestion.length);
+    };
+    const keepGray = (issue) => {
+        keptGray.add(`${issue.original}→${issue.suggestion}`);
+        if (!grayLineSource) recordGrayChoice(issue, 'kept');
+        setKeptVersion((value) => value + 1);
+    };
 
     useImperativeHandle(forwardedRef, () => textareaRef.current);
 
@@ -113,7 +159,7 @@ const StudentTextArea = forwardRef(function StudentTextArea({
         <div className="spelling-underline-field">
             <div className="spelling-underline-layer-wrap">
                 <div ref={highlighterRef} className="spelling-underline-layer" style={sharedStyle} aria-hidden="true">
-                    {text ? [...renderMarks(text, issues, true), '​'] : '​'}
+                    {text ? [...renderMarks(text, marks, true), '​'] : '​'}
                 </div>
                 <textarea
                     {...props}
@@ -147,6 +193,9 @@ const StudentTextArea = forwardRef(function StudentTextArea({
                     </div>
                 </div>
             )}
+
+            {/* 빨간 물결(틀렸어요)이 먼저, 회색 점선(살펴볼까요?)은 그 아래 */}
+            {showIssueNotice && <GrayLinePanel issues={grayIssues} onApply={applyGray} onKeep={keepGray} />}
         </div>
     );
 });

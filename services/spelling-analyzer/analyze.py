@@ -6,6 +6,7 @@
 표준 출력: 한 줄에 JSON 하나 {"id": ..., "suggestions": [{start, end, original, suggestion, kind}]}
   kind: spacing_insert(띄어 써야 할 듯) · spacing_remove(붙여 써야 할 듯) · typo(받침·글자 오타일 듯)
   category·filter_reason: 갈래와 거른 까닭. hunspell·mecab: 두 번째·세 번째 눈의 판정(True 같은 말 · False 반대 · None 모름).
+  visible: 학생에게 회색 점선으로 보일지(visible() 한 곳에서 정한다).
   start/end 는 파이썬 문자열 위치(코드 포인트)이며, 어절 단위(띄어쓰기로 나뉜 덩어리)로 넓혀 돌려준다.
 
 판정은 '살펴볼 곳'일 뿐이다 — 빨간 줄(확실히 틀림)은 앱의 규칙·기본 자료가 정한다.
@@ -302,6 +303,28 @@ HINT_TIME_BUDGET = 0.08   # 한 번 분석에 후보 묻기로 쓰는 시간(초
 HINT_MAX_LEN = 8
 
 
+# 회색 점선으로 보일 갈래(2026-10-08 선생님 결정: 잘 맞는 갈래만). 그 밖의 띄어쓰기는 기록만 한다.
+SHOWN_CATEGORIES = ('particle_attach', 'modifier_noun', 'typo')
+BOUND_EXCEPTION = re.compile(r'^\S+\s(적|척|뻔|체)')
+
+
+def visible(item):
+    """학생에게 회색 점선으로 보일지 — 실시간 창구와 밤 기록이 이 함수 하나를 쓴다(빨간 줄과 겹침은 부르는 쪽이 본다).
+    전체 글 표본 채점으로 정했다(2026-10-08):
+      · 꾸미는 말+명사: hunspell 이 반대하면 뺀다(검은색·저녁때·먹을게). '본 적·한 척·할 뻔·한 체'는 사전이 본적(本籍) 같은
+        다른 낱말로 착각하므로 그대로 둔다.
+      · 토씨 붙이기: 두 도구가 반대해도 Kiwi 가 대개 맞아(같다 고→같다고) 교차 확인을 쓰지 않는다.
+      · 받침 오타: 사전이 스스로 내놓은 고칠 말에 Kiwi 제안이 있을 때만(약 92% 맞음).
+    """
+    if item.get('category') not in SHOWN_CATEGORIES or item.get('filter_reason'):
+        return False
+    if item['category'] == 'typo':
+        return item.get('hunspell') is True
+    if item['category'] == 'modifier_noun' and item.get('hunspell') is False:
+        return bool(BOUND_EXCEPTION.match(item.get('suggestion', '')))
+    return True
+
+
 def analyze(kiwi, text, hun=None, mec=None):
     text = (text or '')[:MAX_TEXT]
     if hun:
@@ -327,6 +350,7 @@ def analyze(kiwi, text, hun=None, mec=None):
                 item['hunspell'], item['mecab'] = cross_check(hun, mec, item)
             except Exception:
                 pass
+        item['visible'] = visible(item)
         out.append(item)
     return sorted(out, key=lambda item: item['start'])
 

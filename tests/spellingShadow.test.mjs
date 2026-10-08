@@ -50,15 +50,27 @@ test('Kiwi 분석기: 띄어쓰기·붙여 쓰기·오타를 어절로 돌려주
     assert.ok(!pick('spacing_insert').some((s) => s.startsWith('분노을')));
 });
 
-test('교차 확인: 오타는 사전이 같은 말일 때만, 꾸밈말+명사는 사전이 반대하면 빼되 본 적·한 척은 둔다', () => {
-    assert.equal(isShown({ category: 'typo', hunspell: true, suggestion: '때문에' }, null), true);
-    assert.equal(isShown({ category: 'typo', hunspell: null, suggestion: '차 샀다' }, null), false);
-    assert.equal(isShown({ category: 'modifier_noun', hunspell: false, suggestion: '검은 색' }, null), false);
-    assert.equal(isShown({ category: 'modifier_noun', hunspell: false, suggestion: '본 적이' }, null), true);
-    assert.equal(isShown({ category: 'modifier_noun', hunspell: null, suggestion: '먹을 것' }, null), true);
-    assert.equal(isShown({ category: 'particle_attach', hunspell: false, mecab: false, suggestion: '같다고' }, null), true);
-    assert.equal(isShown({ category: 'particle_attach', hunspell: null, suggestion: '흰돌이가' }, 'proper_noun'), false);
-    assert.equal(isShown({ category: 'other_spacing', hunspell: true, suggestion: '그 다음' }, null), false);
+test('보일지는 분석기의 visible 이 정하고, 기록은 빨간 줄과 겹치면 뺀다', () => {
+    assert.equal(isShown({ visible: true }, null), true);
+    assert.equal(isShown({ visible: true }, 'red_overlap'), false);
+    assert.equal(isShown({ visible: false }, null), false);
+    assert.equal(isShown({}, null), false);
+});
+
+test('분석기 visible(): 오타는 사전이 같은 말일 때만, 꾸밈말+명사는 사전이 반대하면 빼되 본 적·한 척은 둔다', { skip: !existsSync(python) && 'Kiwi 가 설치된 맥미니에서만' }, () => {
+    const cases = [
+        [{ category: 'typo', hunspell: true, suggestion: '때문에' }, true],
+        [{ category: 'typo', hunspell: null, suggestion: '차 샀다' }, false],
+        [{ category: 'modifier_noun', hunspell: false, suggestion: '검은 색' }, false],
+        [{ category: 'modifier_noun', hunspell: false, suggestion: '본 적이' }, true],
+        [{ category: 'modifier_noun', hunspell: null, suggestion: '먹을 것' }, true],
+        [{ category: 'particle_attach', hunspell: false, mecab: false, suggestion: '같다고' }, true],
+        [{ category: 'particle_attach', filter_reason: 'proper_noun', suggestion: '흰돌이가' }, false],
+        [{ category: 'other_spacing', hunspell: true, suggestion: '그 다음' }, false]
+    ];
+    const code = `import json,sys\nsys.path.insert(0,'services/spelling-analyzer')\nfrom analyze import visible\nprint(json.dumps([visible(c) for c in json.load(sys.stdin)]))`;
+    const result = spawnSync(python, ['-c', code], { input: JSON.stringify(cases.map(([item]) => item)), encoding: 'utf8' });
+    assert.deepEqual(JSON.parse(result.stdout), cases.map(([, expected]) => expected));
 });
 
 const hunspellReady = existsSync('/opt/homebrew/bin/hunspell') && existsSync(`${homedir()}/agit-kiwi/hunspell-ko/ko.dic`);

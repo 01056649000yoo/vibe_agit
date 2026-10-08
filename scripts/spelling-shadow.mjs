@@ -27,22 +27,11 @@ const PYTHON = path.join(homedir(), 'agit-kiwi/venv/bin/python');
 const ANALYZER = path.join(ROOT, 'services/spelling-analyzer/analyze.py');
 const STATUS = path.join(homedir(), 'backups/auto/spelling-shadow-status.txt');
 const KEEP_DAYS = 60;
-// 회색 줄로 먼저 보여 줄 갈래(2026-10-08 선생님 결정: 잘 맞는 갈래만) — 그 밖의 띄어쓰기는 기록만
-export const SHOWN_CATEGORIES = Object.freeze(['particle_attach', 'modifier_noun', 'typo']);
-
 /**
- * 2단계에서 보였을지 — 고른 갈래 + 거르기 통과 + 교차 확인(2026-10-08, 전체 글 표본 채점으로 정함).
- *  · 꾸미는 말+명사: hunspell 이 반대하면 뺀다(검은색·저녁때·먹을게처럼 한 낱말·어미인 것). 단 '본 적·한 척·할 뻔·한 체'는
- *    사전이 본적(本籍) 같은 다른 낱말로 착각하므로 그대로 둔다.
- *  · 토씨 붙이기: 두 도구가 반대해도 Kiwi 가 대개 맞아(같다 고→같다고) 교차 확인을 쓰지 않는다.
- *  · 받침 오타: 사전이 스스로 내놓은 고칠 말에 Kiwi 제안이 있을 때만(약 92% 맞음, 나머지는 절반이 엉뚱).
+ * 2단계에서 보였을지 — 분석기(analyze.py `visible()`)가 갈래·거르기·교차 확인으로 정하고, 여기서는 빨간 줄과 겹침만 더 본다.
+ * 실시간 창구(server.py)도 같은 `visible()` 을 쓴다 — 규칙을 여기 다시 적지 않는다.
  */
-export const isShown = (item, filterReason) => {
-    if (!SHOWN_CATEGORIES.includes(item.category) || filterReason) return false;
-    if (item.category === 'typo') return item.hunspell === true;
-    if (item.category === 'modifier_noun' && item.hunspell === false) return /^[^\s]+\s(적|척|뻔|체)/.test(item.suggestion);
-    return true;
-};
+export const isShown = (item, filterReason) => item.visible === true && !filterReason;
 
 const arg = (name, fallback) => {
     const index = process.argv.indexOf(name);
@@ -168,6 +157,7 @@ const runShadow = async () => {
             returning 1) select count(*) from ins;`) || 0);
     }
     psql(`delete from public.spelling_shadow_suggestions where analyzed_at < now() - interval '${KEEP_DAYS} days';
+        delete from public.spelling_gray_feedback where created_at < now() - interval '${KEEP_DAYS} days';
         update public.spelling_shadow_runs set finished_at = now(), posts_analyzed = ${posts.length}, suggestions_saved = ${saved}, source_until = now() where id = ${runId};`);
     const at = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 16).replace('T', ' ');
     status(`OK ${at} posts=${posts.length} saved=${saved}`);

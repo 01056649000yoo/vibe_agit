@@ -77,7 +77,8 @@ const StudentWritingPreview = ({ settings, compact }) => {
     // 도구 줄에는 surface 'toolbar' 만 뜬다. 나머지(reference·editor, 예: AI 맞춤법 검사)는
     // 실제 학생 화면과 같게 '글쓰기 참고함' 안에서 열린다(WritingToolHost 규칙과 일치).
     const toolbarTools = enabledTools.filter((tool) => tool.surface === 'toolbar');
-    const referenceTools = enabledTools.filter((tool) => tool.surface !== 'toolbar');
+    // 'inline'(회색 점선)은 입력기 안 표시라 미리보기 도구 칩에도 띄우지 않는다.
+    const referenceTools = enabledTools.filter((tool) => tool.surface !== 'toolbar' && tool.surface !== 'inline');
     const activeTool = openTool && enabledTools.some((tool) => tool.id === openTool) ? openTool : null;
     const activeMeta = activeTool ? enabledTools.find((tool) => tool.id === activeTool) : null;
     const ToolChip = ({ tool }) => (

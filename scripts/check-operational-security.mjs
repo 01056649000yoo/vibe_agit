@@ -16,11 +16,14 @@ const expectedFunctions = new Set([
     '_shared', 'book-search', 'korean-dictionary-search', 'main',
     'send-feedback', 'verify-admin-mode', 'vibe-ai', 'neis-meal', 'spelling-weekly-review',
     // 20261300~20261304로 운영 중인 다했니 연동. 배포 동기화 대상과 동일하게 명시한다.
-    'dahandin-credential', 'dahandin-cookie-sync'
+    'dahandin-credential', 'dahandin-cookie-sync',
+    // 수호룡의 인형뽑기(20261363~, v1.22 2026-10-02 운영). 목록에 빠져 있던 것을 2026-10-08 에 올렸다.
+    'spelling-claw'
 ]);
 
 // Allowed while staged locally; mandatory once its database migration is applied.
-const stagedFunctions = new Set(['class-agit-public-read']);
+// spelling-look-closer: 회색 점선 실시간 창구(2026-10-08). 처음 값 꺼짐 — 배포로 운영 폴더에 들어가면 expectedFunctions 로 옮긴다.
+const stagedFunctions = new Set(['class-agit-public-read', 'spelling-look-closer']);
 const failures = [];
 const mode = async (path) => (await stat(path)).mode & 0o777;
 const hasAgitApiHsts = (caddyfile) => {

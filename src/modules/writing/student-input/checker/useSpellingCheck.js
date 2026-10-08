@@ -54,11 +54,8 @@ export function useSpellingCheck(value, { enabled = true, entries = 'student', d
     }, [enabled, entries]);
 
     useEffect(() => {
-        if (scannedText === text) return undefined;
-        if (!delayMs) {
-            setScannedText(text);
-            return undefined;
-        }
+        // delayMs 0 이면 아래에서 지금 글을 바로 훑으므로 기다릴 것이 없다.
+        if (scannedText === text || !delayMs) return undefined;
         const timer = setTimeout(() => setScannedText(text), delayMs);
         return () => clearTimeout(timer);
     }, [delayMs, scannedText, text]);

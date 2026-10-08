@@ -75,3 +75,51 @@ test('검토 중 자료 862개: 스위치는 꺼져 있고(선생님 검토 전)
     const config = await readFile('src/modules/writing/student-input/checker/pending/config.js', 'utf8');
     assert.match(config, /import\('\.\/pendingSpellingDetector\.js'\)/);
 });
+
+test('회색 점선: 바뀐 문단만 보내고, 결과를 지금 글 자리에 맞추고, 빨간 물결·그대로 두기와 겹치면 뺀다', async () => {
+    const {
+        splitParagraphs, pickParagraphsToSend, placeGraySuggestions, visibleGrayIssues, applyGraySuggestion,
+        GRAY_MAX_PARAGRAPHS, GRAY_MAX_PARAGRAPH_CHARS
+    } = await import('../src/modules/writing/student-input/checker/gray/paragraphs.js');
+    const text = '먹을것을 샀다.\n\n선생님 한테 갔다.';
+    const paragraphs = splitParagraphs(text);
+    assert.deepEqual(paragraphs.map((p) => p.start), [0, 10]);
+    const cache = new Map([[paragraphs[0].text, [{ start: 0, end: 4, original: '먹을것을', suggestion: '먹을 것을', category: 'modifier_noun' }]]]);
+    assert.deepEqual(pickParagraphsToSend(paragraphs, cache).map((p) => p.text), ['선생님 한테 갔다.'], '이미 물은 문단은 다시 보내지 않는다');
+    cache.set(paragraphs[1].text, [{ start: 0, end: 6, original: '선생님 한테', suggestion: '선생님한테', category: 'particle_attach' }]);
+    const placed = placeGraySuggestions(paragraphs, cache);
+    assert.deepEqual(placed.map((g) => [g.start, g.end]), [[0, 4], [10, 16]]);
+    assert.equal(text.slice(10, 16), '선생님 한테');
+    // 빨간 물결이 있는 자리·그대로 두기 한 것은 뺀다
+    assert.equal(visibleGrayIssues(placed, [{ start: 0, end: 3 }], new Set()).length, 1);
+    assert.equal(visibleGrayIssues(placed, [], new Set(['선생님 한테→선생님한테'])).length, 1);
+    // 고치기는 그 자리가 원래 조각일 때만
+    assert.equal(applyGraySuggestion(text, placed[1]), '먹을것을 샀다.\n\n선생님한테 갔다.');
+    assert.equal(applyGraySuggestion('다른 글', placed[1]), null);
+    // 상한: 문단 12개·긴 문단은 보내지 않음
+    const many = Array.from({ length: 20 }, (_, i) => ({ start: i * 10, text: `문단 ${i} 입니다` }));
+    assert.equal(pickParagraphsToSend(many, new Map()).length, GRAY_MAX_PARAGRAPHS);
+    assert.equal(pickParagraphsToSend([{ start: 0, text: '가'.repeat(GRAY_MAX_PARAGRAPH_CHARS + 1) }], new Map()).length, 0);
+});
+
+test('회색 점선은 처음 값 꺼짐이고, 서버 함수가 학급 켜짐·학생 인증·상한을 다시 본다', async () => {
+    const { DEFAULT_WRITING_EDITOR_SETTINGS, SPELLING_GRAY_TOOL_ID } = await import('../src/modules/writing/editor-settings/settings.js');
+    assert.ok(!DEFAULT_WRITING_EDITOR_SETTINGS.enabled_tools.includes(SPELLING_GRAY_TOOL_ID));
+    const manifest = await readFile('src/modules/writing/tools/spelling-gray/manifest.js', 'utf8');
+    assert.match(manifest, /defaultEnabled: false/);
+    assert.match(manifest, /surface: 'inline'/);
+    const fn = await readFile('supabase/functions/spelling-look-closer/index.ts', 'utf8');
+    assert.match(fn, /auth\.getUser\(\)/);
+    assert.match(fn, /enabledTools\.includes\(GRAY_TOOL_ID\)/);
+    assert.match(fn, /MAX_PARAGRAPHS = 12/);
+    assert.match(fn, /allowRequest\(user\.id\)/);
+    assert.doesNotMatch(fn, /console\.(log|error)\([^)]*text/, '학생 글을 기록에 남기지 않는다');
+    const server = await readFile('services/spelling-analyzer/server.py', 'utf8');
+    assert.match(server, /HOST = '127\.0\.0\.1'/, '분석 창구는 맥미니 밖에서 보이지 않는다');
+    assert.match(server, /hmac\.compare_digest/);
+    // 입력기는 미리보기 흉내(grayLineSource)일 때 기록하지 않는다
+    const area = await readFile('src/modules/writing/student-input/StudentTextArea.jsx', 'utf8');
+    assert.match(area, /if \(!grayLineSource\) recordGrayChoice\(issue, 'applied'\)/);
+    const ops = await readFile('scripts/check-operational-security.mjs', 'utf8');
+    assert.match(ops, /spelling-look-closer/);
+});
