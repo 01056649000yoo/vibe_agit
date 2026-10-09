@@ -63,3 +63,16 @@ test('자동 게시 SQL 은 공통 자료의 필수 칸(만든 사람·승인자
     assert.match(sql, /'monthly', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', now\(\)/);
     assert.match(sql, /'‘게속’ 대신 ‘계속’라고 써요\.'/);
 });
+
+test('사전 관문: 틀린 꼴이 다른 뜻 표제어면 보류, 바른 꼴을 가리키는 비표준 표제어는 통과, 띄어쓰기만 다르면 묻지 않는다', async () => {
+    const { dictionaryProblem } = await import('../scripts/spelling-monthly-update.mjs');
+    const fake = (table) => async (_key, word) => table[word] || { total: 0, items: [] };
+    const other = fake({ 할레: { total: 1, items: [{ word: '할레', definitions: ['독일 서남부의 도시.'] }] } });
+    assert.match(await dictionaryProblem({ wrong: '할레', right: '할래' }, 'k', other), /다른 뜻 낱말/);
+    const pointer = fake({ 삼춘: { total: 1, items: [{ word: '삼춘', definitions: ['→ 삼촌.'] }] } });
+    assert.equal(await dictionaryProblem({ wrong: '삼춘', right: '삼촌' }, 'k', pointer), null);
+    let asked = false;
+    await dictionaryProblem({ wrong: '방학때', right: '방학 때' }, 'k', async () => { asked = true; return { total: 0, items: [] }; });
+    assert.equal(asked, false, '띄어쓰기만 다른 짝은 사전에 묻지 않는다');
+    assert.match(await dictionaryProblem({ wrong: '게속', right: '계속' }, null), /열쇠가 없어/);
+});

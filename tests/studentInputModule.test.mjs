@@ -58,14 +58,16 @@ test('글을 쓰는 칸은 학생 입력기 모듈 하나로만 만든다(옛 �
     }
 });
 
-test('검토 중 자료 862개: 스위치는 꺼져 있고(선생님 검토 전), 켜면 엔진이 같은 자리에서 찾는다', async () => {
+test('검토 중 자료: 교차 점검 뒤 860개로 켰고(2026-10-09), 엔진이 같은 자리에서 찾는다', async () => {
     const { PENDING_SPELLING_ENABLED } = await import('../src/modules/writing/student-input/checker/pending/config.js');
     const { findPendingSpellingIssues } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingDetector.js');
     const { PENDING_SPELLING_ENTRIES } = await import('../src/modules/writing/student-input/checker/pending/pendingSpellingEntries.js');
-    assert.equal(PENDING_SPELLING_ENABLED, false, '선생님 검토 전에는 학생에게 보이지 않아야 한다');
-    assert.equal(PENDING_SPELLING_ENTRIES.length, 862);
+    assert.equal(PENDING_SPELLING_ENABLED, true, '교차 점검을 마치고 켰다');
+    assert.equal(PENDING_SPELLING_ENTRIES.length, 860, '862개에서 교차 점검으로 2개 뺐다(2026-10-09)');
     const sentence = '이집트의 피라밋을 보았다.';
-    assert.ok(!engine(sentence).some((issue) => issue.right === '피라미드'));
+    assert.ok(!engine(sentence).some((issue) => issue.right === '피라미드'), '기본 자료만으로는 못 찾는다');
+    // 교차 점검에서 뺀 것은 다시 들어오지 않는다
+    assert.ok(!PENDING_SPELLING_ENTRIES.some((entry) => entry.detectionPatterns.some((p) => ['다같이', '고리라'].includes(p.target || p.text))));
     const withPending = checkSpelling(sentence, { elementaryDetector: findElementarySpellingIssues, pendingDetector: findPendingSpellingIssues });
     const found = withPending.find((issue) => issue.right === '피라미드');
     assert.equal(found?.source, 'pending');

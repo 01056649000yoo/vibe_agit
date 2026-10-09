@@ -5,7 +5,8 @@
  * 선생님이 검토를 마치면: 뺄 것을 decisions.json 에 적고 `merge-spelling-expansion.mjs --batch ...` 로 기본 자료에 합친다.
  * 이 스위치를 true 로 바꾸는 것은 "검토 없이 우선 다 보이게" 할 때뿐이다 — 바꾸면 배포해야 학생에게 보인다.
  */
-export const PENDING_SPELLING_ENABLED = false;
+// 2026-10-09 교차 점검(표준국어대사전·hunspell·학생 글 모의 실행)을 거쳐 860개로 켰다(선생님 결정 — 사람이 하나하나 보는 대신).
+export const PENDING_SPELLING_ENABLED = true;
 
 let detectorPromise = null;
 

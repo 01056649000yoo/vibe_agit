@@ -15,6 +15,7 @@
  *   · 한글 2~15자·2어절 이하, 틀린 꼴 ≠ 바른 꼴, 이미 있는 자료(기본·검토 중·공통)·지금 검사기가 이미 긋는 것 아님
  *   · 증거: 2개 학급 이상, 그리고 ①은 3번 이상 고르고 받아들인 비율 80% 이상 / ②·③은 3번 이상
  *   · 사전(hunspell): 바른 꼴은 모두 사전에 있는 말. 틀린 꼴이 그 자체로 맞는 낱말이면(질렸다→질렀다) 문맥이 필요해 보류
+ *   · 표준국어대사전(무료 API, 낱말만 보냄): 틀린 꼴이 **다른 뜻의 표제어**면 보류(2026-10-09 — 862개 교차 점검과 같은 방식)
  *   · 학생 글 전체 모의 실행: 틀린 꼴을 품은 어절 가운데 **사전에 있는 바른 말**(그 안에 밑줄이 그어질 곳)이 0
  *     (선생님이 고친 뒤 글에 같은 실수가 남는 것은 보지 않는다 — 선생님이 한 글의 실수를 다 고치지는 않는다)
  *   · 한 달에 50개까지(증거 많은 순)
@@ -22,7 +23,7 @@
  * 자동 게시한 것은 관리자 화면에서 하나씩 끄거나, 한 달 치를 한꺼번에 끌 수 있다(spelling_monthly_candidates.entry_id).
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, mkdirSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { checkSpelling } from '../src/modules/writing/student-input/checker/spellingEngine.js';
@@ -30,6 +31,7 @@ import { findElementarySpellingIssues, getElementarySpellingEntries } from '../s
 import { PENDING_SPELLING_ENTRIES } from '../src/modules/writing/student-input/checker/pending/pendingSpellingEntries.js';
 import { normalizeSpellingValue } from '../supabase/functions/spelling-weekly-review/reviewCore.js';
 import { scoreDocuments } from './spelling-scorecard.mjs';
+import { classifyWrongHeadword, dictionaryLookup } from './expand-spelling-base.mjs';
 import { sendTelegram } from './lib/telegram.mjs';
 
 const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
@@ -192,6 +194,32 @@ const containingSpans = (candidates) => {
     return spans;
 };
 
+/** 표준국어대사전 열쇠(없으면 null — 그러면 사전 관문을 지날 수 없어 보류된다). 값은 어디에도 쓰지 않는다. */
+const readDictionaryKey = () => {
+    try {
+        const line = readFileSync(path.join(homedir(), 'agit-supabase/secrets.agit.env'), 'utf8').split('\n').find((row) => row.startsWith('STDICT_API_KEY='));
+        return line ? line.slice(line.indexOf('=') + 1).trim().replace(/^["']|["']$/g, '') : null;
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * 사전 관문 — 통과하면 null, 아니면 보류 까닭. 띄어쓰기만 다른 짝은 낱말이 같아 보지 않는다.
+ * 틀린 꼴이 표제어라도 뜻풀이가 바른 꼴을 가리키면(→ 계속) 비표준 꼴로 실린 것이라 통과.
+ */
+export const dictionaryProblem = async (item, key, lookup = dictionaryLookup) => {
+    if (spacingOnly(item.wrong, item.right) || /\s/.test(item.wrong)) return null;
+    if (!key) return '표준국어대사전 열쇠가 없어 확인 못 함';
+    const wrong = await lookup(key, item.wrong, 'exact');
+    if (wrong.total < 0) return '표준국어대사전 조회 실패';
+    if (wrong.total > 0) {
+        const { pointsToRight, otherMeanings } = classifyWrongHeadword(wrong.items, item.right);
+        if (!pointsToRight && otherMeanings.length) return `표준국어대사전에 다른 뜻 낱말로 있음: ${otherMeanings[0].slice(0, 30)}`;
+    }
+    return null;
+};
+
 const sqlText = (value) => `'${String(value).replace(/'/g, "''")}'`;
 
 /** 공통 자료(빨간 물결) 한 줄을 넣는 SQL — 시뮬레이션 검사가 같은 함수로 실제 넣기를 되돌림 시험한다. */
@@ -235,6 +263,12 @@ const main = async () => {
         }
         return { ...item, status: reason ? 'held' : 'published', reason };
     });
+    // 사전 관문(무료 API) — 다른 관문을 지난 것만 묻는다(많아야 수십 번)
+    const dictKey = readDictionaryKey();
+    for (const item of decided.filter((entry) => entry.status === 'published')) {
+        const problem = await dictionaryProblem(item, dictKey);
+        if (problem) { item.status = 'held'; item.reason = problem; }
+    }
     let published = decided.filter((item) => item.status === 'published');
     for (const item of published.slice(MONTHLY_LIMIT)) { item.status = 'held'; item.reason = `한 달 상한 ${MONTHLY_LIMIT}개 초과`; }
     published = published.slice(0, MONTHLY_LIMIT);

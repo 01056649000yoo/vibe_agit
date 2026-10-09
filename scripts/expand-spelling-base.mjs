@@ -41,7 +41,7 @@ export const parsePairs = (tsv) => tsv.split('\n')
         return { no: index + 1, categoryId, subcategoryId, slot, mode, wrong, right, context };
     });
 
-const dictionaryLookup = async (key, query, method) => {
+export const dictionaryLookup = async (key, query, method) => {
     const url = new URL('https://stdict.korean.go.kr/api/search.do');
     url.searchParams.set('key', key);
     url.searchParams.set('q', query);
