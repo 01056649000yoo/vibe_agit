@@ -145,3 +145,4 @@
   공개 anon 키로 SECURITY DEFINER 를 부를 수 있다(쌤링크 08-28 이전 → 10-04 발견). [경로: supabase/migrations/**] [검사: npm run check:rpc-surface]
 - 화면을 찍으려고 `npm run dev` 를 띄웠으면 **포트로 끈다**(`lsof -tiTCP:5173 -sTCP:LISTEN | xargs kill`). `pkill -f "vite --port"` 는 실제 명령이 `vite` 뿐이라 못 끈다 — 남은 서버(진짜 주소)를 `test:render` 가 재사용해 교사 화면이 로그인 첫 화면에 머물고 33개만 4분 걸려 실패한다(2026-10-09). [경로: e2e/**]
 - **`--dry-run` 은 DB 에 쓰지 않으니 필수 칸 오류를 숨긴다.** 맞춤법 한 달 업데이트가 미리 보기로는 50개 게시였지만 실제로 넣으면 `created_by` NOT NULL 로 전부 실패할 참이었다(2026-10-09 시뮬레이션). 쓰는 SQL 은 함수로 빼서 되돌림(BEGIN…ROLLBACK)으로 한 번 실제로 넣어 본다. [경로: scripts/**] [검사: tests/spellingMonthlyUpdate.test.mjs]
+- **표에 칸을 더하고 화면에서 쓰면, 그 화면이 읽는 RPC 도 함께 고친다.** `peer_reading_enabled` 를 더하고 미션 카드에 단추를 붙였지만 카드는 `get_teacher_mission_overview_v1` 로 그려져 값이 없었고, 배포 뒤 단추가 안 보였다(2026-10-09). 화면이 어떤 RPC 로 그려지는지 먼저 찾는다. [경로: supabase/migrations/**] [검사: tests/missionPeerReading.test.mjs]

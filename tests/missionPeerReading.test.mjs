@@ -88,3 +88,12 @@ test('친구들에게 열기: 한 번만 열고 닫지 않는다 — 서버가 �
     const notifications = await readFile('src/modules/writing/notifications.js', 'utf8');
     assert.match(notifications, /writing\.peer_reading_opened/);
 });
+
+test('선생님 미션 목록 함수가 카드가 쓰는 함께 읽기 칸을 돌려준다(배포 뒤 단추가 안 보이던 일, 20261390)', async () => {
+    const card = await readFile('src/components/teacher/MissionList.jsx', 'utf8');
+    const overview = await readFile('supabase/migrations/20261390_teacher_mission_overview_peer_reading.sql', 'utf8');
+    for (const column of ['peer_reading_enabled', 'peer_reading_opened_at']) {
+        assert.match(card, new RegExp(`mission\\.${column}`), `카드가 ${column} 를 쓴다`);
+        assert.match(overview, new RegExp(`mission\\.${column}`), `목록 함수가 ${column} 를 돌려줘야 한다`);
+    }
+});
