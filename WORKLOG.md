@@ -22,6 +22,11 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-09 — 학급 데이터 API 계획 넣기 (Claude)
+- **한 일**: 선생님 요청(선생님이 자기 반 자료를 API 로 가져가 다른 앱을 만들 수 있게 — 나중을 위해 계획만). 지금 있는 것(내보내기뿐, 쌤링크 연결 원칙)을 확인하고 1단계 읽기 전용·2단계 웹훅·쓰기·3단계 OAuth 계획, 안전장치·개인정보처리방침 개정·정할 것·구현 순서를 정리.
+- **변경**: `CLASS_DATA_API_PLAN.md`(새), `docs/OPEN_ITEMS.md` OI-031, 위키 길잡이 한 줄, ROADMAP 결정 기록.
+- **결과/검증**: 문서만(코드·DB 변화 없음).
+- **남은 것 / 다음**: OI-031.
 ## 2026-10-09 — 검토 중 맞춤법 862개 교차 점검 → 860개 켬 · 매달 업데이트에 사전 관문 (Claude)
 - **한 일**: 선생님 결정(직접 다 보는 대신 Claude 가 국어사전과 대조). `scripts/crosscheck-pending-spelling.mjs`: 표준국어대사전 바른 꼴·틀린 꼴(다른 뜻 표제어), hunspell(예문·틀린 꼴), 학생 글 모의 실행(바른 낱말 속 밑줄), 서로 부딪힘 → 통과 561·확인 필요 294·빼기 권장 7. 확인 필요·빼기 권장을 실제 엔진으로 하나씩 판단: 진짜 문제 2개(다같이 ⊂ 바다같이, 고리라 ⊂ 고리라고)만 빼고 예문 1개(삐약 → 삐악) 고침, 나머지는 hunspell 너그러움·활용형이라 표제어 아님·드문 은어 뜻 등으로 그대로. 스위치 켬. 매달 업데이트에 표준국어대사전 관문(`dictionaryProblem`)을 더해 같은 방식으로 점검·반영. [원인: 점검 도구 첫 판이 문맥형을 낱말로 보고 기호 붙은 어절을 따로 세어 빼기 권장이 부풀었음 — 고침]
 - **변경**: `crosscheck-pending-spelling.mjs`(새), `expand-spelling-base.mjs`(`dictionaryLookup` 내보냄), `spelling-monthly-update.mjs`, `batch-01·02.decisions.json` drop, `batch-05.content.tsv`, `pendingSpellingEntries.js`(860), `pending/config.js` 켬, `docs/SPELLING_MONTHLY_UPDATE.md`, 검사, v1.26.10.

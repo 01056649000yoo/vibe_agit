@@ -26,6 +26,7 @@
 | 이관·연구소 통합 | [INTEGRATION_PLAN.md](../../INTEGRATION_PLAN.md) | ARCHITECTURE |
 | 우리반 글 전시관·학급 문집 | [CLASS_AGIT_PLAN.md](../../CLASS_AGIT_PLAN.md) | ROADMAP |
 | 여러 학급 이웃 아지트·초대·공용 글 피드 | [NEIGHBOR_AGIT_PLAN.md](../../NEIGHBOR_AGIT_PLAN.md) | ROADMAP·SECURITY_HARNESS |
+| 선생님이 자기 반 자료로 앱 만들기(학급 데이터 API, 계획만) | [CLASS_DATA_API_PLAN.md](../../CLASS_DATA_API_PLAN.md) | SECURITY_HARNESS·PERFORMANCE_HARNESS·OI-031 |
 | 학생 홈·목록·쓰기·1,000명 성능 | [PERFORMANCE_HARNESS.md](../../PERFORMANCE_HARNESS.md) | AGENTS의 현재 확장 규칙 |
 | RLS·인증·RPC·Edge 함수·외부 API | [SECURITY_HARNESS.md](../../SECURITY_HARNESS.md) | AGENTS의 DB 마이그레이션 규칙 |
 | 보안 점검(날짜별 기록) | [docs/security-audits/](../security-audits/README.md) | SECURITY_HARNESS(정본 규칙) |
