@@ -146,3 +146,10 @@ test('회색 점선: 입력칸이 여러 개여도 요청은 하나로 모으고
     assert.equal(calls.length, 2, '막힌 뒤 한 번 더 보냈다');
     assert.deepEqual(got.sort(), ['둘째 연입니다', '셋째 연입니다', '첫째 연입니다']);
 });
+
+test('맞춤법 수첩을 끈 반은 회색 점선도 꺼진다(화면·서버 같은 기준, 2026-10-09 선생님 결정)', async () => {
+    const sw = await readFile('src/modules/writing/student-input/useSpellingSwitch.js', 'utf8');
+    assert.match(sw, /isToolEnabled\(SPELLING_LOOKUP_TOOL_ID\) && isToolEnabled\(SPELLING_GRAY_TOOL_ID\)/);
+    const fn = await readFile('supabase/functions/spelling-look-closer/index.ts', 'utf8');
+    assert.match(fn, /!enabledTools\.includes\(LOOKUP_TOOL_ID\)/);
+});

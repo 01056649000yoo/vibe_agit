@@ -15,6 +15,7 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .filter(Boolean)
 
 export const GRAY_TOOL_ID = 'spelling-gray'
+export const LOOKUP_TOOL_ID = 'spelling-lookup'
 export const MAX_PARAGRAPHS = 12
 export const MAX_PARAGRAPH_CHARS = 1500
 export const MAX_TOTAL_CHARS = 6000
@@ -110,7 +111,8 @@ Deno.serve(async (req) => {
         .eq('id', student.class_id)
         .maybeSingle()
     const enabledTools = (klass?.writing_editor_settings as { enabled_tools?: unknown } | null)?.enabled_tools
-    if (!Array.isArray(enabledTools) || !enabledTools.includes(GRAY_TOOL_ID)) {
+    // 맞춤법 수첩(빨간 물결)을 끈 반은 회색 점선도 끈다(2026-10-09 선생님 결정).
+    if (!Array.isArray(enabledTools) || !enabledTools.includes(GRAY_TOOL_ID) || !enabledTools.includes(LOOKUP_TOOL_ID)) {
         return jsonResponse({ available: false, reason: 'class_off' }, 200, headers)
     }
 
