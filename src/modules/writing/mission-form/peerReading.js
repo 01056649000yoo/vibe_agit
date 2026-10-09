@@ -2,10 +2,12 @@
  * 과제 '함께 읽기' 규칙(순수 함수 — 화면·검사가 함께 쓴다). 서버 규칙은 20261385·20261388·20261389.
  */
 
-/** 끄면 친구가 글을 못 보니 친구 댓글도 함께 끈다. */
-export const peerReadingPatch = (enabled) => (enabled
-    ? { peer_reading_enabled: true }
-    : { peer_reading_enabled: false, allow_comments: false });
+/**
+ * 함께 읽기 켜고 끄기. 댓글 설정은 **지우지 않는다** — 끈 동안 화면은 댓글을 잠가 보여 주고(친구가 글을 못 보면
+ * 서버도 댓글을 막는다: create_my_post_comment_v1 은 visibility='class' 만), 다시 켜면 원래 댓글 설정이 돌아온다.
+ * (2026-10-09 시뮬레이션: 껐다 켜면 댓글이 꺼진 채 남던 것 고침)
+ */
+export const peerReadingPatch = (enabled) => ({ peer_reading_enabled: Boolean(enabled) });
 
 /** 과제 수정에서 '함께 읽기' 를 잠글지 — 서버 규칙(20261388·20261389)과 같은 기준. */
 export const peerReadingLockReason = ({ isEditing, openedAt, submittedCount = 0 }) => {

@@ -123,3 +123,26 @@ test('회색 점선은 기본 켜짐(2026-10-08 선생님 결정)이고, 서버 
     const ops = await readFile('scripts/check-operational-security.mjs', 'utf8');
     assert.match(ops, /spelling-look-closer/);
 });
+
+test('회색 점선: 입력칸이 여러 개여도 요청은 하나로 모으고, 막히면 잠시 뒤 다시 보낸다(2026-10-09 시뮬레이션)', async () => {
+    const api = await import('../src/modules/writing/student-input/checker/gray/grayApi.js');
+    const calls = [];
+    let limitOnce = true;
+    api.setGraySenderForTest(async (texts) => {
+        calls.push([...texts]);
+        if (limitOnce) { limitOnce = false; return { status: 'limited' }; }
+        return { status: 'ok', results: new Map(texts.map((text) => [text, []])) };
+    });
+    const got = [];
+    const stop = api.onGrayResult((text) => got.push(text));
+    // 시의 연 세 칸이 같은 순간에 묻는다
+    api.requestGraySuggestions(['첫째 연입니다']);
+    api.requestGraySuggestions(['둘째 연입니다']);
+    api.requestGraySuggestions(['셋째 연입니다', '첫째 연입니다']);
+    await new Promise((resolve) => setTimeout(resolve, 2300));
+    stop();
+    api.setGraySenderForTest(null);
+    assert.deepEqual(calls[0], ['첫째 연입니다', '둘째 연입니다', '셋째 연입니다'], '세 칸이 한 번에, 같은 문단은 한 번만');
+    assert.equal(calls.length, 2, '막힌 뒤 한 번 더 보냈다');
+    assert.deepEqual(got.sort(), ['둘째 연입니다', '셋째 연입니다', '첫째 연입니다']);
+});

@@ -55,3 +55,11 @@ test('맞는 낱말을 잘못 고른 실수·바른 낱말 속 밑줄은 자동�
     const plist = await readFile('ops/launchd/com.agit.spelling-monthly-update.plist', 'utf8');
     assert.match(plist, /<key>Day<\/key>\s*<integer>1<\/integer>/);
 });
+
+test('자동 게시 SQL 은 공통 자료의 필수 칸(만든 사람·승인자)을 채운다(2026-10-09 시뮬레이션에서 찾음)', async () => {
+    const { publishEntrySql } = await import('../scripts/spelling-monthly-update.mjs');
+    const sql = publishEntrySql({ wrong: '게속', right: '계속' }, '00000000-0000-0000-0000-000000000001');
+    assert.match(sql, /created_by, approved_by, approved_at\)/);
+    assert.match(sql, /'monthly', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', now\(\)/);
+    assert.match(sql, /'‘게속’ 대신 ‘계속’라고 써요\.'/);
+});

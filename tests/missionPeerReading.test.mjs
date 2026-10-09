@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-test('선생님만 읽기: 끄면 친구 댓글도 함께 꺼진다', async () => {
+test('선생님만 읽기: 껐다 켜도 댓글 설정은 그대로(끈 동안은 화면이 잠그고 서버가 막는다)', async () => {
     const { peerReadingPatch } = await import('../src/modules/writing/mission-form/peerReading.js');
-    assert.deepEqual(peerReadingPatch(false), { peer_reading_enabled: false, allow_comments: false });
+    assert.deepEqual(peerReadingPatch(false), { peer_reading_enabled: false });
     assert.deepEqual(peerReadingPatch(true), { peer_reading_enabled: true });
+    const choice = await readFile('src/modules/writing/mission-form/PeerReadingChoice.jsx', 'utf8');
+    assert.match(choice, /checked=\{!locked && Boolean\(allowComments\)\}/, '선생님만일 때 댓글은 꺼진 것으로 보인다');
 });
 
 test('과제 만드는 화면 네 곳(일반·편지·보고서·시)이 같은 단추를 쓰고, 저장·불러오기·다시 내기가 값을 옮긴다', async () => {

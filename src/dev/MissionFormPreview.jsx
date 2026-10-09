@@ -10,7 +10,14 @@ const KINDS = [
   { id: 'letter', label: '✉️ 편지' },
   { id: 'poem', label: '🌿 시' },
   { id: 'report', label: '📋 보고서' },
+  { id: 'letter-opened', label: '✉️ 연 과제 수정' },
 ]
+// 이미 친구들에게 연 편지 과제를 고치는 경우 — 함께 읽기 스위치가 잠겨야 한다(20261388)
+const OPENED_LETTER = {
+  id: 'preview-opened', title: '어버이날 편지', guide: '부모님께 마음을 전해요.', peer_reading_enabled: true,
+  peer_reading_opened_at: '2026-10-09T10:32:00+09:00', allow_comments: true, base_reward: 100,
+  template_config: { min_body_chars: 200, letter_paper: 'basic' },
+}
 const PREVIEW_CLASS = { id: 'preview', name: '미리보기 반' }
 
 /*
@@ -55,6 +62,7 @@ export default function MissionFormPreview() {
       ))}
     </div>
   )
+  if (kind === 'letter-opened') return <>{tabs}<LetterMissionForm activeClass={PREVIEW_CLASS} mission={OPENED_LETTER} isMobile={isMobile} onBack={() => setKind('general')} onSaved={() => {}} /></>
   if (kind === 'letter') return <>{tabs}<LetterMissionForm activeClass={PREVIEW_CLASS} isMobile={isMobile} onBack={() => setKind('general')} onSaved={() => {}} /></>
   if (kind === 'poem') return <>{tabs}<PoemMissionForm activeClass={PREVIEW_CLASS} isMobile={isMobile} onBack={() => setKind('general')} onSaved={() => {}} /></>
   if (kind === 'report') return <>{tabs}<ReportMissionForm activeClass={PREVIEW_CLASS} isMobile={isMobile} onBack={() => setKind('general')} onSaved={() => {}} /></>

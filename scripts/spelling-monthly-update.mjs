@@ -194,6 +194,12 @@ const containingSpans = (candidates) => {
 
 const sqlText = (value) => `'${String(value).replace(/'/g, "''")}'`;
 
+/** 공통 자료(빨간 물결) 한 줄을 넣는 SQL — 시뮬레이션 검사가 같은 함수로 실제 넣기를 되돌림 시험한다. */
+export const publishEntrySql = (item, adminId) => `insert into public.spelling_learning_entries(scope, status, wrong_expression, correct_expression, label, explanation, examples, source_kind, created_by, approved_by, approved_at)
+    values ('common', 'approved', ${sqlText(item.wrong)}, ${sqlText(item.right)}, ${sqlText(`${item.wrong} / ${item.right}`.slice(0, 40))},
+            ${sqlText(explanationFor(item.wrong, item.right))}, '[]'::jsonb, 'monthly', ${sqlText(adminId)}, ${sqlText(adminId)}, now())
+    returning id;`;
+
 const main = async () => {
     const dryRun = has('--dry-run');
     const range = monthRange();
@@ -244,15 +250,16 @@ const main = async () => {
     for (const item of held.slice(0, 20)) console.log(`  · 보류 ${item.wrong} → ${item.right} — ${item.reason}`);
     if (dryRun || !range.runMonth) return;
 
+    // 공통 자료는 만든 사람이 꼭 있어야 한다(created_by NOT NULL) — 관리자 이름으로 넣고 승인자도 관리자로 남긴다.
+    // (2026-10-09 시뮬레이션에서 찾음: 이 값 없이 넣으면 첫 실행에서 게시가 하나도 안 되고 실패했다)
+    const adminId = psql(`select id from public.profiles where role = 'ADMIN' order by created_at limit 1;`).split('\n')[0];
+    if (!adminId) throw new Error('admin_profile_missing');
     const runId = psql(`insert into public.spelling_monthly_runs(run_month) values ('${range.runMonth}')
         on conflict (run_month) do update set started_at = now(), finished_at = null returning id;`).split('\n')[0];
     for (const item of decided) {
         let entryId = 'NULL';
         if (item.status === 'published') {
-            entryId = psql(`insert into public.spelling_learning_entries(scope, status, wrong_expression, correct_expression, label, explanation, examples, source_kind, approved_at)
-                values ('common', 'approved', ${sqlText(item.wrong)}, ${sqlText(item.right)}, ${sqlText(`${item.wrong} / ${item.right}`.slice(0, 40))},
-                        ${sqlText(explanationFor(item.wrong, item.right))}, '[]'::jsonb, 'monthly', now())
-                returning id;`).split('\n')[0];
+            entryId = psql(publishEntrySql(item, adminId)).split('\n')[0];
             entryId = sqlText(entryId);
         }
         psql(`insert into public.spelling_monthly_candidates(run_month, wrong_expression, correct_expression, sources, support, classes, status, reason, entry_id)
