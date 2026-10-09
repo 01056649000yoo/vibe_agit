@@ -1,4 +1,7 @@
 import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailabilitySwitch';
+import { peerReadingPatch } from './peerReading';
+
+export { peerReadingErrorMessage, peerReadingLockReason, peerReadingPatch } from './peerReading';
 
 /**
  * 과제의 "학생끼리 서로의 글 보기" 선택(2026-10-08). 과제 만드는 화면 네 곳(일반·편지·보고서·시)이 함께 쓴다.
@@ -6,20 +9,21 @@ import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailab
  * 친구가 글을 볼 수 없으니 친구 댓글도 함께 끈다(peerReadingPatch).
  * 모양은 과제 화면의 다른 켜기와 같은 공용 스위치(2026-10-09 화면 정리).
  */
-export const peerReadingPatch = (enabled) => (enabled
-    ? { peer_reading_enabled: true }
-    : { peer_reading_enabled: false, allow_comments: false });
 
-export default function PeerReadingChoice({ enabled = true, onChange }) {
+/**
+ * @param {string} lockedReason 값이 있으면 스위치를 잠그고 그 까닭을 보여 준다(이미 낸 글이 있거나 친구들에게 연 과제 — 20261388).
+ */
+export default function PeerReadingChoice({ enabled = true, onChange, lockedReason = '' }) {
     return (
         <FeatureAvailabilitySwitch
             checked={enabled}
             onChange={(next) => onChange(peerReadingPatch(next))}
+            disabled={Boolean(lockedReason)}
             ariaLabel="반 친구도 글 읽기"
             enabledLabel="👀 반 친구도 글을 읽어요"
             disabledLabel="🔒 선생님만 글을 읽어요"
-            enabledDescription="끄면 학생끼리 서로의 글을 볼 수 없어요."
-            disabledDescription="친구 글 보기·친구 댓글이 꺼져요. 학생 본인은 자기 글을 봐요."
+            enabledDescription={lockedReason || '끄면 학생끼리 서로의 글을 볼 수 없어요.'}
+            disabledDescription={lockedReason || '친구 글 보기·친구 댓글이 꺼져요. 나중에 미션 카드에서 친구들에게 열 수 있어요.'}
             fullWidth
         />
     );

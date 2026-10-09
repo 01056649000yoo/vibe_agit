@@ -3,7 +3,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
-import PeerReadingChoice, { PeerCommentSwitch } from '../../mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch, peerReadingErrorMessage, peerReadingLockReason } from '../../mission-form/PeerReadingChoice';
 import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
@@ -113,7 +113,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
             onSaved?.();
         } catch (error) {
             console.error('[PoemMissionForm] 저장 실패:', error.message);
-            alert('시 쓰기 미션 저장에 실패했습니다.');
+            alert(peerReadingErrorMessage(error) || '시 쓰기 미션 저장에 실패했습니다.');
         } finally {
             setSaving(false);
         }
@@ -152,7 +152,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                     <MissionFormStep number={3} title="쓰는 조건" description="함께 읽기와 포인트를 정해요.">
                         <MissionFormGroup title="👥 함께 읽기">
                             <div className="mission-field-row">
-                                <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                                <PeerReadingChoice enabled={form.peer_reading_enabled} lockedReason={peerReadingLockReason({ isEditing: Boolean(mission?.id), openedAt: mission?.peer_reading_opened_at })} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                                 <PeerCommentSwitch allowComments={form.allow_comments} peerReadingEnabled={form.peer_reading_enabled} onChange={(next) => update('allow_comments', next)} />
                             </div>
                         </MissionFormGroup>

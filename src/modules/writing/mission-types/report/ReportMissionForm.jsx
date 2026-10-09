@@ -10,7 +10,7 @@ import {
     REPORT_MAX_SECTIONS,
 } from './reportContent';
 import { REPORT_IMAGE_MAX_EDGE, REPORT_IMAGE_MAX_STORED_BYTES } from './reportImageApi';
-import PeerReadingChoice, { PeerCommentSwitch } from '../../mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch, peerReadingErrorMessage, peerReadingLockReason } from '../../mission-form/PeerReadingChoice';
 import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
@@ -167,7 +167,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
             onSaved?.({ ...mission, ...payload, id: data.id });
         } catch (error) {
             console.error('[ReportMissionForm] 저장 실패:', error.message);
-            alert('보고하는 글쓰기 과제 저장에 실패했습니다.');
+            alert(peerReadingErrorMessage(error) || '보고하는 글쓰기 과제 저장에 실패했습니다.');
         } finally {
             setSaving(false);
         }
@@ -234,7 +234,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                         </MissionFormGroup>
                         <MissionFormGroup title="👥 함께 읽기">
                             <div className="mission-field-row">
-                                <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                                <PeerReadingChoice enabled={form.peer_reading_enabled} lockedReason={peerReadingLockReason({ isEditing: Boolean(mission?.id), openedAt: mission?.peer_reading_opened_at })} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                                 <PeerCommentSwitch allowComments={form.allow_comments} peerReadingEnabled={form.peer_reading_enabled} onChange={(next) => update('allow_comments', next)} />
                             </div>
                         </MissionFormGroup>

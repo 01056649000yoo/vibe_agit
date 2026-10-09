@@ -26,6 +26,7 @@ import TeacherPageTitle from './TeacherPageTitle';
 import TeacherSubmissionBoard from './TeacherSubmissionBoard';
 import CardSizeControl from '../../modules/card-layout/CardSizeControl';
 import { TEACHER_TOUR_ANCHORS, tourAnchor } from '../../guides/teacherTour.js';
+import PeerReadingOpenDialog from '../../modules/writing/mission-form/PeerReadingOpenDialog';
 
 const GENRE_MISSION_BUILDERS = new Map(
     getGenreMissionTypes()
@@ -48,6 +49,8 @@ const MissionManager = ({
     const isSubmissionBoardView = activeWorkspaceView === 'board';
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
+    // 선생님만 읽기 과제를 친구들에게 여는 확인 창(2026-10-09)
+    const [peerOpenMission, setPeerOpenMission] = useState(null);
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
     const [editingGenreMission, setEditingGenreMission] = useState(null);
     const [activeGenreMode, setActiveGenreMode] = useState('create');
@@ -310,8 +313,25 @@ const MissionManager = ({
         );
     }
 
+    const handlePeerReadingOpened = (result) => {
+        setPeerOpenMission(null);
+        if (activeClass?.id) {
+            dataCache.invalidate(`missions_v2_${activeClass.id}`);
+            dataCache.invalidate(`missions_${activeClass.id}`);
+        }
+        notify(`🔓 친구들에게 열었어요. 승인한 글 ${result?.approved ?? 0}편이 보여요.`);
+        fetchMissions();
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
+            {peerOpenMission && (
+                <PeerReadingOpenDialog
+                    mission={peerOpenMission}
+                    onClose={() => setPeerOpenMission(null)}
+                    onOpened={handlePeerReadingOpened}
+                />
+            )}
             {/* Sticky Header 영역 */}
             <div style={{
                 position: 'sticky',
@@ -471,6 +491,7 @@ const MissionManager = ({
                     missionStatuses={submissionBoard.mission_statuses}
                     totalStudentCount={totalStudentCount}
                     onOpenScheduledMission={handleOpenScheduledMission}
+                    onOpenPeerReading={setPeerOpenMission}
                     handleEditClick={handleMissionEditClick}
                     setArchiveModal={setArchiveModal}
                     handleDeleteMission={handleDeleteMission}

@@ -14,6 +14,7 @@ import { normalizeLabResult } from '../modules/writing/tools/lab-results/api';
 import { getLatestSubmissionBoardMission } from '../modules/writing/submission-board/boardMissionScope';
 import { useTeacherSubmissionBoard } from '../modules/writing/submission-board/useTeacherSubmissionBoard';
 import { createMissionDraft } from '../modules/writing/mission-form/missionDraft';
+import { peerReadingErrorMessage } from '../modules/writing/mission-form/PeerReadingChoice';
 import {
     getMissionScheduleError,
     resolveMissionSchedulePatch,
@@ -266,7 +267,7 @@ export const useMissionManager = (
 
         const { data, error } = await supabase
             .from('writing_missions')
-            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, archived_at, open_at, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric')
+            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, archived_at, open_at, created_at, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, peer_reading_opened_at, tags, evaluation_rubric')
             .eq('id', missionId)
             .maybeSingle();
 
@@ -359,7 +360,7 @@ export const useMissionManager = (
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric, is_archived, archived_at, open_at')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, peer_reading_opened_at, tags, evaluation_rubric, is_archived, archived_at, open_at')
                 .eq('id', mission.id)
                 .maybeSingle();
 
@@ -535,7 +536,7 @@ export const useMissionManager = (
         } catch (error) {
             await ask({
                 title: '글쓰기 과제를 저장하지 못했습니다',
-                body: `${error.message}
+                body: `${peerReadingErrorMessage(error) || error.message}
 
 적어 둔 내용은 그대로 있습니다. 잠시 뒤 다시 눌러 주세요.`,
                 confirmLabel: '알겠어요',

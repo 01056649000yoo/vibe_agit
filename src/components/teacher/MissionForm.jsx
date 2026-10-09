@@ -20,7 +20,7 @@ import {
 } from '../../modules/writing/mission-types/genreCatalog';
 import MissionPromptFields from '../../modules/writing/mission-form/MissionPromptFields';
 import { applyGenreToMissionDraft } from '../../modules/writing/mission-form/missionDraft';
-import PeerReadingChoice, { PeerCommentSwitch } from '../../modules/writing/mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch, peerReadingLockReason } from '../../modules/writing/mission-form/PeerReadingChoice';
 import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../modules/writing/mission-form/MissionFormStep';
 import FeatureAvailabilitySwitch from '../common/FeatureAvailabilitySwitch';
 
@@ -35,6 +35,9 @@ const MissionForm = ({
     frequentTags, saveFrequentTag, removeFrequentTag, ask
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
+    // 함께 읽기 잠금(20261388): 친구들에게 연 과제·이미 낸 글이 있는 과제는 수정에서 바꾸지 않는다
+    const [peerOpenedAt, setPeerOpenedAt] = React.useState(null);
+    const peerLockReason = peerReadingLockReason({ isEditing, openedAt: peerOpenedAt, submittedCount });
     const [isLabQuestionsModalOpen, setIsLabQuestionsModalOpen] = React.useState(false);
     const [tagInput, setTagInput] = React.useState('');
     const [isLoadingEditMission, setIsLoadingEditMission] = React.useState(false);
@@ -141,11 +144,12 @@ const MissionForm = ({
             try {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, tags, evaluation_rubric')
+                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, repeat_bonus_enabled, repeat_bonus_threshold, repeat_bonus_reward, repeat_bonus_max_count, allow_comments, peer_reading_enabled, peer_reading_opened_at, tags, evaluation_rubric')
                     .eq('id', editingMissionId)
                     .maybeSingle();
 
                 if (error) throw error;
+                if (isMounted) setPeerOpenedAt(data?.peer_reading_opened_at || null);
                 if (!data || !isMounted) return;
 
                 const defaultLevels = readLocalStorageJson('default_rubric_levels', [
@@ -697,6 +701,7 @@ const MissionForm = ({
                                         <div className="mission-field-row">
                                             <PeerReadingChoice
                                                 enabled={formData.peer_reading_enabled ?? true}
+                                                lockedReason={peerLockReason}
                                                 onChange={(patch) => setFormData({ ...formData, ...patch })}
                                             />
                                             <PeerCommentSwitch

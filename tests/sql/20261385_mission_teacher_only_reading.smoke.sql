@@ -18,8 +18,10 @@ BEGIN
     SELECT teacher_id INTO v_teacher FROM public.classes WHERE id = v_class;
     IF v_post IS NULL THEN RAISE EXCEPTION '시험할 과제 글이 없음'; END IF;
 
-    -- ① 끄기
+    -- ① 끄기(20261388 부터 제출 글이 있는 과제는 서버가 닫기를 막는다 — 이 시험은 '선생님만' 상태의 가림만 보므로 준비 단계에서 잠시 끈다)
+    ALTER TABLE public.writing_missions DISABLE TRIGGER trg_guard_mission_peer_reading_v1;
     UPDATE public.writing_missions SET peer_reading_enabled = FALSE WHERE id = v_mission;
+    ALTER TABLE public.writing_missions ENABLE TRIGGER trg_guard_mission_peer_reading_v1;
     SELECT visibility INTO v_vis FROM public.student_posts WHERE id = v_post;
     IF v_vis <> 'private' THEN RAISE EXCEPTION '끈 뒤에도 공개: %', v_vis; END IF;
 
@@ -49,10 +51,15 @@ BEGIN
     IF v_seen <> 1 THEN RAISE EXCEPTION '선생님이 못 읽음'; END IF;
     RESET ROLE;
 
-    -- ⑤ 다시 켜기
+    -- ⑤ 다시 켜기 — 과제 수정으로 켜도 '열기' 로 기록되어(20261389) 승인한 글만 반 공개
     UPDATE public.writing_missions SET peer_reading_enabled = TRUE WHERE id = v_mission;
+    IF (SELECT peer_reading_opened_at FROM public.writing_missions WHERE id = v_mission) IS NULL THEN
+        RAISE EXCEPTION '과제 수정으로 켰는데 연 시각이 없음';
+    END IF;
     SELECT visibility INTO v_vis FROM public.student_posts WHERE id = v_post;
-    IF v_vis <> 'class' THEN RAISE EXCEPTION '다시 켰는데 비공개: %', v_vis; END IF;
+    IF v_vis <> (CASE WHEN (SELECT is_confirmed FROM public.student_posts WHERE id = v_post) THEN 'class' ELSE 'private' END) THEN
+        RAISE EXCEPTION '다시 켠 뒤 공개 범위가 승인 여부와 다름: %', v_vis;
+    END IF;
     RAISE NOTICE '선생님만 읽기 스모크 통과';
 END;
 $$;

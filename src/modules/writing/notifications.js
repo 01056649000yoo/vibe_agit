@@ -54,6 +54,17 @@ export const writingNotificationDefinitions = Object.freeze([
         actionLabel: '내 글 확인하기'
     },
     {
+        // 선생님만 읽던 과제를 선생님이 친구들에게 열었다(20261388). 누르면 그 과제의 친구 글 보기로.
+        eventType: 'writing.peer_reading_opened',
+        icon: '👀',
+        tone: 'positive',
+        title: '친구들의 글이 열렸어요',
+        message: (payload) => `‘${payload.mission_title || '과제'}’에서 반 친구들의 글을 읽을 수 있어요.${payload.comments_open ? ' 댓글도 남길 수 있어요.' : ''}`,
+        action: 'custom',
+        actionLabel: '친구 글 보러 가기',
+        handleAction: ({ event, onNavigate }) => onNavigate?.('friends_hideout', { missionId: event?.payload?.mission_id, returnTo: 'mission_list' })
+    },
+    {
         eventType: 'writing.approval_recovered',
         icon: '↩️',
         tone: 'warning',

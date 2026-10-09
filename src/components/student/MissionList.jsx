@@ -261,7 +261,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     {mission.peer_reading_enabled === false ? (
                                         // 선생님만 읽는 과제(20261385) — 친구 글이 서버에서 가려지므로 빈 목록 대신 까닭을 보여 준다.
                                         <span
-                                            title="이 과제는 선생님만 글을 읽어요. 내 글은 언제든 볼 수 있어요."
+                                            title="지금은 선생님만 글을 읽어요. 선생님이 나중에 친구들에게 열 수 있어요. 내 글은 언제든 볼 수 있어요."
                                             style={{
                                                 flex: isMobile ? '1 1 100%' : '0 0 auto',
                                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',

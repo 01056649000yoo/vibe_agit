@@ -143,3 +143,4 @@
 
 - **다른 앱 스키마를 아지트 DB 로 옮기면 함수 권한을 다시 잠근다.** 새 스키마의 함수는 기본으로 PUBLIC 실행이고, PostgREST 노출 스키마면
   공개 anon 키로 SECURITY DEFINER 를 부를 수 있다(쌤링크 08-28 이전 → 10-04 발견). [경로: supabase/migrations/**] [검사: npm run check:rpc-surface]
+- 화면을 찍으려고 `npm run dev` 를 띄웠으면 **포트로 끈다**(`lsof -tiTCP:5173 -sTCP:LISTEN | xargs kill`). `pkill -f "vite --port"` 는 실제 명령이 `vite` 뿐이라 못 끈다 — 남은 서버(진짜 주소)를 `test:render` 가 재사용해 교사 화면이 로그인 첫 화면에 머물고 33개만 4분 걸려 실패한다(2026-10-09).

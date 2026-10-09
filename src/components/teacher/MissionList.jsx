@@ -40,7 +40,7 @@ const MissionItem = memo(({
     mission, isMobile, submittedCount, missionStatus, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
     showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    isHighlighted, missionCardSize, onOpenScheduledMission
+    isHighlighted, missionCardSize, onOpenScheduledMission, onOpenPeerReading
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
@@ -160,6 +160,31 @@ const MissionItem = memo(({
             </div>
             <h4 style={{ margin: 0, fontSize: isSmall ? '0.92rem' : isLarge ? '1.08rem' : '1rem', lineHeight: 1.35, color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
 
+            {/* 선생님만 읽는 과제 — 다 쓴 뒤 한 번에 친구들에게 연다(닫기는 없다, 20261388). */}
+            {mission.peer_reading_enabled === false && (
+                <div style={{
+                    display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px',
+                    padding: '8px 10px', borderRadius: '10px',
+                    background: 'var(--ui-surface-muted)', border: '1px solid var(--ui-border)', color: 'var(--ui-ink)'
+                }}>
+                    <strong style={{ fontSize: 'var(--ui-text-xs)' }}>🔒 선생님만 읽는 중</strong>
+                    <span style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>친구들은 아직 서로의 글을 못 봐요</span>
+                    {onOpenPeerReading && (
+                        <button type="button" onClick={(e) => { e.stopPropagation(); onOpenPeerReading(mission); }}
+                            title="승인한 글을 반 친구들이 읽을 수 있게 엽니다(다시 닫을 수 없어요)"
+                            aria-label={`${mission.title} 친구들에게 글 열기`}
+                            style={{ ...CARD_ACTION_BUTTON_STYLE, marginLeft: 'auto', background: 'var(--ui-primary-soft)', border: '1px solid var(--ui-primary-border)', color: 'var(--ui-primary)' }}>
+                            🔓 친구들에게 글 열기
+                        </button>
+                    )}
+                </div>
+            )}
+            {mission.peer_reading_enabled !== false && mission.peer_reading_opened_at && (
+                <div style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)', fontWeight: 800 }}>
+                    👀 {new Date(mission.peer_reading_opened_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}에 친구들에게 열었어요 · 승인한 글만 보여요
+                </div>
+            )}
+
             {/* 예약 과제는 학생에게 아직 안 보인다. 선생님 화면에서만 이렇게 갈라 보여 준다. */}
             {isMissionScheduled(mission) && (
                 <div style={{
@@ -254,7 +279,7 @@ const MissionList = ({
     missions, loading, submissionCounts, missionStatuses, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
-    highlightedMissionId, missionCardSize, onOpenScheduledMission
+    highlightedMissionId, missionCardSize, onOpenScheduledMission, onOpenPeerReading
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
     const cardColumns = getMissionCardColumns(missionCardSize);
@@ -376,6 +401,7 @@ const MissionList = ({
                             missionStatus={missionStatuses?.[mission.id]}
                             totalStudentCount={totalStudentCount}
                             onOpenScheduledMission={onOpenScheduledMission}
+                            onOpenPeerReading={onOpenPeerReading}
                             handleEditClick={handleEditClick}
                             setArchiveModal={setArchiveModal}
                             handleDeleteMission={handleDeleteMission}
