@@ -42,8 +42,12 @@ export const findElementarySpellingIssues = (value, limit = 50) => ELEMENTARY_DE
 
 const splitEntryChoices = (entry) => entry.question.split('/').map((choice) => choice.trim());
 
-const ELEMENTARY_SPELLING_QUIZ_POOL = Object.freeze(
-    ELEMENTARY_SPELLING_ENTRIES.map((entry, index) => {
+/**
+ * 수첩 5문제 후보를 만든다(기본 자료·검토 거친 자료가 같은 방식). 문맥 항목(`문이 닫혔다 / 문이 다쳤다` → 정답 `닫혔`)은
+ * 정답을 품은 선택지 하나를 정답으로 삼는다(2026-10-09 — 그대로 두면 정답이 선택지에 없었다).
+ */
+export const createSpellingQuizPool = (entries) => Object.freeze(
+    entries.map((entry, index) => {
         if (entry.quiz) {
             return Object.freeze({
                 id: `pool-${entry.id}`,
@@ -59,7 +63,9 @@ const ELEMENTARY_SPELLING_QUIZ_POOL = Object.freeze(
         }
 
         const choices = splitEntryChoices(entry);
-        const hasSingleCorrectChoice = choices.includes(entry.answer);
+        const containing = choices.filter((choice) => choice !== entry.answer && choice.includes(entry.answer));
+        const answer = choices.includes(entry.answer) ? entry.answer : containing.length === 1 ? containing[0] : entry.answer;
+        const hasSingleCorrectChoice = choices.includes(answer);
         return Object.freeze({
             id: `pool-${entry.id}`,
             number: index + 1,
@@ -71,12 +77,14 @@ const ELEMENTARY_SPELLING_QUIZ_POOL = Object.freeze(
             choices: Object.freeze(hasSingleCorrectChoice
                 ? choices
                 : [entry.answer, '둘 중 하나만 언제나 맞아요.']),
-            answer: entry.answer,
+            answer,
             explanation: entry.explanation,
             solution: entry.examples[0]
         });
     })
 );
+
+const ELEMENTARY_SPELLING_QUIZ_POOL = createSpellingQuizPool(ELEMENTARY_SPELLING_ENTRIES);
 
 export const getElementarySpellingQuizPool = () => ELEMENTARY_SPELLING_QUIZ_POOL;
 
@@ -91,16 +99,21 @@ const takeRandomItems = (items, count, random) => {
     return selected;
 };
 
-/** 수첩을 닫거나 다시 열 때 전체 500개 중 겹치지 않는 문제만 뽑는다. */
-export const createRandomElementarySpellingQuiz = (count = 5, random = Math.random) => {
-    const safeCount = Math.min(Math.max(0, Math.floor(count)), ELEMENTARY_SPELLING_QUIZ_POOL.length);
-    const selected = takeRandomItems(ELEMENTARY_SPELLING_QUIZ_POOL, safeCount, random);
+/** 후보 묶음에서 겹치지 않는 문제만 뽑는다. */
+export const createRandomSpellingQuiz = (pool, count = 5, random = Math.random) => {
+    const safeCount = Math.min(Math.max(0, Math.floor(count)), pool.length);
+    const selected = takeRandomItems(pool, safeCount, random);
     return selected.map((question, index) => ({
         ...question,
         choices: takeRandomItems(question.choices, question.choices.length, random),
         sessionNumber: index + 1
     }));
 };
+
+/** 수첩을 닫거나 다시 열 때 기본 500개 중 겹치지 않는 문제만 뽑는다. */
+export const createRandomElementarySpellingQuiz = (count = 5, random = Math.random) => (
+    createRandomSpellingQuiz(ELEMENTARY_SPELLING_QUIZ_POOL, count, random)
+);
 
 export const ELEMENTARY_SPELLING_ENTRY_IDS = Object.freeze(
     ELEMENTARY_SPELLING_ENTRIES.map((entry) => entry.id)
@@ -113,16 +126,18 @@ const normalize = (value) => String(value || '')
     .toLocaleLowerCase('ko-KR')
     .replace(/[\s/·,?!."'’“”()_-]/g, '');
 
-export const searchElementarySpelling = (query) => {
-    const normalizedQuery = normalize(query.trim());
+/** 자료 목록에서 찾는다. `extraDetectedIds` 는 다른 찾기 장치가 문장에서 찾은 항목(검토 거친 자료 등). */
+export const searchSpellingEntries = (entries, query, extraDetectedIds = []) => {
+    const normalizedQuery = normalize(String(query || '').trim());
     if (!normalizedQuery) return [];
 
     const detectedEntryIds = new Set([
         ...findDetectedEntryIds(query),
-        ...findElementarySpellingIssues(query).map((issue) => issue.entryId)
+        ...findElementarySpellingIssues(query).map((issue) => issue.entryId),
+        ...extraDetectedIds
     ]);
 
-    return ELEMENTARY_SPELLING_ENTRIES
+    return entries
         .map((entry) => {
             const candidates = [
                 entry.question,
@@ -160,6 +175,8 @@ export const searchElementarySpelling = (query) => {
         .slice(0, 6)
         .map(({ entry }) => entry);
 };
+
+export const searchElementarySpelling = (query) => searchSpellingEntries(ELEMENTARY_SPELLING_ENTRIES, query);
 
 export const getPopularSpellingEntries = () => POPULAR_SPELLING_ENTRY_IDS
     .map((id) => ELEMENTARY_SPELLING_ENTRIES.find((entry) => entry.id === id))

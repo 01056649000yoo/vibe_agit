@@ -1,19 +1,19 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import {
-    ELEMENTARY_SPELLING_DETECTION_RULES,
-    getElementarySpellingEntries
-} from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
-import {
     SPELLING_QUICK_DETECTION_RULES
 } from '../src/modules/writing/student-input/checker/spellingDetectionRules.js';
+// 내보내는 자료는 수첩 자료 묶음(spellingBook) 하나에서 — 기본 500 + 교차 점검을 거친 자료(스위치가 켜졌으면).
+// 인형뽑기 퀴즈·주간 검수·연구소가 이 파일을 읽는다(2026-10-09).
+import { getSpellingBookDetectionRules, getSpellingBookEntries } from '../src/modules/writing/student-input/checker/spellingBook.js';
 
 const detectionOutputUrl = new URL('../public/spelling/elementary-detection-v1.json', import.meta.url);
 const lookupOutputUrl = new URL('../public/spelling/elementary-lookup-v1.json', import.meta.url);
 const detectionOutputPath = fileURLToPath(detectionOutputUrl);
 const lookupOutputPath = fileURLToPath(lookupOutputUrl);
 const checkOnly = process.argv.includes('--check');
-const lookupEntries = getElementarySpellingEntries();
+const lookupEntries = getSpellingBookEntries();
+const detectionRules = getSpellingBookDetectionRules();
 
 const detectionPayload = {
     version: 1,
@@ -26,7 +26,7 @@ const detectionPayload = {
         lookup: rule.lookup || rule.right,
         source: rule.source
     })),
-    elementaryRules: ELEMENTARY_SPELLING_DETECTION_RULES.map((rule) => ({
+    elementaryRules: detectionRules.map((rule) => ({
         id: rule.id,
         entryId: rule.entryId,
         label: rule.label,

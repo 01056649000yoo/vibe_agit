@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import {
-    ELEMENTARY_SPELLING_DETECTION_RULES
-} from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
+import { getSpellingBookDetectionRules } from '../src/modules/writing/student-input/checker/spellingBook.js';
+import { PENDING_SPELLING_ENABLED } from '../src/modules/writing/student-input/checker/pending/config.js';
+// 공개 파일은 수첩 자료 묶음(기본 500 + 교차 점검을 거친 자료)을 내보낸다(2026-10-09)
+const ELEMENTARY_SPELLING_DETECTION_RULES = getSpellingBookDetectionRules();
 import {
     SPELLING_QUICK_DETECTION_RULES
 } from '../src/modules/writing/student-input/checker/spellingDetectionRules.js';
@@ -23,7 +24,7 @@ test('연구소용 공유 맞춤법 목록은 아지트 원본 규칙과 같은 
     assert.equal(sharedCatalog.elementaryRules.length, ELEMENTARY_SPELLING_DETECTION_RULES.length);
     assert.equal(sharedLookupCatalog.version, 1);
     assert.equal(sharedLookupCatalog.lookupEntries.length, ELEMENTARY_SPELLING_DETECTION_RULES.length);
-    assert.equal(sharedCatalog.elementaryRules.length, 500);
+    assert.equal(sharedCatalog.elementaryRules.length, PENDING_SPELLING_ENABLED ? 1360 : 500);
     assert.deepEqual(
         sharedCatalog.quickRules.map((rule) => rule.id),
         SPELLING_QUICK_DETECTION_RULES.map((rule) => rule.id)

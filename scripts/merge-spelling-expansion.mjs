@@ -18,6 +18,7 @@
  */
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { getElementarySpellingEntries } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
 
 const DIR = 'docs/spelling-expansion';
@@ -148,6 +149,12 @@ if (process.argv[1]?.endsWith('merge-spelling-expansion.mjs')) {
     const exclude = new Set(String(arg('--exclude', '')).split(',').map((value) => value.trim()).filter(Boolean));
     const pending = process.argv.includes('--pending');
     mergeBatches(batches, { exclude, dryRun: process.argv.includes('--dry-run'), pending })
-        .then((all) => console.log(`${pending ? '검토 중 자료로 만든' : '합칠'} 항목 ${all.length}개${process.argv.includes('--dry-run') ? '(미리 보기, 파일은 그대로)' : ''}`))
+        .then((all) => {
+            console.log(`${pending ? '검토 중 자료로 만든' : '합칠'} 항목 ${all.length}개${process.argv.includes('--dry-run') ? '(미리 보기, 파일은 그대로)' : ''}`);
+            if (process.argv.includes('--dry-run')) return;
+            // 자동 반영(2026-10-09): 자료가 바뀌면 인형뽑기·주간 검수·연구소가 읽는 공개 파일도 곧바로 다시 만든다.
+            const exported = spawnSync(process.execPath, ['scripts/export-spelling-detection.mjs'], { encoding: 'utf8' });
+            console.log(exported.status === 0 ? '공개 파일(인형뽑기·수첩 퀴즈용)도 다시 만들었습니다.' : `공개 파일 다시 만들기 실패 — npm run spelling:export 를 돌려 주세요.\n${exported.stderr}`);
+        })
         .catch((error) => { console.error(`합치기 실패 — ${error.message}`); process.exitCode = 1; });
 }

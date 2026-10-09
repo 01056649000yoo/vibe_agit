@@ -5,14 +5,15 @@ import {
     buildSpellingQuizPool, createSpellingQuiz, gradeSpellingAnswer, publicQuizQuestion, QUIZ_BLANK,
     SPELLING_QUIZ_LEVELS, spellingSourcesFromCatalog, spellingSourcesFromEntries, spellingSourcesFromLearningEntries
 } from '../src/modules/game/spelling-claw/quiz/spellingQuizBuilder.js';
-import { getElementarySpellingEntries } from '../src/modules/writing/student-input/checker/elementarySpellingEntries.js';
+import { getSpellingBookEntries } from '../src/modules/writing/student-input/checker/spellingBook.js';
 
 /*
  * 맞춤법 퀴즈 만들기(2026-10-01). 사전 항목에서 문제를 그때그때 만든다 — 공통 자료가 게시되면 저절로 출제된다.
  * 화면과 서버가 같은 문제를 내야 하므로 앱 사전과 공개 파일이 같은 묶음을 만드는지까지 본다.
  */
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-const basePool = buildSpellingQuizPool(spellingSourcesFromEntries(getElementarySpellingEntries()));
+// 자료 묶음 = 기본 500 + 교차 점검을 거친 자료(2026-10-09) — 공개 파일과 같은 원본
+const basePool = buildSpellingQuizPool(spellingSourcesFromEntries(getSpellingBookEntries()));
 
 test('앱 사전과 공개 파일(서버가 읽음)이 똑같은 문제 묶음을 만든다', async () => {
     const [lookup, detection] = await Promise.all([
@@ -21,7 +22,7 @@ test('앱 사전과 공개 파일(서버가 읽음)이 똑같은 문제 묶음�
     ]);
     const catalogPool = buildSpellingQuizPool(spellingSourcesFromCatalog(JSON.parse(lookup), JSON.parse(detection)));
     assert.deepEqual(catalogPool, basePool);
-    assert.ok(new Set(basePool.map((item) => item.entryKey)).size >= 480, '대부분의 사전 항목에서 문제가 나와야 합니다.');
+    assert.ok(new Set(basePool.map((item) => item.entryKey)).size >= 1300, '대부분의 사전 항목에서 문제가 나와야 합니다.');
 });
 
 test('모든 문제가 바르게 만들어진다 — 정답이 보기에 있고, 고칠 문장은 정말 틀린 문장이다', () => {
@@ -78,7 +79,7 @@ test('새로 게시된 공통 자료와 학급 자료는 저절로 출제되고,
         { id: 'c2', status: 'approved', wrong_expression: '먹을만큼', correct_expression: '먹을 만큼', label: '띄어쓰기', explanation: '‘만큼’은 띄어 써요.', examples: ['먹을 만큼만 담아요.'] },
         { id: 'c3', status: 'disabled', wrong_expression: '왠만하면', correct_expression: '웬만하면', examples: ['웬만하면 같이 가자.'] }
     ];
-    const pool = buildSpellingQuizPool([...spellingSourcesFromLearningEntries(rows, 'common'), ...spellingSourcesFromEntries(getElementarySpellingEntries())]);
+    const pool = buildSpellingQuizPool([...spellingSourcesFromLearningEntries(rows, 'common'), ...spellingSourcesFromEntries(getSpellingBookEntries())]);
     const common = pool.filter((item) => item.source === 'common');
     assert.ok(common.some((item) => item.type === 'spacingWrite' && item.answer === '먹을 만큼'));
     assert.ok(!common.some((item) => item.entryKey === 'common:c3'), '적용 중지한 공통 자료가 출제됐습니다.');

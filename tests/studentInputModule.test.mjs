@@ -155,3 +155,26 @@ test('맞춤법 수첩을 끈 반은 회색 점선도 꺼진다(화면·서버 �
     const fn = await readFile('supabase/functions/spelling-look-closer/index.ts', 'utf8');
     assert.match(fn, /!enabledTools\.includes\(LOOKUP_TOOL_ID\)/);
 });
+
+test('수첩·인형뽑기 퀴즈: 기본 500 + 교차 점검 자료가 함께 나오고, 공통 자료(매달 자동 추가)도 저절로 섞인다', async () => {
+    const book = await import('../src/modules/writing/student-input/checker/spellingBook.js');
+    assert.equal(book.getSpellingBookEntries().length, 1360);
+    const pool = book.getSpellingBookQuizPool();
+    // 문맥 항목도 정답이 선택지 안에 있다(문이 닫혔다 / 문이 다쳤다 → '문이 닫혔다')
+    for (const item of pool) assert.ok(item.choices.includes(item.answer), `${item.question} 정답이 선택지에 없다`);
+    const door = pool.find((item) => item.question === '문이 닫혔다 / 문이 다쳤다');
+    assert.equal(door.answer, '문이 닫혔다');
+    // 수첩 검색이 새 자료도 찾는다
+    assert.ok(book.searchSpellingBook('피라밋').some((entry) => entry.answer === '피라미드'));
+    // 공통 자료가 퀴즈 후보에 들어간다
+    const rows = [{ id: 'm1', scope: 'common', wrong_expression: '게속', correct_expression: '계속' }];
+    // 공통 자료는 후보 맨 끝에 붙는다 — 맨 끝을 뽑는 값으로 확인
+    const quiz = book.createRandomSpellingBookQuiz(1, () => 0.999999, rows);
+    assert.equal(quiz[0].answer, '계속', '공통 자료가 수첩 퀴즈 후보에 있어야 한다');
+    assert.ok(quiz[0].choices.includes('게속'));
+    // 공개 파일(인형뽑기·주간 검수)도 같은 1,360개
+    const lookup = JSON.parse(await readFile('public/spelling/elementary-lookup-v1.json', 'utf8'));
+    assert.equal(lookup.lookupEntries.length, 1360);
+    const merge = await readFile('scripts/merge-spelling-expansion.mjs', 'utf8');
+    assert.match(merge, /export-spelling-detection\.mjs/, '자료를 합치면 공개 파일도 저절로 다시 만든다');
+});

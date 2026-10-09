@@ -3,11 +3,11 @@ import { ArrowRight, BookOpen, ExternalLink, Search, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
 import { supabase } from '../../../../lib/supabaseClient';
 import {
-    createRandomElementarySpellingQuiz,
     createOfficialDictionarySearchUrl,
-    getPopularSpellingEntries,
-    searchElementarySpelling
+    getPopularSpellingEntries
 } from '../../student-input/checker/elementarySpellingEntries';
+// 검색·5문제는 기본 500개 + 교차 점검을 거친 자료(2026-10-09)
+import { createRandomSpellingBookQuiz, searchSpellingBook } from '../../student-input/checker/spellingBook';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { classifySpellingSearchQuery } from '../../spelling-learning/searchCandidate';
 import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';
@@ -64,11 +64,12 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     const [dictionaryMessage, setDictionaryMessage] = useState('');
     const [dictionarySearchedQuery, setDictionarySearchedQuery] = useState('');
     const [classEntries, setClassEntries] = useState([]);
+    const quizStartedRef = useRef(false);
     const [quizIndex, setQuizIndex] = useState(0);
     const [quizSelection, setQuizSelection] = useState('');
     const [quizScore, setQuizScore] = useState(0);
     const [quizFinished, setQuizFinished] = useState(false);
-    const [quizQuestions, setQuizQuestions] = useState(() => createRandomElementarySpellingQuiz(5));
+    const [quizQuestions, setQuizQuestions] = useState(() => createRandomSpellingBookQuiz(5));
     const inputRef = useRef(null);
     const searchRequestRef = useRef(0);
     const popularEntries = useMemo(() => getPopularSpellingEntries(), []);
@@ -87,11 +88,12 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                 label: entry.label,
                 source: { label: entry.scope === 'common' ? '공통 맞춤법 자료' : '우리 반 맞춤법 수첩', url: '#' }
             }));
-        return [...custom, ...searchElementarySpelling(searchedQuery)].slice(0, 20);
+        return [...custom, ...searchSpellingBook(searchedQuery)].slice(0, 20);
     }, [classEntries, searchedQuery]);
 
     const selectQuizAnswer = (choice) => {
         if (quizSelection || quizFinished) return;
+        quizStartedRef.current = true;
         setQuizSelection(choice);
         if (choice === activeQuizQuestion.answer) setQuizScore((score) => score + 1);
     };
@@ -107,7 +109,8 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     };
 
     const restartQuiz = () => {
-        setQuizQuestions(createRandomElementarySpellingQuiz(5));
+        quizStartedRef.current = false;
+        setQuizQuestions(createRandomSpellingBookQuiz(5, Math.random, classEntries));
         setQuizIndex(0);
         setQuizSelection('');
         setQuizScore(0);
@@ -121,7 +124,14 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
 
     useEffect(() => {
         spellingLearningApi.getStudentEntries()
-            .then((entries) => setClassEntries(Array.isArray(entries) ? entries : []))
+            .then((entries) => {
+                const rows = Array.isArray(entries) ? entries : [];
+                setClassEntries(rows);
+                // 공통·반별 자료(매달 자동 추가 포함)가 오면 아직 풀기 전인 5문제에도 섞는다(저절로 출제).
+                if (rows.length) {
+                    setQuizQuestions((current) => (quizStartedRef.current ? current : createRandomSpellingBookQuiz(5, Math.random, rows)));
+                }
+            })
             .catch(() => setClassEntries([]));
     }, []);
 
@@ -160,7 +170,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         setDictionaryMessage('');
         setDictionarySearchedQuery('');
 
-        const localMatches = searchElementarySpelling(trimmed);
+        const localMatches = searchSpellingBook(trimmed);
         const classMatch = classEntries.find((entry) => [entry.wrong_expression, entry.correct_expression]
             .some((value) => trimmed.includes(String(value || ''))));
         const firstMatch = classMatch || localMatches[0];
