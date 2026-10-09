@@ -20,7 +20,9 @@ import {
 } from '../../modules/writing/mission-types/genreCatalog';
 import MissionPromptFields from '../../modules/writing/mission-form/MissionPromptFields';
 import { applyGenreToMissionDraft } from '../../modules/writing/mission-form/missionDraft';
-import PeerReadingChoice from '../../modules/writing/mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch } from '../../modules/writing/mission-form/PeerReadingChoice';
+import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../modules/writing/mission-form/MissionFormStep';
+import FeatureAvailabilitySwitch from '../common/FeatureAvailabilitySwitch';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
@@ -45,6 +47,16 @@ const MissionForm = ({
     const [lockedQuestionCount, setLockedQuestionCount] = React.useState(0);
     const hasSubmissions = Number(submittedCount) > 0;
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
+    // 아래 고정 줄의 지금 설정 요약(2026-10-09 화면 정리)
+    const missionSummary = [
+        formData.genre,
+        `${formData.min_chars || 0}자 이상`,
+        formData.min_paragraphs ? `${formData.min_paragraphs}문단` : '',
+        `${formData.base_reward || 0}P`,
+        formData.peer_reading_enabled === false ? '🔒 선생님만 읽음' : (formData.allow_comments ? '👀 반 친구가 읽고 댓글' : '👀 반 친구가 읽음'),
+        useAIQuestions ? `질문 ${formData.guide_questions?.length || 0}개` : '',
+        formData.schedule_at ? '🕒 예약' : '바로 공개'
+    ];
 
     const runGenrePreset = React.useCallback((genreId, { force = false } = {}) => {
         const result = applyGenreToMissionDraft(formData, genreId, {
@@ -199,7 +211,7 @@ const MissionForm = ({
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', marginBottom: '24px' }}>
                         <Card style={{
                             padding: isMobile ? '16px' : '24px',
-                            border: '2px solid #3498DB',
+                            border: '1px solid var(--ui-border)',
                             width: '100%',
                             maxWidth: 'none',
                             margin: '0 0 24px 0',
@@ -222,7 +234,8 @@ const MissionForm = ({
                                     </div>
                                 </div>
                             ) : (
-                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <form onSubmit={handleSubmit} className="mission-form-steps">
+                                <MissionFormStep number={1} title="무엇을 쓰나요?" description="주제와 글 종류, 학생에게 보여 줄 안내를 적어요.">
                                 <MissionPromptFields
                                     title={formData.title}
                                     guide={formData.guide}
@@ -270,210 +283,29 @@ const MissionForm = ({
                                     </div>
                                 )}
 
-                                {/* 태그 입력 UI */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#F8F9FF', borderRadius: '16px', border: '1px solid #E0E7FF' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                        <label style={{ fontSize: 'var(--ui-text-sm)', color: '#4F46E5', fontWeight: 'bold' }}>🏷️ 미션 태그</label>
-                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#6366F1', opacity: 0.8 }}>* 태그를 입력하면 학생들의 글을 키워드별로 분류하여 관리할 수 있습니다.</span>
-                                    </div>
+                                </MissionFormStep>
 
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                        {formData.tags?.map((tag, index) => (
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                key={index}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    color: 'white',
-                                                    padding: '6px 14px',
-                                                    borderRadius: '20px',
-                                                    fontSize: 'var(--ui-text-sm)',
-                                                    fontWeight: 'bold',
-                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                                }}
-                                            >
-                                                #{tag}
-                                                <span
-                                                    onClick={() => {
-                                                        const newTags = formData.tags.filter((_, i) => i !== index);
-                                                        setFormData({ ...formData, tags: newTags });
-                                                    }}
-                                                    style={{ cursor: 'pointer', opacity: 0.8, fontSize: '1.1rem', marginLeft: '4px' }}
-                                                >
-                                                    ×
-                                                </span>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <input
-                                            type="text"
-                                            placeholder="태그 입력 (엔터 또는 쉼표)"
-                                            value={tagInput}
-                                            onChange={e => setTagInput(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ',') {
-                                                    e.preventDefault();
-                                                    handleAddTag(tagInput);
-                                                    setTagInput('');
-                                                }
-                                            }}
-                                            style={{
-                                                flex: 1,
-                                                padding: '12px 16px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #C7D2FE',
-                                                fontSize: 'var(--ui-text-md)',
-                                                boxSizing: 'border-box',
-                                                background: 'white'
-                                            }}
-                                        />
-                                        <Button
-                                            type="button"
-                                            onClick={() => {
-                                                saveFrequentTag(tagInput.trim().replace(',', ''));
-                                                handleAddTag(tagInput);
-                                                setTagInput('');
-                                            }}
-                                            style={{
-                                                background: '#C7D2FE',
-                                                color: '#4F46E5',
-                                                padding: '0 16px',
-                                                fontSize: 'var(--ui-text-sm)',
-                                                fontWeight: 'bold',
-                                                minHeight: 'auto',
-                                                height: '46px'
-                                            }}
-                                        >
-                                            ⭐ 저장
-                                        </Button>
-                                    </div>
-
-                                    {/* 자주 쓰는 태그 목록 */}
-                                    {frequentTags?.length > 0 && (
-                                        <div style={{ marginTop: '8px' }}>
-                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#6366F1', marginBottom: '8px', fontWeight: 'bold' }}>⭐ 자주 쓰는 태그 (클릭해서 추가)</div>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                {frequentTags.map((tag, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            background: 'white',
-                                                            border: '1px solid #E0E7FF',
-                                                            padding: '4px 10px',
-                                                            borderRadius: '10px',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s'
-                                                        }}
-                                                        onClick={() => handleAddTag(tag)}
-                                                    >
-                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#4F46E5', fontWeight: 'bold' }}>#{tag}</span>
-                                                        <span
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                removeFrequentTag(tag);
-                                                            }}
-                                                            style={{ color: '#FDA4AF', fontSize: 'var(--ui-text-md)', marginLeft: '4px', cursor: 'pointer' }}
-                                                        >
-                                                            ×
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* [개편] 핵심 질문 설계 인터페이스 */}
-                                <div style={{
-                                    background: 'var(--ui-page)',
-                                    padding: '20px',
-                                    borderRadius: '20px',
-                                    border: useAIQuestions ? '2px solid #3498DB' : '1px dashed var(--ui-ink-subtle)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    transition: 'all 0.3s'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div
-                                            onClick={toggleAIQuestions}
-                                            style={{
-                                                width: '50px',
-                                                height: '26px',
-                                                background: useAIQuestions ? '#3498DB' : 'var(--ui-ink-subtle)',
-                                                borderRadius: '13px',
-                                                position: 'relative',
-                                                cursor: 'pointer',
-                                                transition: 'background 0.3s'
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: '20px',
-                                                height: '20px',
-                                                background: 'white',
-                                                borderRadius: '50%',
-                                                position: 'absolute',
-                                                top: '3px',
-                                                left: useAIQuestions ? '27px' : '3px',
-                                                transition: 'left 0.3s'
-                                            }} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontWeight: 'bold', fontSize: 'var(--ui-text-md)', color: 'var(--ui-ink-strong)' }}>
-                                                🎯 핵심 질문 설계 {useAIQuestions ? '(사용 중)' : '(선택)'}
-                                            </div>
-                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)' }}>
-                                                {useAIQuestions
-                                                    ? `${formData.guide_questions?.length || 0}개의 질문이 준비되었습니다.`
-                                                    : '학생들이 생각의 구조를 잡을 수 있도록 AI가 질문을 만들어줍니다.'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={() => setIsLabQuestionsModalOpen(true)}
-                                            style={{
-                                                background: '#FDF2F8',
-                                                color: '#DB2777',
-                                                border: '1px solid #FBCFE8',
-                                                borderRadius: '14px',
-                                                fontWeight: 'bold',
-                                                padding: '8px 14px'
-                                            }}
-                                        >
+                                <MissionFormStep number={2} optional title="생각 돕기" description="학생이 생각의 구조를 잡도록 핵심 질문을 줘요. 연구소에서 만든 질문도 불러올 수 있어요.">
+                                    <FeatureAvailabilitySwitch
+                                        checked={Boolean(useAIQuestions)}
+                                        onChange={() => toggleAIQuestions()}
+                                        ariaLabel="핵심 질문 사용"
+                                        enabledLabel="🎯 핵심 질문 사용 중"
+                                        disabledLabel="🎯 핵심 질문 사용 안 함"
+                                        enabledDescription={`${formData.guide_questions?.length || 0}개의 질문이 준비되었어요.`}
+                                        disabledDescription="켜면 AI가 생각을 이끄는 질문을 만들어 줘요."
+                                        fullWidth
+                                    />
+                                    <div style={{ display: 'flex', gap: 'var(--ui-space-2)', flexWrap: 'wrap' }}>
+                                        <Button type="button" variant="outline" onClick={() => setIsLabQuestionsModalOpen(true)}>
                                             🗳️ 연구소 질문 불러오기
                                         </Button>
                                         {useAIQuestions && (
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                onClick={() => setIsQuestionModalOpen(true)}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #36D1DC 0%, #5B86E0 100%)',
-                                                    borderRadius: '14px',
-                                                    color: 'white',
-                                                    fontWeight: 'bold',
-                                                    padding: '8px 16px',
-                                                    border: 'none',
-                                                    boxShadow: '0 4px 15px rgba(91, 134, 224, 0.3)'
-                                                }}
-                                            >
-                                                🪄 질문 수정/설계하기
+                                            <Button type="button" onClick={() => setIsQuestionModalOpen(true)}>
+                                                🪄 질문 수정·설계하기
                                             </Button>
                                         )}
                                     </div>
-                                </div>
 
                                 {typeof document !== 'undefined' && isQuestionModalOpen && createPortal(
                                     <div
@@ -823,344 +655,265 @@ const MissionForm = ({
                                     />
                                 )}
 
-                                {/* [통합] 미션 세부 설정 (분량, 댓글, 포인트) */}
-                                <div style={{
-                                    background: 'white',
-                                    borderRadius: '24px',
-                                    border: '1px solid var(--ui-border)',
-                                    padding: '32px',
-                                    marginBottom: '24px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-                                }}>
-                                    {/* 헤더: 제목 + 저장 버튼 */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: 'var(--ui-ink-strong)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            ⚙️ 미션 세부 설정
-                                        </h3>
-                                        <Button
-                                            type="button"
-                                            onClick={handleSaveDefaultSettings}
-                                            style={{
-                                                background: 'var(--ui-page)',
-                                                border: '1px solid var(--ui-border)',
-                                                color: 'var(--ui-ink-muted)',
-                                                padding: '5px 12px',
-                                                fontSize: 'var(--ui-text-sm)',
-                                                borderRadius: '8px',
-                                                minHeight: 'auto',
-                                                fontWeight: 'bold',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                transition: 'all 0.2s',
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                            }}
-                                            onMouseOver={e => { e.currentTarget.style.background = 'var(--ui-border)'; e.currentTarget.style.color = 'var(--ui-ink-strong)'; }}
-                                            onMouseOut={e => { e.currentTarget.style.background = 'var(--ui-page)'; e.currentTarget.style.color = 'var(--ui-ink-muted)'; }}
-                                        >
-                                            <span>💾</span> 설정값을 기본으로 저장
+                                </MissionFormStep>
+
+                                <MissionFormStep
+                                    number={3}
+                                    title="쓰는 조건"
+                                    description="분량, 함께 읽기, 포인트를 정해요."
+                                    actions={(
+                                        <Button type="button" variant="outline" size="sm" onClick={handleSaveDefaultSettings}>
+                                            💾 설정값을 기본으로 저장
                                         </Button>
-                                    </div>
-
-                                    {/* 컨텐츠: 2컬럼 레이아웃 */}
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: isMobile ? 'column' : 'row',
-                                        gap: isMobile ? '32px' : '48px',
-                                        alignItems: 'flex-start'
-                                    }}>
-                                        {/* (Left) 분량 및 설정 */}
-                                        <div style={{ flex: 1, width: '100%' }}>
-                                            <label style={{ fontSize: 'var(--ui-text-md)', color: '#2E86C1', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                                <span style={{ fontSize: '1.1rem' }}>📏</span> 분량 및 설정
+                                    )}
+                                >
+                                    <MissionFormGroup title="📏 분량">
+                                        <div className="mission-field-row">
+                                            <label className="mission-field-label">
+                                                최소 글자 수
+                                                <input
+                                                    type="number"
+                                                    className="mission-field-input"
+                                                    step="50"
+                                                    min="0"
+                                                    value={formData.min_chars}
+                                                    onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })}
+                                                />
                                             </label>
+                                            <label className="mission-field-label">
+                                                문단 개수
+                                                <input
+                                                    type="number"
+                                                    className="mission-field-input"
+                                                    min="0"
+                                                    value={formData.min_paragraphs}
+                                                    onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })}
+                                                />
+                                            </label>
+                                        </div>
+                                    </MissionFormGroup>
 
-                                            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>최소 글자수</span>
-                                                    <input
-                                                        type="number"
-                                                        step="50"
-                                                        placeholder="0"
-                                                        value={formData.min_chars}
-                                                        onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: '12px',
-                                                            border: '2px solid #AED6F1',
-                                                            fontSize: 'var(--ui-text-lg)',
-                                                            textAlign: 'center',
-                                                            fontWeight: 'bold',
-                                                            color: 'var(--ui-ink-strong)',
-                                                            boxSizing: 'border-box'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>문단 개수</span>
-                                                    <input
-                                                        type="number"
-                                                        placeholder="0"
-                                                        value={formData.min_paragraphs}
-                                                        onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: '12px',
-                                                            border: '2px solid #AED6F1',
-                                                            fontSize: 'var(--ui-text-lg)',
-                                                            textAlign: 'center',
-                                                            fontWeight: 'bold',
-                                                            color: 'var(--ui-ink-strong)',
-                                                            boxSizing: 'border-box'
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* 학생끼리 서로의 글 보기(끄면 댓글도 꺼진다) */}
+                                    <MissionFormGroup title="👥 함께 읽기">
+                                        <div className="mission-field-row">
                                             <PeerReadingChoice
                                                 enabled={formData.peer_reading_enabled ?? true}
                                                 onChange={(patch) => setFormData({ ...formData, ...patch })}
                                             />
+                                            <PeerCommentSwitch
+                                                allowComments={formData.allow_comments}
+                                                peerReadingEnabled={formData.peer_reading_enabled ?? true}
+                                                onChange={(next) => setFormData({ ...formData, allow_comments: next })}
+                                            />
+                                        </div>
+                                    </MissionFormGroup>
 
-                                            {/* 댓글 허용 토글 — 친구가 글을 못 보면 댓글도 쓸 수 없다 */}
-                                            <div
-                                                aria-disabled={formData.peer_reading_enabled === false}
-                                                onClick={() => {
-                                                    if (formData.peer_reading_enabled === false) return;
-                                                    setFormData({ ...formData, allow_comments: !formData.allow_comments });
+                                    <MissionFormGroup title="💰 포인트">
+                                        <div className="mission-field-row">
+                                            <label className="mission-field-label">
+                                                기본 보상(P)
+                                                <input
+                                                    type="number"
+                                                    className="mission-field-input"
+                                                    step="100"
+                                                    min="0"
+                                                    value={formData.base_reward}
+                                                    onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })}
+                                                />
+                                            </label>
+                                            <label className="mission-field-label">
+                                                보너스 — 몇 자 더 쓰면
+                                                <input
+                                                    type="number"
+                                                    className="mission-field-input"
+                                                    step="100"
+                                                    min="0"
+                                                    value={formData.bonus_threshold}
+                                                    onChange={e => setFormData({ ...formData, bonus_threshold: parseInt(e.target.value) || 0 })}
+                                                />
+                                            </label>
+                                            <label className="mission-field-label">
+                                                보너스 포인트(P)
+                                                <input
+                                                    type="number"
+                                                    className="mission-field-input"
+                                                    step="10"
+                                                    min="0"
+                                                    value={formData.bonus_reward}
+                                                    onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })}
+                                                />
+                                            </label>
+                                        </div>
+                                        <FeatureAvailabilitySwitch
+                                            checked={Boolean(formData.repeat_bonus_enabled)}
+                                            onChange={(next) => setFormData({ ...formData, repeat_bonus_enabled: next })}
+                                            ariaLabel="글자 수 구간별 반복 보너스"
+                                            enabledLabel="🔁 글자 수 구간별 반복 보너스 사용 중"
+                                            disabledLabel="🔁 글자 수 구간별 반복 보너스 사용 안 함"
+                                            enabledDescription="정한 글자 수마다 포인트를 또 줘요(최대 횟수까지)."
+                                            disabledDescription="켜면 길게 쓸수록 구간마다 포인트를 더 줘요."
+                                            fullWidth
+                                        />
+                                        {formData.repeat_bonus_enabled && (
+                                            <div className="mission-field-row">
+                                                <label className="mission-field-label">
+                                                    반복 글자 수
+                                                    <input type="number" className="mission-field-input" min="1" max="20000" step="1" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} />
+                                                </label>
+                                                <label className="mission-field-label">
+                                                    구간당 포인트
+                                                    <input type="number" className="mission-field-input" min="1" max="10000" step="1" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} />
+                                                </label>
+                                                <label className="mission-field-label">
+                                                    최대 반복 횟수
+                                                    <input type="number" className="mission-field-input" min="1" max="20" value={formData.repeat_bonus_max_count} onChange={e => setFormData({ ...formData, repeat_bonus_max_count: Math.min(20, Math.max(1, parseInt(e.target.value) || 1)) })} />
+                                                </label>
+                                            </div>
+                                        )}
+                                    </MissionFormGroup>
+                                </MissionFormStep>
+
+                                <MissionFormStep number={4} optional title="평가와 관리" description="평가 루브릭, 글을 모아 볼 태그, 학생에게 여는 시각을 정해요.">
+                                    <MissionFormGroup title="📊 글쓰기 평가 루브릭">
+                                        <RubricSettings
+                                            bare
+                                            rubric={formData.evaluation_rubric}
+                                            onChange={(evaluationRubric) => setFormData({
+                                                ...formData,
+                                                evaluation_rubric: evaluationRubric
+                                            })}
+                                            isMobile={isMobile}
+                                            onSaveDefaultRubric={handleSaveDefaultRubric}
+                                        />
+                                    </MissionFormGroup>
+
+                                    <MissionFormGroup title="🏷️ 미션 태그">
+                                        <p className="mission-step__hint">태그를 붙이면 학생 글을 낱말별로 모아 볼 수 있어요. 학생에게는 보이지 않아요.</p>
+                                        {formData.tags?.length > 0 && (
+                                            <div className="mission-chip-list">
+                                                {formData.tags.map((tag, index) => (
+                                                    <span className="mission-chip" key={`${tag}-${index}`}>
+                                                        #{tag}
+                                                        <button
+                                                            type="button"
+                                                            aria-label={`${tag} 태그 빼기`}
+                                                            onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) })}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', gap: 'var(--ui-space-2)' }}>
+                                            <input
+                                                type="text"
+                                                className="mission-field-input"
+                                                aria-label="태그 입력"
+                                                placeholder="태그 입력 (엔터 또는 쉼표)"
+                                                value={tagInput}
+                                                onChange={e => setTagInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ',') {
+                                                        e.preventDefault();
+                                                        handleAddTag(tagInput);
+                                                        setTagInput('');
+                                                    }
                                                 }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: '10px',
-                                                    background: formData.allow_comments ? '#E8F6F3' : 'var(--ui-page)',
-                                                    padding: '12px',
-                                                    borderRadius: '16px',
-                                                    cursor: 'pointer',
-                                                    border: formData.allow_comments ? '2px solid #1ABC9C' : '2px solid var(--ui-ink-subtle)',
-                                                    transition: 'all 0.2s',
-                                                    marginTop: '8px'
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                title="이 태그를 붙이고 자주 쓰는 태그에도 남겨요"
+                                                style={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
+                                                onClick={() => {
+                                                    saveFrequentTag(tagInput.trim().replace(',', ''));
+                                                    handleAddTag(tagInput);
+                                                    setTagInput('');
                                                 }}
                                             >
-                                                <span style={{ fontSize: '1.1rem' }}>
-                                                    {formData.allow_comments ? '💬' : '🔒'}
-                                                </span>
-                                                <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : 'var(--ui-ink-muted)' }}>
-                                                    {formData.peer_reading_enabled === false ? '선생님만 읽는 과제라 댓글도 꺼져요' : formData.allow_comments ? '친구 댓글 허용함' : '댓글 기능 끄기'}
-                                                </span>
-                                            </div>
+                                                ⭐ 저장
+                                            </Button>
                                         </div>
-
-                                        {/* 구분선 (Desktop only) */}
-                                        {!isMobile && <div style={{ width: '1px', alignSelf: 'stretch', background: 'var(--ui-border)', margin: '0 8px' }} />}
-
-                                        {/* (Right) 포인트 보상 설정 */}
-                                        <div style={{ flex: 1, width: '100%' }}>
-                                            <label style={{ fontSize: 'var(--ui-text-md)', color: '#F39C12', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                                <span style={{ fontSize: '1.1rem' }}>💰</span> 포인트 보상 설정
-                                            </label>
-
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                                {/* 기본 보상 */}
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    background: '#FFFDF0',
-                                                    padding: '10px 14px',
-                                                    borderRadius: '16px',
-                                                    border: '1px solid #F9E79F'
-                                                }}>
-                                                    <span style={{ fontSize: 'var(--ui-text-md)', color: '#B7950B', fontWeight: 'bold' }}>기본 보상</span>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <input
-                                                            type="number"
-                                                            step="100"
-                                                            value={formData.base_reward}
-                                                            onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })}
-                                                            style={{
-                                                                width: '90px',
-                                                                padding: '6px',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #FDEBD0',
-                                                                fontSize: 'var(--ui-text-lg)',
-                                                                fontWeight: 'bold',
-                                                                textAlign: 'right',
-                                                                color: '#D35400',
-                                                                background: 'white'
-                                                            }}
-                                                        />
-                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: '900', color: '#D35400' }}>P</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* 보너스 조건 */}
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    background: '#FFFDF0',
-                                                    padding: '10px 14px',
-                                                    borderRadius: '16px',
-                                                    border: '1px solid #F9E79F',
-                                                    flexWrap: 'wrap',
-                                                    gap: '8px'
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ fontSize: '1.1rem' }}>⚡</span>
-                                                        <input
-                                                            type="number"
-                                                            step="100"
-                                                            value={formData.bonus_threshold}
-                                                            onChange={e => setFormData({ ...formData, bonus_threshold: parseInt(e.target.value) || 0 })}
-                                                            style={{
-                                                                width: '60px',
-                                                                padding: '6px',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #FDEBD0',
-                                                                fontSize: 'var(--ui-text-md)',
-                                                                fontWeight: 'bold',
-                                                                textAlign: 'center',
-                                                                background: 'white'
-                                                            }}
-                                                        />
-                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: 'var(--ui-ink-muted)', fontWeight: 'bold' }}>자 추가 작성 시</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#B7950B' }}>+</span>
-                                                        <input
-                                                            type="number"
-                                                            step="10"
-                                                            value={formData.bonus_reward}
-                                                            onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })}
-                                                            style={{
-                                                                width: '60px',
-                                                                padding: '6px',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #FDEBD0',
-                                                                fontSize: 'var(--ui-text-md)',
-                                                                fontWeight: 'bold',
-                                                                textAlign: 'center',
-                                                                color: '#D35400',
-                                                                background: 'white'
-                                                            }}
-                                                        />
-                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#D35400' }}>P</span>
-                                                    </div>
-                                                </div>
-
-                                                <div style={{
-                                                    background: '#FFFDF0', padding: '12px 14px', borderRadius: '16px',
-                                                    border: '1px solid #F9E79F', display: 'flex', flexDirection: 'column', gap: '10px'
-                                                }}>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--ui-text-sm)', color: '#7F6000', fontWeight: 'bold' }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={Boolean(formData.repeat_bonus_enabled)}
-                                                            onChange={e => setFormData({ ...formData, repeat_bonus_enabled: e.target.checked })}
-                                                        />
-                                                        글자 수 구간별 반복 보너스 사용
-                                                    </label>
-                                                    {formData.repeat_bonus_enabled && (
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
-                                                                반복 글자 수
-                                                                <input type="number" min="1" max="20000" step="1" value={formData.repeat_bonus_threshold} onChange={e => setFormData({ ...formData, repeat_bonus_threshold: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
-                                                            </label>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
-                                                                구간당 포인트
-                                                                <input type="number" min="1" max="10000" step="1" value={formData.repeat_bonus_reward} onChange={e => setFormData({ ...formData, repeat_bonus_reward: Math.max(1, parseInt(e.target.value) || 1) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
-                                                            </label>
-                                                            <label style={{ fontSize: 'var(--ui-text-xs)', color: 'var(--ui-ink-muted)' }}>
-                                                                최대 반복 횟수
-                                                                <input type="number" min="1" max="20" value={formData.repeat_bonus_max_count} onChange={e => setFormData({ ...formData, repeat_bonus_max_count: Math.min(20, Math.max(1, parseInt(e.target.value) || 1)) })} style={{ width: '100%', marginTop: '4px', padding: '7px', borderRadius: '8px', border: '2px solid #FDEBD0' }} />
-                                                            </label>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                        {frequentTags?.length > 0 && (
+                                            <div className="mission-chip-list" aria-label="자주 쓰는 태그 — 누르면 붙어요">
+                                                {frequentTags.map((tag) => (
+                                                    <span
+                                                        className="mission-chip is-suggestion"
+                                                        key={tag}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={() => handleAddTag(tag)}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(tag); }}
+                                                    >
+                                                        + #{tag}
+                                                        <button
+                                                            type="button"
+                                                            aria-label={`${tag} 자주 쓰는 태그에서 지우기`}
+                                                            onClick={(e) => { e.stopPropagation(); removeFrequentTag(tag); }}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </span>
+                                                ))}
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                        )}
+                                    </MissionFormGroup>
 
-                                <RubricSettings
-                                    rubric={formData.evaluation_rubric}
-                                    onChange={(evaluationRubric) => setFormData({
-                                        ...formData,
-                                        evaluation_rubric: evaluationRubric
-                                    })}
-                                    isMobile={isMobile}
-                                    onSaveDefaultRubric={handleSaveDefaultRubric}
-                                />
-
-                                {/*
-                                  * 예약 공개. 켜면 정한 시각까지 학생에게 보이지 않는다.
-                                  * 숨기는 방법이 보관과 같은 스위치라, 학생 쪽 조회·쓰기는 이미 막혀 있다.
-                                  */}
-                                <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--ui-page)', border: '1px solid var(--ui-border)' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
+                                    {/*
+                                      * 예약 공개. 켜면 정한 시각까지 학생에게 보이지 않는다.
+                                      * 숨기는 방법이 보관과 같은 스위치라, 학생 쪽 조회·쓰기는 이미 막혀 있다.
+                                      */}
+                                    <MissionFormGroup title="🕒 여는 시각">
+                                        <FeatureAvailabilitySwitch
                                             checked={Boolean(formData.schedule_at)}
-                                            onChange={(event) => setFormData({
+                                            onChange={(next) => setFormData({
                                                 ...formData,
-                                                schedule_at: event.target.checked ? getMissionScheduleInputMin() : ''
+                                                schedule_at: next ? getMissionScheduleInputMin() : ''
                                             })}
+                                            ariaLabel="정한 시각에 저절로 열기"
+                                            enabledLabel="정한 시각에 저절로 열어요"
+                                            disabledLabel="저장하면 바로 열어요"
+                                            enabledDescription="그때까지 학생에게 보이지 않아요."
+                                            disabledDescription="켜면 날짜와 시각을 정해 저절로 열 수 있어요."
+                                            fullWidth
                                         />
-                                        🕒 정한 시각에 저절로 열기
-                                    </label>
-                                    {formData.schedule_at ? (
-                                        <div style={{ marginTop: '10px' }}>
-                                            <input
-                                                type="datetime-local"
-                                                value={formData.schedule_at}
-                                                min={getMissionScheduleInputMin()}
-                                                onChange={(event) => setFormData({ ...formData, schedule_at: event.target.value })}
-                                                style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--ui-border)', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}
-                                            />
-                                            {getMissionScheduleError(formData.schedule_at) ? (
-                                                <p style={{ margin: '8px 0 0', color: 'var(--ui-danger)', fontSize: 'var(--ui-text-xs)', fontWeight: 'bold' }}>
-                                                    {getMissionScheduleError(formData.schedule_at)}
-                                                </p>
-                                            ) : (
-                                                <p style={{ margin: '8px 0 0', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-xs)', lineHeight: 1.6 }}>
-                                                    그때까지 학생에게 보이지 않아요. 시각은 한국 시간이고, 확인이
-                                                    {' '}{MISSION_SCHEDULE_TICK_SECONDS}초마다 돌아 최대 1분쯤 늦게 열릴 수 있어요.
-                                                </p>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <p style={{ margin: '8px 0 0', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-xs)' }}>
-                                            끄면 저장하는 순간 학생에게 열려요.
-                                        </p>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setIsPreviewOpen(true)}
-                                        style={{ flex: isMobile ? '1 1 100%' : 1, height: '54px', borderRadius: '14px', fontWeight: 'bold' }}
-                                    >
+                                        {formData.schedule_at ? (
+                                            <div>
+                                                <input
+                                                    type="datetime-local"
+                                                    className="mission-field-input"
+                                                    aria-label="여는 날짜와 시각"
+                                                    value={formData.schedule_at}
+                                                    min={getMissionScheduleInputMin()}
+                                                    onChange={(event) => setFormData({ ...formData, schedule_at: event.target.value })}
+                                                />
+                                                {getMissionScheduleError(formData.schedule_at) ? (
+                                                    <p style={{ margin: '8px 0 0', color: 'var(--ui-danger)', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
+                                                        {getMissionScheduleError(formData.schedule_at)}
+                                                    </p>
+                                                ) : (
+                                                    <p className="mission-step__hint">
+                                                        시각은 한국 시간이고, 확인이 {MISSION_SCHEDULE_TICK_SECONDS}초마다 돌아 최대 1분쯤 늦게 열릴 수 있어요.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                    </MissionFormGroup>
+                                </MissionFormStep>
+
+                                <MissionFormActions summary={missionSummary}>
+                                    <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)}>
                                         👀 학생에게 어떻게 보일까요?
                                     </Button>
                                     {isEditing && (
-                                        <Button
-                                            type="button"
-                                            onClick={handleCancelEdit}
-                                            style={{ flex: 1, backgroundColor: 'var(--ui-ink-subtle)', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
-                                        >
+                                        <Button type="button" variant="ghost" onClick={handleCancelEdit}>
                                             취소하기
                                         </Button>
                                     )}
-                                    <Button type="submit" style={{ flex: 2, backgroundColor: isEditing ? '#F39C12' : '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>
+                                    <Button type="submit">
                                         {isEditing ? '수정 완료 ✏️' : (formData.schedule_at ? '예약하기 🕒' : '글쓰기 미션 공개하기 🚀')}
                                     </Button>
-                                </div>
+                                </MissionFormActions>
                             </form >
                             )}
                         </Card >

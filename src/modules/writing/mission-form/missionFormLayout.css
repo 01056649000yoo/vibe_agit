@@ -1,0 +1,252 @@
+/*
+ * 과제 만들기 화면 공통 틀(2026-10-09). 단계 카드는 모두 같은 표면·테두리·모서리를 쓰고,
+ * 색은 켜져 있는 것과 중요한 단추에만 쓴다. 값은 디자인 토큰(--ui-*)만.
+ */
+.mission-form-steps {
+    display: grid;
+    gap: var(--ui-space-4, 16px);
+}
+
+.mission-step {
+    display: grid;
+    gap: var(--ui-space-4, 16px);
+    padding: var(--ui-space-5, 20px);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg, 16px);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-xs, none);
+}
+
+.mission-step__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--ui-space-3, 12px);
+    padding-bottom: var(--ui-space-3, 12px);
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.mission-step__number {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--ui-radius-pill, 999px);
+    background: var(--ui-primary);
+    color: var(--ui-surface);
+    font-size: var(--ui-text-md);
+    font-weight: 900;
+}
+
+.mission-step__title {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.mission-step__title h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2, 8px);
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-lg);
+    font-weight: 900;
+    text-wrap: balance;
+}
+
+.mission-step__title p {
+    margin: 4px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-compact, 1.45);
+}
+
+.mission-step__chip {
+    padding: 2px 8px;
+    border-radius: var(--ui-radius-pill, 999px);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary);
+    font-size: var(--ui-text-xs);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.mission-step__chip.is-optional {
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
+}
+
+.mission-step__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2, 8px);
+    margin-left: auto;
+}
+
+.mission-step__body {
+    display: grid;
+    gap: var(--ui-space-4, 16px);
+    min-width: 0;
+}
+
+.mission-group {
+    display: grid;
+    gap: var(--ui-space-2, 8px);
+    min-width: 0;
+}
+
+.mission-group + .mission-group {
+    padding-top: var(--ui-space-4, 16px);
+    border-top: 1px dashed var(--ui-border);
+}
+
+.mission-group__title {
+    margin: 0;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    font-weight: 800;
+}
+
+.mission-group__body {
+    display: grid;
+    gap: var(--ui-space-3, 12px);
+    min-width: 0;
+}
+
+.mission-field-label {
+    display: grid;
+    gap: 6px;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+}
+
+.mission-field-label small {
+    color: var(--ui-ink-muted);
+    font-weight: 600;
+}
+
+.mission-field-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--ui-border-strong, var(--ui-border));
+    border-radius: var(--ui-radius-md, 12px);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-text-md);
+    box-sizing: border-box;
+}
+
+.mission-field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: var(--ui-space-3, 12px);
+}
+
+.mission-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mission-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 4px 6px 4px 12px;
+    border: 1px solid var(--ui-primary-border, var(--ui-border));
+    border-radius: var(--ui-radius-pill, 999px);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary);
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+}
+
+.mission-chip.is-suggestion {
+    border-color: var(--ui-border);
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    cursor: pointer;
+}
+
+.mission-chip button {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ui-radius-pill, 999px);
+    background: transparent;
+    color: inherit;
+    font-size: var(--ui-text-md);
+    cursor: pointer;
+}
+
+.mission-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-3, 12px);
+    margin-top: var(--ui-space-2, 8px);
+    padding: var(--ui-space-3, 12px) var(--ui-space-4, 16px);
+    padding-bottom: calc(var(--ui-space-3, 12px) + env(safe-area-inset-bottom, 0px));
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg, 16px);
+    background: var(--ui-surface-raised, var(--ui-surface));
+    box-shadow: var(--ui-shadow-md, 0 4px 16px rgba(15, 23, 42, 0.08));
+}
+
+.mission-actions__summary {
+    display: flex;
+    flex: 1 1 260px;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+}
+
+.mission-actions__summary span {
+    padding: 4px 10px;
+    border-radius: var(--ui-radius-pill, 999px);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mission-actions__buttons {
+    display: flex;
+    flex: 1 1 360px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ui-space-2, 8px);
+}
+
+.mission-actions__buttons > * {
+    min-height: 48px;
+}
+
+@media (max-width: 600px) {
+    .mission-step {
+        padding: var(--ui-space-4, 16px);
+    }
+
+    .mission-actions__buttons > * {
+        flex: 1 1 100%;
+    }
+}
+
+.mission-step__hint {
+    margin: 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-text-sm);
+    line-height: var(--ui-line-compact, 1.45);
+}

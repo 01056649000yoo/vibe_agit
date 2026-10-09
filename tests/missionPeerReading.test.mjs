@@ -46,3 +46,22 @@ test('서버가 정한다: 과제 글 공개 범위는 과제 설정에서, 설�
     assert.match(card, /mission\.peer_reading_enabled === false/);
     assert.match(card, /🔒 선생님만 읽어요/);
 });
+
+test('과제 만드는 화면 네 곳이 같은 틀(번호 단계 카드·아래 고정 줄·공용 스위치)을 쓴다', async () => {
+    const forms = {
+        'src/components/teacher/MissionForm.jsx': 4,
+        'src/modules/writing/mission-types/letter/LetterMissionForm.jsx': 4,
+        'src/modules/writing/mission-types/report/ReportMissionForm.jsx': 4,
+        'src/modules/writing/mission-types/poem/PoemMissionForm.jsx': 4
+    };
+    for (const [form, steps] of Object.entries(forms)) {
+        const source = await readFile(form, 'utf8');
+        assert.equal((source.match(/<MissionFormStep\s/g) || []).length, steps, `${form} 는 단계 카드 ${steps}개`);
+        assert.match(source, /<MissionFormActions/, `${form} 에 아래 고정 줄이 없다`);
+        assert.match(source, /<PeerCommentSwitch/, `${form} 의 댓글 켜기가 공용 스위치가 아니다`);
+        assert.match(source, /<RubricSettings[\s\S]{0,160}bare[\s\S]{0,160}rubric=/, `${form} 는 루브릭을 rubric= 로 넘긴다(편지가 value= 로 넘겨 켜지지 않던 일)`);
+    }
+    // 미션 태그는 ④ 평가와 관리 안에 있다(선생님 결정)
+    const general = await readFile('src/components/teacher/MissionForm.jsx', 'utf8');
+    assert.ok(general.indexOf('🏷️ 미션 태그') > general.indexOf('number={4}'), '미션 태그가 ④ 단계에 있어야 한다');
+});

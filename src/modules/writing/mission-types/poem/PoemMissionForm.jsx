@@ -3,7 +3,8 @@ import { supabase } from '../../../../lib/supabaseClient';
 import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
-import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch } from '../../mission-form/PeerReadingChoice';
+import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
@@ -128,44 +129,63 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                 </div>
             </div>
 
-            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid #DCFCE7', boxSizing: 'border-box' }}>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>시 쓰기 주제 *</span>
-                        <input value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 여름비를 오감으로 표현해 봅시다" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }} />
-                    </label>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>학생 안내 *</span>
-                        <textarea value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="시에서 표현할 장면과 느낌을 안내해주세요." style={{ width: '100%', minHeight: '110px', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.95rem', resize: 'vertical', fontFamily: 'inherit' }} />
-                    </label>
+            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid var(--ui-border)', boxSizing: 'border-box' }}>
+                <form onSubmit={handleSubmit} className="mission-form-steps">
+                    <MissionFormStep number={1} title="무엇을 쓰나요?" description="시 주제와 학생에게 보여 줄 안내를 적어요.">
+                        <label className="mission-field-label">
+                            시 쓰기 주제
+                            <input className="mission-field-input" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 여름비를 오감으로 표현해 봅시다" />
+                        </label>
+                        <label className="mission-field-label">
+                            학생 안내
+                            <textarea className="mission-field-input" value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="시에서 표현할 장면과 느낌을 안내해주세요." style={{ minHeight: '110px', resize: 'vertical', fontFamily: 'inherit' }} />
+                        </label>
+                    </MissionFormStep>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px' }}>
-                        <NumberSetting label="최소 연 수" value={form.min_stanzas} min={1} onChange={(value) => update('min_stanzas', value)} description="학생 화면에 이 수만큼 연 입력칸이 먼저 열립니다." />
-                        <NumberSetting label="연별 최소 행" value={form.min_lines_per_stanza} min={1} onChange={(value) => update('min_lines_per_stanza', value)} description="각 연에 필요한 최소 줄 수입니다." />
-                        <NumberSetting label="완료 포인트" value={form.base_reward} min={0} step={10} onChange={(value) => update('base_reward', value)} description="10P 단위로 조정하며 교사 승인 후 지급합니다." />
-                    </div>
+                    <MissionFormStep number={2} optional title="글의 틀" description="학생 화면에 연별 입력칸이 열려요. 연과 행 수를 정해요.">
+                        <div className="mission-field-row">
+                            <NumberSetting label="최소 연 수" value={form.min_stanzas} min={1} onChange={(value) => update('min_stanzas', value)} description="학생 화면에 이 수만큼 연 입력칸이 먼저 열립니다." />
+                            <NumberSetting label="연별 최소 행" value={form.min_lines_per_stanza} min={1} onChange={(value) => update('min_lines_per_stanza', value)} description="각 연에 필요한 최소 줄 수입니다." />
+                        </div>
+                    </MissionFormStep>
 
-                    <RubricSettings
-                        rubric={form.evaluation_rubric}
-                        onChange={(evaluationRubric) => update('evaluation_rubric', evaluationRubric)}
-                        isMobile={isMobile}
-                        recommendedCodes={['4국05-04', '6국05-05']}
-                    />
+                    <MissionFormStep number={3} title="쓰는 조건" description="함께 읽기와 포인트를 정해요.">
+                        <MissionFormGroup title="👥 함께 읽기">
+                            <div className="mission-field-row">
+                                <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                                <PeerCommentSwitch allowComments={form.allow_comments} peerReadingEnabled={form.peer_reading_enabled} onChange={(next) => update('allow_comments', next)} />
+                            </div>
+                        </MissionFormGroup>
+                        <MissionFormGroup title="💰 포인트">
+                            <NumberSetting label="완료 포인트" value={form.base_reward} min={0} step={10} onChange={(value) => update('base_reward', value)} description="10P 단위로 조정하며 교사 승인 후 지급합니다." />
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                    <MissionFormStep number={4} optional title="평가와 관리" description="평가 루브릭을 정해요.">
+                        <MissionFormGroup title="📊 글쓰기 평가 루브릭">
+                            <RubricSettings
+                                bare
+                                rubric={form.evaluation_rubric}
+                                onChange={(evaluationRubric) => update('evaluation_rubric', evaluationRubric)}
+                                isMobile={isMobile}
+                                recommendedCodes={['4국05-04', '6국05-05']}
+                            />
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <button type="button" disabled={!form.peer_reading_enabled} onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #4ADE80' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDF4' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
-                        {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}
-                    </button>
-
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '10px' }}>
-                        <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)} style={{ minHeight: '52px', flex: 1 }}>
+                    <MissionFormActions summary={[
+                        '시',
+                        `${form.min_stanzas || 1}연 · 연마다 ${form.min_lines_per_stanza || 1}행 이상`,
+                        `${form.base_reward || 0}P`,
+                        form.peer_reading_enabled === false ? '🔒 선생님만 읽음' : (form.allow_comments ? '👀 반 친구가 읽고 댓글' : '👀 반 친구가 읽음')
+                    ]}>
+                        <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)}>
                             👀 학생에게 어떻게 보일까요?
                         </Button>
-                        <Button type="submit" disabled={saving} style={{ minHeight: '52px', flex: 1, background: '#16A34A', color: 'white', fontWeight: '900' }}>
+                        <Button type="submit" disabled={saving}>
                             {saving ? '저장 중...' : mission?.id ? '시 쓰기 미션 수정하기' : '시 쓰기 미션 공개하기'}
                         </Button>
-                    </div>
+                    </MissionFormActions>
                 </form>
             </Card>
 

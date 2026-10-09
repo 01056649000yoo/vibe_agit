@@ -27,9 +27,17 @@ const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.j
 const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
 const TeacherAccountMenuPreview = lazy(() => import('./TeacherAccountMenuPreview.jsx'))
 const StudentInputPreview = lazy(() => import('./StudentInputPreview.jsx'))
+const MissionFormPreview = lazy(() => import('./MissionFormPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'mission-form',
+    icon: '📝',
+    title: '선생님 과제 만들기 창',
+    description: '주제·내용·태그·핵심 질문·세부 설정·루브릭·예약 순서 그대로. 저장·AI 는 부르지 않는다 — 화면 정리를 눈으로 보며 다듬는 곳',
+    Component: MissionFormPreview,
+  }),
   Object.freeze({
     id: 'student-input',
     icon: '✏️',

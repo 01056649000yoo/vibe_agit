@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../../../components/common/Button';
+import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailabilitySwitch';
 import {
     getCurriculumGradeBand,
     getKoreanStandardsForGradeBand,
@@ -59,7 +60,9 @@ const RubricSettings = ({
     onChange,
     isMobile,
     onSaveDefaultRubric,
-    recommendedCodes = []
+    recommendedCodes = [],
+    // 과제 만들기 단계 카드 안에서는 바깥 상자 없이 공용 스위치로(2026-10-09). 다른 화면은 지금 모양 그대로.
+    bare = false
 }) => {
     const normalized = createDefaultEvaluationRubric(rubric);
     const curriculum = normalized.curriculum;
@@ -92,7 +95,7 @@ const RubricSettings = ({
     };
 
     return (
-        <div style={{
+        <div style={bare ? { display: 'grid', gap: '12px' } : {
             background: '#FFF8F0',
             padding: isMobile ? '16px' : '20px',
             borderRadius: '20px',
@@ -105,6 +108,18 @@ const RubricSettings = ({
                 justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap',
                 marginBottom: normalized.use_rubric ? '20px' : 0
             }}>
+                {bare ? (
+                    <FeatureAvailabilitySwitch
+                        checked={normalized.use_rubric}
+                        onChange={(next) => updateRubric({ use_rubric: next })}
+                        ariaLabel="글쓰기 평가 루브릭 사용"
+                        enabledLabel="📊 글쓰기 평가 루브릭 사용 중"
+                        disabledLabel="📊 글쓰기 평가 루브릭 사용 안 함"
+                        enabledDescription="성취도 평가와 2022 개정 국어 성취기준 기반 평어 작성에 연결됩니다."
+                        disabledDescription="켜면 단계별 성취 기준을 정해 평가와 평어에 씁니다."
+                        fullWidth
+                    />
+                ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button
                         type="button"
@@ -134,6 +149,7 @@ const RubricSettings = ({
                         </div>
                     </div>
                 </div>
+                )}
 
                 {normalized.use_rubric && (
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>

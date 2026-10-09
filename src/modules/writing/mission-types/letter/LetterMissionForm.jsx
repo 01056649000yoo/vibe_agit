@@ -4,7 +4,8 @@ import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
 import { DEFAULT_LETTER_PAPER, LETTER_PAPERS, getLetterPaper } from './letterPapers';
-import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch } from '../../mission-form/PeerReadingChoice';
+import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const getInitialForm = (mission) => ({
     title: mission?.title || '',
@@ -113,62 +114,76 @@ const LetterMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 </div>
             </div>
 
-            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid #FCE7F3', boxSizing: 'border-box' }}>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>편지 쓰기 주제 *</span>
-                        <input value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 어버이날, 부모님께 마음을 담아 편지를 써 봅시다" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }} />
-                    </label>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>학생 안내 *</span>
-                        <textarea value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="누구에게, 어떤 마음을 전하는 편지인지 안내해주세요." style={{ width: '100%', minHeight: '110px', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.95rem', resize: 'vertical', fontFamily: 'inherit' }} />
-                    </label>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
-                        <label>
-                            <span style={{ display: 'block', marginBottom: '7px', color: '#475569', fontSize: '0.85rem', fontWeight: '800' }}>하고 싶은 말 최소 글자 수</span>
-                            <input type="number" min="0" step="50" value={form.min_body_chars} onChange={(event) => update('min_body_chars', Math.max(0, Number(event.target.value) || 0))} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }} />
-                            <span style={{ display: 'block', marginTop: '5px', color: '#94A3B8', fontSize: '0.72rem' }}>받는 사람·첫인사·끝인사는 글자 수를 세지 않습니다.</span>
+            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid var(--ui-border)', boxSizing: 'border-box' }}>
+                <form onSubmit={handleSubmit} className="mission-form-steps">
+                    <MissionFormStep number={1} title="무엇을 쓰나요?" description="편지 주제와 학생에게 보여 줄 안내를 적어요.">
+                        <label className="mission-field-label">
+                            편지 쓰기 주제
+                            <input className="mission-field-input" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 어버이날, 부모님께 마음을 담아 편지를 써 봅시다" />
                         </label>
-                        <label>
-                            <span style={{ display: 'block', marginBottom: '7px', color: '#475569', fontSize: '0.85rem', fontWeight: '800' }}>제출 보상 포인트</span>
-                            <input type="number" min="0" step="10" value={form.base_reward} onChange={(event) => update('base_reward', Math.max(0, Number(event.target.value) || 0))} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }} />
+                        <label className="mission-field-label">
+                            학생 안내
+                            <textarea className="mission-field-input" value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="누구에게, 어떤 마음을 전하는 편지인지 안내해주세요." style={{ minHeight: '110px', resize: 'vertical', fontFamily: 'inherit' }} />
                         </label>
-                    </div>
+                    </MissionFormStep>
 
-                    <div style={{ padding: '16px', borderRadius: '16px', background: '#FFF7FB', border: '1px solid #FBCFE8', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div>
-                            <strong style={{ color: '#9D174D', fontSize: '0.92rem' }}>✉️ 편지지 고르기</strong>
-                            <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.78rem' }}>
-                                학생 글을 PDF로 내보낼 때 기본으로 쓰는 편지지입니다. 내보내는 화면에서 그때그때 바꿀 수도 있습니다.
-                            </p>
+                    <MissionFormStep number={2} optional title="글의 틀" description="받는 사람·첫인사·하고 싶은 말·끝인사 칸이 학생에게 나와요. 내보낼 때 쓸 편지지를 골라요.">
+                        <label className="mission-field-label">
+                            ✉️ 편지지
+                            <select className="mission-field-input" value={form.letter_paper} onChange={(event) => update('letter_paper', event.target.value)}>
+                                {LETTER_PAPERS.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.emoji} {option.label}</option>
+                                ))}
+                            </select>
+                            <small>{paper.description} 학생 글을 PDF로 내보낼 때 기본으로 쓰고, 내보내는 화면에서 바꿀 수도 있어요.</small>
+                        </label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--ui-space-2)' }}>
+                            <Button type="button" variant="outline" onClick={handlePrintBlankPaper} loading={printing} loadingText="편지지 여는 중...">
+                                🖨️ 빈 편지지 인쇄하기
+                            </Button>
+                            <span className="mission-step__hint">손으로 옮겨 쓰게 할 때 써요. 글 없이 편지지만 나와요.</span>
                         </div>
-                        <select value={form.letter_paper} onChange={(event) => update('letter_paper', event.target.value)} style={{ padding: '12px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem', background: 'white' }}>
-                            {LETTER_PAPERS.map((option) => (
-                                <option key={option.value} value={option.value}>{option.emoji} {option.label}</option>
-                            ))}
-                        </select>
-                        <p style={{ margin: 0, color: '#64748B', fontSize: '0.8rem' }}>{paper.description}</p>
-                        <Button type="button" onClick={handlePrintBlankPaper} loading={printing} loadingText="편지지 여는 중..." style={{ background: 'white', color: '#9D174D', border: '1px solid #FBCFE8', borderRadius: '12px', fontWeight: 'bold' }}>
-                            🖨️ 빈 편지지 인쇄하기
-                        </Button>
-                        <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>손으로 옮겨 쓰게 할 때 씁니다. 글 없이 편지지만 나옵니다.</span>
-                    </div>
+                    </MissionFormStep>
 
-                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#334155', fontWeight: '700' }}>
-                        <input type="checkbox" checked={form.allow_comments} disabled={!form.peer_reading_enabled} onChange={(event) => update('allow_comments', event.target.checked)} />
-                        친구들이 이 편지에 댓글을 달 수 있게 하기
-                    </label>
+                    <MissionFormStep number={3} title="쓰는 조건" description="분량, 함께 읽기, 포인트를 정해요.">
+                        <MissionFormGroup title="📏 분량">
+                            <label className="mission-field-label">
+                                하고 싶은 말 최소 글자 수
+                                <input className="mission-field-input" type="number" min="0" step="50" value={form.min_body_chars} onChange={(event) => update('min_body_chars', Math.max(0, Number(event.target.value) || 0))} />
+                                <small>받는 사람·첫인사·끝인사는 글자 수를 세지 않아요.</small>
+                            </label>
+                        </MissionFormGroup>
+                        <MissionFormGroup title="👥 함께 읽기">
+                            <div className="mission-field-row">
+                                <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                                <PeerCommentSwitch allowComments={form.allow_comments} peerReadingEnabled={form.peer_reading_enabled} onChange={(next) => update('allow_comments', next)} />
+                            </div>
+                        </MissionFormGroup>
+                        <MissionFormGroup title="💰 포인트">
+                            <label className="mission-field-label">
+                                제출 보상 포인트
+                                <input className="mission-field-input" type="number" min="0" step="10" value={form.base_reward} onChange={(event) => update('base_reward', Math.max(0, Number(event.target.value) || 0))} />
+                            </label>
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <RubricSettings value={form.evaluation_rubric} onChange={(value) => update('evaluation_rubric', value)} isMobile={isMobile} />
+                    <MissionFormStep number={4} optional title="평가와 관리" description="평가 루브릭을 정해요.">
+                        <MissionFormGroup title="📊 글쓰기 평가 루브릭">
+                            <RubricSettings bare rubric={form.evaluation_rubric} onChange={(value) => update('evaluation_rubric', value)} isMobile={isMobile} />
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <MissionFormActions summary={[
+                        '편지',
+                        `하고 싶은 말 ${form.min_body_chars || 0}자 이상`,
+                        `${form.base_reward || 0}P`,
+                        form.peer_reading_enabled === false ? '🔒 선생님만 읽음' : (form.allow_comments ? '👀 반 친구가 읽고 댓글' : '👀 반 친구가 읽음')
+                    ]}>
                         <Button type="button" variant="ghost" onClick={onBack}>취소</Button>
                         <Button type="submit" loading={saving} loadingText="저장 중...">
                             {mission?.id ? '편지 쓰기 미션 수정' : '편지 쓰기 미션 공개하기'}
                         </Button>
-                    </div>
+                    </MissionFormActions>
                 </form>
             </Card>
         </div>

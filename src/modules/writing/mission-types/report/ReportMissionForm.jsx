@@ -10,7 +10,8 @@ import {
     REPORT_MAX_SECTIONS,
 } from './reportContent';
 import { REPORT_IMAGE_MAX_EDGE, REPORT_IMAGE_MAX_STORED_BYTES } from './reportImageApi';
-import PeerReadingChoice from '../../mission-form/PeerReadingChoice';
+import PeerReadingChoice, { PeerCommentSwitch } from '../../mission-form/PeerReadingChoice';
+import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
@@ -64,15 +65,15 @@ const SectionTemplateEditor = ({ sections, onChange, isMobile }) => {
     };
 
     return (
-        <section style={{ padding: isMobile ? '16px' : '20px', borderRadius: '18px', border: '1px solid #99F6E4', background: '#F0FDFA' }}>
-            <div style={{ marginBottom: '12px' }}>
-                <strong style={{ display: 'block', color: '#115E59' }}>학생에게 처음 열어줄 내용 칸</strong>
-                <span style={{ color: '#64748B', fontSize: '0.78rem' }}>학생은 소제목을 고치고 칸을 더하거나 순서를 바꿀 수 있습니다.</span>
+        <section style={{ display: 'grid', gap: 'var(--ui-space-2)' }}>
+            <div>
+                <strong style={{ display: 'block', color: 'var(--ui-ink)' }}>학생에게 처음 열어줄 내용 칸</strong>
+                <span className="mission-step__hint">학생은 소제목을 고치고 칸을 더하거나 순서를 바꿀 수 있어요.</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                 {sections.map((section, index) => (
-                    <div key={`report-default-${index}`} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '42px minmax(0,1fr) auto', gap: '7px', alignItems: 'center', padding: '9px', borderRadius: '13px', background: 'white', border: '1px solid #CCFBF1' }}>
-                        <strong style={{ color: '#0F766E', textAlign: 'center' }}>{index + 1}</strong>
+                    <div key={`report-default-${index}`} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '42px minmax(0,1fr) auto', gap: '7px', alignItems: 'center', padding: '9px', borderRadius: 'var(--ui-radius-md)', background: 'var(--ui-surface-muted)', border: '1px solid var(--ui-border)' }}>
+                        <strong style={{ color: 'var(--ui-primary)', textAlign: 'center' }}>{index + 1}</strong>
                         <input
                             value={section}
                             onChange={(event) => updateTitle(index, event.target.value)}
@@ -91,7 +92,7 @@ const SectionTemplateEditor = ({ sections, onChange, isMobile }) => {
                 type="button"
                 onClick={() => onChange([...sections, `내용 ${sections.length + 1}`])}
                 disabled={sections.length >= REPORT_MAX_SECTIONS}
-                style={{ width: '100%', marginTop: '10px', padding: '11px', border: '2px dashed #5EEAD4', borderRadius: '12px', background: 'white', color: '#0F766E', cursor: 'pointer', fontWeight: '900' }}
+                style={{ width: '100%', minHeight: '44px', padding: '11px', border: '2px dashed var(--ui-border-strong)', borderRadius: 'var(--ui-radius-md)', background: 'var(--ui-surface)', color: 'var(--ui-primary)', cursor: 'pointer', fontWeight: '900' }}
             >＋ 기본 내용 칸 추가</button>
         </section>
     );
@@ -206,45 +207,66 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 </div>
             </div>
 
-            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid #CCFBF1', boxSizing: 'border-box' }}>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>보고할 주제 *</span>
-                        <input value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 우리 학교 주변 생태를 관찰해 보고합시다" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }} />
-                    </label>
-                    <label>
-                        <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>학생 안내 *</span>
-                        <textarea value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="무엇을 관찰·조사하고 어떤 사진과 내용을 넣을지 안내해주세요." style={{ width: '100%', minHeight: '110px', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.95rem', resize: 'vertical', fontFamily: 'inherit' }} />
-                    </label>
+            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid var(--ui-border)', boxSizing: 'border-box' }}>
+                <form onSubmit={handleSubmit} className="mission-form-steps">
+                    <MissionFormStep number={1} title="무엇을 쓰나요?" description="보고할 주제와 학생에게 보여 줄 안내를 적어요.">
+                        <label className="mission-field-label">
+                            보고할 주제
+                            <input className="mission-field-input" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 우리 학교 주변 생태를 관찰해 보고합시다" />
+                        </label>
+                        <label className="mission-field-label">
+                            학생 안내
+                            <textarea className="mission-field-input" value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="무엇을 관찰·조사하고 어떤 사진과 내용을 넣을지 안내해주세요." style={{ minHeight: '110px', resize: 'vertical', fontFamily: 'inherit' }} />
+                        </label>
+                    </MissionFormStep>
 
-                    <SectionTemplateEditor sections={form.default_sections} onChange={(value) => update('default_sections', value)} isMobile={isMobile} />
+                    <MissionFormStep number={2} optional title="글의 틀" description="학생이 글·사진 칸을 더하고 순서를 바꾸는 보고서 틀이에요. 처음 열어 줄 칸과 사진 수를 정해요.">
+                        <SectionTemplateEditor sections={form.default_sections} onChange={(value) => update('default_sections', value)} isMobile={isMobile} />
+                        <div className="mission-field-row">
+                            <NumberSetting label="최소 완성 칸" value={form.min_sections} min={1} max={REPORT_MAX_SECTIONS} onChange={(value) => update('min_sections', value)} description="내용을 써야 하는 최소 칸 수입니다." />
+                            <NumberSetting label="사진 수 제한" value={form.max_images} min={1} max={REPORT_MAX_IMAGES} onChange={(value) => update('max_images', value)} description="사진은 최대 3장까지 허용합니다." />
+                        </div>
+                    </MissionFormStep>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
-                        <NumberSetting label="최소 완성 칸" value={form.min_sections} min={1} max={REPORT_MAX_SECTIONS} onChange={(value) => update('min_sections', value)} description="내용을 써야 하는 최소 칸 수입니다." />
-                        <NumberSetting label="사진 수 제한" value={form.max_images} min={1} max={REPORT_MAX_IMAGES} onChange={(value) => update('max_images', value)} description="사진은 최대 3장까지 허용합니다." />
-                        <NumberSetting label="최소 글자 수" value={form.min_chars} min={0} max={10000} step={10} onChange={(value) => update('min_chars', value)} description="모든 내용 칸의 글을 합쳐 계산합니다." />
-                        <NumberSetting label="완료 포인트" value={form.base_reward} min={0} max={10000} step={10} onChange={(value) => update('base_reward', value)} description="교사 승인 후 지급합니다." />
-                    </div>
+                    <MissionFormStep number={3} title="쓰는 조건" description="분량, 함께 읽기, 포인트를 정해요.">
+                        <MissionFormGroup title="📏 분량">
+                            <NumberSetting label="최소 글자 수" value={form.min_chars} min={0} max={10000} step={10} onChange={(value) => update('min_chars', value)} description="모든 내용 칸의 글을 합쳐 계산합니다." />
+                        </MissionFormGroup>
+                        <MissionFormGroup title="👥 함께 읽기">
+                            <div className="mission-field-row">
+                                <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                                <PeerCommentSwitch allowComments={form.allow_comments} peerReadingEnabled={form.peer_reading_enabled} onChange={(next) => update('allow_comments', next)} />
+                            </div>
+                        </MissionFormGroup>
+                        <MissionFormGroup title="💰 포인트">
+                            <NumberSetting label="완료 포인트" value={form.base_reward} min={0} max={10000} step={10} onChange={(value) => update('base_reward', value)} description="교사 승인 후 지급합니다." />
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <RubricSettings
-                        rubric={form.evaluation_rubric}
-                        onChange={(evaluationRubric) => update('evaluation_rubric', evaluationRubric)}
-                        isMobile={isMobile}
-                        recommendedCodes={['4국03-02', '6국03-01']}
-                    />
+                    <MissionFormStep number={4} optional title="평가와 관리" description="평가 루브릭을 정해요.">
+                        <MissionFormGroup title="📊 글쓰기 평가 루브릭">
+                            <RubricSettings
+                                bare
+                                rubric={form.evaluation_rubric}
+                                onChange={(evaluationRubric) => update('evaluation_rubric', evaluationRubric)}
+                                isMobile={isMobile}
+                                recommendedCodes={['4국03-02', '6국03-01']}
+                            />
+                        </MissionFormGroup>
+                    </MissionFormStep>
 
-                    <PeerReadingChoice enabled={form.peer_reading_enabled} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
-
-                    <button type="button" disabled={!form.peer_reading_enabled} onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #2DD4BF' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDFA' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
-                        {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}
-                    </button>
-
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '10px' }}>
-                        <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)} style={{ minHeight: '52px', flex: 1 }}>👀 학생 화면 미리보기</Button>
-                        <Button type="submit" disabled={saving} style={{ minHeight: '52px', flex: 1, background: '#0F766E', color: 'white', fontWeight: '900' }}>
+                    <MissionFormActions summary={[
+                        '보고하는 글',
+                        `${form.min_sections || 1}칸 이상`,
+                        `${form.min_chars || 0}자 이상`,
+                        `${form.base_reward || 0}P`,
+                        form.peer_reading_enabled === false ? '🔒 선생님만 읽음' : (form.allow_comments ? '👀 반 친구가 읽고 댓글' : '👀 반 친구가 읽음')
+                    ]}>
+                        <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)}>👀 학생 화면 미리보기</Button>
+                        <Button type="submit" disabled={saving}>
                             {saving ? '저장 중...' : mission?.id ? '보고 과제 수정하기' : '보고 과제 공개하기'}
                         </Button>
-                    </div>
+                    </MissionFormActions>
                 </form>
             </Card>
 

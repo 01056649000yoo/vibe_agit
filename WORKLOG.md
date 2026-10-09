@@ -22,6 +22,11 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-09 — 과제 만들기 화면 정리: 네 화면을 같은 단계 틀로 (Claude)
+- **한 일**: 선생님 요청(칸마다 비슷한데 꾸밈이 달라 산만). 공용 `MissionFormStep`·`MissionFormGroup`·`MissionFormActions`(번호 단계 카드·묶음 이름표·아래 고정 줄 요약)를 만들어 일반·편지·보고서·시 과제 화면을 ① 무엇을 쓰나요 ② 생각 돕기/글의 틀 ③ 쓰는 조건 ④ 평가와 관리로 재배치. 선생님 결정: 미션 태그는 ④로, 선택 단계도 접지 않고 펼침. 켜기는 모두 공용 `FeatureAvailabilitySwitch`(핵심 질문·친구 읽기·댓글·반복 보너스·루브릭·예약), 루브릭에 `bare`. [원인: 편지 화면이 루브릭에 `value=` 로 넘겨 켜도 반영되지 않았음 — 함께 고침]
+- **변경**: `mission-form/MissionFormStep.jsx`·`missionFormLayout.css`, `PeerReadingChoice`(공용 스위치·`PeerCommentSwitch`), `RubricSettings`(bare), `MissionForm.jsx`(1,228 → 약 980줄), 편지·보고서·시 폼, 실험실 `?dev-lab=mission-form`(네 화면 탭), 검사 1개, v1.26.7.
+- **결과/검증**: 저장 값·흐름 변화 없음. 단위 1,574·렌더 89·빌드 통과, 실험실에서 PC·휴대폰 찍어 봄·루브릭 켜기·선생님만 읽기 → 댓글 잠김·예약 → 날짜 칸·요약 줄 확인.
+- **남은 것 / 다음**: 선생님 확인 뒤 배포. 공지 초안 확인 대기.
 ## 2026-10-09 — 회색 점선 전체 기본 켬 · 과제 "선생님만 읽기" · 맞춤법 한 달 자동 업데이트 (Claude)
 - **한 일**: 선생님 결정 세 가지. ① 회색 점선 기본 켬 + 기존 827개 학급에 넣음(동시 작성 최대 약 200명 → 초당 15~20건, 창구 여유 8배). ② 과제마다 `선생님만 글을 읽어요`: 과제에 `peer_reading_enabled`, 끄면 서버가 그 과제 글을 visibility=private 로 — 친구 직접 읽기(RLS)·학급 피드·댓글·공감·전시관/이웃 후보가 이미 visibility 로 거르므로 저절로 가려지고 선생님 화면은 그대로. 설정을 바꾸면 이미 낸 글도 따라감, 끄면 친구 댓글도 꺼짐, 학생 과제 카드 `🔒 선생님만 읽어요`. 네 화면(일반·편지·보고서·시)은 공용 단추 하나. ③ 한 달 자동 업데이트: 매달 1일 05:40 회색 점선 고르기·제안대로 고쳐짐·선생님 교정 놓침을 모아 관문(2학급·3번·사전·모의 실행)을 지난 것만 공통 자료로(50개, `monthly`), 텔레그램 요약. 미리 돌림: 후보 2,432 → 게시 50 · 보류 2,382.
 - **변경**: `20261384`~`20261387`(+스모크 1), `PeerReadingChoice`, `MissionList`, `useMissionManager`·`pastMission`, `scripts/spelling-monthly-update.mjs`, `docs/SPELLING_MONTHLY_UPDATE.md`, 관리자 `🗓️ 한 달 자동` 표시, 활용 안내서, 상태 알림 줄, 검사 2개, v1.26.6. git 밖: `~/Library/LaunchAgents/com.agit.spelling-monthly-update.plist`.
