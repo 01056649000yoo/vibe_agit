@@ -28,9 +28,17 @@ const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
 const TeacherAccountMenuPreview = lazy(() => import('./TeacherAccountMenuPreview.jsx'))
 const StudentInputPreview = lazy(() => import('./StudentInputPreview.jsx'))
 const MissionFormPreview = lazy(() => import('./MissionFormPreview.jsx'))
+const LabActivitiesPreview = lazy(() => import('./LabActivitiesPreview.jsx'))
 const TeacherTourLiveHook = lazy(() => import('./TeacherTourPreview.jsx').then((m) => ({ default: m.TeacherTourLiveHook })))
 
 export const DEV_LAB_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'lab-activities',
+    icon: '🧪',
+    title: '학생 연구소 활동 목록',
+    description: '진행 중·완료·종료됐지만 친구 개요 모음이 열린 카드(👀 친구 개요 보기). 가짜 자료로만 그린다',
+    Component: LabActivitiesPreview,
+  }),
   Object.freeze({
     id: 'mission-form',
     icon: '📝',

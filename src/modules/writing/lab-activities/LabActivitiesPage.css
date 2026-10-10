@@ -185,6 +185,7 @@
 .lab-activity-card__badges em { background: #f1f5f9; color: #475569; }
 .lab-activity-card__badges em[data-status="in_progress"] { background: #fff7ed; color: #c2410c; }
 .lab-activity-card__badges em[data-status="done"] { background: #ecfdf5; color: #047857; }
+.lab-activity-card__badges em[data-status="peer_board"] { background: var(--ui-success-soft); color: var(--ui-success); }
 
 .lab-activity-card h2 {
     margin: 0;

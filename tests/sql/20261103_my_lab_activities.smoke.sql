@@ -68,8 +68,10 @@ BEGIN
         FROM public.get_my_lab_activities_v1(50, NULL, NULL) activity
         JOIN writing_helper.rooms room ON room.id = activity.id
         WHERE room.agit_class_id IS DISTINCT FROM v_student.class_id
-          OR room.is_active IS DISTINCT FROM TRUE
-          OR (room.expires_at IS NOT NULL AND room.expires_at <= NOW())
+          -- 종료된 방은 친구 개요 모음이 열려 있을 때만(20261393)
+          OR ((room.is_active IS DISTINCT FROM TRUE
+               OR (room.expires_at IS NOT NULL AND room.expires_at <= NOW()))
+              AND activity.peer_board_until IS NULL)
           OR activity.activity_type <> ALL(ARRAY[
               'outline_builder',
               'question_generator',

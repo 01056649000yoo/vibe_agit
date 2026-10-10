@@ -16,7 +16,10 @@ const normalizeActivity = (row) => {
         status: ALLOWED_STATUSES.has(row.participation_status)
             ? row.participation_status
             : 'not_started',
-        hasMore: row.has_more === true
+        hasMore: row.has_more === true,
+        // 종료된 개요짜기도 친구 개요 모음이 열린 동안 목록에 온다(20261393). 그때는 보기 전용.
+        roomActive: row.room_is_active !== false,
+        peerBoardUntil: row.peer_board_until || null
     };
 };
 

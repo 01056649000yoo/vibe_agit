@@ -19,6 +19,9 @@ const STATUS_META = Object.freeze({
     done: { label: '완료', action: '결과 보기' }
 });
 
+// 종료됐지만 친구 개요 모음이 열린 활동(20261393) — 쓰기 없이 친구 개요만 본다.
+const PEER_BOARD_META = Object.freeze({ label: '친구 개요 모음', action: '친구 개요 보기' });
+
 const formatExpiry = (value) => {
     if (!value) return null;
     const date = new Date(value);
@@ -67,7 +70,7 @@ const LabActivitiesPage = ({ onBack }) => {
 
     // 머리말에 보여 줄 요약. 목록을 이미 받아 왔으므로 따로 조회하지 않는다(성능 계약).
     // 더 불러오기 전이면 화면에 있는 것만 세므로 `hasMore` 일 때는 `+` 를 붙여 정확히 말한다.
-    const openCount = items.filter((item) => item.status !== 'done').length;
+    const openCount = items.filter((item) => item.roomActive && item.status !== 'done').length;
     const doneCount = items.filter((item) => item.status === 'done').length;
 
     const openActivity = (activityId) => {
@@ -143,8 +146,12 @@ const LabActivitiesPage = ({ onBack }) => {
                 <div className="lab-activities-page__list">
                     {items.map((item) => {
                         const activityMeta = ACTIVITY_META[item.activityType] || ACTIVITY_META.outline_builder;
-                        const statusMeta = STATUS_META[item.status] || STATUS_META.not_started;
+                        const peerBoardOnly = !item.roomActive;
+                        const statusMeta = peerBoardOnly
+                            ? PEER_BOARD_META
+                            : STATUS_META[item.status] || STATUS_META.not_started;
                         const expiry = formatExpiry(item.expiresAt);
+                        const peerBoardUntil = formatExpiry(item.peerBoardUntil);
 
                         return (
                             <article key={item.id} className={`lab-activity-card tone-${activityMeta.tone}`}>
@@ -152,11 +159,15 @@ const LabActivitiesPage = ({ onBack }) => {
                                 <div className="lab-activity-card__body">
                                     <div className="lab-activity-card__badges">
                                         <span>{activityMeta.label}</span>
-                                        <em data-status={item.status}>{statusMeta.label}</em>
+                                        <em data-status={peerBoardOnly ? 'peer_board' : item.status}>
+                                            {peerBoardOnly ? '👀 ' : ''}{statusMeta.label}
+                                        </em>
                                     </div>
                                     <h2>{item.title}</h2>
                                     {item.topic && <p>주제: {item.topic}</p>}
-                                    {expiry && <small>{expiry}까지 참여할 수 있어요</small>}
+                                    {peerBoardOnly
+                                        ? <small>활동은 끝났어요{peerBoardUntil ? ` · ${peerBoardUntil}까지 친구 개요를 볼 수 있어요` : ''}</small>
+                                        : expiry && <small>{expiry}까지 참여할 수 있어요</small>}
                                 </div>
                                 <button type="button" onClick={() => openActivity(item.id)}>
                                     {statusMeta.action}

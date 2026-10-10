@@ -211,3 +211,17 @@ test('학생 연구소 메뉴는 홈 추가 조회 없이 열 때만 우리 반 
     assert.match(labActivitiesPage, /window\.location\.assign\(`\/lab\/room\/\$\{/);
     assert.doesNotMatch(labActivitiesPage, /setInterval|\.channel\(|postgres_changes/);
 });
+
+test('종료된 개요짜기는 친구 개요 모음이 열린 동안만 학생 목록에 보기 전용으로 보인다(2026-10-11)', async () => {
+    const [migration, api, page] = await Promise.all([
+        readFile('supabase/migrations/20261393_lab_activities_peer_board.sql', 'utf8'),
+        readFile('src/modules/writing/lab-activities/api.js', 'utf8'),
+        readFile('src/modules/writing/lab-activities/LabActivitiesPage.jsx', 'utf8')
+    ]);
+    assert.match(migration, /room\.is_active IS TRUE AND \(room\.expires_at IS NULL OR room\.expires_at > NOW\(\)\)\)\s*OR board\.until IS NOT NULL/);
+    assert.match(migration, /b\.revoked_at IS NULL[\s\S]{0,80}link\.is_active[\s\S]{0,80}link\.expires_at > NOW\(\)/, '샘링크 링크가 마감의 원본');
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_my_lab_activities_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.match(api, /roomActive: row\.room_is_active !== false/);
+    assert.match(page, /친구 개요 보기/);
+    assert.match(page, /item\.roomActive && item\.status !== 'done'/, '보기 전용은 할 일 수에 세지 않는다');
+});

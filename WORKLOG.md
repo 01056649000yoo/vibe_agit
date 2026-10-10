@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-11 — 친구 개요 모음: 세 줄·질문 색·종료한 활동도 학생 목록에 (Claude)
+- **한 일**: 선생님 요청 셋. ① 세 칸 나란히 → 위에서 아래로 세 줄, 한 줄 안 질문은 나란히(최대 3). ② 질문은 옅은 파란 띠·파란 글씨. ③ 종료한 개요짜기도 친구 개요 모음을 켜면 학생 목록에 `👀 친구 개요 모음 · …까지`(보기 전용)로 나타나고, 들어가면 쓰기 대신 판, 기간이 지나거나 끄면 사라짐 — `get_my_lab_activities_v1` 에 `room_is_active`·`peer_board_until`(샘링크 링크가 원본), 연구소 입장에서 종료 방 + 열린 판이면 `peerBoardToken`. 화면 확인은 운영 자료를 바꾸지 않고 DB 읽기·가짜 응답으로만(PITFALLS 10-11).
+- **변경**: 아지트 `20261393`(+스모크, `20261103` 스모크를 새 규칙에 맞춤)·`lab-activities/api.js`·`LabActivitiesPage.jsx/.css`·`dev/LabActivitiesPreview.jsx`·`labSsoIntegration` 검사·FEATURE_MAP v1.26.14. 연구소 `board-client.tsx`·globals.css·`lab-student-session.ts`·`room/[id]/page.tsx`·`student-actions.ts`·guide.ts·검사.
+- **결과/검증**: 스모크(판 없음 안 보임·켜면 보임·만료·끄기·진행 중 그대로) 통과, 연구소 검사 112·빌드, 아지트 검사. 노트북 세 크기 13/13 한 화면, 휴대폰 겹침 없음, 학생 목록 미리보기 3장·가로 넘침 0.
+- **남은 것 / 다음**: 선생님 `배포` 때 `20261393` 적용 → 연구소·아지트 푸시(마이그레이션 → 배포 순서).
+
 ## 2026-10-11 — 친구 개요 모음 한 명씩 보기: 세 칸·글자 크기 (Claude)
 - **한 일**: 선생님 점검 요청 — 가운데 한 줄이라 긴 개요는 내려야 했고 글씨가 너무 컸다. 노트북은 처음·가운데·끝 세 칸(칸 안에서만 넘침), 넘치면 그 학생만 저절로 줄임(최저 72%), 답 기본 1.05rem·질문 0.98rem 진하게, `가−`·`가+`/`-`·`+` 6단계(그 기기 저장). 휴대폰은 쌓아서. [원인: 화면 확인에서 찾은 두 가지 — 저장값 없을 때 `Number(null)=0` 이라 80% 로 시작, 휴대폰에서 칸이 줄어들어 겹침 → 고치고 검사]
 - **변경**: 연구소 `board-client.tsx`(OutlineViewer·fitToScreen)·`lib/outline-board.ts`(글자 단계·`readFontStep`)·globals.css·guide.ts·검사 2개. FEATURE_MAP v1.26.13. PITFALLS 한 줄.
