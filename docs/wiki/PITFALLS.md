@@ -146,3 +146,8 @@
 - 화면을 찍으려고 `npm run dev` 를 띄웠으면 **포트로 끈다**(`lsof -tiTCP:5173 -sTCP:LISTEN | xargs kill`). `pkill -f "vite --port"` 는 실제 명령이 `vite` 뿐이라 못 끈다 — 남은 서버(진짜 주소)를 `test:render` 가 재사용해 교사 화면이 로그인 첫 화면에 머물고 33개만 4분 걸려 실패한다(2026-10-09). [경로: e2e/**]
 - **`--dry-run` 은 DB 에 쓰지 않으니 필수 칸 오류를 숨긴다.** 맞춤법 한 달 업데이트가 미리 보기로는 50개 게시였지만 실제로 넣으면 `created_by` NOT NULL 로 전부 실패할 참이었다(2026-10-09 시뮬레이션). 쓰는 SQL 은 함수로 빼서 되돌림(BEGIN…ROLLBACK)으로 한 번 실제로 넣어 본다. [경로: scripts/**] [검사: tests/spellingMonthlyUpdate.test.mjs]
 - **표에 칸을 더하고 화면에서 쓰면, 그 화면이 읽는 RPC 도 함께 고친다.** `peer_reading_enabled` 를 더하고 미션 카드에 단추를 붙였지만 카드는 `get_teacher_mission_overview_v1` 로 그려져 값이 없었고, 배포 뒤 단추가 안 보였다(2026-10-09). 화면이 어떤 RPC 로 그려지는지 먼저 찾는다. [경로: supabase/migrations/**] [검사: tests/missionPeerReading.test.mjs]
+
+## 아지트 밖 저장소 (쌤링크 `~/URL`·연구소 `~/writing-helper`)
+
+- **출처(Origin)를 비교하는 보안 검사는 그 사이트가 열리는 모든 주소 모양으로 시험한다.** 쌤링크는 `https://`·`http://`·`www.` 로 모두 열리는데 10-04 CSRF 검사가 `https://샘링크.kr` 하나만 받아, 다른 모양으로 들어온 선생님의 링크 만들기·연장이 "샘링크 화면에서 보낸 요청만" 으로 막혔다(2026-10-10). 브라우저가 붙이는 `Sec-Fetch-Site` 를 먼저 본다. [경로: ~/URL/proxy.ts]
+- **아지트 밖 저장소(`~/URL` 쌤링크·`~/writing-helper` 연구소)를 맥미니에서 로컬 빌드하기 전에 `git fetch` 로 원격과 비교한다.** 다른 세션이 원격에만 올린 수정(10-08 `bd8df84`)을 받지 않고 빌드해 운영에서 그 수정이 빠졌다(2026-10-10). `git status -sb` 가 `behind` 면 먼저 받는다. [경로: ~/URL/**]
