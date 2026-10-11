@@ -57,7 +57,7 @@
 - 통합 환경의 별도 회원가입은 화면과 서버 액션에서 모두 차단했다. 통합 Supabase Auth 허용 목록에는
   `https://끄적끄적아지트.site/lab/**`를 추가하고 Compose로 Auth만 재생성했으며 기존 아지트 응답은 유지됐다.
 - 공개 도메인 `/lab/login`·정적 자산·보호 화면 리다이렉트와 기존 아지트 `/`·`helper.` 로그인이 모두 정상이다.
-  유승현 자료는 학급 2·방 27·세션 179, 최원진 자료는 학급 1·방 10·세션 86으로 구·신 DB가 동일하다.
+  유승현 자료는 학급 2·방 27·세션 179, 교사 B 자료는 학급 1·방 10·세션 86으로 구·신 DB가 동일하다.
 - 호스트 Caddy는 검증된 후보 설정으로 무중단 reload해 현재 `/lab` 분기가 동작한다. 다만
   `/etc/caddy/Caddyfile`은 root 소유라 현재 세션에서 영구 파일을 덮지 못했다. 같은 내용의 검증된
   `~/agit-supabase/Caddyfile.proposed`를 `sudo cp`한 뒤 `/etc/caddy/Caddyfile` 기준으로 다시 reload해야
@@ -130,7 +130,7 @@
   - 테스트 `test.끄적끄적아지트.site` — 맥미니 통합 스택 병행 검증용 (본 도메인은 컷오버까지 Vercel 유지)
   - API `api.끄적끄적아지트.site` 신설 → Kong. 기존 `supabase.샘링크.kr`은 전환 기간 병행 유지
   - 기존 `helper.끄적끄적아지트.site` → `/lab/*` 301 리다이렉트 유지 (배포된 QR·단축링크 보존)
-- [x] 연구소 기존 데이터 결정 (2026-07-24): **유승현·최원진 두 계정만 UUID 매핑으로 유지, 나머지 데이터·계정은 삭제**
+- [x] 연구소 기존 데이터 결정 (2026-07-24): **유승현·교사 B 두 계정만 UUID 매핑으로 유지, 나머지 데이터·계정은 삭제**
 
 ### Phase 1 — DB 통합 (2~3일)
 
@@ -152,7 +152,7 @@
 - [~] Edge Functions 4개 로컬 배포 완료 (2026-07-24): send-feedback/set-student-metadata/verify-admin-mode/vibe-ai를 `~/agit-supabase/volumes/functions/`에 배치, main 라우터 동적 디스패치로 실행 확인(함수 자체 코드까지 도달). AI 개인키는 `profile_secrets`(9/20 교사) 이관 완료. **잔여: 전역 시크릿 2개** — `RESEND_API_KEY`(피드백 메일), `ADMIN_MODE_PASSWORD`(관리자 모드) → `~/agit-supabase/secrets.agit.env`에 채우면 됨. OPENAI 공용키·ALLOWED_ORIGIN은 설정됨
 - [x] Realtime publication 확인 (2026-07-24) — 통합 스택 네트워크 별칭·Kong upstream 정합화,
   앱 구독 8개 RLS 테이블 publication 등록, WebSocket 101·supabase-js SUBSCRIBED 검증
-- [x] 연구소 UUID 매핑 완료 (2026-07-24): 유승현 `098d553a`→`2f5e2cf5`(01056649000yoo@gmail.com, 방27), 최원진 `4507af34`→`bbf421da`(wonjinchoi0126@gmail.com, 방10). 나머지 13명 연구소 데이터 삭제. `rooms.teacher_id` FK 재생성, 고아 참조 0
+- [x] 연구소 UUID 매핑 완료 (2026-07-24): 유승현 `098d553a`→`2f5e2cf5`((운영자 이메일 생략), 방27), 교사 B `4507af34`→`bbf421da`((교사 B 이메일 생략), 방10). 나머지 13명 연구소 데이터 삭제. `rooms.teacher_id` FK 재생성, 고아 참조 0
 - [x] RLS 검증 (2026-07-24): anon으로 students·student_posts 조회 시 **노출 0건**(`Content-Range: */0`), public 19/19 테이블 RLS 활성. 익명 signup 200 확인(학생 로그인 생명줄)
 
 ### Phase 2 — 호스팅 구성 (1~2일)

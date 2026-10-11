@@ -15,7 +15,7 @@ import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
 import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
 import PriorityWritingNotificationBanner from './modules/notifications/PriorityWritingNotificationBanner';
-import { captureSamlinkConnectRequest, isApprovedTeacherProfile, issueSamlinkTicket, samlinkConnectReturnUrl, takeSamlinkConnectRequest } from './modules/tool/samlink/samlinkConnect';
+import { captureSamlinkConnectRequest, isApprovedTeacherProfile, issueSamlinkTicket, samlinkConnectReturnUrl, takeSamlinkConnectRequest, takeSamlinkConnectState } from './modules/tool/samlink/samlinkConnect';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
 import { DEFAULT_WRITING_EDITOR_SETTINGS } from './modules/writing/editor-settings/settings';
 import {
@@ -181,8 +181,9 @@ function App() {
   useEffect(() => {
     if (!session || !isApprovedTeacherProfile(profile)) return;
     if (!takeSamlinkConnectRequest()) return;
+    const connectState = takeSamlinkConnectState(); // 쌤링크가 시작할 때 만든 확인표(없으면 빈 값)
     issueSamlinkTicket(supabase)
-      .then((ticket) => window.location.replace(samlinkConnectReturnUrl(ticket)))
+      .then((ticket) => window.location.replace(samlinkConnectReturnUrl(ticket, connectState)))
       .catch(() => window.alert('쌤링크 연결을 준비하지 못했습니다. 쌤링크에서 다시 눌러 주세요.'));
   }, [session, profile]);
 

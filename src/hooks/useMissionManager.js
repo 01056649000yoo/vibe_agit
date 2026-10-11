@@ -575,6 +575,9 @@ export const useMissionManager = (
     }, []);
 
     const selectedPostId = selectedPost?.id || null;
+    // AI 피드백이 오는 사이 다른 학생 글로 옮겨 가도 그 글에 붙지 않게, 지금 보는 글 번호를 늘 따로 들고 있는다.
+    const selectedPostIdRef = useRef(selectedPostId);
+    selectedPostIdRef.current = selectedPostId;
     const selectedPostFeedback = selectedPost?.ai_feedback || '';
 
     useEffect(() => {
@@ -835,6 +838,7 @@ ${postArray.map((p, idx) => {
 
     const handleGenerateSingleAI = async () => {
         if (!selectedPost) return;
+        const targetPostId = selectedPost.id;
         setIsGenerating(true);
         try {
             const feedback = await fetchAIFeedback([{
@@ -848,13 +852,16 @@ ${postArray.map((p, idx) => {
                 const { error } = await supabase
                     .from('student_posts')
                     .update({ ai_feedback: feedback })
-                    .eq('id', selectedPost.id);
+                    .eq('id', targetPostId);
 
                 if (error) throw error;
 
-                setTempFeedback(feedback);
-                setPosts(prev => prev.map(p => p.id === selectedPost.id ? { ...p, ai_feedback: feedback } : p));
-                setSelectedPost(prev => ({ ...prev, ai_feedback: feedback }));
+                // 글 목록은 요청한 글에만, 화면 편집칸은 아직 그 글을 보고 있을 때만 바꾼다.
+                setPosts(prev => prev.map(p => p.id === targetPostId ? { ...p, ai_feedback: feedback } : p));
+                if (selectedPostIdRef.current === targetPostId) {
+                    setTempFeedback(feedback);
+                    setSelectedPost(prev => (prev && prev.id === targetPostId ? { ...prev, ai_feedback: feedback } : prev));
+                }
 
                 setShowCompleteToast(true);
                 setTimeout(() => setShowCompleteToast(false), 3000);

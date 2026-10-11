@@ -23,7 +23,7 @@
 - `GET /openapi/v1/get/class/list` — 키만으로 학급·쿠키 합계. 개별 학생 코드는 안 줌.
   - 확인: `여수진남초 4학년`, cookies 794.
 - `GET /openapi/v1/get/student/total?code={학생코드}` — 학생 1명.
-  - 실측(김단우, `6CHMT29NR`): `cookie:28, usedCookie:20, totalCookie:8`, `chocoChips` 필드는 **실제 응답에 없음**, badges는 빈 목록.
+  - 실측(테스트 학생 A, (코드 생략)): `cookie:28, usedCookie:20, totalCookie:8`, `chocoChips` 필드는 **실제 응답에 없음**, badges는 빈 목록.
   - ⚠️ **코드가 틀리면 "API KEY 가 올바르지 않습니다"** 라는 오해되는 메시지를 준다(키 문제 아님).
 - 속도 제한: 평균 5 req/초·300 req/분. 학생별 순차 호출 + 200ms 간격, `slow down.`/429 시 대기 후 재시도.
 - 지급 기준 필드: **`cookie`(전체 누적 발급)**. `totalCookie`(잔여)는 학생이 쓰면 줄어 delta가 음수가 되므로 쓰지 않는다.

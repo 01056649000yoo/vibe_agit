@@ -10,6 +10,9 @@
 export const SAMLINK_ORIGIN = 'https://xn--9y2br3k43n.kr';
 const CONNECT_PARAM = 'samlink-connect';
 const PENDING_KEY = 'agit-samlink-connect-pending-v1';
+// 쌤링크가 연결을 시작할 때 만든 일회용 확인표(2026-10-11 보안 점검). 구글 로그인을 거쳐 돌아올 때 그대로 쌤링크에 돌려준다.
+const STATE_KEY = 'agit-samlink-connect-state-v1';
+const STATE_PATTERN = /^[a-f0-9]{48}$/;
 
 export const issueSamlinkTicket = async (supabase) => {
     const { data, error } = await supabase.rpc('issue_samlink_connect_ticket_v1');
@@ -26,8 +29,14 @@ export const isSamlinkTicketRequest = (event, frameWindow) => event.origin === S
 export const captureSamlinkConnectRequest = (win = window) => {
     const url = new URL(win.location.href);
     if (url.searchParams.get(CONNECT_PARAM) !== '1') return false;
-    try { win.sessionStorage.setItem(PENDING_KEY, String(Date.now())); } catch { /* 저장 못 해도 지금 바로 처리는 된다 */ }
+    const state = url.searchParams.get('state') || '';
+    try {
+        win.sessionStorage.setItem(PENDING_KEY, String(Date.now()));
+        if (STATE_PATTERN.test(state)) win.sessionStorage.setItem(STATE_KEY, state);
+        else win.sessionStorage.removeItem(STATE_KEY);
+    } catch { /* 저장 못 해도 지금 바로 처리는 된다 */ }
     url.searchParams.delete(CONNECT_PARAM);
+    url.searchParams.delete('state');
     win.history.replaceState(win.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     return true;
 };
@@ -43,7 +52,18 @@ export const takeSamlinkConnectRequest = (win = window) => {
     }
 };
 
+/** 쌤링크가 준 state 를 꺼낸다. 한 번 꺼내면 지운다. 형식이 맞지 않으면 빈 값. */
+export const takeSamlinkConnectState = (win = window) => {
+    try {
+        const stored = win.sessionStorage.getItem(STATE_KEY) || '';
+        win.sessionStorage.removeItem(STATE_KEY);
+        return STATE_PATTERN.test(stored) ? stored : '';
+    } catch {
+        return '';
+    }
+};
+
 export const isApprovedTeacherProfile = (profile) => profile?.role === 'ADMIN'
     || (profile?.role === 'TEACHER' && profile?.is_approved === true && !profile?.approval_revoked_at);
 
-export const samlinkConnectReturnUrl = (ticket) => `${SAMLINK_ORIGIN}/connect#ticket=${encodeURIComponent(ticket)}`;
+export const samlinkConnectReturnUrl = (ticket, state = '') => `${SAMLINK_ORIGIN}/connect#ticket=${encodeURIComponent(ticket)}${STATE_PATTERN.test(state) ? `&state=${state}` : ''}`;
