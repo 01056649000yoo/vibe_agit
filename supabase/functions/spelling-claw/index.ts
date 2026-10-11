@@ -39,6 +39,9 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '').split(',').map((v
 const CATALOG_ORIGIN = (Deno.env.get('SPELLING_CATALOG_ORIGIN') ?? ALLOWED_ORIGINS[0] ?? '').replace(/\/$/, '')
 const QUIZ_COUNT = 10
 const BASE_CACHE_MS = 10 * 60 * 1000
+// 집게가 움직여 인형을 잡기까지 걸리는 최소 시간. 잡은 인형은 화면이 알려 주는 값이라(서버가 집게 움직임을 알 수 없다),
+// 코인을 넣자마자 결과를 보내는 자동 호출은 잡은 것으로 치지 않는다(2026-10-11 보안 점검).
+const MIN_PLAY_MS = 4000
 
 const allowOrigin = (origin: string | null) => {
     if (!ALLOWED_ORIGINS.length) return '*'
@@ -170,8 +173,14 @@ const playFinish = async (
     const playId = typeof body.playId === 'string' ? body.playId : ''
     if (!/^[0-9a-f-]{36}$/.test(playId)) throw new HttpError(400, '판 번호가 올바르지 않아요.')
     // 화면이 보낸 인형은 아는 인형만, 한 판에 8개까지 기록하고 상품은 CLAW_MAX_PRIZES_PER_PLAY 개까지.
-    const caught = (Array.isArray(body.caught) ? body.caught : [])
+    const { data: playRow } = await admin.from('spelling_claw_plays').select('started_at')
+        .eq('id', playId).eq('student_id', context.student_id).maybeSingle()
+    const startedAt = playRow?.started_at ? Date.parse(playRow.started_at) : NaN
+    const tooFast = Number.isFinite(startedAt) && Date.now() - startedAt < MIN_PLAY_MS
+    const caught = tooFast ? [] : (Array.isArray(body.caught) ? body.caught : [])
         .filter((id): id is string => typeof id === 'string' && CLAW_PLUSHES.some((plush) => plush.id === id))
+        // 같은 인형을 여러 번 잡았다고 보내도 한 번만 센다.
+        .filter((id, position, all) => all.indexOf(id) === position)
         .slice(0, 8)
     const settings = normalizeClawClassSettings(context.settings)
     const prizeSettings = normalizeClawPrizeSettings(context.prize_settings ?? undefined)

@@ -16,3 +16,10 @@ test('피드백 메일은 피드백마다 한 번, 교사별 시간당 상한이
     assert.match(source, /MAX_PER_HOUR/);
     assert.ok(source.indexOf('allowSend(user.id, feedback.id)') < source.indexOf("fetch('https://api.resend.com/emails'"));
 });
+
+test('인형뽑기는 코인을 넣자마자 보낸 결과를 잡은 것으로 치지 않고, 같은 인형 중복을 센다', async () => {
+    const source = await readFile('supabase/functions/spelling-claw/index.ts', 'utf8');
+    assert.match(source, /MIN_PLAY_MS/);
+    assert.match(source, /tooFast \? \[\]/);
+    assert.match(source, /all\.indexOf\(id\) === position/);
+});
