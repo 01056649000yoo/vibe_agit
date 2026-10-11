@@ -1,11 +1,11 @@
 {
   "counts": {
-    "unitFiles": 227,
-    "unitTests": 1582,
-    "sqlSmokes": 201,
+    "unitFiles": 230,
+    "unitTests": 1595,
+    "sqlSmokes": 198,
     "e2eFiles": 4,
     "e2eTests": 9,
     "skipped": 0
   },
-  "lastChange": "늘림: 단위 검사 선언 1581→1582, SQL 롤백 스모크 199→201"
+  "lastChange": "줄임: 낡은 롤백 스모크 4개 삭제(지워진 함수 대상, 2026-10-11 보안 점검) (SQL 롤백 스모크 201→198)"
 }
