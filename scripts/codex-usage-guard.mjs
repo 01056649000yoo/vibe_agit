@@ -3,7 +3,7 @@
 //
 //   node scripts/codex-usage-guard.mjs check [--min-remaining 10]
 //       남은 사용량을 읽어 보여 준다. 충분하면 종료 코드 0, 모자라면 3, 읽지 못하면 2(읽지 못하면 쓰지 않는다).
-//   node scripts/codex-usage-guard.mjs ask --dir <빈 복사 폴더> --prompt <질문 파일> --out <답 파일> [--model gpt-6.1-sol] [--effort medium]
+//   node scripts/codex-usage-guard.mjs ask --dir <빈 복사 폴더> --prompt <질문 파일> --out <답 파일> --model <모델> [--effort medium]
 //       check 를 먼저 통과해야만 `codex exec` 를 읽기 전용으로 돌리고, 끝나면 남은 사용량을 다시 보여 준다.
 //
 // 읽는 곳: Codex 앱 서버의 `account/rateLimits/read`(조회만 하므로 사용량이 줄지 않는다). 5시간 창·주간 창 둘 다 본다.
@@ -113,8 +113,8 @@ async function main() {
         const dir = option(args, '--dir');
         const promptFile = option(args, '--prompt');
         const out = option(args, '--out');
-        if (!dir || !promptFile || !out || !existsSync(promptFile)) {
-            console.error('사용법: ask --dir <폴더> --prompt <질문 파일> --out <답 파일> [--model gpt-6.1-sol] [--effort medium]');
+        if (!dir || !promptFile || !out || !option(args, '--model') || !existsSync(promptFile)) {
+            console.error('사용법: ask --dir <폴더> --prompt <질문 파일> --out <답 파일> --model <모델> [--effort medium]');
             process.exit(64);
         }
         // 저장소 폴더(.env.local 같은 비밀 값이 있는 곳)에서는 돌리지 않는다 — 빈 복사 폴더만.
@@ -125,7 +125,8 @@ async function main() {
         }
         const before = await check(minRemaining);
         if (!before.ok) process.exit(before.code);
-        const model = option(args, '--model', 'gpt-6.1-sol');
+        // 모델 이름은 코드에 적지 않고 부르는 쪽(선생님이 정한 모델)이 지정한다.
+        const model = option(args, '--model');
         const effort = option(args, '--effort', 'medium');
         const exit = await new Promise((resolve) => {
             const child = spawn('codex', ['exec', '-m', model, '-c', `model_reasoning_effort="${effort}"`, '-s', 'read-only', '--skip-git-repo-check', '-C', resolved, '-o', out, readFileSync(promptFile, 'utf8')], { stdio: ['ignore', 'ignore', 'inherit'] });

@@ -47,4 +47,6 @@ test('보여 주는 글에 초기화 시각이 들어가고, 호출은 지킴이
     assert.match(source, /'-s', 'read-only'/);
     assert.match(source, /\.env\.local[\s\S]{0,80}\.git/);
     assert.doesNotMatch(source, /OPENAI_API_KEY|api[_-]?key/i, '유료 열쇠를 쓰지 않는다');
+    assert.doesNotMatch(source, /gpt-\d/i, '모델 이름은 코드에 적지 않고 부르는 쪽이 --model 로 지정한다(모델 이름 한 곳 규칙)');
+    assert.match(source, /!option\(args, '--model'\)/, '--model 이 없으면 쓰지 않는다');
 });
