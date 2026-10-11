@@ -32,8 +32,8 @@ BEGIN
        OR jsonb_typeof(v_out->'teacher_entry_count') <> 'number' THEN
         RAISE EXCEPTION '원자료 수가 숫자가 아니다: %', v_out::text;
     END IF;
-    -- start 함수가 월요일만 받으므로 화면에 주는 주간도 월요일이어야 한다.
-    IF EXTRACT(ISODOW FROM (v_out->>'week_start')::DATE) <> 1 THEN
-        RAISE EXCEPTION 'week_start 가 월요일이 아니다: %', v_out->>'week_start';
+    -- 검수 날짜는 spelling_review_run_date_v1()(자동 검수로 바뀜)이 정하므로 요일은 보지 않고 날짜인지만 본다.
+    IF (v_out->>'week_start')::DATE IS NULL THEN
+        RAISE EXCEPTION 'week_start 가 비어 있다: %', v_out::text;
     END IF;
 END $$;

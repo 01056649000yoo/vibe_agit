@@ -7,7 +7,7 @@
 DO $$
 DECLARE
     v_class UUID; v_book UUID; v_teacher UUID; v_other UUID; v_student UUID;
-    v_path TEXT; v_ws JSONB; v_snap JSONB; v_blocked BOOLEAN; v_case TEXT; v_shared BOOLEAN;
+    v_path TEXT; v_ws JSONB; v_snap JSONB; v_blocked BOOLEAN; v_case TEXT; v_shared BOOLEAN; v_visible BOOLEAN;
     v_cases TEXT[][] := ARRAY[
         ARRAY['비율', '1000', '1000', 'plain', 'ok'],
         ARRAY['작음', '600', '849', 'plain', 'ok'],
@@ -26,6 +26,7 @@ BEGIN
     SELECT id INTO v_other FROM public.profiles WHERE role = 'TEACHER' AND is_approved IS TRUE AND id <> v_teacher LIMIT 1;
     SELECT auth_id INTO v_student FROM public.students WHERE class_id = v_class AND auth_id IS NOT NULL AND deleted_at IS NULL AND is_active IS DISTINCT FROM FALSE LIMIT 1;
     IF v_book IS NULL OR v_other IS NULL THEN RAISE EXCEPTION '시험할 문집·교사가 없습니다.'; END IF;
+    v_visible := EXISTS (SELECT 1 FROM public.class_agit_book_editions e WHERE e.book_id = v_book AND e.student_visible);
     v_shared := EXISTS (SELECT 1 FROM public.neighbor_shared_books s WHERE s.book_id = v_book AND s.status = 'published');
 
     UPDATE public.class_agit_books SET paper_format = 'A4', cover_image = NULL WHERE id = v_book;
@@ -70,7 +71,12 @@ BEGIN
     IF public.can_access_class_agit_cover_v1(v_path, TRUE) THEN RAISE EXCEPTION '다른 교사가 표지를 올릴 수 있습니다.'; END IF;
     IF v_student IS NOT NULL THEN
         PERFORM set_config('request.jwt.claims', json_build_object('sub', v_student, 'role', 'authenticated')::TEXT, true);
-        IF NOT public.can_access_class_agit_cover_v1(v_path, FALSE) THEN RAISE EXCEPTION '그 반 학생이 표지를 못 봅니다.'; END IF;
+        -- 2026-10-11 부터 학생은 학생에게 공개된 확정판이 있는 우리 반 문집 표지만 읽는다(20261396).
+        IF v_visible THEN
+            IF NOT public.can_access_class_agit_cover_v1(v_path, FALSE) THEN RAISE EXCEPTION '그 반 학생이 공개된 문집 표지를 못 봅니다.'; END IF;
+        ELSIF public.can_access_class_agit_cover_v1(v_path, FALSE) THEN
+            RAISE EXCEPTION '공개 전 문집 표지를 학생이 봅니다.';
+        END IF;
         IF public.can_access_class_agit_cover_v1(v_path, TRUE) THEN RAISE EXCEPTION '학생이 표지를 올릴 수 있습니다.'; END IF;
     END IF;
     PERFORM set_config('request.jwt.claims', '{}', true);

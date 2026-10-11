@@ -14,6 +14,7 @@ BEGIN
     FROM public.student_posts post
     JOIN public.classes class ON class.id = post.class_id
     JOIN public.students student ON student.id = post.student_id
+    JOIN public.writing_missions mission ON mission.id = post.mission_id AND mission.is_archived IS NOT TRUE
     WHERE post.is_confirmed IS TRUE AND class.teacher_id IS NOT NULL AND student.auth_id IS NOT NULL
     ORDER BY post.approved_at DESC NULLS LAST
     LIMIT 1;

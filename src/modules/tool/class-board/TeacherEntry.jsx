@@ -181,6 +181,8 @@ export default function ClassBoardTeacherEntry({ activeClass, module }) {
       if (requestId !== requestRef.current) return;
       const nextBoards = Array.isArray(result?.boards) ? sortClassBoards(result.boards.map(normalizeClassBoard)) : [];
       if (background && workspaceRevision(nextBoards) === workspaceRevision(boardsRef.current)) return;
+      // 응답을 기다리는 사이 편집·저장이 시작됐다면 늦게 온 서버 판이 편집 내용을 덮어쓰지 않게 버린다(2026-10-11 보안 점검).
+      if (background && (hasUnsavedRef.current || busyRef.current)) return;
       setBoards(nextBoards);
       setHiddenPanelOpen(false);
       setHiddenBoards([]);

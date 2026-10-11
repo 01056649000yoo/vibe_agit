@@ -27,6 +27,23 @@ const escapeHtml = (value: unknown) => String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;')
 
+// 같은 피드백을 되풀이해 보내거나 한 교사가 메일을 쏟아내지 못하게 한다(2026-10-11 보안 점검).
+// 함수 인스턴스 메모리 기준의 가벼운 제한이다 — 피드백마다 1회, 교사별 1시간 5통.
+const sentFeedbackIds = new Set<string>()
+const sendLog = new Map<string, number[]>()
+const MAX_PER_HOUR = 5
+const HOUR_MS = 3_600_000
+function allowSend(userId: string, feedbackId: string) {
+    if (sentFeedbackIds.has(feedbackId)) return false
+    const now = Date.now()
+    const recent = (sendLog.get(userId) ?? []).filter((at) => now - at < HOUR_MS)
+    if (recent.length >= MAX_PER_HOUR) return false
+    recent.push(now)
+    sendLog.set(userId, recent)
+    if (sendLog.size > 500) sendLog.delete(sendLog.keys().next().value as string)
+    return true
+}
+
 Deno.serve(async (req) => {
     const origin = req.headers.get('Origin')
     const headers = headersFor(origin)
@@ -46,6 +63,9 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers })
         }
 
+        if (Number(req.headers.get('content-length') || 0) > 2000) {
+            return new Response(JSON.stringify({ error: 'Payload too large' }), { status: 413, headers })
+        }
         const { feedbackId } = await req.json()
         if (typeof feedbackId !== 'string' || !feedbackId) {
             return new Response(JSON.stringify({ error: 'Feedback id is required' }), { status: 400, headers })
@@ -61,6 +81,9 @@ Deno.serve(async (req) => {
         if (feedbackError || !feedback) return new Response(JSON.stringify({ error: 'Feedback not found' }), { status: 404, headers })
 
         if (RESEND_API_KEY) {
+            if (!allowSend(user.id, feedback.id)) {
+                return new Response(JSON.stringify({ message: 'Feedback already sent' }), { status: 200, headers })
+            }
             const emailResponse = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
@@ -75,6 +98,8 @@ Deno.serve(async (req) => {
                 })
             })
             if (!emailResponse.ok) throw new Error('이메일 알림 전송에 실패했습니다.')
+            sentFeedbackIds.add(feedback.id)
+            if (sentFeedbackIds.size > 2000) sentFeedbackIds.delete(sentFeedbackIds.values().next().value as string)
         }
 
         return new Response(JSON.stringify({ message: 'Feedback processed' }), { status: 200, headers })

@@ -14,8 +14,10 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean)
 
-export const GRAY_TOOL_ID = 'spelling-gray'
+const GRAY_TOOL_ID = 'spelling-gray'
 export const LOOKUP_TOOL_ID = 'spelling-lookup'
+// 글 문단 상한(cleanParagraphs)보다 넉넉한 요청 본문 상한.
+const MAX_BODY_BYTES = 200_000
 export const MAX_PARAGRAPHS = 12
 export const MAX_PARAGRAPH_CHARS = 1500
 export const MAX_TOTAL_CHARS = 6000
@@ -116,9 +118,15 @@ Deno.serve(async (req) => {
         return jsonResponse({ available: false, reason: 'class_off' }, 200, headers)
     }
 
+    // JSON 을 읽기 전에 크기를 본다 — 아주 큰 본문으로 함수 메모리를 채우는 것을 막는다(2026-10-11 보안 점검).
+    const declaredLength = Number(req.headers.get('content-length') || 0)
+    if (declaredLength > MAX_BODY_BYTES) return jsonResponse({ error: '한 번에 보낼 수 있는 글을 넘었습니다.' }, 413, headers)
+
     let body: { paragraphs?: unknown }
     try {
-        body = await req.json()
+        const raw = await req.text()
+        if (raw.length > MAX_BODY_BYTES) return jsonResponse({ error: '한 번에 보낼 수 있는 글을 넘었습니다.' }, 413, headers)
+        body = JSON.parse(raw)
     } catch {
         return jsonResponse({ error: '요청이 올바르지 않습니다.' }, 400, headers)
     }
