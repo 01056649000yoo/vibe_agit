@@ -117,7 +117,7 @@ test('서버: 종이를 바꿔 저장하면 그림 표지를 끄고, 확정판 �
 test('그림 표지여도 여는 글·차례·간지는 그대로 이어 붙는다(10-06 실제 인쇄 점검에서 차례가 빠졌던 것)', async () => {
     const print = await readFile('src/modules/class-agit/anthology/print.js', 'utf8');
     assert.match(print, /const coverHtml = imageCover \?/);
-    assert.match(print, /const front = `\$\{coverHtml\}\n\$\{book\.introduction \?/);
+    assert.match(print, /const front = `\$\{coverHtml\}\r?\n\$\{book\.introduction \?/);
     assert.match(print, /\.pdf-entry__rule\{background:\$\{inner\.rule\}\}/, '작품 제목 아래 선은 background 로 칠해진다');
 });
 
