@@ -60,7 +60,7 @@
 .teacher-reading-modal > header h2 { margin:6px 0 0; color:#1E293B; }
 .teacher-reading-detail-loading { padding:100px 24px; text-align:center; color:#94A3B8; }
 .teacher-reading-detail-meta { display:flex; justify-content:space-between; gap:12px; padding:16px 24px 0; color:#64748B; font-size:var(--ui-text-sm); font-weight:800; }
-.teacher-reading-content { min-height:200px; margin:14px 24px 20px; padding:24px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:var(--ui-text-lg); line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+.teacher-reading-content { min-height:200px; margin:14px 24px 20px; padding:24px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:var(--ui-text-lg); line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; text-align:justify; }
 .teacher-reading-review-box { margin:0 24px 24px; padding:20px; border-radius:20px; background:#EFF6FF; }
 .teacher-reading-review-box.is-reviewed { border:2px solid #86EFAC; background:linear-gradient(145deg,#F0FDF4,#FFFFFF); }
 .teacher-reading-review-box > div:first-child { display:flex; align-items:center; justify-content:space-between; gap:12px; }

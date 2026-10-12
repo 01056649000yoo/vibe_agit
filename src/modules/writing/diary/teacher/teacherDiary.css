@@ -84,6 +84,8 @@
     font-size: 1rem;
     line-height: 1.8;
     white-space: pre-wrap;
+    /* 일기는 줄글 — 양쪽 정렬로 오른쪽 끝을 맞춘다(keep-all 이라 왼쪽 정렬이면 들쭉날쭉). */
+    text-align: justify;
 }
 .teacher-diary__comment { display: flex; flex-direction: column; gap: 6px; }
 .teacher-diary__comment > span { color: var(--ui-ink-strong); font-size: .85rem; font-weight: 800; }
