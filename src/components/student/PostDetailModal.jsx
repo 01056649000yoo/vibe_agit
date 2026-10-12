@@ -11,6 +11,7 @@ import ReactionNamesTooltip from './ReactionNamesTooltip';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import { normalizeBookCoverUrl } from '../../modules/writing/reading-log/bookCoverUrl';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 
 // [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
 const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, isTeacher, onEdit, onDelete }) => {
@@ -476,7 +477,7 @@ const PostDetailModal = ({
                         </div>
                     )}
                     <WritingVersionSwitch {...version} onChange={version.setView} />
-                    <div style={{
+                    <div className="writing-body" data-format={getWritingFormat(mission)} style={{
                         color: displayingOriginal ? '#7F8C8D' : '#2D3436',
                         marginBottom: '80px',
                         letterSpacing: '-0.02em',

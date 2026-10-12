@@ -14,7 +14,9 @@ const POEM_GENRES = new Set(['시', '동시']);
 
 export const WRITING_FORMAT = Object.freeze({ prose: 'prose', poem: 'poem' });
 
-export const getWritingFormat = (mission) => {
+export const getWritingFormat = (missionOrList) => {
+    // 조회 방식에 따라 미션이 배열(writing_missions)로 붙어 오기도 한다.
+    const mission = Array.isArray(missionOrList) ? missionOrList[0] : missionOrList;
     const type = String(mission?.mission_type || '').trim().toLowerCase();
     const genre = String(mission?.genre || '').trim();
     return POEM_TYPES.has(type) || POEM_GENRES.has(genre) ? WRITING_FORMAT.poem : WRITING_FORMAT.prose;

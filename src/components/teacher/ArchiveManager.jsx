@@ -762,7 +762,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardSize, onCardSizeChange }) =
                                                     onOpen={() => setPresentationPost(post)}
                                                     style={{ flex: 1, minHeight: 0, border: 'none', background: 'none', padding: 0 }}
                                                 >
-                                                    <div style={{
+                                                    <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{
                                                         lineHeight: '1.6', color: '#444', whiteSpace: 'pre-wrap',
                                                         fontSize: 'var(--ui-text-md)', flex: 1, maxHeight: '300px', overflowY: 'auto'
                                                     }}>{post.content}</div>

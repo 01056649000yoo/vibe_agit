@@ -3,6 +3,7 @@ import ModalCloseButton from '../common/ModalCloseButton';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 
 const ActivityDetailModal = ({ post, onClose }) => {
     if (!post) return null;
@@ -31,7 +32,7 @@ const ActivityDetailModal = ({ post, onClose }) => {
                     </div>
                     <ModalCloseButton onClick={onClose} label="최근 활동 글 닫기" />
                 </header>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '32px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', fontSize: '1.1rem' }}>
+                <div className="writing-body" data-format={getWritingFormat(post.writing_missions)} style={{ flex: 1, overflowY: 'auto', padding: '32px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', fontSize: '1.1rem' }}>
                     {isCommentActivity && (
                         <aside style={{
                             marginBottom: '22px', padding: '15px 17px', borderRadius: '15px',

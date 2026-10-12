@@ -9,6 +9,7 @@ import ReportDocument from '../../modules/writing/mission-types/report/ReportDoc
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import { normalizeBookCoverUrl } from '../../modules/writing/reading-log/bookCoverUrl';
 import './TeacherStudentAgitPostDetail.css';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -132,7 +133,7 @@ const TeacherStudentAgitPostDetail = ({
 
                                 <WritingVersionSwitch {...version} onChange={version.setView} />
 
-                                <div className={`teacher-agit-post-detail__content${displayingReport ? ' is-report' : ''}`}>
+                                <div className={`teacher-agit-post-detail__content writing-body${displayingReport ? ' is-report' : ''}`} data-format={getWritingFormat(post.mission || post.writing_missions)}>
                                     {version.view === WRITING_VIEW.TEACHER ? (
                                         <TeacherEditRounds postId={post.id} />
                                     ) : displayingReport ? (

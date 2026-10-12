@@ -13,6 +13,7 @@ import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import { countWrittenChars, getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+import { getWritingFormat } from '../../modules/writing/presentation/writingFormat.js';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
 import LabReferenceSource from '../../modules/writing/references/LabReferenceSource';
@@ -838,7 +839,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     {(version.view === WRITING_VIEW.CHANGES ? title : originalTitle) || '제목 없음'}
                                     <span style={{ fontSize: 'var(--ui-text-md)', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>{version.view === WRITING_VIEW.CHANGES ? '처음 글 → 고친 글' : '나의 처음 글'}</span>
                                 </div>
-                                <div style={{
+                                <div className="writing-body" data-format={getWritingFormat(mission)} style={{
                                     fontSize: isMobile ? '1.1rem' : '1.25rem',
                                     lineHeight: '1.8',
                                     color: version.view === WRITING_VIEW.CHANGES ? '#2C3E50' : '#7F8C8D',
@@ -1158,7 +1159,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                             <ReportDocument structuredContent={structuredContent} content={content} compact />
                                         </Suspense>
                                     ) : previewParagraphs.length > 0 ? (
-                                        <div style={{
+                                        <div className="writing-body" data-format={getWritingFormat(mission)} style={{
                                             background: '#FFFFFF',
                                             border: '1px solid #E3F2FD',
                                             borderRadius: '18px',

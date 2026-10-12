@@ -574,6 +574,8 @@ const SubmissionStatusModal = ({
                                                             <WritingPresentationTrigger
                                                                 label={`${post.students?.name || '학생'}의 처음글 전체 화면으로 보기`}
                                                                 onOpen={() => setPresentationSelection({ post, version: 'original' })}
+                                                                className="writing-body"
+                                                                data-format={getWritingFormat(selectedMission)}
                                                                 style={{
                                                                  padding: '20px', background: '#F0FDF4', borderRadius: '16px',
                                                                  border: '1px solid #DCFCE7', fontSize: 'var(--ui-text-md)', color: '#333',
@@ -596,6 +598,8 @@ const SubmissionStatusModal = ({
                                                             <WritingPresentationTrigger
                                                                 label={`${post.students?.name || '학생'}의 마지막글 전체 화면으로 보기`}
                                                                 onOpen={() => setPresentationSelection({ post, version: 'final' })}
+                                                                className="writing-body"
+                                                                data-format={getWritingFormat(selectedMission)}
                                                                 style={{
                                                                  padding: '20px', background: '#EFF6FF', borderRadius: '16px',
                                                                  border: '1px solid #DBEAFE', fontSize: 'var(--ui-text-md)', color: '#333',

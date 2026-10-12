@@ -538,7 +538,7 @@ const PostDetailViewer = ({
                                                 <span>🌱 최초 제출 (초안)</span>
                                                 <span className="writing-presentation-trigger__hint">크게 보기</span>
                                             </div>
-                                            <div style={{
+                                            <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{
                                                 fontSize: '1.15rem', color: '#64748B', lineHeight: '1.8',
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
@@ -565,7 +565,7 @@ const PostDetailViewer = ({
                                                 <span>✨ 최종 제출 (수정본)</span>
                                                 <span className="writing-presentation-trigger__hint">크게 보기</span>
                                             </div>
-                                            <div style={{
+                                            <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{
                                                 fontSize: '1.15rem', color: '#1F2937', lineHeight: '1.8',
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
@@ -586,6 +586,8 @@ const PostDetailViewer = ({
                                     <WritingPresentationTrigger
                                         label="현재 글 전체 화면으로 보기"
                                         onOpen={() => setPresentationVersion('final')}
+                                        className="writing-body"
+                                        data-format={getWritingFormat(selectedMission)}
                                         style={{
                                          fontSize: isMobile ? '1.15rem' : '1.3rem',
                                          color: '#374151',
@@ -900,7 +902,7 @@ const PostDetailViewer = ({
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#444', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
+                                            <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#444', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                                                 {selectedPost.original_content || '처음글 기록이 없습니다.'}
                                             </div>
                                         </section>
@@ -933,7 +935,7 @@ const PostDetailViewer = ({
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#333', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontWeight: '500' }}>
+                                            <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#333', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontWeight: '500' }}>
                                                 {isReportPost ? (
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
                                                 ) : selectedPost.content}

@@ -35,6 +35,14 @@ body {
   padding: 0;
 }
 
+/*
+ * 학생 글 보기창 — 줄글(독서록·일기 등)은 양쪽 정렬해 오른쪽 끝을 가지런히 맞춘다.
+ * 앱 전체가 word-break: keep-all 이라 왼쪽 정렬이면 줄 끝이 들쭉날쭉하다.
+ * 시는 줄 끝이 작품이라 건드리지 않는다(갈래 판단은 writingFormat.js 한 곳).
+ * 전체 화면 보기(writingPresentationModal.css)와 같은 규칙.
+ */
+.writing-body[data-format='prose'] { text-align: justify; }
+
 .card {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
