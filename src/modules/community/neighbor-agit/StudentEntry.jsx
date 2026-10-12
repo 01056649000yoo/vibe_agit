@@ -43,6 +43,9 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     // 저장 뒤 딱 한 번만 결과를 다시 본다. 학생 화면은 폴링하지 않는다(PERFORMANCE_HARNESS).
     const commentRecheckTimer = useRef(null);
     const openDetailId = useRef(null);
+    // 활동을 바꾸는 사이 늦게 온 옛 활동 응답이 화면을 덮지 않게 하는 요청 번호(2026-10-12 점검).
+    const activityRequestRef = useRef(0);
+    const selectedActivityIdRef = useRef(null);
     // `결과 확인` 을 연달아 눌러도 요청은 하나씩, 3초에 한 번만 보낸다.
     const [rechecking, setRechecking] = useState(false);
     const lastRecheckAt = useRef(0);
@@ -110,6 +113,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
 
     const loadMore = async () => {
         if (!visibleFeed?.has_more || loadingMore) return;
+        const requestedActivityId = selectedActivity?.id;
+        const requestedSection = activeSection;
         setLoadingMore(true);
         try {
             const request = activeSection === 'gallery'
@@ -120,6 +125,8 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows,
                 cursor: { at: visibleFeed.next_cursor_at, id: visibleFeed.next_cursor_id }
             });
+            // 더 불러오는 사이 다른 활동·영역으로 옮겼다면 이 응답은 버린다.
+            if (requestedSection !== 'gallery' && requestedActivityId !== selectedActivityIdRef.current) return;
             const apply = (current) => ({
                 ...next,
                 items: [...(current?.items || []), ...next.items]
@@ -236,18 +243,22 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
     };
 
     const openActivity = async (activity) => {
+        const requestId = activityRequestRef.current + 1;
+        activityRequestRef.current = requestId;
+        selectedActivityIdRef.current = activity.id;
         setSelectedActivity(activity);
         setActivityFeed(null);
         setActivityMessage('');
         setActivityLoading(true);
         try {
-            setActivityFeed(await api.getActivityFeed({
+            const nextFeed = await api.getActivityFeed({
                 spaceId, activityId: activity.id, limit: NEIGHBOR_AGIT_LIMITS.initialFeedRows
-            }));
+            });
+            if (activityRequestRef.current === requestId) setActivityFeed(nextFeed);
         } catch {
-            setActivityMessage('활동 글을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+            if (activityRequestRef.current === requestId) setActivityMessage('활동 글을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
         } finally {
-            setActivityLoading(false);
+            if (activityRequestRef.current === requestId) setActivityLoading(false);
         }
     };
 
@@ -262,15 +273,17 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
 
     const toggleReaction = async () => {
         if (!detail || interactionBusy) return;
+        const targetPostId = detail.shared_post_id;
         setInteractionBusy('reaction');
         setInteractionError('');
         try {
             const result = await api.toggleReaction({
-                spaceId, sharedPostId: detail.shared_post_id
+                spaceId, sharedPostId: targetPostId
             });
             const patch = { my_reaction: result.active, reaction_count: result.reaction_count };
-            setDetail((current) => ({ ...current, ...patch }));
-            updateFeedItem(detail.shared_post_id, patch);
+            // 응답을 기다리는 사이 다른 글을 열었다면 그 글 상세는 건드리지 않는다.
+            setDetail((current) => (current && current.shared_post_id === targetPostId ? { ...current, ...patch } : current));
+            updateFeedItem(targetPostId, patch);
         } catch {
             setInteractionError('공감을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
         } finally {
@@ -287,15 +300,22 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
             setInteractionError('댓글을 한 줄로 입력해 주세요.');
             return;
         }
+        const targetPostId = detail.shared_post_id;
         setInteractionBusy('comment');
         setInteractionError('');
         clearCommentRecheck();
         try {
             const result = await api.saveComment({
-                spaceId, sharedPostId: detail.shared_post_id, content, action: 'save'
+                spaceId, sharedPostId: targetPostId, content, action: 'save'
             });
+            // 응답을 기다리는 사이 다른 글을 열었다면 목록 숫자만 맞추고 그 글의 화면·입력값은 건드리지 않는다.
+            if (openDetailId.current !== targetPostId) {
+                updateFeedItem(targetPostId, { comment_count: result.comment_count });
+                return;
+            }
             // 검사를 기다리는 동안에는 목록에 넣지 않는다. 아직 아무에게도 보이지 않는 상태다.
             setDetail((current) => {
+                if (!current || current.shared_post_id !== targetPostId) return current;
                 const withoutMine = (current.comments || []).filter((comment) => !comment.is_mine);
                 return {
                     ...current,
@@ -309,10 +329,10 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
             });
             setCommentDraft(result.comment ? result.comment.content : content);
             setMyCommentStatus(result.pending_review ? 'pending' : null);
-            updateFeedItem(detail.shared_post_id, { comment_count: result.comment_count });
+            updateFeedItem(targetPostId, { comment_count: result.comment_count });
             if (result.pending_review) {
                 // 검사는 보통 몇 초 안에 끝난다. 창이 열려 있으면 한 번만 결과를 맞춘다.
-                const sharedPostId = detail.shared_post_id;
+                const sharedPostId = targetPostId;
                 commentRecheckTimer.current = window.setTimeout(() => { void recheckMyComment(sharedPostId); }, 8000);
             }
         } catch (error) {
@@ -327,21 +347,23 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
 
     const deleteComment = async () => {
         if (!detail || interactionBusy) return;
+        const targetPostId = detail.shared_post_id;
         setInteractionBusy('comment-delete');
         setInteractionError('');
         try {
             const result = await api.saveComment({
-                spaceId, sharedPostId: detail.shared_post_id, action: 'delete'
+                spaceId, sharedPostId: targetPostId, action: 'delete'
             });
-            setDetail((current) => ({
+            updateFeedItem(targetPostId, { comment_count: result.comment_count });
+            if (openDetailId.current !== targetPostId) return;
+            setDetail((current) => (current && current.shared_post_id === targetPostId ? {
                 ...current,
                 comment_count: result.comment_count,
                 comments: (current.comments || []).filter((comment) => !comment.is_mine)
-            }));
+            } : current));
             setCommentDraft('');
             setMyCommentStatus(null);
             clearCommentRecheck();
-            updateFeedItem(detail.shared_post_id, { comment_count: result.comment_count });
         } catch {
             setInteractionError('댓글을 삭제하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
         } finally {

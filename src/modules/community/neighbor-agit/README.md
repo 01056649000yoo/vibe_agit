@@ -33,10 +33,10 @@
 표시한다. `manifest.studentEntry`는 공개 단계·제한 공개 학급·학급 모듈·교사 학생 공개·활성 공간 조건을 서버
 bootstrap과 함께 통과한 학생에게만 홈 카드를 보여 준다.
 
-제품 범위·최대 네 학급·호스트/게스트 권한·원본 글 보존·전용 RPC·관리자 내부 공개와 이번 주 구현 순서는
+제품 범위·최대 10학급·호스트/게스트 권한·원본 글 보존·전용 RPC·관리자 내부 공개와 이번 주 구현 순서는
 루트의 [`NEIGHBOR_AGIT_PLAN.md`](../../../../NEIGHBOR_AGIT_PLAN.md)를 정본으로 사용한다.
 
-`policy.js`가 공개 단계(`internal/limited_beta/public_beta/paused`)와 공간당 최대 4학급·학급당 활성 공간 1개,
+`policy.js`가 공개 단계(`internal/limited_beta/public_beta/paused`)와 공간당 최대 10학급·학급당 활성 공간 1개,
 화면 노출 조건의 단일 원본이다. 이 판정은 화면을 안전하게 닫기 위한 보조 수단이며 권한 판정은 아니다.
 다음 단계의 모든 전용 RPC가 실제 사용자·학급 연결과 같은 조건을 서버에서 다시 확인해야 한다.
 

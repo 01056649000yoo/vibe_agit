@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { neighborAgitApi } from '../api';
 import { groupByTopic } from './groupByTopic.js';
 import './gallery.css';
@@ -26,12 +26,17 @@ export default function StudentGalleryPanel({ spaceId, view, onSelect, onOpenPos
         }
     }, [api, spaceId]);
 
+    // 반을 바꾸는 사이 늦게 온 옛 반의 글 목록이 현재 반 아래에 나타나지 않게 요청 번호로 거른다(2026-10-12 점검).
+    const galleryRequestRef = useRef(0);
     const loadGallery = useCallback(async (classKey) => {
+        const requestId = galleryRequestRef.current + 1;
+        galleryRequestRef.current = requestId;
         setError('');
         try {
-            setGallery(await api.getClassGallery({ spaceId, classKey }));
+            const next = await api.getClassGallery({ spaceId, classKey });
+            if (galleryRequestRef.current === requestId) setGallery(next);
         } catch {
-            setError('이 반 글을 불러오지 못했어요. 반 고르기로 돌아가 다시 골라 주세요.');
+            if (galleryRequestRef.current === requestId) setError('이 반 글을 불러오지 못했어요. 반 고르기로 돌아가 다시 골라 주세요.');
         }
     }, [api, spaceId]);
 
@@ -41,6 +46,7 @@ export default function StudentGalleryPanel({ spaceId, view, onSelect, onOpenPos
     useEffect(() => {
         if (view && view !== 'latest') {
             setTopic('all');
+            setGallery(null);
             void loadGallery(view);
         }
     }, [view, loadGallery]);

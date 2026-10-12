@@ -28,6 +28,8 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     const [saving, setSaving] = useState(false);
     const [notice, setNotice] = useState('');
     const openedInitial = useRef(null);
+    // 문집을 바꾸는 사이 늦게 온 옛 문집이 화면과 방문록 입력을 덮지 않게 현재 선택을 따로 들고 있는다(2026-10-12 점검).
+    const openIdRef = useRef(null);
     const loadPrint = useCallback(() => api.getSharedBookPrint({ spaceId, sharedBookId: openId }), [api, spaceId, openId]);
 
     const loadBooks = useCallback(async () => {
@@ -40,18 +42,20 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     }, [api, spaceId]);
 
     const openBook = useCallback(async (sharedBookId) => {
+        openIdRef.current = sharedBookId;
         setOpenId(sharedBookId);
         setBook(null);
         setNotice('');
         setBookLoading(true);
         try {
             const next = await api.getSharedBook({ spaceId, sharedBookId });
+            if (openIdRef.current !== sharedBookId) return;
             setBook(next);
             setDraft(next.guestbook?.mine?.content || '');
         } catch {
-            setNotice('지금은 이 문집을 읽을 수 없어요. 소개가 내려갔을 수 있어요.');
+            if (openIdRef.current === sharedBookId) setNotice('지금은 이 문집을 읽을 수 없어요. 소개가 내려갔을 수 있어요.');
         } finally {
-            setBookLoading(false);
+            if (openIdRef.current === sharedBookId) setBookLoading(false);
         }
     }, [api, spaceId]);
 
@@ -64,6 +68,7 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
     }, [initialSharedBookId, openBook]);
 
     const closeBook = () => {
+        openIdRef.current = null;
         setOpenId(null);
         setBook(null);
         setNotice('');
@@ -83,11 +88,13 @@ export default function StudentBooksPanel({ spaceId, initialSharedBookId = null,
         const content = draft.replace(/\s+/g, ' ').trim();
         if (action === 'save' && !content) { setNotice('방문록을 적어 주세요.'); return; }
         if (action === 'save' && content.length < minChars) { setNotice(`방문록은 ${minChars}자 이상 써 주세요. (지금 ${content.length}자)`); return; }
+        const targetBookId = openId;
         setSaving(true);
         setNotice('');
         try {
-            await api.saveGuestbook({ spaceId, sharedBookId: openId, content, action });
-            const next = await api.getSharedBook({ spaceId, sharedBookId: openId });
+            await api.saveGuestbook({ spaceId, sharedBookId: targetBookId, content, action });
+            const next = await api.getSharedBook({ spaceId, sharedBookId: targetBookId });
+            if (openIdRef.current !== targetBookId) return;
             setBook(next);
             setDraft(next.guestbook?.mine?.content || '');
             setNotice(action === 'delete' ? '방문록을 지웠어요.' : '방문록을 보냈어요. 선생님이 확인하면 모두에게 보여요.');

@@ -69,7 +69,9 @@ test('학생 화면은 쓰기 RPC 응답으로 댓글·공감·간직하기를 �
     assert.match(api, /save_neighbor_comment_v1/);
     assert.match(api, /toggle_neighbor_reaction_v1/);
     assert.doesNotMatch(api, /toggle_neighbor_save_v1/, '상대 학급 글은 보관하지 않는다.');
-    assert.match(entry, /setDetail\(\(current\) => \(\{ \.\.\.current, \.\.\.patch \}\)\)/);
+    // 2026-10-12: 응답을 기다리는 사이 다른 글을 열었다면 그 글 상세는 건드리지 않는다(요청한 글 번호와 맞을 때만 갱신).
+    assert.match(entry, /current\.shared_post_id === targetPostId \? \{ \.\.\.current, \.\.\.patch \} : current/);
+    assert.match(entry, /openDetailId\.current !== targetPostId/);
     // 검사를 기다리는 댓글은 목록에 넣지 않는다(아직 아무에게도 보이지 않는다).
     assert.match(entry, /\? \[\.\.\.withoutMine, result\.comment\]/);
     assert.match(entry, /maxLength=\{300\}/);

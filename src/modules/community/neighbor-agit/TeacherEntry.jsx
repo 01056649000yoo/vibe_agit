@@ -343,9 +343,12 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (tabId === 'gallery') return;
     };
 
+    // 불러오기에 실패하면 자동 조회가 쉬지 않고 되풀이되던 것을 막는다 — 실패하면 다시 해 보기를 눌러야 한다(2026-10-12 점검).
+    const [galleryLoadFailed, setGalleryLoadFailed] = useState(false);
     const loadGalleryCandidates = async () => {
         if (!workspace?.space?.id || galleryLoading) return;
         setGalleryLoading(true);
+        setGalleryLoadFailed(false);
         setErrorMessage('');
         try {
             setGalleryCandidates(await api.getShareCandidates({
@@ -354,6 +357,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                 limit: 500
             }));
         } catch (error) {
+            setGalleryLoadFailed(true);
             setErrorMessage(getErrorMessage(error, '우리 학급 글을 불러오지 못했습니다.'));
         } finally {
             setGalleryLoading(false);
@@ -447,22 +451,29 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     };
 
     // 교사가 한 활동의 우리 반 제출 글을 직접 골라 공개한다(학생 요청 없이).
+    // 활동을 바꾸는 사이 늦게 온 옛 활동의 제출 글이 새 활동 아래에 나타나 잘못 공개되지 않게 요청 번호로 거른다(2026-10-12 점검).
+    const activityCandidatesRequestRef = useRef(0);
     const openActivityPublish = async (activity) => {
+        const requestId = activityCandidatesRequestRef.current + 1;
+        activityCandidatesRequestRef.current = requestId;
         setActivityPublishFor(activity);
         setActivityCandidates(null);
         setActivityCandLoading(true);
         setErrorMessage('');
         try {
-            setActivityCandidates(await api.getActivityCandidates({ spaceId: workspace.space.id, classId, activityId: activity.id }));
+            const candidates = await api.getActivityCandidates({ spaceId: workspace.space.id, classId, activityId: activity.id });
+            if (activityCandidatesRequestRef.current === requestId) setActivityCandidates(candidates);
         } catch (error) {
-            setErrorMessage(getErrorMessage(error, '활동 글을 불러오지 못했습니다.'));
+            if (activityCandidatesRequestRef.current === requestId) setErrorMessage(getErrorMessage(error, '활동 글을 불러오지 못했습니다.'));
         } finally {
-            setActivityCandLoading(false);
+            if (activityCandidatesRequestRef.current === requestId) setActivityCandLoading(false);
         }
     };
     const reloadActivityCandidates = async (activityId) => {
+        const requestId = activityCandidatesRequestRef.current;
         try {
-            setActivityCandidates(await api.getActivityCandidates({ spaceId: workspace.space.id, classId, activityId }));
+            const candidates = await api.getActivityCandidates({ spaceId: workspace.space.id, classId, activityId });
+            if (activityCandidatesRequestRef.current === requestId) setActivityCandidates(candidates);
         } catch { /* 목록 새로고침 실패는 조용히 넘긴다 — 다음 열람 때 다시 받는다. */ }
     };
     const publishActivityPost = async (activityId, post) => {
@@ -489,25 +500,35 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         }
     };
 
+    // 닫은 뒤 늦게 도착한 응답이 창을 다시 열지 않게 요청 번호를 둔다(2026-10-12 점검).
+    const postDetailRequestRef = useRef(0);
     const openPostDetail = async (sharedPostId) => {
         if (detailBusy) return;
+        const requestId = postDetailRequestRef.current + 1;
+        postDetailRequestRef.current = requestId;
         setDetailBusy(true);
         setPostDetail(null);
         setErrorMessage('');
         try {
-            setPostDetail(await api.getPostDetail({
+            const detailResult = await api.getPostDetail({
                 spaceId: workspace.space.id,
                 classId,
                 sharedPostId
-            }));
+            });
+            if (postDetailRequestRef.current === requestId) setPostDetail(detailResult);
         } catch (error) {
-            setErrorMessage(getErrorMessage(error, '글과 댓글을 불러오지 못했습니다.'));
+            if (postDetailRequestRef.current === requestId) setErrorMessage(getErrorMessage(error, '글과 댓글을 불러오지 못했습니다.'));
         } finally {
-            setDetailBusy(false);
+            if (postDetailRequestRef.current === requestId) setDetailBusy(false);
         }
     };
 
-    const closePostDetail = () => { setPostDetail(null); setDetailBusy(false); setEngageRefresh((value) => value + 1); };
+    const closePostDetail = () => {
+        postDetailRequestRef.current += 1;
+        setPostDetail(null);
+        setDetailBusy(false);
+        setEngageRefresh((value) => value + 1);
+    };
 
     // AI가 막은 우리 반 이웃 댓글 처리(되살리기/삭제) → 워크스페이스 다시 읽어 배지·목록 갱신.
     const handleBlockedComment = async (commentId, action) => {
@@ -614,15 +635,18 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (isReady && classId) void api.markSeen(classId).catch(() => {});
     }, [isReady, classId, api]);
 
+    // 다른 단계·탭에 갔다 오면 실패 기록을 지워 자동으로 한 번 더 시도한다.
+    useEffect(() => { setGalleryLoadFailed(false); }, [activeActivityTab, galleryStep]);
+
     // 이웃 글 마당 "글 모으기" 스텝에 들어가면 우리 반 글을 자동으로 불러온다(큰 버튼 없이).
     useEffect(() => {
         if (isReady && activeActivityTab === 'gallery' && galleryStep === 'collect'
-            && workspace?.space?.id && !galleryCandidates && !galleryLoading) {
+            && workspace?.space?.id && !galleryCandidates && !galleryLoading && !galleryLoadFailed) {
             void loadGalleryCandidates();
         }
         // loadGalleryCandidates 는 매 렌더 새로 만들어지지만, 위 가드(candidates/loading)가 재실행을 막는다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isReady, activeActivityTab, galleryStep, workspace?.space?.id, galleryCandidates, galleryLoading]);
+    }, [isReady, activeActivityTab, galleryStep, workspace?.space?.id, galleryCandidates, galleryLoading, galleryLoadFailed]);
 
     const selectedActivities = activeActivityTab === 'gallery'
         ? []
