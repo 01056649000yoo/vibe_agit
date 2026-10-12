@@ -23,7 +23,7 @@ test('일기·독서록 목록과 학생별 요약은 보완 중을 확인 완�
     assert.doesNotMatch(migration, /review_status <> 'unreviewed'|review_status IS NOT NULL|total_count - [a-z_.]*unreviewed/);
 });
 
-test('공용 검토 화면은 네 상태를 한 원본으로 표시한다', async () => {
+test('공용 검토 화면은 다섯 칸을 한 원본으로 표시한다', async () => {
     const [workspace, css] = await Promise.all([
         readFile('src/modules/writing/review/SelfWritingReviewWorkspace.jsx', 'utf8'),
         readFile('src/modules/writing/review/selfWritingReviewWorkspace.css', 'utf8')
@@ -31,11 +31,12 @@ test('공용 검토 화면은 네 상태를 한 원본으로 표시한다', asyn
 
     assert.match(workspace, /id: 'unreviewed', label: '미확인'/);
     assert.match(workspace, /id: 'revision_requested', label: '보완 중'/);
-    assert.match(workspace, /id: 'reviewed', label: '확인 완료'/);
+    assert.match(workspace, /id: 'reviewed', label: '확인만'/);
+    assert.match(workspace, /id: 'commented', label: '한마디 남김'/);
     assert.match(workspace, /id: 'all', label: '전체'/);
-    assert.match(workspace, /getSelfWritingReviewLabel/);
-    assert.match(css, /\.self-writing-review-summary\s*\{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
-    assert.match(css, /\.self-writing-student-card__stats\s*\{[^}]*grid-template-columns: repeat\(4, 1fr\)/);
+    assert.match(workspace, /getSelfWritingReviewLabel = \(reviewStatus, reviewGroup\)/);
+    assert.match(css, /\.self-writing-review-summary\s*\{[\s\S]*?grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+    assert.match(css, /\.self-writing-student-card__stats\s*\{[^}]*grid-template-columns: repeat\(5, 1fr\)/);
 });
 
 test('일기·독서록 관리 화면은 보완 중 수와 필터를 실제 응답에서 사용한다', async () => {
@@ -58,4 +59,35 @@ test('일기·독서록 관리 화면은 보완 중 수와 필터를 실제 응�
     assert.match(reading, /revision_requested: acc\.revision_requested \+ row\.revision_requested_count/);
     assert.match(reading, /getFilteredTotal\(shownCounts, effectiveReviewFilter\)/);
     assert.match(reading, /row\.revision_requested_count/);
+});
+
+test('확인만·한마디 남김은 review_group 하나로 고르고 세어 겹치지 않는다(확인 완료 목록이 늘 비던 것)', async () => {
+    const migration = await readFile(
+        'supabase/migrations/20261397_self_writing_commented_review_group.sql',
+        'utf8'
+    );
+
+    // 예전 필터는 저장값에 없는 'reviewed' 를 review_status 와 비교해 한 편도 고르지 못했다.
+    assert.doesNotMatch(migration, /review_status = p_review_filter/);
+    assert.equal((migration.match(/OR review_group = p_review_filter/g) || []).length, 2);
+    assert.equal(
+        (migration.match(/p_review_filter NOT IN \('all', 'unreviewed', 'revision_requested', 'reviewed', 'commented'\)/g) || []).length,
+        2
+    );
+    assert.equal((migration.match(/THEN 'commented'/g) || []).length, 3);
+    assert.match(migration, /'commented_count', per_student\.commented_count/);
+    assert.match(migration, /'commented', COALESCE\(diaries\.commented, 0\)/);
+    assert.match(migration, /'review_group', page\.review_group/);
+
+    const [diary, reading] = await Promise.all([
+        readFile('src/modules/writing/diary/teacher/TeacherDiaryManager.jsx', 'utf8'),
+        readFile('src/modules/writing/reading-log/teacher/TeacherReadingLogManager.jsx', 'utf8')
+    ]);
+    assert.match(diary, /commented: Number\(data\?\.counts\?\.commented \|\| 0\)/);
+    assert.match(reading, /if \(filter === 'commented'\) return counts\.commented;/);
+    // 반 전체 내보내기는 확인한 글 전부(확인만 + 한마디)를 센다.
+    assert.match(reading, /const confirmedTotal = shownCounts\.reviewed \+ shownCounts\.commented;/);
+    for (const manager of [diary, reading]) {
+        assert.match(manager, /getSelfWritingReviewLabel\(item\.review_status, item\.review_group\)/);
+    }
 });

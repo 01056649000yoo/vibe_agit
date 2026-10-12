@@ -1,6 +1,6 @@
 .self-writing-review-summary {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
     margin: 12px 0 10px;
 }
@@ -23,6 +23,7 @@
 .self-writing-review-summary button.unreviewed.is-active { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
 .self-writing-review-summary button.revision_requested.is-active { border-color: #FDBA74; background: #FFF7ED; color: #C2410C; }
 .self-writing-review-summary button.reviewed.is-active { border-color: #86EFAC; background: #F0FDF4; color: #15803D; }
+.self-writing-review-summary button.commented.is-active { border-color: #C4B5FD; background: #F5F3FF; color: #6D28D9; }
 .self-writing-review-summary strong { color: inherit; font-size: 1.12rem; line-height: 1; }
 .self-writing-review-summary small { color: inherit; font-size: .75rem; font-weight: 900; }
 
@@ -180,7 +181,7 @@
 .self-writing-student-card__identity small { overflow: hidden; color: #94A3B8; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
 .self-writing-student-card__main em { grid-column: 2; color: #2563EB; font-size: .68rem; font-style: normal; font-weight: 900; }
 .self-writing-student-card.is-diary .self-writing-student-card__main em { color: #6D28D9; }
-.self-writing-student-card__stats { display: grid; grid-template-columns: repeat(4, 1fr); border-block: 1px solid #F1F5F9; background: #F8FAFC; }
+.self-writing-student-card__stats { display: grid; grid-template-columns: repeat(5, 1fr); border-block: 1px solid #F1F5F9; background: #F8FAFC; }
 .self-writing-student-card__stats span { display: flex; align-items: center; justify-content: center; padding: 8px 3px; color: #64748B; font-size: .66rem; font-weight: 800; gap: 3px; }
 .self-writing-student-card__stats strong { color: #334155; font-size: .82rem; }
 .self-writing-student-card__stats .has-unread,

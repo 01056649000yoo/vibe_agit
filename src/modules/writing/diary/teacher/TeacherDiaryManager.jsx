@@ -43,7 +43,7 @@ const STUDENT_DIARY_LIMIT = 100;
 const EMPTY_OVERVIEW = Object.freeze({
     total: 0,
     pending_count: 0,
-    counts: { total: 0, unreviewed: 0, revision_requested: 0, reviewed: 0, students: 0 },
+    counts: { total: 0, unreviewed: 0, revision_requested: 0, reviewed: 0, commented: 0, students: 0 },
     items: []
 });
 
@@ -171,6 +171,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
                     unreviewed,
                     revision_requested: Number(data?.counts?.revision_requested || 0),
                     reviewed: Number(data?.counts?.reviewed || 0),
+                    commented: Number(data?.counts?.commented || 0),
                     students: Number(data?.counts?.students || 0)
                 },
                 items: Array.isArray(data?.items) ? data.items : []
@@ -335,7 +336,8 @@ const TeacherDiaryManager = ({ activeClass }) => {
     const emptyMessage = useMemo(() => {
         if (view === 'queue' || filter === 'unreviewed') return '확인을 기다리는 일기가 없어요. 모두 살펴보셨습니다. ✅';
         if (filter === 'revision_requested') return '현재 보완을 요청한 일기가 없어요.';
-        if (filter === 'reviewed') return '아직 확인한 일기가 없어요.';
+        if (filter === 'reviewed') return '한마디 없이 확인만 한 일기가 없어요.';
+        if (filter === 'commented') return '아직 한마디를 남긴 일기가 없어요.';
         return '학생이 쓴 일기가 아직 없어요.';
     }, [filter, view]);
 
@@ -515,7 +517,8 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                                 <span><strong>{student.total}</strong>전체</span>
                                                 <span className={student.unreviewed > 0 ? 'has-unread' : ''}><strong>{student.unreviewed}</strong>미확인</span>
                                                 <span className={student.revision_requested > 0 ? 'has-revision' : ''}><strong>{student.revision_requested}</strong>보완</span>
-                                                <span><strong>{student.reviewed}</strong>완료</span>
+                                                <span><strong>{student.reviewed}</strong>확인</span>
+                                                <span><strong>{student.commented || 0}</strong>한마디</span>
                                             </div>
                                             <button
                                                 type="button"
@@ -551,7 +554,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                                 onClick={() => openDiary(item)}
                                             >
                                                 <span className={`self-writing-shelf-card__status ${item.review_status === 'revision_requested' ? 'is-revision' : item.review_status === 'checked' || item.review_status === 'commented' ? 'is-checked' : ''}`}>
-                                                    {getSelfWritingReviewLabel(item.review_status)}
+                                                    {getSelfWritingReviewLabel(item.review_status, item.review_group)}
                                                 </span>
                                                 <h4>{item.title || '제목 없는 일기'}</h4>
                                                 <p>{item.char_count || 0}자 · {item.visibility === 'class' ? '친구 공개' : '나만 보기'}</p>
@@ -624,7 +627,7 @@ const TeacherDiaryManager = ({ activeClass }) => {
                                 studentName={item.student_name || '이름 없음'}
                                 dateLabel={formatDiaryDate(item.diary_date)}
                                 title={item.title || '제목 없는 일기'}
-                                secondary={`${item.char_count || 0}자 · ${item.visibility === 'class' ? '친구 공개' : '나만 보기'} · ${getSelfWritingReviewLabel(item.review_status)}`}
+                                secondary={`${item.char_count || 0}자 · ${item.visibility === 'class' ? '친구 공개' : '나만 보기'} · ${getSelfWritingReviewLabel(item.review_status, item.review_group)}`}
                                 selectable={false}
                                 tone={getSelfWritingRecordTone(item.review_status, 'diary')}
                                 actionLabel="일기 보기 ›"

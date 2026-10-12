@@ -5,7 +5,8 @@ import './selfWritingReviewWorkspace.css';
 const SUMMARY_ITEMS = [
     { id: 'unreviewed', label: '미확인', icon: '🕓' },
     { id: 'revision_requested', label: '보완 중', icon: '✏️' },
-    { id: 'reviewed', label: '확인 완료', icon: '✅' },
+    { id: 'reviewed', label: '확인만', icon: '✅' },
+    { id: 'commented', label: '한마디 남김', icon: '💬' },
     { id: 'all', label: '전체', icon: '📚' }
 ];
 
@@ -15,8 +16,10 @@ export const getSelfWritingRecordTone = (reviewStatus, checkedTone) => (
         : reviewStatus === 'checked' || reviewStatus === 'commented' ? checkedTone : 'pending'
 );
 
-export const getSelfWritingReviewLabel = (reviewStatus) => {
+// reviewGroup 은 목록 RPC 가 주는 칸(unreviewed·revision_requested·reviewed·commented). 있으면 한마디 남긴 글을 구분한다.
+export const getSelfWritingReviewLabel = (reviewStatus, reviewGroup) => {
     if (reviewStatus === 'revision_requested') return '✏️ 보완 요청';
+    if (reviewGroup === 'commented') return '💬 한마디 남김';
     if (reviewStatus === 'checked' || reviewStatus === 'commented') return '✅ 확인 완료';
     return '🕓 미확인';
 };

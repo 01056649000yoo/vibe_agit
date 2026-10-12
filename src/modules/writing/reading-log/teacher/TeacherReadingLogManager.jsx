@@ -21,12 +21,13 @@ import {
 
 const ReadingMarathonTeacherSettings = lazy(() => import('../marathon/ReadingMarathonTeacherSettings'));
 
-const EMPTY_COUNTS = { total: 0, unreviewed: 0, revision_requested: 0, reviewed: 0, students: 0 };
+const EMPTY_COUNTS = { total: 0, unreviewed: 0, revision_requested: 0, reviewed: 0, commented: 0, students: 0 };
 
 const getFilteredTotal = (counts, filter) => {
     if (filter === 'unreviewed') return counts.unreviewed;
     if (filter === 'revision_requested') return counts.revision_requested;
     if (filter === 'reviewed') return counts.reviewed;
+    if (filter === 'commented') return counts.commented;
     return counts.total;
 };
 
@@ -239,6 +240,7 @@ const TeacherReadingLogManager = ({
             unreviewed: acc.unreviewed + row.unreviewed_count,
             revision_requested: acc.revision_requested + row.revision_requested_count,
             reviewed: acc.reviewed + row.reviewed_count,
+            commented: acc.commented + (row.commented_count || 0),
             students: acc.students + (row.total_count > 0 ? 1 : 0)
         }), { ...EMPTY_COUNTS });
     }, [summary]);
@@ -246,6 +248,9 @@ const TeacherReadingLogManager = ({
     const shownCounts = viewMode === 'student'
         ? (summaryCounts || EMPTY_COUNTS)
         : counts;
+
+    // 내보내기는 확인한 독서록 전부(확인만 + 한마디 남김)를 대상으로 한다.
+    const confirmedTotal = shownCounts.reviewed + shownCounts.commented;
 
     const filteredTotal = getFilteredTotal(shownCounts, effectiveReviewFilter);
 
@@ -328,12 +333,12 @@ const TeacherReadingLogManager = ({
     };
 
     const openClassExport = () => {
-        if (shownCounts.reviewed < 1) return;
+        if (confirmedTotal < 1) return;
         setExportTarget({
             scope: 'class',
             studentId: null,
             studentName: activeClass?.name || '우리 반',
-            totalCount: shownCounts.reviewed
+            totalCount: confirmedTotal
         });
     };
 
@@ -530,7 +535,8 @@ const TeacherReadingLogManager = ({
     const filteredTitle = useMemo(() => {
         if (viewMode === 'queue') return '검토 대기 독서록';
         if (reviewFilter === 'revision_requested') return '보완 요청한 독서록';
-        if (reviewFilter === 'reviewed') return '확인한 독서록 기록';
+        if (reviewFilter === 'reviewed') return '확인만 한 독서록';
+        if (reviewFilter === 'commented') return '한마디를 남긴 독서록';
         return '전체 독서록';
     }, [reviewFilter, viewMode]);
 
@@ -561,7 +567,7 @@ const TeacherReadingLogManager = ({
             studentName={item.student_name || '이름 없음'}
             dateLabel={formatDate(item.updated_at)}
             title={item.title || '제목 없는 독서록'}
-            secondary={`『${item.book_title || '책 정보 없음'}』 · ${getSelfWritingReviewLabel(item.review_status)}`}
+            secondary={`『${item.book_title || '책 정보 없음'}』 · ${getSelfWritingReviewLabel(item.review_status, item.review_group)}`}
             selectable={false}
             tone={getSelfWritingRecordTone(item.review_status, 'reading')}
             actionLabel="독서록 보기 ›"
@@ -571,7 +577,7 @@ const TeacherReadingLogManager = ({
 
     const renderShelfCard = (item) => (
         <button key={item.post_id} type="button" className="self-writing-shelf-card" onClick={() => openDetail(item)}>
-            <span className={`teacher-reading-status ${item.review_status}`}>{getSelfWritingReviewLabel(item.review_status)}</span>
+            <span className={`teacher-reading-status ${item.review_status}`}>{getSelfWritingReviewLabel(item.review_status, item.review_group)}</span>
             <h4>{item.title || '제목 없는 독서록'}</h4>
             <p>『{item.book_title || '책 정보 없음'}』</p>
             <small>{formatDate(item.updated_at)}</small>
@@ -714,7 +720,7 @@ const TeacherReadingLogManager = ({
                                 : '검색과 학생 필터로 지난 독서록을 찾아볼 수 있어요.'}
                     </small>
                 </div>
-                {viewMode === 'archive' && shownCounts.reviewed > 0 && (
+                {viewMode === 'archive' && confirmedTotal > 0 && (
                     <Button variant="outline" size="sm" onClick={openClassExport} disabled={exporting}>
                         {exporting && exportTarget?.scope === 'class' ? '내보내는 중...' : '📤 확인 독서록 전체 내보내기'}
                     </Button>
@@ -766,7 +772,8 @@ const TeacherReadingLogManager = ({
                                     <span><strong>{row.total_count}</strong>전체</span>
                                     <span className={row.unreviewed_count > 0 ? 'has-unread' : ''}><strong>{row.unreviewed_count}</strong>미확인</span>
                                     <span className={row.revision_requested_count > 0 ? 'has-revision' : ''}><strong>{row.revision_requested_count}</strong>보완</span>
-                                    <span><strong>{row.reviewed_count}</strong>완료</span>
+                                    <span><strong>{row.reviewed_count}</strong>확인</span>
+                                    <span><strong>{row.commented_count || 0}</strong>한마디</span>
                                 </div>
                                 <button type="button" className="self-writing-student-card__export" onClick={() => openStudentExport(row)}>
                                     📤 독서록 모음 내보내기
