@@ -193,6 +193,26 @@
         {
           "pattern": "/opt/homebrew/bin/npm",
           "argPattern": "^view [A-Za-z0-9@/_.-]+(?: version| versions| dist-tags)?(?: --json)?$"
+        },
+        {
+          "pattern": "/usr/bin/python3",
+          "argPattern": "^(-B )?(~|/Users/seunghyeonmaegmini)/Jarvis_Brain_Local/scripts/[A-Za-z0-9_]+\\.py( |$)"
+        },
+        {
+          "pattern": "/opt/homebrew/bin/python3",
+          "argPattern": "^(-B )?(~|/Users/seunghyeonmaegmini)/Jarvis_Brain_Local/scripts/[A-Za-z0-9_]+\\.py( |$)"
+        },
+        {
+          "pattern": "/usr/bin/curl",
+          "argPattern": "^(?!.*(--unix-socket|--abstract-unix-socket|file:|--config|(^| )-K( |$)|(^| )-o( |$)|--output)).*(https://api\\.notion\\.com/v1/|http://127\\.0\\.0\\.1:8765/api/)"
+        },
+        {
+          "pattern": "/opt/homebrew/bin/docker",
+          "argPattern": "^(exec agit-db psql |ps( |$)|logs |inspect |stats --no-stream)"
+        },
+        {
+          "pattern": "/opt/homebrew/Cellar/python@3.*/*/bin/python3*",
+          "argPattern": "^(-B )?(~|/Users/seunghyeonmaegmini)/Jarvis_Brain_Local/scripts/[A-Za-z0-9_]+\\.py( |$)"
         }
       ]
     }
