@@ -164,3 +164,4 @@
 - **승인 상태를 바꾸는 길이 여럿이면 로그인 차단은 `profiles` 트리거 한 곳에서 건다.** 함수마다 따로 막으면 빠지는 길이 생긴다(2026-10-11, `20261395`). [경로: supabase/migrations/**]
 - **응답을 기다린 뒤 화면 상태에 쓰기 전에 "아직 그 글을 보고 있는가" 를 다시 본다.** AI 피드백이 다른 학생 글에 붙었다(2026-10-11). [경로: src/hooks/**]
 - **`npm audit fix` 는 검사 도구(eslint 플러그인)까지 올려 옛 코드를 새 오류로 만든다.** 연구소가 푸시 뒤 CI 린트에서 멈췄다(2026-10-11). 취약한 패키지만 `npm update <이름>` 으로 올리고, 푸시 전에 `npm run lint` 를 돌린다. [경로: package-lock.json]
+- **오픈클로 실행 정책은 실행 파일도 스크립트도 절대 경로여야 묶는다.** `python3 -B scripts/x.py`(상대)·`rg`(이름만)는 `SYSTEM_RUN_DENIED`, 허용 목록에도 이름과 절대 경로를 따로 적어야 한다(2026-10-13). 막힌 명령은 `~/.openclaw/state/openclaw.sqlite` 의 `operator_approvals` 와 `agents/main/agent/codex-home/logs_2.sqlite` 로 찾는다. [경로: ops/openclaw/**]
