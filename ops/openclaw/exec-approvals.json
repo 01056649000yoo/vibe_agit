@@ -213,6 +213,10 @@
         {
           "pattern": "/opt/homebrew/Cellar/python@3.*/*/bin/python3*",
           "argPattern": "^(-B )?(~|/Users/seunghyeonmaegmini)/Jarvis_Brain_Local/scripts/[A-Za-z0-9_]+\\.py( |$)"
+        },
+        {
+          "pattern": "/usr/local/bin/docker",
+          "argPattern": "^(exec agit-db psql |ps( |$)|logs |inspect |stats --no-stream)"
         }
       ]
     }
