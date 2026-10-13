@@ -119,6 +119,80 @@
         {
           "pattern": "openclaw",
           "argPattern": "^(?:[a-z-]+ ){0,3}(?:--help|-h)$"
+        },
+        {
+          "pattern": "/bin/cat"
+        },
+        {
+          "pattern": "/usr/bin/printf"
+        },
+        {
+          "pattern": "/bin/echo"
+        },
+        {
+          "pattern": "/bin/mkdir"
+        },
+        {
+          "pattern": "/usr/bin/sed",
+          "argPattern": "^-n '?[0-9]+(,[0-9$]+)?p'? [^;|&<>`$]+$"
+        },
+        {
+          "pattern": "/usr/bin/head"
+        },
+        {
+          "pattern": "/usr/bin/tail"
+        },
+        {
+          "pattern": "/usr/bin/wc"
+        },
+        {
+          "pattern": "/usr/bin/grep"
+        },
+        {
+          "pattern": "/bin/pwd"
+        },
+        {
+          "pattern": "/bin/date"
+        },
+        {
+          "pattern": "/usr/bin/find",
+          "argPattern": "^(?!.*(?:^| )-(?:exec|execdir|ok|okdir|delete|fprint0?|fprintf|fls)(?: |$))(?!.*\\.\\.)'?/Users/seunghyeonmaegmini/(?:Jarvis_Brain_Local|\\.openclaw/(?:workspace|media/inbound))(?:/[^ ]*)?'?(?: .*)?$"
+        },
+        {
+          "pattern": "/usr/bin/sort",
+          "argPattern": "^(?:-[rnuV]+ ?)*$"
+        },
+        {
+          "pattern": "/usr/bin/uniq",
+          "argPattern": "^(?:-[cdui]+ ?)*$"
+        },
+        {
+          "pattern": "/usr/bin/touch",
+          "argPattern": "^'?/Users/seunghyeonmaegmini/Jarvis_Brain_Local/[A-Za-z_]+/[^ ;|&<>`$/\\\\']+'?$"
+        },
+        {
+          "pattern": "/usr/bin/unzip",
+          "argPattern": "^-l '?/Users/seunghyeonmaegmini/(?:\\.openclaw/media/inbound|Jarvis_Brain_Local/Attachments)/[^;|&<>`$\\\\']+'?$"
+        },
+        {
+          "pattern": "/usr/bin/which",
+          "argPattern": "^[A-Za-z0-9_.-]+$"
+        },
+        {
+          "pattern": "/usr/bin/command",
+          "argPattern": "^-v [A-Za-z0-9_.-]+$"
+        },
+        {
+          "pattern": "/bin/sleep",
+          "argPattern": "^[0-9]{1,3}$"
+        },
+        {
+          "pattern": "/usr/bin/mdfind",
+          "argPattern": "^[^;|&<>`$]*$"
+        },
+        {
+          "pattern": "/opt/homebrew/bin/npm",
+          "argPattern": "^view [A-Za-z0-9@/_.-]+(?: version| versions| dist-tags)?(?: --json)?$"
         }
       ]
     }
