@@ -42,19 +42,23 @@ export const CLAW_PRIZE_LIMITS = Object.freeze({
     giftName: 30
 });
 
-/** 기본값(합 100%): 포인트 94%(평균 약 24P) · 수호룡 상점 아이템 5% · 선생님 선물 1%(2026-10-02 선생님 결정 — 선물·아이템은 드물게, 글쓰기 가치를 지킨다). */
+/**
+ * 기본값(합 100%): 포인트 95%(평균 약 24P) · 수호룡 상점 아이템 5% · **선생님 선물 없음**.
+ *
+ * 선생님 선물은 교사가 학생에게 직접 지켜야 하는 약속이라, 교사가 상품 설정에서 `+ 선물 추가` 로 넣고
+ * 저장해야만 나온다(2026-10-13 선생님 결정). 전에는 기본값에 `자리 고르기권 0.6% · 급식 먼저 먹기권 0.4%` 가
+ * 있어, 설정을 한 번도 저장하지 않은 학급(켜 둔 14곳 중 9곳)에서 교사가 모르는 선물이 당첨됐다.
+ * 그 1% 는 포인트로 옮겼다(금액별 비율은 그대로 — 94% 표를 95% 로 늘림).
+ */
 export const CLAW_DEFAULT_PRIZE_SETTINGS = Object.freeze({
     points: Object.freeze([
-        { id: 'p10', points: 10, percent: 37.6 },
-        { id: 'p20', points: 20, percent: 28.2 },
-        { id: 'p30', points: 30, percent: 14.6 },
-        { id: 'p50', points: 50, percent: 9.4 },
+        { id: 'p10', points: 10, percent: 38 },
+        { id: 'p20', points: 20, percent: 28.5 },
+        { id: 'p30', points: 30, percent: 14.8 },
+        { id: 'p50', points: 50, percent: 9.5 },
         { id: 'p100', points: 100, percent: 4.2 }
     ].map(Object.freeze)),
-    gifts: Object.freeze([
-        { id: 'seat', name: '자리 고르기권', percent: 0.6 },
-        { id: 'lunch', name: '급식 먼저 먹기권', percent: 0.4 }
-    ].map(Object.freeze)),
+    gifts: Object.freeze([]),
     decor: Object.freeze({ starter: 3, common: 1.5, rare: 0.4, hero: 0.1 })
 });
 

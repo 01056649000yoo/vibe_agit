@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
 import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailabilitySwitch';
+import TeacherCountBadge from '../../../components/teacher/TeacherCountBadge';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import { supabase } from '../../../lib/supabaseClient';
 import {
@@ -170,7 +171,8 @@ const navStyle = (active, isMobile) => ({
     boxShadow: active ? '0 6px 18px rgba(15,23,42,.06)' : 'none'
 });
 
-const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled, isAdmin = false }) => {
+// moduleBadges: 모듈 id → 교사가 처리할 일 수(예: 인형뽑기의 아직 안 준 선물). 대시보드 메뉴 배지와 같은 수다.
+const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, onNavigationHandled, isAdmin = false, moduleBadges = {} }) => {
     // 관리자 시험 모듈(adminOnly)은 관리자에게만 메뉴로 보인다. 학생 노출 스위치는 달지 않는다.
     const modules = useMemo(
         () => TEACHER_GAME_MODULES.filter(({ module }) => !module.adminOnly || isAdmin),
@@ -265,6 +267,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                         >
                             <span style={{ fontSize: '1.3rem' }}>{module.icon || '🎮'}</span>
                             <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', fontWeight: '900' }}>{module.name}</span>
+                            <TeacherCountBadge count={Number(moduleBadges[module.id]) || 0} label="처리할 일" />
                             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOn ? '#22C55E' : '#94A3B8', flex: '0 0 auto' }} />
                         </button>
                     );

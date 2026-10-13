@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ClawCelebration from './ClawCelebration';
 import ClawPlayScreen from './ClawPlayScreen';
 import ClawPrizeSettings from './ClawPrizeSettings';
+import { notifyClawGiftsChanged } from './clawGiftBadge';
 import {
     CLAW_CLASS_SETTING_OPTIONS, CLAW_DEFAULT_PRIZE_SETTINGS, normalizeClawClassSettings, normalizeClawPrizeSettings,
     sumClawPrizeSettings
@@ -127,6 +128,7 @@ export default function SpellingClawTeacherManager({ activeClass }) {
         let timer = null;
         let failures = 0;
         let inFlight = false;
+        let lastPendingCount = null;
         const run = async () => {
             if (stopped || inFlight || document.visibilityState !== 'visible') return;
             inFlight = true;
@@ -138,7 +140,10 @@ export default function SpellingClawTeacherManager({ activeClass }) {
                 setHistory((current) => ({ ...current, error: '내역을 불러오지 못했어요. 잠시 뒤 다시 해 볼게요.' }));
             } else {
                 failures = 0;
-                setHistory({ rows: data?.rows || [], today: data?.today || null, pendingGifts: data?.pending_gifts || [], error: '' });
+                const pendingGifts = data?.pending_gifts || [];
+                // 아직 안 준 선물 수가 바뀌었을 때만 대시보드 메뉴 배지에 알린다(12초마다 다시 세지 않게).
+                if (pendingGifts.length !== lastPendingCount) { lastPendingCount = pendingGifts.length; notifyClawGiftsChanged(); }
+                setHistory({ rows: data?.rows || [], today: data?.today || null, pendingGifts, error: '' });
             }
             timer = setTimeout(run, failures ? Math.min(HISTORY_MAX_BACKOFF_MS, 30000 * (2 ** Math.min(2, failures - 1))) : HISTORY_POLL_MS);
         };
@@ -160,6 +165,7 @@ export default function SpellingClawTeacherManager({ activeClass }) {
         });
         setGiftSaving('');
         if (error) { setHistory((current) => ({ ...current, error: messageOf(error, '줬어요를 남기지 못했어요. 다시 눌러 주세요.') })); return; }
+        notifyClawGiftsChanged();
         setHistory((current) => ({
             ...current,
             error: '',
@@ -310,7 +316,10 @@ export default function SpellingClawTeacherManager({ activeClass }) {
             <div className={`claw-bench__savebar${dirty ? ' is-dirty' : ''}`} role="status">
                 <span>{!classId ? '실험실이라 이 화면에만 두고 저장하지 않아요.'
                     : settingsState === 'loading' ? '설정을 불러오는 중…'
-                        : saveMessage?.text || (dirty ? '저장 안 된 변경이 있어요. 저장해야 학생에게 적용돼요.' : '저장된 설정이 학생에게 적용되고 있어요.')}
+                        : saveMessage?.text || (dirty ? '저장 안 된 변경이 있어요. 저장해야 학생에게 적용돼요.'
+                            // 한 번도 저장하지 않은 학급은 기본값(선생님 선물 없음)으로 뽑는다 — 선물은 넣고 저장해야 나온다.
+                            : !saved.updatedAt ? '아직 저장하지 않아 기본 설정(포인트·수호룡 아이템, 선생님 선물 없음)이 적용되고 있어요. 선생님 선물은 ‘+ 선물 추가’ 후 저장하면 나와요.'
+                            : '저장된 설정이 학생에게 적용되고 있어요.')}
                 {dirty && prizeTotal !== 100 && ` 상품 확률 합계가 ${prizeTotal}%예요 — 100%로 맞춰야 저장할 수 있어요.`}</span>
                 {classId && saveMessage?.conflict && <button type="button" className="is-secondary" onClick={loadSettings}>새로 불러오기</button>}
                 {classId && dirty && <button type="button" className="is-secondary" onClick={revert} disabled={settingsLocked}>되돌리기</button>}

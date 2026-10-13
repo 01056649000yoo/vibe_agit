@@ -247,8 +247,9 @@ test('교사가 넣은 확률(%)도 꽝이 없고, 화면의 확률과 실제 �
     assert.equal(safe.decor.hero, 0);
     assert.equal(safe.decor.starter, CLAW_DEFAULT_PRIZE_SETTINGS.decor.starter, '빠진 칸은 기본값이어야 합니다.');
 
-    // 기본값은 합 100%: 포인트 94 · 아이템 5 · 선물 1(2026-10-02 선생님 결정 — 선물은 드물게).
-    assert.deepEqual(sumClawPrizeSettings(CLAW_DEFAULT_PRIZE_SETTINGS), { total: 100, kinds: { points: 94, gift: 1, decor: 5 } });
+    // 기본값은 합 100%: 포인트 95 · 아이템 5 · 선물 0(2026-10-13 선생님 결정 — 선생님 선물은 교사가 넣고 저장해야 나온다).
+    assert.deepEqual(sumClawPrizeSettings(CLAW_DEFAULT_PRIZE_SETTINGS), { total: 100, kinds: { points: 95, gift: 0, decor: 5 } });
+    assert.deepEqual(CLAW_DEFAULT_PRIZE_SETTINGS.gifts, [], '저장하지 않은 학급에 교사가 모르는 선물이 나가면 안 됩니다.');
 
     // 모든 확률을 0으로 두어도 포인트가 나온다(기본 포인트 표로).
     const allOff = { points: [{ id: 'x', points: 10, percent: 0 }], gifts: [], decor: { starter: 0, common: 0, rare: 0, hero: 0 } };
@@ -302,10 +303,11 @@ test('하루 기회를 다 쓰고 최소 포인트를 받으면 학생 홈 알�
 
 test('종류별 몫은 줄마다 반올림한 값을 더하지 않고 바로 낸다 — 기본값은 이 학생 조건에서 그대로 공개된다', () => {
     const odds = describeClawOdds({ decorTiers: ['starter', 'common', 'rare', 'hero'] });
-    assert.deepEqual(odds.kinds, { points: 94, gift: 1, decor: 5 });
-    assert.deepEqual(odds.points.map((row) => row.percent), [37.6, 28.2, 14.6, 9.4, 4.2]);
-    // 입문 등급만 받을 수 있는 학생: 나머지 등급 몫(2%)은 포인트로, 선물 1%는 그대로.
-    assert.deepEqual(describeClawOdds({ decorTiers: ['starter'] }).kinds, { points: 96, gift: 1, decor: 3 });
+    assert.deepEqual(odds.kinds, { points: 95, gift: 0, decor: 5 });
+    assert.deepEqual(odds.points.map((row) => row.percent), [38, 28.5, 14.8, 9.5, 4.2]);
+    assert.deepEqual(odds.gifts, [], '저장하지 않은 학급(기본값)에는 선생님 선물이 없습니다.');
+    // 입문 등급만 받을 수 있는 학생: 나머지 등급 몫(2%)은 포인트로.
+    assert.deepEqual(describeClawOdds({ decorTiers: ['starter'] }).kinds, { points: 97, gift: 0, decor: 3 });
     assert.deepEqual(describeClawOdds({ settings: { gifts: [] } }).kinds, { points: 100, gift: 0, decor: 0 });
 });
 

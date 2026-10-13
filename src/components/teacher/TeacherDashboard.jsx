@@ -65,6 +65,7 @@ import {
 } from '../../modules/writing/mission-workspace/missionWorkspaceView';
 import { useTeacherUnreviewedWriting } from '../../hooks/useTeacherUnreviewedWriting';
 import { useTeacherWorkspacePoll } from '../../modules/community/neighbor-agit/useTeacherWorkspacePoll';
+import { CLAW_GIFTS_CHANGED_EVENT } from '../../modules/game/spelling-claw/clawGiftBadge';
 import './TeacherDashboard.css';
 
 const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
@@ -122,6 +123,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     // 독서마라톤: 쪽수를 몰라 달린 거리에 넣지 못한 책 수. 고치는 화면이 3층 깊이라
     // 배지가 없으면 교사가 알 길이 없다. 대시보드가 한 번만 세서 안쪽 화면으로 물려준다.
     const [readingPendingBooks, setReadingPendingBooks] = useState(0);
+    const [clawGiftBadge, setClawGiftBadge] = useState(0);
 
     /*
      * 공지는 대시보드가 한 번만 읽어 머리말 버튼과 위쪽 띠에 함께 넘긴다.
@@ -284,6 +286,27 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     useEffect(() => {
         void loadReadingPendingBooks();
     }, [loadReadingPendingBooks]);
+
+    // 아직 안 준 선생님 선물 배지 — 학생이 인형뽑기에서 뽑았지만 `줬어요` 를 누르지 않은 선물 수.
+    // 세는 기준은 [아지트 놀이터 > 수호룡의 인형뽑기 > 뽑기 내역] 의 `아직 안 준 선물` 과 같다(서버에서 같은 조건).
+    const loadClawGiftBadge = useCallback(async () => {
+        if (!activeClass?.id) { setClawGiftBadge(0); return; }
+        const { data, error } = await supabase.rpc('get_teacher_spelling_claw_gift_badge_v1', { p_class_id: activeClass.id });
+        if (error) { setClawGiftBadge(0); return; }
+        setClawGiftBadge(Number(data?.count ?? 0));
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        void loadClawGiftBadge();
+        // 선물은 드물어(기본 1%) 폴링하지 않는다 — `줬어요`·내역 새로 받기 이벤트와 창으로 돌아올 때만 다시 센다.
+        const refresh = () => { void loadClawGiftBadge(); };
+        window.addEventListener(CLAW_GIFTS_CHANGED_EVENT, refresh);
+        window.addEventListener('focus', refresh);
+        return () => {
+            window.removeEventListener(CLAW_GIFTS_CHANGED_EVENT, refresh);
+            window.removeEventListener('focus', refresh);
+        };
+    }, [loadClawGiftBadge]);
 
     useEffect(() => {
         try {
@@ -455,7 +478,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         'reading-logs': readingLogsUnreviewedCount + readingPendingBooks,
         diaries: diariesUnreviewedCount,
         comments: commentTodoBadge,
-        'neighbor-agit': neighborBadge
+        'neighbor-agit': neighborBadge,
+        playground: clawGiftBadge
     });
 
     useEffect(() => {
@@ -711,6 +735,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             navigationTarget={workspaceTarget}
                             onNavigationHandled={handleWorkspaceNavigationHandled}
                             isAdmin={isAdmin}
+                            moduleBadges={{ 'spelling-claw': clawGiftBadge }}
                         />
                     ) : visibleTab === 'tools' ? (
                         <TeachingToolsHub

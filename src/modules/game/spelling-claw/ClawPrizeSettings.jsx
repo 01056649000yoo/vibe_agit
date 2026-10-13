@@ -127,7 +127,7 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
                 <fieldset>
                     <legend>{kindLabel('gift')}</legend>
                     <GroupInput label={kindLabel('gift')} value={kinds.gift} disabled={!draft.gifts.length} onCommit={(value) => scaleList('gifts', value)} />
-                    {draft.gifts.length === 0 && <small>선물이 없으면 선물 몫은 없어요. 합계를 100%로 맞춰 주세요.</small>}
+                    {draft.gifts.length === 0 && <small>선생님 선물은 기본으로 없어요. ‘+ 선물 추가’로 이름과 확률을 넣고 합계를 100%로 맞춰 저장하면 학생에게 나와요.</small>}
                     {draft.gifts.map((row) => <div key={row.id} className="claw-prize-settings__row claw-prize-settings__row--gift">
                         <input type="text" value={row.name} maxLength={CLAW_PRIZE_LIMITS.giftName} placeholder="예: 자리 고르기권" aria-label="선물 이름"
                             onChange={(e) => updateRow('gifts', row.id, { name: e.target.value })} />
