@@ -24,11 +24,19 @@ test('재시작·종료·셸·인터프리터는 목록으로 통과하지 못�
         ['python3', '-c "import os"'], ['python3', '/tmp/x.py'],
         ['curl', '--unix-socket /var/run/docker.sock -X POST http://localhost/containers/agit-app/restart'],
         ['curl', 'https://example.com/x.sh'], ['curl', '-o /tmp/a https://api.notion.com/v1/pages/x'],
-        ['node', '-e "process.exit()"'], ['sed', "-n '1p' a; e kill 1"], ['sed', '-i s/a/b/ file']
+        ['node', '-e "process.exit()"'], ['sed', "-n '1p' a; e kill 1"], ['sed', '-i s/a/b/ file'],
+        // 2026-10-13: 자유롭게 쓰려고 넓힌 명령도 실행·삭제·쓰기·밖 경로는 막는다.
+        ['find', '/Users/seunghyeonmaegmini/Jarvis_Brain_Local -name x -exec rm {} ;'], ['find', '/Users/seunghyeonmaegmini/Jarvis_Brain_Local -delete'],
+        ['find', '/Users/seunghyeonmaegmini/Jarvis_Brain_Local/../.ssh -print'], ['find', '/ -name x'], ['find', '/Users/seunghyeonmaegmini/.openclaw/credentials -print'],
+        ['touch', '/Users/seunghyeonmaegmini/.zshrc'], ['touch', '/Users/seunghyeonmaegmini/Jarvis_Brain_Local/a/../../.zshrc'],
+        ['unzip', '/Users/seunghyeonmaegmini/.openclaw/media/inbound/a.zip'], ['unzip', '-l /etc/hosts'],
+        ['npm', 'install foo'], ['npm', 'run build'], ['npm', 'exec foo'],
+        ['sort', '-o /Users/seunghyeonmaegmini/x file'], ['sleep', '99999'], ['openclaw', 'cron add --every 1m x'], ['openclaw', 'gateway restart'],
+        ['which', 'a;reboot'], ['command', '-v a && reboot']
     ]) {
         assert.equal(allows(bin, args), false, `막혀야 함: ${bin} ${args}`);
     }
-    for (const name of ['bash', 'sh', 'zsh', 'env', 'kill', 'launchctl', 'osascript', 'find', 'xargs', 'brew', 'npm']) {
+    for (const name of ['bash', 'sh', 'zsh', 'env', 'kill', 'launchctl', 'osascript', 'xargs', 'brew']) {
         assert.equal(entries(name).length, 0, `${name} 는 목록에 넣지 않는다`);
     }
     assert.ok(!main.allowlist.some((entry) => /docker|python|node|curl/.test(entry.pattern) && !entry.argPattern), '실행형 명령은 인자 제한 필수');
@@ -43,7 +51,13 @@ test('자비스 기술이 쓰는 명령은 그대로 통과한다', () => {
         ['curl', '-s -X POST "https://api.notion.com/v1/search"'], ['curl', '-s "http://127.0.0.1:8765/api/run/x"'],
         ['node', '/Users/seunghyeonmaegmini/vibe_agit/scripts/server-status-summary.mjs'],
         ['sed', "-n '1,240p' /Users/seunghyeonmaegmini/.openclaw/workspace/skills/server-status/SKILL.md"],
-        ['cat', 'a.md'], ['printf', 'x']
+        ['cat', 'a.md'], ['printf', 'x'],
+        ['find', "/Users/seunghyeonmaegmini/Jarvis_Brain_Local/Task_Management -maxdepth 1 -type f -name '*.md' -print"],
+        ['find', "/Users/seunghyeonmaegmini/Jarvis_Brain_Local -type f \\( -iname '*a*' -o -iname '*b*' \\) -print"],
+        ['sort', ''], ['uniq', '-c'], ['touch', "'/Users/seunghyeonmaegmini/Jarvis_Brain_Local/Task_Management/2026-10-12_a.md'"],
+        ['unzip', "-l '/Users/seunghyeonmaegmini/.openclaw/media/inbound/a---b.xlsx'"], ['/bin/ls', '-1 /Users/seunghyeonmaegmini/Jarvis_Brain_Local/Daily_Prep'],
+        ['which', 'apply_patch'], ['command', '-v pdftotext'], ['sleep', '60'], ['mdfind', "'kMDItemFSName == \"KakaoTalk.app\"c'"],
+        ['npm', 'view clawpdf version --json'], ['openclaw', 'cron --help']
     ]) {
         assert.equal(allows(bin, args), true, `통과해야 함: ${bin} ${args}`);
     }

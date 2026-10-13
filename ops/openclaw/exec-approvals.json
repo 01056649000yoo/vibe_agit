@@ -72,6 +72,53 @@
         },
         {
           "pattern": "date"
+        },
+        {
+          "pattern": "find",
+          "argPattern": "^(?!.*(?:^| )-(?:exec|execdir|ok|okdir|delete|fprint0?|fprintf|fls)(?: |$))(?!.*\\.\\.)'?/Users/seunghyeonmaegmini/(?:Jarvis_Brain_Local|\\.openclaw/(?:workspace|media/inbound))(?:/[^ ]*)?'?(?: .*)?$"
+        },
+        {
+          "pattern": "sort",
+          "argPattern": "^(?:-[rnuV]+ ?)*$"
+        },
+        {
+          "pattern": "uniq",
+          "argPattern": "^(?:-[cdui]+ ?)*$"
+        },
+        {
+          "pattern": "touch",
+          "argPattern": "^'?/Users/seunghyeonmaegmini/Jarvis_Brain_Local/[A-Za-z_]+/[^ ;|&<>`$/\\\\']+'?$"
+        },
+        {
+          "pattern": "unzip",
+          "argPattern": "^-l '?/Users/seunghyeonmaegmini/(?:\\.openclaw/media/inbound|Jarvis_Brain_Local/Attachments)/[^;|&<>`$\\\\']+'?$"
+        },
+        {
+          "pattern": "/bin/ls"
+        },
+        {
+          "pattern": "which",
+          "argPattern": "^[A-Za-z0-9_.-]+$"
+        },
+        {
+          "pattern": "command",
+          "argPattern": "^-v [A-Za-z0-9_.-]+$"
+        },
+        {
+          "pattern": "sleep",
+          "argPattern": "^[0-9]{1,3}$"
+        },
+        {
+          "pattern": "mdfind",
+          "argPattern": "^[^;|&<>`$]*$"
+        },
+        {
+          "pattern": "npm",
+          "argPattern": "^view [A-Za-z0-9@/_.-]+(?: version| versions| dist-tags)?(?: --json)?$"
+        },
+        {
+          "pattern": "openclaw",
+          "argPattern": "^(?:[a-z-]+ ){0,3}(?:--help|-h)$"
         }
       ]
     }
