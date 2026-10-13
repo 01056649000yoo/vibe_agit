@@ -1,7 +1,6 @@
 import { execFile } from "node:child_process";
 import { Type } from "typebox";
 import { defineToolPlugin } from "openclaw/plugin-sdk/tool-plugin";
-import { textResult } from "openclaw/plugin-sdk/tool-results";
 
 // 텔레그램 슬래시 명령(/task, /memo, /cal, /proj, /done, /pdf)을 모델을 거치지 않고 곧바로 자비스 통합 명령에 넘긴다.
 // 스킬 머리말의 `command-dispatch: tool` + `command-tool: jarvis_quick` 이 이 도구를 부른다(2026-10-13).
@@ -42,9 +41,9 @@ export default defineToolPlugin({
       }),
       async execute({ command, commandName }, _config, context) {
         const kind = String(commandName || "").replace(/^\//, "").trim().toLowerCase();
-        if (!KINDS.has(kind)) return textResult(`알 수 없는 명령입니다: ${commandName}`, { ok: false });
-        const text = await runJarvis(kind, String(command ?? ""), context?.signal);
-        return textResult(text, { kind, text });
+        if (!KINDS.has(kind)) return `알 수 없는 명령입니다: ${commandName}`;
+        // 문자열을 그대로 돌려줘야 도구 플러그인이 글자 결과(content 의 text)로 감싼다. 객체를 돌려주면 JSON 이 그대로 텔레그램에 나온다.
+        return await runJarvis(kind, String(command ?? ""), context?.signal);
       },
     }),
   ],
