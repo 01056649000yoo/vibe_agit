@@ -1,0 +1,19 @@
+{
+  "id": "jarvis-quick",
+  "name": "Jarvis Quick",
+  "description": "Run the Jarvis unified command from Telegram slash commands without a model turn.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "jarvis_quick"
+    ]
+  }
+}
