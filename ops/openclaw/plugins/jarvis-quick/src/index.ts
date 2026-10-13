@@ -8,7 +8,7 @@ import { textResult } from "openclaw/plugin-sdk/tool-results";
 // 실행은 고정된 스크립트 하나뿐이고, 셸을 거치지 않으며(execFile), 명령 이름은 아래 목록만 받는다.
 const PYTHON = "/usr/bin/python3";
 const JARVIS = "/Users/seunghyeonmaegmini/Jarvis_Brain_Local/scripts/jarvis.py";
-const KINDS = new Set(["task", "done", "memo", "proj", "cal", "pdf"]);
+const KINDS = new Set(["task", "done", "memo", "proj", "cal", "pdf", "time", "journal", "doc", "sheet", "del"]);
 
 function runJarvis(kind: string, raw: string, signal?: AbortSignal): Promise<string> {
   return new Promise((resolve) => {
