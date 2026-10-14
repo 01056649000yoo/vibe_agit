@@ -165,3 +165,4 @@
 - **응답을 기다린 뒤 화면 상태에 쓰기 전에 "아직 그 글을 보고 있는가" 를 다시 본다.** AI 피드백이 다른 학생 글에 붙었다(2026-10-11). [경로: src/hooks/**]
 - **`npm audit fix` 는 검사 도구(eslint 플러그인)까지 올려 옛 코드를 새 오류로 만든다.** 연구소가 푸시 뒤 CI 린트에서 멈췄다(2026-10-11). 취약한 패키지만 `npm update <이름>` 으로 올리고, 푸시 전에 `npm run lint` 를 돌린다. [경로: package-lock.json]
 - **오픈클로 실행 정책은 실행 파일도 스크립트도 절대 경로여야 묶는다.** `python3 -B scripts/x.py`(상대)·`rg`(이름만)는 `SYSTEM_RUN_DENIED`, 허용 목록에도 이름과 절대 경로를 따로 적어야 한다(2026-10-13). 막힌 명령은 `~/.openclaw/state/openclaw.sqlite` 의 `operator_approvals` 와 `agents/main/agent/codex-home/logs_2.sqlite` 로 찾는다. [경로: ops/openclaw/**]
+- **도커 가상 디스크(Docker.raw)가 가득 차면 컨테이너는 살아 있어도 점검 응답이 막혀 `container_down` 경고가 난다.** 하루 빌드를 여러 번 하면 빌드 캐시가 16GB 까지 쌓였다(2026-10-14, 한도 32→64GB 로 증설). 많이 빌드한 날은 `docker builder prune -af` 로 캐시를 비우고, 알림의 "도커 %"는 맥 내장이 아니라 이 가상 디스크 사용률이다. [경로: scripts/trim-old-docker-images.sh]
