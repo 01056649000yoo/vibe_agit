@@ -217,20 +217,6 @@ const shuffle = (list, random) => {
  */
 export const SPELLING_QUIZ_BOOK_LIMIT = 1;
 
-/**
- * 전에 푼 적 없는 새 문제로 만든다. `seenEntryKeys` 는 최근에 푼 순서(가장 최근이 앞)의 항목 키 —
- * 전부 빼고도 문제가 모자라면(많이 풀어 새 말이 바닥남) 가장 오래전에 푼 말부터 다시 내서 채운다.
- */
-export const createFreshSpellingQuiz = (pool, seenEntryKeys = [], options = {}) => {
-    const count = options.count ?? 10;
-    const seen = [...new Set(seenEntryKeys)];
-    for (let keep = seen.length; keep >= 0; keep = keep > 0 ? Math.floor(keep / 2) : -1) {
-        const quiz = createSpellingQuiz(pool, { ...options, excludeEntryKeys: seen.slice(0, keep) });
-        if (quiz.length >= count) return quiz;
-    }
-    return createSpellingQuiz(pool, options);
-};
-
 export const createSpellingQuiz = (pool, {
     count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED,
     bookLimit = SPELLING_QUIZ_BOOK_LIMIT, excludeEntryKeys = []
@@ -269,6 +255,20 @@ export const createSpellingQuiz = (pool, {
         number: index + 1,
         choices: item.choices ? shuffle(item.choices, random) : undefined
     }));
+};
+
+/**
+ * 전에 푼 적 없는 새 문제로 만든다. `seenEntryKeys` 는 최근에 푼 순서(가장 최근이 앞)의 항목 키 —
+ * 전부 빼고도 문제가 모자라면(많이 풀어 새 말이 바닥남) 가장 오래전에 푼 말부터 다시 내서 채운다.
+ */
+export const createFreshSpellingQuiz = (pool, seenEntryKeys = [], options = {}) => {
+    const count = options.count ?? 10;
+    const seen = [...new Set(seenEntryKeys)];
+    for (let keep = seen.length; keep >= 0; keep = keep > 0 ? Math.floor(keep / 2) : -1) {
+        const quiz = createSpellingQuiz(pool, { ...options, excludeEntryKeys: seen.slice(0, keep) });
+        if (quiz.length >= count) return quiz;
+    }
+    return createSpellingQuiz(pool, options);
 };
 
 /** 학생에게 보내는 모양 — 정답·풀이 문장은 빼고 보낸다(2단계에서 서버가 이것만 내려준다). */
