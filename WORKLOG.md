@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-18 — 외부에서 아르곤 쓰기: 맥 화면 세션 대기열 도우미 (Claude)
+- **한 일**: SSH·tmux 에서는 키체인이 잠겨 아르곤(agy) 로그인이 안 읽혀, 키체인이 열린 맥 화면(GUI) 세션에서 대신 실행하는 도우미를 만들었다 [원인: agy 로그인이 키체인 암호화 저장이라 SSH 세션에서 못 읽음; 키체인 열기·샌드박스 해제로도 해결 안 됨].
+- **변경**: git 밖 — `~/Library/LaunchAgents/local.agy-queue.plist`(상주), `~/bin/agy-queue-runner.sh`(대기열 `~/agy-queue/in` → `out`), `~/agy-ask.sh`(질문 파일 → 답 파일, 답이 올 때까지 기다림), `~/remote-check.sh` 아르곤 항목 교체. 제거: `launchctl bootout gui/501/local.agy-queue` 후 plist 삭제.
+- **결과/검증**: SSH·tmux 세션에서 `ok` 질문 왕복 성공. Codex 는 파일 로그인(`~/.codex/auth.json`)이라 원래 외부에서 됨. 질문에는 코드(변경분)만 넣는다.
+- **남은 것**: 맥 화면 로그인이 풀리거나 재부팅 후 자동 로그인이 안 되면 도우미도 멈춘다(점검표가 알려 줌).
+
 ## 2026-10-18 — 푸시 환경 정리: GitHub 토큰 파일·밀린 마이그레이션 적용 (Claude)
 - **한 일**: 인형뽑기·퀴즈 변경 7커밋 푸시. 푸시가 막혔던 원인 둘을 풀었다 [원인: gh 토큰이 키체인에만 있어 SSH·tmux 에서 못 읽음 / 10-16 에 올라간 마이그레이션이 운영 DB 에 안 들어가 푸시 전 검사가 막음].
 - **변경**: git 밖 — `~/.config/claude/token.env` 에 `GH_TOKEN` 추가(값은 문서에 쓰지 않음, 권한 600, SSH·tmux 로 들어오면 자동 읽힘), `gh auth setup-git` 로 git 이 이 토큰을 씀. 운영 DB 에 `20261399_lab_outline_board_reopen_stops_old_link.sql` 적용(선생님 승인, 함수 한 문장 추가). 다른 프로젝트용 `clawpdf`·`rastermill` 변경은 저장소 밖 `~/clawpdf-rastermill-package-changes.patch` 로 옮김.
@@ -137,13 +143,6 @@
 - **변경**: 연구소 `board-client.tsx`(OutlineViewer·fitToScreen)·`lib/outline-board.ts`(글자 단계·`readFontStep`)·globals.css·guide.ts·검사 2개. FEATURE_MAP v1.26.13. PITFALLS 한 줄.
 - **결과/검증**: 연구소 검사 111·린트·빌드 통과. 선생님 반 방(13명)으로 1366×768·1280×800·1440×900 모두 13/13 한 화면, 휴대폰 겹침 없음, 글자 크기 기억 130% 확인. ⚠️ 확인 판을 같은 방에 열어 선생님이 켜 둔 판을 닫고 지움 — 선생님께 알리고 다시 켜 달라고 함(PITFALLS).
 - **남은 것 / 다음**: 선생님 `배포` 뒤 연구소 푸시(자동 배포).
-
-## 2026-10-10 — 연구소 개요 짜기 친구 개요 모음 (Claude)
-- **한 일**: 선생님 결정(추천대로). 개요짜기에서 공유를 켜면 제출한 개요만 번호·실명과 함께 보는 공개 페이지(`/lab/board/<48자>`) + 샘링크 5글자 주소(숫자 포함·1주·선생님 계정 `내 링크` 등록)를 DB 함수가 만든다(아지트 전시관 샘링크와 같은 방식, 샘링크 앱 수정 없음). 페이지는 열릴 때마다 샘링크 링크 상태를 원본으로 본다(만료·삭제·끄기 → 닫힘). 선생님 상자: 큰 주소·QR·`1주 늘리기`(최대 90일)·새 주소(확인)·끄기(확인)·샘링크 관리(아지트 연결 길). 페이지: 이름 카드 → 한 명씩 전체 화면(이전·다음·←→·밀기·칠판 전체 화면), 1분 자동(다른 탭이면 멈춤)·단추 5초 쉼·서버 5초 캐시·새 카드 노란 테두리·D-n. 옛 QR 공유 페이지와 로그인 없는 `getShareableResult` 는 닫음. [원인: 화면 확인 중 새로 고침 응답을 다시 정리해 개요가 모두 비던 것 — `readOutlineBoardResponse` 로 고치고 검사]
-- **변경**: 아지트 `20261391`(+스모크 10항목), FEATURE_MAP v1.26.12. 연구소 `~/writing-helper`: `lib/outline-board(-server).ts`·`actions/outline-board-actions.ts`·`board/[token]/{page,board-client,data/route}`·`dashboard/room/[id]/outline-board-panel.tsx`·방 만들기 체크·`createRoom`·`proxy.ts`(`/board` 공개)·`share/[sessionId]` 닫음·`guide.ts`·globals.css·`tests/outline-board.test.mjs`. 운영 DB 적용(`npm run migrate`).
-- **결과/검증**: 스모크 통과(다른 선생님 차단·제출만·늘리기·샘링크 만료 따라감·새 주소·끄기·방 삭제 시 샘링크 정리·권한). 연구소 검사 107·린트·배포 빌드 통과. 선생님 방(13명)으로 실제 화면: 카드 13·←→·Esc·가로 넘침 0(칠판·휴대폰)·5초 쉼·샘링크 307 → 시험 판은 지움.
-- **덧붙임**: 선생님 요청 — 학생 개요 화면(쓰는 화면 띠·완성 화면 상자)에도 샘링크 주소, 누르면 모달로 친구 개요 모음, 기간 지나면 회색·`기간이 끝났어요`, 끄면 사라짐. `20261392`(`get_student_outline_board_v1`, 열린·만료 판만+긴 번호, 내 활동 확인 뒤) + `components/outline-board-link.tsx`(불러오기/보여 주기 나눔). 스모크·연구소 검사 109·빌드 통과, 실제 화면(띠·상자·모달 13장·Esc 두 단계·휴대폰)·진짜 만료(띠·페이지·샘링크 모두 만료) 확인 뒤 시험 판 지움.
-- **남은 것 / 다음**: 선생님 `배포` 뒤 연구소·아지트 푸시(자동 배포).
 
 ## 지난 기록
 
