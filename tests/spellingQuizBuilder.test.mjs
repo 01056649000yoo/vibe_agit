@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
-    buildSpellingQuizPool, createSpellingQuiz, gradeSpellingAnswer, publicQuizQuestion, QUIZ_BLANK,
+    buildSpellingQuizPool, createFreshSpellingQuiz, createSpellingQuiz, gradeSpellingAnswer, publicQuizQuestion, QUIZ_BLANK,
     SPELLING_QUIZ_LEVELS, spellingSourcesFromCatalog, spellingSourcesFromEntries, spellingSourcesFromLearningEntries
 } from '../src/modules/game/spelling-claw/quiz/spellingQuizBuilder.js';
 import { getSpellingBookEntries } from '../src/modules/writing/student-input/checker/spellingBook.js';
@@ -136,4 +136,17 @@ test('책 낱말은 퀴즈 한 판에 한 개까지만 섞이고 나머지는 �
         assert.ok(quiz.filter((item) => item.level === 'book').length <= SPELLING_QUIZ_BOOK_LIMIT);
     }
     assert.equal(SPELLING_QUIZ_BOOK_LIMIT, 1);
+});
+
+test('새 도전은 전에 푼 말을 빼고 내고, 새 말이 모자라면 오래전에 푼 말부터 다시 낸다(2026-10-18)', () => {
+    const pool = buildSpellingQuizPool([...spellingSourcesFromEntries(getSpellingBookEntries())]);
+    const first = createSpellingQuiz(pool, { writeCount: 4, random: seeded(11) });
+    const firstKeys = first.map((item) => item.entryKey);
+    const second = createFreshSpellingQuiz(pool, firstKeys, { writeCount: 4, random: seeded(12) });
+    assert.equal(second.length, 10);
+    assert.ok(second.every((item) => !firstKeys.includes(item.entryKey)), '전에 푼 말이 또 나왔습니다.');
+    // 새 말이 거의 바닥난 경우: 모든 말을 푼 것으로 해도 10문제는 채운다.
+    const allKeys = [...new Set(pool.map((item) => item.entryKey))];
+    const refill = createFreshSpellingQuiz(pool, allKeys, { writeCount: 4, random: seeded(13) });
+    assert.equal(refill.length, 10);
 });

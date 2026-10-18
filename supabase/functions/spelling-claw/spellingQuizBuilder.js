@@ -217,12 +217,27 @@ const shuffle = (list, random) => {
  */
 export const SPELLING_QUIZ_BOOK_LIMIT = 1;
 
+/**
+ * 전에 푼 적 없는 새 문제로 만든다. `seenEntryKeys` 는 최근에 푼 순서(가장 최근이 앞)의 항목 키 —
+ * 전부 빼고도 문제가 모자라면(많이 풀어 새 말이 바닥남) 가장 오래전에 푼 말부터 다시 내서 채운다.
+ */
+export const createFreshSpellingQuiz = (pool, seenEntryKeys = [], options = {}) => {
+    const count = options.count ?? 10;
+    const seen = [...new Set(seenEntryKeys)];
+    for (let keep = seen.length; keep >= 0; keep = keep > 0 ? Math.floor(keep / 2) : -1) {
+        const quiz = createSpellingQuiz(pool, { ...options, excludeEntryKeys: seen.slice(0, keep) });
+        if (quiz.length >= count) return quiz;
+    }
+    return createSpellingQuiz(pool, options);
+};
+
 export const createSpellingQuiz = (pool, {
     count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED,
-    bookLimit = SPELLING_QUIZ_BOOK_LIMIT
+    bookLimit = SPELLING_QUIZ_BOOK_LIMIT, excludeEntryKeys = []
 } = {}) => {
     const byEntry = new Map();
     for (const item of pool) byEntry.set(item.entryKey, [...(byEntry.get(item.entryKey) || []), item]);
+    for (const key of excludeEntryKeys) byEntry.delete(key);
     // 꼭 넣을 재료(공통 자료 2개)를 무작위로 골라 먼저 낼 항목 앞에 둔다 — 아래 take 가 먼저 낼 항목부터 쓰므로 반드시 들어간다.
     const mustKeys = Object.entries(guaranteed || {}).flatMap(([source, need]) => shuffle(
         [...byEntry.keys()].filter((key) => byEntry.get(key)[0]?.source === source && !preferredEntryKeys.includes(key)), random

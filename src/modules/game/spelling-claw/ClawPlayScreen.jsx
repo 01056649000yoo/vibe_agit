@@ -89,6 +89,16 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
 
     const closeCelebration = useCallback(() => setCelebration(null), []);
 
+    // 목표에 닿기 어려워지면 풀이를 잠깐 보여 준 뒤 저절로 새 문제로 넘어간다(코인·포인트는 합격해야만 나가므로 끊긴 판은 보상이 없다).
+    const quizLength = quiz?.questions?.length || 0;
+    const quizCannotPass = Boolean(result) && !result.finished && quizLength > 0
+        && score + (quizLength - index - 1) < (data?.settings?.passCount ?? 0);
+    useEffect(() => {
+        if (!quizCannotPass) return undefined;
+        const timer = setTimeout(() => { startQuiz(); }, 3500);
+        return () => clearTimeout(timer);
+    }, [quizCannotPass, startQuiz]);
+
     if (loadError) {
         return <div className="claw-bench__state" role="alert"><span aria-hidden="true">🐉</span><p>{loadError}</p></div>;
     }
@@ -99,6 +109,7 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const questions = quiz?.questions || [];
     const question = questions.at(index);
     const finished = Boolean(quiz) && index >= questions.length;
+    const cannotPass = quizCannotPass && !finished;
     // 끝내지 못한 판(창을 닫음)도 코인 하나로 센다 — 넣으면 그 판을 이어 한다.
     const coins = today.coinsLeft + (today.playingId && !roundActive ? 1 : 0);
     const clawOpen = coins > 0 || roundActive || Boolean(pendingFinish);
@@ -243,7 +254,10 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                         {result.correct ? '' : result.nearMiss ? '거의 맞았어요 — 띄어쓰기를 다시 보세요. ' : `정답: ${result.answer}. `}
                         {result.explanation}
                     </p>}
-                    <button type="button" className="claw-bench__next" onClick={next} disabled={!result}>{index === questions.length - 1 ? '채점하기' : '다음 문제'}</button>
+                    {cannotPass && <p className="claw-bench__bonus" role="status">이번 판은 목표({settings.passCount}개)에 닿기 어려워요. 잠시 뒤 새 문제로 다시 도전해요!</p>}
+                    <button type="button" className="claw-bench__next" onClick={cannotPass ? startQuiz : next} disabled={!result || busy}>
+                        {cannotPass ? '새 문제로 다시 도전' : index === questions.length - 1 ? '채점하기' : '다음 문제'}
+                    </button>
                 </div> : <div className="claw-bench__question">
                     <p className="claw-bench__prompt">{score}/{questions.length} 맞혔어요 {summary?.passed ? '🎉' : ''}</p>
                     {summary?.coinGranted && <p className="claw-bench__bonus is-earned">{summary.perfect
