@@ -81,11 +81,24 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
         let ok = false;
         try { ok = Boolean(await onSpendCoin?.()); } finally { setSpending(false); }
         if (!ok) { setToast('코인을 넣지 못했어요. 다시 해 보세요'); return; }
-        if (engineRef.current?.getMode() === 'ready') engineRef.current.startRound();
+        // 코인은 이미 서버에서 빠졌다. 기계가 아직 '준비'가 아니면(막 끝난 판 정리 중 등) 잠깐 기다려서라도 판을 시작한다.
+        for (let waited = 0; waited < 4000; waited += 100) {
+            const current = engineRef.current;
+            if (!current) return;
+            if (current.getMode() === 'ready') { current.startRound(); return; }
+            await new Promise((resolve) => { setTimeout(resolve, 100); });
+        }
+        setToast('기계가 준비되지 않았어요. 화면을 새로고침해 주세요');
     }, [coins, onSpendCoin, spending]);
 
     const setDirection = (dir, on) => engineRef.current?.setInput(dir, on);
     const playing = hud.mode === 'play';
+
+    // 단추가 꺼질 때(시간 종료 등) 손가락을 뗀 신호가 오지 않아도 방향 입력이 눌린 채로 남지 않게 비운다.
+    useEffect(() => {
+        if (playing) return;
+        for (const item of DIRECTIONS) engineRef.current?.setInput(item.dir, false);
+    }, [playing]);
 
     return <div className="claw-stage">
         <div className="claw-stage__canvas" ref={containerRef} />

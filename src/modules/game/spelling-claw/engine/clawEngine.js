@@ -845,6 +845,7 @@ export async function createClawEngine({ container, plushes, difficulty = 'easy'
     roundWins = [];
     roundActive = true;
     setClawCalm(false);
+    for (const key in input) input[key] = false;
     claw.mode = 'play'; claw.timer = PLAY_TIME;
     sfx.coin(); renderHud();
     return true;
