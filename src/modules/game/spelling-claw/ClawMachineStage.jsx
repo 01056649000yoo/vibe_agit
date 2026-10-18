@@ -79,15 +79,16 @@ const ClawMachineStage = ({ coins, onSpendCoin, onWon, onRoundEnd, onPerf, quali
         if (coins <= 0) { setToast('맞춤법 퀴즈를 통과하면 코인을 받아요'); return; }
         setSpending(true);
         let ok = false;
-        try { ok = Boolean(await onSpendCoin?.()); } finally { setSpending(false); }
-        if (!ok) { setToast('코인을 넣지 못했어요. 다시 해 보세요'); return; }
+        try { ok = Boolean(await onSpendCoin?.()); } catch { ok = false; }
+        if (!ok) { setSpending(false); setToast('코인을 넣지 못했어요. 다시 해 보세요'); return; }
         // 코인은 이미 서버에서 빠졌다. 기계가 아직 '준비'가 아니면(막 끝난 판 정리 중 등) 잠깐 기다려서라도 판을 시작한다.
         for (let waited = 0; waited < 4000; waited += 100) {
             const current = engineRef.current;
-            if (!current) return;
-            if (current.getMode() === 'ready') { current.startRound(); return; }
+            if (!current) { setSpending(false); return; }
+            if (current.getMode() === 'ready') { current.startRound(); setSpending(false); return; }
             await new Promise((resolve) => { setTimeout(resolve, 100); });
         }
+        setSpending(false);
         setToast('기계가 준비되지 않았어요. 화면을 새로고침해 주세요');
     }, [coins, onSpendCoin, spending]);
 

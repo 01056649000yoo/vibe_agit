@@ -94,10 +94,10 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const quizCannotPass = Boolean(result) && !result.finished && quizLength > 0
         && score + (quizLength - index - 1) < (data?.settings?.passCount ?? 0);
     useEffect(() => {
-        if (!quizCannotPass) return undefined;
+        if (!quizCannotPass || busy) return undefined;
         const timer = setTimeout(() => { startQuiz(); }, 3500);
         return () => clearTimeout(timer);
-    }, [quizCannotPass, startQuiz]);
+    }, [quizCannotPass, busy, startQuiz]);
 
     if (loadError) {
         return <div className="claw-bench__state" role="alert"><span aria-hidden="true">🐉</span><p>{loadError}</p></div>;
