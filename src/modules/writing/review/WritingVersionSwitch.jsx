@@ -25,7 +25,7 @@ const seenKey = (postId) => `writing-change-seen-v1:${postId}`;
  * (학생 본인 글에만 쓴다 — "선생님이 승인했어요, 이렇게 좋아졌어요" 를 보여 주는 순간). 한 번 열었는지는
  * 이 브라우저에만 남긴다. 저장소가 막혀 있으면 늘 최종 글로 연다.
  */
-export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, autoOpenChanges = false, teacherEditRounds = 0 }) => {
+export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTitle, approved, autoOpenChanges = false, teacherEditRounds = 0, sideBySide = false }) => {
     const info = useMemo(
         () => getWritingCompareInfo({ before, after, beforeTitle, afterTitle, approved }),
         [before, after, beforeTitle, afterTitle, approved]
@@ -56,9 +56,11 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
     }, [view, postId]);
     const rounds = Math.max(0, Number(teacherEditRounds) || 0);
     // 고른 칸이 사라졌으면(글이 바뀌었거나 승인이 풀림) 최종 글로 돌아간다.
+    // 나란히 화면(`sideBySide`)의 두 번째 칸은 승인 전에도 `처음 글과 나란히` 로 남아 있어야 하므로
+    // 고친 곳 수(`canShowChanges`)가 0이어도 처음 글이 있으면 되돌리지 않는다(되돌리면 눌러도 아무 일이 없다).
     const lost = view === WRITING_VIEW.TEACHER
         ? rounds === 0
-        : (view === WRITING_VIEW.CHANGES && !info.canShowChanges) || (view !== WRITING_VIEW.FINAL && !info.hasOriginal);
+        : (view === WRITING_VIEW.CHANGES && !info.canShowChanges && !sideBySide) || (view !== WRITING_VIEW.FINAL && !info.hasOriginal);
     const safeView = lost ? WRITING_VIEW.FINAL : view;
     return { ...info, teacherEditRounds: rounds, view: safeView, setView };
 };

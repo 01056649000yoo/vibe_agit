@@ -32,7 +32,8 @@ const PostDetailViewer = ({
     // 이 화면의 두 번째 칸은 처음·최종을 나란히 놓는다(승인된 글이면 형광펜). 교사 화면이라 자동으로 열지 않는다.
     const version = useWritingVersion({
         postId: selectedPost?.id, before: selectedPost?.original_content, after: selectedPost?.content,
-        approved: Boolean(selectedPost?.is_confirmed), teacherEditRounds: selectedPost?.teacher_edit_rounds
+        approved: Boolean(selectedPost?.is_confirmed), teacherEditRounds: selectedPost?.teacher_edit_rounds,
+        sideBySide: true
     });
     const showTeacherEdits = version.view === WRITING_VIEW.TEACHER;
     const showOriginal = version.view !== WRITING_VIEW.FINAL && !showTeacherEdits;
@@ -562,7 +563,7 @@ const PostDetailViewer = ({
                                              display: 'flex', flexDirection: 'column'
                                         }}>
                                             <div className="writing-presentation-trigger__heading" style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3B82F6', marginBottom: '16px' }}>
-                                                <span>✨ 최종 제출 (수정본)</span>
+                                                <span>{selectedPost.teacher_edit_rounds > 0 ? '✨ 현재 글 (선생님 교정본)' : '✨ 최종 제출 (수정본)'}</span>
                                                 <span className="writing-presentation-trigger__hint">크게 보기</span>
                                             </div>
                                             <div className="writing-body" data-format={getWritingFormat(selectedMission)} style={{

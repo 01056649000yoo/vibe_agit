@@ -81,6 +81,10 @@
     background: var(--ui-surface);
     color: var(--ui-ink-strong);
     outline: none;
+    /* 앱 전체 word-break: keep-all 이면 단어째 넘어가 오른쪽 끝이 들쭉날쭉하다.
+       학생 입력창(StudentTextInput.css)과 같은 줄바꿈 규칙이라야 학생이 쓴 모양 그대로 고칠 수 있다. */
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .teacher-edit-field:focus {
