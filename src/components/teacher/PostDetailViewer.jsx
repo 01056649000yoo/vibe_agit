@@ -1,5 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingAttributedText from '../../modules/writing/review/WritingAttributedText';
+import { attributeWritingChanges } from '../../modules/writing/review/writingAttribution.js';
+import { useTeacherEditRounds } from '../../modules/writing/review/teacherEditRoundsApi';
 import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from './TeacherEditToggle';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
@@ -38,6 +41,14 @@ const PostDetailViewer = ({
     const showTeacherEdits = version.view === WRITING_VIEW.TEACHER;
     const showOriginal = version.view !== WRITING_VIEW.FINAL && !showTeacherEdits;
     const setVersionView = version.setView;
+    // 나란히 보기에서 누가 고쳤는지(학생·선생님) 가른다. 교정 회차 기록은 나란히 보기를 열 때만 불러온다.
+    const editRoundCount = Number(selectedPost?.teacher_edit_rounds) || 0;
+    const editRounds = useTeacherEditRounds(selectedPost?.id, showOriginal && editRoundCount > 0);
+    const attributedItems = useMemo(() => {
+        if (!showOriginal || !selectedPost?.original_content) return null;
+        if (editRoundCount > 0 && (editRounds.loading || editRounds.error)) return null;
+        return attributeWritingChanges(selectedPost.original_content, editRoundCount > 0 ? editRounds.rounds : [], selectedPost.content);
+    }, [showOriginal, selectedPost?.original_content, selectedPost?.content, editRoundCount, editRounds.loading, editRounds.error, editRounds.rounds]);
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -543,13 +554,17 @@ const PostDetailViewer = ({
                                                 fontSize: '1.15rem', color: '#64748B', lineHeight: '1.8',
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
-                                                <WritingChangeHighlight
-                                                    variant="before"
-                                                    enabled={Boolean(selectedPost.is_confirmed)}
-                                                    before={selectedPost.original_content}
-                                                    after={selectedPost.content}
-                                                    emptyText="최초 내용 기록이 없습니다."
-                                                />
+                                                {attributedItems ? (
+                                                    <WritingAttributedText items={attributedItems} variant="before" />
+                                                ) : (
+                                                    <WritingChangeHighlight
+                                                        variant="before"
+                                                        enabled={Boolean(selectedPost.is_confirmed)}
+                                                        before={selectedPost.original_content}
+                                                        after={selectedPost.content}
+                                                        emptyText="최초 내용 기록이 없습니다."
+                                                    />
+                                                )}
                                             </div>
                                         </WritingPresentationTrigger>
 
@@ -572,6 +587,8 @@ const PostDetailViewer = ({
                                             }}>
                                                 {isReportPost ? (
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
+                                                ) : attributedItems ? (
+                                                    <WritingAttributedText items={attributedItems} variant="after" showLegend={false} />
                                                 ) : (
                                                     <WritingChangeHighlight
                                                         variant="after"

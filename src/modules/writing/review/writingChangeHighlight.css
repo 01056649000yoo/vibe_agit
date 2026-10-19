@@ -28,3 +28,35 @@
     text-decoration: line-through;
     text-decoration-thickness: 2px;
 }
+
+/* 누가 고쳤는지 가른 비교(WritingAttributedText) — 학생은 노랑, 선생님은 교정지의 빨강. */
+.writing-attr__mark-student {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.writing-attr__mark-teacher {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--ui-danger-soft);
+    color: var(--ui-proof-ink);
+    box-shadow: inset 0 -2px 0 var(--ui-proof-ink);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.writing-attr__del-student {
+    color: var(--ui-removed-ink);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}
+
+.writing-attr__del-teacher {
+    color: var(--ui-proof-ink);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}

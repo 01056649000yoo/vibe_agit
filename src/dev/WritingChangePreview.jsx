@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import WritingChangeHighlight from '../modules/writing/review/WritingChangeHighlight';
+import WritingAttributedText from '../modules/writing/review/WritingAttributedText';
+import { attributeWritingChanges } from '../modules/writing/review/writingAttribution.js';
 import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from '../components/teacher/TeacherEditToggle';
 import RevisionCountChip from '../modules/writing/review/RevisionCountChip';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../modules/writing/review/WritingVersionSwitch';
@@ -21,6 +23,16 @@ const SAMPLES = {
         after: '나는 강아지를 꼭 키우고 싶다. 강아지는 귀엽고 나를 반겨 준다.\n\n하지만 엄마는 안 된다고 하셨다. 왜냐하면 집이 좁고 낮에는 돌볼 사람이 없기 때문이다.\n\n그래서 나는 엄마와 약속을 정해 보기로 했다. 산책은 내가 맡겠다고 말씀드릴 것이다.'
     },
     spaces: { label: '줄바꿈만 바뀐 글', before: '첫 줄\n둘째 줄', after: '첫 줄\n\n둘째 줄' }
+};
+
+// 처음 글 → (학생) → 선생님이 고치기 전 글 → (선생님) → 수정본 → (학생) → 지금 글
+const ATTRIBUTION_SAMPLE = {
+    original: SAMPLES.short.before,
+    rounds: [{
+        base_content: '오늘은 운동장이 더 넓어 보였다. 이어달리기를 할수 있어서 신났다.\n우리 반이 이겼다.',
+        edited_content: '오늘은 운동장이 더 넓어 보였다. 이어달리기를 할 수 있어서 신났다.\n우리 반이 힘을 모아 이겼다.'
+    }],
+    current: '오늘은 운동장이 더 넓어 보였다. 이어달리기를 할 수 있어서 정말 신났다.\n우리 반이 힘을 모아 이겼다. 다음에도 뛰고 싶다.'
 };
 
 const box = { padding: 20, borderRadius: 16, border: '1px solid var(--ui-border)', background: 'var(--ui-surface)', fontSize: '1.1rem', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' };
@@ -70,12 +82,26 @@ export default function WritingChangePreview() {
                 </div>
             </section>
             <section>
+                <h3>교사 글 자세히 보기 — 처음 글과 나란히(학생·선생님 구분)</h3>
+                <AttributedSection />
+            </section>
+            <section>
                 <h3>나란히 보기(글 자세히 보기·제출 현황)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
                     <div style={box}><strong>🌱 최초 제출</strong><br /><WritingChangeHighlight variant="before" enabled={approved} before={sample.before} after={sample.after} /></div>
                     <div style={box}><strong>✨ 최종 제출</strong><br /><WritingChangeHighlight variant="after" enabled={approved} before={sample.before} after={sample.after} /></div>
                 </div>
             </section>
+        </div>
+    );
+}
+
+function AttributedSection() {
+    const items = attributeWritingChanges(ATTRIBUTION_SAMPLE.original, ATTRIBUTION_SAMPLE.rounds, ATTRIBUTION_SAMPLE.current);
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }} data-testid="attributed-preview">
+            <div style={box}><strong>🌱 최초 제출 (초안)</strong><br /><WritingAttributedText items={items} variant="before" /></div>
+            <div style={box}><strong>✨ 현재 글 (선생님 교정본)</strong><br /><WritingAttributedText items={items} variant="after" showLegend={false} /></div>
         </div>
     );
 }

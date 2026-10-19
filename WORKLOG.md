@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-20 — 처음 글과 나란히: 학생·선생님이 고친 곳을 색으로 가름 (Claude)
+- **한 일**: 나란히 보기에서 처음 글 → 지금 글의 바뀐 곳을 누가 고쳤는지 가려 칠했다(학생=노랑, 선생님=빨강, 지운 곳=가운데 줄). 판을 차례로 견주는 방식이라 추측이 아니다(처음 글 → 교정 회차 고치기 전/고친 글 → 지금 글).
+- **변경**: 새 `writingAttribution.js`·`WritingAttributedText.jsx`·CSS, `PostDetailViewer.jsx`(교정 회차는 나란히 보기를 열 때만 `get_post_teacher_edits_v1` 로 읽음), 개발 미리보기 `WritingChangePreview.jsx`, `tests/writingAttribution.test.mjs`, FEATURE_MAP v1.26.18.
+- **결과/검증**: 시험 5개 추가·관련 125개 통과, eslint 통과, `?dev-lab=writing-change` 를 실제 브라우저로 그려 색 구분 확인. DB 변경 없음. 교정 기록이 없던 옛 글은 모두 학생 고침으로 보임.
+- **남은 것**: 배포 지시 대기. 실제 교정 글로 확인(선생님).
+
 ## 2026-10-20 — 교사 글 보기: 처음 글과 나란히 동작 + 고치기 칸 줄바꿈 (Claude)
 - **한 일**: ① 승인 전 글에서 `처음 글과 나란히` 를 눌러도 변화가 없던 것을 고쳐 처음 글과 현재(교정 포함) 글을 좌우로 보이게 했다 [원인: 고친 곳 수가 0이면 `useWritingVersion` 이 고른 칸을 최종 글로 되돌림]. ② 선생님 고치기 칸의 오른쪽 끝이 들쭉날쭉하던 것을 학생 입력창과 같은 줄바꿈 규칙으로 맞췄다 [원인: 앱 전체 `word-break: keep-all` 을 물려받음].
 - **변경**: `WritingVersionSwitch.jsx`(`sideBySide` 옵션), `PostDetailViewer.jsx`(옵션 전달·교정본이 있으면 오른쪽 칸 이름 `현재 글 (선생님 교정본)`), `teacherPostEdit.css`, `tests/teacherSideBySideCompare.test.mjs`.
@@ -136,13 +142,6 @@
 - **변경**: 연구소 layout(umami 뺌)·next.config(`deploymentId`)·`room/[id]/page.tsx`(서버에서 곧바로 이동)·loading.tsx 3곳·`lib/current-user.ts`(React cache)·선생님 방 `initialSessions`·학생 활동 `.catch`·종료 제목·맞춤법 `_v3`·한 명씩 보기 칸 높이·검사 `lab-loading-and-entry` 등. git 밖: jarvis Caddy(`~/Jarvis_Brain_Local/deploy/Caddyfile.docker`) umami 블록 삭제·검사 뒤 reload(샘링크 200), `~/umami`·꺼 둔 LaunchAgent 삭제(이미지·볼륨은 7월에 이미 없음).
 - **결과/검증**: 연구소 검사 121·린트·빌드 통과. 네 활동 학생 흐름·선생님 첫 화면 1명 완료·종료 뒤 막힘·판 끄기 모두 화면으로 확인.
 - **남은 것 / 다음**: 맥미니 본체 `/etc/caddy/Caddyfile` 의 umami 블록(sudo 필요)·가비아 DNS `umami` 레코드는 선생님. 결정: 종료된 개요짜기에서 학생이 개요를 고쳐 저장하는 것(지금 허용, 다른 활동은 막힘)을 막을지. 배포는 선생님 말씀 뒤.
-
-## 2026-10-11 — 친구 개요 모음: 세 줄·질문 색·종료한 활동도 학생 목록에 (Claude)
-- **한 일**: 선생님 요청 셋. ① 세 칸 나란히 → 위에서 아래로 세 줄, 한 줄 안 질문은 나란히(최대 3). ② 질문은 옅은 파란 띠·파란 글씨. ③ 종료한 개요짜기도 친구 개요 모음을 켜면 학생 목록에 `👀 친구 개요 모음 · …까지`(보기 전용)로 나타나고, 들어가면 쓰기 대신 판, 기간이 지나거나 끄면 사라짐 — `get_my_lab_activities_v1` 에 `room_is_active`·`peer_board_until`(샘링크 링크가 원본), 연구소 입장에서 종료 방 + 열린 판이면 `peerBoardToken`. 화면 확인은 운영 자료를 바꾸지 않고 DB 읽기·가짜 응답으로만(PITFALLS 10-11).
-- **변경**: 아지트 `20261393`(+스모크, `20261103` 스모크를 새 규칙에 맞춤)·`lab-activities/api.js`·`LabActivitiesPage.jsx/.css`·`dev/LabActivitiesPreview.jsx`·`labSsoIntegration` 검사·FEATURE_MAP v1.26.14. 연구소 `board-client.tsx`·globals.css·`lab-student-session.ts`·`room/[id]/page.tsx`·`student-actions.ts`·guide.ts·검사.
-- **결과/검증**: 스모크(판 없음 안 보임·켜면 보임·만료·끄기·진행 중 그대로) 통과, 연구소 검사 112·빌드, 아지트 검사. 노트북 세 크기 13/13 한 화면, 휴대폰 겹침 없음, 학생 목록 미리보기 3장·가로 넘침 0.
-- **덧붙임**: 배포(`20261393` 적용 → 두 저장소 자동 배포 성공). 선생님 요청으로 선생님 상자·방 만들기에 학생이 들어오는 길 안내(학생 대시보드·주소·QR) — 학생 대시보드 안내가 없었음. 연구소 검사 113.
-- **남은 것 / 다음**: 안내 문구는 선생님 `배포` 뒤 연구소 푸시.
 
 ## 지난 기록
 
