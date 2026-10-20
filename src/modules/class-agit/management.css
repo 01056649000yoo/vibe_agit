@@ -342,3 +342,16 @@
 
 .class-agit-management .class-agit-works-target > button { margin-left: auto; }
 .class-agit-management .class-agit-back-to-add { margin: 0 0 var(--ui-space-3); }
+
+/* 작품 담기는 주제(미션) 목록이 기본이다 — 검색은 접어 둔다(2026-10-20 "글을 검색해서 담기는 어렵다") */
+.class-agit-management .anthology-bulk__more { margin: 0 0 var(--ui-space-3); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); }
+.class-agit-management .anthology-bulk__more > summary { padding: var(--ui-space-2) var(--ui-space-4); color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 700; cursor: pointer; }
+.class-agit-management .anthology-bulk__more > :not(summary) { padding: 0 var(--ui-space-4) var(--ui-space-3); }
+.class-agit-management .anthology-bulk__bar { display: block; height: 6px; margin: var(--ui-space-1) 0; border-radius: 3px; background: var(--ui-border); overflow: hidden; max-width: 320px; }
+.class-agit-management .anthology-bulk__bar i { display: block; height: 100%; background: var(--ui-primary); }
+.class-agit-management .anthology-bulk__work strong { font-size: var(--ui-text-lg); }
+.class-agit-management .class-agit-back-to-add { display: flex; align-items: center; gap: var(--ui-space-3); }
+.class-agit-management .class-agit-back-to-add > span { color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+
+.class-agit-management .anthology-bulk__list > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); }
+.class-agit-management .anthology-bulk__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); }

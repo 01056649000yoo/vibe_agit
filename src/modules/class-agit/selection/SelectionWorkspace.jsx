@@ -82,15 +82,8 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
             </div>
             {mode === 'order' && <div className="class-agit-back-to-add"><Button variant="ghost" size="sm" type="button" onClick={() => setMode('find')}>← 작품 담기로 돌아가기</Button></div>}
             <div hidden={mode !== 'find'}>
-                <div className="anthology-ways" role="group" aria-label="담는 방법">
-                    <Button variant={way === 'mission' ? 'primary' : 'outline'} type="button" aria-pressed={way === 'mission'}
-                        onClick={() => { setWay('mission'); setStartMission(null); }}>주제째 담기</Button>
-                    <Button variant={way === 'work' ? 'primary' : 'outline'} type="button" aria-pressed={way === 'work'}
-                        onClick={() => setWay('work')}>작품 골라 담기</Button>
-                    <p className="anthology-ways__detail">{way === 'mission'
-                        ? '미션을 고르면 그 미션의 글을 한 번에 담습니다. 전시실 하나에는 20편까지 들어갑니다.'
-                        : '글을 하나씩 보고 고릅니다.'}</p>
-                </div>
+                {way === 'work' && <div className="class-agit-back-to-add"><Button variant="ghost" size="sm" type="button" onClick={() => { setWay('mission'); setStartMission(null); }}>← 주제 목록으로</Button>
+                    <span>{startMission ? `‘${startMission.title}’에서 담을 글을 골라요` : '글을 하나씩 보고 골라요'}</span></div>}
                 {way === 'mission'
                     ? <MissionBulkPicker classId={draft.classId} api={api} items={draft.items}
                         capacity={remaining}

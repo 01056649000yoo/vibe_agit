@@ -52,20 +52,22 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {message && <p className="anthology-bulk__message" role="status">{message}</p>}
         <p className="anthology-bulk__hint">
-            💡 선생님이 <strong>승인한 글</strong>은 진행 중인 미션이어도 담을 수 있어요. 아직 승인하지 않은 글은 담기지 않으니,
-            나중에 승인한 글은 이 화면에 다시 와서 더 담아 주세요.
+            💡 담을 <strong>주제(미션)</strong>를 고르세요. 선생님이 <strong>승인한 글</strong>은 진행 중인 미션이어도 담을 수 있어요. 나중에 승인한 글은 다시 와서 더 담으면 됩니다.
         </p>
-        <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
-            <label>미션명 찾기<input value={input} maxLength={80} placeholder="오래된 미션도 찾아보세요" onChange={(event) => setInput(event.target.value)} /></label>
-            <Button variant="outline" type="submit">미션 검색</Button>
-        </form>
-        <div className="anthology-bulk__filters">
-            <label>미션 범위<select value={scope} onChange={(event) => setScope(event.target.value)}>
-                <option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">지난 과제 보관함</option>
-            </select></label>
-            <label><input type="checkbox" checked={skipRepresented} onChange={(event) => setSkipRepresented(event.target.checked)} />이미 담은 학생은 빼기</label>
-            <span className="anthology-bulk__capacity">{capacityNote}</span>
-        </div>
+        <details className="anthology-bulk__more">
+            <summary>오래된 미션 찾기 · 거르기</summary>
+            <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
+                <label>미션명 찾기<input value={input} maxLength={80} placeholder="오래된 미션도 찾아보세요" onChange={(event) => setInput(event.target.value)} /></label>
+                <Button variant="outline" type="submit">미션 검색</Button>
+            </form>
+            <div className="anthology-bulk__filters">
+                <label>미션 범위<select value={scope} onChange={(event) => setScope(event.target.value)}>
+                    <option value="all">전체 미션</option><option value="active">사용 중</option><option value="archived">지난 과제 보관함</option>
+                </select></label>
+                <label><input type="checkbox" checked={skipRepresented} onChange={(event) => setSkipRepresented(event.target.checked)} />이미 담은 학생은 빼기</label>
+                <span className="anthology-bulk__capacity">{capacityNote}</span>
+            </div>
+        </details>
         <BrowseStatus state={state} />
         <ul className="anthology-bulk__list">{state.page?.items.map((mission) => {
             const mine = items.filter((item) => item.missionId === mission.id).length;
@@ -81,6 +83,7 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
                     <strong>{mission.title}</strong>
                     <small>{missionFormatLabel(mission.format)}
                         {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''} · {mission.archived ? '지난 과제 보관함' : '진행 중'}</small>
+                    {mission.supported && total > 0 && <span className="anthology-bulk__bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (mine / total) * 100)}%` }} /></span>}
                     <small>{!mission.supported ? '전시·문집 지원 준비 중'
                         : noneYet ? '아직 승인한 글이 없어요 · 글을 승인하면 담을 수 있어요'
                         : allAdded ? `승인한 글 ${total}편을 모두 담았습니다`
@@ -94,7 +97,7 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
                         onClick={() => run(mission, newRoom.capacity, newRoom.onAdd)}>
                         {newRoom.label(Math.min(left, newRoom.capacity))}
                     </Button>}
-                    <Button variant="ghost" type="button" disabled={busy} onClick={() => onPickMission(mission)}>글 보기</Button>
+                    <Button variant="ghost" type="button" disabled={busy} onClick={() => onPickMission(mission)}>일부만 골라 담기</Button>
                 </div>
             </li>;
         })}</ul>
