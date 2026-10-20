@@ -13,6 +13,7 @@ import {
     removeReportImage,
     uploadReportImage,
 } from './reportImageApi';
+import { REPORT_PHOTO_RULES, REPORT_PHOTO_RULES_CHECK_LABEL } from './reportPhotoRules.js';
 import './reportWriting.css';
 
 const TITLE_INPUT_STYLE = {
@@ -40,6 +41,8 @@ const ReportEditor = ({
     const [imageUrls, setImageUrls] = useState(() => new Map());
     const [uploadingSectionId, setUploadingSectionId] = useState(null);
     const [photoStatus, setPhotoStatus] = useState('');
+    // 사진을 올리기 전에 약속을 읽고 체크해야 한다(법적 동의가 아니라 주의 안내, 저장하지 않는다).
+    const [photoRulesChecked, setPhotoRulesChecked] = useState(false);
     const imageCount = sections.filter((section) => section.image?.path).length;
     const imagePathKey = sections
         .map((section) => section.image?.path)
@@ -122,6 +125,10 @@ const ReportEditor = ({
 
     const handlePhotoChange = async (section, file) => {
         if (!file || disabled || uploadingSectionId) return;
+        if (!photoRulesChecked) {
+            alert('사진을 올리기 전에 위의 사진 약속을 읽고 체크해 주세요.');
+            return;
+        }
         if (!section.image?.path && imageCount >= normalizedConfig.maxImages) {
             alert(`사진은 ${normalizedConfig.maxImages}장까지 넣을 수 있어요.`);
             return;
@@ -206,6 +213,17 @@ const ReportEditor = ({
                 <span>내용 칸 {sections.length}/{normalizedConfig.maxSections} · 사진 {imageCount}/{normalizedConfig.maxImages}</span>
             </div>
 
+            <fieldset className="report-editor__photo-rules" disabled={disabled}>
+                <legend>📷 사진을 올리기 전에 약속해요</legend>
+                <ul>
+                    {REPORT_PHOTO_RULES.map((rule) => <li key={rule}>{rule}</li>)}
+                </ul>
+                <label className="report-editor__photo-rules-check">
+                    <input type="checkbox" checked={photoRulesChecked} onChange={(event) => setPhotoRulesChecked(event.target.checked)} />
+                    <span>{REPORT_PHOTO_RULES_CHECK_LABEL}</span>
+                </label>
+            </fieldset>
+
             <div className="report-editor__sections">
                 {sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
@@ -266,7 +284,7 @@ const ReportEditor = ({
                                                 <input
                                                     type="file"
                                                     accept="image/*"
-                                                    disabled={Boolean(uploadingSectionId) || imageCount >= normalizedConfig.maxImages}
+                                                    disabled={Boolean(uploadingSectionId) || imageCount >= normalizedConfig.maxImages || !photoRulesChecked}
                                                     onChange={(event) => {
                                                         const file = event.target.files?.[0];
                                                         event.target.value = '';
@@ -291,7 +309,7 @@ const ReportEditor = ({
                                                         <input
                                                             type="file"
                                                             accept="image/*"
-                                                            disabled={Boolean(uploadingSectionId)}
+                                                            disabled={Boolean(uploadingSectionId) || !photoRulesChecked}
                                                             onChange={(event) => {
                                                                 const file = event.target.files?.[0];
                                                                 event.target.value = '';

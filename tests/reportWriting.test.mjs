@@ -214,3 +214,15 @@ test('보고서 완성본은 한 장의 보고서 용지(머리·관찰 N·사�
     // 칸은 둥근 카드가 아니라 용지 안의 점선으로 이어 붙인다.
     assert.match(reportWritingCss, /\.report-document__section \+ \.report-document__section\s*\{[^}]*dashed/);
 });
+
+test('사진을 올리기 전에 약속을 읽고 체크해야 하고, 약속 문구는 한 파일에서 온다', async () => {
+    const rules = await import('../src/modules/writing/mission-types/report/reportPhotoRules.js');
+    assert.equal(rules.REPORT_PHOTO_RULES.length, 4);
+    assert.ok(rules.REPORT_PHOTO_RULES.some((rule) => rule.includes('얼굴')));
+    assert.ok(rules.REPORT_PHOTO_RULES.some((rule) => rule.includes('직접 찍은')));
+    assert.match(reportEditorSource, /REPORT_PHOTO_RULES\.map/);
+    assert.match(reportEditorSource, /useState\(false\)/);
+    // 체크 전에는 사진 올리기·바꾸기 입력이 모두 막히고, 처리 함수도 한 번 더 막는다.
+    assert.equal((reportEditorSource.match(/!photoRulesChecked/g) ?? []).length >= 3, true);
+    assert.match(reportEditorSource, /if \(!photoRulesChecked\) \{\s*alert\(/);
+});
