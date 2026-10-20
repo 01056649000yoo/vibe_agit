@@ -16,6 +16,16 @@ export const STUDENT_GUIDE_SECTIONS = Object.freeze([
                 ctaLabel: '과제 보기', destination: Object.freeze({ type: 'tab', tabId: 'mission_list' })
             }),
             Object.freeze({
+                id: 'reports', icon: '📋', title: '보고서 쓰기',
+                description: '머리말과 칸 글을 쓰고, 출처 칸이 있으면 참고한 곳도 적어요.',
+                ctaLabel: '과제 보기', destination: Object.freeze({ type: 'tab', tabId: 'mission_list' })
+            }),
+            Object.freeze({
+                id: 'report-photos', icon: '📷', title: '보고서 사진',
+                description: '내가 찍은 사진만, 얼굴이 안 나오게 올리고 짧게 설명해요.',
+                ctaLabel: '과제 보기', destination: Object.freeze({ type: 'tab', tabId: 'mission_list' })
+            }),
+            Object.freeze({
                 id: 'reading-logs', icon: '📚', title: '독서록',
                 description: '읽은 책에서 기억에 남은 점과 내 생각을 적어요.',
                 ctaLabel: '독서록 쓰기', destination: Object.freeze({ type: 'tab', tabId: 'reading_logs' })

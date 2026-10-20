@@ -13,7 +13,7 @@ const [modal, dashboard, header] = await Promise.all([
 test('학생 사용법은 글쓰기·아지트·소식 흐름을 짧은 문장으로 안내한다', () => {
     assert.deepEqual(STUDENT_GUIDE_SECTIONS.map((section) => section.id), ['writing', 'agit', 'news']);
     assert.deepEqual(STUDENT_GUIDE_ITEMS.map((item) => item.id), [
-        'missions', 'reading-logs', 'diaries', 'lab-activities', 'my-agit',
+        'missions', 'reports', 'report-photos', 'reading-logs', 'diaries', 'lab-activities', 'my-agit',
         'friends-hideout', 'class-agit', 'neighbor-agit', 'playground', 'feedback', 'activity', 'footprint'
     ]);
     for (const item of STUDENT_GUIDE_ITEMS) {
