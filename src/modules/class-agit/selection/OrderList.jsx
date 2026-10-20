@@ -19,7 +19,7 @@ export default function OrderList({ items, roomTitle = '미배정', roomOptions 
     };
     const move = (target) => { try { change(moveSelected(items, chosen, target)); } catch (reason) { setError(reason.message); } };
     const work = reading === null ? null : items.at(reading);
-    return <section className="class-agit-selection-order" aria-label="담은 작품 정리">
+    return <section className="class-agit-selection-order" aria-label="순서·이동 정리">
         <div className="class-agit-selection-heading"><div><h3>{roomTitle} · {items.length}편</h3><p>{new Set(items.map((item) => item.studentId)).size}명의 작가 · 전시실당 최대 {limits.worksPerRoom}편</p></div><Button variant="outline" type="button" onClick={onFind}>작품 더 찾기</Button></div>
         <div className="class-agit-order-tools"><label>전체 순서<select value={grouping} onChange={(event) => setGrouping(event.target.value)}><option value="mission">미션별로 모으기</option><option value="student">학생 이름순</option><option value="added">담은 순서</option></select></label><Button variant="outline" type="button" disabled={!items.length} onClick={() => change(sortSelectedWorks(items, grouping, addedOrder.current))}>전시실 순서 적용</Button><Button variant="ghost" type="button" disabled={!undo || undo.revision !== savedRevision || undo.after.length !== items.length || undo.after.some((item, index) => workKey(item) !== workKey(items.at(index)))} onClick={() => { onRestore(undo.items); setUndo(null); }}>순서 변경 되돌리기</Button></div>
         <p className="class-agit-selection-hint">순서 적용은 현재 전시실의 작품만 바꿉니다. 저장 전에는 직전 변경을 되돌릴 수 있습니다.</p>
