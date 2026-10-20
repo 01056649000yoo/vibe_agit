@@ -19,17 +19,18 @@ const WAYS = [
     { id: 'work', label: '작품 골라 담기', detail: '글을 하나씩 보고 고릅니다' },
 ];
 
-export default function SourcePicker({ classId, api, items, onAdd, onClose, ownerStudent = null }) {
+// `embedded` — 3단계 안에 바로 놓일 때(테두리 상자·제목·닫기 단추 없이). `onRemove` — 담은 글 빼기.
+export default function SourcePicker({ classId, api, items, onAdd, onClose, onRemove, embedded = false, ownerStudent = null }) {
     const [way, setWay] = useState('mission');
     // `글 보기` 로 넘어올 때 그 미션을 골라 둔 채로 연다.
     const [startMission, setStartMission] = useState(null);
     const effectiveWay = ownerStudent ? 'student' : way;
     const chosen = WAYS.find((entry) => entry.id === effectiveWay);
-    return <section className="class-agit-book-picker">
-        <header><h2>수록할 글 찾기</h2><Button variant="outline" type="button" onClick={onClose}>찾기 닫기</Button></header>
+    return <section className={embedded ? 'class-agit-book-picker class-agit-book-picker--embedded' : 'class-agit-book-picker'}>
+        {!embedded && <header><h2>수록할 글 찾기</h2><Button variant="outline" type="button" onClick={onClose}>찾기 닫기</Button></header>}
         {ownerStudent && <p className="anthology-ways__detail"><strong>{ownerStudent.name}</strong> 학생의 글만 담을 수 있습니다. 지은이는 표지에 한 번만 표시됩니다.</p>}
-        {!ownerStudent && <div className="anthology-ways" role="group" aria-label="담는 방법">
-            {WAYS.map((entry) => <Button key={entry.id} variant={way === entry.id ? 'primary' : 'outline'} type="button"
+        {!ownerStudent && way !== 'work' && <div className="anthology-ways" role="group" aria-label="담는 방법">
+            {WAYS.filter((entry) => entry.id !== 'work').map((entry) => <Button key={entry.id} variant={way === entry.id ? 'primary' : 'outline'} type="button"
                 aria-pressed={way === entry.id} onClick={() => { setWay(entry.id); if (entry.id === 'mission') setStartMission(null); }}>{entry.label}</Button>)}
             <p className="anthology-ways__detail">{chosen.detail}</p>
         </div>}
@@ -41,7 +42,9 @@ export default function SourcePicker({ classId, api, items, onAdd, onClose, owne
         {effectiveWay === 'student' && <StudentBulkPicker classId={classId} api={api} items={items} onAdd={onAdd} fixedStudent={ownerStudent}
             capacity={Math.max(0, limits.anthologyWorks - items.length)}
             capacityNote={`남은 자리 ${Math.max(0, limits.anthologyWorks - items.length)}편 · 담음 ${items.length}/${limits.anthologyWorks}편`} />}
+        {effectiveWay === 'work' && !ownerStudent && <div className="class-agit-back-to-add"><Button variant="ghost" size="sm" type="button" onClick={() => { setWay('mission'); setStartMission(null); }}>← 주제 목록으로</Button>
+            <span>{startMission ? `‘${startMission.title}’에서 담을 글을 골라요` : '글을 하나씩 보고 골라요'}</span></div>}
         {effectiveWay === 'work' && <SourceBrowser classId={classId} api={api} items={items} maximum={limits.anthologyWorks} scope="글꽃 책방"
-            initialMission={startMission} onAdd={onAdd} />}
+            initialMission={startMission} hideMissionRail onRemove={onRemove} onAdd={onAdd} />}
     </section>;
 }

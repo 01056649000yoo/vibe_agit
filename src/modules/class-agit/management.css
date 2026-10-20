@@ -380,3 +380,25 @@
     .class-agit-management .class-agit-works-layout { grid-template-columns: minmax(0, 1fr); }
     .class-agit-management .class-agit-room-rail { position: static; max-height: none; }
 }
+
+/* 글꽃 책방 작품 담기: 담은 글 현황(왼쪽)과 담기 도구(오른쪽). 전시관 작품 담기와 같은 뼈대 */
+.class-agit-management .class-agit-source-tabs { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin: 0 0 var(--ui-space-3); border-bottom: 2px solid var(--ui-border); }
+.class-agit-management .class-agit-source-tabs button { display: inline-flex; align-items: center; gap: var(--ui-space-2); min-height: var(--ui-control-md); padding: var(--ui-space-2) var(--ui-space-4); margin-bottom: -2px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--ui-ink-muted); font: inherit; font-size: var(--ui-text-md); font-weight: 800; cursor: pointer; }
+.class-agit-management .class-agit-source-tabs button:hover:not(:disabled) { color: var(--ui-primary); }
+.class-agit-management .class-agit-source-tabs button[aria-selected='true'] { color: var(--ui-primary); border-bottom-color: var(--ui-primary); background: transparent; }
+.class-agit-management .class-agit-source-tabs button:disabled { opacity: .5; cursor: default; }
+.class-agit-management .class-agit-book-exhibits { display: grid; gap: var(--ui-space-2); justify-items: start; }
+.class-agit-management .class-agit-book-exhibits h3 { margin: 0; }
+.class-agit-management .class-agit-book-rail .class-agit-room-card { cursor: default; }
+/* 테두리 상자 없이 바로 펼친 담기 영역(책방) */
+.class-agit-management .class-agit-book-picker--embedded { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+/* 주제 카드를 촘촘하게: 넓은 화면은 두 장씩, 제목·진행·단추를 낮게 쌓는다(전시관·책방 공통) */
+.class-agit-management .anthology-bulk__list { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--ui-space-3); }
+.class-agit-management .anthology-bulk__list > li { padding: var(--ui-space-3); gap: var(--ui-space-2); align-content: start; }
+.class-agit-management .anthology-bulk__work strong { font-size: var(--ui-text-md); }
+.class-agit-management .anthology-bulk__work small { font-size: var(--ui-text-sm); margin-top: 0; }
+.class-agit-management .anthology-bulk__bar { margin: var(--ui-space-1) 0; max-width: none; }
+.class-agit-management .anthology-bulk__hint { margin: 0 0 var(--ui-space-2); padding: var(--ui-space-2) var(--ui-space-3); }
+.class-agit-management .anthology-ways { margin-bottom: var(--ui-space-2); }
+.class-agit-management .anthology-bulk__more { margin-bottom: var(--ui-space-2); }
+@media (max-width: 900px) { .class-agit-management .anthology-bulk__list { grid-template-columns: minmax(0, 1fr); } }

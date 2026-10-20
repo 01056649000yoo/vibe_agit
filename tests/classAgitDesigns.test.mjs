@@ -142,7 +142,7 @@ test('문집 제작은 다섯 단계 탭으로 나뉘고, 차례는 담기와 �
     assert.match(source, /role="tablist"/);
     for (const id of steps) assert.ok(source.includes(`role: 'tabpanel'`) && source.includes(`panel('${id}')`), `${id} 패널이 없습니다.`);
     const works = source.slice(source.indexOf("panel('works')"), source.indexOf("panel('order')"));
-    for (const label of ['학생 글에서 담기', '전시 작품 가져오기', '담은 글 · ']) assert.ok(works.includes(label), `3단계에 ${label}이 없습니다.`);
+    for (const label of ['학생 글에서 담기', '전시 작품 가져오기', '<BookRail']) assert.ok(works.includes(label), `3단계에 ${label}이 없습니다.`);
     // 3단계에는 차례 목록·묶기·쪽 배치가 없다 — 그것은 4단계 것이다.
     for (const label of ['작품 묶기', '쪽 배치', '<ol']) assert.ok(!works.includes(label), `3단계에 ${label}이 남아 있습니다.`);
     const order = source.slice(source.indexOf("panel('order')"), source.indexOf("panel('publish')"));
