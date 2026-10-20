@@ -68,3 +68,20 @@ test('선생님 교정 탭은 최종 글 칸과 같은 폭·두 칸 비율·글 
     const rounds = await read('src/modules/writing/review/TeacherEditRounds.jsx');
     assert.equal((rounds.match(/writing-body" data-format=\{format\}/g) ?? []).length, 2, '두 글 칸 모두 산문 정렬 규칙(.writing-body)을 받아야 합니다.');
 });
+
+test('최종 글 비교·크게 보기·학생 바뀐 곳 모두 제목 교정을 보여 준다(훅이 본문과 제목을 함께 돌려줌)', async () => {
+    const hook = await read('src/modules/writing/review/useAttributedChanges.js');
+    assert.match(hook, /attributeTitleChanges\(/);
+    assert.match(hook, /return \{ items, titleItems \}/);
+    const viewer = await read('src/components/teacher/PostDetailViewer.jsx');
+    assert.match(viewer, /const \{ items: attributedItems, titleItems \} = useAttributedChanges\(/);
+    assert.equal((viewer.match(/<WritingAttributedText items=\{titleItems\}/g) ?? []).length >= 3, true, '왼쪽 칸·오른쪽 칸·크게 보기 제목');
+    const shelf = await read('src/components/student/MyShelfPostDetail.jsx');
+    assert.match(shelf, /const \{ items: attributedItems, titleItems \} = useAttributedChanges\(/);
+    assert.match(shelf, /<WritingAttributedText items=\{titleItems\} variant="merged"/);
+});
+
+test('거의 새로 썼어요 안내는 본문에만 붙고 제목 비교(범례를 숨긴 조각)에는 붙지 않는다', async () => {
+    const source = await read('src/modules/writing/review/WritingAttributedText.jsx');
+    assert.match(source, /variant === 'after' \|\| !showLegend \|\| !share\.rewritten/);
+});

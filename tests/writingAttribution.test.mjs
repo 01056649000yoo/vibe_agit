@@ -79,3 +79,60 @@ test('처음 글의 절반 이상이 바뀌면 거의 새로 썼다고 보고, �
     assert.equal(small.rewritten, false);
     assert.ok(small.percent < 50);
 });
+
+// ── 2026-10-21 제보: 문단 맨 앞의 눈에 보이지 않는 공백(U+200B) + 제목 비교 ──────────────────────────────
+import { buildProofMarks } from '../src/modules/writing/review/proofMarks.js';
+import { diffWritingText, isBlankText, tokenizeWords } from '../src/modules/writing/review/writingDiff.js';
+import { attributeTitleChanges } from '../src/modules/writing/review/writingAttribution.js';
+
+const ZW = '​';
+const BEFORE = `첫 문단입니다.\n${ZW}무대 위에서 지켜봐 주셨습니다.\n${ZW}비록 무대에 서면 떨립니다.`;
+const AFTER = `첫 문단입니다.\n${ZW} 무대 위에서 지켜봐 주셨습니다.\n${ZW} 비록 무대에 서면 떨립니다.`;
+
+test('폭 없는 공백도 공백으로 본다 — 어절을 가르고 공백만으로 된 글로 친다', () => {
+    assert.equal(isBlankText(ZW), true);
+    assert.equal(isBlankText(`${ZW} \n`), true);
+    assert.equal(isBlankText(`${ZW}가`), false);
+    assert.deepEqual(tokenizeWords(`가\n${ZW}무대 위`), ['가', `\n${ZW}`, '무대', ' ', '위']);
+});
+
+test('문단 맨 앞의 폭 없는 공백 뒤에 띄어쓰기만 넣으면 뒤따르는 단어는 고친 것으로 치지 않는다', () => {
+    const diff = diffWritingText(BEFORE, AFTER);
+    const changed = diff.segments.filter((segment) => segment.type !== 'same').map((segment) => segment.text);
+    assert.ok(changed.length > 0, '공백이 바뀐 것은 나와야 합니다.');
+    for (const text of changed) assert.equal(isBlankText(text), true, `공백이 아닌 조각이 바뀐 것으로 나왔습니다: ${JSON.stringify(text)}`);
+    assert.equal(diff.changeCount, 0, '공백만 바뀐 자리는 세지 않습니다.');
+});
+
+test('최종 글 비교(귀속)도 같다 — 선생님이 넣은 것은 공백뿐이고 무대·비록은 그대로다', () => {
+    const items = attributeWritingChanges(BEFORE, [{ base_content: BEFORE, edited_content: AFTER }], AFTER);
+    assert.equal(currentOf(items), AFTER);
+    assert.equal(originalOf(items), BEFORE);
+    for (const item of items) {
+        const touched = item.removedBy || item.author !== 'orig';
+        if (touched) assert.equal(isBlankText(item.text), true, `단어가 칠해졌습니다: ${JSON.stringify(item.text)}`);
+    }
+});
+
+test('선생님 교정지도 띄어쓰기 부호(split)만 낸다', () => {
+    const proof = buildProofMarks(BEFORE, AFTER);
+    const kinds = proof.segments.filter((segment) => segment.kind !== 'same').map((segment) => segment.kind);
+    assert.deepEqual([...new Set(kinds)], ['split']);
+});
+
+test('제목도 처음 제목 → 학생 → 선생님 교정 → 지금 제목으로 가른다', () => {
+    const original = '화예회를준비하고 쓰자';
+    const rounds = [{ base_title: '학예화가 떨릴고', edited_title: '학예회가 떨리고' }];
+    const current = '학예회가 떨리고';
+    const items = attributeTitleChanges(original, rounds, current);
+    assert.equal(currentOf(items), current);
+    assert.equal(originalOf(items), original);
+    // 학생이 새로 쓴 제목 조각은 선생님이 고쳐 지워졌어도 기록에는 학생 조각으로 남는다
+    assert.ok(items.some((item) => item.author === 'student'), '학생이 쓴 제목 조각이 있어야 합니다.');
+    assert.ok(items.some((item) => item.author === 'student' && item.removedBy === 'teacher'), '선생님이 지운 학생 제목 조각이 있어야 합니다.');
+    assert.ok(items.some((item) => item.author === 'teacher' && !item.removedBy), '선생님이 고친 제목 조각이 있어야 합니다.');
+    // 교정 기록이 없으면(회차 0) 처음 제목 → 지금 제목이 모두 학생
+    const plain = attributeTitleChanges('가나 다라', [], '가나 다라마');
+    assert.deepEqual(marked(plain, 'teacher'), []);
+    assert.equal(currentOf(plain), '가나 다라마');
+});

@@ -14,13 +14,27 @@
 /** LCS 표 칸 수 상한. 어절 500 × 500 정도 — 표 하나가 1MB 남짓이다. */
 export const WRITING_DIFF_MAX_CELLS = 250_000;
 
+/**
+ * 공백으로 보는 글자: 보통 공백·줄바꿈 + **폭 없는 공백류**(U+200B~U+200D·U+2060·U+FEFF).
+ * 학생 글 문단 맨 앞에는 눈에 보이지 않는 U+200B 가 들어 있는 일이 있다(문단 들여쓰기 흔적). 이것을 공백으로 보지 않으면
+ * 선생님이 그 뒤에 띄어쓰기 하나만 넣어도 `​무대` 가 통째로 다른 어절이 되어 단어 전체가 고친 것처럼 칠해진다(2026-10-21 제보).
+ */
+const BLANK_SPLIT = /([\s\u200b-\u200d\u2060\ufeff]+)/;
+const BLANK_ONLY = /^[\s\u200b-\u200d\u2060\ufeff]+$/;
+const BLANK_EACH = /[\s\u200b-\u200d\u2060\ufeff]/g;
+
+/** 공백(보이지 않는 공백 포함)만으로 된 글인가 — 비교·교정 부호·귀속이 같은 기준을 쓴다. */
+export const isBlankText = (text) => BLANK_ONLY.test(String(text ?? ''));
+/** 공백(보이지 않는 공백 포함)을 뺀 글자 수. */
+export const countNonBlank = (text) => String(text ?? '').replace(BLANK_EACH, '').length;
+
 /** 어절과 그 사이 공백(줄바꿈 포함)을 따로 토막 낸다. 공백도 토막이라 원문 모양이 그대로 되살아난다. */
-export const tokenizeWords = (text) => String(text ?? '').split(/(\s+)/).filter((token) => token !== '');
+export const tokenizeWords = (text) => String(text ?? '').split(BLANK_SPLIT).filter((token) => token !== '');
 
 /** 줄 단위 토막(줄바꿈을 줄 끝에 붙여 둔다). */
 export const tokenizeLines = (text) => String(text ?? '').split(/(?<=\n)/).filter((token) => token !== '');
 
-const isBlank = (token) => /^\s+$/.test(token);
+const isBlank = isBlankText;
 
 /** 앞뒤가 같은 토막 수를 센다. */
 const commonEdges = (before, after) => {

@@ -32,8 +32,9 @@ const MyShelfPostDetail = ({
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
     // 바뀐 곳을 내가 고친 곳(노랑)과 선생님이 고쳐 준 곳(빨강)으로 가른다. 선생님 교정이 있는 글은 회차 기록을 이때만 읽는다.
-    const attributedItems = useAttributedChanges({
+    const { items: attributedItems, titleItems } = useAttributedChanges({
         postId: post?.id, original: post?.original_content, current: post?.content,
+        originalTitle: post?.original_title, currentTitle: post?.title,
         teacherEditRounds: post?.teacher_edit_rounds, enabled: showChanges
     });
 
@@ -105,7 +106,9 @@ const MyShelfPostDetail = ({
                         </div>
 
                         <h1 style={{ margin: 0, color: '#263238', fontSize: 'clamp(1.45rem, 4vw, 2rem)', lineHeight: 1.35, wordBreak: 'break-word' }}>
-                            {title || '제목 없는 글'}
+                            {showChanges && titleItems
+                                ? <WritingAttributedText items={titleItems} variant="merged" studentLabel="내가 고친 곳" selfView showLegend={false} />
+                                : (title || '제목 없는 글')}
                         </h1>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', marginTop: '10px', color: '#90A4AE', fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
                             <span>{formatDate(post.updated_at || post.created_at)}</span>

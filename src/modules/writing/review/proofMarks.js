@@ -1,5 +1,5 @@
 /* eslint-disable security/detect-object-injection -- 글자 배열과 LCS 표는 이 파일에서 만든 숫자 인덱스로만 읽고 쓴다. */
-import { diffWritingText } from './writingDiff.js';
+import { diffWritingText, isBlankText } from './writingDiff.js';
 
 /**
  * 선생님 교정지 — 고치기 전 학생 글에 **빨간 펜 교정 부호**를 얹는다(2026-09-30).
@@ -18,7 +18,7 @@ import { diffWritingText } from './writingDiff.js';
 /** 덩어리 하나의 글자 비교 상한(글자 수 곱). 넘으면 덩어리를 통째로 `replace` 로 보인다. */
 export const PROOF_CHAR_MAX_CELLS = 40_000;
 
-const isBlank = (text) => /^\s+$/.test(text);
+const isBlank = isBlankText;
 
 /** 두 글자열의 글자 단위 비교 — same/del/ins 를 차례로. */
 const diffChars = (before, after) => {

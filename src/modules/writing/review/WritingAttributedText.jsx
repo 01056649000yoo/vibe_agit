@@ -25,7 +25,8 @@ const WritingAttributedText = ({ items, variant = 'after', showLegend = true, st
     const counts = useMemo(() => countAttributedChanges(items), [items]);
     const share = useMemo(() => getRewriteShare(items), [items]);
     // 처음 글의 절반 이상이 고쳐졌으면 알린다(오른쪽 최종 글 칸에는 띄우지 않는다 — 왼쪽·합친 보기에서 한 번만).
-    const rewriteNotice = variant === 'after' || !share.rewritten ? '' : (
+    // 범례를 숨긴 조각(제목 비교)에는 붙이지 않는다 — 제목은 짧아서 조금만 고쳐도 100%가 되기 때문이다(2026-10-21).
+    const rewriteNotice = variant === 'after' || !showLegend || !share.rewritten ? '' : (
         share.by === 'teacher'
             ? '선생님이 처음 글을 거의 새로 고쳐 주셨어요'
             : (selfView ? '처음 글을 거의 새로 썼어요' : '학생이 처음 글을 거의 새로 썼어요')

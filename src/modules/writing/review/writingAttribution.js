@@ -1,5 +1,5 @@
 /* eslint-disable security/detect-object-injection -- 세는 칸은 이 파일이 만든 두 값(student·teacher)뿐이다. */
-import { diffWritingText } from './writingDiff.js';
+import { countNonBlank, diffWritingText, isBlankText } from './writingDiff.js';
 
 /**
  * 누가 어디를 고쳤는지(2026-10-20, 교사 글 자세히 보기의 `처음 글과 나란히`).
@@ -92,14 +92,25 @@ export const attributeWritingChanges = (original, rounds, current) => {
     return mergeItems(items);
 };
 
+/**
+ * 제목도 본문과 같은 방식으로 가른다(2026-10-21 제보: 최종 글 비교에 제목 교정이 안 나왔다).
+ * 처음 제목 → (학생) → 선생님이 고치기 전 제목 → (선생님) → 선생님 수정 제목 → … → 지금 제목.
+ * `rounds` 는 `get_post_teacher_edits_v1` 회차 그대로(`base_title`·`edited_title`).
+ */
+export const attributeTitleChanges = (original, rounds, current) => attributeWritingChanges(
+    original,
+    (Array.isArray(rounds) ? rounds : []).map((round) => ({ base_content: round.base_title, edited_content: round.edited_title })),
+    current
+);
+
 /** 고친 자리 수(학생·선생님 따로). 이어진 추가·삭제 묶음을 한 자리로 센다. */
 export const countAttributedChanges = (items) => {
     const counts = { student: 0, teacher: 0 };
     let last = null;
     for (const item of items) {
         const actor = item.removedBy ?? (item.author === 'orig' ? null : item.author);
-        if (!actor || /^\s+$/.test(item.text)) {
-            if (!actor && !/^\s+$/.test(item.text)) last = null;
+        if (!actor || isBlankText(item.text)) {
+            if (!actor && !isBlankText(item.text)) last = null;
             continue;
         }
         if (last !== actor) counts[actor] += 1;
@@ -116,7 +127,7 @@ export const REWRITE_NOTICE_RATIO = 0.5;
  * `rewritten` 이면 화면이 "거의 새로 썼어요" 를 알린다. `by` 는 더 많이 지운 쪽(같으면 student).
  */
 export const getRewriteShare = (items) => {
-    const size = (item) => item.text.replace(/\s/g, '').length;
+    const size = (item) => countNonBlank(item.text);
     const original = items.filter((item) => item.author === 'orig');
     const total = original.reduce((sum, item) => sum + size(item), 0);
     const removed = { student: 0, teacher: 0 };

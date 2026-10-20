@@ -53,8 +53,9 @@ const PostDetailViewer = ({
     const [isSavingTeacherEdit, setIsSavingTeacherEdit] = useState(false);
     const [presentationVersion, setPresentationVersion] = useState(null);
     // 누가 고쳤는지(학생·선생님) 가른다. 나란히 보기(③)와 크게 보기를 열 때만 계산하고, 교정 회차 기록도 이때만 불러온다.
-    const attributedItems = useAttributedChanges({
+    const { items: attributedItems, titleItems } = useAttributedChanges({
         postId: selectedPost?.id, original: selectedPost?.original_content, current: selectedPost?.content,
+        originalTitle: selectedPost?.original_title, currentTitle: selectedPost?.title,
         teacherEditRounds: selectedPost?.teacher_edit_rounds, enabled: showOriginal || presentationVersion !== null
     });
     // 크게 보기에서 고친 곳 표시를 켜고 끈다(발표·수업에서 깨끗한 글만 보여 줄 때).
@@ -573,7 +574,10 @@ const PostDetailViewer = ({
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
                                                 {attributedItems ? (
-                                                    <WritingAttributedText items={attributedItems} variant="before" />
+                                                    <>
+                                                        {titleItems && <div className="writing-compare-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#475569', lineHeight: 1.5, marginBottom: '14px' }}><WritingAttributedText items={titleItems} variant="before" showLegend={false} /></div>}
+                                                        <WritingAttributedText items={attributedItems} variant="before" />
+                                                    </>
                                                 ) : (
                                                     <WritingChangeHighlight
                                                         variant="before"
@@ -606,7 +610,10 @@ const PostDetailViewer = ({
                                                 {isReportPost ? (
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
                                                 ) : attributedItems ? (
-                                                    <WritingAttributedText items={attributedItems} variant="after" showLegend={false} />
+                                                    <>
+                                                        {titleItems && <div className="writing-compare-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#1F2937', lineHeight: 1.5, marginBottom: '14px' }}><WritingAttributedText items={titleItems} variant="after" showLegend={false} /></div>}
+                                                        <WritingAttributedText items={attributedItems} variant="after" showLegend={false} />
+                                                    </>
                                                 ) : (
                                                     <WritingChangeHighlight
                                                         variant="after"
@@ -1010,9 +1017,9 @@ const PostDetailViewer = ({
                     <WritingPresentationModal
                         isOpen={presentationVersion !== null}
                         onClose={() => setPresentationVersion(null)}
-                        title={presentationVersion === 'original'
-                            ? (selectedPost.original_title || selectedPost.title)
-                            : selectedPost.title}
+                        title={hasAttributedMarks && showPresentationMarks && titleItems
+                            ? <WritingAttributedText items={titleItems} variant={presentationVersion === 'original' ? 'before' : 'after'} showLegend={false} />
+                            : (presentationVersion === 'original' ? (selectedPost.original_title || selectedPost.title) : selectedPost.title)}
                         studentName={selectedPost.students?.name}
                         format={getWritingFormat(selectedMission)}
                         versionLabel={presentationVersion === 'original'
