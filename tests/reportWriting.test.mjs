@@ -203,3 +203,14 @@ test('관찰 결과를 쓴 최소 완성 칸 수를 제출 전에 확인한다',
         config: { min_sections: 2 },
     }), null);
 });
+
+test('보고서 완성본은 한 장의 보고서 용지(머리·관찰 N·사진 N)로 그리고 소제목·figcaption 은 쓰지 않는다', () => {
+    assert.match(reportDocumentSource, /report-document__masthead/);
+    assert.match(reportDocumentSource, /관찰·조사 보고서/);
+    assert.match(reportDocumentSource, /report-document__number[\s\S]*?관찰 \{index \+ 1\}/);
+    assert.match(reportDocumentSource, /report-document__photo-no[\s\S]*?사진 \{photoNumbers\.at\(index\)\}/);
+    assert.match(reportDocumentSource, /아직 쓰지 않았어요/);
+    assert.doesNotMatch(reportDocumentSource, /<figcaption>|<h3>/);
+    // 칸은 둥근 카드가 아니라 용지 안의 점선으로 이어 붙인다.
+    assert.match(reportWritingCss, /\.report-document__section \+ \.report-document__section\s*\{[^}]*dashed/);
+});

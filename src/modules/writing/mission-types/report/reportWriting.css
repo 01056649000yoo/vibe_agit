@@ -210,34 +210,59 @@
     font-weight: 850;
 }
 
+/* 완성본 — 한 장의 보고서 용지. 칸마다 둥근 카드로 떼지 않고 한 용지 안에 가는 선으로 이어 붙인다. */
 .report-document {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     width: 100%;
+    overflow: hidden;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #fffffe;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .07);
     white-space: normal;
+}
+
+.report-document__masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 14px;
+    padding: 12px 18px 10px;
+    border-bottom: 3px double #0f766e;
+    background: #f0fdfa;
+    color: #115e59;
+}
+
+.report-document__masthead strong {
+    font-size: 1rem;
+    font-weight: 950;
+    letter-spacing: .02em;
+}
+
+.report-document__masthead span {
+    font-size: .8rem;
+    font-weight: 800;
 }
 
 .report-document__section {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 14px;
     padding: 18px;
-    border: 1px solid #dbeafe;
-    border-radius: 18px;
-    background: #fff;
+}
+
+.report-document__section + .report-document__section {
+    border-top: 1px dashed #cbd5e1;
 }
 
 .report-document__number {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #0f766e;
-    color: #fff;
-    font-size: .82rem;
+    padding-top: 2px;
+    color: #0f766e;
+    font-size: .86rem;
     font-weight: 950;
+    white-space: nowrap;
 }
 
 .report-document__body {
@@ -246,21 +271,37 @@
 
 .report-document__body--with-photo {
     display: grid;
-    grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
+    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
     align-items: start;
-    gap: 16px;
+    gap: 18px;
 }
 
 .report-document__copy {
     min-width: 0;
 }
 
+.report-document__label {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #ccfbf1;
+    color: #115e59;
+    font-size: .72rem;
+    font-weight: 900;
+}
+
 .report-document__body p {
     margin: 0;
-    color: #334155;
+    color: #1e293b;
     line-height: 1.85;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.report-document__body p.report-document__empty {
+    color: #94a3b8;
+    font-size: .88em;
 }
 
 .report-document figure {
@@ -271,9 +312,18 @@
 .report-document__photo-frame {
     aspect-ratio: 4 / 3;
     overflow: hidden;
-    border: 1px solid #dbeafe;
-    border-radius: 14px;
+    border: 1px solid #94a3b8;
+    border-radius: 4px;
     background: #e2e8f0;
+}
+
+.report-document__photo-no {
+    display: block;
+    margin-top: 5px;
+    color: #475569;
+    font-size: .76rem;
+    font-weight: 800;
+    text-align: center;
 }
 
 .report-document__photo-frame img {
@@ -294,15 +344,11 @@
     display: grid;
     place-items: center;
     min-height: 180px;
-    border-radius: 14px;
+    border-radius: 4px;
     background: #f1f5f9;
     color: #64748b;
     font-size: .84rem;
     font-weight: 800;
-}
-
-.report-document--compact {
-    gap: 10px;
 }
 
 .report-document--compact .report-document__section {
@@ -347,14 +393,9 @@
     }
 
     .report-document__section {
-        grid-template-columns: 30px minmax(0, 1fr);
-        gap: 9px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
         padding: 14px;
-    }
-
-    .report-document__number {
-        width: 28px;
-        height: 28px;
     }
 
     .report-document__body--with-photo {
