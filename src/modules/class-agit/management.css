@@ -374,3 +374,9 @@
 
 .class-agit-management .class-agit-source-bulkremove { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2) var(--ui-space-3); margin: 0 0 var(--ui-space-3); padding: var(--ui-space-2) var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); }
 .class-agit-management .class-agit-source-bulkremove span { color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }
+
+/* 좁은 화면: 위에서 다시 정한 2열을 한 열로(뒤에 적은 규칙이 앞의 @media 를 덮어 가로로 넘치던 문제) */
+@media (max-width: 900px) {
+    .class-agit-management .class-agit-works-layout { grid-template-columns: minmax(0, 1fr); }
+    .class-agit-management .class-agit-room-rail { position: static; max-height: none; }
+}

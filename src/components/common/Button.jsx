@@ -30,7 +30,10 @@ const Button = ({
         lineHeight: 'var(--ui-line-compact)',
         cursor: disabled || loading ? 'not-allowed' : 'pointer',
         transition: 'transform var(--ui-motion-fast), background-color var(--ui-motion-fast), border-color var(--ui-motion-fast), box-shadow var(--ui-motion-fast)',
-        border: '1px solid transparent',
+        // `border` 한 줄로 쓰면 변형(outline)이 borderColor 만 바꿀 때 React 가 섞어 쓰기 경고를 낸다.
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: 'transparent',
         gap: 'var(--ui-space-2)',
         boxShadow: 'var(--ui-shadow-xs)',
     };
