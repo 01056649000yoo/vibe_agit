@@ -272,7 +272,8 @@
 .report-document__body--with-photo {
     display: grid;
     grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
-    align-items: start;
+    /* 글이 길어도 사진이 칸 맨 위에 붙지 않고 글 높이의 가운데에 놓인다 */
+    align-items: center;
     gap: 18px;
 }
 
