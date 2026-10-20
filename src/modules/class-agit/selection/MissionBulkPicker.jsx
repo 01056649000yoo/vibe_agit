@@ -52,9 +52,8 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {message && <p className="anthology-bulk__message" role="status">{message}</p>}
         <p className="anthology-bulk__hint">
-            💡 선생님이 <strong>승인한 글</strong>만 담을 수 있어요. 아직 쓰는 중인 미션은 글을 모두 승인한 뒤 <strong>지난 과제 보관함</strong>으로 보내고,
-            아래 <strong>미션 범위</strong>에서 <strong>지난 과제 보관함</strong>을 골라 담으면 빠짐이 없어요.
-            진행 중인 미션도 승인한 글만큼은 담을 수 있고, 나중에 승인한 글은 다시 와서 더 담을 수 있어요.
+            💡 선생님이 <strong>승인한 글</strong>은 진행 중인 미션이어도 담을 수 있어요. 아직 승인하지 않은 글은 담기지 않으니,
+            나중에 승인한 글은 이 화면에 다시 와서 더 담아 주세요.
         </p>
         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
             <label>미션명 찾기<input value={input} maxLength={80} placeholder="오래된 미션도 찾아보세요" onChange={(event) => setInput(event.target.value)} /></label>
@@ -83,7 +82,7 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
                     <small>{missionFormatLabel(mission.format)}
                         {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''} · {mission.archived ? '지난 과제 보관함' : '진행 중'}</small>
                     <small>{!mission.supported ? '전시·문집 지원 준비 중'
-                        : noneYet ? (mission.archived ? '승인한 글이 없습니다' : '아직 승인한 글이 없어요 · 글을 승인하면 담을 수 있고, 미션을 마치면 지난 과제 보관함으로 보내 주세요')
+                        : noneYet ? '아직 승인한 글이 없어요 · 글을 승인하면 담을 수 있어요'
                         : allAdded ? `승인한 글 ${total}편을 모두 담았습니다`
                         : `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}${missionFormatNote(mission.format)}`}</small>
                 </div>

@@ -14,6 +14,8 @@ test('주제째 담기: 담을 글이 없는 것과 다 담은 것을 다른 말
 
 test('주제째 담기: 승인한 글만 담긴다는 안내와 진행 중·보관함 표시가 있다', () => {
     assert.match(source, /anthology-bulk__hint/);
-    assert.match(source, /승인한 글<\/strong>만 담을 수 있어요/);
+    // 승인한 글은 진행 중인 미션이어도 담을 수 있다(2026-10-21 통일). 보관함으로 보내라고 요구하지 않는다.
+    assert.match(source, /승인한 글<\/strong>은 진행 중인 미션이어도 담을 수 있어요/);
+    assert.doesNotMatch(source, /보관함으로 보내/);
     assert.match(source, /mission\.archived \? '지난 과제 보관함' : '진행 중'/);
 });
