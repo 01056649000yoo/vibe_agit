@@ -134,9 +134,9 @@ ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{displa
 .anthology-page-number{border-top:${inner.ruleWidth}mm ${inner.ruleStyle} ${inner.rule};color:${inner.heading}}${inner.pageNumber === 'dashes' ? `
 .anthology-page-number::before{content:'— '}.anthology-page-number::after{content:' —'}` : ''}${inner.pageNumber === 'bold' ? `
 .anthology-page-number{font-weight:800}` : ''}` : ''}
-/* 보고서 사진: 한 덩어리로 놓고 쪽 높이의 26% 안으로 줄인다(쪽보다 큰 사진이 쪼개지지 않게) */
-.anthology-photo{margin:0 auto 3mm;text-align:center;break-inside:avoid;width:fit-content;max-width:100%;padding:2mm 2mm 1.4mm;border:.3mm solid #94a3b8;background:#fff}
-.anthology-photo img{display:block;width:auto;max-width:100%;height:auto;max-height:${Math.round(contentHeight * 0.26)}mm;object-fit:contain;margin:0 auto}
+/* 보고서 사진: 한 덩어리로 놓고 쪽 높이의 18% 안으로 줄인다(쪽보다 큰 사진이 쪼개지지 않게) */
+.anthology-photo{margin:0 auto 3mm;text-align:center;break-inside:avoid;width:fit-content;max-width:70%;padding:2mm 2mm 1.4mm;border:.3mm solid #94a3b8;background:#fff}
+.anthology-photo img{display:block;width:auto;max-width:100%;height:auto;max-height:${Math.round(contentHeight * 0.18)}mm;object-fit:contain;margin:0 auto}
 .anthology-photo figcaption{margin-top:1.4mm;color:#475569;font-size:.9em;line-height:1.4}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
