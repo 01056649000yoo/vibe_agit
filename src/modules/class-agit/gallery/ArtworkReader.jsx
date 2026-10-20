@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal.jsx';
 import ModalCloseButton from '../../../components/common/ModalCloseButton.jsx';
+import WorkBlocks from './WorkBlocks.jsx';
 
 export default function ArtworkReader({ work, onClose, onPrevious, onNext, footer, roomTitle, loading = false, error = null, hideAuthor = false }) {
     const dialog = useRef(null);
@@ -41,7 +42,7 @@ export default function ArtworkReader({ work, onClose, onPrevious, onNext, foote
             <span className="class-agit-eyebrow">{work?.kindLabel || '작품 읽기'}</span>
             <h2 id={titleId}>{work?.title || '작품 읽기'}</h2>
             {loading ? <p role="status">작품을 불러오고 있어요…</p> : error ? <p role="alert">{error}</p> : work && <>{!hideAuthor && <p className="class-agit-reader__author">{work.author}</p>}
-            <div className="class-agit-reader__text">{work.blocks.map((block, index) => <p key={index}>{block}</p>)}</div></>}
+            <div className="class-agit-reader__text"><WorkBlocks blocks={work.blocks} /></div></>}
         </article>
         <footer className="class-agit-reader__footer">
             {footer || <nav aria-label="작품 넘기기"><button type="button" onClick={onPrevious} disabled={!onPrevious}>← 이전 작품</button><button type="button" onClick={onClose}>전시실로</button><button type="button" onClick={onNext} disabled={!onNext}>다음 작품 →</button></nav>}

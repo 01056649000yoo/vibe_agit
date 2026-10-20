@@ -2,6 +2,7 @@ import { supabase } from '../../../lib/supabaseClient.js';
 import { dataCache, classKey, classScope } from '../../../lib/cache.js';
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 import { assertClassAgitWorkspace, buildClassAgitSavePayload } from './contract.js';
+import { applyPhotoGate } from '../photoGate.js';
 
 const call = async (name, payload) => {
     const { data, error } = await supabase.rpc(name, payload);
@@ -24,6 +25,16 @@ async function browse(classId, name, params, version, maximum, rpcName) {
     return result.data;
 }
 
+// 글의 현재 모습(정본)을 받아 응답을 확인한다. 사진 확인 장치를 거치지 않는 원본 호출이다.
+async function fetchSources(classId, ids) {
+    if (!ids.length || ids.length > limits.selectionBatch || new Set(ids).size !== ids.length) throw new Error('서로 다른 작품을 1~50편 선택해 주세요.');
+    const data = await call('get_class_agit_sources_v1', { p_class_id: classId, p_post_ids: ids });
+    if (data?.version !== 1 || data.class_id !== classId || !Array.isArray(data.items) || data.items.length !== ids.length
+        || data.items.some((item, index) => item.id !== ids.at(index) || (item.source
+            ? item.source.id !== item.id || item.source.class_id !== classId || !item.source.source_revision : !item.reason))) throw new Error('선택 작품의 검토 결과를 확인할 수 없습니다.');
+    return data.items;
+}
+
 export const classAgitApi = {
     async getWorkspace(classId, exhibitionId = null) {
         return assertClassAgitWorkspace(await call('get_class_agit_workspace_v1', { p_class_id: classId, p_exhibition_id: exhibitionId }), classId);
@@ -40,12 +51,9 @@ export const classAgitApi = {
         return browse(classId, 'candidates', { p_class_id: classId, p_filters: { ...filters, limit: limits.candidatePage } }, 2, 50, 'get_class_agit_candidates_v2');
     },
     async getSources(classId, ids) {
-        if (!ids.length || ids.length > limits.selectionBatch || new Set(ids).size !== ids.length) throw new Error('서로 다른 작품을 1~50편 선택해 주세요.');
-        const data = await call('get_class_agit_sources_v1', { p_class_id: classId, p_post_ids: ids });
-        if (data?.version !== 1 || data.class_id !== classId || !Array.isArray(data.items) || data.items.length !== ids.length
-            || data.items.some((item, index) => item.id !== ids.at(index) || (item.source
-                ? item.source.id !== item.id || item.source.class_id !== classId || !item.source.source_revision : !item.reason))) throw new Error('선택 작품의 검토 결과를 확인할 수 없습니다.');
-        return data.items;
+        const items = await fetchSources(classId, ids);
+        // 확인하지 않은 사진이 든 보고서는 담기 전에 선생님이 사진을 보고 확인한다(장치가 없으면 그대로 = 사진 없이 글만).
+        return applyPhotoGate(classId, items, fetchSources);
     },
     async getSource(classId, postId) {
         const data = await call('get_class_agit_source_v1', { p_class_id: classId, p_post_id: postId });

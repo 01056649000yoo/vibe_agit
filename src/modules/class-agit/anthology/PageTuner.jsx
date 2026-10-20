@@ -3,7 +3,7 @@ import Button from '../../../components/common/Button';
 import ModalPortal from '../../../components/common/ModalPortal';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { buildAnthologyHtml } from './print.js';
-import { paginateAnthology } from './pagination.js';
+import { paginateAnthology, settleAnthologyPhotos } from './pagination.js';
 
 /*
  * 쪽 다듬기 — 초안을 보고 **작품이 어느 쪽에서 시작할지** 교사가 정하는 자리.
@@ -53,6 +53,7 @@ const PageTuner = ({ edition, breaks, onToggle, onClose, saving }) => {
             await doc.fonts.ready;
             await new Promise((resolve) => frame.contentWindow.requestAnimationFrame(
                 () => frame.contentWindow.requestAnimationFrame(resolve)));
+            await settleAnthologyPhotos(doc);
             const count = paginateAnthology(doc);
             doc.querySelector('.anthology-toolbar')?.remove();
             fitToWidth(frame);

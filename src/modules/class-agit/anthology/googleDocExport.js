@@ -20,6 +20,7 @@
 import { assertBookEdition, bookCoverKicker } from './contract.js';
 import { coverSource } from './coverImage.js';
 import { createGoogleDocument, applyGoogleDocRequests, googleDocEditUrl } from '../../writing/export/googleDocsApi.js';
+import { textBlocks } from '../photoBlocks.js';
 
 /** 구글 문서 편집기가 감당할 만한 크기로 제한한다. PDF 와 같은 상한을 쓴다. */
 export const ANTHOLOGY_DOC_GUIDE = '이 문서는 쪽수를 비워 두었습니다. 상단 메뉴에서 `삽입 → 목차`를 누르면 쪽수와 링크가 붙은 목차가 자동으로 만들어지고, `삽입 → 페이지 번호`로 쪽번호를 넣을 수 있습니다. 한글(hwp)로 옮기려면 `파일 → 다운로드 → Microsoft Word(.docx)`로 내려받아 한글에서 열면 됩니다.';
@@ -124,7 +125,8 @@ export function buildAnthologyDocRequests(edition, { layoutMode = 'page_per_work
         const byline = [personal ? null : work.author, work.group].filter(Boolean).join(' · ');
         if (byline) write(`${byline}\n`);
         write('\n');
-        work.blocks.forEach((block) => write(`${block}\n`));
+        // 사진 자리표는 글 내보내기에서 뺀다(구글 문서에 사진을 넣는 일은 2d).
+        textBlocks(work.blocks).forEach((block) => write(`${block}\n`));
     });
     pageBreak();
 

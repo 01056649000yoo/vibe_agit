@@ -22,6 +22,7 @@ import BookOrderEditor from './BookOrderEditor.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
 import { collectStudentSources, describeBulkResult } from './bulkAdd.js';
 import { CLASS_AGIT_LIMITS } from '../policy.js';
+import { textBlocks } from '../photoBlocks.js';
 import '../classAgit.css';
 import '../management.css';
 
@@ -173,7 +174,7 @@ export default function AnthologyManager({ activeClass, api = classAgitReleaseAp
             제목: work.title || '',
             글쓴이: work.author || '',
             주제: work.group || '',
-            내용: Array.isArray(work.blocks) ? work.blocks.join('\n\n') : (work.blocks || '')
+            내용: Array.isArray(work.blocks) ? textBlocks(work.blocks).join('\n\n') : (work.blocks || '')
         }));
         const label = snapshot.draft ? '초안' : `${snapshot.number || 1}판`;
         const fileName = `${snapshot.book.title || '문집'} (${label} 글 모음)`;

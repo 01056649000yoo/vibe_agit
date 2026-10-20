@@ -14,10 +14,17 @@ import useGalleryRead from './useGalleryRead.js';
 import GalleryRoom from '../gallery/GalleryRoom.jsx';
 import StudentBooks from '../anthology/StudentBooks.jsx';
 import ArtworkReader from '../gallery/ArtworkReader.jsx';
+import { PhotoResolverContext } from '../photoContext.js';
+import { resolvePhotoUrls } from '../api/photoApi.js';
 import '../classAgit.css';
 import '../anthology/cover.css';
 
-export default function ClassAgitStudentEntry({ params, onNavigate, onReplace, onBack, api = classAgitStudentApi, releaseApi = classAgitReleaseApi }) {
+/** 학생 입구: 전시실·책 읽기 화면에 보고서 사진을 찾는 방법을 넣어 준다(읽을 수 있는 사진만 서버가 알려 준다). */
+export default function ClassAgitStudentEntry(props) {
+    return <PhotoResolverContext.Provider value={resolvePhotoUrls}><StudentEntryBody {...props} /></PhotoResolverContext.Provider>;
+}
+
+function StudentEntryBody({ params, onNavigate, onReplace, onBack, api = classAgitStudentApi, releaseApi = classAgitReleaseApi }) {
     const route = normalizeClassAgitParams(params);
     const mode = route.mode || 'list';
     const room = mode === 'lobby' ? 0 : Number(route.room || 1);

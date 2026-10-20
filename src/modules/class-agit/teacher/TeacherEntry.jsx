@@ -10,6 +10,9 @@ import AnthologyManager from '../anthology/AnthologyManager.jsx';
 import ShareManager from '../public/ShareManager.jsx';
 import { classAgitReleaseApi } from '../api/releaseApi.js';
 import PublishedExhibition from './PublishedExhibition.jsx';
+import { PhotoResolverContext } from '../photoContext.js';
+import { resolvePhotoUrls } from '../api/photoApi.js';
+import PhotoConfirmHost from './PhotoConfirmHost.jsx';
 import '../classAgit.css';
 import '../management.css';
 
@@ -103,5 +106,8 @@ function ClassAgitSections({ section, ...props }) {
     </div>;
 }
 export default function ClassAgitTeacherEntry(props) {
-    return <ClassAgitSections key={props.activeClass.id} {...props} />;
+    return <PhotoResolverContext.Provider value={resolvePhotoUrls}>
+        <ClassAgitSections key={props.activeClass.id} {...props} />
+        <PhotoConfirmHost />
+    </PhotoResolverContext.Provider>;
 }

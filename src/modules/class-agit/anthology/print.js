@@ -2,13 +2,28 @@ import { buildWritingPdfHtml } from '../../writing/export/writingPdfExport.js';
 import { escapePdfHtml, PDF_KICKER_CLASSES } from '../../writing/export/pdfRenderContract.js';
 import { assertBookEdition, ANTHOLOGY_PRINT_SETTINGS, bookCoverKicker } from './contract.js';
 import { getBookPaper, getBookDesign, getBookPageLayout } from '../designs.js';
-import { paginateAnthology } from './pagination.js';
+import { paginateAnthology, settleAnthologyPhotos } from './pagination.js';
 import { coverSource } from './coverImage.js';
+import { photoIdsOfBlocks } from '../photoBlocks.js';
 
 export async function buildAnthologyHtml(edition) {
     assertBookEdition(edition);
     const book = edition.book;
     const paper = getBookPaper(book.print.paper), design = getBookDesign(book.print.design);
+    /*
+     * 보고서 사진(2026-10-20): 작품 본문의 사진 자리표를 인쇄 창 안의 데이터 주소로 미리 받아 둔다(서명 주소는 인쇄 창에서 끊길 수 있다).
+     * photoApi 는 브라우저 전용이라 사진이 있을 때만 불러온다(검사는 node 에서 이 파일을 읽는다). 읽을 수 없는 사진은 자료에서 빠져 글만 놓인다.
+     */
+    const photoIds = [...new Set(book.works.flatMap((work) => photoIdsOfBlocks(work.blocks)))];
+    let photoImages = '';
+    if (photoIds.length) {
+        const { resolvePhotoUrls, photoDataUrl } = await import('../api/photoApi.js');
+        const infos = await resolvePhotoUrls(photoIds);
+        photoImages = (await Promise.all([...infos].map(async ([id, info]) => {
+            const uri = await photoDataUrl(id);
+            return uri ? `<img data-photo-id="${id}" src="${uri}" width="${Number(info.width) || 400}" height="${Number(info.height) || 300}" alt="">` : '';
+        }))).join('');
+    }
     /*
      * 그림 표지(2026-10-06): 첫 쪽은 올린 그림으로 꽉 채우고, 속지는 고른 속지 스타일(디자인 색을 쓰지 않음).
      * 그림은 인쇄 창 안에 데이터 주소로 넣는다 — 서명 주소는 시간이 지나면 끊기고, 인쇄 전에 다 불러와야 한다.
@@ -119,6 +134,9 @@ ${PDF_KICKER_CLASSES.map((name) => `.anthology-work .${name}`).join(',')}{displa
 .anthology-page-number{border-top:${inner.ruleWidth}mm ${inner.ruleStyle} ${inner.rule};color:${inner.heading}}${inner.pageNumber === 'dashes' ? `
 .anthology-page-number::before{content:'— '}.anthology-page-number::after{content:' —'}` : ''}${inner.pageNumber === 'bold' ? `
 .anthology-page-number{font-weight:800}` : ''}` : ''}
+/* 보고서 사진: 한 덩어리로 놓고 쪽 높이의 40% 안으로 줄인다(쪽보다 큰 사진이 쪼개지지 않게) */
+.anthology-photo{margin:0 0 3mm;text-align:center;break-inside:avoid}
+.anthology-photo img{display:inline-block;max-width:100%;height:auto;max-height:${Math.round(contentHeight * 0.4)}mm;object-fit:contain;border:.2mm solid #94a3b8}
 @media print{html,body{background:white}.anthology-toolbar{display:none}.anthology-page{margin:0;box-shadow:none}#anthology-source{display:none}}
 </style>`;
     const kicker = bookCoverKicker(book);
@@ -153,7 +171,7 @@ ${[...groupStarts.entries()].map(([index, title]) => {
     return `<div data-divider="${index}"><h1>${e(title)}</h1><div data-divider-list>${rows}</div></div>`;
 }).join('')}`;
     const back = `<div data-colophon><h1>${e(book.title)}</h1>${personal ? `<p>글쓴이 ${e(book.owner_student_name)}</p>` : ''}<p>${e(book.class_label)}</p><p>발행일 ${e(book.issue_date)} · ${editionLabel}</p><p>${personal ? '한 사람의 글을 모아 엮었습니다.' : '우리 반의 글을 모아 엮었습니다.'}\n글의 권리는 각 글쓴이에게 있습니다.</p><p>끄적끄적 아지트 · 글꽃 책방</p></div>`;
-    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body class="${personal ? 'anthology-personal' : 'anthology-class'}"><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-source" data-layout="${layout}">${front}`).replace('</body>', `${back}</div></body>`);
+    return html.replace('</head>', `${styles}</head>`).replace('<body>', `<body class="${personal ? 'anthology-personal' : 'anthology-class'}"><div class="anthology-toolbar" role="status">문집 페이지를 준비하고 있습니다…</div><div id="anthology-pages"></div><div id="anthology-photos" hidden>${photoImages}</div><div id="anthology-source" data-layout="${layout}">${front}`).replace('</body>', `${back}</div></body>`);
 }
 export async function renderAnthologyWindow(target, edition) {
     const html = await buildAnthologyHtml(edition);
@@ -161,6 +179,7 @@ export async function renderAnthologyWindow(target, edition) {
     target.document.open(); target.document.write(html); target.document.close();
     await target.document.fonts.ready;
     await new Promise((resolve) => target.requestAnimationFrame(() => target.requestAnimationFrame(resolve)));
+    await settleAnthologyPhotos(target.document);
     const count = paginateAnthology(target.document);
     const toolbar = target.document.querySelector('.anthology-toolbar'); toolbar.textContent = `${edition.draft ? '검토용 초안 · ' : ''}${getBookPaper(edition.book.print.paper).label} · ${count}쪽 · `;
     if (edition.draft) target.document.querySelectorAll('.anthology-page-number').forEach((footer) => { footer.textContent = `검토용 초안 · ${footer.textContent}`; });

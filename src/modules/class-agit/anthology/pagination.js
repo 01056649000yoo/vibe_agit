@@ -4,6 +4,26 @@
  */
 export const ANTHOLOGY_MIN_BODY_RATIO = 0.3;
 
+import { photoIdOfBlock } from '../photoBlocks.js';
+
+/**
+ * 보고서 사진 한 장을 쪽에 놓을 덩어리로(2026-10-20). 사진 자료는 인쇄 문서의 `#anthology-photos` 에 데이터 주소로 들어 있다.
+ * 자료가 없으면(읽을 수 없는 사진) null — 글만 쪽에 놓인다. 사진은 쪼개지 않고 한 덩어리로 다룬다(크기는 print.js 가 쪽 높이로 제한).
+ */
+const photoFigure = (doc, id) => {
+    const source = [...doc.querySelectorAll('#anthology-photos img')].find((image) => image.dataset.photoId === id);
+    if (!source) return null;
+    const figure = doc.createElement('figure');
+    figure.className = 'anthology-photo'; figure.dataset.photo = id;
+    figure.append(source.cloneNode(true));
+    return figure;
+};
+
+/** 사진이 다 풀린 뒤에 쪽 높이를 재야 한다(안 풀린 사진은 높이 0 으로 재진다). */
+export async function settleAnthologyPhotos(doc) {
+    await Promise.all([...doc.querySelectorAll('#anthology-photos img')].map((image) => (image.decode ? image.decode().catch(() => {}) : Promise.resolve())));
+}
+
 // The same measured DOM pages are used on screen and by the browser's selected paper size.
 // No font shrinking; oversized paragraphs split at Unicode code point boundaries.
 export function paginateAnthology(doc) {
@@ -96,7 +116,13 @@ export function paginateAnthology(doc) {
         const main = article.querySelector('main');
         let blocks;
         if (main.children.length) blocks = [...main.children].map((child) => { const copy = child.cloneNode(false); copy.textContent = child.textContent; return copy; });
-        else blocks = main.textContent.split(/\n\s*\n/u).map((text) => { const p = doc.createElement('p'); p.textContent = text; return p; });
+        else {
+            blocks = main.textContent.split(/\n\s*\n/u).map((text) => {
+                const photoId = photoIdOfBlock(text.trim());
+                if (photoId) return photoFigure(doc, photoId);
+                const p = doc.createElement('p'); p.textContent = text; return p;
+            }).filter(Boolean);
+        }
 
         if (forcedBreaks.has(index)) cursor = null;
 

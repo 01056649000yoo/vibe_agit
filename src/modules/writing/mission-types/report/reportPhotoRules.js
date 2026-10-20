@@ -14,3 +14,9 @@ export const REPORT_PHOTO_RULES = Object.freeze([
 ]);
 
 export const REPORT_PHOTO_RULES_CHECK_LABEL = '위 약속을 읽었고, 내 사진은 약속을 지켰어요.';
+
+/**
+ * 책·전시에 사진을 담을 때 선생님이 사진을 직접 보고 확인하는 문구(서버 확인 문구 판 1 = `confirm_class_agit_photo_use_v1` 의
+ * p_statement_version). 문구를 바꾸면 `PHOTO_STATEMENT_VERSION`(api/photoApi.js)과 서버 판을 함께 올린다.
+ */
+export const TEACHER_PHOTO_CHECK_STATEMENT = '아래 사진을 직접 보았고, 얼굴·이름표·이름이 적힌 물건·학교나 집처럼 알아볼 수 있는 장소가 나오지 않으며, 학생이 직접 찍은 사진으로 보입니다.';
