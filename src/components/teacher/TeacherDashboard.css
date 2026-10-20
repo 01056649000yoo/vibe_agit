@@ -375,6 +375,36 @@
 }
 
 /* 화면에 실제로 있는 버튼·메뉴 이름 */
+.teacher-guide__more {
+    display: inline;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #EEF2FF;
+    color: #4338CA;
+    font: inherit;
+    font-size: .85em;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.teacher-guide__notes-fold {
+    margin-top: 6px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-muted);
+}
+
+.teacher-guide__notes-fold > summary {
+    padding: 9px 12px;
+    color: #4338CA;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.teacher-guide__notes-fold[open] > summary { border-bottom: 1px solid var(--ui-border); }
+.teacher-guide__notes-fold .teacher-guide__notes { padding: 10px 12px 2px 28px; }
+
 .teacher-guide__key {
     padding: 2px 7px;
     border: 1px solid var(--ui-border);

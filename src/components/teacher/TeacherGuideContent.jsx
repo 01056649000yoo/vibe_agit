@@ -1,6 +1,24 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { renderEmphasis } from './guideEmphasis.jsx';
+import { splitGuideLead } from './guideFold.js';
 
+
+/** 긴 항목은 첫 문장만 보이고 `더 보기` 로 나머지를 연다. */
+const FoldItem = ({ text }) => {
+    const { lead, rest } = useMemo(() => splitGuideLead(text), [text]);
+    const [open, setOpen] = useState(false);
+    if (!rest) return <>{renderEmphasis(text)}</>;
+    return (
+        <>
+            {renderEmphasis(lead)}
+            {open && <> {renderEmphasis(rest)}</>}
+            {' '}
+            <button type="button" className="teacher-guide__more" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+                {open ? '접기' : '더 보기'}
+            </button>
+        </>
+    );
+};
 
 const TeacherGuideContent = ({ guide, initialSectionId = '' }) => {
     const idPrefix = useId();
@@ -65,13 +83,18 @@ const TeacherGuideContent = ({ guide, initialSectionId = '' }) => {
 
                 <h4 className="teacher-guide__heading">이 순서로 하면 됩니다</h4>
                 <ol className="teacher-guide__steps">
-                    {activeSection.steps.map((guideStep) => <li key={guideStep}>{renderEmphasis(guideStep)}</li>)}
+                    {activeSection.steps.map((guideStep) => <li key={guideStep}><FoldItem text={guideStep} /></li>)}
                 </ol>
 
-                <h4 className="teacher-guide__heading">알아 두면 좋은 것</h4>
-                <ul className="teacher-guide__notes">
-                    {activeSection.notes.map((note) => <li key={note}>{renderEmphasis(note)}</li>)}
-                </ul>
+                {/* 주의사항은 접어 둔다 — 핵심(순서)만 한 화면에 보이게. 탭을 바꾸면 다시 접힌다. */}
+                {activeSection.notes.length > 0 && (
+                    <details className="teacher-guide__notes-fold" key={activeSection.id || 'main'}>
+                        <summary>알아 두면 좋은 것 {activeSection.notes.length}가지 보기</summary>
+                        <ul className="teacher-guide__notes">
+                            {activeSection.notes.map((note) => <li key={note}><FoldItem text={note} /></li>)}
+                        </ul>
+                    </details>
+                )}
             </section>
         </div>
     );
