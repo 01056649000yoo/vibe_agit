@@ -9,7 +9,7 @@ import BulkReview from './BulkReview.jsx';
 import { toggleSelection } from './model.js';
 import './selection.css';
 
-export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, hideMissionRail = false, onCreateRoom, onAdd, onArrange, onBusyChange }) {
+export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, hideMissionRail = false, onRemove, onCreateRoom, onAdd, onArrange, onBusyChange }) {
     // 주제째 담기에서 `글 보기` 로 넘어오면 그 미션을 고른 채로 연다.
     const [mission, setMission] = useState(initialMission);
     const [input, setInput] = useState('');
@@ -69,6 +69,11 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                     {!(hideMissionRail && mission) && <MissionList api={api} classId={classId} items={items} selected={mission} onSelect={(next) => { setMission(next); setSearchAll(false); }} />}
                     <div className="class-agit-selection-results">
                         <div className="class-agit-selection-heading"><div><h3>{filteredMission?.title || '전체 미션의 글'}</h3><p>{filteredMission ? '학생 이름순' : '최근 수정순'} · 학급에 공개하고 제출·확인한 글</p></div></div>
+                        {onRemove && filteredMission && (() => {
+                            const mine = items.filter((item) => item.missionId === filteredMission.id);
+                            return mine.length > 0 && <div className="class-agit-source-bulkremove"><span>이 주제에서 이미 담은 글 {mine.length}편</span>
+                                <Button variant="outline" size="sm" type="button" onClick={() => onRemove(mine.map((item) => item.sourceId || item.itemId), filteredMission.title)}>이 주제에서 담은 {mine.length}편 모두 빼기</Button></div>;
+                        })()}
                         {onCreateRoom && filteredMission && <Button variant="outline" type="button" onClick={() => { try { onCreateRoom(filteredMission.title); } catch (reason) { setError(reason.message); } }}>이 미션 제목으로 전시실 만들기</Button>}
                         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
                             <label>글 제목·학생 이름<input value={input} maxLength={80} placeholder="학급 전체에서 검색할 수 있어요" onChange={(event) => setInput(event.target.value)} /></label><Button variant="outline" type="submit">글 검색</Button>
@@ -79,6 +84,7 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                             <ul className="class-agit-source-rows">{pageRows.map((row) => <li key={row.id} data-added={added.has(row.id)}>
                                 <label><input type="checkbox" checked={pending.some((item) => item.id === row.id)} disabled={added.has(row.id)} onChange={() => toggle(row)} aria-label={`${row.student_name} · ${row.title} 선택`} /><span className="class-agit-source-student">{row.student_name}</span><span className="class-agit-source-title"><strong>{row.title}</strong><small>{row.excerpt || row.group_title}</small>{!filteredMission && <small>{row.group_title}</small>}</span></label>
                                 <span className="class-agit-source-state">{added.has(row.id) ? '담음' : pending.some((item) => item.id === row.id) ? '선택' : ''}</span>
+                                {onRemove && added.has(row.id) && <Button variant="outline" size="sm" type="button" aria-label={`${row.title} 초안에서 빼기`} onClick={() => onRemove([row.id])}>빼기</Button>}
                                 <Button variant="ghost" type="button" aria-label={`${row.title} 읽기`} onClick={() => run(async () => { const source = await api.getSource(classId, row.id); if (alive.current) setReading(source); })}>읽기</Button>
                             </li>)}</ul>{!pageRows.length && <p className="class-agit-empty">이 조건에 맞는 글이 없습니다. 미션이나 검색 조건을 바꿔 주세요.</p>}</>}
                         <PageControls state={state} label="작품 목록 페이지" />

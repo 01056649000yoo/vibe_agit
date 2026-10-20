@@ -373,3 +373,6 @@
 .class-agit-management .class-agit-room-card__topics li span { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
 .class-agit-management .class-agit-room-card__topics li b { flex: none; color: var(--ui-primary); font-weight: 800; }
 .class-agit-management .class-agit-room-card__topics .class-agit-room-card__more { justify-content: flex-start; background: transparent; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
+
+.class-agit-management .class-agit-source-bulkremove { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-2) var(--ui-space-3); margin: 0 0 var(--ui-space-3); padding: var(--ui-space-2) var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface-muted); }
+.class-agit-management .class-agit-source-bulkremove span { color: var(--ui-ink); font-size: var(--ui-text-sm); font-weight: 700; }

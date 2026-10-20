@@ -55,6 +55,15 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
         onDraft(addSources(created, sources, room.id));
         setActive(room.id); setError('');
     };
+    // 담은 글을 초안에서 뺀다. 한 편은 바로, 여러 편(주제째)은 확인을 받고 뺀다. 공개판에는 다음 갱신 때 반영된다.
+    const removeSources = async (sourceIds, topicTitle = '') => {
+        if (sourceIds.length > 1 && !(await ask({ title: `${topicTitle ? `‘${topicTitle}’ 주제에서 ` : ''}담은 ${sourceIds.length}편을 초안에서 뺄까요?`, confirmLabel: `${sourceIds.length}편 빼기` }))) return;
+        const gone = new Set(sourceIds);
+        try {
+            const next = assertRoomDraft({ ...draft, items: draft.items.filter((item) => !gone.has(item.sourceId || item.itemId)), revision: draft.revision + 1 });
+            onDraft({ ...next, items: orderedRoomItems(next) }); setError('');
+        } catch (reason) { setError(reason.message); }
+    };
     const replaceItems = (nextItems) => {
         const next = assertRoomDraft({ ...draft, items: [...draft.items.filter((item) => (item.roomId || null) !== roomId), ...nextItems], revision: draft.revision + 1 });
         onDraft({ ...next, items: orderedRoomItems(next) });
@@ -98,7 +107,7 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
                         } : undefined}
                         onPickMission={(mission) => { setStartMission(mission); setWay('work'); }} />
                     : <SourceBrowser classId={draft.classId} api={api} items={draft.items}
-                        destination={room?.title || '미배정'} remaining={remaining} initialMission={startMission} hideMissionRail
+                        destination={room?.title || '미배정'} remaining={remaining} initialMission={startMission} hideMissionRail onRemove={removeSources}
                         onCreateRoom={draft.rooms.length < limits.maxRooms ? addRoom : undefined}
                         onAdd={(sources) => onDraft(addExhibitionSources(draft, sources, roomId))} onArrange={() => setMode('order')} onBusyChange={onBusyChange} />}
             </div>
