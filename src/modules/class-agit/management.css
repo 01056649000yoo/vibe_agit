@@ -207,11 +207,13 @@
 .class-agit-book-preview figcaption { text-align:center;font-size:.85rem;color:#64748b;margin-top:12px; }
 @media(max-width:1000px) { .class-agit-design-options{grid-template-columns:repeat(2,minmax(0,1fr));} }
 @media(max-width:700px) { .class-agit-sections{display:block;}.class-agit-section-nav{position:static;flex-direction:row;margin-bottom:16px;}.class-agit-section-nav button{flex:1;text-align:center;}.class-agit-paper-options{grid-template-columns:1fr;}.class-agit-paper-option{padding-right:40px;}.class-agit-book-preview{max-width:230px;} }
-.class-agit-room-settings { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;margin:14px 0;background:var(--bg-secondary,#f5f7fa);border:1px solid var(--border-color,#dfe5e9);border-radius:12px; }
-.class-agit-room-settings label { display:flex;flex-direction:column;gap:6px;min-width:0; }
-.class-agit-room-settings :is(input,select) { min-width:0;width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:white; }
-.class-agit-room-settings .class-agit-header-actions { align-self:end; }
-@media(max-width:640px) { .class-agit-room-settings { grid-template-columns:1fr; } }
+/* 전시실 설정: 주제·소개·배경을 한 줄에, 이동·삭제 단추는 그 아래 한 줄에 — 빈 칸 없이 촘촘하게(2026-10-20 "칸이 너무 크고 공간이 불필요") */
+.class-agit-room-settings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, .9fr); gap: var(--ui-space-2) var(--ui-space-3); align-items: end; padding: var(--ui-space-3) var(--ui-space-4); margin: var(--ui-space-2) 0 var(--ui-space-3); background: var(--ui-surface-muted); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.class-agit-room-settings label { display: flex; flex-direction: column; gap: var(--ui-space-1); min-width: 0; font-size: var(--ui-text-sm); font-weight: 700; color: var(--ui-ink-strong); }
+.class-agit-room-settings :is(input, select) { min-width: 0; width: 100%; min-height: var(--ui-control-md); padding: var(--ui-space-2) var(--ui-space-3); background: var(--ui-surface); }
+.class-agit-room-settings .class-agit-header-actions { grid-column: 1 / -1; justify-content: flex-end; gap: var(--ui-space-2); }
+@media (max-width: 900px) { .class-agit-room-settings { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .class-agit-room-settings label:nth-of-type(2) { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .class-agit-room-settings { grid-template-columns: 1fr; } }
 
 .class-agit-share-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
 .class-agit-share-found { margin: 0; align-self: center; font-weight: 700; color: var(--ui-ink-soft); }
@@ -287,3 +289,16 @@
 .anthology-cover-placeholder span { font-size: var(--ui-text-3xl); }
 .anthology-cover-placeholder strong { font-size: var(--ui-text-sm); line-height: 1.5; }
 @media (max-width: 640px) { .anthology-cover-mode { grid-template-columns: minmax(0, 1fr); } }
+
+/* 교사 화면 글자 키우기와 전시관·책방 통일(2026-10-20): 단계 이름·STEP 표시·전시실 탭이 너무 작다는 지적 */
+.class-agit-management .class-agit-eyebrow:not(:where(.class-agit-gallery *, .class-agit-public *)) { font-size: var(--ui-text-sm); font-weight: 800; letter-spacing: .04em; }
+.class-agit-management .class-agit-steps strong { font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-steps small { font-size: var(--ui-text-sm); }
+.class-agit-management .class-agit-step-heading p:not(.class-agit-eyebrow) { font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-workbench-summary { font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-selection-heading strong { font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-room-nav { gap: var(--ui-space-2); margin: var(--ui-space-3) 0; }
+.class-agit-management .class-agit-room-nav button { display: inline-flex; align-items: center; gap: var(--ui-space-2); min-height: var(--ui-control-md); padding: var(--ui-space-2) var(--ui-space-4); border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-ink); font-size: var(--ui-text-md); font-weight: 700; cursor: pointer; }
+.class-agit-management .class-agit-room-nav button:hover { border-color: var(--ui-primary-border); background: var(--ui-primary-soft); }
+.class-agit-management .class-agit-room-nav button[aria-current] { border-color: var(--ui-primary); background: var(--ui-primary-soft); color: var(--ui-primary); box-shadow: inset 0 -2px var(--ui-primary); }
+.class-agit-management .class-agit-room-nav small { margin: 0; padding: 1px var(--ui-space-2); border-radius: var(--ui-radius-pill); background: var(--ui-surface-muted); color: var(--ui-ink-muted); font-size: var(--ui-text-sm); font-weight: 700; opacity: 1; }
