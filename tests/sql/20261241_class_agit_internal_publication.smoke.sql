@@ -42,8 +42,9 @@ BEGIN
         INSERT INTO public.writing_missions(class_id,teacher_id,title,guide,genre,mission_type,input_template,min_chars,min_paragraphs,base_reward,bonus_reward)
         -- 2026-09-28 갱신: 20261244 파일에서 후보 자격을 글의 구조가 아니라 과제 형식(class_agit_mission_format_v1)으로 가린다.
         -- 그래서 알 수 없는 구조·비공개 사진을 가진 17번 글은 전시 대상이 아닌 형식(meeting) 과제에 달아 제외를 검사한다.
-        VALUES(v_class,v_admin,'C1 과제 '||i,'합성 안내','글쓰기',CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' WHEN i=17 THEN 'meeting' ELSE '글쓰기' END,
-            CASE WHEN i=2 THEN 'poem' WHEN i=16 THEN 'report' WHEN i=17 THEN 'meeting' ELSE 'freeform' END,1,1,0,0) RETURNING id INTO v_mission;
+        -- 20261400 이후 보고서(사진 없는 것)는 담을 수 있어, 16번도 meeting 과제에 달린 보고서 구조(과제 형식과 구조가 다름 → 제외)로 바꿨다.
+        VALUES(v_class,v_admin,'C1 과제 '||i,'합성 안내','글쓰기',CASE WHEN i=2 THEN 'poem' WHEN i IN(16,17) THEN 'meeting' ELSE '글쓰기' END,
+            CASE WHEN i=2 THEN 'poem' WHEN i IN(16,17) THEN 'meeting' ELSE 'freeform' END,1,1,0,0) RETURNING id INTO v_mission;
         INSERT INTO public.student_posts(class_id,student_id,mission_id,title,content,is_submitted,is_confirmed,structured_content)
         VALUES(v_class,v_student,v_mission,'C1 작품 '||i,'첫 문단'||E'\n\n'||'둘째 문단',i<>15,i NOT IN(14,15),
             CASE WHEN i=2 THEN '{"template":"poem","version":1,"stanzas":["첫 연\n둘째 행","다음 연"]}'::JSONB

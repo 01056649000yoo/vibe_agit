@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import useBrowsePage from './useBrowsePage.js';
 import { BrowseStatus, PageControls } from './MissionList.jsx';
+import { missionFormatLabel, missionFormatNote } from './missionFormat.js';
 import { collectMissionSources, describeBulkResult } from '../anthology/bulkAdd.js';
 
 /*
@@ -70,9 +71,9 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
             return <li key={mission.id}>
                 <div className="anthology-bulk__work">
                     <strong>{mission.title}</strong>
-                    <small>{mission.format === 'poem' ? '시' : mission.format === 'prose' ? '글' : '기타 장르'}
+                    <small>{missionFormatLabel(mission.format)}
                         {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''}{mission.archived ? ' · 지난 과제 보관함' : ''}</small>
-                    <small>{mission.supported ? `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}` : '전시·문집 지원 준비 중'}</small>
+                    <small>{mission.supported ? `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}${missionFormatNote(mission.format)}` : '전시·문집 지원 준비 중'}</small>
                 </div>
                 <div className="anthology-bulk__actions">
                     <Button variant="primary" type="button" disabled={!mission.supported || !here || busy} onClick={() => run(mission, here, onAdd)}>

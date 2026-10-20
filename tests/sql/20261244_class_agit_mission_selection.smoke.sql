@@ -19,7 +19,7 @@ BEGIN
     END LOOP;
     FOR n IN 1..66 LOOP
         INSERT INTO public.writing_missions(class_id,teacher_id,title,guide,genre,mission_type,input_template,is_archived,created_at,min_chars,min_paragraphs,base_reward,bonus_reward)
-            VALUES(c,t,'탐색 미션 '||lpad(n::TEXT,2,'0'),'합성 안내','글쓰기','글쓰기',CASE WHEN n=65 THEN 'report' ELSE 'freeform' END,n>50,
+            VALUES(c,t,'탐색 미션 '||lpad(n::TEXT,2,'0'),'합성 안내','글쓰기','글쓰기',CASE WHEN n=65 THEN 'meeting' ELSE 'freeform' END,n>50,
                 now()-n*INTERVAL '1 day',1,1,0,0) RETURNING id INTO m;
         missions:=array_append(missions,m);
         IF n<66 THEN FOR k IN 1..16 LOOP

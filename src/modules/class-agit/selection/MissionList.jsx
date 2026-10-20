@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import useBrowsePage from './useBrowsePage.js';
 import { NARROW_LAYOUT_PX } from './selectionLayout.js';
+import { missionFormatLabel, missionFormatNote } from './missionFormat.js';
 
 export function PageControls({ state, label }) {
     return <nav className="class-agit-selection-pages" aria-label={label}>
@@ -33,8 +34,8 @@ export default function MissionList({ api, classId, selected, onSelect, items })
         <ul className="class-agit-mission-list">{state.page?.items.map((mission) => <li key={mission.id}>
             <button type="button" aria-pressed={selected?.id === mission.id} disabled={!mission.supported} onClick={() => choose(mission)}>
                 <strong>{mission.title}</strong>
-                <small>{mission.format === 'poem' ? '시' : mission.format === 'prose' ? '글' : '기타 장르'} · {mission.created_at ? new Date(mission.created_at).toLocaleDateString('ko-KR') : '등록일 없음'}{mission.archived ? ' · 보관함' : ''}</small>
-                <span>{mission.supported ? `검토할 글 ${mission.review_count}편 · 담음 ${items.filter((item) => item.missionId === mission.id).length}편` : '전시 지원 준비 중'}</span>
+                <small>{missionFormatLabel(mission.format)} · {mission.created_at ? new Date(mission.created_at).toLocaleDateString('ko-KR') : '등록일 없음'}{mission.archived ? ' · 보관함' : ''}</small>
+                <span>{mission.supported ? `검토할 글 ${mission.review_count}편 · 담음 ${items.filter((item) => item.missionId === mission.id).length}편${missionFormatNote(mission.format)}` : '전시 지원 준비 중'}</span>
             </button>
         </li>)}</ul>
         {state.page && !state.page.items.length && <p>이 조건에 맞는 미션이 없습니다.</p>}
