@@ -44,3 +44,14 @@ test('학생 내 글 보기의 바뀐 곳도 내가 고친 곳·선생님이 고
     // 계산할 수 없을 때(긴 글·불러오는 중)는 옛 비교로 물러선다.
     assert.match(shelf, /<WritingChangeHighlight before=\{post\.original_content\}/);
 });
+
+test('크게 보기 창에는 고친 곳 보기/숨기기 단추가 있고, 끄면 칠하지 않은 글만 보여 준다', async () => {
+    const modal = await read('src/modules/writing/presentation/WritingPresentationModal.jsx');
+    assert.match(modal, /marks \? \(/);
+    assert.match(modal, /aria-pressed=\{marks\.shown\}/);
+    const viewer = await read('src/components/teacher/PostDetailViewer.jsx');
+    assert.match(viewer, /showPresentationMarks/);
+    assert.match(viewer, /marks=\{hasAttributedMarks/);
+    // 끄면 처음 글·지금 글 원문 그대로(칠도 안내 띠도 없음)
+    assert.match(viewer, /\(presentationVersion === 'original' \? selectedPost\.original_content : selectedPost\.content\)/);
+});

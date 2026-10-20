@@ -42,11 +42,6 @@ const PostDetailViewer = ({
     const showOriginalOnly = version.view === WRITING_VIEW.ORIGINAL;
     const showOriginal = version.view === WRITING_VIEW.CHANGES;
     const setVersionView = version.setView;
-    // 나란히 보기에서 누가 고쳤는지(학생·선생님) 가른다. 교정 회차 기록은 나란히 보기를 열 때만 불러온다.
-    const attributedItems = useAttributedChanges({
-        postId: selectedPost?.id, original: selectedPost?.original_content, current: selectedPost?.content,
-        teacherEditRounds: selectedPost?.teacher_edit_rounds, enabled: showOriginal
-    });
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -57,6 +52,14 @@ const PostDetailViewer = ({
     const [editedContent, setEditedContent] = useState('');
     const [isSavingTeacherEdit, setIsSavingTeacherEdit] = useState(false);
     const [presentationVersion, setPresentationVersion] = useState(null);
+    // 누가 고쳤는지(학생·선생님) 가른다. 나란히 보기(③)와 크게 보기를 열 때만 계산하고, 교정 회차 기록도 이때만 불러온다.
+    const attributedItems = useAttributedChanges({
+        postId: selectedPost?.id, original: selectedPost?.original_content, current: selectedPost?.content,
+        teacherEditRounds: selectedPost?.teacher_edit_rounds, enabled: showOriginal || presentationVersion !== null
+    });
+    // 크게 보기에서 고친 곳 표시를 켜고 끈다(발표·수업에서 깨끗한 글만 보여 줄 때).
+    const [showPresentationMarks, setShowPresentationMarks] = useState(true);
+    const hasAttributedMarks = Boolean(attributedItems?.some((item) => item.author !== 'orig' || item.removedBy));
     const isReportPost = isReportStructuredContent(selectedPost?.structured_content);
     const outlineNotice = outlineReference ? (
         <>
@@ -1015,12 +1018,19 @@ const PostDetailViewer = ({
                         versionLabel={presentationVersion === 'original'
                             ? '🌱 최초 제출 (초안)'
                             : '✨ 최종 제출 (수정본)'}
+                        marks={hasAttributedMarks && !(presentationVersion === 'final' && isReportPost)
+                            ? { shown: showPresentationMarks, onToggle: () => setShowPresentationMarks((shown) => !shown) }
+                            : undefined}
                     >
                         {presentationVersion === 'final' && isReportPost ? (
                             <ReportDocument
                                 structuredContent={selectedPost.structured_content}
                                 content={selectedPost.content}
                             />
+                        ) : hasAttributedMarks ? (
+                            showPresentationMarks ? (
+                                <WritingAttributedText items={attributedItems} variant={presentationVersion === 'original' ? 'before' : 'after'} />
+                            ) : (presentationVersion === 'original' ? selectedPost.original_content : selectedPost.content)
                         ) : (
                             <WritingChangeHighlight
                                 variant={presentationVersion === 'original' ? 'before' : 'after'}

@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-20 — 크게 보기: 고친 곳 보기/숨기기 단추 (Claude)
+- **한 일**: 교사 글 자세히 보기의 크게 보기(전체 화면)에도 학생·선생님 구분 색 표시를 넣고, `🖍️ 고친 곳 숨기기/보기` 단추(켜고 끔)를 글자 크기 조절 앞에 달았다. 끄면 칠도 안내 띠도 없는 원문 그대로.
+- **변경**: `WritingPresentationModal.jsx`(선택 prop `marks`)·CSS, `PostDetailViewer.jsx`(크게 보기를 열 때도 구분 계산), 개발 미리보기·`tests/teacherSideBySideCompare.test.mjs`, FEATURE_MAP v1.26.18.
+- **결과/검증**: 관련 시험·eslint 통과, 미리보기에서 단추 눌러 표시 9조각 → 0 확인. 제출 현황·보관함의 크게 보기는 그대로(옛 승인 글 형광펜만).
+- **남은 것**: 배포 지시 대기(선생님). 제출 현황 쪽 크게 보기에도 넣을지는 선생님 결정.
+
 ## 2026-10-20 — 단계 탭(①처음 글 ②선생님 교정 ③최종 글)·학생 내 글 보기에도 고친 사람 구분 (Claude)
 - **한 일**: 선생님 결정 — 교사 글 자세히 보기 탭을 고친 순서대로 바꾸고 한 화면에는 글 두 개만 놓는다(①한 칸 ②교정지+다시 낸 글 ③처음·최종 두 칸). 학생 `내 글 보기` 의 바뀐 곳(승인된 글)도 `내가 고친 곳`·`선생님이 고친 곳` 으로 가르고, 되돌린 선생님 교정은 회색 가운데 줄로 남긴다.
 - **변경**: `WritingVersionSwitch.jsx`(단계 탭·기본 칸), `PostDetailViewer.jsx`(①단독 칸), 새 `useAttributedChanges.js`(교사·학생 공용 훅), `WritingAttributedText.jsx`(`merged`), `MyShelfPostDetail.jsx`, 개발 미리보기·시험, FEATURE_MAP v1.26.18.
@@ -136,13 +142,6 @@
 - **변경**: `scripts/codex-usage-guard.mjs`·`tests/codexUsageGuard.test.mjs`(새). git 밖: brew `antigravity-cli`(`agy`), 호출법 기억 파일. 시험 중 만든 가짜 주소 행·임시 방·샘링크 링크는 모두 지움.
 - **결과/검증**: 지킴이 검사 6개·실제 읽기(5시간 84%·주간 98% 남음)·기준을 올려 막히는지 확인.
 - **남은 것 / 다음**: 재현한 4건의 수정은 선생님 계획 승인 뒤(샘링크 저장소·연구소·`20261394`).
-
-## 2026-10-11 — 연구소 개요짜기 종료하면 보기만·종료 확인 창·새로 고침 문구 (Claude)
-- **한 일**: 선생님 결정 — 종료된 개요짜기는 고칠 수 없고 보기만. `saveAnswers`·`requestOutline` 이 종료·만료 방이면 거절, 입장은 낸 개요가 있으면 결과(보기만)로, 쓰기 화면은 `room_ended` 면 결과로, 결과 화면은 `개요 다시 만들기` 대신 안내. `활동 종료하기` 는 확인 창 뒤 종료(개요짜기·다른 활동 문구 따로). 느린 새로 고침 질문: 운영 응답 0.013~0.058초·DB 7.5ms로 서버는 빠르고, 반영 뒤 5초 쉬는 동안 단추가 `잠깐만요` 라 불러오는 중처럼 보였음 → `✓ 방금 반영했어요`. [원인: 쉬는 시간 문구가 로딩처럼 보임]
-- **변경**: 연구소 `student-actions.ts`(isRoomEnded·OUTLINE_ENDED_MESSAGE·room_ended·roomEnded)·`lab-student-session.ts`·`room/[id]/page.tsx`·activity·result·`close-room-button.tsx`(새)·선생님 방 page·board-client·guide.ts·검사. FEATURE_MAP v1.26.16.
-- **결과/검증**: 연구소 검사 123·린트·빌드. "테스트" 반 실제: 진행 중 수정 → 공유판 반영, 종료 확인 창(그만두기 유지·확인 종료), 종료 뒤 학생 결과(보기만·상자 있음), 예전 쓰기 주소 → 결과. 시험 방 지움.
-- **덧붙임**: 배포(두 저장소 자동 배포 성공). umami 마무리 — 선생님이 가비아 DNS `umami` 레코드 삭제(공개 DNS 3곳에서 사라짐 확인)·본체 `/etc/caddy/Caddyfile` 블록 삭제(백업 `Caddyfile.bak-20261011`). 내가 드린 명령의 `caddy validate` 가 sudo 없이 돌아 접속 기록 파일 권한으로 멈춰 reload 가 안 됐음 → 관리 API 로 `caddy reload`(돌고 있는 Caddy 가 스스로 검사) → 실행 설정에서 umami 사라짐, 아지트·연구소·www·api·샘링크 정상. [원인: 검사 명령에 sudo 를 빠뜨림]
-- **남은 것 / 다음**: 없음.
 
 ## 지난 기록
 

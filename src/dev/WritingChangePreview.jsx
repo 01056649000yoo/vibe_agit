@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import WritingChangeHighlight from '../modules/writing/review/WritingChangeHighlight';
 import WritingAttributedText from '../modules/writing/review/WritingAttributedText';
+import WritingPresentationModal from '../modules/writing/presentation/WritingPresentationModal';
 import { attributeWritingChanges } from '../modules/writing/review/writingAttribution.js';
 import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from '../components/teacher/TeacherEditToggle';
 import RevisionCountChip from '../modules/writing/review/RevisionCountChip';
@@ -86,6 +87,10 @@ export default function WritingChangePreview() {
                 <AttributedSection />
             </section>
             <section>
+                <h3>크게 보기 — 고친 곳 보기/숨기기 단추</h3>
+                <PresentationMarksSection />
+            </section>
+            <section>
                 <h3>학생 내 글 보기 — 바뀐 곳(내가 고친 곳·선생님이 고쳐 준 곳)</h3>
                 <StudentMergedSection />
             </section>
@@ -133,6 +138,27 @@ function StudentMergedSection() {
     return (
         <div style={{ ...box, maxWidth: 560 }} data-testid="student-merged-preview">
             <WritingAttributedText items={items} variant="merged" studentLabel="내가 고친 곳" />
+        </div>
+    );
+}
+
+function PresentationMarksSection() {
+    const [open, setOpen] = useState(false);
+    const [shown, setShown] = useState(true);
+    const items = attributeWritingChanges(ATTRIBUTION_SAMPLE.original, ATTRIBUTION_SAMPLE.rounds, ATTRIBUTION_SAMPLE.current);
+    return (
+        <div>
+            <button type="button" onClick={() => setOpen(true)}>크게 보기 열기</button>
+            <WritingPresentationModal
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                title="우리 반 체육 대회"
+                studentName="김아지"
+                versionLabel="✨ 최종 제출 (수정본)"
+                marks={{ shown, onToggle: () => setShown((value) => !value) }}
+            >
+                {shown ? <WritingAttributedText items={items} variant="after" /> : ATTRIBUTION_SAMPLE.current}
+            </WritingPresentationModal>
         </div>
     );
 }

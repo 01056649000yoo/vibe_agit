@@ -18,6 +18,11 @@ const WritingPresentationModal = ({
      * 실제 정렬은 CSS 가 `data-format` 을 보고 한다.
      */
     format = WRITING_FORMAT.prose,
+    /*
+     * 고친 곳 표시를 켜고 끄는 단추(선택). `{ shown, onToggle }` 을 주면 글자 크기 조절 앞에 `🖍️ 고친 곳` 단추가 생긴다.
+     * 표시를 칠하고 말고는 부르는 쪽이 정한다 — 이 창은 단추만 그린다.
+     */
+    marks,
     children
 }) => {
     const titleId = useId();
@@ -100,6 +105,16 @@ const WritingPresentationModal = ({
                         </div>
 
                         <div className="writing-presentation-modal__controls" aria-label="본문 글자 크기 조절">
+                            {marks ? (
+                                <button
+                                    type="button"
+                                    className="writing-presentation-modal__marks"
+                                    aria-pressed={marks.shown}
+                                    onClick={marks.onToggle}
+                                >
+                                    🖍️ 고친 곳 {marks.shown ? '숨기기' : '보기'}
+                                </button>
+                            ) : null}
                             <span>글자 크기</span>
                             <button
                                 type="button"

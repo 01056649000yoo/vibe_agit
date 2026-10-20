@@ -213,6 +213,7 @@
     }
 
     .writing-presentation-modal__controls {
+        flex-wrap: wrap;
         justify-content: flex-end;
         width: 100%;
     }
@@ -242,4 +243,17 @@
         align-items: flex-start;
         flex-direction: column;
     }
+}
+
+/* 고친 곳 보기/숨기기 단추 — 켜져 있을 때(aria-pressed) 형광펜색으로 눌린 모양 */
+.writing-presentation-modal__controls > button.writing-presentation-modal__marks {
+    padding: 0 14px;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+.writing-presentation-modal__controls > button.writing-presentation-modal__marks[aria-pressed='true'] {
+    border-color: #d29a44;
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
 }
