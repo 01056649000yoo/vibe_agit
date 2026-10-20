@@ -24,6 +24,8 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
     const active = activeRoom !== undefined ? activeRoom : localActive;
     const setActive = onActiveRoom || setLocalActive;
     const [error, setError] = useState('');
+    // 주제째 담기가 글을 모으는 동안(비동기)에는 전시실을 바꾸지 못하게 한다 — 늦게 끝난 담기가 옛 전시실·옛 초안에 들어가는 것을 막는다.
+    const [pickBusy, setPickBusy] = useState(false);
     const { ask, confirmDialog } = useConfirmDialog();
     const room = draft.rooms.find((entry) => entry.id === active);
     const roomId = room?.id || null;
@@ -33,7 +35,9 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
     const unassigned = draft.items.filter((item) => item.roomId == null).length;
     const roomOptions = draft.rooms.map((entry) => ({ ...entry, count: draft.items.filter((item) => item.roomId === entry.id).length }));
     // 지금 자리에 남은 수 — 전시실이면 그 방의 20편, 미배정이면 전시 전체 120편 기준이다.
-    const remaining = room ? limits.worksPerRoom - items.length : limits.maxWorks - draft.items.length;
+    // 전시실이 정원(20편)이 남아도 전시 전체(120편) 남은 자리를 넘을 수 없다.
+    const totalRemaining = Math.max(0, limits.maxWorks - draft.items.length);
+    const remaining = room ? Math.max(0, Math.min(limits.worksPerRoom - items.length, totalRemaining)) : totalRemaining;
     const change = (operation) => { const next = editRooms(draft, operation); onDraft(next); setError(''); return next; };
     const attempt = (operation) => { try { return change(operation); } catch (reason) { setError(reason.message); return null; } };
     const addRoom = (title = '') => { const next = change({ type: 'room-add', title: title.slice(0, limits.roomTitleLength) }); setActive(next.rooms.at(-1).id); };
@@ -82,7 +86,7 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
         </div> : <p>방을 정하지 않은 작품입니다. 순서·이동 정리에서 여러 편을 골라 전시실로 이동하세요.</p>}
     </>);
     const worksView = (<div className="class-agit-works-layout">
-        <RoomRail rooms={roomOptions} items={draft.items} activeId={roomId} onPick={setActive} />
+        <RoomRail rooms={roomOptions} items={draft.items} activeId={roomId} onPick={setActive} disabled={pickBusy} />
         <div className="class-agit-works-main">
             <div className="class-agit-works-target" role="status">
                 <strong>{room ? `${room.title}에 담는 중` : '미배정 작품'}</strong>
@@ -94,7 +98,7 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
                 {way === 'work' && <div className="class-agit-back-to-add"><Button variant="ghost" size="sm" type="button" onClick={() => { setWay('mission'); setStartMission(null); }}>← 주제 목록으로</Button>
                     <span>{startMission ? `‘${startMission.title}’에서 담을 글을 골라요` : '글을 하나씩 보고 골라요'}</span></div>}
                 {way === 'mission'
-                    ? <MissionBulkPicker classId={draft.classId} api={api} items={draft.items}
+                    ? <MissionBulkPicker classId={draft.classId} api={api} items={draft.items} onBusyChange={(busy) => { setPickBusy(busy); onBusyChange?.(busy); }}
                         capacity={remaining}
                         capacityNote={`${room ? `${room.title} 전시실` : '미배정'}에 남은 자리 ${remaining}편 · 전시 전체 ${draft.items.length}/${limits.maxWorks}편`}
                         addLabel={(count) => `${room ? '이 전시실' : '미배정'}에 ${count}편 담기`}

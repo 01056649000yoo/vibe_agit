@@ -14,8 +14,8 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   const title = p.getByLabel('전시 제목'); await title.fill('시뮬레이션 전시'); 
   const intro = p.getByLabel('전시 소개'); await intro.fill('5단계 테스트 소개글');
   ok('1단계 제목 입력 반영', (await title.inputValue()) === '시뮬레이션 전시');
-  const themes = p.locator('[class*=design-picker] button, [role=radio]'); ok('1단계 디자인 선택지', await themes.count() >= 4, String(await themes.count()));
-  if (await themes.count() >= 2) await themes.nth(1).click();
+  const themes = p.locator('input[name="전시관 디자인"]'); ok('1단계 디자인 선택지', await themes.count() >= 4, String(await themes.count()));
+  if (await themes.count() >= 2) await themes.nth(1).check();
   // 다음 단계 버튼
   await p.getByRole('button', { name: /전시실 구성 →/ }).click(); await p.waitForTimeout(800);
   ok('2단계로 이동', (await stepSel()).includes('전시실 구성'));

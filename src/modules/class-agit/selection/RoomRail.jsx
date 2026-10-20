@@ -12,14 +12,14 @@ const topicsOf = (works) => {
     const byTopic = new Map();
     for (const item of works) {
         const key = item.missionId || item.groupTitle || '기타';
-        const entry = byTopic.get(key) || { title: item.groupTitle || '주제 없음', count: 0 };
+        const entry = byTopic.get(key) || { key, title: item.groupTitle || '주제 없음', count: 0 };
         entry.count += 1;
         byTopic.set(key, entry);
     }
     return [...byTopic.values()];
 };
 
-export default function RoomRail({ rooms, items, activeId, onPick }) {
+export default function RoomRail({ rooms, items, activeId, onPick, disabled = false }) {
     const byRoom = (roomId) => items.filter((item) => (item.roomId || null) === roomId);
     const unassigned = byRoom(null);
     const card = ({ id, title, index }) => {
@@ -30,7 +30,7 @@ export default function RoomRail({ rooms, items, activeId, onPick }) {
         const capacity = id === null ? null : limits.worksPerRoom;
         return (
             <li key={id ?? 'unassigned'} className={`class-agit-room-card${active ? ' is-active' : ''}`}>
-                <button type="button" className="class-agit-room-card__head" aria-current={active ? 'true' : undefined} onClick={() => onPick(id)}>
+                <button type="button" className="class-agit-room-card__head" aria-current={active ? 'true' : undefined} disabled={disabled} onClick={() => onPick(id)}>
                     <span className="class-agit-room-card__title">{id === null ? title : `${index}. ${title}`}</span>
                     <span className="class-agit-room-card__count"><b>{works.length}</b>{capacity ? `/${capacity}편` : '편'}</span>
                     {capacity && <span className="class-agit-room-card__bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (works.length / capacity) * 100)}%` }} /></span>}
@@ -38,7 +38,7 @@ export default function RoomRail({ rooms, items, activeId, onPick }) {
                 {works.length === 0
                     ? <p className="class-agit-room-card__empty">{active ? '아직 담은 주제가 없어요. 오른쪽에서 담아 보세요.' : '비어 있어요'}</p>
                     : <ul className="class-agit-room-card__topics">
-                        {shown.map((topic) => <li key={topic.title}><span>{topic.title}</span><b>{topic.count}편</b></li>)}
+                        {shown.map((topic) => <li key={topic.key}><span>{topic.title}</span><b>{topic.count}편</b></li>)}
                         {topics.length > shown.length && <li className="class-agit-room-card__more">외 {topics.length - shown.length}개 주제</li>}
                     </ul>}
             </li>

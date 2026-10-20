@@ -162,7 +162,9 @@ test('전시관도 같은 방법으로 담는다', () => {
     assert.match(workspace, /import MissionBulkPicker from '\.\/MissionBulkPicker\.jsx'/);
     assert.match(workspace, /const \[way, setWay\] = useState\('mission'\)/);
     assert.match(workspace, /capacity=\{remaining\}/);
-    assert.match(workspace, /const remaining = room \? limits\.worksPerRoom - items\.length : limits\.maxWorks - draft\.items\.length;/);
+    // 전시실 정원(20편)이 남아도 전시 전체(120편) 남은 자리를 넘지 못한다(2026-10-20 검토에서 발견).
+    assert.match(workspace, /const totalRemaining = Math\.max\(0, limits\.maxWorks - draft\.items\.length\);/);
+    assert.match(workspace, /const remaining = room \? Math\.max\(0, Math\.min\(limits\.worksPerRoom - items\.length, totalRemaining\)\) : totalRemaining;/);
     assert.match(workspace, /label: \(count\) => `새 전시실 만들어 \$\{count\}편 담기`/);
     // 새 전시실에 담을 수 있는 수는 방 하나(20편)와 전시 전체 남은 자리 중 작은 쪽이다.
     assert.match(workspace, /capacity: Math\.min\(limits\.worksPerRoom, limits\.maxWorks - draft\.items\.length\)/);

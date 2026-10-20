@@ -90,6 +90,7 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                     </div>
                 </div>
                 {pending.length > 0 && <details className="class-agit-pending-selection"><summary>선택 내역 {pending.length}편 · 미션을 바꿔도 유지됩니다</summary><ul>{pending.map((row) => <li key={row.id}><span>{row.student_name} · {row.title}<small>{row.group_title}</small></span><Button variant="ghost" type="button" onClick={() => toggle(row)}>선택 해제</Button></li>)}</ul><Button variant="outline" type="button" onClick={() => setSelected([])}>선택 모두 해제</Button></details>}
+                {pending.length > capacity && <p className="class-agit-error" role="status">선택한 {pending.length}편이 남은 자리 {capacity}편보다 많아요. 선택을 줄이거나 자리가 넉넉한 전시실을 골라 주세요.</p>}
                 <div className="class-agit-selection-summary"><span>선택 <strong>{pending.length}</strong>편 · 담음 <strong>{items.length}/{maximum}</strong>편{destination && ` · ${destination} 남은 자리 ${capacity}편`}</span><div className="class-agit-header-actions">
                     {onArrange && <Button variant="outline" type="button" onClick={onArrange}>순서·이동 정리</Button>}
                     <Button variant="primary" type="button" disabled={!pending.length || pending.length > capacity} onClick={() => run(async () => {

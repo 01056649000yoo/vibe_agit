@@ -40,3 +40,10 @@ test('안내서 상세는 주의사항을 접고, 긴 항목에 더 보기를 �
     assert.match(source, /알아 두면 좋은 것 \{activeSection\.notes\.length\}가지 보기/);
     assert.match(source, /<FoldItem text=\{guideStep\} \/>/);
 });
+
+test('첫 문장이 강조 표기로 끝나도 거기서 나눈다', () => {
+    const text = '**먼저 학생들에게 과제의 목표를 설명합니다.** ' + '학생들이 자료를 살펴보도록 안내하세요 '.repeat(10);
+    const { lead, rest } = splitGuideLead(text);
+    assert.equal(lead, '**먼저 학생들에게 과제의 목표를 설명합니다.**');
+    assert.ok(rest.startsWith('학생들이'));
+});

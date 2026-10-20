@@ -9,7 +9,7 @@ export default function BookRail({ items, limit, students = null, ownerStudent =
     const byTopic = new Map();
     for (const item of items) {
         const key = item.missionId || item.group || '기타';
-        const entry = byTopic.get(key) || { title: item.group || '주제 없음', count: 0 };
+        const entry = byTopic.get(key) || { key, title: item.group || '주제 없음', count: 0 };
         entry.count += 1; byTopic.set(key, entry);
     }
     const topics = [...byTopic.values()];
@@ -28,7 +28,7 @@ export default function BookRail({ items, limit, students = null, ownerStudent =
                 {items.length === 0
                     ? <p className="class-agit-room-card__empty">아직 담은 글이 없어요. 오른쪽에서 담아 보세요.</p>
                     : <ul className="class-agit-room-card__topics">
-                        {shown.map((topic) => <li key={topic.title}><span>{topic.title}</span><b>{topic.count}편</b></li>)}
+                        {shown.map((topic) => <li key={topic.key}><span>{topic.title}</span><b>{topic.count}편</b></li>)}
                         {topics.length > shown.length && <li className="class-agit-room-card__more">외 {topics.length - shown.length}개 주제</li>}
                     </ul>}
                 {!ownerStudent && items.length > 0 && <p className="class-agit-room-card__empty">{authors.size}명의 글</p>}

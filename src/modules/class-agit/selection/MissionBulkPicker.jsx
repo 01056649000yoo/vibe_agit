@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Button from '../../../components/common/Button.jsx';
 import useBrowsePage from './useBrowsePage.js';
 import { BrowseStatus, PageControls } from './MissionList.jsx';
@@ -15,12 +15,14 @@ import { collectMissionSources, describeBulkResult } from '../anthology/bulkAdd.
  * 자리(`capacity`)는 부르는 쪽이 정한다. 문집은 한 권의 남은 자리, 전시는 **그 전시실의**
  * 남은 자리다(전시실 하나는 20편이라 학급 전체 미션이 한 방에 들어가지 않는다).
  */
-export default function MissionBulkPicker({ classId, api, items, capacity, capacityNote, addLabel, onAdd, newRoom, onPickMission }) {
+export default function MissionBulkPicker({ classId, api, items, capacity, capacityNote, addLabel, onAdd, newRoom, onPickMission, onBusyChange }) {
     const [input, setInput] = useState('');
     const [query, setQuery] = useState('');
     const [scope, setScope] = useState('all');
     const [skipRepresented, setSkipRepresented] = useState(false);
     const [busyMission, setBusyMission] = useState(null);
+    useEffect(() => { onBusyChange?.(busyMission !== null); }, [busyMission, onBusyChange]);
+    useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
     const [progress, setProgress] = useState(null);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');

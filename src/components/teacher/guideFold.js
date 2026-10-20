@@ -13,8 +13,9 @@ const isBalanced = (text) => (text.match(/\*\*/g) || []).length % 2 === 0 && (te
 export const splitGuideLead = (text) => {
     const source = String(text ?? '');
     if (plainLength(source) < GUIDE_FOLD_MIN_LENGTH) return { lead: source, rest: '' };
-    for (const match of source.matchAll(/[.!?](?=\s)/g)) {
-        const end = match.index + 1;
+    // 문장 끝 기호 바로 뒤에 닫는 강조 표기(`**`·백틱)가 붙어도 경계로 본다.
+    for (const match of source.matchAll(/[.!?](?:\*\*|`)?(?=\s)/g)) {
+        const end = match.index + match[0].length;
         const lead = source.slice(0, end);
         const rest = source.slice(end).trim();
         if (plainLength(lead) >= MIN_LEAD && plainLength(rest) >= MIN_REST && isBalanced(lead)) {
