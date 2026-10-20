@@ -9,7 +9,7 @@ import BulkReview from './BulkReview.jsx';
 import { toggleSelection } from './model.js';
 import './selection.css';
 
-export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, hideMissionRail = false, onRemove, onCreateRoom, onAdd, onArrange, onBusyChange }) {
+export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, hideMissionRail = false, onRemove, onAdd, onArrange, onBusyChange }) {
     // 주제째 담기에서 `글 보기` 로 넘어오면 그 미션을 고른 채로 연다.
     const [mission, setMission] = useState(initialMission);
     const [input, setInput] = useState('');
@@ -74,7 +74,6 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
                             return mine.length > 0 && <div className="class-agit-source-bulkremove"><span>이 주제에서 이미 담은 글 {mine.length}편</span>
                                 <Button variant="outline" size="sm" type="button" onClick={() => onRemove(mine.map((item) => item.sourceId || item.itemId), filteredMission.title)}>이 주제에서 담은 {mine.length}편 모두 빼기</Button></div>;
                         })()}
-                        {onCreateRoom && filteredMission && <Button variant="outline" type="button" onClick={() => { try { onCreateRoom(filteredMission.title); } catch (reason) { setError(reason.message); } }}>이 미션 제목으로 전시실 만들기</Button>}
                         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
                             <label>글 제목·학생 이름<input value={input} maxLength={80} placeholder="학급 전체에서 검색할 수 있어요" onChange={(event) => setInput(event.target.value)} /></label><Button variant="outline" type="submit">글 검색</Button>
                         </form>
