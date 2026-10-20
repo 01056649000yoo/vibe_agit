@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-20 — 새로고침 때 로그인 안내가 잠깐 보이던 문제 (Claude)
+- **한 일**: 로그인해 둔 사람이 새로고침하면 첫 화면(로그인 안내)이 번쩍였다 사라졌다. `index.html` 에 검색 로봇·로그인 전 방문자용으로 미리 그려 둔 첫 화면이 있어서, 앱이 뜨기 전까지 로그인한 사람에게도 보였기 때문이다 [원인: 미리 그린 첫 화면이 저장된 로그인 여부와 상관없이 보임]. 저장된 로그인(스토어의 `hasStoredSession` 과 같은 기준)이 있으면 그 화면을 가린다.
+- **변경**: 새 `public/boot-session.js`(보안 정책이 인라인 스크립트를 막아 파일로), `index.html`(스크립트 링크·`html.has-session .search-intro{visibility:hidden}`), `tests/searchDiscovery.test.mjs`.
+- **결과/검증**: eslint·전체 시험 통과, 브라우저로 비로그인은 보이고 저장된 로그인은 가려짐을 확인. 로그인한 사람은 앱이 뜨기 전 짧게 빈 화면을 본다(뒤이어 홈 틀).
+- **남은 것**: 없음(배포 지시 대기).
+
 ## 2026-10-20 — 관찰·조사 보고서 양식과 출처, 문집·글꽃 책방 연동 (Claude)
 - **한 일**: 과제 만들기에서 `관찰 보고서`·`조사 보고서`·`자유 보고서(예전 방식)` 고르기와 `출처 쓰기` 켜기(기본 꺼짐). 학생은 머리말(대상·기간·장소·날씨·방법 / 주제·기간·방법)·칸 소제목·날짜·사진 설명·참고 자료를 쓰고, 보고서 보기·PDF·문집·글꽃 책방이 같은 양식을 따른다. 글꽃 전시관 주제째 담기는 승인한 글이면 진행 중인 미션도 담을 수 있게 통일하고 `담을 글 없음`/`다 담았습니다` 안내를 나눴다.
 - **변경**: `report/*`(reportContent·ReportMissionForm·ReportEditor·ReportDocument·reportPdfExport·css), `MissionBulkPicker`, 새 `20261403_class_agit_report_forms.sql`(**운영 적용 전**, 서버 `class_agit_source_data_v1` 가 meta 를 검증·머리말 줄/설명/날짜/참고 자료를 문단 목록에 담음) + 스모크, 개발 미리보기 `report-forms`, 시험 `reportForms`, `teacherGuides.js`·FEATURE_MAP v1.26.23. git 밖 변경 없음(별도 저장소 아레나의 도커 컨테이너·터널·DNS 는 그쪽 STATUS 에 기록).

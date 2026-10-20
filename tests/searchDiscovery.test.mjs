@@ -187,3 +187,19 @@ test('자바스크립트 전 첫 화면은 진짜 첫 화면과 같은 모양이
     .filter((selector) => !selector.startsWith('.search-intro'));
   assert.deepEqual(leaked, [], '정적 CSS 가 .search-intro 밖으로 새어 나갑니다');
 });
+
+test('저장된 로그인이 있으면 미리 그린 첫 화면을 가린다(새로고침 때 로그인 안내가 번쩍이지 않게)', async () => {
+  const [index, script, store, client] = await Promise.all([
+    read('index.html'),
+    read('public/boot-session.js'),
+    read('src/store/useAuthStore.js'),
+    read('src/lib/supabaseClient.js'),
+  ]);
+  assert.match(index, /<script src="\/boot-session\.js"><\/script>/);
+  assert.match(index, /html\.has-session \.search-intro\s*\{\s*visibility:\s*hidden/);
+  // 인라인이 아니라 파일이고(CSP), 판정 기준이 스토어의 hasStoredSession 과 같다.
+  for (const needle of ['-auth-token', 'student_session']) {
+    assert.ok(script.includes(needle) && store.includes(needle), needle);
+  }
+  assert.ok(script.includes("'sb-agit-auth-token'") && client.includes("SHARED_AUTH_COOKIE_NAME = 'sb-agit-auth-token'"));
+});
