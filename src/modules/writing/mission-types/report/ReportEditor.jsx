@@ -426,6 +426,19 @@ const ReportEditor = ({
                                 )}
 
                                 <div className="report-editor__writing-panel">
+                                    {kindDef && !disabled && (!showPhoto ? (
+                                        <button
+                                            type="button"
+                                            className="report-editor__photo-toggle"
+                                            onClick={() => updateSection(section.id, { photo: true })}
+                                        >📷 이 칸에도 사진을 넣고 싶어요</button>
+                                    ) : !section.image?.path && (
+                                        <button
+                                            type="button"
+                                            className="report-editor__photo-toggle"
+                                            onClick={() => updateSection(section.id, { photo: false })}
+                                        >✏️ 이 칸은 글만 쓸래요</button>
+                                    ))}
                                     {kindDef && (
                                         <div className="report-editor__section-meta">
                                             <input

@@ -643,3 +643,18 @@
     .report-template__kind, .report-template__tools { grid-column: 1 / -1; justify-content: flex-end; }
     .report-template__kind button { flex: 1; }
 }
+
+.report-editor__photo-toggle {
+    justify-self: start;
+    min-height: 36px;
+    margin-bottom: 8px;
+    padding: 0 12px;
+    border: 1px dashed #5EEAD4;
+    border-radius: 999px;
+    background: #F0FDFA;
+    color: #0F766E;
+    font: inherit;
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+    cursor: pointer;
+}

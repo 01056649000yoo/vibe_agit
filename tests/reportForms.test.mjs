@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
     REPORT_KINDS,
     buildReportStructuredContent,
@@ -151,4 +152,11 @@ test('칸마다 사진 칸 여부: 선생님이 정한 값이 우선, 없으면 
     // 저장된 글의 칸 값이 설정보다 우선(학생이 칸을 옮겨도 따라간다)
     assert.equal(normalizeReportSections(saved, '', OBS)[1].photo, false);
     assert.equal('photo' in buildReportStructuredContent(normalizeReportSections(null, '', {}), {}).sections[0], false);
+});
+
+test('학생은 글만 칸에 사진을 더하거나 사진 칸을 뺄 수 있다(선생님 설정은 기본값)', () => {
+    const source = readFileSync(new URL('../src/modules/writing/mission-types/report/ReportEditor.jsx', import.meta.url), 'utf8');
+    assert.match(source, /이 칸에도 사진을 넣고 싶어요/);
+    assert.match(source, /updateSection\(section\.id, \{ photo: true \}\)/);
+    assert.match(source, /이 칸은 글만 쓸래요/);
 });
