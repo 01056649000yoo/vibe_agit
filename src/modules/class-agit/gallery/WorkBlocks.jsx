@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { isPhotoBlock, photoIdOfBlock, photoIdsOfBlocks } from '../photoBlocks.js';
+import { isPhotoBlock, photoCaptionOf, photoIdOfBlock, photoIdsOfBlocks } from '../photoBlocks.js';
 import { PhotoResolverContext } from '../photoContext.js';
 
 /**
@@ -19,10 +19,19 @@ export default function WorkBlocks({ blocks }) {
     }, [ids, resolvePhotos]);
     return list.map((block, index) => {
         // 조각 순서는 작품마다 고정이라 순번 키로 충분하다.
-        if (!isPhotoBlock(block)) return <p key={index}>{block}</p>;
+        if (!isPhotoBlock(block)) {
+            // 사진 바로 뒤의 `▲ 설명` 줄은 사진 아래 설명으로 붙였으므로 따로 그리지 않는다.
+            return isPhotoBlock(list[index - 1]) && photoCaptionOf(block) && photos.has(photoIdOfBlock(list[index - 1])) ? null : <p key={index}>{block}</p>;
+        }
         const info = photos.get(photoIdOfBlock(block));
+        const caption = photoCaptionOf(list[index + 1]);
         return info
-            ? <figure className="class-agit-reader__photo" key={index}><img src={info.url} width={info.width} height={info.height} alt="보고서 사진" loading="lazy" decoding="async" /></figure>
+            ? (
+                <figure className="class-agit-reader__photo" key={index}>
+                    <img src={info.url} width={info.width} height={info.height} alt={caption || '보고서 사진'} loading="lazy" decoding="async" />
+                    {caption && <figcaption>{caption}</figcaption>}
+                </figure>
+            )
             : null;
     });
 }

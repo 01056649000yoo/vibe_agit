@@ -17,7 +17,7 @@ export const REPORT_KIND_RESEARCH = 'research';
 export const REPORT_META_MAX = 100;
 export const REPORT_DATE_MAX = 30;
 export const REPORT_SOURCE_MAX = 200;
-export const REPORT_CAPTION_MAX = 80;
+export const REPORT_CAPTION_MAX = 40;
 
 export const REPORT_KINDS = Object.freeze({
     [REPORT_KIND_OBSERVATION]: Object.freeze({

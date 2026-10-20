@@ -376,7 +376,7 @@ const ReportEditor = ({
 
                                     {kindDef && section.image?.path && (
                                         <div className="report-editor__caption">
-                                            <label htmlFor={`report-caption-${section.id}`}>사진 설명 <b title="꼭 써요">*</b></label>
+                                            <label htmlFor={`report-caption-${section.id}`}>사진 설명 <b title="꼭 써요">*</b> <small>(짧게, 최대 40자)</small></label>
                                             <StudentTextField
                                                 id={`report-caption-${section.id}`}
                                                 type="text"

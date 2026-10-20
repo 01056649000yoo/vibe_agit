@@ -4,18 +4,19 @@
  */
 export const ANTHOLOGY_MIN_BODY_RATIO = 0.3;
 
-import { photoIdOfBlock } from '../photoBlocks.js';
+import { photoCaptionOf, photoIdOfBlock } from '../photoBlocks.js';
 
 /**
  * 보고서 사진 한 장을 쪽에 놓을 덩어리로(2026-10-20). 사진 자료는 인쇄 문서의 `#anthology-photos` 에 데이터 주소로 들어 있다.
  * 자료가 없으면(읽을 수 없는 사진) null — 글만 쪽에 놓인다. 사진은 쪼개지 않고 한 덩어리로 다룬다(크기는 print.js 가 쪽 높이로 제한).
  */
-const photoFigure = (doc, id) => {
+const photoFigure = (doc, id, caption = '') => {
     const source = [...doc.querySelectorAll('#anthology-photos img')].find((image) => image.dataset.photoId === id);
     if (!source) return null;
     const figure = doc.createElement('figure');
     figure.className = 'anthology-photo'; figure.dataset.photo = id;
     figure.append(source.cloneNode(true));
+    if (caption) { const text = doc.createElement('figcaption'); text.textContent = caption; figure.append(text); }
     return figure;
 };
 
@@ -117,9 +118,18 @@ export function paginateAnthology(doc) {
         let blocks;
         if (main.children.length) blocks = [...main.children].map((child) => { const copy = child.cloneNode(false); copy.textContent = child.textContent; return copy; });
         else {
-            blocks = main.textContent.split(/\n\s*\n/u).map((text) => {
+            const texts = main.textContent.split(/\n\s*\n/u);
+            blocks = texts.map((text, textIndex) => {
                 const photoId = photoIdOfBlock(text.trim());
-                if (photoId) return photoFigure(doc, photoId);
+                const caption = photoCaptionOf(texts[textIndex + 1]?.trim());
+                if (photoId) {
+                    const figure = photoFigure(doc, photoId, caption);
+                    // 사진이 없으면 설명 줄은 글로 남는다.
+                    return figure;
+                }
+                // 사진 바로 뒤의 `▲ 설명` 줄은 사진 아래 설명으로 붙였다(사진 자료가 있을 때만).
+                const before = photoIdOfBlock(texts[textIndex - 1]?.trim());
+                if (before && photoCaptionOf(text.trim()) && photoFigure(doc, before)) return null;
                 const p = doc.createElement('p'); p.textContent = text; return p;
             }).filter(Boolean);
         }

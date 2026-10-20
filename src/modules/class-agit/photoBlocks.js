@@ -15,3 +15,7 @@ export const isPhotoBlock = (block) => photoIdOfBlock(block) !== null;
 export const textBlocks = (blocks) => (Array.isArray(blocks) ? blocks.filter((block) => !isPhotoBlock(block)) : []);
 /** blocks 에 든 사진ID 들(순서대로, 중복 없이). */
 export const photoIdsOfBlocks = (blocks) => [...new Set((Array.isArray(blocks) ? blocks : []).map(photoIdOfBlock).filter(Boolean))];
+
+/** 사진 바로 뒤에 오는 `▲ 설명` 한 줄(서버 20261403 이 양식 보고서에서 넣음). 사진 아래 설명으로 붙인다. */
+export const PHOTO_CAPTION_PREFIX = '\u25b2 ';
+export const photoCaptionOf = (block) => (typeof block === 'string' && block.startsWith(PHOTO_CAPTION_PREFIX) ? block.slice(PHOTO_CAPTION_PREFIX.length).trim() : '');

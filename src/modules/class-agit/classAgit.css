@@ -463,5 +463,6 @@
 }
 
 /* 보고서 사진(2026-10-20): 글 문단 사이에 한 장씩. 글 폭 안에서 비율대로 줄어든다. */
-.class-agit-reader__photo { margin: 0 0 1.5em; text-align: center; }
-.class-agit-reader__photo img { display: inline-block; max-width: 100%; height: auto; max-height: 60vh; border: 1px solid #cdd6c6; border-radius: 8px; background: #eef1e9; }
+.class-agit-reader__photo { margin: 0 auto 1.5em; text-align: center; width: fit-content; max-width: 100%; padding: 8px 8px 6px; border: 1px solid #b8c4b0; border-radius: 6px; background: #fff; }
+.class-agit-reader__photo figcaption { margin-top: 6px; color: #475569; font-size: .9em; line-height: 1.4; }
+.class-agit-reader__photo img { display: block; width: auto; max-width: 100%; height: auto; max-height: 60vh; margin: 0 auto; background: #eef1e9; }
