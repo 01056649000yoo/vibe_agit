@@ -9,7 +9,7 @@ import BulkReview from './BulkReview.jsx';
 import { toggleSelection } from './model.js';
 import './selection.css';
 
-export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, onCreateRoom, onAdd, onArrange, onBusyChange }) {
+export default function SourceBrowser({ classId, api, items, maximum = limits.maxWorks, scope = '학급 전시', remaining, destination, initialMission = null, hideMissionRail = false, onCreateRoom, onAdd, onArrange, onBusyChange }) {
     // 주제째 담기에서 `글 보기` 로 넘어오면 그 미션을 고른 채로 연다.
     const [mission, setMission] = useState(initialMission);
     const [input, setInput] = useState('');
@@ -64,15 +64,16 @@ export default function SourceBrowser({ classId, api, items, maximum = limits.ma
         {message && <p role="status">{message}</p>}
         <div hidden={Boolean(review)}>
             <fieldset disabled={busy} className="class-agit-selection-fieldset">
-                <div className="class-agit-selection-layout">
-                    <MissionList api={api} classId={classId} items={items} selected={mission} onSelect={(next) => { setMission(next); setSearchAll(false); }} />
+                {/* 주제를 이미 골라 들어왔으면(전시관) 왼쪽 미션 목록은 쓸 일이 없다 — 숨긴다. */}
+                <div className={`class-agit-selection-layout${hideMissionRail && mission ? ' is-single' : ''}`}>
+                    {!(hideMissionRail && mission) && <MissionList api={api} classId={classId} items={items} selected={mission} onSelect={(next) => { setMission(next); setSearchAll(false); }} />}
                     <div className="class-agit-selection-results">
                         <div className="class-agit-selection-heading"><div><h3>{filteredMission?.title || '전체 미션의 글'}</h3><p>{filteredMission ? '학생 이름순' : '최근 수정순'} · 학급에 공개하고 제출·확인한 글</p></div></div>
                         {onCreateRoom && filteredMission && <Button variant="outline" type="button" onClick={() => { try { onCreateRoom(filteredMission.title); } catch (reason) { setError(reason.message); } }}>이 미션 제목으로 전시실 만들기</Button>}
                         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
                             <label>글 제목·학생 이름<input value={input} maxLength={80} placeholder="학급 전체에서 검색할 수 있어요" onChange={(event) => setInput(event.target.value)} /></label><Button variant="outline" type="submit">글 검색</Button>
                         </form>
-                        <div className="class-agit-selection-filters"><label><input type="checkbox" checked={searchAll} onChange={(event) => setSearchAll(event.target.checked)} />전체 미션에서 검색</label><label><input type="checkbox" checked={unrepresented} onChange={(event) => setUnrepresented(event.target.checked)} />아직 작품을 담지 않은 학생</label></div>
+                        <div className="class-agit-selection-filters">{!(hideMissionRail && mission) && <label><input type="checkbox" checked={searchAll} onChange={(event) => setSearchAll(event.target.checked)} />전체 미션에서 검색</label>}<label><input type="checkbox" checked={unrepresented} onChange={(event) => setUnrepresented(event.target.checked)} />아직 작품을 담지 않은 학생</label></div>
                         <BrowseStatus state={state} />
                         {state.page && <><label className="class-agit-selection-check"><input type="checkbox" checked={pageSelected} disabled={!available.length} onChange={selectPage} />이 페이지 선택 · {pageRows.length}편</label>
                             <ul className="class-agit-source-rows">{pageRows.map((row) => <li key={row.id} data-added={added.has(row.id)}>

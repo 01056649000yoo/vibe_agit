@@ -81,3 +81,4 @@
 /* The two lists own their scroll position, so actions stay next to the list even with 120 works. */
 .class-agit-source-rows, .class-agit-review-list { max-height: min(52vh, 540px); overflow: auto; scrollbar-gutter: stable; }
 .class-agit-compact-order { max-height: min(60vh, 660px); overflow: auto; scrollbar-gutter: stable; }
+.class-agit-selection-layout.is-single { grid-template-columns: minmax(0, 1fr); }

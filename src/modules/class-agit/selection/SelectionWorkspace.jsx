@@ -98,7 +98,7 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
                         } : undefined}
                         onPickMission={(mission) => { setStartMission(mission); setWay('work'); }} />
                     : <SourceBrowser classId={draft.classId} api={api} items={draft.items}
-                        destination={room?.title || '미배정'} remaining={remaining} initialMission={startMission}
+                        destination={room?.title || '미배정'} remaining={remaining} initialMission={startMission} hideMissionRail
                         onCreateRoom={draft.rooms.length < limits.maxRooms ? addRoom : undefined}
                         onAdd={(sources) => onDraft(addExhibitionSources(draft, sources, roomId))} onArrange={() => setMode('order')} onBusyChange={onBusyChange} />}
             </div>
