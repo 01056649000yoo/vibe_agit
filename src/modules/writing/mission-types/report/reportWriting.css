@@ -248,9 +248,9 @@
 
 .report-document__section {
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr);
-    gap: 14px;
-    padding: 18px;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 18px;
 }
 
 .report-document__section + .report-document__section {
@@ -271,10 +271,11 @@
 
 .report-document__body--with-photo {
     display: grid;
-    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+    /* 글이 주인공이라 사진 칸은 좁게 왼쪽에 두고 나머지를 모두 글에 준다 */
+    grid-template-columns: minmax(104px, 148px) minmax(0, 1fr);
     /* 글이 길어도 사진이 칸 맨 위에 붙지 않고 글 높이의 가운데에 놓인다 */
     align-items: center;
-    gap: 18px;
+    gap: 16px;
 }
 
 .report-document__copy {
@@ -308,6 +309,8 @@
 .report-document figure {
     min-width: 0;
     margin: 0;
+    justify-self: start;
+    width: 100%;
 }
 
 .report-document__photo-frame {
@@ -324,7 +327,7 @@
     color: #475569;
     font-size: .76rem;
     font-weight: 800;
-    text-align: center;
+    text-align: left;
 }
 
 .report-document__photo-frame img {
@@ -400,7 +403,7 @@
     }
 
     .report-document__body--with-photo {
-        grid-template-columns: minmax(102px, 128px) minmax(0, 1fr);
+        grid-template-columns: minmax(84px, 104px) minmax(0, 1fr);
         gap: 10px;
     }
 }
@@ -536,7 +539,7 @@
 .report-document__meta dt { flex: none; color: #0f766e; font-size: .8rem; font-weight: 900; }
 .report-document__meta dd { margin: 0; min-width: 0; color: #134e4a; font-size: .92rem; overflow-wrap: anywhere; }
 .report-document__date { margin-left: 8px; color: #64748b; font-size: .78rem; font-weight: 700; }
-.report-document__photo-caption { display: block; margin-top: 5px; color: #475569; font-size: .8rem; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+.report-document__photo-caption { display: block; margin-top: 5px; color: #475569; font-size: .8rem; line-height: 1.45; text-align: left; overflow-wrap: anywhere; }
 .report-document__sources {
     margin-top: 14px;
     padding: 12px 16px;
