@@ -24,7 +24,7 @@ const expectedFunctions = new Set([
 ]);
 
 // Allowed while staged locally; mandatory once its database migration is applied.
-const stagedFunctions = new Set(['class-agit-public-read']);
+const stagedFunctions = new Set(['class-agit-public-read', 'class-agit-photo-copy']);
 const failures = [];
 const mode = async (path) => (await stat(path)).mode & 0o777;
 const hasAgitApiHsts = (caddyfile) => {
@@ -86,6 +86,11 @@ try {
         "SELECT EXISTS(SELECT 1 FROM public.applied_migrations WHERE filename='20261243_class_agit_frozen_public_reads.sql');"], { encoding: 'utf8', timeout: 10000 });
     if (publicReaderMigration.status !== 0) failures.push('외부 전시 조회 마이그레이션 적용 여부 확인 실패');
     else if (publicReaderMigration.stdout.trim() === 't' && !deployed.includes('class-agit-public-read')) failures.push('필수 Edge 함수 누락: class-agit-public-read');
+    // 보고서 사진 복사 함수(20261401): 마이그레이션이 적용되면 이 함수도 배포돼 있어야 한다.
+    const photoCopyMigration = spawnSync('docker', ['exec', 'agit-db', 'psql', '-U', 'supabase_admin', '-d', 'postgres', '-Atc',
+        "SELECT EXISTS(SELECT 1 FROM public.applied_migrations WHERE filename='20261401_class_agit_report_photos.sql');"], { encoding: 'utf8', timeout: 10000 });
+    if (photoCopyMigration.status !== 0) failures.push('보고서 사진 마이그레이션 적용 여부 확인 실패');
+    else if (photoCopyMigration.stdout.trim() === 't' && !deployed.includes('class-agit-photo-copy')) failures.push('필수 Edge 함수 누락: class-agit-photo-copy');
 
     const [hostCaddy, repoCaddy] = await Promise.all([
         readFile(hostCaddyPath, 'utf8'),

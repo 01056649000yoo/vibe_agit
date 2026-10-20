@@ -15,7 +15,7 @@ test('미션 목록은 편지·보고서를 이름으로 보여 주고, 모르�
     assert.equal(missionFormatLabel('letter'), '편지');
     assert.equal(missionFormatLabel('report'), '보고서');
     assert.equal(missionFormatLabel('meeting'), '기타 장르');
-    assert.match(missionFormatNote('report'), /사진이 든 글은 제외/);
+    assert.match(missionFormatNote('report'), /사진은 글만 담겨요/);
     assert.equal(missionFormatNote('letter'), '');
 });
 

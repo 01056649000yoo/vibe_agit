@@ -23,3 +23,22 @@ test('인형뽑기는 코인을 넣자마자 보낸 결과를 잡은 것으로 �
     assert.match(source, /tooFast \? \[\]/);
     assert.match(source, /all\.indexOf\(id\) === position/);
 });
+
+test('보고서 사진 복사 함수는 경로를 받지 않고, 학급 담당자 확인을 DB 에 맡기며, 요청 크기를 먼저 본다', async () => {
+    const source = await readFile('supabase/functions/class-agit-photo-copy/index.ts', 'utf8');
+    assert.match(source, /MAX_BODY_BYTES/);
+    assert.ok(source.indexOf("get('content-length')") < source.indexOf('JSON.parse(raw)'));
+    assert.doesNotMatch(source, /await req\.json\(\)/);
+    // 무엇을 옮길지는 DB(담당 교사 토큰으로 부른 claim RPC)가 정한다. 본문의 경로는 쓰지 않는다.
+    assert.match(source, /userClient\.rpc\('claim_class_agit_photo_copy_v1'/);
+    assert.doesNotMatch(source, /body\??\.(source_path|copy_path|path)/);
+    assert.match(source, /finish_class_agit_photo_copy_v1/);
+    assert.match(source, /MAX_PHOTOS_PER_REQUEST/);
+});
+
+test('보고서 사진 복사 함수는 확인한 뒤 원본 크기가 바뀌었으면 복사하지 않는다', async () => {
+    const source = await readFile('supabase/functions/class-agit-photo-copy/index.ts', 'utf8');
+    assert.match(source, /\.info\(photo\.source_path\)/);
+    assert.match(source, /size !== photo\.bytes/);
+    assert.ok(source.indexOf('.info(photo.source_path)') < source.indexOf('.copy(photo.source_path'));
+});

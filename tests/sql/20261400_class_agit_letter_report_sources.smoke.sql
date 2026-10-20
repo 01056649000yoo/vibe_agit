@@ -1,5 +1,7 @@
 -- Synthetic data only; the runner wraps this file in a rollback transaction.
--- 우리반 아지트: 편지·보고서(사진 없는 것)를 담을 수 있고, 사진 보고서·일기·meeting 은 담지 않는다(20261400).
+-- 우리반 아지트: 편지·보고서를 담을 수 있고, 일기·meeting 은 담지 않는다(20261400).
+-- 2026-10-20 갱신: 20261401 이 사진 보고서도 후보로 올린다(선생님이 확인한 사진이 없으면 글만 담긴다). 사진 자체는 20261401 스모크가 본다.
+-- `migrate:check` 는 이 마이그레이션만 올린 상태, `smoke:all` 은 20261401 까지 올린 상태로 돌려서 사진 보고서 기대는 두 상태를 모두 받는다.
 DO $$
 DECLARE t UUID:=gen_random_uuid(); c UUID:=gen_random_uuid(); s UUID; m UUID; p UUID;
     types TEXT[]:=ARRAY['freeform','poem','letter','report','report','meeting'];
@@ -67,22 +69,23 @@ SELECT set_config('request.jwt.claim.sub',current_setting('test.lr_teacher'),TRU
 SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.lr_teacher'),'role','authenticated')::TEXT,TRUE);
 DO $$
 DECLARE c UUID:=current_setting('test.lr_class')::UUID; ps JSONB:=current_setting('test.lr_posts')::JSONB; ms JSONB:=current_setting('test.lr_missions')::JSONB;
-    r JSONB; src JSONB; ids UUID[]; n INTEGER;
+    r JSONB; src JSONB; ids UUID[]; n INTEGER; photo_ready BOOLEAN;
 BEGIN
-    -- 미션 목록: 일반·시·편지·보고서는 지원, meeting 은 미지원. 보고서 두 과제 중 글만 있는 쪽만 검토할 글로 센다.
+    -- 미션 목록: 일반·시·편지·보고서는 지원, meeting 은 미지원. 사진 보고서도 이제 센다(글만 담김).
+    photo_ready:=to_regprocedure('public.confirm_class_agit_photo_use_v1(uuid,uuid,text[],smallint)') IS NOT NULL;
     r:=public.get_class_agit_missions_v1(c);
     IF (SELECT count(*) FROM jsonb_array_elements(r->'items') x WHERE (x->>'supported')::BOOLEAN) <> 5 THEN RAISE EXCEPTION 'supported mission count'; END IF;
     IF (SELECT (x->>'supported')::BOOLEAN FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ms->>'6') IS NOT FALSE THEN RAISE EXCEPTION 'meeting must stay unsupported'; END IF;
     IF (SELECT (x->>'review_count')::INTEGER FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ms->>'3') <> 1 THEN RAISE EXCEPTION 'letter review count'; END IF;
     IF (SELECT (x->>'review_count')::INTEGER FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ms->>'4') <> 1 THEN RAISE EXCEPTION 'report (text) review count'; END IF;
-    IF (SELECT (x->>'review_count')::INTEGER FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ms->>'5') <> 0 THEN RAISE EXCEPTION 'photo report must not be counted'; END IF;
-    -- 후보 목록: 일반·시·편지·보고서(글만) 4편. 사진 보고서와 meeting 은 빠진다.
+    IF (SELECT (x->>'review_count')::INTEGER FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ms->>'5') <> (CASE WHEN photo_ready THEN 1 ELSE 0 END) THEN RAISE EXCEPTION 'photo report count (photo support %)',photo_ready; END IF;
+    -- 후보 목록: 일반·시·편지·보고서(글만)·보고서(사진) 5편. meeting 은 빠진다.
     r:=public.get_class_agit_candidates_v2(c);
-    IF jsonb_array_length(r->'items')<>4 THEN RAISE EXCEPTION 'candidate count %',jsonb_array_length(r->'items'); END IF;
-    IF EXISTS (SELECT 1 FROM jsonb_array_elements(r->'items') x WHERE x->>'id' IN (ps->>'5',ps->>'6')) THEN RAISE EXCEPTION 'photo report or meeting listed'; END IF;
-    -- 학생 목록의 검토 수도 같은 기준(4편)
+    IF jsonb_array_length(r->'items')<>(CASE WHEN photo_ready THEN 5 ELSE 4 END) THEN RAISE EXCEPTION 'candidate count %',jsonb_array_length(r->'items'); END IF;
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(r->'items') x WHERE x->>'id'=ps->>'6') THEN RAISE EXCEPTION 'meeting listed'; END IF;
+    -- 학생 목록의 검토 수도 같은 기준(5편)
     r:=public.get_class_agit_students_v1(c);
-    IF (r->'items'->0->>'review_count')::INTEGER<>4 THEN RAISE EXCEPTION 'student review count'; END IF;
+    IF (r->'items'->0->>'review_count')::INTEGER<>(CASE WHEN photo_ready THEN 5 ELSE 4 END) THEN RAISE EXCEPTION 'student review count'; END IF;
     -- 편지: 일반 글과 같은 문단 목록, 머리표만 편지
     r:=public.get_class_agit_sources_v1(c,ARRAY[(ps->>'3')::UUID]);
     src:=r->'items'->0->'source';
@@ -94,9 +97,13 @@ BEGIN
     IF src IS NULL OR src->>'format'<>'prose' OR src->>'kindLabel'<>'보고서' THEN RAISE EXCEPTION 'report source %',src; END IF;
     IF src->'blocks'<>'["화단이 궁금했다.","키가 11cm 자랐다.","잎이 네 장 났다."]'::JSONB THEN RAISE EXCEPTION 'report blocks %',src->'blocks'; END IF;
     IF src::TEXT LIKE '%까닭%' THEN RAISE EXCEPTION 'report heading leaked into blocks'; END IF;
-    -- 사진 보고서: 담을 수 없고 까닭을 사진으로 알려 준다
+    -- 사진 보고서: 사진 지원(20261401) 전에는 담지 않고, 지원 뒤에는 확인한 사진이 없으면 글만 담긴다(자리표 없음)
     r:=public.get_class_agit_sources_v1(c,ARRAY[(ps->>'5')::UUID]);
-    IF r->'items'->0->'source'<>'null'::JSONB OR r->'items'->0->>'reason' NOT LIKE '사진이 든 보고서%' THEN RAISE EXCEPTION 'photo report reason %',r->'items'->0; END IF;
+    src:=r->'items'->0->'source';
+    IF NOT photo_ready THEN
+        IF src IS NOT NULL AND src<>'null'::JSONB THEN RAISE EXCEPTION 'photo report accepted before photo support'; END IF;
+    ELSIF src IS NULL OR src->'blocks'<>'["사진을 찍었다.","잎이 났다."]'::JSONB OR src->'photo_sections'<>'["a"]'::JSONB OR (src->>'photos_included')::INTEGER<>0 THEN
+        RAISE EXCEPTION 'photo report text-only source %',src; END IF;
     -- meeting: 담을 수 없다
     r:=public.get_class_agit_sources_v1(c,ARRAY[(ps->>'6')::UUID]);
     IF r->'items'->0->'source'<>'null'::JSONB THEN RAISE EXCEPTION 'meeting must be excluded'; END IF;

@@ -6,5 +6,5 @@ const FORMAT_LABELS = Object.freeze({ poem: '시', prose: '글', letter: '편지
 
 export const missionFormatLabel = (format) => Reflect.get(FORMAT_LABELS, format) || '기타 장르';
 
-/** 보고서는 사진이 든 글을 아직 담을 수 없다(사진 지원은 학생 동의를 기록하는 다음 단계) — 목록에서 미리 알려 준다. */
-export const missionFormatNote = (format) => (format === 'report' ? ' · 사진이 든 글은 제외' : '');
+/** 보고서는 선생님이 사진을 보고 확인하는 단계(2c)가 생기기 전까지 사진 없이 글만 담긴다 — 목록에서 미리 알려 준다. */
+export const missionFormatNote = (format) => (format === 'report' ? ' · 사진은 글만 담겨요' : '');

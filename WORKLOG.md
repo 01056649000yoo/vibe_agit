@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-20 — 보고서 사진 서버 기반(2b): 확인 기록·사진 복사본·사진 자리표 (Claude)
+- **한 일**: 선생님이 사진을 보고 확인해야 사진이 담기게 하는 서버를 만들었다. 설계를 바꿨다 — 사진을 새 필드(`media`)로 달면 저장·공개·읽기 함수 십여 곳을 고쳐야 해서, **문단 목록(blocks) 안에 사진 자리표 한 줄**(`\x1f`+`photo:`+UUID)로 담는다. 전시·책·공개판이 blocks 를 그대로 고정해 가므로 고정·철회·동의 규칙이 저절로 따라온다 [원인: 이 저장소의 저장·읽기 함수들이 blocks 만 골라 옮김].
+- **변경**: 새 `supabase/migrations/20261401_class_agit_report_photos.sql`(**운영 DB 적용 전** → OI-033), 새 Edge 함수 `supabase/functions/class-agit-photo-copy`(복사만 하고 무엇을 옮길지는 DB 가 정함, 요청 크기 상한·원본 크기 확인), `check-operational-security.mjs`(마이그레이션이 적용되면 배포 필수), 새 스모크 `tests/sql/20261401_*.smoke.sql`, 1단계 스모크는 두 상태(사진 지원 전·후) 모두 받게 수정, 화면 안내(`사진은 글만 담겨요`)·활용 안내서·README·설계 문서(2b 갱신).
+- **결과/검증**: `migrate:check` 통과, 우리반 아지트 스모크 18/18, 전체 스모크 201/203(2건은 원래 실패 → OI-036), 관련 시험 638개, eslint 통과. 아르곤 1회 검토(26K자 입력)에서 5건 채택: JSONB 를 글자로 바꾸면 제어 문자가 `\u001f` 가 돼 `LIKE` 검색이 항상 실패(학생이 책 사진을 못 읽고 청소가 쓰는 사진을 지울 뻔함 → 구조 비교로), 칸 id 중복·80자 초과 거절, 반환 content 길이 재검사, 지금 경로와 같은 최신 확인 행만 사용·NULL 경로 일치 방지, 확인 뒤 원본이 바뀌면 복사 거절. 지적한 입력은 스모크에 넣음.
+- **남은 것**: OI-033(적용·배포·Edge 함수 동기화), OI-034 의 2c(담기 전 사진 확인 화면·읽기·책자 PDF)·2d.
+
 ## 2026-10-20 — 보고서 사진 2단계 설계와 학생 올리기 약속(2a) (Claude)
 - **한 일**: 선생님 결정 — 사진은 얼굴 등 개인을 알아볼 수 있는 정보가 없어야 하고, 학생은 올리기 전 약속을 읽고 체크하며, 책·전시에 담을 때는 선생님이 사진을 보고 확인해야 담긴다(문제 있는 사진만 빼고 담기). 학생 클릭은 법적 동의가 아니다(만 14세 미만은 보호자 동의, 학교 동의서 기준). 설계 문서를 쓰고 2a(학생 약속)를 구현했다.
 - **변경**: `report/reportPhotoRules.js`(약속 문구 한 곳)·`ReportEditor.jsx`(약속 칸, 체크 전에는 사진 올리기·바꾸기 막힘)·`reportWriting.css`, `tests/reportWriting.test.mjs`, 새 `docs/CLASS_AGIT_PHOTOS_PLAN.md`, FEATURE_MAP v1.26.20, OPEN_ITEMS OI-034 갱신. DB 변경 없음.
@@ -137,12 +143,6 @@
 - **결과/검증**: 운영 DB 롤백 스모크 통과(같은 글에 한마디 넣고 빼며 칸 이동·5칸 합=전체), 옛 함수에선 같은 스모크가 실패함을 확인. 새 JS 검사는 화면 코드를 되돌리면 2개 실패(`verify:guard` 는 윈도우 심볼릭 링크 권한으로 못 돌려 손으로 확인). 전체 검사 1590·린트·빌드. 배포 Actions `38200258423` 성공 — 운영 DB 에 `20261397` 적용, `agit-app` 재시작(12:34), 배포 번들에 `writing-body`·`한마디 남김`·`review_group`·일기/독서록 확인창 `text-align:justify` 확인. 운영 현황: 확인만 1808·한마디 480.
 - **남은 것 / 다음**: 화면 눈검사 못 함 — 좁은 화면에서 5칸 요약의 '한마디 남김' 줄바꿈 여부를 다음 접속 때 본다.
 
-## 2026-10-13 — 오픈클로가 자비스에서 자꾸 막히는 원인 확인과 허용 목록 넓히기 (Claude)
-- **한 일**: 선생님이 "예전엔 됐는데 어느 순간 승인 문제로 막힌다"고 물음 → 오픈클로 승인 기록(`operator_approvals`) 25건 분석. 10-04 22:23 까지 7건은 텔레그램 카드로 선생님이 허용, 22:27 부터 18건은 전부 `no-route` 자동 거절 — 10-04 에 세 앱 재시작 금지를 위해 승인 카드를 끄고(`execApprovals.enabled=false`) 목록 밖은 거절(`askFallback deny`)로 바꿨기 때문. 거절된 안전한 명령(find·touch·unzip -l·/bin/ls·which·command -v·sleep·mdfind·npm view·openclaw --help·sort/uniq)만 인자를 좁혀 추가(17→29개). 실행·삭제·쓰기·밖 경로·재시작은 계속 거절. 승인 카드는 다시 켜지 않음. [원인: 허용 목록이 좁은데 카드를 꺼서 목록 밖 명령이 묻지도 않고 거절]
-- **변경**: `ops/openclaw/exec-approvals.json`·`tests/openclawExecPolicy.test.mjs`(차단 시험 추가). git 밖: 오픈클로 승인 설정 적용(`openclaw approvals set --gateway --file …`), 되돌림용 백업 `~/backups/auto/openclaw.sqlite.before-allowlist-widen-20261013`.
-- **결과/검증**: 정책 검사 3개 통과(find -exec·-delete·밖 경로, touch 밖 경로, npm install, openclaw 재시작·cron 등 거절 확인), 적용 후 `approvals get` 29개. 미허용 유지: `python3 ~/.openclaw/workspace/tmp/*.py`(스스로 쓴 스크립트 실행은 목록 우회라 거절), `cat` 은 인자 제한 없음(설정 파일도 읽을 수 있음 — 좁히기 검토).
-- **남은 것 / 다음**: 또 막히면 `openclaw approvals`/`operator_approvals` 의 `denied no-route` 기록을 보고 그 명령만 좁게 추가.
-
 ## 지난 기록
 
 이 파일에는 **최근 것만** 둔다. 통째로 읽으면 한 세션 예산을 통째로 쓴다.
@@ -150,7 +150,7 @@
 
 | 기간 | 보관소 |
 |---|---|
-| 2026년 10월 12일까지 | [docs/worklog/2026-10.md](docs/worklog/2026-10.md) |
+| 2026년 10월 13일까지 | [docs/worklog/2026-10.md](docs/worklog/2026-10.md) |
 | 2026년 9월 | [docs/worklog/2026-09.md](docs/worklog/2026-09.md) |
 | 2026년 8월 | [docs/worklog/2026-08.md](docs/worklog/2026-08.md) |
 | 2026년 7월 | [docs/worklog/2026-07.md](docs/worklog/2026-07.md) |

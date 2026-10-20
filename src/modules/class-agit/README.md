@@ -60,7 +60,7 @@
 
 `20261241_class_agit_internal_publication.sql`의 `class_agit_source_data_v1`은 서버 자격·표시본·해시 정본이다.
 확인된 현재 과제 `title/content/structured_content`를 쓰고 교사 수정 제안을 자동 선택하지 않는다.
-일반 과제·시의 연/행·편지·보고서(사진 없는 것)를 지원하며(허용 기준은 `class_agit_exhibitable_format_v1` 한 함수, 20261400) 편지·보고서는 책에서 일반 글(`prose`)과 같은 문단 목록에 머리표(`kindLabel`)만 편지·보고서로 담는다. 비공개·미제출·회수·미확인·사진이 든 보고서·일기·meeting·미지원 장르는 제외한다.
+일반 과제·시의 연/행·편지·보고서(사진 없는 것)를 지원하며(허용 기준은 `class_agit_exhibitable_format_v1` 한 함수, 20261400) 편지·보고서는 책에서 일반 글(`prose`)과 같은 문단 목록에 머리표(`kindLabel`)만 편지·보고서로 담는다. 비공개·미제출·회수·미확인·일기·meeting·미지원 장르는 제외한다. 사진이 든 보고서는 후보에 오르며(20261401) 선생님이 사진을 보고 확인(`confirm_class_agit_photo_use_v1`)하고 Edge 함수(`class-agit-photo-copy`)가 복사본을 만든 사진만 `blocks` 안의 **사진 자리표**(제어 문자 `\x1f` + `photo:` + 사진ID)로 담긴다. 확인하지 않은 사진은 글만 담긴다. 자리표를 읽는 화면·인쇄·내보내기는 2c/2d.
 후보/전문/저장/공개/읽기가 같은 자격 도우미를 사용한다. 새 장르는 화면 매니페스트와 이 정본·스모크를 함께 확장한다.
 
 | 호출 | 응답/변경 |
