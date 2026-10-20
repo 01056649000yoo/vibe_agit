@@ -1,6 +1,6 @@
 /* eslint-disable security/detect-object-injection -- 조각 종류 이름은 이 파일 안에서 정한 두 값(student·teacher)뿐이다. */
 import { useMemo } from 'react';
-import { countAttributedChanges } from './writingAttribution.js';
+import { countAttributedChanges, getRewriteShare } from './writingAttribution.js';
 import './writingChangeHighlight.css';
 
 /**
@@ -21,8 +21,15 @@ const classOf = (item, variant) => {
     return item.author === 'orig' ? '' : `mark-${item.author}`;
 };
 
-const WritingAttributedText = ({ items, variant = 'after', showLegend = true, studentLabel = '학생이 고친 곳' }) => {
+const WritingAttributedText = ({ items, variant = 'after', showLegend = true, studentLabel = '학생이 고친 곳', selfView = false }) => {
     const counts = useMemo(() => countAttributedChanges(items), [items]);
+    const share = useMemo(() => getRewriteShare(items), [items]);
+    // 처음 글의 절반 이상이 고쳐졌으면 알린다(오른쪽 최종 글 칸에는 띄우지 않는다 — 왼쪽·합친 보기에서 한 번만).
+    const rewriteNotice = variant === 'after' || !share.rewritten ? '' : (
+        share.by === 'teacher'
+            ? '선생님이 처음 글을 거의 새로 고쳐 주셨어요'
+            : (selfView ? '처음 글을 거의 새로 썼어요' : '학생이 처음 글을 거의 새로 썼어요')
+    );
     const pieces = useMemo(() => {
         const visible = items.filter((item) => (variant === 'merged' ? true : variant === 'before' ? item.author === 'orig' : !item.removedBy));
         const classes = visible.map((item) => classOf(item, variant));
@@ -37,6 +44,9 @@ const WritingAttributedText = ({ items, variant = 'after', showLegend = true, st
     const total = counts.student + counts.teacher;
     return (
         <>
+            {rewriteNotice ? (
+                <span className="writing-attr__rewrite" role="note">🔄 {rewriteNotice} <small>(처음 글의 {share.percent}%가 바뀌었어요)</small></span>
+            ) : null}
             {showLegend && total > 0 ? (
                 <span className="writing-change__legend">
                     ✍️ 바뀐 곳 {total}군데 —{' '}

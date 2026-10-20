@@ -139,7 +139,7 @@ const MyShelfPostDetail = ({
                             ) : showChanges ? (
                                 // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).
                                 attributedItems ? (
-                                    <WritingAttributedText items={attributedItems} variant="merged" studentLabel="내가 고친 곳" />
+                                    <WritingAttributedText items={attributedItems} variant="merged" studentLabel="내가 고친 곳" selfView />
                                 ) : (
                                     <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
                                 )

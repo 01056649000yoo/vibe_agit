@@ -60,3 +60,22 @@
     text-decoration: line-through;
     text-decoration-thickness: 2px;
 }
+
+/* 처음 글의 절반 이상이 고쳐졌을 때의 안내 띠 */
+.writing-attr__rewrite {
+    display: block;
+    margin-bottom: var(--ui-space-3);
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border-radius: 10px;
+    background: var(--ui-highlight);
+    color: var(--ui-highlight-ink);
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    line-height: 1.5;
+    white-space: normal;
+}
+
+.writing-attr__rewrite small {
+    font-size: inherit;
+    font-weight: 700;
+}

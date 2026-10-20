@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { attributeWritingChanges, countAttributedChanges } from '../src/modules/writing/review/writingAttribution.js';
+import { attributeWritingChanges, countAttributedChanges, getRewriteShare } from '../src/modules/writing/review/writingAttribution.js';
 
 /*
  * 누가 고쳤는지 가르기(2026-10-20): 판을 차례로 견주므로 조각을 이으면 처음 글과 지금 글이 그대로 되살아나야 한다.
@@ -60,4 +60,22 @@ test('너무 긴 글은 null 을 돌려줘 화면이 옛 비교로 물러선다'
     const big = Array.from({ length: 700 }, (_, i) => `단어${i}`).join('\n');
     const other = Array.from({ length: 700 }, (_, i) => `다른${i}`).join('\n');
     assert.equal(attributeWritingChanges(big, [], other), null);
+});
+
+test('처음 글의 절반 이상이 바뀌면 거의 새로 썼다고 보고, 누가 더 지웠는지 알려 준다', () => {
+    const original = '하나 둘 셋 넷 다섯 여섯 일곱 여덟';
+    // 학생이 앞의 다섯 어절을 갈아 씀(약 60%)
+    const studentRewrite = '가 나 다 라 마 여섯 일곱 여덟';
+    const byStudent = getRewriteShare(attributeWritingChanges(original, [], studentRewrite));
+    assert.equal(byStudent.rewritten, true);
+    assert.equal(byStudent.by, 'student');
+    // 선생님이 갈아 쓰고 학생은 그대로 냄
+    const teacherEdit = '가 나 다 라 마 여섯 일곱 여덟';
+    const byTeacher = getRewriteShare(attributeWritingChanges(original, [{ base_content: original, edited_content: teacherEdit }], teacherEdit));
+    assert.equal(byTeacher.rewritten, true);
+    assert.equal(byTeacher.by, 'teacher');
+    // 한 어절만 고치면 안내하지 않는다
+    const small = getRewriteShare(attributeWritingChanges(original, [], '하나 둘 셋 넷 다섯 여섯 일곱 여덟째'));
+    assert.equal(small.rewritten, false);
+    assert.ok(small.percent < 50);
 });

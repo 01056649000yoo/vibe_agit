@@ -107,3 +107,25 @@ export const countAttributedChanges = (items) => {
     }
     return counts;
 };
+
+/** 처음 글을 거의 새로 썼다고 안내하는 기준 — 처음 글(공백 뺀 글자)의 이만큼 이상이 지워지거나 바뀌었을 때. */
+export const REWRITE_NOTICE_RATIO = 0.5;
+
+/**
+ * 처음 글이 얼마나 고쳐졌는지. 처음 글 글자(공백 뺀 것) 중 지워진 비율과, 그것을 지운 사람(학생·선생님)별 몫.
+ * `rewritten` 이면 화면이 "거의 새로 썼어요" 를 알린다. `by` 는 더 많이 지운 쪽(같으면 student).
+ */
+export const getRewriteShare = (items) => {
+    const size = (item) => item.text.replace(/\s/g, '').length;
+    const original = items.filter((item) => item.author === 'orig');
+    const total = original.reduce((sum, item) => sum + size(item), 0);
+    const removed = { student: 0, teacher: 0 };
+    for (const item of original) if (item.removedBy) removed[item.removedBy] += size(item);
+    const ratio = total > 0 ? (removed.student + removed.teacher) / total : 0;
+    return {
+        ratio,
+        percent: Math.round(ratio * 100),
+        rewritten: ratio >= REWRITE_NOTICE_RATIO,
+        by: removed.teacher > removed.student ? 'teacher' : 'student'
+    };
+};
