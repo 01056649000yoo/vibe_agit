@@ -443,3 +443,79 @@
     height: 20px;
     margin: 1px 0 0;
 }
+
+
+/* 양식 종류(관찰·조사) 머리말·칸 소제목·날짜·출처·사진 설명 (2026-10-21) */
+.report-editor__meta {
+    margin: 0 0 16px;
+    padding: 16px 18px 18px;
+    border: 1px solid #99f6e4;
+    border-radius: 18px;
+    background: #f0fdfa;
+}
+.report-editor__meta legend {
+    padding: 0 8px;
+    color: #0f766e;
+    font-weight: 950;
+}
+.report-editor__meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px 14px;
+}
+.report-editor__meta-field {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    min-width: 0;
+}
+.report-editor__meta-field > label,
+.report-editor__caption > label,
+.report-editor__source > label,
+.report-editor__date-field > span {
+    color: #115e59;
+    font-size: .8rem;
+    font-weight: 900;
+}
+.report-editor__meta-field b,
+.report-editor__caption b { color: #dc2626; }
+.report-editor__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.report-editor__chips button {
+    min-height: 36px;
+    padding: 4px 12px;
+    border: 1px solid #99f6e4;
+    border-radius: 99px;
+    background: #fff;
+    color: #0f766e;
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.report-editor__chips button.is-on { background: #0f766e; border-color: #0f766e; color: #fff; }
+.report-editor__caption { display: grid; gap: 5px; margin-top: 9px; }
+.report-editor__section-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 190px);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.report-editor__section-meta:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+.report-editor__heading-input,
+.report-editor__date-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid #99f6e4;
+    border-radius: 10px;
+    background: #fff;
+    color: #134e4a;
+    font: inherit;
+    font-weight: 800;
+}
+.report-editor__date-field { display: grid; gap: 4px; }
+.report-editor__date-field input { font-weight: 600; }
+.report-editor__source { display: grid; gap: 5px; margin-top: 10px; }
+@media (max-width: 640px) {
+    .report-editor__section-meta { grid-template-columns: minmax(0, 1fr); }
+}

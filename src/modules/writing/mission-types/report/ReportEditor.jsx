@@ -3,9 +3,16 @@ import { StudentTextArea, StudentTextField } from '../../student-input';
 import {
     buildReportStructuredContent,
     createReportSection,
+    getReportKind,
     normalizeReportConfig,
+    normalizeReportMeta,
     normalizeReportSections,
+    reportKindOf,
     reportSectionsToContent,
+    REPORT_CAPTION_MAX,
+    REPORT_DATE_MAX,
+    REPORT_META_MAX,
+    REPORT_SOURCE_MAX,
 } from './reportContent';
 import {
     getReportImageUrls,
@@ -38,6 +45,11 @@ const ReportEditor = ({
         () => normalizeReportSections(structuredContent, content, config),
         [config, content, structuredContent]
     );
+    // 양식 종류(관찰·조사)가 있는 과제는 머리말·칸 소제목·날짜·출처·사진 설명 칸이 더 생긴다. 없으면 예전 화면 그대로.
+    const kind = normalizedConfig.kind || reportKindOf(structuredContent);
+    const kindDef = getReportKind(kind);
+    const sourcesEnabled = Boolean(kindDef && normalizedConfig.sourcesEnabled);
+    const meta = useMemo(() => normalizeReportMeta(structuredContent?.meta, kind, { trim: false }), [structuredContent, kind]);
     const [imageUrls, setImageUrls] = useState(() => new Map());
     const [uploadingSectionId, setUploadingSectionId] = useState(null);
     const [photoStatus, setPhotoStatus] = useState('');
@@ -60,14 +72,15 @@ const ReportEditor = ({
         return () => { active = false; };
     }, [imagePathKey]);
 
-    const buildNextDraft = (nextSections) => {
-        const nextStructuredContent = buildReportStructuredContent(nextSections);
-        const nextContent = reportSectionsToContent(nextSections);
+    const buildNextDraft = (nextSections, nextMeta = meta) => {
+        const options = { kind, meta: nextMeta };
+        const nextStructuredContent = buildReportStructuredContent(nextSections, options);
+        const nextContent = reportSectionsToContent(nextSections, options);
         return { structuredContent: nextStructuredContent, content: nextContent };
     };
 
-    const commitSections = (nextSections) => {
-        const nextDraft = buildNextDraft(nextSections);
+    const commitSections = (nextSections, nextMeta = meta) => {
+        const nextDraft = buildNextDraft(nextSections, nextMeta);
         setStructuredContent(nextDraft.structuredContent);
         setContent(nextDraft.content);
         return nextDraft;
@@ -87,13 +100,32 @@ const ReportEditor = ({
         )));
     };
 
+    const updateMeta = (key, value) => commitSections(sections, { ...meta, [key]: value });
+
+    // 조사 방법처럼 고르기 쉬운 말은 누르면 넣고, 다시 누르면 뺀다.
+    const toggleMetaChip = (key, chip) => {
+        const parts = String(Object.entries(meta).find(([name]) => name === key)?.[1] || '').split(/\s*[,，、]\s*/).map((item) => item.trim()).filter(Boolean);
+        const next = parts.includes(chip) ? parts.filter((item) => item !== chip) : [...parts, chip];
+        updateMeta(key, next.join(', '));
+    };
+
     const updateObservation = (section, observation) => {
+        // 양식 종류가 있으면 사진 설명은 따로 쓴다. 예전 과제는 본문이 곧 사진 설명이다.
+        if (kindDef) {
+            updateSection(section.id, { body: observation });
+            return;
+        }
         updateSection(section.id, {
             body: observation,
             image: section.image
                 ? { ...section.image, caption: observation.slice(0, 240) }
                 : null,
         });
+    };
+
+    const updateCaption = (section, text) => {
+        if (!section.image) return;
+        updateSection(section.id, { image: { ...section.image, caption: text.slice(0, REPORT_CAPTION_MAX) } });
     };
 
     const moveSection = (index, direction) => {
@@ -107,12 +139,12 @@ const ReportEditor = ({
 
     const handleAddSection = () => {
         if (sections.length >= normalizedConfig.maxSections) return;
-        commitSections([...sections, createReportSection(`관찰 결과 ${sections.length + 1}`)]);
+        commitSections([...sections, createReportSection(kindDef ? `${kindDef.contentLabel} ${sections.length + 1}` : `관찰 결과 ${sections.length + 1}`)]);
     };
 
     const handleRemoveSection = async (section) => {
         if (sections.length <= normalizedConfig.minSections) return;
-        if (!window.confirm('이 사진과 관찰 결과 칸을 보고서에서 뺄까요?')) return;
+        if (!window.confirm(kindDef ? '이 칸을 보고서에서 뺄까요?' : '이 사진과 관찰 결과 칸을 보고서에서 뺄까요?')) return;
         const next = sections.filter((item) => item.id !== section.id);
         try {
             const saved = await persistSections(next);
@@ -154,7 +186,9 @@ const ReportEditor = ({
                         ...item,
                         image: {
                             ...uploaded,
-                            caption: String(item.body || item.image?.caption || '').slice(0, 240),
+                            caption: kindDef
+                                ? String(item.image?.caption || '')
+                                : String(item.body || item.image?.caption || '').slice(0, 240),
                         },
                     }
                     : item
@@ -208,8 +242,48 @@ const ReportEditor = ({
                 style={{ ...TITLE_INPUT_STYLE, fontSize: isMobile ? '1.45rem' : '1.9rem' }}
             />
 
+            {kindDef && (
+                <fieldset className="report-editor__meta" disabled={disabled}>
+                    <legend>{kindDef.icon} {kindDef.label} 머리말</legend>
+                    <div className="report-editor__meta-grid">
+                        {kindDef.metaFields.map((field) => (
+                            <div key={field.key} className="report-editor__meta-field">
+                                <label htmlFor={`report-meta-${field.key}`}>
+                                    {field.label}{field.required && <b title="꼭 써요"> *</b>}
+                                </label>
+                                <StudentTextField
+                                    id={`report-meta-${field.key}`}
+                                    type="text"
+                                    value={meta[field.key] ?? ''}
+                                    maxLength={REPORT_META_MAX}
+                                    onChange={(event) => updateMeta(field.key, event.target.value)}
+                                    placeholder={field.placeholder}
+                                    disabled={disabled}
+                                    lang="ko"
+                                    style={{ padding: '10px 12px', border: '1px solid #99F6E4', borderRadius: '10px', fontSize: '1rem' }}
+                                />
+                                {field.chips && !disabled && (
+                                    <div className="report-editor__chips" role="group" aria-label={`${field.label} 고르기`}>
+                                        {field.chips.map((chip) => {
+                                            const on = String(meta[field.key] || '').split(/\s*[,，、]\s*/).includes(chip);
+                                            return (
+                                                <button key={chip} type="button" className={on ? 'is-on' : ''} aria-pressed={on} onClick={() => toggleMetaChip(field.key, chip)}>{chip}</button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </fieldset>
+            )}
+
             <div className="report-editor__intro">
-                <span>왼쪽에 사진을 넣고, 오른쪽 글쓰기 창에 사진을 관찰한 결과를 적어요.</span>
+                <span>{kindDef
+                    ? (kind === 'research'
+                        ? '머리말을 쓰고, 칸마다 조사한 내용을 내 말로 정리해요. 사진은 필요할 때만 넣어요.'
+                        : '머리말을 쓰고, 칸마다 사진과 함께 직접 관찰한 내용을 적어요.')
+                    : '왼쪽에 사진을 넣고, 오른쪽 글쓰기 창에 사진을 관찰한 결과를 적어요.'}</span>
                 <span>내용 칸 {sections.length}/{normalizedConfig.maxSections} · 사진 {imageCount}/{normalizedConfig.maxImages}</span>
             </div>
 
@@ -228,11 +302,11 @@ const ReportEditor = ({
                 {sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
                     const isUploading = uploadingSectionId === section.id;
-                    const observation = section.body || section.image?.caption || '';
+                    const observation = kindDef ? (section.body || '') : (section.body || section.image?.caption || '');
                     return (
                         <section className="report-editor__section" key={section.id}>
                             <header className="report-editor__section-header">
-                                <span className="report-editor__section-number">☰ {index + 1}번 사진 + 관찰 결과</span>
+                                <span className="report-editor__section-number">☰ {index + 1}번 {kindDef ? (section.heading || kindDef.contentLabel) : '사진 + 관찰 결과'}</span>
                                 {!disabled && (
                                     <div className="report-editor__section-actions">
                                         <button
@@ -297,6 +371,22 @@ const ReportEditor = ({
                                         )}
                                     </div>
 
+                                    {kindDef && section.image?.path && (
+                                        <div className="report-editor__caption">
+                                            <label htmlFor={`report-caption-${section.id}`}>사진 설명 <b title="꼭 써요">*</b></label>
+                                            <StudentTextField
+                                                id={`report-caption-${section.id}`}
+                                                type="text"
+                                                value={section.image.caption || ''}
+                                                maxLength={REPORT_CAPTION_MAX}
+                                                onChange={(event) => updateCaption(section, event.target.value)}
+                                                placeholder="예: 잎이 두 장 나온 모습"
+                                                disabled={disabled}
+                                                lang="ko"
+                                                style={{ padding: '8px 10px', border: '1px solid #99F6E4', borderRadius: '9px', fontSize: '.9rem' }}
+                                            />
+                                        </div>
+                                    )}
                                     {section.image?.path && (
                                         <>
                                             <div className="report-editor__photo-meta">
@@ -332,20 +422,63 @@ const ReportEditor = ({
                                 </div>
 
                                 <div className="report-editor__writing-panel">
+                                    {kindDef && (
+                                        <div className="report-editor__section-meta">
+                                            <input
+                                                className="report-editor__heading-input"
+                                                type="text"
+                                                value={section.heading || ''}
+                                                maxLength={80}
+                                                onChange={(event) => updateSection(section.id, { heading: event.target.value })}
+                                                placeholder="이 칸의 소제목"
+                                                aria-label={`${index + 1}번 칸 소제목`}
+                                                disabled={disabled}
+                                            />
+                                            {kindDef.dateLabel && (
+                                                <label className="report-editor__date-field">
+                                                    <span>{kindDef.dateLabel}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={section.date || ''}
+                                                        maxLength={REPORT_DATE_MAX}
+                                                        onChange={(event) => updateSection(section.id, { date: event.target.value })}
+                                                        placeholder={kindDef.datePlaceholder}
+                                                        disabled={disabled}
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    )}
                                     <label
                                         className="report-editor__writing-label"
                                         htmlFor={`report-observation-${section.id}`}
-                                    >사진에 대한 관찰 결과</label>
+                                    >{kindDef ? kindDef.contentLabel : '사진에 대한 관찰 결과'}</label>
                                     <StudentTextArea
                                         id={`report-observation-${section.id}`}
                                         value={observation}
                                         onChange={(event) => updateObservation(section, event.target.value)}
-                                        placeholder="사진을 보고 관찰한 모습, 변화, 알게 된 점을 적어보세요."
+                                        placeholder={kindDef ? kindDef.bodyPlaceholder : '사진을 보고 관찰한 모습, 변화, 알게 된 점을 적어보세요.'}
                                         disabled={disabled}
                                         autoCapitalize="sentences"
                                         lang="ko"
                                         style={{ ...SECTION_BODY_STYLE, fontSize: isMobile ? '1rem' : '1.08rem' }}
                                     />
+                                    {sourcesEnabled && (
+                                        <div className="report-editor__source">
+                                            <label htmlFor={`report-source-${section.id}`}>📚 출처</label>
+                                            <StudentTextField
+                                                id={`report-source-${section.id}`}
+                                                type="text"
+                                                value={section.source || ''}
+                                                maxLength={REPORT_SOURCE_MAX}
+                                                onChange={(event) => updateSection(section.id, { source: event.target.value })}
+                                                placeholder="예: 『우리 음식 이야기』 33쪽 / 누리집 이름과 주소, 본 날짜"
+                                                disabled={disabled}
+                                                lang="ko"
+                                                style={{ padding: '9px 11px', border: '1px solid #99F6E4', borderRadius: '10px', fontSize: '.92rem' }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -363,7 +496,7 @@ const ReportEditor = ({
                     >
                         {sections.length >= normalizedConfig.maxSections
                             ? `내용 칸은 ${normalizedConfig.maxSections}개까지 만들 수 있어요`
-                            : '＋ 사진과 관찰 결과 칸 추가'}
+                            : (kindDef ? `＋ ${kindDef.contentLabel} 칸 추가` : '＋ 사진과 관찰 결과 칸 추가')}
                     </button>
                 </div>
             )}

@@ -50,6 +50,10 @@ test('머리말은 그 종류에 정해진 칸만 남기고 길이를 자른다'
     // 관찰 칸 이름은 조사 보고서에 들어가지 않는다.
     assert.deepEqual(normalizeReportMeta({ target: '강낭콩', topic: '전통 음식' }, 'research'), { topic: '전통 음식' });
     assert.deepEqual(normalizeReportMeta({ target: 'x' }, null), {});
+    // 입력하는 중에는 띄어쓰기를 지우지 않는다(저장 때만 trim: false).
+    assert.equal(normalizeReportMeta({ target: '강낭 ' }, 'observation', { trim: false }).target, '강낭 ');
+    assert.equal(buildReportStructuredContent([], { kind: 'observation', meta: { target: '강낭 ' } }).meta.target, '강낭 ');
+    assert.deepEqual(normalizeReportMeta({ target: '   ' }, 'observation', { trim: false }), {});
 });
 
 test('저장: 머리말·날짜·출처는 있을 때만 들어가고, 칸 날짜·출처 필드는 비면 빠진다', () => {

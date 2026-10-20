@@ -63,14 +63,16 @@ export const reportKindOf = (structuredContent, config = {}) => (
     getReportKind(config?.kind)?.id || getReportKind(structuredContent?.meta?.kind)?.id || null
 );
 
-/** 머리말: 그 종류에 정해진 칸 이름만 남기고 길이를 자른다. */
-export const normalizeReportMeta = (meta, kind) => {
+/** 머리말: 그 종류에 정해진 칸 이름만 남기고 길이를 자른다.
+ *  입력하는 중에 저장할 때는 공백을 지우면 띄어쓰기를 칠 수 없어서 `trim: false` 로 둔다. */
+export const normalizeReportMeta = (meta, kind, { trim = true } = {}) => {
     const def = getReportKind(kind);
     if (!def) return {};
     const out = {};
     def.metaFields.forEach(({ key }) => {
-        const text = String(meta?.[key] ?? '').replace(/\s+/g, ' ').trim().slice(0, REPORT_META_MAX);
-        if (text) out[key] = text;
+        const raw = String(meta?.[key] ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, REPORT_META_MAX);
+        const text = trim ? raw.replace(/\s+/g, ' ').trim() : raw;
+        if (raw.trim()) out[key] = text;
     });
     return out;
 };
@@ -201,7 +203,7 @@ export const normalizeReportSections = (structuredContent, content = '', config 
 
 export const buildReportStructuredContent = (sections, { kind = null, meta = null } = {}) => {
     const validKind = getReportKind(kind)?.id || null;
-    const metaValues = validKind ? normalizeReportMeta(meta, validKind) : {};
+    const metaValues = validKind ? normalizeReportMeta(meta, validKind, { trim: false }) : {};
     return {
         template: REPORT_TEMPLATE_ID,
         version: 1,
