@@ -8,17 +8,23 @@ import './writingChangeHighlight.css';
  * `items` 는 `attributeWritingChanges` 의 결과.
  *   - `before`: 처음 글. 고치며 지운 곳에 가운데 줄 — 학생이 지운 곳은 회색, 선생님이 지운 곳은 빨간색
  *   - `after` : 지금 글. 새로 쓰거나 고친 곳에 형광펜 — 학생은 노랑, 선생님은 빨강
+ *   - `merged`: 한 글 안에 둘 다(학생 내 글 보기). 지운 곳은 그 자리에 가운데 줄 — 선생님이 고쳐 준 것을 학생이 다시 지운 곳도
+ *     회색 가운데 줄로 남는다
  * 글자 크기·줄 간격은 감싸는 자리의 것을 물려받는다.
  */
 const classOf = (item, variant) => {
+    if (variant === 'merged') {
+        if (item.removedBy) return `del-${item.removedBy}`;
+        return item.author === 'orig' ? '' : `mark-${item.author}`;
+    }
     if (variant === 'before') return item.removedBy ? `del-${item.removedBy}` : '';
     return item.author === 'orig' ? '' : `mark-${item.author}`;
 };
 
-const WritingAttributedText = ({ items, variant = 'after', showLegend = true }) => {
+const WritingAttributedText = ({ items, variant = 'after', showLegend = true, studentLabel = '학생이 고친 곳' }) => {
     const counts = useMemo(() => countAttributedChanges(items), [items]);
     const pieces = useMemo(() => {
-        const visible = items.filter((item) => (variant === 'before' ? item.author === 'orig' : !item.removedBy));
+        const visible = items.filter((item) => (variant === 'merged' ? true : variant === 'before' ? item.author === 'orig' : !item.removedBy));
         const classes = visible.map((item) => classOf(item, variant));
         // 칠한 두 조각 사이가 공백뿐이면 그 공백도 같은 색으로 칠해 형광펜이 어절마다 끊기지 않게 한다(보여 줄 때만).
         return visible.map((item, index) => {
@@ -34,9 +40,9 @@ const WritingAttributedText = ({ items, variant = 'after', showLegend = true }) 
             {showLegend && total > 0 ? (
                 <span className="writing-change__legend">
                     ✍️ 바뀐 곳 {total}군데 —{' '}
-                    {counts.student > 0 ? <><mark className="writing-attr__mark-student">학생이 고친 곳 {counts.student}</mark>{' '}</> : null}
+                    {counts.student > 0 ? <><mark className="writing-attr__mark-student">{studentLabel} {counts.student}</mark>{' '}</> : null}
                     {counts.teacher > 0 ? <><mark className="writing-attr__mark-teacher">선생님이 고친 곳 {counts.teacher}</mark>{' '}</> : null}
-                    · 가운데 줄: 지운 곳{variant === 'before' ? '(색은 지운 사람)' : ' (처음 글 쪽에 보여요)'}
+                    · 가운데 줄: 지운 곳{variant === 'after' ? ' (처음 글 쪽에 보여요)' : '(색은 지운 사람)'}
                 </span>
             ) : null}
             <span className="writing-change__text">

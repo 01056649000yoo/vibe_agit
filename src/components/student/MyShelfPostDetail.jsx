@@ -1,5 +1,7 @@
 import React from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
+import WritingAttributedText from '../../modules/writing/review/WritingAttributedText';
+import { useAttributedChanges } from '../../modules/writing/review/useAttributedChanges';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
 import { motion } from 'framer-motion';
@@ -29,6 +31,11 @@ const MyShelfPostDetail = ({
     });
     const showOriginal = version.view === WRITING_VIEW.ORIGINAL;
     const showChanges = version.view === WRITING_VIEW.CHANGES;
+    // 바뀐 곳을 내가 고친 곳(노랑)과 선생님이 고쳐 준 곳(빨강)으로 가른다. 선생님 교정이 있는 글은 회차 기록을 이때만 읽는다.
+    const attributedItems = useAttributedChanges({
+        postId: post?.id, original: post?.original_content, current: post?.content,
+        teacherEditRounds: post?.teacher_edit_rounds, enabled: showChanges
+    });
 
     const selfType = getSelfWritingType(post);
     const readingLog = selfType?.id === 'reading_log';
@@ -131,7 +138,11 @@ const MyShelfPostDetail = ({
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
                             ) : showChanges ? (
                                 // 승인된 글은 처음 글 → 고친 글에서 바뀐 곳을 형광펜으로 칠해 보여 준다(안내는 위 띠에 있다).
-                                <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
+                                attributedItems ? (
+                                    <WritingAttributedText items={attributedItems} variant="merged" studentLabel="내가 고친 곳" />
+                                ) : (
+                                    <WritingChangeHighlight before={post.original_content} after={post.content} showLegend={false} />
+                                )
                             ) : content || '아직 내용이 없어요.'}
                         </div>
 

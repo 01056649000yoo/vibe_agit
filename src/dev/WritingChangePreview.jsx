@@ -86,6 +86,15 @@ export default function WritingChangePreview() {
                 <AttributedSection />
             </section>
             <section>
+                <h3>학생 내 글 보기 — 바뀐 곳(내가 고친 곳·선생님이 고쳐 준 곳)</h3>
+                <StudentMergedSection />
+            </section>
+            <section>
+                <h3>교사 글 자세히 보기 — 단계 탭(선생님 교정 0회·1회)</h3>
+                <StepTabsSection rounds={0} />
+                <StepTabsSection rounds={1} />
+            </section>
+            <section>
                 <h3>나란히 보기(글 자세히 보기·제출 현황)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
                     <div style={box}><strong>🌱 최초 제출</strong><br /><WritingChangeHighlight variant="before" enabled={approved} before={sample.before} after={sample.after} /></div>
@@ -96,12 +105,34 @@ export default function WritingChangePreview() {
     );
 }
 
+function StepTabsSection({ rounds }) {
+    const version = useWritingVersion({
+        postId: `steps-${rounds}`, before: ATTRIBUTION_SAMPLE.original, after: ATTRIBUTION_SAMPLE.current,
+        approved: false, teacherEditRounds: rounds, sideBySide: true
+    });
+    return (
+        <div data-testid={`steps-${rounds}`}>
+            <WritingVersionSwitch {...version} onChange={version.setView} layout="sideBySide" />
+            <p>지금 칸: <b>{version.view}</b></p>
+        </div>
+    );
+}
+
 function AttributedSection() {
     const items = attributeWritingChanges(ATTRIBUTION_SAMPLE.original, ATTRIBUTION_SAMPLE.rounds, ATTRIBUTION_SAMPLE.current);
     return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }} data-testid="attributed-preview">
             <div style={box}><strong>🌱 최초 제출 (초안)</strong><br /><WritingAttributedText items={items} variant="before" /></div>
             <div style={box}><strong>✨ 현재 글 (선생님 교정본)</strong><br /><WritingAttributedText items={items} variant="after" showLegend={false} /></div>
+        </div>
+    );
+}
+
+function StudentMergedSection() {
+    const items = attributeWritingChanges(ATTRIBUTION_SAMPLE.original, ATTRIBUTION_SAMPLE.rounds, ATTRIBUTION_SAMPLE.current);
+    return (
+        <div style={{ ...box, maxWidth: 560 }} data-testid="student-merged-preview">
+            <WritingAttributedText items={items} variant="merged" studentLabel="내가 고친 곳" />
         </div>
     );
 }

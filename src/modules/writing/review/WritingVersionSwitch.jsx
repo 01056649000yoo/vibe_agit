@@ -30,7 +30,9 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
         () => getWritingCompareInfo({ before, after, beforeTitle, afterTitle, approved }),
         [before, after, beforeTitle, afterTitle, approved]
     );
-    const [view, setView] = useState(WRITING_VIEW.FINAL);
+    // 나란히 화면(교사 글 자세히 보기)은 `③ 최종 글` = 처음 글과 최종 글을 좌우로 놓는 칸(`CHANGES`)이 처음 칸이다.
+    const homeView = sideBySide ? WRITING_VIEW.CHANGES : WRITING_VIEW.FINAL;
+    const [view, setView] = useState(homeView);
     // 글은 화면보다 늦게 도착한다(불러오는 중에는 처음 글이 비어 있다). 그래서 처음 그릴 때가 아니라
     // **바뀐 곳을 보여 줄 수 있게 된 순간 한 번** 판단한다. 같은 글에서 두 번 열지 않는다.
     const autoOpenedFor = useRef(null);
@@ -61,7 +63,7 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
     const lost = view === WRITING_VIEW.TEACHER
         ? rounds === 0
         : (view === WRITING_VIEW.CHANGES && !info.canShowChanges && !sideBySide) || (view !== WRITING_VIEW.FINAL && !info.hasOriginal);
-    const safeView = lost ? WRITING_VIEW.FINAL : view;
+    const safeView = lost || (sideBySide && view === WRITING_VIEW.FINAL && info.hasOriginal) ? (info.hasOriginal ? homeView : WRITING_VIEW.FINAL) : view;
     return { ...info, teacherEditRounds: rounds, view: safeView, setView };
 };
 
@@ -72,17 +74,22 @@ export const useWritingVersion = ({ postId, before, after, beforeTitle, afterTit
 const WritingVersionSwitch = ({ view, onChange, hasOriginal, changeCount, canShowChanges, teacherEditRounds = 0, layout = 'three' }) => {
     if (!hasOriginal && !teacherEditRounds) return null;
     const sideBySide = layout === 'sideBySide';
-    const options = [
+    // 교사 글 자세히 보기는 글이 고쳐진 순서대로 ① 처음 글 → ② 선생님 교정 → ③ 최종 글. 한 번에 글 두 개만 놓는다
+    // (①은 처음 글 하나, ②는 교정지와 다시 낸 글, ③은 처음 글과 최종 글). 선생님이 안 고친 글은 ②가 없다.
+    const stepTabs = [
+        ...(hasOriginal ? [{ id: WRITING_VIEW.ORIGINAL, label: '처음 글' }] : []),
+        ...(teacherEditRounds > 0 ? [{ id: WRITING_VIEW.TEACHER, label: `✏️ 선생님 교정 ${teacherEditRounds}회`, teacher: true }] : []),
+        ...(hasOriginal ? [{ id: WRITING_VIEW.CHANGES, label: '최종 글' }] : [])
+    ].map((tab, index) => ({ ...tab, label: `${['①', '②', '③'].at(index)} ${tab.label}` }));
+    const options = sideBySide ? stepTabs : [
         { id: WRITING_VIEW.FINAL, label: '최종 글' },
-        ...(hasOriginal && (canShowChanges || sideBySide)
-            ? [{ id: WRITING_VIEW.CHANGES, label: canShowChanges ? '🖍️ 바뀐 곳' : '처음 글과 나란히' }]
-            : []),
-        ...(hasOriginal && !sideBySide ? [{ id: WRITING_VIEW.ORIGINAL, label: '처음 글' }] : []),
+        ...(hasOriginal && canShowChanges ? [{ id: WRITING_VIEW.CHANGES, label: '🖍️ 바뀐 곳' }] : []),
+        ...(hasOriginal ? [{ id: WRITING_VIEW.ORIGINAL, label: '처음 글' }] : []),
         ...(teacherEditRounds > 0 ? [{ id: WRITING_VIEW.TEACHER, label: `✏️ 선생님 교정 ${teacherEditRounds}회`, teacher: true }] : [])
     ];
     return (
         <div className="writing-version">
-            {canShowChanges ? (
+            {canShowChanges && !sideBySide ? (
                 <div className="writing-version__banner">
                     <span>✍️ 처음 글에서 <strong>{changeCount}군데</strong> 고쳤어요</span>
                     {view === WRITING_VIEW.CHANGES ? (

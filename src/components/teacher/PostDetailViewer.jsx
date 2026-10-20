@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import WritingChangeHighlight from '../../modules/writing/review/WritingChangeHighlight';
 import WritingAttributedText from '../../modules/writing/review/WritingAttributedText';
-import { attributeWritingChanges } from '../../modules/writing/review/writingAttribution.js';
-import { useTeacherEditRounds } from '../../modules/writing/review/teacherEditRoundsApi';
+import { useAttributedChanges } from '../../modules/writing/review/useAttributedChanges';
 import { TeacherEditBanner, TeacherEditToggle, getTeacherEditBlockedReason } from './TeacherEditToggle';
 import WritingVersionSwitch, { WRITING_VIEW, useWritingVersion } from '../../modules/writing/review/WritingVersionSwitch';
 import TeacherEditRounds from '../../modules/writing/review/TeacherEditRounds';
@@ -39,16 +38,15 @@ const PostDetailViewer = ({
         sideBySide: true
     });
     const showTeacherEdits = version.view === WRITING_VIEW.TEACHER;
-    const showOriginal = version.view !== WRITING_VIEW.FINAL && !showTeacherEdits;
+    // ① 처음 글(한 칸) · ② 선생님 교정 · ③ 최종 글(처음 글과 최종 글 두 칸). 한 번에 글 두 개만 놓는다.
+    const showOriginalOnly = version.view === WRITING_VIEW.ORIGINAL;
+    const showOriginal = version.view === WRITING_VIEW.CHANGES;
     const setVersionView = version.setView;
     // 나란히 보기에서 누가 고쳤는지(학생·선생님) 가른다. 교정 회차 기록은 나란히 보기를 열 때만 불러온다.
-    const editRoundCount = Number(selectedPost?.teacher_edit_rounds) || 0;
-    const editRounds = useTeacherEditRounds(selectedPost?.id, showOriginal && editRoundCount > 0);
-    const attributedItems = useMemo(() => {
-        if (!showOriginal || !selectedPost?.original_content) return null;
-        if (editRoundCount > 0 && (editRounds.loading || editRounds.error)) return null;
-        return attributeWritingChanges(selectedPost.original_content, editRoundCount > 0 ? editRounds.rounds : [], selectedPost.content);
-    }, [showOriginal, selectedPost?.original_content, selectedPost?.content, editRoundCount, editRounds.loading, editRounds.error, editRounds.rounds]);
+    const attributedItems = useAttributedChanges({
+        postId: selectedPost?.id, original: selectedPost?.original_content, current: selectedPost?.content,
+        teacherEditRounds: selectedPost?.teacher_edit_rounds, enabled: showOriginal
+    });
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -536,6 +534,23 @@ const PostDetailViewer = ({
                                     </div>
                                 ) : showTeacherEdits ? (
                                     <TeacherEditRounds postId={selectedPost.id} />
+                                ) : showOriginalOnly ? (
+                                    <WritingPresentationTrigger
+                                        label="최초 제출 글 전체 화면으로 보기"
+                                        onOpen={() => setPresentationVersion('original')}
+                                        className="writing-body"
+                                        data-format={getWritingFormat(selectedMission)}
+                                        style={{
+                                         fontSize: isMobile ? '1.15rem' : '1.3rem',
+                                         color: '#374151',
+                                         lineHeight: '2',
+                                         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                         padding: '18px 20px', border: '1px solid transparent', borderRadius: '20px',
+                                         background: 'transparent'
+                                    }}>
+                                        <span className="writing-presentation-trigger__hint" style={{ display: 'table', margin: '0 0 14px auto' }}>전체 화면으로 읽기</span>
+                                        {selectedPost.original_content || '최초 내용 기록이 없습니다.'}
+                                    </WritingPresentationTrigger>
                                 ) : showOriginal ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', flex: 1 }}>
                                         {/* Left: Original Content */}
