@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-20 — 관찰·조사 보고서 양식과 출처, 문집·글꽃 책방 연동 (Claude)
+- **한 일**: 과제 만들기에서 `관찰 보고서`·`조사 보고서`·`자유 보고서(예전 방식)` 고르기와 `출처 쓰기` 켜기(기본 꺼짐). 학생은 머리말(대상·기간·장소·날씨·방법 / 주제·기간·방법)·칸 소제목·날짜·사진 설명·참고 자료를 쓰고, 보고서 보기·PDF·문집·글꽃 책방이 같은 양식을 따른다. 글꽃 전시관 주제째 담기는 승인한 글이면 진행 중인 미션도 담을 수 있게 통일하고 `담을 글 없음`/`다 담았습니다` 안내를 나눴다.
+- **변경**: `report/*`(reportContent·ReportMissionForm·ReportEditor·ReportDocument·reportPdfExport·css), `MissionBulkPicker`, 새 `20261403_class_agit_report_forms.sql`(**운영 적용 전**, 서버 `class_agit_source_data_v1` 가 meta 를 검증·머리말 줄/설명/날짜/참고 자료를 문단 목록에 담음) + 스모크, 개발 미리보기 `report-forms`, 시험 `reportForms`, `teacherGuides.js`·FEATURE_MAP v1.26.23. git 밖 변경 없음(별도 저장소 아레나의 도커 컨테이너·터널·DNS 는 그쪽 STATUS 에 기록).
+- **결과/검증**: eslint 0, 관련 시험·클래스 아지트 스모크 20/20·`migrate:check` 통과, 개발 미리보기로 관찰·조사·자유 보고서 화면 확인. 아르곤·Codex 검토에서 채택: 칸 id 중복·80자 초과 보정, 본문이 빈 줄로 시작해도 날짜 유지, 캡션 앞 공백, 본문 글자 아님 거절, 글자 수 상한에 머리말 여유 3000자 [원인: 서버 상한이 학생 문단만 센다는 계약과 달리 머리말까지 셈].
+- **남은 것**: OI-037(20261403 적용은 선생님 `! npm run migrate` 뒤 앱 배포), OI-036.
+
 ## 2026-10-20 — 보고서 사진 화면(2c): 담기 전 선생님 확인·읽기·책자 PDF (Claude)
 - **한 일**: 사진이 든 보고서를 담으려 하면 **선생님 사진 확인 화면**이 열린다(사진을 크게 보고 문구에 체크한 뒤 담을 사진을 직접 고름, 고르지 않으면 글만). 확인 → 서버 기록 → Edge 복사 → 글을 다시 받아 사진이 든 모습으로 담는다. 읽는 화면(전시실·책)과 책자·미리보기 인쇄에 사진이 들어간다. 글을 받는 길(`classAgitApi.getSources`) 한 곳에 확인 장치를 끼워 작품 찾기·미션별·학생별 담기가 모두 거친다.
 - **변경**: 새 `20261402_class_agit_photo_paths.sql`(`get_class_agit_photo_paths_v1` — 읽기 권한을 보고 복사본 경로를 알려 줌, **운영 적용 전**) + 스모크, `photoBlocks.js`·`photoGate.js`·`photoContext.js`·`api/photoApi.js`·`gallery/WorkBlocks.jsx`·`teacher/PhotoConfirmHost.jsx`(+css), `print.js`·`pagination.js`·`PageTuner.jsx`(사진을 쪼갤 수 없는 덩어리로 놓고 풀린 뒤 높이를 잼), 구글 문서·엑셀 내보내기는 자리표를 글로 쓰지 않게(`textBlocks`), 교사·학생 입구가 사진 찾는 방법을 주입, 활용 안내서·README·설계 문서, `tests/classAgitPhotos.test.mjs`.
@@ -136,12 +142,6 @@
 - **변경**: git 밖 — 도커 데스크톱 디스크 이미지 64GB(외장 SSD `/Volumes/SHmaegmini/DockerDesktop/Docker.raw`), `/Applications/Kiro*`·`~/.kiro*`·임시 설치 파일 삭제, 도커 빌드 캐시 전부 정리, `~/Library/Application Support/com.docker.install/in_progress` 삭제. 코드 변경 없음.
 - **결과/검증**: 도커 VM 63G 중 16G(27%), 컨테이너 15개 모두 실행·healthy(`agit-auth` 만 시작 순서로 3회 재시도 뒤 정상), 아지트·로그인·REST·쌤링크·자비스 응답 200, DB 샘링크 링크 558·경고 기록 26 그대로, `agit-kong` 경고는 22:40 자동 해결.
 - **남은 것 / 다음**: 재부팅은 선생님이 주말에(Preboot 11GB 는 정식 부팅 파일이라 거의 그대로일 수 있음). 빌드가 많은 날은 `docker builder prune` 으로 캐시를 정리(기존 `com.agit.docker-cache-trim` 이 맡음). Downloads 설치 파일 1.9GB 는 선생님 판단 대기.
-
-## 2026-10-13 — 인형뽑기: 저장 안 한 학급은 선생님 선물 없음 + 아직 안 준 선물 메뉴 배지 (Claude Opus 5.5)
-- **한 일**: ① 기본 상품표에서 선생님 선물(자리 고르기권 0.6%·급식 먼저 먹기권 0.4%)을 빼고 그 1% 를 포인트로(94→95%, 금액별 비율 유지). 선물은 교사가 `+ 선물 추가` 후 저장해야 나온다. 저장 전 교사 화면 문구·선물 빈 칸 안내·도움말도 고침. [원인: 설정을 한 번도 저장하지 않은 학급이 기본값으로 뽑아, 교사가 모르는 선물이 당첨됨 — 10-07 영암 4-3, 10-13 여수진남초(과학)] ② 대시보드 `아지트 놀이터` 메뉴와 놀이터 안 인형뽑기 메뉴에 아직 안 준 선물 수 배지(`get_teacher_spelling_claw_gift_badge_v1`, 뽑기 내역 pending_gifts 와 같은 조건). `줬어요`·내역 수 변화·창 포커스 때 다시 셈, 폴링 없음.
-- **변경**: 이번 커밋(v1.26.13). 마이그레이션 `20261398_spelling_claw_gift_badge` + 스모크. `prizeTable.js`(Edge·앱 공용 원본), `TeacherDashboard`·`GameManager`·`RegisteredGameModuleCards`·`TeacherManager`·`ClawPrizeSettings`·`teacherGuides`.
-- **결과/검증**: 운영 DB 롤백 스모크(배지=아직 안 준 선물 수, 줬어요 뒤 1 감소, 다른 교사 0). 전체 검사 1595·린트·빌드. 점검: 학급 전체 알림은 선물 3건 모두 반 친구 수만큼 발송(18/6/22). 켜 둔 학급 14 · 저장 5 · 미저장 9, 저장한 5곳은 모두 교사가 선물을 직접 정함. 여수진남초(과학) 23명 중 13명이 진남초 4-1 과 이름이 같아 같은 학생이 두 학급 계정으로 뽑는 것으로 보임.
-- **남은 것 / 다음**: 화면 눈검사(놀이터 메뉴 배지). 두 학급 계정을 쓰는 학생의 하루 기회 이중 사용은 선생님 판단 대기.
 
 ## 지난 기록
 

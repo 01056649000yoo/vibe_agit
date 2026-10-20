@@ -449,10 +449,11 @@ const ReportEditor = ({
                                             )}
                                         </div>
                                     )}
+                                    {/* 양식 종류가 있으면 소제목 입력칸이 곧 이 글의 이름이라, 안내 글은 화면 읽기 프로그램에만 보인다(두 번 보이면 헷갈린다). */}
                                     <label
-                                        className="report-editor__writing-label"
+                                        className={`report-editor__writing-label${kindDef ? ' report-editor__sr-only' : ''}`}
                                         htmlFor={`report-observation-${section.id}`}
-                                    >{kindDef ? kindDef.contentLabel : '사진에 대한 관찰 결과'}</label>
+                                    >{kindDef ? (section.heading || kindDef.contentLabel) : '사진에 대한 관찰 결과'}</label>
                                     <StudentTextArea
                                         id={`report-observation-${section.id}`}
                                         value={observation}

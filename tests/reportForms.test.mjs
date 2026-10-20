@@ -120,3 +120,15 @@ test('제출 검사: 필수 머리말, 출처(켠 과제만), 사진 설명', ()
     saved = buildReportStructuredContent(filled(OBS, { image }), { kind: 'observation', meta: { target: '강낭콩' } });
     assert.match(validateReportSubmission({ structuredContent: saved, content: '', config: OBS }), /사진 설명/);
 });
+
+test('칸 id 가 겹치거나 80자를 넘어도 서로 다른 80자 이하로 바로잡는다', () => {
+    const long = 'x'.repeat(80);
+    const sections = normalizeReportSections({
+        sections: [{ id: 'section-2' }, { id: long }, { id: long }, { id: 'section-1' }, { id: 'section-1' }],
+    }, '', {});
+    const ids = sections.map((section) => section.id);
+    assert.equal(new Set(ids).size, ids.length);
+    assert.ok(ids.every((id) => id.length <= 80));
+    const padded = normalizeReportSections({ sections: [{ id: 'section-2' }] }, '', {});
+    assert.equal(new Set(padded.map((section) => section.id)).size, padded.length);
+});

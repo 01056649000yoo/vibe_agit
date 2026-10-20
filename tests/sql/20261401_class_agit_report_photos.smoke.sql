@@ -90,7 +90,7 @@ BEGIN
     IF (SELECT count(*) FROM public.class_agit_item_photos WHERE post_id=current_setting('test.rp_post')::UUID)<>2 THEN RAISE EXCEPTION 'duplicate photo rows'; END IF;
     PERFORM public.finish_class_agit_photo_copy_v1(ids[1],TRUE);
     PERFORM public.finish_class_agit_photo_copy_v1(ids[2],TRUE);
-    IF (SELECT count(*) FROM public.class_agit_item_photos WHERE status='copied')<>2 THEN RAISE EXCEPTION 'copy not recorded'; END IF;
+    IF (SELECT count(*) FROM public.class_agit_item_photos WHERE status='copied' AND post_id=current_setting('test.rp_post')::UUID)<>2 THEN RAISE EXCEPTION 'copy not recorded'; END IF;
     PERFORM set_config('test.rp_marker_a',(SELECT E'\x1fphoto:'||id::TEXT FROM public.class_agit_item_photos WHERE post_id=current_setting('test.rp_post')::UUID AND section_id='a'),TRUE);
     PERFORM set_config('test.rp_marker_c',(SELECT E'\x1fphoto:'||id::TEXT FROM public.class_agit_item_photos WHERE post_id=current_setting('test.rp_post')::UUID AND section_id='c'),TRUE);
     PERFORM set_config('test.rp_copy_a',(SELECT copy_path FROM public.class_agit_item_photos WHERE post_id=current_setting('test.rp_post')::UUID AND section_id='a'),TRUE);

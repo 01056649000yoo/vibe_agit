@@ -68,7 +68,7 @@ test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보�
     assert.match(reportEditorSource, /사진을 보고 관찰한 모습, 변화, 알게 된 점을 적어보세요/);
     // 소제목·날짜·출처·사진 설명 입력칸은 양식 종류(관찰·조사)가 있는 과제에만 나온다. 예전 자유 보고서는 위처럼 단순한 그대로다.
     assert.match(reportEditorSource, /\{kindDef && \(\s*<div className="report-editor__section-meta">[\s\S]*?이 칸의 소제목/);
-    assert.match(reportEditorSource, /kindDef \? kindDef\.contentLabel : '사진에 대한 관찰 결과'/);
+    assert.match(reportEditorSource, /kindDef \? \(section\.heading \|\| kindDef\.contentLabel\) : '사진에 대한 관찰 결과'/);
     assert.doesNotMatch(reportEditorSource, /사진에서 무엇을 볼 수 있는지 설명해주세요/);
     assert.doesNotMatch(reportEditorSource, /SECTION_TITLE_STYLE|CAPTION_STYLE/);
     assert.doesNotMatch(reportDocumentSource, /<figcaption>|<h3>/);

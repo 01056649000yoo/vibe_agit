@@ -180,7 +180,12 @@ export const normalizeReportSections = (structuredContent, content = '', config 
 
     const sections = sourceSections.slice(0, normalizedConfig.maxSections).map((section, index) => {
         const proposedId = cleanText(section?.id, 80).trim() || `section-${index + 1}`;
-        const id = usedIds.has(proposedId) ? `${proposedId}-${index + 1}` : proposedId;
+        let id = proposedId;
+        for (let n = index + 1; usedIds.has(id); n += 1) {
+            // 접미사를 붙여도 80자(서버 상한)를 넘지 않게 앞을 자른다.
+            const suffix = `-${n}`;
+            id = `${proposedId.slice(0, 80 - suffix.length)}${suffix}`;
+        }
         usedIds.add(id);
         return {
             id,
@@ -198,7 +203,10 @@ export const normalizeReportSections = (structuredContent, content = '', config 
 
     while (sections.length < normalizedConfig.minSections) {
         const index = sections.length;
-        sections.push(createReportSection(normalizedConfig.defaultSections.at(index) || `내용 ${index + 1}`, index));
+        const added = createReportSection(normalizedConfig.defaultSections.at(index) || `내용 ${index + 1}`, index);
+        for (let n = index + 1; usedIds.has(added.id); n += 1) added.id = `section-${n}`;
+        usedIds.add(added.id);
+        sections.push(added);
     }
 
     return sections;

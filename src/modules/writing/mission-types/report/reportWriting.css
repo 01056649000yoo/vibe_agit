@@ -544,3 +544,15 @@
 .report-document__sources strong { color: #0f766e; font-size: .9rem; }
 .report-document__sources ol { margin: 6px 0 0; padding-left: 20px; color: #334155; font-size: .88rem; line-height: 1.6; }
 .report-document__sources li { overflow-wrap: anywhere; }
+
+.report-editor__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
