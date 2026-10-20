@@ -556,3 +556,7 @@
     white-space: nowrap;
     border: 0;
 }
+
+.report-editor__section-layout--text {
+    grid-template-columns: minmax(0, 1fr);
+}

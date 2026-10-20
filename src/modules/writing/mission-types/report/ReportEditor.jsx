@@ -7,6 +7,7 @@ import {
     normalizeReportConfig,
     normalizeReportMeta,
     normalizeReportSections,
+    reportKindAllowsPhoto,
     reportKindOf,
     reportSectionsToContent,
     REPORT_CAPTION_MAX,
@@ -281,8 +282,8 @@ const ReportEditor = ({
             <div className="report-editor__intro">
                 <span>{kindDef
                     ? (kind === 'research'
-                        ? '머리말을 쓰고, 칸마다 조사한 내용을 내 말로 정리해요. 사진은 필요할 때만 넣어요.'
-                        : '머리말을 쓰고, 칸마다 사진과 함께 직접 관찰한 내용을 적어요.')
+                        ? '머리말을 쓰고, 칸마다 조사한 내용을 내 말로 정리해요. 사진·그림은 조사한 내용 칸에 필요할 때만 넣어요.'
+                        : '머리말을 쓰고, 까닭과 느낀 점은 글로, 관찰한 모습 칸에는 사진과 함께 적어요.')
                     : '왼쪽에 사진을 넣고, 오른쪽 글쓰기 창에 사진을 관찰한 결과를 적어요.'}</span>
                 <span>내용 칸 {sections.length}/{normalizedConfig.maxSections} · 사진 {imageCount}/{normalizedConfig.maxImages}</span>
             </div>
@@ -302,6 +303,8 @@ const ReportEditor = ({
                 {sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
                     const isUploading = uploadingSectionId === section.id;
+                    // 글만 쓰는 칸(까닭·느낀 점)에는 사진 칸을 두지 않는다. 이미 사진이 있으면 그대로 보인다.
+                    const showPhoto = !kindDef || Boolean(section.image?.path) || reportKindAllowsPhoto(kind, index);
                     const observation = kindDef ? (section.body || '') : (section.body || section.image?.caption || '');
                     return (
                         <section className="report-editor__section" key={section.id}>
@@ -333,7 +336,8 @@ const ReportEditor = ({
                                 )}
                             </header>
 
-                            <div className="report-editor__section-layout">
+                            <div className={`report-editor__section-layout${showPhoto ? '' : ' report-editor__section-layout--text'}`}>
+                                {showPhoto && (
                                 <div className="report-editor__photo-panel">
                                     <div className="report-editor__photo-frame">
                                         {section.image?.path ? (
@@ -420,6 +424,7 @@ const ReportEditor = ({
 
                                     {isUploading && <div className="report-editor__status" role="status">{photoStatus}</div>}
                                 </div>
+                                )}
 
                                 <div className="report-editor__writing-panel">
                                     {kindDef && (

@@ -8,6 +8,7 @@ import {
     normalizeReportConfig,
     normalizeReportMeta,
     normalizeReportSections,
+    reportKindAllowsPhoto,
     reportKindOf,
     reportSectionsToContent,
     validateReportSubmission,
@@ -29,7 +30,12 @@ test('관찰·조사 양식은 종류별 머리말 칸과 기본 칸 제목을 �
     assert.deepEqual(REPORT_KINDS.observation.metaFields.map((f) => f.key), ['target', 'period', 'place', 'weather', 'method']);
     assert.deepEqual(REPORT_KINDS.research.metaFields.map((f) => f.key), ['topic', 'period', 'method']);
     assert.deepEqual(normalizeReportConfig(OBS).defaultSections, ['관찰한 까닭', '관찰한 모습', '알게 된 점과 느낀 점']);
-    assert.deepEqual(normalizeReportConfig(RES).defaultSections, ['조사한 까닭', '조사한 내용', '알게 된 점과 느낀 점']);
+    assert.deepEqual(normalizeReportConfig(RES).defaultSections, ['조사한 까닭', '조사한 내용', '알게 된 점', '느낀 점과 더 알고 싶은 점']);
+    assert.equal(reportKindAllowsPhoto('observation', 0), false);
+    assert.equal(reportKindAllowsPhoto('observation', 1), true);
+    assert.equal(reportKindAllowsPhoto('observation', 2), false);
+    assert.equal(reportKindAllowsPhoto('observation', 3), true);
+    assert.equal(reportKindAllowsPhoto(null, 0), true);
     // 선생님이 칸 제목을 직접 정하면 그것이 우선이다.
     assert.deepEqual(normalizeReportConfig({ ...OBS, default_sections: ['가', '나'] }).defaultSections, ['가', '나']);
     // 모르는 종류는 예전 방식으로 본다.

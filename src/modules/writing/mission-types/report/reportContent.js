@@ -30,6 +30,9 @@ export const REPORT_KINDS = Object.freeze({
         dateLabel: '관찰한 날',
         datePlaceholder: '예: 10월 3일',
         defaultSections: Object.freeze(['관찰한 까닭', '관찰한 모습', '알게 된 점과 느낀 점']),
+        // 처음 놓인 칸 순서대로 사진 칸이 있는지(까닭·느낀 점 칸은 글만). 더한 칸은 사진 칸이 있다.
+        photoSlots: Object.freeze([false, true, false]),
+        photoHint: '관찰한 모습을 사진으로 남겨요.',
         metaFields: Object.freeze([
             Object.freeze({ key: 'target', label: '관찰 대상', placeholder: '예: 강낭콩', required: true }),
             Object.freeze({ key: 'period', label: '관찰 기간·날짜', placeholder: '예: 10월 1일 ~ 10월 20일' }),
@@ -47,7 +50,9 @@ export const REPORT_KINDS = Object.freeze({
         bodyPlaceholder: '알아낸 내용을 내 말로 정리해서 적어 보세요. 책이나 누리집 글을 그대로 옮겨 쓰지 않아요.',
         dateLabel: '',
         datePlaceholder: '',
-        defaultSections: Object.freeze(['조사한 까닭', '조사한 내용', '알게 된 점과 느낀 점']),
+        defaultSections: Object.freeze(['조사한 까닭', '조사한 내용', '알게 된 점', '느낀 점과 더 알고 싶은 점']),
+        photoSlots: Object.freeze([false, true, false, false]),
+        photoHint: '조사한 내용에 도움이 되는 사진·그림이 있으면 넣어요(없어도 돼요).',
         metaFields: Object.freeze([
             Object.freeze({ key: 'topic', label: '조사 주제', placeholder: '예: 우리 고장의 전통 음식', required: true }),
             Object.freeze({ key: 'period', label: '조사 기간', placeholder: '예: 10월 5일 ~ 10월 12일' }),
@@ -58,6 +63,13 @@ export const REPORT_KINDS = Object.freeze({
 
 const KIND_BY_ID = new Map(Object.entries(REPORT_KINDS));
 export const getReportKind = (kind) => KIND_BY_ID.get(kind) || null;
+
+/** 양식 종류가 있는 보고서에서 이 순서의 칸에 사진 칸을 보여 줄지. 종류가 없으면(예전 방식) 모든 칸. */
+export const reportKindAllowsPhoto = (kind, index) => {
+    const def = getReportKind(kind);
+    if (!def) return true;
+    return def.photoSlots.at(index) ?? true;
+};
 
 /** 글에 저장된 종류(머리말 안)나 과제 설정의 종류. 없으면 null(예전 방식). */
 export const reportKindOf = (structuredContent, config = {}) => (
