@@ -27,15 +27,18 @@ function CandidateApply({ onAdd, refreshing }) {
 
 const EXHIBITION_STEPS = [
     { id: 'settings', title: '기본 설정', detail: '이름 · 소개 · 학생 공개' },
-    { id: 'works', title: '작품·전시실 구성', detail: '주제 · 작품 배정 · 순서' },
+    { id: 'rooms', title: '전시실 구성', detail: '이름 · 배경 · 순서' },
+    { id: 'works', title: '작품 담기', detail: '전시실별로 담기' },
     { id: 'preview', title: '미리보기', detail: '학생의 시선으로 감상' },
     { id: 'share', title: '외부 읽기 공유', detail: '전체 작품 · 주소 관리' },
 ];
 
-export default function ExhibitionWorkbench({ activeClass, sourceApi, students = [], initialDraft, persistence }) {
+export default function ExhibitionWorkbench({ activeClass, sourceApi, initialDraft, persistence }) {
     const [draft, setDraft] = useState(() => normalizeRoomDraft(initialDraft || createExhibitionDraft(activeClass?.id)));
     const [savedDraft, setSavedDraft] = useState(() => initialDraft || null);
     const [worksVisited, setWorksVisited] = useState(false);
+    // 전시실 구성·작품 담기 두 단계가 같은 전시실을 가리킨다.
+    const [activeRoom, setActiveRoom] = useState(() => (initialDraft?.rooms?.[0]?.id) || null);
     const [selectionBusy, setSelectionBusy] = useState(false);
     const [candidate, setCandidate] = useState(null);
     const [step, setStep] = useState('settings');
@@ -51,11 +54,10 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
     const stepId = useId();
     const { ask, confirmDialog } = useConfirmDialog();
     // 전시본 만들기는 방×작품(최대 10×120)을 훑고 작품마다 blocks 를 복사한다.
-    // 감싸지 않으면 제목 한 글자 칠 때마다 120편을 통째로 다시 만든다. 실제로 쓰는 곳은 3단계뿐이다.
+    // 감싸지 않으면 제목 한 글자 칠 때마다 120편을 통째로 다시 만든다. 실제로 쓰는 곳은 미리보기 단계뿐이다.
     const presentation = useMemo(() => createGalleryPresentation(draft), [draft]);
     const rooms = useMemo(() => arrangeGalleryRooms(presentation.works, presentation.rooms), [presentation]);
     const selectedStudents = new Set(draft.items.map((item) => item.studentId));
-    const unselectedStudents = students.filter((student) => !selectedStudents.has(student.id));
     const selectedSources = new Set(draft.items.map((item) => item.sourceId));
     const externalCount = draft.items.length;
     const dirty = savedDraft?.revision !== draft.revision;
@@ -85,7 +87,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
         if (dirty && (saveFirst || nextStep === 'share')) { current = await saveDraft(); if (!current) return; }
         if (nextStep === 'share') setShareRevision(current?.revision ?? draft.revision);
         if (nextStep === 'preview') setPreviewMode('draft');
-        if (nextStep === 'works') setWorksVisited(true);
+        if (nextStep === 'works' || nextStep === 'rooms') setWorksVisited(true);
         setStep(nextStep);
         tabs.current.get(EXHIBITION_STEPS.findIndex((entry) => entry.id === nextStep))?.focus({ preventScroll: true });
     };
@@ -137,7 +139,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
             <div className="class-agit-status" role="status">{busy ? '전시를 처리하고 있습니다…' : message || (dirty ? '저장하지 않은 변경이 있습니다.' : '저장된 초안입니다.')}</div>
             {error && <p className="class-agit-error" role="alert">{error}</p>}
             {unassigned && <p className="class-agit-error" role="status">미배정 작품을 전시실에 넣거나 초안에서 빼면 발행할 수 있습니다.</p>}
-            {blockedWorks && <p className="class-agit-error" role="status">상태가 바뀐 작품이 있습니다. 2단계에서 전문을 다시 확인하거나 초안에서 빼 주세요.</p>}
+            {blockedWorks && <p className="class-agit-error" role="status">상태가 바뀐 작품이 있습니다. 3단계에서 전문을 다시 확인하거나 초안에서 빼 주세요.</p>}
 
             <div role="tabpanel" id={`${stepId}-panel-settings`} aria-labelledby={`${stepId}-tab-settings`} hidden={step !== 'settings'} className="class-agit-step-panel">
                 <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 01</span><h2>전시의 첫인상을 정해요</h2><p>전시 이름과 소개를 적고, 우리 반 학생에게 보여 줄 준비를 합니다.</p></div>
@@ -147,9 +149,9 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
                         {persistence ? <><label className="class-agit-access-toggle"><input type="checkbox" checked={persistence.moduleEnabled} onChange={(event) => perform(() => persistence.setEnabled(event.target.checked))} />학급 학생 공개 켜기</label>
                             <p>이 학급의 전시·문집 학생 입구를 켭니다. 작품을 담고 저장한 뒤 이 전시를 학급에 공개해 주세요.</p>{publicationActions}
                             {dirty && <p>편집 내용을 먼저 저장하면 공개 설정을 반영할 수 있습니다.</p>}
-                            {!draft.items.length && <p>2단계에서 작품을 담으면 전시를 공개할 수 있습니다.</p>}
+                            {!draft.items.length && <p>3단계에서 작품을 담으면 전시를 공개할 수 있습니다.</p>}
                         </> : <p>시안에서는 학생 화면을 미리 볼 수 있습니다. 실제 공개는 저장·공개 샘플이나 담당 학급에서 설정합니다.</p>}
-                        <p>외부 방문자의 읽기 공유는 4단계에서 별도로 설정합니다.</p>
+                        <p>외부 방문자의 읽기 공유는 5단계에서 별도로 설정합니다.</p>
                     </div>
                 </div>
                 <DesignPicker label="전시관 디자인" options={GALLERY_THEMES} value={getGalleryTheme(draft.theme).id} onChange={(theme) => changeDraft({ type: 'theme', theme })} disabled={draft.state === 'archived'} />
@@ -160,28 +162,34 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
                 </div></details>}
             </div>
 
-            <div role="tabpanel" id={`${stepId}-panel-works`} aria-labelledby={`${stepId}-tab-works`} hidden={step !== 'works'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>이 전시에 담을 작품을 골라요</h2><p>전시실의 주제를 정하고 미션에서 작품을 담으세요. 한 실에 최대 {limits.worksPerRoom}편이며, 다 채우지 않아도 다음 전시실을 만들 수 있습니다.</p></div>
-                {worksVisited && <SelectionWorkspace draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
+            <div role="tabpanel" id={`${stepId}-panel-rooms`} aria-labelledby={`${stepId}-tab-rooms`} hidden={step !== 'rooms'} className="class-agit-step-panel">
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 02</span><h2>전시실을 구성해요</h2><p>전시실의 주제·소개·배경을 정하고 순서를 정합니다. 새 전시는 첫 전시실이 이미 있어서, 하나만 쓰신다면 바로 다음 단계로 가셔도 됩니다. 한 실에는 최대 {limits.worksPerRoom}편이 들어갑니다.</p></div>
+                {step === 'rooms' && <SelectionWorkspace view="rooms" activeRoom={activeRoom} onActiveRoom={setActiveRoom} draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
                     onDraft={(next) => { setDraft(next); setMessage(''); setError(''); }} onReadSource={readSource}
                     onWithdraw={persistence ? (item) => runSavedAction('withdraw', item) : undefined} onBusyChange={setSelectionBusy} />}
-                <details className="class-agit-participation"><summary>아직 선정하지 않은 작가 {unselectedStudents.length}명</summary><p>{unselectedStudents.map((student) => student.name).join(' · ') || '모든 작가의 작품을 담았습니다.'}</p></details>
+            </div>
+
+            <div role="tabpanel" id={`${stepId}-panel-works`} aria-labelledby={`${stepId}-tab-works`} hidden={step !== 'works'} className="class-agit-step-panel">
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>전시실별로 작품을 담아요</h2><p>왼쪽에서 전시실을 고르면 그 전시실에 어떤 글이 담겼는지 보이고, 오른쪽에서 미션이나 글을 골라 그 전시실에 담습니다.</p></div>
+                {worksVisited && <SelectionWorkspace view="works" activeRoom={activeRoom} onActiveRoom={setActiveRoom} draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
+                    onDraft={(next) => { setDraft(next); setMessage(''); setError(''); }} onReadSource={readSource}
+                    onWithdraw={persistence ? (item) => runSavedAction('withdraw', item) : undefined} onBusyChange={setSelectionBusy} />}
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-preview`} aria-labelledby={`${stepId}-tab-preview`} hidden={step !== 'preview'} className="class-agit-step-panel">
-                {step === 'preview' && <><div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>학생의 시선으로 둘러봐요</h2><p>전시실과 목록을 넘기며 제목·작품 순서·본문을 확인합니다.</p></div>
+                {step === 'preview' && <><div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>학생의 시선으로 둘러봐요</h2><p>전시실과 목록을 넘기며 제목·작품 순서·본문을 확인합니다.</p></div>
                     <div className="class-agit-preview-toolbar"><div className="class-agit-segmented" role="group" aria-label="미리보기 기준"><Button variant={previewMode === 'draft' ? 'primary' : 'ghost'} type="button" aria-pressed={previewMode === 'draft'} onClick={() => setPreviewMode('draft')}>초안 미리보기</Button>{persistence && draft.state === 'published' && <Button variant={previewMode === 'published' ? 'primary' : 'ghost'} type="button" aria-pressed={previewMode === 'published'} disabled={dirty} onClick={() => setPreviewMode('published')}>공개판 확인</Button>}</div>{publicationActions}</div>
                     {previewMode === 'published' && persistence?.renderPublication ? persistence.renderPublication(() => setPreviewMode('draft')) : <GalleryViewer key={draft.revision} exhibition={presentation} embedded onExit={() => selectStep('works')} />}
                 </>}
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-share`} aria-labelledby={`${stepId}-tab-share`} hidden={step !== 'share'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 04</span><h2>외부 읽기 공유를 준비해요</h2><p>전시에 담은 전체 작품의 외부 미리보기를 확인하고 전시 기간과 공유 주소를 관리합니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 05</span><h2>외부 읽기 공유를 준비해요</h2><p>전시에 담은 전체 작품의 외부 미리보기를 확인하고 전시 기간과 공유 주소를 관리합니다.</p></div>
                 {/* 외부 공유와 학급 공개는 다른 스위치다. 주소만 내고 학급에는 안 열어 둔 채 끝나는 일이 실제로 있었다. */}
                 {persistence && draft.state !== 'published' && <div className="class-agit-publish-reminder" role="status">
                     <p><strong>아직 학급에 공개하지 않았습니다.</strong> 외부 주소를 만들어도 우리 반 학생은 이 전시를 볼 수 없어요.</p>
                     {publishButton('primary')}
-                    {publishBlocked && <p>{!persistence.moduleEnabled ? '1단계에서 학급 학생 공개를 먼저 켜 주세요.' : !draft.items.length ? '2단계에서 작품을 담으면 공개할 수 있습니다.' : unassigned ? '2단계에서 미배정 작품을 전시실에 넣어 주세요.' : blockedWorks ? '2단계에서 상태가 바뀐 작품을 확인해 주세요.' : dirty ? '편집 내용을 먼저 저장해 주세요.' : '보관한 전시는 복원한 뒤 공개할 수 있습니다.'}</p>}
+                    {publishBlocked && <p>{!persistence.moduleEnabled ? '1단계에서 학급 학생 공개를 먼저 켜 주세요.' : !draft.items.length ? '3단계에서 작품을 담으면 공개할 수 있습니다.' : unassigned ? '3단계에서 미배정 작품을 전시실에 넣어 주세요.' : blockedWorks ? '3단계에서 상태가 바뀐 작품을 확인해 주세요.' : dirty ? '편집 내용을 먼저 저장해 주세요.' : '보관한 전시는 복원한 뒤 공개할 수 있습니다.'}</p>}
                 </div>}
                 {persistence ? (shareRevision !== null && (persistence.renderShare ? persistence.renderShare({ key: shareRevision, onStateChange: setShareState }) : <p className="class-agit-empty">이 샘플은 저장·학급 공개까지 점검합니다. 문집·외부 공유 통합 샘플에서 주소 설정을 확인할 수 있습니다.</p>))
                     : externalPreview ? <GalleryViewer exhibition={createGalleryPresentation(draft, 'external')} embedded onExit={() => setExternalPreview(false)} /> : <div className="class-agit-order-panel"><p>실제 링크를 만들지 않는 시안입니다. 전시에 담은 전체 작품의 제목과 지은이를 미리 봅니다.</p><Button variant="outline" type="button" onClick={() => setExternalPreview(true)}>외부 방문자로 미리보기 · {externalCount}편 ↗</Button></div>}
@@ -196,7 +204,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, students =
         </fieldset>
         {candidate && <ArtworkReader work={{ id: candidate.id, author: candidate.student_name, ...presentSource(candidate) }} onClose={() => setCandidate(null)} footer={<CandidateApply refreshing={selectedSources.has(candidate.id)} onAdd={() => {
             setDraft(editExhibition(draft, { type: selectedSources.has(candidate.id) ? 'refresh' : 'add', source: candidate }));
-            setCandidate(null); setMessage('작품을 전시에 담았습니다. 작품·전시실 구성에서 방 배정을 확인해 주세요.');
+            setCandidate(null); setMessage('작품을 전시에 담았습니다. 3단계 작품 담기에서 방 배정을 확인해 주세요.');
         }} />} />}
     </section>;
 }

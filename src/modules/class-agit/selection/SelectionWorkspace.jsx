@@ -4,20 +4,25 @@ import useConfirmDialog from '../../../components/common/useConfirmDialog.jsx';
 import SourceBrowser from './SourceBrowser.jsx';
 import MissionBulkPicker from './MissionBulkPicker.jsx';
 import OrderList from './OrderList.jsx';
+import RoomRail from './RoomRail.jsx';
 import { addExhibitionSources } from './model.js';
 import { normalizeRoomDraft, editRooms, orderedRoomItems, assertRoomDraft } from '../rooms.js';
 import { CLASS_AGIT_LIMITS as limits } from '../policy.js';
 import { getRoomVariants } from '../designs.js';
 
-export default function SelectionWorkspace({ draft: input, savedRevision, dirty, api, onDraft, onReadSource, onWithdraw, onBusyChange }) {
+/*
+ * `view` — 'rooms'(전시실 구성) 또는 'works'(전시실별 작품 담기). 전시관은 이 둘을 별도 단계로 쓴다(2026-10-20).
+ * 고른 전시실(`activeRoom`)은 두 단계가 같이 쓰도록 위에서 쥐어 줄 수 있다.
+ */
+export default function SelectionWorkspace({ draft: input, savedRevision, dirty, api, onDraft, onReadSource, onWithdraw, onBusyChange, view = 'works', activeRoom, onActiveRoom }) {
     const draft = normalizeRoomDraft(input);
-    // 큰 탭: 전시실을 만드는 일과 작품을 담는 일을 나눈다(2026-10-20). 기본은 작품 담기 — 전시실은 이미 하나 있다.
-    const [tab, setTab] = useState('works');
     const [mode, setMode] = useState('find');
     // 담는 방법. 주제째 담기가 기본이다 — 전시실 하나가 미션 하나인 경우가 흔하다.
     const [way, setWay] = useState('mission');
     const [startMission, setStartMission] = useState(null);
-    const [active, setActive] = useState(draft.rooms[0]?.id || null);
+    const [localActive, setLocalActive] = useState(draft.rooms[0]?.id || null);
+    const active = activeRoom !== undefined ? activeRoom : localActive;
+    const setActive = onActiveRoom || setLocalActive;
     const [error, setError] = useState('');
     const { ask, confirmDialog } = useConfirmDialog();
     const room = draft.rooms.find((entry) => entry.id === active);
@@ -52,18 +57,11 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
         const next = assertRoomDraft({ ...draft, items: [...draft.items.filter((item) => (item.roomId || null) !== roomId), ...nextItems], revision: draft.revision + 1 });
         onDraft({ ...next, items: orderedRoomItems(next) });
     };
-    return <div className="class-agit-selection-workspace">
-        {confirmDialog}
-        <div className="class-agit-workspace-tabs" role="tablist" aria-label="전시 구성 작업">
-            <button type="button" role="tab" aria-selected={tab === 'rooms'} onClick={() => setTab('rooms')}>🏛️ 전시실 만들기 <small>{draft.rooms.length}/{limits.maxRooms}개</small></button>
-            <button type="button" role="tab" aria-selected={tab === 'works'} onClick={() => setTab('works')}>📚 작품 담기 <small>{draft.items.length}/{limits.maxWorks}편</small></button>
-        </div>
-        {error && <p role="alert" className="class-agit-error">{error}</p>}
-        <div hidden={tab !== 'rooms'} role="tabpanel">
-        <div className="class-agit-selection-heading"><span>전시실을 추가하고 이름·소개·배경과 순서를 정해요. 작품은 `작품 담기` 탭에서 담아요.</span><Button variant="outline" type="button" disabled={draft.rooms.length >= limits.maxRooms} onClick={() => { try { addRoom(); } catch (reason) { setError(reason.message); } }}>+ 전시실</Button></div>
+    const roomsView = (<>
+        <div className="class-agit-selection-heading"><span /><Button variant="outline" type="button" disabled={draft.rooms.length >= limits.maxRooms} onClick={() => { try { addRoom(); } catch (reason) { setError(reason.message); } }}>+ 전시실</Button></div>
         <nav className="class-agit-room-nav" aria-label="편집할 전시실">
             {roomOptions.map((entry, index) => <button key={entry.id} type="button" aria-current={roomId === entry.id ? 'page' : undefined} onClick={() => setActive(entry.id)}>{index + 1}. {entry.title}<small>{entry.count}/{limits.worksPerRoom}편</small></button>)}
-            <button type="button" aria-current={!room ? 'page' : undefined} onClick={() => setActive(null)}>미배정 <small>{unassigned}편</small></button>
+            {unassigned > 0 && <button type="button" aria-current={!room ? 'page' : undefined} onClick={() => setActive(null)}>미배정 <small>{unassigned}편</small></button>}
         </nav>
         {room ? <div className="class-agit-room-settings">
             <label>전시실 주제<input value={room.title} maxLength={limits.roomTitleLength} onChange={(event) => attempt({ type: 'room-edit', id: room.id, patch: { title: event.target.value } })} /></label>
@@ -71,17 +69,14 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
             <label>전시실 배경<select value={room.variant} onChange={(event) => attempt({ type: 'room-edit', id: room.id, patch: { variant: Number(event.target.value) } })}>{getRoomVariants(draft.theme).map((variant, index) => <option key={index} value={index}>{variant.label}</option>)}</select></label>
             <div className="class-agit-header-actions"><Button variant="outline" size="sm" type="button" disabled={draft.rooms[0].id === room.id} onClick={() => attempt({ type: 'room-move', id: room.id, direction: -1 })}>전시실 앞으로</Button><Button variant="outline" size="sm" type="button" disabled={draft.rooms.at(-1).id === room.id} onClick={() => attempt({ type: 'room-move', id: room.id, direction: 1 })}>전시실 뒤로</Button><Button variant="outline" size="sm" type="button" onClick={async () => { if (await ask({ title: '이 전시실을 삭제할까요?', body: `${items.length}편의 작품은 미배정으로 옮깁니다. 학생 원글은 유지됩니다.`, confirmLabel: '미배정으로 옮기고 삭제' })) { if (attempt({ type: 'room-delete', id: room.id })) setActive(null); } }}>전시실 삭제</Button></div>
         </div> : <p>방을 정하지 않은 작품입니다. 담은 작품 정리에서 여러 편을 골라 전시실로 이동하세요.</p>}
-        </div>
-        <div className="class-agit-target-room" hidden={tab !== 'works'}>
-            <label>담을 전시실
-                <select value={roomId || ''} onChange={(event) => setActive(event.target.value || null)}>
-                    {roomOptions.map((entry, index) => <option key={entry.id} value={entry.id}>{index + 1}. {entry.title} ({entry.count}/{limits.worksPerRoom}편)</option>)}
-                    <option value="">미배정 ({unassigned}편)</option>
-                </select>
-            </label>
-            <span>남은 자리 {remaining}편 · 전시 전체 {draft.items.length}/{limits.maxWorks}편</span>
-        </div>
-        <div hidden={tab !== 'works'} role="tabpanel">
+    </>);
+    const worksView = (<div className="class-agit-works-layout">
+        <RoomRail rooms={roomOptions} items={draft.items} activeId={roomId} onPick={setActive} />
+        <div className="class-agit-works-main">
+            <div className="class-agit-works-target" role="status">
+                <strong>{room ? `${room.title}에 담는 중` : '미배정 작품'}</strong>
+                <span>남은 자리 {remaining}편 · 전시 전체 {draft.items.length}/{limits.maxWorks}편</span>
+            </div>
             <div className="class-agit-selection-modes" role="group" aria-label="작품 선택 작업">
                 <Button variant={mode === 'find' ? 'primary' : 'outline'} type="button" aria-pressed={mode === 'find'} onClick={() => setMode('find')}>작품 찾기</Button>
                 <Button variant={mode === 'order' ? 'primary' : 'outline'} type="button" aria-pressed={mode === 'order'} onClick={() => setMode('order')}>담은 작품 정리 · {items.length}편</Button>
@@ -118,6 +113,12 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
                 onAssign={(sourceIds, target) => change({ type: 'room-assign', sourceIds, roomId: target })}
                 savedRevision={savedRevision} dirty={dirty} onChange={replaceItems} onRestore={replaceItems}
                 onFind={() => setMode('find')} onReadSource={onReadSource} onWithdraw={onWithdraw} /></div>
+
         </div>
+    </div>);
+    return <div className="class-agit-selection-workspace">
+        {confirmDialog}
+        {error && <p role="alert" className="class-agit-error">{error}</p>}
+        {view === 'rooms' ? roomsView : worksView}
     </div>;
 }
