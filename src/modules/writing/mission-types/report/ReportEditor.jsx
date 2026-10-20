@@ -7,7 +7,6 @@ import {
     normalizeReportConfig,
     normalizeReportMeta,
     normalizeReportSections,
-    reportKindAllowsPhoto,
     reportKindOf,
     reportSectionsToContent,
     REPORT_CAPTION_MAX,
@@ -304,7 +303,7 @@ const ReportEditor = ({
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
                     const isUploading = uploadingSectionId === section.id;
                     // 글만 쓰는 칸(까닭·느낀 점)에는 사진 칸을 두지 않는다. 이미 사진이 있으면 그대로 보인다.
-                    const showPhoto = !kindDef || Boolean(section.image?.path) || reportKindAllowsPhoto(kind, index);
+                    const showPhoto = !kindDef || Boolean(section.image?.path) || section.photo !== false;
                     const observation = kindDef ? (section.body || '') : (section.body || section.image?.caption || '');
                     return (
                         <section className="report-editor__section" key={section.id}>

@@ -64,11 +64,13 @@ export const REPORT_KINDS = Object.freeze({
 const KIND_BY_ID = new Map(Object.entries(REPORT_KINDS));
 export const getReportKind = (kind) => KIND_BY_ID.get(kind) || null;
 
-/** 양식 종류가 있는 보고서에서 이 순서의 칸에 사진 칸을 보여 줄지. 종류가 없으면(예전 방식) 모든 칸. */
-export const reportKindAllowsPhoto = (kind, index) => {
+/** 이 순서의 칸에 사진 칸을 둘지: 선생님이 정한 값(flags)이 있으면 그것, 없으면 그 종류의 기본값.
+ *  종류가 없으면(예전 방식) 모든 칸에 둔다. */
+export const reportKindAllowsPhoto = (kind, index, flags = []) => {
     const def = getReportKind(kind);
     if (!def) return true;
-    return def.photoSlots.at(index) ?? true;
+    const set = Array.isArray(flags) ? flags.at(index) : undefined;
+    return typeof set === 'boolean' ? set : (def.photoSlots.at(index) ?? true);
 };
 
 /** 글에 저장된 종류(머리말 안)나 과제 설정의 종류. 없으면 null(예전 방식). */
@@ -126,12 +128,14 @@ const toBoundedInteger = (value, fallback, min, max) => {
 const cleanText = (value, maxLength) => String(value || '').slice(0, maxLength);
 
 export const normalizeReportConfig = (config = {}) => {
-    const defaultSections = Array.isArray(config.default_sections)
+    const rawFlags = Array.isArray(config.section_photos) ? config.section_photos : [];
+    const kept = Array.isArray(config.default_sections)
         ? config.default_sections
-            .map((title) => cleanText(title, 80).trim())
-            .filter(Boolean)
+            .map((title, index) => ({ title: cleanText(title, 80).trim(), flag: rawFlags.at(index) }))
+            .filter((item) => item.title)
             .slice(0, REPORT_MAX_SECTIONS)
         : [];
+    const defaultSections = kept.map((item) => item.title);
     const kind = getReportKind(config.kind)?.id || null;
     const kindDefaults = getReportKind(kind) ? [...getReportKind(kind).defaultSections] : [...DEFAULT_REPORT_SECTION_TITLES];
     const sectionTitles = defaultSections.length > 0
@@ -143,8 +147,13 @@ export const normalizeReportConfig = (config = {}) => {
         sectionTitles.push(`내용 ${sectionTitles.length + 1}`);
     }
 
+    // 종류가 있으면 칸마다 사진 칸이 있는지(선생님이 정함, 정하지 않았으면 그 종류의 기본값). 종류가 없으면 모두 true.
+    const customFlags = defaultSections.length > 0 ? kept.map((item) => item.flag) : [];
+    const sectionPhotos = sectionTitles.map((_, index) => reportKindAllowsPhoto(kind, index, customFlags));
+
     return {
         kind,
+        sectionPhotos,
         // 출처 쓰기는 선생님이 과제마다 켠다(기본 꺼짐).
         sourcesEnabled: config.sources_enabled === true,
         defaultSections: sectionTitles,
@@ -154,7 +163,7 @@ export const normalizeReportConfig = (config = {}) => {
     };
 };
 
-export const createReportSection = (heading = '', stableIndex = null) => ({
+export const createReportSection = (heading = '', stableIndex = null, photo = true) => ({
     id: stableIndex === null
         ? (globalThis.crypto?.randomUUID?.() || `section-${Date.now()}-${Math.random().toString(16).slice(2)}`)
         : `section-${stableIndex + 1}`,
@@ -163,6 +172,7 @@ export const createReportSection = (heading = '', stableIndex = null) => ({
     image: null,
     date: '',
     source: '',
+    photo,
 });
 
 const normalizeImage = (image, fallbackCaption = '') => {
@@ -187,7 +197,7 @@ export const normalizeReportSections = (structuredContent, content = '', config 
         : [];
     const sourceSections = savedSections.length > 0
         ? savedSections
-        : normalizedConfig.defaultSections.map((heading, index) => createReportSection(heading, index));
+        : normalizedConfig.defaultSections.map((heading, index) => createReportSection(heading, index, normalizedConfig.sectionPhotos.at(index) ?? true));
     const usedIds = new Set();
 
     const sections = sourceSections.slice(0, normalizedConfig.maxSections).map((section, index) => {
@@ -204,6 +214,7 @@ export const normalizeReportSections = (structuredContent, content = '', config 
             heading: cleanText(section?.heading, 80),
             body: cleanText(section?.body, 12000),
             image: normalizeImage(section?.image, bodyAsCaption ? section?.body : ''),
+            photo: typeof section?.photo === 'boolean' ? section.photo : (normalizedConfig.sectionPhotos.at(index) ?? true),
             date: cleanText(section?.date, REPORT_DATE_MAX),
             source: cleanText(section?.source, REPORT_SOURCE_MAX),
         };
@@ -215,7 +226,7 @@ export const normalizeReportSections = (structuredContent, content = '', config 
 
     while (sections.length < normalizedConfig.minSections) {
         const index = sections.length;
-        const added = createReportSection(normalizedConfig.defaultSections.at(index) || `내용 ${index + 1}`, index);
+        const added = createReportSection(normalizedConfig.defaultSections.at(index) || `내용 ${index + 1}`, index, normalizedConfig.sectionPhotos.at(index) ?? true);
         for (let n = index + 1; usedIds.has(added.id); n += 1) added.id = `section-${n}`;
         usedIds.add(added.id);
         sections.push(added);
@@ -239,6 +250,7 @@ export const buildReportStructuredContent = (sections, { kind = null, meta = nul
                 heading: cleanText(section.heading, 80),
                 body: cleanText(section.body, 12000),
                 image: normalizeImage(section.image, validKind ? '' : section.body),
+                ...(validKind ? { photo: section.photo !== false } : {}),
                 ...(date.trim() ? { date } : {}),
                 ...(source.trim() ? { source } : {}),
             };

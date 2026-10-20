@@ -69,7 +69,7 @@ test('저장: 머리말·날짜·출처는 있을 때만 들어가고, 칸 날�
     sections[1].source = '식물도감';
     const saved = buildReportStructuredContent(sections, { kind: 'observation', meta: { target: '강낭콩' } });
     assert.deepEqual(saved.meta, { kind: 'observation', target: '강낭콩' });
-    assert.deepEqual(Object.keys(saved.sections[0]), ['id', 'heading', 'body', 'image']);
+    assert.deepEqual(Object.keys(saved.sections[0]), ['id', 'heading', 'body', 'image', 'photo']);
     assert.equal(saved.sections[1].date, '10월 3일');
     assert.equal(saved.sections[1].source, '식물도감');
     assert.equal(reportKindOf(saved), 'observation');
@@ -137,4 +137,18 @@ test('칸 id 가 겹치거나 80자를 넘어도 서로 다른 80자 이하로 �
     assert.ok(ids.every((id) => id.length <= 80));
     const padded = normalizeReportSections({ sections: [{ id: 'section-2' }] }, '', {});
     assert.equal(new Set(padded.map((section) => section.id)).size, padded.length);
+});
+
+test('칸마다 사진 칸 여부: 선생님이 정한 값이 우선, 없으면 양식 기본값, 예전 방식은 모두 있음', () => {
+    assert.deepEqual(normalizeReportConfig(OBS).sectionPhotos, [false, true, false]);
+    assert.deepEqual(normalizeReportConfig({ ...OBS, default_sections: ['가', '나', '다'], section_photos: [true, true, false] }).sectionPhotos, [true, true, false]);
+    assert.deepEqual(normalizeReportConfig({ ...OBS, default_sections: ['가', '', '다'], section_photos: [false, true, true] }).sectionPhotos, [false, true]);
+    assert.deepEqual(normalizeReportConfig({ min_sections: 2 }).sectionPhotos, [true, true, true]);
+    const sections = normalizeReportSections(null, '', { ...OBS, default_sections: ['가', '나'], section_photos: [true, false] });
+    assert.deepEqual(sections.map((section) => section.photo), [true, false]);
+    const saved = buildReportStructuredContent(sections, { kind: 'observation', meta: { target: 'x' } });
+    assert.deepEqual(saved.sections.map((section) => section.photo), [true, false]);
+    // 저장된 글의 칸 값이 설정보다 우선(학생이 칸을 옮겨도 따라간다)
+    assert.equal(normalizeReportSections(saved, '', OBS)[1].photo, false);
+    assert.equal('photo' in buildReportStructuredContent(normalizeReportSections(null, '', {}), {}).sections[0], false);
 });

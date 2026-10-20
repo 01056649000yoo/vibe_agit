@@ -560,3 +560,86 @@
 .report-editor__section-layout--text {
     grid-template-columns: minmax(0, 1fr);
 }
+
+/* 교사 설정: 내용 칸 목록 */
+.report-template { display: grid; gap: var(--ui-space-2); }
+.report-template__title { display: block; color: var(--ui-ink); }
+.report-template__summary {
+    display: block;
+    width: fit-content;
+    margin-top: var(--ui-space-2);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-sm);
+    font-weight: 800;
+}
+.report-template__list { display: grid; gap: var(--ui-space-2); margin: 0; padding: 0; list-style: none; }
+.report-template__row {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--ui-border);
+    border-left: 5px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-muted);
+}
+.report-template__row--photo { border-left-color: #0F766E; background: #F0FDFA; }
+.report-template__number { color: var(--ui-primary); font-weight: 900; text-align: center; }
+.report-template__input {
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    background: #fff;
+    font: inherit;
+    font-weight: 700;
+}
+.report-template__kind { display: inline-flex; border: 1px solid #CBD5E1; border-radius: 10px; overflow: hidden; background: #fff; }
+.report-template__kind button {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: #475569;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+.report-template__kind button[aria-pressed="true"] { background: #0F766E; color: #fff; }
+.report-template__tools { display: inline-flex; gap: 5px; }
+.report-template__tools button {
+    min-width: 40px;
+    min-height: 40px;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+}
+.report-template__tools button:disabled { opacity: .4; cursor: default; }
+.report-template__tools .report-template__remove { padding: 0 10px; border-color: #FECACA; background: #FFF7F7; color: #B91C1C; }
+.report-template__add { display: flex; flex-wrap: wrap; gap: 8px; }
+.report-template__add button {
+    flex: 1 1 200px;
+    min-height: 44px;
+    padding: 10px;
+    border: 2px dashed var(--ui-border-strong);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    color: var(--ui-primary);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+}
+.report-template__add button:disabled { opacity: .5; cursor: default; }
+@media (max-width: 640px) {
+    .report-template__row { grid-template-columns: 30px minmax(0, 1fr); }
+    .report-template__kind, .report-template__tools { grid-column: 1 / -1; justify-content: flex-end; }
+    .report-template__kind button { flex: 1; }
+}

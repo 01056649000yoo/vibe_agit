@@ -6,6 +6,7 @@ import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/
 import {
     DEFAULT_REPORT_SECTION_TITLES,
     getReportKind,
+    reportKindAllowsPhoto,
     normalizeReportConfig,
     REPORT_KINDS,
     REPORT_MAX_IMAGES,
@@ -13,19 +14,22 @@ import {
 } from './reportContent';
 import { REPORT_IMAGE_MAX_EDGE, REPORT_IMAGE_MAX_STORED_BYTES } from './reportImageApi';
 import PeerReadingChoice, { PeerCommentSwitch, peerReadingErrorMessage, peerReadingLockReason } from '../../mission-form/PeerReadingChoice';
+import './reportWriting.css';
 import MissionFormStep, { MissionFormActions, MissionFormGroup } from '../../mission-form/MissionFormStep';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
 const getInitialForm = (mission) => {
-    const normalizedConfig = normalizeReportConfig(mission?.template_config);
+    // 새 과제는 관찰 보고서로 시작한다. 예전에 만든 과제(종류 없음)를 고칠 때는 예전 방식 그대로 둔다.
+    const initialKind = mission?.id ? normalizeReportConfig(mission?.template_config).kind : 'observation';
+    const normalizedConfig = normalizeReportConfig({ ...mission?.template_config, kind: initialKind });
     return {
         title: mission?.title || '',
         guide: mission?.guide || '',
-        // 새 과제는 관찰 보고서로 시작한다. 예전에 만든 과제(종류 없음)를 고칠 때는 예전 방식 그대로 둔다.
-        kind: mission?.id ? normalizedConfig.kind : 'observation',
+        kind: initialKind,
         sources_enabled: normalizedConfig.sourcesEnabled,
         default_sections: normalizedConfig.defaultSections,
+        section_photos: normalizedConfig.sectionPhotos,
         min_sections: mission?.template_config?.min_sections ?? mission?.min_paragraphs ?? 2,
         max_images: normalizedConfig.maxImages,
         min_chars: mission?.min_chars ?? 100,
@@ -54,51 +58,80 @@ const NumberSetting = ({ label, value, min, max, step = 1, onChange, description
     </label>
 );
 
-const SectionTemplateEditor = ({ sections, onChange, isMobile }) => {
+const SectionTemplateEditor = ({ sections, photos, withPhotoChoice, maxImages, onChange }) => {
+    // 칸 제목과 사진 칸 여부는 짝이라, 바꿀 때 두 목록을 함께 넘긴다.
+    const photoOf = (index) => photos.at(index) !== false;
+    const flags = sections.map((_, index) => photoOf(index));
+    const photoCount = flags.filter(Boolean).length;
     const updateTitle = (index, value) => {
         const next = [...sections];
         next.splice(index, 1, value.slice(0, 80));
-        onChange(next);
+        onChange(next, flags);
     };
+    const setPhoto = (index, value) => onChange(sections, flags.map((flag, itemIndex) => (itemIndex === index ? value : flag)));
     const move = (index, direction) => {
         const target = index + direction;
         if (target < 0 || target >= sections.length) return;
         const next = [...sections];
         const [movingSection] = next.splice(index, 1);
         next.splice(target, 0, movingSection);
-        onChange(next);
+        const nextFlags = [...flags];
+        const [movingFlag] = nextFlags.splice(index, 1);
+        nextFlags.splice(target, 0, movingFlag);
+        onChange(next, nextFlags);
     };
 
     return (
-        <section style={{ display: 'grid', gap: 'var(--ui-space-2)' }}>
+        <section className="report-template">
             <div>
-                <strong style={{ display: 'block', color: 'var(--ui-ink)' }}>학생에게 처음 열어줄 내용 칸</strong>
-                <span className="mission-step__hint">학생은 소제목을 고치고 칸을 더하거나 순서를 바꿀 수 있어요.</span>
+                <strong className="report-template__title">학생에게 처음 열어줄 내용 칸</strong>
+                <span className="mission-step__hint">
+                    칸마다 소제목을 쓰고{withPhotoChoice ? ', 글만 쓰는 칸인지 사진도 넣는 칸인지 고르세요.' : ' 순서를 정하세요.'} 학생은 칸을 더하거나 순서를 바꿀 수 있어요.
+                </span>
+                {withPhotoChoice && (
+                    <span className="report-template__summary" role="status">
+                        ✏️ 글만 {sections.length - photoCount}칸 · 📷 사진 있는 칸 {photoCount}칸
+                        {photoCount > maxImages ? ` — 사진은 최대 ${maxImages}장이라 사진 칸이 더 많아요` : ''}
+                    </span>
+                )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            <ol className="report-template__list">
                 {sections.map((section, index) => (
-                    <div key={`report-default-${index}`} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '42px minmax(0,1fr) auto', gap: '7px', alignItems: 'center', padding: '9px', borderRadius: 'var(--ui-radius-md)', background: 'var(--ui-surface-muted)', border: '1px solid var(--ui-border)' }}>
-                        <strong style={{ color: 'var(--ui-primary)', textAlign: 'center' }}>{index + 1}</strong>
+                    <li key={`report-default-${index}`} className={`report-template__row${withPhotoChoice && photoOf(index) ? ' report-template__row--photo' : ''}`}>
+                        <span className="report-template__number" aria-hidden="true">{index + 1}</span>
                         <input
+                            className="report-template__input"
                             value={section}
                             onChange={(event) => updateTitle(index, event.target.value)}
                             placeholder="내용 칸 소제목"
-                            style={{ minWidth: 0, padding: '10px 11px', border: '1px solid #CBD5E1', borderRadius: '10px', fontFamily: 'inherit' }}
+                            aria-label={`${index + 1}번 칸 소제목`}
                         />
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            <button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`${index + 1}번 기본 칸 위로 이동`} style={{ minWidth: '38px', minHeight: '38px', border: '1px solid #CBD5E1', borderRadius: '9px', background: '#F8FAFC', cursor: 'pointer' }}>↑</button>
-                            <button type="button" onClick={() => move(index, 1)} disabled={index === sections.length - 1} aria-label={`${index + 1}번 기본 칸 아래로 이동`} style={{ minWidth: '38px', minHeight: '38px', border: '1px solid #CBD5E1', borderRadius: '9px', background: '#F8FAFC', cursor: 'pointer' }}>↓</button>
-                            <button type="button" onClick={() => onChange(sections.filter((_, itemIndex) => itemIndex !== index))} disabled={sections.length <= 1} style={{ minHeight: '38px', padding: '0 10px', border: '1px solid #FECACA', borderRadius: '9px', background: '#FFF7F7', color: '#B91C1C', cursor: 'pointer', fontWeight: '800' }}>삭제</button>
+                        {withPhotoChoice && (
+                            <div className="report-template__kind" role="group" aria-label={`${index + 1}번 칸 종류`}>
+                                <button type="button" aria-pressed={!photoOf(index)} onClick={() => setPhoto(index, false)}>✏️ 글만</button>
+                                <button type="button" aria-pressed={photoOf(index)} onClick={() => setPhoto(index, true)}>📷 글+사진</button>
+                            </div>
+                        )}
+                        <div className="report-template__tools">
+                            <button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`${index + 1}번 칸 위로 이동`}>↑</button>
+                            <button type="button" onClick={() => move(index, 1)} disabled={index === sections.length - 1} aria-label={`${index + 1}번 칸 아래로 이동`}>↓</button>
+                            <button
+                                type="button"
+                                className="report-template__remove"
+                                onClick={() => onChange(sections.filter((_, itemIndex) => itemIndex !== index), flags.filter((_, itemIndex) => itemIndex !== index))}
+                                disabled={sections.length <= 1}
+                                aria-label={`${index + 1}번 칸 삭제`}
+                            >삭제</button>
                         </div>
-                    </div>
+                    </li>
                 ))}
+            </ol>
+            <div className="report-template__add">
+                <button type="button" onClick={() => onChange([...sections, `내용 ${sections.length + 1}`], [...flags, false])} disabled={sections.length >= REPORT_MAX_SECTIONS}>＋ 글만 쓰는 칸 추가</button>
+                {withPhotoChoice && (
+                    <button type="button" onClick={() => onChange([...sections, `내용 ${sections.length + 1}`], [...flags, true])} disabled={sections.length >= REPORT_MAX_SECTIONS}>＋ 사진도 넣는 칸 추가</button>
+                )}
             </div>
-            <button
-                type="button"
-                onClick={() => onChange([...sections, `내용 ${sections.length + 1}`])}
-                disabled={sections.length >= REPORT_MAX_SECTIONS}
-                style={{ width: '100%', minHeight: '44px', padding: '11px', border: '2px dashed var(--ui-border-strong)', borderRadius: 'var(--ui-radius-md)', background: 'var(--ui-surface)', color: 'var(--ui-primary)', cursor: 'pointer', fontWeight: '900' }}
-            >＋ 기본 내용 칸 추가</button>
         </section>
     );
 };
@@ -112,19 +145,25 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
     const changeKind = (nextKind) => setForm((current) => {
         const titlesOf = (kind) => (getReportKind(kind)?.defaultSections ?? DEFAULT_REPORT_SECTION_TITLES);
         const untouched = current.default_sections.join('\n') === titlesOf(current.kind).join('\n');
+        const nextTitles = untouched ? [...titlesOf(nextKind)] : current.default_sections;
         return {
             ...current,
             kind: nextKind,
             sources_enabled: nextKind ? current.sources_enabled : false,
-            default_sections: untouched ? [...titlesOf(nextKind)] : current.default_sections,
+            default_sections: nextTitles,
+            // 칸 제목을 그대로 둔 채 종류만 바꾸면 사진 칸도 그 종류의 기본값으로 바꾼다.
+            section_photos: untouched ? nextTitles.map((_, index) => reportKindAllowsPhoto(nextKind, index)) : current.section_photos,
         };
     });
     const kindDef = getReportKind(form.kind);
 
-    const normalizedDefaultSections = form.default_sections
-        .map((title) => title.trim())
-        .filter(Boolean)
+    // 빈 칸 제목은 버리되 사진 칸 여부는 제목과 짝으로 남긴다.
+    const keptSections = form.default_sections
+        .map((title, index) => ({ title: title.trim(), photo: form.section_photos.at(index) !== false }))
+        .filter((item) => item.title)
         .slice(0, REPORT_MAX_SECTIONS);
+    const normalizedDefaultSections = keptSections.map((item) => item.title);
+    const sectionPhotoFlags = keptSections.map((item) => item.photo);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -139,8 +178,10 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
 
         const minSections = Math.min(form.min_sections, REPORT_MAX_SECTIONS);
         const defaultSections = [...normalizedDefaultSections];
+        const sectionPhotos = [...sectionPhotoFlags];
         while (defaultSections.length < minSections) {
             defaultSections.push(`내용 ${defaultSections.length + 1}`);
+            sectionPhotos.push(true);
         }
 
         setSaving(true);
@@ -158,6 +199,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                     ...(form.kind ? { kind: form.kind } : {}),
                     ...(form.kind && form.sources_enabled ? { sources_enabled: true } : {}),
                     default_sections: defaultSections,
+                    ...(form.kind ? { section_photos: sectionPhotos } : {}),
                     min_sections: minSections,
                     max_sections: REPORT_MAX_SECTIONS,
                     max_images: clampNumber(form.max_images, 1, REPORT_MAX_IMAGES),
@@ -203,6 +245,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
             default_sections: normalizedDefaultSections.length > 0
                 ? normalizedDefaultSections
                 : [...DEFAULT_REPORT_SECTION_TITLES],
+            ...(form.kind && normalizedDefaultSections.length > 0 ? { section_photos: sectionPhotoFlags } : {}),
             min_sections: form.min_sections,
             max_sections: REPORT_MAX_SECTIONS,
             max_images: form.max_images,
@@ -263,7 +306,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                     </MissionFormStep>
 
                     <MissionFormStep number={2} optional title="글의 틀"description="학생이 글·사진 칸을 더하고 순서를 바꾸는 보고서 틀이에요. 처음 열어 줄 칸과 사진 수를 정해요.">
-                        <SectionTemplateEditor sections={form.default_sections} onChange={(value) => update('default_sections', value)} isMobile={isMobile} />
+                        <SectionTemplateEditor sections={form.default_sections} photos={form.section_photos} withPhotoChoice={Boolean(form.kind)} maxImages={form.max_images} onChange={(titles, photos) => setForm((current) => ({ ...current, default_sections: titles, section_photos: photos }))} />
  {form.kind && (
                             <MissionFormGroup title="📚 출처(참고 자료)">
                                 <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', cursor: 'pointer' }}>
