@@ -5,7 +5,9 @@ import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
 import {
     DEFAULT_REPORT_SECTION_TITLES,
+    getReportKind,
     normalizeReportConfig,
+    REPORT_KINDS,
     REPORT_MAX_IMAGES,
     REPORT_MAX_SECTIONS,
 } from './reportContent';
@@ -20,6 +22,9 @@ const getInitialForm = (mission) => {
     return {
         title: mission?.title || '',
         guide: mission?.guide || '',
+        // 새 과제는 관찰 보고서로 시작한다. 예전에 만든 과제(종류 없음)를 고칠 때는 예전 방식 그대로 둔다.
+        kind: mission?.id ? normalizedConfig.kind : 'observation',
+        sources_enabled: normalizedConfig.sourcesEnabled,
         default_sections: normalizedConfig.defaultSections,
         min_sections: mission?.template_config?.min_sections ?? mission?.min_paragraphs ?? 2,
         max_images: normalizedConfig.maxImages,
@@ -104,6 +109,17 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const closePreview = useCallback(() => setIsPreviewOpen(false), []);
     const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+    const changeKind = (nextKind) => setForm((current) => {
+        const titlesOf = (kind) => (getReportKind(kind)?.defaultSections ?? DEFAULT_REPORT_SECTION_TITLES);
+        const untouched = current.default_sections.join('\n') === titlesOf(current.kind).join('\n');
+        return {
+            ...current,
+            kind: nextKind,
+            sources_enabled: nextKind ? current.sources_enabled : false,
+            default_sections: untouched ? [...titlesOf(nextKind)] : current.default_sections,
+        };
+    });
+    const kindDef = getReportKind(form.kind);
 
     const normalizedDefaultSections = form.default_sections
         .map((title) => title.trim())
@@ -139,6 +155,8 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 mission_type: 'report',
                 input_template: 'report',
                 template_config: {
+                    ...(form.kind ? { kind: form.kind } : {}),
+                    ...(form.kind && form.sources_enabled ? { sources_enabled: true } : {}),
                     default_sections: defaultSections,
                     min_sections: minSections,
                     max_sections: REPORT_MAX_SECTIONS,
@@ -154,7 +172,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                 allow_comments: form.allow_comments,
                 peer_reading_enabled: form.peer_reading_enabled,
                 guide_questions: [],
-                tags: ['보고하는글쓰기', '보고서'],
+                tags: ['보고하는글쓰기', '보고서', ...(kindDef ? [kindDef.label.replace(' ', '')] : [])],
                 evaluation_rubric: form.evaluation_rubric,
                 is_archived: false,
             };
@@ -180,6 +198,8 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
         mission_type: 'report',
         input_template: 'report',
         template_config: {
+            ...(form.kind ? { kind: form.kind } : {}),
+            ...(form.kind && form.sources_enabled ? { sources_enabled: true } : {}),
             default_sections: normalizedDefaultSections.length > 0
                 ? normalizedDefaultSections
                 : [...DEFAULT_REPORT_SECTION_TITLES],
@@ -209,26 +229,59 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
 
             <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid var(--ui-border)', boxSizing: 'border-box' }}>
                 <form onSubmit={handleSubmit} className="mission-form-steps">
-                    <MissionFormStep number={1} title="무엇을 쓰나요?" description="보고할 주제와 학생에게 보여 줄 안내를 적어요.">
+                    <MissionFormStep number={1} title="무엇을 쓰나요?" description="보고서 양식과 주제, 학생에게 보여 줄 안내를 정해요.">
+                        <MissionFormGroup title="📋 어떤 보고서인가요?">
+                        <p className="mission-step__hint" style={{ margin: '0 0 8px' }}>양식에 맞는 머리말과 칸이 학생 화면에 만들어지고, 문집·글꽃 책방에도 이 양식으로 담겨요.</p>
+                        <div role="radiogroup" aria-label="보고서 양식" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                            {[...Object.values(REPORT_KINDS), { id: null, icon: '📋', label: '자유 보고서', summary: '머리말 없이 사진과 글 칸만 있는 예전 방식이에요.' }].map((option) => {
+                                const selected = (form.kind || null) === option.id;
+                                return (
+                                    <button
+                                        key={option.id || 'free'}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={selected}
+                                        onClick={() => changeKind(option.id)}
+                                        style={{ textAlign: 'left', padding: '14px', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', border: selected ? '2px solid var(--ui-primary)' : '1px solid var(--ui-border)', background: selected ? 'var(--ui-primary-soft, #F0FDFA)' : 'var(--ui-surface)', display: 'grid', gap: '4px' }}
+                                    >
+                                        <strong style={{ fontSize: '1.02rem', color: 'var(--ui-ink)' }}>{option.icon} {option.label}</strong>
+                                        <span style={{ fontSize: '0.82rem', color: 'var(--ui-ink-muted, #64748B)', lineHeight: 1.5 }}>{option.summary}</span>
+                                        {option.metaFields && <span style={{ fontSize: '0.74rem', color: 'var(--ui-ink-muted, #94A3B8)' }}>머리말: {option.metaFields.map((field) => field.label).join(' · ')}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        </MissionFormGroup>
                         <label className="mission-field-label">
                             보고할 주제
-                            <input className="mission-field-input" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="예: 우리 학교 주변 생태를 관찰해 보고합시다" />
+                            <input className="mission-field-input" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder={form.kind === 'research' ? '예: 우리 고장의 전통 음식을 조사해 보고합시다' : form.kind === 'observation' ? '예: 강낭콩이 자라는 모습을 관찰해 보고합시다' : '예: 우리 학교 주변 생태를 관찰해 보고합시다'} />
                         </label>
                         <label className="mission-field-label">
                             학생 안내
-                            <textarea className="mission-field-input" value={form.guide} onChange={(event) => update('guide', event.target.value)} placeholder="무엇을 관찰·조사하고 어떤 사진과 내용을 넣을지 안내해주세요." style={{ minHeight: '110px', resize: 'vertical', fontFamily: 'inherit' }} />
+                            <textarea className="mission-field-input" value={form.guide} onChange={(event) => update('guide', event.target.value)}  placeholder={form.kind === 'research' ? '무엇을 어떻게 조사하고 어떤 내용을 정리할지 안내해주세요.' : '무엇을 관찰하고 어떤 사진과 내용을 넣을지 안내해주세요.'} style={{ minHeight: '110px', resize: 'vertical', fontFamily: 'inherit' }} />
                         </label>
                     </MissionFormStep>
 
-                    <MissionFormStep number={2} optional title="글의 틀" description="학생이 글·사진 칸을 더하고 순서를 바꾸는 보고서 틀이에요. 처음 열어 줄 칸과 사진 수를 정해요.">
+                    <MissionFormStep number={2} optional title="글의 틀"description="학생이 글·사진 칸을 더하고 순서를 바꾸는 보고서 틀이에요. 처음 열어 줄 칸과 사진 수를 정해요.">
                         <SectionTemplateEditor sections={form.default_sections} onChange={(value) => update('default_sections', value)} isMobile={isMobile} />
+ {form.kind && (
+                            <MissionFormGroup title="📚 출처(참고 자료)">
+                                <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', cursor: 'pointer' }}>
+                                    <input type="checkbox" checked={form.sources_enabled} onChange={(event) => update('sources_enabled', event.target.checked)} style={{ marginTop: '4px', width: '18px', height: '18px' }} />
+                                    <span>
+                                        <strong style={{ display: 'block', color: 'var(--ui-ink)' }}>학생이 출처를 쓰게 하기</strong>
+                                        <span className="mission-step__hint">켜면 칸마다 출처(책 제목·누리집 주소 등)를 적는 칸이 생기고, 하나 이상 써야 제출돼요. 보고서 끝에는 참고 자료 목록이 모여요. {form.kind === 'research' ? '조사 보고서는 켜는 것을 권해요.' : '관찰 보고서는 꺼 두어도 괜찮아요.'}</span>
+                                    </span>
+                                </label>
+                            </MissionFormGroup>
+                        )}
                         <div className="mission-field-row">
-                            <NumberSetting label="최소 완성 칸" value={form.min_sections} min={1} max={REPORT_MAX_SECTIONS} onChange={(value) => update('min_sections', value)} description="내용을 써야 하는 최소 칸 수입니다." />
+                            <NumberSetting label="최소 완성 칸"value={form.min_sections} min={1} max={REPORT_MAX_SECTIONS} onChange={(value) => update('min_sections', value)} description="내용을 써야 하는 최소 칸 수입니다." />
                             <NumberSetting label="사진 수 제한" value={form.max_images} min={1} max={REPORT_MAX_IMAGES} onChange={(value) => update('max_images', value)} description="사진은 최대 3장까지 허용합니다." />
                         </div>
                     </MissionFormStep>
 
-                    <MissionFormStep number={3} title="쓰는 조건" description="분량, 함께 읽기, 포인트를 정해요.">
+                    <MissionFormStep number={3} title="쓰는 조건"description="분량, 함께 읽기, 포인트를 정해요.">
                         <MissionFormGroup title="📏 분량">
                             <NumberSetting label="최소 글자 수" value={form.min_chars} min={0} max={10000} step={10} onChange={(value) => update('min_chars', value)} description="모든 내용 칸의 글을 합쳐 계산합니다." />
                         </MissionFormGroup>
@@ -243,7 +296,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                         </MissionFormGroup>
                     </MissionFormStep>
 
-                    <MissionFormStep number={4} optional title="평가와 관리" description="평가 루브릭을 정해요.">
+                    <MissionFormStep number={4} optional title="평가와 관리"description="평가 루브릭을 정해요.">
                         <MissionFormGroup title="📊 글쓰기 평가 루브릭">
                             <RubricSettings
                                 bare
@@ -256,7 +309,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                     </MissionFormStep>
 
                     <MissionFormActions summary={[
-                        '보고하는 글',
+                        kindDef ? kindDef.label : '보고하는 글',
                         `${form.min_sections || 1}칸 이상`,
                         `${form.min_chars || 0}자 이상`,
                         `${form.base_reward || 0}P`,
