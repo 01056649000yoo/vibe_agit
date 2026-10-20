@@ -133,7 +133,7 @@ const MyShelfPostDetail = ({
                         <div className="writing-body" data-format={getWritingFormat(post.mission)} style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: 'var(--ui-text-lg)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {version.view === WRITING_VIEW.TEACHER ? (
                                 // 선생님이 고쳐 준 회차별 교정지와 그다음에 낸 글을 좌우로(승인 뒤에도 볼 수 있다).
-                                <TeacherEditRounds postId={post.id} />
+                                <TeacherEditRounds postId={post.id} format={getWritingFormat(post.mission)} />
                             ) : displayingReport ? (
                                 <ReportDocument structuredContent={post.structured_content} content={post.content} />
                             ) : showChanges ? (

@@ -435,7 +435,7 @@ const PostDetailViewer = ({
 
                         <main style={{
                             flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '40px',
-                            maxWidth: (showOriginal || !isFeedbackVisible) ? '1600px' : '1200px',
+                            maxWidth: (showOriginal || showTeacherEdits || !isFeedbackVisible) ? '1600px' : '1200px',
                             margin: '0 auto', width: '100%', boxSizing: 'border-box',
                             display: 'flex', gap: '40px', transition: 'all 0.3s'
                         }}>
@@ -536,7 +536,7 @@ const PostDetailViewer = ({
                                         </div>
                                     </div>
                                 ) : showTeacherEdits ? (
-                                    <TeacherEditRounds postId={selectedPost.id} />
+                                    <TeacherEditRounds postId={selectedPost.id} format={getWritingFormat(selectedMission)} />
                                 ) : showOriginalOnly ? (
                                     <WritingPresentationTrigger
                                         label="최초 제출 글 전체 화면으로 보기"

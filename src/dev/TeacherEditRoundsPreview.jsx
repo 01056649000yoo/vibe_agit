@@ -44,7 +44,7 @@ export default function TeacherEditRoundsPreview() {
             <section style={{ padding: 20, borderRadius: 16, background: 'var(--ui-surface)', border: '1px solid var(--ui-border)' }}>
                 <WritingVersionSwitch {...version} onChange={version.setView} />
                 {version.view === WRITING_VIEW.TEACHER
-                    ? <TeacherEditRounds key={count} rounds={rounds} />
+                    ? <TeacherEditRounds key={count} rounds={rounds} format="prose" />
                     : <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{version.view === WRITING_VIEW.FINAL ? last.edited_content : ROUNDS[0].base_content}</div>}
             </section>
         </div>

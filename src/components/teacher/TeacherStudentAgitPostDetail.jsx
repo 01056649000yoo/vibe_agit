@@ -135,7 +135,7 @@ const TeacherStudentAgitPostDetail = ({
 
                                 <div className={`teacher-agit-post-detail__content writing-body${displayingReport ? ' is-report' : ''}`} data-format={getWritingFormat(post.mission || post.writing_missions)}>
                                     {version.view === WRITING_VIEW.TEACHER ? (
-                                        <TeacherEditRounds postId={post.id} />
+                                        <TeacherEditRounds postId={post.id} format={getWritingFormat(post.mission || post.writing_missions)} />
                                     ) : displayingReport ? (
                                         <ReportDocument structuredContent={post.structured_content} content={post.content} />
                                     ) : showChanges ? (

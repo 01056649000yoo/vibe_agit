@@ -55,3 +55,16 @@ test('크게 보기 창에는 고친 곳 보기/숨기기 단추가 있고, 끄�
     // 끄면 처음 글·지금 글 원문 그대로(칠도 안내 띠도 없음)
     assert.match(viewer, /\(presentationVersion === 'original' \? selectedPost\.original_content : selectedPost\.content\)/);
 });
+
+test('선생님 교정 탭은 최종 글 칸과 같은 폭·두 칸 비율·글 모양을 쓴다', async () => {
+    const viewer = await read('src/components/teacher/PostDetailViewer.jsx');
+    assert.match(viewer, /showOriginal \|\| showTeacherEdits \|\| !isFeedbackVisible\) \? '1600px'/);
+    const css = await read('src/modules/writing/review/teacherEditRounds.css');
+    assert.match(css, /\.teacher-edits__pair\s*\{[^}]*repeat\(2, minmax\(0, 1fr\)\)[^}]*gap:\s*30px/);
+    const body = css.match(/\.teacher-edits__body\s*\{[^}]*\}/)?.[0] ?? '';
+    assert.match(body, /font-size:\s*1\.15rem/);
+    assert.match(body, /line-height:\s*1\.8/);
+    assert.match(body, /word-break:\s*break-word/);
+    const rounds = await read('src/modules/writing/review/TeacherEditRounds.jsx');
+    assert.equal((rounds.match(/writing-body" data-format=\{format\}/g) ?? []).length, 2, '두 글 칸 모두 산문 정렬 규칙(.writing-body)을 받아야 합니다.');
+});

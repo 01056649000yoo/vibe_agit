@@ -1,8 +1,8 @@
 /* 선생님 교정지 — 빨간 펜 교정 부호와 회차별 좌우 비교. 색은 토큰만 쓴다. */
 .teacher-proof__text {
     white-space: pre-wrap;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
+    /* 최종 글 칸과 같은 줄바꿈(글자 단위) — 단어 단위면 오른쪽 끝이 들쭉날쭉하다 */
+    word-break: break-word;
     /* 고친 말이 줄 위에 얹히므로 줄 사이를 넉넉히 */
     line-height: 2.4;
 }
@@ -54,6 +54,8 @@
 
 .teacher-edits {
     display: grid;
+    flex: 1;
+    align-content: start;
     gap: var(--ui-space-3);
 }
 
@@ -87,15 +89,23 @@
 
 .teacher-edits__pair {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: var(--ui-space-3);
+    /* 글 자세히 보기의 `③ 최종 글` 두 칸과 같은 가로 비율(같은 폭 두 칸, 간격 30px). 좁은 화면에서만 위아래로 쌓는다. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px;
+}
+
+@media (max-width: 720px) {
+    .teacher-edits__pair {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--ui-space-3);
+    }
 }
 
 .teacher-edits__sheet {
     min-width: 0;
-    padding: var(--ui-space-4);
+    padding: 24px;
     border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-md);
+    border-radius: 24px;
     background: var(--ui-surface);
 }
 
@@ -140,11 +150,11 @@
 
 .teacher-edits__body {
     color: var(--ui-ink);
-    font-size: var(--ui-text-md);
-    line-height: 1.9;
+    /* 최종 글 칸과 같은 글 크기·줄 간격·줄바꿈 */
+    font-size: 1.15rem;
+    line-height: 1.8;
     white-space: pre-wrap;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .teacher-edits__empty {

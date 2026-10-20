@@ -16,8 +16,9 @@ const formatDate = (value) => {
  *   오른쪽 — 그다음에 낸 글: 선생님 수정본에서 학생이 또 바꾼 곳에 형광펜. 아직 다시 내지 않았으면 선생님 수정본을 그대로.
  * 여러 번 고쳐 줬으면 위의 회차 단추로 오간다(처음엔 마지막 회차). 좁은 화면에서는 위아래로 쌓인다.
  * `rounds` 를 넘기면 불러오지 않는다(개발 미리보기).
+ * `format`(글 갈래, `getWritingFormat`)을 주면 글 칸이 최종 글 칸과 같은 글 모양(산문은 양쪽 정렬·글자 단위 줄바꿈)이 된다.
  */
-const TeacherEditRounds = ({ postId, rounds: givenRounds = null }) => {
+const TeacherEditRounds = ({ postId, rounds: givenRounds = null, format }) => {
     const fetched = useTeacherEditRounds(postId, givenRounds === null);
     const rounds = givenRounds ?? fetched.rounds;
     const [picked, setPicked] = useState(null);
@@ -57,7 +58,7 @@ const TeacherEditRounds = ({ postId, rounds: givenRounds = null }) => {
                     {titleChanged ? (
                         <h4 className="teacher-edits__title"><TeacherProofText before={current.base_title || ''} after={current.edited_title || ''} showLegend={false} /></h4>
                     ) : current.edited_title ? <h4 className="teacher-edits__title">{current.edited_title}</h4> : null}
-                    <div className="teacher-edits__body">
+                    <div className="teacher-edits__body writing-body" data-format={format}>
                         <TeacherProofText before={current.base_content || ''} after={current.edited_content || ''} />
                     </div>
                 </article>
@@ -68,7 +69,7 @@ const TeacherEditRounds = ({ postId, rounds: givenRounds = null }) => {
                             {resubmitted ? '형광펜: 선생님 글에서 또 바꾼 곳' : '아직 다시 내지 않았어요'}
                         </span>
                     </header>
-                    <div className="teacher-edits__body">
+                    <div className="teacher-edits__body writing-body" data-format={format}>
                         {resubmitted ? (
                             <WritingChangeHighlight before={current.edited_content || ''} after={current.next_content} variant="after" showLegend={false} />
                         ) : (current.edited_content || '')}

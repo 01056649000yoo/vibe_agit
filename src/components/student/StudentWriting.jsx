@@ -818,7 +818,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             // 선생님 교정지는 좌우로 넓게 놓아야 해서 편집칸을 덮지 않고 그 위에 따로 편다.
                             // 다 보면 `최종 글` 을 눌러 다시 고친다.
                             <div style={{ marginBottom: '20px' }}>
-                                <TeacherEditRounds postId={postId} />
+                                <TeacherEditRounds postId={postId} format={getWritingFormat(mission)} />
                             </div>
                         )}
                         {showOriginal && (
