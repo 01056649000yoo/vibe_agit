@@ -324,6 +324,7 @@
 .anthology-ways { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); align-items: center; margin-bottom: var(--ui-space-4); }
 .anthology-ways__detail { flex: 1 1 100%; margin: 0; font-size: var(--ui-text-sm); color: var(--ui-ink-muted); }
 .anthology-bulk__message { margin: 0 0 var(--ui-space-3); padding: var(--ui-space-3); background: var(--ui-success-soft); border-radius: var(--ui-radius-md); font-size: var(--ui-text-sm); font-weight: 700; color: var(--ui-ink-strong); }
+.anthology-bulk__hint { margin: 0 0 var(--ui-space-3); padding: var(--ui-space-3); border-left: 4px solid #355c46; background: #f0f6f1; border-radius: var(--ui-radius-md); font-size: var(--ui-text-sm); line-height: 1.6; color: var(--ui-ink-strong); }
 .anthology-bulk__filters { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); align-items: center; margin: var(--ui-space-3) 0; font-size: var(--ui-text-sm); }
 .anthology-bulk__capacity { margin-left: auto; color: var(--ui-ink-muted); }
 .anthology-bulk__list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--ui-space-2); }

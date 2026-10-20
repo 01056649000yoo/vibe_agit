@@ -51,6 +51,11 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
     return <section className="anthology-bulk" aria-label="주제째 담기">
         {error && <p className="class-agit-error" role="alert">{error}</p>}
         {message && <p className="anthology-bulk__message" role="status">{message}</p>}
+        <p className="anthology-bulk__hint">
+            💡 선생님이 <strong>승인한 글</strong>만 담을 수 있어요. 아직 쓰는 중인 미션은 글을 모두 승인한 뒤 <strong>지난 과제 보관함</strong>으로 보내고,
+            아래 <strong>미션 범위</strong>에서 <strong>지난 과제 보관함</strong>을 골라 담으면 빠짐이 없어요.
+            진행 중인 미션도 승인한 글만큼은 담을 수 있고, 나중에 승인한 글은 다시 와서 더 담을 수 있어요.
+        </p>
         <form className="class-agit-selection-search" onSubmit={(event) => { event.preventDefault(); setQuery(input.trim()); }}>
             <label>미션명 찾기<input value={input} maxLength={80} placeholder="오래된 미션도 찾아보세요" onChange={(event) => setInput(event.target.value)} /></label>
             <Button variant="outline" type="submit">미션 검색</Button>
@@ -65,19 +70,26 @@ export default function MissionBulkPicker({ classId, api, items, capacity, capac
         <BrowseStatus state={state} />
         <ul className="anthology-bulk__list">{state.page?.items.map((mission) => {
             const mine = items.filter((item) => item.missionId === mission.id).length;
-            const left = Math.max(0, mission.review_count - mine);
+            const total = mission.review_count;
+            const left = Math.max(0, total - mine);
+            // 담을 글이 없는 것(아직 승인한 글이 없음)과 다 담은 것은 다른 일이다 — 말을 다르게 한다.
+            const noneYet = mission.supported && total === 0;
+            const allAdded = mission.supported && total > 0 && left === 0;
             const here = Math.min(left, capacity);
             const busy = busyMission !== null;
             return <li key={mission.id}>
                 <div className="anthology-bulk__work">
                     <strong>{mission.title}</strong>
                     <small>{missionFormatLabel(mission.format)}
-                        {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''}{mission.archived ? ' · 지난 과제 보관함' : ''}</small>
-                    <small>{mission.supported ? `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}${missionFormatNote(mission.format)}` : '전시·문집 지원 준비 중'}</small>
+                        {mission.created_at ? ` · ${new Date(mission.created_at).toLocaleDateString('ko-KR')}` : ''} · {mission.archived ? '지난 과제 보관함' : '진행 중'}</small>
+                    <small>{!mission.supported ? '전시·문집 지원 준비 중'
+                        : noneYet ? (mission.archived ? '승인한 글이 없습니다' : '아직 승인한 글이 없어요 · 글을 승인하면 담을 수 있고, 미션을 마치면 지난 과제 보관함으로 보내 주세요')
+                        : allAdded ? `승인한 글 ${total}편을 모두 담았습니다`
+                        : `담을 수 있는 글 ${left}편${mine ? ` · 이미 담음 ${mine}편` : ''}${missionFormatNote(mission.format)}`}</small>
                 </div>
                 <div className="anthology-bulk__actions">
                     <Button variant="primary" type="button" disabled={!mission.supported || !here || busy} onClick={() => run(mission, here, onAdd)}>
-                        {working(mission) || (!mission.supported ? '담을 수 없음' : !left ? '다 담았습니다' : !capacity ? '자리 없음' : (addLabel ? addLabel(here) : `${here}편 담기`))}
+                        {working(mission) || (!mission.supported ? '담을 수 없음' : noneYet ? '담을 글 없음' : allAdded ? '다 담았습니다 ✓' : !capacity ? '자리 없음' : (addLabel ? addLabel(here) : `${here}편 담기`))}
                     </Button>
                     {newRoom && <Button variant="outline" type="button" disabled={!mission.supported || !left || busy || newRoom.disabled}
                         onClick={() => run(mission, newRoom.capacity, newRoom.onAdd)}>
