@@ -66,12 +66,13 @@ test('공개 작품 확인은 전시실 카드와 모달로 나눠 순서까지 
     assert.match(source, /class-agit-share-room-cards/);
     assert.match(source, /aria-haspopup="dialog"/);
     assert.match(source, /<Modal isOpen=\{!!open\}/);
-    // 표는 찾은 작품만 보여 주되, 순번은 방 안 실제 위치를 쓰고 찾는 중에는 순서를 잠근다.
-    assert.match(source, /open\.matched\.map/);
+    // 작품 찾기(검색)는 2026-10-20 에 뺐다 — 전시실 카드 10개 안에 작품이 20편씩이라 찾을 일이 없고 순서만 잠갔다.
+    assert.match(source, /open\.works\.map/);
+    assert.doesNotMatch(source, /작품 찾기|setQuery|matched/);
     assert.match(source, /const order = open\.works\.findIndex/);
     assert.match(source, /moveShareWorkOrder\(draft, item.itemId, order\)/);
     assert.match(source, /moveShareWorkOrder\(draft, item.itemId, order \+ 2\)/);
-    assert.match(source, /disabled=\{Boolean\(search\) \|\| order === 0\}/);
+    assert.match(source, /disabled=\{order === 0\}/);
     for (const column of ['작품 제목', '지은이', '전시 주제']) assert.ok(source.includes(column), `${column} 열이 없습니다.`);
 });
 test('샘링크 연결은 고정 목적지·비공개 도우미·기간 동기화를 지킨다', () => {

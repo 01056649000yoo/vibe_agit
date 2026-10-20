@@ -215,7 +215,6 @@
 @media (max-width: 900px) { .class-agit-room-settings { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .class-agit-room-settings label:nth-of-type(2) { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .class-agit-room-settings { grid-template-columns: 1fr; } }
 
-.class-agit-share-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
 .class-agit-share-found { margin: 0; align-self: center; font-weight: 700; color: var(--ui-ink-soft); }
 .class-agit-share-room-cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .class-agit-share-room-card { width: 100%; height: 100%; display: grid; gap: 6px; justify-items: start; text-align: left;
@@ -224,7 +223,7 @@
 .class-agit-share-room-no { font-size: var(--ui-text-xs); font-weight: 700; color: var(--ui-primary); }
 .class-agit-share-room-card strong { font-size: var(--ui-text-md); overflow-wrap: anywhere; }
 .class-agit-share-room-count { font-weight: 700; }
-.class-agit-share-room-peek, .class-agit-share-room-hit { color: var(--ui-ink-soft); overflow-wrap: anywhere; }
+.class-agit-share-room-peek { color: var(--ui-ink-soft); overflow-wrap: anywhere; }
 .class-agit-share-room-open { margin-top: 4px; font-weight: 700; color: var(--ui-primary); }
 .class-agit-share-room-editor { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
 .class-agit-share-room-title { display: grid; gap: 6px; font-weight: 700; }
@@ -239,7 +238,6 @@
 .class-agit-share-order span { min-width: 22px; font-weight: 700; }
 .class-agit-share-order button { padding: 2px 6px; min-width: 0; }
 .class-agit-share-room-note { margin: 0; color: var(--ui-ink-soft); }
-.class-agit-share-filters label { display: grid; gap: 6px; flex: 1 1 240px; }
 .class-agit-share-topic { min-width: 0; border: 1px solid var(--ui-border); border-radius: 12px; overflow: hidden; }
 .class-agit-share-table-scroll { overflow: auto; max-height: 480px; }
 .class-agit-share-topic table { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 640px; }
