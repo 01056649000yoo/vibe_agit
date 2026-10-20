@@ -37,7 +37,7 @@ export default function OrderList({ items, roomTitle = '미배정', roomOptions 
             <button type="button" className="class-agit-compact-title" onClick={() => setReading(index)}><strong>{item.title}</strong>{(item.sourceChanged || item.unavailable || item.revoked) && <small className="class-agit-error">{item.unavailable ? '원글 수록 불가' : item.revoked ? '수록 철회됨' : '원글 변경됨'}</small>}</button>
             <span className="class-agit-compact-author">{item.authorName}<small>{item.groupTitle}</small></span><span className="class-agit-room-label">{roomTitle}</span>
         </li>)}</ol>
-        {!items.length && <p className="class-agit-empty">작품 찾기에서 첫 작품을 담아 주세요.</p>}
+        {!items.length && <p className="class-agit-empty">작품 담기로 돌아가 첫 작품을 담아 주세요.</p>}
         <p className="class-agit-selection-hint">초안에서 빼기는 다음 공개판 갱신에 반영됩니다. 현재 공개판에서도 철회하려면 작품 제목을 열어 수록 철회를 선택하세요.</p>
         {work && <ArtworkReader work={{ ...work, id: workKey(work), author: work.authorName }} onClose={() => setReading(null)} footer={<div className="class-agit-management-confirmation">
             <nav aria-label="정리 작품 넘기기"><Button variant="outline" type="button" disabled={reading === 0} onClick={() => setReading((index) => index - 1)}>← 이전 작품</Button><Button variant="ghost" type="button" onClick={() => setReading(null)}>목록으로</Button><Button variant="outline" type="button" disabled={reading === items.length - 1} onClick={() => setReading((index) => index + 1)}>다음 작품 →</Button></nav>

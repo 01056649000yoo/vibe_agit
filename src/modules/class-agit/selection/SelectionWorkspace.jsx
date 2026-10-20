@@ -16,7 +16,7 @@ import { getRoomVariants } from '../designs.js';
  */
 export default function SelectionWorkspace({ draft: input, savedRevision, dirty, api, onDraft, onReadSource, onWithdraw, onBusyChange, view = 'works', activeRoom, onActiveRoom }) {
     const draft = normalizeRoomDraft(input);
-    const [mode, setMode] = useState('find');
+    const [pickedMode, setMode] = useState('find');
     // 담는 방법. 주제째 담기가 기본이다 — 전시실 하나가 미션 하나인 경우가 흔하다.
     const [way, setWay] = useState('mission');
     const [startMission, setStartMission] = useState(null);
@@ -28,6 +28,8 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
     const room = draft.rooms.find((entry) => entry.id === active);
     const roomId = room?.id || null;
     const items = draft.items.filter((item) => (item.roomId || null) === roomId);
+    // 정리 화면은 담긴 글이 있을 때만 연다 — 비어 있는 전시실로 옮겨 가면 저절로 담기 화면으로 돌아온다.
+    const mode = pickedMode === 'order' && items.length > 0 ? 'order' : 'find';
     const unassigned = draft.items.filter((item) => item.roomId == null).length;
     const roomOptions = draft.rooms.map((entry) => ({ ...entry, count: draft.items.filter((item) => item.roomId === entry.id).length }));
     // 지금 자리에 남은 수 — 전시실이면 그 방의 20편, 미배정이면 전시 전체 120편 기준이다.
@@ -76,11 +78,9 @@ export default function SelectionWorkspace({ draft: input, savedRevision, dirty,
             <div className="class-agit-works-target" role="status">
                 <strong>{room ? `${room.title}에 담는 중` : '미배정 작품'}</strong>
                 <span>남은 자리 {remaining}편 · 전시 전체 {draft.items.length}/{limits.maxWorks}편</span>
+                {mode === 'find' && items.length > 0 && <Button variant="outline" size="sm" type="button" onClick={() => setMode('order')}>순서·이동 정리 ({items.length}편)</Button>}
             </div>
-            <div className="class-agit-selection-modes" role="group" aria-label="작품 선택 작업">
-                <Button variant={mode === 'find' ? 'primary' : 'outline'} type="button" aria-pressed={mode === 'find'} onClick={() => setMode('find')}>작품 찾기</Button>
-                <Button variant={mode === 'order' ? 'primary' : 'outline'} type="button" aria-pressed={mode === 'order'} onClick={() => setMode('order')}>담은 작품 정리 · {items.length}편</Button>
-            </div>
+            {mode === 'order' && <div className="class-agit-back-to-add"><Button variant="ghost" size="sm" type="button" onClick={() => setMode('find')}>← 작품 담기로 돌아가기</Button></div>}
             <div hidden={mode !== 'find'}>
                 <div className="anthology-ways" role="group" aria-label="담는 방법">
                     <Button variant={way === 'mission' ? 'primary' : 'outline'} type="button" aria-pressed={way === 'mission'}

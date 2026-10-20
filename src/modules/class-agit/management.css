@@ -339,3 +339,6 @@
 .class-agit-management .class-agit-room-card__works li small { flex: none; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }
 .class-agit-management .class-agit-room-card__works .class-agit-room-card__more { color: var(--ui-ink-muted); }
 @media (max-width: 900px) { .class-agit-management .class-agit-works-layout { grid-template-columns: minmax(0, 1fr); } .class-agit-management .class-agit-room-rail { position: static; max-height: none; } }
+
+.class-agit-management .class-agit-works-target > button { margin-left: auto; }
+.class-agit-management .class-agit-back-to-add { margin: 0 0 var(--ui-space-3); }
