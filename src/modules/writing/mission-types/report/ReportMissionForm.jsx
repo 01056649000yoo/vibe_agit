@@ -155,6 +155,8 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
             section_photos: untouched ? nextTitles.map((_, index) => reportKindAllowsPhoto(nextKind, index)) : current.section_photos,
         };
     });
+    // 예전 방식(자유 보고서)으로 만든 과제를 고치는 중인지. 이때만 그 카드를 보여 준다.
+    const legacyEditing = Boolean(mission?.id) && !normalizeReportConfig(mission?.template_config).kind;
     const kindDef = getReportKind(form.kind);
 
     // 빈 칸 제목은 버리되 사진 칸 여부는 제목과 짝으로 남긴다.
@@ -275,8 +277,9 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                     <MissionFormStep number={1} title="무엇을 쓰나요?" description="보고서 양식과 주제, 학생에게 보여 줄 안내를 정해요.">
                         <MissionFormGroup title="📋 어떤 보고서인가요?">
                         <p className="mission-step__hint" style={{ margin: '0 0 8px' }}>양식에 맞는 머리말과 칸이 학생 화면에 만들어지고, 문집·글꽃 책방에도 이 양식으로 담겨요.</p>
-                        <div role="radiogroup" aria-label="보고서 양식" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
-                            {[...Object.values(REPORT_KINDS), { id: null, icon: '📋', label: '자유 보고서', summary: '머리말 없이 사진과 글 칸만 있는 예전 방식이에요.' }].map((option) => {
+                        <div role="radiogroup" aria-label="보고서 양식" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(' + (legacyEditing ? 3 : 2) + ', minmax(0, 1fr))', gap: '10px' }}>
+                            {/* 자유 보고서는 예전에 만든 과제를 고칠 때만 보인다. 새 과제는 관찰·조사 중에서 고른다. */}
+                            {[...Object.values(REPORT_KINDS), ...(legacyEditing ? [{ id: null, icon: '📋', label: '자유 보고서', summary: '머리말 없이 사진과 글 칸만 있는 예전 방식이에요.' }] : [])].map((option) => {
                                 const selected = (form.kind || null) === option.id;
                                 return (
                                     <button

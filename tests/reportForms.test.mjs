@@ -160,3 +160,9 @@ test('학생은 글만 칸에 사진을 더하거나 사진 칸을 뺄 수 있�
     assert.match(source, /updateSection\(section\.id, \{ photo: true \}\)/);
     assert.match(source, /이 칸은 글만 쓸래요/);
 });
+
+test('새 과제 만들기에는 자유 보고서 카드가 없고, 예전 과제를 고칠 때만 보인다', () => {
+    const source = readFileSync(new URL('../src/modules/writing/mission-types/report/ReportMissionForm.jsx', import.meta.url), 'utf8');
+    assert.match(source, /const legacyEditing = Boolean\(mission\?\.id\) && !normalizeReportConfig\(mission\?\.template_config\)\.kind;/);
+    assert.match(source, /\.\.\.\(legacyEditing \? \[\{ id: null, icon: '📋', label: '자유 보고서'/);
+});
