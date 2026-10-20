@@ -355,3 +355,21 @@
 
 .class-agit-management .anthology-bulk__list > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-3); }
 .class-agit-management .anthology-bulk__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); }
+
+/* 전시실별 현황 카드를 크게, 글 제목 대신 주제와 편수만(2026-10-20) */
+.class-agit-management .class-agit-works-layout { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+.class-agit-management .class-agit-room-rail { padding: var(--ui-space-4); }
+.class-agit-management .class-agit-room-rail > h3 { font-size: var(--ui-text-lg); }
+.class-agit-management .class-agit-room-rail > ul { gap: var(--ui-space-3); }
+.class-agit-management .class-agit-room-card__head { padding: var(--ui-space-4); gap: var(--ui-space-2) var(--ui-space-3); }
+.class-agit-management .class-agit-room-card__title { font-size: var(--ui-text-lg); }
+.class-agit-management .class-agit-room-card__count { font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-room-card__count b { font-size: var(--ui-text-xl); color: var(--ui-primary); }
+.class-agit-management .class-agit-room-card__bar { height: 8px; border-radius: 4px; }
+.class-agit-management .class-agit-room-card__empty { padding: 0 var(--ui-space-4) var(--ui-space-4); font-size: var(--ui-text-md); }
+.class-agit-management .class-agit-room-rail .class-agit-room-card__topics { list-style: none; margin: 0; padding: 0 var(--ui-space-4) var(--ui-space-4); display: grid; gap: var(--ui-space-2); }
+.class-agit-management .class-agit-room-card__topics li { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ui-space-3); padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-sm); background: var(--ui-surface-muted); font-size: var(--ui-text-md); color: var(--ui-ink-strong); }
+.class-agit-management .class-agit-room-card.is-active .class-agit-room-card__topics li { background: var(--ui-surface); }
+.class-agit-management .class-agit-room-card__topics li span { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.class-agit-management .class-agit-room-card__topics li b { flex: none; color: var(--ui-primary); font-weight: 800; }
+.class-agit-management .class-agit-room-card__topics .class-agit-room-card__more { justify-content: flex-start; background: transparent; color: var(--ui-ink-muted); font-size: var(--ui-text-sm); }

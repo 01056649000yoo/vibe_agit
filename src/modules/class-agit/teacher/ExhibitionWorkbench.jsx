@@ -170,7 +170,7 @@ export default function ExhibitionWorkbench({ activeClass, sourceApi, initialDra
             </div>
 
             <div role="tabpanel" id={`${stepId}-panel-works`} aria-labelledby={`${stepId}-tab-works`} hidden={step !== 'works'} className="class-agit-step-panel">
-                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>전시실별로 작품을 담아요</h2><p>왼쪽에서 전시실을 고르면 그 전시실에 어떤 글이 담겼는지 보이고, 오른쪽에서 미션이나 글을 골라 그 전시실에 담습니다.</p></div>
+                <div className="class-agit-step-heading"><span className="class-agit-eyebrow">STEP 03</span><h2>전시실별로 작품을 담아요</h2><p>왼쪽 카드에서 전시실을 고르면 그 전시실에 어떤 주제가 몇 편 담겼는지 보이고, 오른쪽에서 주제(미션)를 골라 그 전시실에 담습니다.</p></div>
                 {worksVisited && <SelectionWorkspace view="works" activeRoom={activeRoom} onActiveRoom={setActiveRoom} draft={draft} savedRevision={savedDraft?.revision} dirty={dirty} api={sourceApi}
                     onDraft={(next) => { setDraft(next); setMessage(''); setError(''); }} onReadSource={readSource}
                     onWithdraw={persistence ? (item) => runSavedAction('withdraw', item) : undefined} onBusyChange={setSelectionBusy} />}
