@@ -13,6 +13,7 @@ const NeighborBooksStudentPreview = lazy(() => import('./NeighborBooksStudentPre
 const NeighborAgitStudentPreview = lazy(() => import('./NeighborAgitStudentPreview.jsx'))
 const ClassAgitSelectionPreview = lazy(() => import('./ClassAgitSelectionPreview.jsx'))
 const ReportFormsPreview = lazy(() => import('./ReportFormsPreview.jsx'))
+const ReportReaderPreview = lazy(() => import('./ReportReaderPreview.jsx'))
 const ClassAgitReleasePreview = lazy(() => import('./ClassAgitReleasePreview.jsx'))
 const MyShelfPreview = lazy(() => import('./MyShelfPreview.jsx'))
 const NoticeComposerPreview = lazy(() => import('./NoticeComposerPreview.jsx'))
@@ -104,6 +105,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     Component: TeacherTourPreview,
   }),
   Object.freeze({ id: 'report-forms', icon: '📋', title: '보고서 양식(관찰·조사)', description: '관찰·조사·자유 보고서를 학생 편집 화면과 읽는 화면으로 나란히 본다. 머리말·칸 날짜·출처·사진 설명, 출처 켜기, 좁은 화면', Component: ReportFormsPreview }),
+  Object.freeze({ id: 'report-reader', icon: '📋', title: '전시관 보고서 읽기 화면', description: '사진이 든 관찰 보고서를 전시관 작품 읽기 화면으로 본다(가짜 사진·글, DB 없음)', Component: ReportReaderPreview }),
   Object.freeze({ id: 'class-agit-selection', icon: '🏡', title: '우리반 아지트 작품 찾기', description: '66개 미션·1,040편 합성 글로 검색·일괄 담기·120편 순서를 점검한다', Component: ClassAgitSelectionPreview }),
   Object.freeze({ id: 'class-agit-release', icon: '🏡', title: '우리반 아지트 문집·외부 공유', description: '문집 확정판·100편 출력·학생 서가·공유 해지/만료와 시범 학급을 한 흐름으로 점검한다', Component: ClassAgitReleasePreview }),
   Object.freeze({ id: 'class-agit-designs', icon: '🎨', title: '전시관·문집 디자인 8종', description: '전시실과 문집 표지 8종을 실제 컴포넌트로 비교한다', Component: ClassAgitDesignPreview }),
