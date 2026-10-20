@@ -56,7 +56,8 @@ export const REPORT_KINDS = Object.freeze({
     }),
 });
 
-export const getReportKind = (kind) => REPORT_KINDS[kind] || null;
+const KIND_BY_ID = new Map(Object.entries(REPORT_KINDS));
+export const getReportKind = (kind) => KIND_BY_ID.get(kind) || null;
 
 /** 글에 저장된 종류(머리말 안)나 과제 설정의 종류. 없으면 null(예전 방식). */
 export const reportKindOf = (structuredContent, config = {}) => (
@@ -68,13 +69,14 @@ export const reportKindOf = (structuredContent, config = {}) => (
 export const normalizeReportMeta = (meta, kind, { trim = true } = {}) => {
     const def = getReportKind(kind);
     if (!def) return {};
-    const out = {};
-    def.metaFields.forEach(({ key }) => {
-        const raw = String(meta?.[key] ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, REPORT_META_MAX);
-        const text = trim ? raw.replace(/\s+/g, ' ').trim() : raw;
-        if (raw.trim()) out[key] = text;
-    });
-    return out;
+    const source = meta && typeof meta === 'object' ? meta : {};
+    return Object.fromEntries(def.metaFields
+        .map(({ key }) => {
+            const raw = String(Reflect.get(source, key) ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, REPORT_META_MAX);
+            return [key, trim ? raw.replace(/\s+/g, ' ').trim() : raw, raw.trim()];
+        })
+        .filter(([, , check]) => check)
+        .map(([key, text]) => [key, text]));
 };
 
 export const readReportMeta = (structuredContent, config = {}) => {
@@ -86,9 +88,10 @@ export const readReportMeta = (structuredContent, config = {}) => {
 export const describeReportMeta = (kind, meta) => {
     const def = getReportKind(kind);
     if (!def) return [];
+    const source = meta && typeof meta === 'object' ? meta : {};
     return def.metaFields
-        .filter(({ key }) => String(meta?.[key] || '').trim())
-        .map(({ key, label }) => ({ key, label, value: meta[key] }));
+        .map(({ key, label }) => ({ key, label, value: String(Reflect.get(source, key) ?? '').trim() }))
+        .filter((row) => row.value);
 };
 
 /** 칸마다 적은 출처를 한 목록으로(같은 출처는 한 번만). */
@@ -118,7 +121,7 @@ export const normalizeReportConfig = (config = {}) => {
             .slice(0, REPORT_MAX_SECTIONS)
         : [];
     const kind = getReportKind(config.kind)?.id || null;
-    const kindDefaults = kind ? [...REPORT_KINDS[kind].defaultSections] : [...DEFAULT_REPORT_SECTION_TITLES];
+    const kindDefaults = getReportKind(kind) ? [...getReportKind(kind).defaultSections] : [...DEFAULT_REPORT_SECTION_TITLES];
     const sectionTitles = defaultSections.length > 0
         ? defaultSections
         : kindDefaults;
@@ -286,7 +289,7 @@ export const validateReportSubmission = ({ structuredContent, content, config = 
     }
     if (kind) {
         const meta = normalizeReportMeta(structuredContent?.meta, kind);
-        const missing = REPORT_KINDS[kind].metaFields.find(({ key, required }) => required && !meta[key]);
+        const missing = getReportKind(kind).metaFields.find(({ key, required }) => required && !Reflect.get(meta, key));
         if (missing) return `${missing.label}을(를) 적어주세요. 📋`;
         if (normalizedConfig.sourcesEnabled && collectReportSources(sections).length < 1) {
             return '출처(참고한 책이나 누리집)를 하나 이상 적어주세요. 📚';

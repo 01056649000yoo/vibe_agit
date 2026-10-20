@@ -1,5 +1,5 @@
 import { escapePdfHtml, renderPdfDocumentHeader } from '../../export/pdfRenderContract.js';
-import { normalizeReportSections } from './reportContent.js';
+import { collectReportSources, describeReportMeta, getReportKind, normalizeReportSections, readReportMeta } from './reportContent.js';
 import { collectReportImagePaths, loadReportImageUrls } from './reportExportImages.js';
 import { REPORT_PDF_MODE_FINAL, REPORT_PDF_MODE_GUIDED } from './reportPdfModes.js';
 
@@ -7,25 +7,53 @@ const getReportSections = (entry) => (
     normalizeReportSections(entry.structuredContent, entry.content)
 );
 
+// 양식 종류(관찰·조사)가 있는 보고서의 머리말·참고 자료. 예전 보고서는 둘 다 비어 있다.
+const getReportForm = (entry, sections) => {
+    const { kind, meta } = readReportMeta(entry.structuredContent);
+    return {
+        kindDef: getReportKind(kind),
+        metaRows: describeReportMeta(kind, meta),
+        sources: kind ? collectReportSources(sections) : [],
+    };
+};
+
+const renderReportMeta = (metaRows) => (metaRows.length > 0 ? `
+    <dl class="report-meta">
+        ${metaRows.map((row) => `<div><dt>${escapePdfHtml(row.label)}</dt><dd>${escapePdfHtml(row.value)}</dd></div>`).join('')}
+    </dl>` : '');
+
+const renderReportSources = (sources) => (sources.length > 0 ? `
+    <section class="report-sources">
+        <strong>참고 자료</strong>
+        <ol>${sources.map((text) => `<li>${escapePdfHtml(text)}</li>`).join('')}</ol>
+    </section>` : '');
+
+const renderPhotoCaption = (section) => (
+    section.image?.caption?.trim() ? `<div class="report-sheet__caption">${escapePdfHtml(section.image.caption.trim())}</div>` : ''
+);
+
 const renderGuidedReportEntry = (entry, imageUrls) => {
     const sections = getReportSections(entry);
+    const { kindDef, metaRows, sources } = getReportForm(entry, sections);
     return `
         <article class="pdf-entry pdf-entry--report pdf-entry--report-guided">
             ${renderPdfDocumentHeader(entry, '보고하는 글')}
             <div class="pdf-entry__rule"></div>
+            ${renderReportMeta(metaRows)}
             <main class="report-sheet">
                 ${sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
                     const question = section.heading?.trim() || '';
-                    const observation = section.body?.trim() || section.image?.caption?.trim() || '';
+                    const observation = section.body?.trim() || (kindDef ? '' : section.image?.caption?.trim() || '');
                     return `
                         <section class="report-sheet__section">
                             <div class="report-sheet__number">${index + 1}</div>
                             <div class="report-sheet__section-body">
                                 ${question ? `
                                     <div class="report-sheet__question">
-                                        <span class="report-sheet__question-label">교사의 질문</span>
+                                        <span class="report-sheet__question-label">${kindDef ? '소제목' : '교사의 질문'}</span>
                                         <h2>${escapePdfHtml(question)}</h2>
+                                        ${kindDef && section.date?.trim() ? `<span class="report-sheet__date">${escapePdfHtml(section.date.trim())}</span>` : ''}
                                     </div>` : ''}
                                 ${section.image?.path || observation ? `
                                     <div class="report-sheet__response${section.image?.path ? ' report-sheet__response--with-photo' : ''}">
@@ -36,6 +64,7 @@ const renderGuidedReportEntry = (entry, imageUrls) => {
                                                         ? `<img src="${escapePdfHtml(imageUrl)}" alt="${escapePdfHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
                                                         : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
                                                 </div>
+                                                ${kindDef ? renderPhotoCaption(section) : ''}
                                             </figure>` : ''}
                                         ${observation ? `
                                             <div class="report-sheet__answer">
@@ -47,20 +76,24 @@ const renderGuidedReportEntry = (entry, imageUrls) => {
                         </section>`;
                 }).join('')}
             </main>
+            ${renderReportSources(sources)}
         </article>`;
 };
 
 const renderFinalReportEntry = (entry, imageUrls) => {
-    const sections = getReportSections(entry)
+    const allSections = getReportSections(entry);
+    const { kindDef, metaRows, sources } = getReportForm(entry, allSections);
+    const sections = allSections
         .filter((section) => section.image?.path || section.body?.trim() || section.image?.caption?.trim());
     return `
         <article class="pdf-entry pdf-entry--report pdf-entry--report-final">
             ${renderPdfDocumentHeader(entry, '완성 보고서')}
             <div class="pdf-entry__rule"></div>
+            ${renderReportMeta(metaRows)}
             <main class="final-report">
                 ${sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
-                    const observation = section.body?.trim() || section.image?.caption?.trim() || '';
+                    const observation = section.body?.trim() || (kindDef ? '' : section.image?.caption?.trim() || '');
                     return `
                         <section class="final-report__section${section.image?.path ? ' final-report__section--with-photo' : ''}">
                             ${section.image?.path ? `
@@ -70,18 +103,41 @@ const renderFinalReportEntry = (entry, imageUrls) => {
                                             ? `<img src="${escapePdfHtml(imageUrl)}" alt="${escapePdfHtml(section.image.caption || `${index + 1}번째 보고서 사진`)}">`
                                             : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
                                     </div>
+                                    ${kindDef ? renderPhotoCaption(section) : ''}
                                 </figure>` : ''}
-                            ${observation ? `
+                            ${observation || (kindDef && section.heading?.trim()) ? `
                                 <div class="final-report__body">
-                                    <p>${escapePdfHtml(observation)}</p>
+                                    ${kindDef && section.heading?.trim() ? `<div class="final-report__heading">${escapePdfHtml(section.heading.trim())}${section.date?.trim() ? ` <span>${escapePdfHtml(section.date.trim())}</span>` : ''}</div>` : ''}
+                                    ${observation ? `<p>${escapePdfHtml(observation)}</p>` : ''}
                                 </div>` : ''}
                         </section>`;
                 }).join('')}
             </main>
+            ${renderReportSources(sources)}
         </article>`;
 };
 
 const REPORT_PDF_STYLES = `
+        .report-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.6mm 5mm;
+            margin: 0 0 4.5mm;
+            padding: 3mm 4mm;
+            border: .35mm solid #99F6E4;
+            border-radius: 2.5mm;
+            background: #F0FDFA;
+        }
+        .report-meta div { display: flex; gap: 2.5mm; min-width: 0; break-inside: avoid; }
+        .report-meta dt { flex: none; color: #0F766E; font-size: 9pt; font-weight: 800; }
+        .report-meta dd { margin: 0; min-width: 0; font-size: 10pt; overflow-wrap: anywhere; }
+        .report-sheet__date, .final-report__heading span { margin-left: 2mm; color: #64748B; font-size: 9pt; font-weight: 700; }
+        .report-sheet__caption { margin-top: 1.6mm; color: #475569; font-size: 8.6pt; text-align: center; line-height: 1.4; }
+        .final-report__heading { margin-bottom: 1.6mm; color: #0F766E; font-size: 11pt; font-weight: 900; }
+        .report-sources { margin-top: 5mm; padding-top: 3mm; border-top: .35mm solid #CBD5E1; break-inside: avoid; }
+        .report-sources strong { color: #0F766E; font-size: 10pt; }
+        .report-sources ol { margin: 1.6mm 0 0; padding-left: 5mm; font-size: 9.4pt; line-height: 1.5; color: #334155; }
+        .report-sources li { overflow-wrap: anywhere; }
         .pdf-entry--report .pdf-entry__kicker { color: #0F766E; }
         .pdf-entry--report .pdf-entry__rule { background: #14B8A6; }
         .report-sheet { display: block; }
