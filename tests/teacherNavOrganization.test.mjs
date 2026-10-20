@@ -14,9 +14,9 @@ test('교사 상단 메뉴는 글쓰기 → 학급 관리 → 확장 기능 → 
         TEACHER_NAV_GROUPS.map((group) => group.id),
         [
             'writing',
-            'writing-lab',
             'class-agit',
             'neighbor-agit',
+            'writing-lab',
             'operations',
             'students',
             'footprints',

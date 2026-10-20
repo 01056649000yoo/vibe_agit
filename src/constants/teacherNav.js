@@ -27,14 +27,6 @@ export const TEACHER_NAV_GROUPS = [
         ]
     },
     {
-        id: 'writing-lab',
-        label: '글쓰기 연구소',
-        icon: '🧪',
-        navSection: 'writing',
-        launchHref: '/lab/dashboard',
-        tabs: []
-    },
-    {
         id: 'class-agit',
         label: '우리반 아지트',
         icon: '🏡',
@@ -51,6 +43,15 @@ export const TEACHER_NAV_GROUPS = [
         navSection: 'writing',
         defaultTab: 'neighbor-agit',
         tabs: [{ id: 'neighbor-agit', label: '모두의 아지트(Beta)' }]
+    },
+    {
+        // 필요한 선생님만 쓰는 메뉴라 글쓰기 갈래의 맨 끝에 둔다(2026-10-20 선생님 요청 — 모두의 아지트 앞에 있었다).
+        id: 'writing-lab',
+        label: '글쓰기 연구소',
+        icon: '🧪',
+        navSection: 'writing',
+        launchHref: '/lab/dashboard',
+        tabs: []
     },
     {
         id: 'operations',

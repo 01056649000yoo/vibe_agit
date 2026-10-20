@@ -12,19 +12,19 @@ const [teacherNav, dashboard, hub, uiPreview, preparationRoadmap, preparationRoa
     readFile('src/components/common/PreparationRoadmap.css', 'utf8')
 ]);
 
-test('우리반 아지트 beta는 글쓰기 연구소 바로 옆의 내부 교사 탭이다', () => {
+test('우리반 아지트 beta는 글쓰기 갈래 안의 내부 교사 탭이고 글쓰기 연구소는 그 뒤(맨 끝)에 있다', () => {
+    const classAgitIndex = teacherNav.indexOf("id: 'class-agit'");
     const labIndex = teacherNav.indexOf("id: 'writing-lab'");
-    const classAgitIndex = teacherNav.indexOf("id: 'class-agit'", labIndex);
     const operationsIndex = teacherNav.indexOf("id: 'operations'");
 
-    assert.ok(labIndex > -1 && labIndex < classAgitIndex && classAgitIndex < operationsIndex);
-    const labGroup = teacherNav.slice(labIndex, classAgitIndex);
+    assert.ok(classAgitIndex > -1 && classAgitIndex < labIndex && labIndex < operationsIndex);
+    const labGroup = teacherNav.slice(labIndex, operationsIndex);
     assert.match(labGroup, /label: '글쓰기 연구소'/);
     assert.doesNotMatch(labGroup, /beta/i);
     // 2026-09-14: `BETA` 배지를 뗐다. 이름과 기본 탭만 남는다.
     assert.match(teacherNav, /id: 'class-agit'[\s\S]*label: '우리반 아지트'[\s\S]*defaultTab: 'class-agit'/);
     assert.doesNotMatch(teacherNav, /badge: 'BETA'/);
-    const classAgitGroup = teacherNav.slice(classAgitIndex, operationsIndex);
+    const classAgitGroup = teacherNav.slice(classAgitIndex, labIndex);
     assert.doesNotMatch(classAgitGroup, /launchHref/);
     assert.match(dashboard, /lazy\(\(\) => import\('\.\/TeacherClassAgitHub'\)\)/);
     assert.match(dashboard, /\['class-agit', 'class-agit-books'\]\.includes\(visibleTab\)[\s\S]*<TeacherClassAgitHub activeClass=\{activeClass\}/);
