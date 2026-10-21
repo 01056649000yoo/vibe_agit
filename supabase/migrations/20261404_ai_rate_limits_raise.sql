@@ -10,6 +10,8 @@
 --   teacher_ai           20 → 60   교사 한 명 기준
 -- 그대로 두는 것: 글 한 편에 맞춤법 검사 한 번(교육 목적), 학생 한 명의 10분 상한, 안내서 AI 길잡이 하루 한도.
 -- 범위 이름·서비스 역할 확인·동시 요청 잠금·기록 표는 그대로다.
+BEGIN;
+
 CREATE OR REPLACE FUNCTION public.consume_ai_request_v1(p_actor_id UUID, p_scope TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -44,3 +46,5 @@ $$;
 
 REVOKE ALL ON FUNCTION public.consume_ai_request_v1(UUID, TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.consume_ai_request_v1(UUID, TEXT) TO service_role;
+
+COMMIT;

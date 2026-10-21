@@ -3,6 +3,7 @@
  *
  *   npm run migrate:status   아직 적용 안 된 파일 보기 (DB 를 건드리지 않는다)
  *   npm run migrate          안 된 것만 순서대로 적용하고 기록
+ *   npm run migrate -- --only <파일.sql>   대기 중인 것 가운데 지정한 파일만 적용(보류한 것을 건너뛸 때)
  *
  * 왜 필요한가:
  *   이 저장소는 마이그레이션을 손으로 적용하고 여러 모델이 번갈아 작업한다.
@@ -54,7 +55,19 @@ try {
     process.exit(1);
 }
 
-const pending = files.filter((f) => !applied.has(f));
+const allPending = files.filter((f) => !applied.has(f));
+// `--only <파일>` — 대기 중인 것 가운데 **지정한 파일만** 적용한다. 보류한 마이그레이션이 대기열에 섞여 있을 때
+// `npm run migrate` 가 그것까지 적용해 버리는 일을 막는다(2026-10-21: 계정 이관은 보류, AI 상한만 적용).
+const onlyIndex = process.argv.indexOf('--only');
+const only = onlyIndex >= 0 ? process.argv.slice(onlyIndex + 1).filter((arg) => !arg.startsWith('--')) : null;
+if (only) {
+    const unknown = only.filter((name) => !allPending.includes(name));
+    if (!only.length || unknown.length) {
+        console.error(`--only 로 지정한 파일은 적용 대기 중이어야 합니다: ${unknown.join(', ') || '(파일 이름이 없습니다)'}`);
+        process.exit(1);
+    }
+}
+const pending = only ? allPending.filter((f) => only.includes(f)) : allPending;
 // 이미 적용된 파일이 그 뒤에 수정된 경우. 자동으로 다시 적용하지 않는다 — 사람이 판단할 일이다.
 const drifted = files.filter((f) => applied.has(f) && applied.get(f) !== checksumOf(f) && applied.get(f) !== '(신규)');
 
