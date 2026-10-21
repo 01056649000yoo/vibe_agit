@@ -8,7 +8,6 @@ import AdminAnnouncementManager from './AdminAnnouncementManager';
 import AdminUsagePanel from './AdminUsagePanel';
 import AdminStudentActivityPanel from './AdminStudentActivityPanel';
 import AdminDormantPanel from './AdminDormantPanel';
-import AdminTeacherTransferPanel from './AdminTeacherTransferPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
@@ -43,8 +42,7 @@ const TAB_GROUPS = [
         tabs: [
             { id: 'active', label: '전체 명단' },
             { id: 'pending', label: '승인 대기' },
-            { id: 'dormant', label: '장기 미접속' },
-            { id: 'transfer', label: '계정 이관' }
+            { id: 'dormant', label: '장기 미접속' }
         ]
     },
     {
@@ -883,13 +881,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 await usage.refresh({ ...options, recompute: true });
                             }}
                         />
-                    </KeepAlivePanel>
-
-                    <KeepAlivePanel
-                        active={currentTab === 'transfer'}
-                        visited={visitedTabs.has('transfer')}
-                    >
-                        <AdminTeacherTransferPanel />
                     </KeepAlivePanel>
 
                     <KeepAlivePanel
