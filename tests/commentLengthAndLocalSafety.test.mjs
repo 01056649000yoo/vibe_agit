@@ -41,3 +41,17 @@ test('vibe-ai Edge 함수는 200자 초과 및 비속어를 로컬에서 선제 
     assert.match(edgeSource, /containsInappropriateWords/);
     assert.match(edgeSource, /친구에게 상처를 주는 말 대신 따뜻하고 고운 말을 써 주세요\./);
 });
+
+test('내 댓글이 확인 중이면 짧게 두 번만 다시 불러온다(상시 폴링 아님)', async () => {
+  const source = await readFile('src/hooks/usePostInteractions.js', 'utf8');
+  // 작성·수정 직후에만 시작하고, 4초 뒤 한 번 · 6초 뒤 한 번이 전부다.
+  assert.match(source, /startFollowUp\(2\)/);
+  assert.match(source, /armFollowUp\(4000\)/);
+  assert.match(source, /armFollowUp\(6000\)/);
+  assert.match(source, /followUpRef\.current\.left > 0/);
+  // 탭이 가려져 있으면 부르지 않고, 화면을 떠나면 타이머를 지운다.
+  assert.match(source, /if \(!document\.hidden\) void fetchRef\.current\?\.\(\)/);
+  assert.match(source, /window\.clearTimeout\(followUpRef\.current\.timer\)/);
+  // 주기적으로 도는 setInterval 은 없다.
+  assert.doesNotMatch(source, /setInterval\(/);
+});

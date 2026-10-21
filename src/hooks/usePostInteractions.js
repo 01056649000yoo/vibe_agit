@@ -46,6 +46,23 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
     const isFetchingRef = useRef(false);
     const lastFetchAtRef = useRef(0);
     const latestContextRef = useRef({ classmates, studentId, studentName });
+    // 내 댓글이 `확인 중이에요` 인 동안 **짧게 두 번만** 다시 불러온다(2026-10-21 — 승인돼도 나갔다 들어와야 보였다).
+    // 상시 폴링이 아니다: 내가 댓글을 달았거나 대기 중인 내 댓글이 있을 때만, 4초 뒤와 6초 뒤(최대 2회 추가 RPC).
+    // 이웃 아지트가 이미 쓰는 "검사 대기면 창이 열린 채 몇 초 뒤 상세 RPC 를 더 부른다" 와 같은 방식이다.
+    const fetchRef = useRef(null);
+    const followUpRef = useRef({ timer: null, left: 0 });
+    const armFollowUp = useCallback((delay) => {
+        window.clearTimeout(followUpRef.current.timer);
+        followUpRef.current.timer = window.setTimeout(() => {
+            followUpRef.current.timer = null;
+            // 탭이 가려져 있으면 부르지 않는다. 돌아오면 화면 복귀 갱신이 한다.
+            if (!document.hidden) void fetchRef.current?.();
+        }, delay);
+    }, []);
+    const startFollowUp = useCallback((attempts = 2) => {
+        followUpRef.current.left = attempts;
+        armFollowUp(4000);
+    }, [armFollowUp]);
 
     const shouldShowComment = useCallback((comment) => {
         const isTeacherComment = !!comment.teacher_id && !comment.student_id;
@@ -119,6 +136,14 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     .filter(shouldShowComment)
             );
 
+            // 아직 확인 중인 내 댓글이 있으면 남은 횟수만큼만 다시 불러온다(위 설명).
+            const myPending = normalizedComments.some((comment) => comment.status === 'pending'
+                && comment.student_id === latestContextRef.current.studentId);
+            if (myPending && followUpRef.current.left > 0) {
+                followUpRef.current.left -= 1;
+                armFollowUp(6000);
+            }
+
             // 탭을 닫거나 통신이 끊겨 대기열을 못 깨운 **내** 댓글이 있으면 한 번만 다시 알린다.
             // 서버 작업기 하나가 전역 대기열을 이어서 비우므로 댓글마다 반복 호출할 필요는 없다.
             normalizedComments
@@ -134,7 +159,8 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             isFetchingRef.current = false;
             setLoading(false);
         }
-    }, [postId, shouldShowComment, studentName]);
+    }, [postId, shouldShowComment, studentName, armFollowUp]);
+    useEffect(() => { fetchRef.current = fetchInteractions; }, [fetchInteractions]);
     useEffect(() => {
         void fetchInteractions();
         if (!postId) return undefined;
@@ -151,6 +177,8 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         return () => {
             window.removeEventListener('focus', refreshOnReturn);
             document.removeEventListener('visibilitychange', refreshOnReturn);
+            window.clearTimeout(followUpRef.current.timer);
+            followUpRef.current = { timer: null, left: 0 };
         };
     }, [fetchInteractions, postId]);
 
@@ -237,6 +265,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
             // 응답을 기다리지 않는다. 서버는 즉시 202를 돌려주고 전역 3칸 대기열에서 검사한다.
             void checkContentSafety('', { commentId: newCommentId });
+            startFollowUp(2);
             return true;
         } catch (err) {
             console.error('댓글 등록 실패:', err.message);
@@ -245,7 +274,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             void fetchInteractions();
             return false;
         }
-    }, [postId, studentId, studentName, fetchInteractions]);
+    }, [postId, studentId, studentName, fetchInteractions, startFollowUp]);
 
     const updateComment = useCallback(async (commentId, newContent) => {
         if (!newContent.trim() || !studentId) return;
@@ -275,6 +304,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     : comment
             )));
             void checkContentSafety('', { commentId });
+            startFollowUp(2);
             return true;
         } catch (err) {
             console.error('댓글 수정 실패:', err.message);
@@ -282,7 +312,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             void fetchInteractions();
             return false;
         }
-    }, [studentId, fetchInteractions]);
+    }, [studentId, fetchInteractions, startFollowUp]);
 
     const deleteComment = useCallback(async (commentId) => {
         if (!commentId) return false;
