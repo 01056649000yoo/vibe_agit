@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -64,8 +65,11 @@ test('브라우저는 pending 저장 뒤 대기열만 깨우고 포인트·AI �
 
 test('브라우저 안내와 서버 차단은 같은 짧은 댓글 기준을 쓴다', () => {
     assert.deepEqual(extractLowEffortComments(interactions), extractLowEffortComments(edge));
-    assert.match(interactions, /compact\.length < 8/);
-    assert.match(edge, /compact\.length < 8/);
+    // 길이 기준(공백 빼고 8자)은 서버·브라우저가 같은 파일(`_shared/commentQuality.js`)을 쓴다(2026-10-21).
+    const shared = readFileSync('supabase/functions/_shared/commentQuality.js', 'utf8');
+    assert.match(shared, /compact\.length < 8/);
+    assert.match(interactions, /commentTextIssue/);
+    assert.match(edge, /commentTextIssue/);
     assert.match(edge, /slice\(0, 200\)/);
 });
 

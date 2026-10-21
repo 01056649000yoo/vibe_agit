@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 // AI 모델과 그 모델이 받는 매개변수는 _shared/model.js 한 곳에서만 정한다.
 import { buildChatRequest } from '../_shared/model.js'
+import { commentTextIssue, looksLikeGibberish } from '../_shared/commentQuality.js'
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .split(',')
@@ -53,17 +54,7 @@ const jsonResponse = (body: unknown, status: number, headers: Record<string, str
  *  ① 홀로 선 자모(ㅁ, ㅓ …) 비율이 한글 글자의 15% 이상 — `ㅋㅋ`, `ㅠㅠ` 정도는 통과한다.
  *  ② 띄어쓰기 없이 한글이 25자 넘게 이어짐 — 운영 글 40편을 재어 보니 가장 긴 것이 18자였다(중앙값 6).
  */
-function looksLikeGibberish(text: string): boolean {
-    const hangul = text.match(/[가-힣ㄱ-ㅎㅏ-ㅣ]/g) ?? []
-    if (hangul.length < 20) return false
-
-    const loneJamo = text.match(/[ㄱ-ㅎㅏ-ㅣ]/g) ?? []
-    if (loneJamo.length / hangul.length >= 0.15) return true
-
-    const longestRun = (text.match(/[가-힣ㄱ-ㅎㅏ-ㅣ]+/g) ?? [])
-        .reduce((longest, chunk) => Math.max(longest, chunk.length), 0)
-    return longestRun >= 25
-}
+// 판정 본문은 `_shared/commentQuality.js` 한 곳에 있다(댓글 검사와 같은 기준을 쓰려고 옮겼다).
 
 const LOW_EFFORT_COMMENTS = new Set([
     '와', '우와', '오', '오오', '우웅', '헉', '대박', '굿', 'good', 'nice', '멋져', '최고', '짱',
@@ -94,17 +85,12 @@ const commentLocalRejectionReason = (content: string): string | null => {
     if (containsInappropriateWords(trimmed)) {
         return '친구에게 상처를 주는 말 대신 따뜻하고 고운 말을 써 주세요.'
     }
-    const compact = trimmed.replace(/\s+/g, '')
-    if (compact.length < 8) {
-        return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
-    }
-    if (trimmed.length > 200) {
-        return '댓글은 200자 이내로 간결하고 다정하게 적어 주세요.'
-    }
-    if (LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
-        return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
-    }
-    if (/^(.)\1{7,}$/u.test(compact) || /(.{1,8})\1{3,}/u.test(compact) || looksLikeGibberish(content)) {
+    // 길이·기호·반복·자판 두드림은 글자 내용으로 판단한다(느낌표·물음표가 많다고 막지 않는다).
+    const issue = commentTextIssue(trimmed, { lowEffort: LOW_EFFORT_COMMENTS })
+    if (issue === 'short') return '감탄만 적기보다 친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 써 볼까요?'
+    if (issue === 'long') return '댓글은 200자 이내로 간결하고 다정하게 적어 주세요.'
+    if (issue === 'no_words') return '기호나 이모티콘만 쓰지 말고 친구에게 전하고 싶은 말을 글자로 써 주세요.'
+    if (issue === 'repeat' || issue === 'gibberish') {
         return '같은 말이나 의미 없는 글자를 반복하지 말고 친구에게 전하고 싶은 내용을 문장으로 써 주세요.'
     }
     return null
@@ -114,6 +100,7 @@ const commentSafetyPrompt = (content: string) => {
     const textToCheck = content.replace(/"/g, "'")
     return `너는 초등학교 선생님이야. 다음 학생 댓글이 학급 커뮤니티에 적절한지 판단해줘.
 욕설, 비꼼, 따돌림, 무시, 의미 없는 무작위 문자열이나 도배가 하나라도 있으면 부적절해.
+('읽기 싫다', '안 읽을래', '재미없다'처럼 친구의 글을 읽지도 않고 깎아내리거나 무시하는 말도 부적절해. 느낌표·물음표·이모티콘이 많은 것만으로는 부적절하지 않아. 내용을 보고 판단해.)
 반드시 {"is_appropriate":boolean,"reason":"부적절할 때 다정한 2~3문장 안내"} JSON만 답해줘.
 분석할 내용: "${textToCheck}"`
 }

@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabaseClient';
 import { checkBadWords } from '../constants/badWords';
 import { checkContentSafety } from '../utils/aiSafety';
 import { debounce } from '../utils/debounce';
+// 서버(vibe-ai)와 같은 글자 내용 판정을 쓴다 — 기호가 아니라 낱말을 보고 판단한다.
+import { commentTextIssue } from '../../supabase/functions/_shared/commentQuality.js';
 
 const LOW_EFFORT_COMMENTS = new Set([
     '와', '우와', '오', '오오', '우웅', '헉', '대박', '굿', 'good', 'nice',
@@ -22,21 +24,15 @@ const commentErrorMessage = (error) => {
 };
 
 const validateCommentQuality = (content) => {
-    const trimmed = content.trim();
-    const compact = trimmed.replace(/\s+/g, '');
-
-    if (compact.length < 8) {
-        return '댓글은 공백을 빼고 8자 이상으로 써야 해요.\n친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 적어 볼까요?';
+    const issue = commentTextIssue(content, { lowEffort: LOW_EFFORT_COMMENTS });
+    if (issue === 'long') return '댓글은 200자 이내로 적어 주세요.';
+    if (issue === 'short') {
+        return content.trim().replace(/\s+/g, '').length < 8
+            ? '댓글은 공백을 빼고 8자 이상으로 써야 해요.\n친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 적어 볼까요?'
+            : '감탄만 있는 짧은 댓글보다는\n친구 글의 좋은 점이나 느낀 점을 함께 써 주세요!';
     }
-
-    if (trimmed.length > 200) {
-        return '댓글은 200자 이내로 적어 주세요.';
-    }
-
-    if (LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
-        return '감탄만 있는 짧은 댓글보다는\n친구 글의 좋은 점이나 느낀 점을 함께 써 주세요!';
-    }
-
+    if (issue === 'no_words') return '기호나 이모티콘만 쓰지 말고\n친구에게 전하고 싶은 말을 글자로 써 주세요.';
+    if (issue === 'repeat' || issue === 'gibberish') return '같은 말이나 의미 없는 글자를 반복하지 말고\n친구에게 전하고 싶은 내용을 문장으로 써 주세요.';
     return null;
 };
 

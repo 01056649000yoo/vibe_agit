@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -20,7 +21,8 @@ test('댓글 입력창(CommentComposer)은 최대 200자(maxLength={200})로 제
 });
 
 test('usePostInteractions의 validateCommentQuality는 200자 초과를 차단한다', () => {
-    assert.match(interactionSource, /trimmed\.length > 200/);
+    assert.match(interactionSource, /commentTextIssue/);
+    assert.match(readFileSync('supabase/functions/_shared/commentQuality.js', 'utf8'), /trimmed\.length > 200/);
     assert.match(interactionSource, /댓글은 200자 이내로 적어 주세요\./);
 });
 
@@ -32,7 +34,8 @@ test('DB RPC(create/update_my_post_comment_v1)는 8~200자 범위를 엄격히 �
 
 test('vibe-ai Edge 함수는 200자 초과 및 비속어를 로컬에서 선제 차단하여 AI 호출 비용을 절감한다', () => {
     assert.match(edgeSource, /claim\.content \?\? ''\)\.trim\(\)\.slice\(0, 200\)/);
-    assert.match(edgeSource, /trimmed\.length > 200/);
+    assert.match(edgeSource, /commentTextIssue/);
+    assert.match(readFileSync('supabase/functions/_shared/commentQuality.js', 'utf8'), /trimmed\.length > 200/);
     assert.match(edgeSource, /댓글은 200자 이내로 간결하고 다정하게 적어 주세요\./);
     assert.match(edgeSource, /INAPPROPRIATE_WORDS/);
     assert.match(edgeSource, /containsInappropriateWords/);

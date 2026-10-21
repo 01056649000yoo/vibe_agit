@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -75,7 +76,9 @@ test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록
     // 반려하면 is_submitted 가 false 로 돌아가므로 is_returned 하나로 판정한다.
     assert.match(vibeAi, /if \(!post\.is_returned\) \{/);
     // 아무 글자나 적은 글에 "잘 썼어요"가 뜨지 않게 먼저 거르고, 그때는 기회를 쓰지 않는다.
-    assert.match(vibeAi, /function looksLikeGibberish/);
+    // 판정 본문은 `_shared/commentQuality.js` 로 옮겼고 vibe-ai 는 그것을 가져와 쓴다(2026-10-21).
+    assert.match(vibeAi, /looksLikeGibberish[\s\S]{0,80}from '\.\.\/_shared\/commentQuality\.js'/);
+    assert.match(readFileSync('supabase/functions/_shared/commentQuality.js', 'utf8'), /export function looksLikeGibberish/);
     assert.ok(vibeAi.indexOf('looksLikeGibberish(body)') < fetchIndex);
     assert.match(vibeAi, /notWriting: true/);
     // 도중에 실패하면 한 번뿐인 기회를 돌려준다(AI 오류로 기회를 잃지 않게).
