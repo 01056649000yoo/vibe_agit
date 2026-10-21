@@ -28,6 +28,28 @@ const mergeItems = (items) => {
     return merged;
 };
 
+/**
+ * 선생님이 손댄 자리를 학생이 **공백만** 바꿔 다시 낸 경우는 선생님 교정으로 둔다(2026-10-21 제보).
+ * 예: 선생님이 문단 앞에 공백 하나(들여쓰기)를 넣었는데 학생 입력창이 그 자리를 공백 두 칸으로 맞춰 다시 내면, 같은 자리를 둘이 만진 것이고
+ * 바뀐 것은 공백뿐이다 — 학생이 고친 것으로 칠하지 않는다. 지운 선생님 공백 바로 옆에 새로 생긴 공백뿐인 학생 조각을 선생님 것으로 바꾸고,
+ * 지운 쪽 조각은 없앤다(그 자리의 선생님 교정이 모양만 바뀌어 이어진 것). 글자가 든 수정은 학생 몫으로 남는다. 선생님 공백을 그냥 지우기만 했으면(옆에 새 공백 없음) 학생이 되돌린 것이다.
+ */
+const foldBlankOverrides = (items) => {
+    const out = [...items];
+    for (let index = 0; index < out.length; index += 1) {
+        const removed = out[index];
+        if (removed.author !== 'teacher' || removed.removedBy !== 'student' || !isBlankText(removed.text)) continue;
+        const neighborIndex = [index + 1, index - 1].find((candidate) => {
+            const neighbor = out[candidate];
+            return neighbor && neighbor.author === 'student' && !neighbor.removedBy && isBlankText(neighbor.text);
+        });
+        if (neighborIndex === undefined) continue;
+        out[neighborIndex] = { ...out[neighborIndex], author: 'teacher' };
+        out[index] = null;
+    }
+    return out.filter(Boolean);
+};
+
 /** 지금 살아 있는 글(지워진 조각을 뺀 것)에 `to` 로 가는 비교를 입혀 새 조각 목록을 만든다. 너무 긴 글이면 null. */
 const applyStep = (items, to, actor) => {
     const live = items.filter((item) => !item.removedBy).map((item) => item.text).join('');
@@ -67,7 +89,7 @@ const applyStep = (items, to, actor) => {
     }
     if (carry) out.push(carry);
     out.push(...items.slice(index));
-    return out;
+    return actor === 'student' ? foldBlankOverrides(out) : out;
 };
 
 /**

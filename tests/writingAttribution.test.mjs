@@ -136,3 +136,29 @@ test('제목도 처음 제목 → 학생 → 선생님 교정 → 지금 제목�
     assert.deepEqual(marked(plain, 'teacher'), []);
     assert.equal(currentOf(plain), '가나 다라마');
 });
+
+// ── 2026-10-21 제보: 선생님이 손댄 자리를 학생이 공백만 바꿔 다시 내면 선생님 교정으로 둔다 ─────────────────────
+test('학생 입력창이 선생님이 넣은 들여쓰기 공백을 두 칸으로 맞춰 다시 내도 선생님 교정으로 남는다', () => {
+    const original = '첫 문단입니다.\n둘째 문단입니다.';
+    const edited = '첫 문단입니다.\n 둘째 문단입니다.';      // 선생님: 문단 앞 공백 하나
+    const current = '첫 문단입니다.\n  둘째 문단입니다.';     // 학생이 다시 낸 글: 공백 두 칸
+    const items = attributeWritingChanges(original, [{ base_content: original, edited_content: edited }], current);
+    assert.equal(currentOf(items), current);
+    assert.equal(originalOf(items), original);
+    assert.deepEqual(marked(items, 'student'), [], '학생이 쓴 조각으로 나오면 안 됩니다.');
+    assert.ok(items.some((item) => item.author === 'teacher' && !item.removedBy && item.text.includes('  ')), '두 칸 공백이 선생님 교정으로 남아야 합니다.');
+    assert.equal(items.some((item) => item.author === 'teacher' && item.removedBy === 'student'), false, '학생이 선생님 교정을 지운 것으로 나오면 안 됩니다.');
+});
+
+test('같은 자리라도 글자가 든 수정은 학생 몫이고, 공백만 바뀐 같은 자리는 늘든 줄든 선생님 교정으로 둔다', () => {
+    const original = '가나다\n라마바';
+    const edited = '가나다\n 라마바';
+    // 학생이 그 자리에 새 문장을 써 넣음 → 학생
+    const wrote = attributeWritingChanges(original, [{ base_content: original, edited_content: edited }], '가나다 새로 쓴 문장\n라마바');
+    assert.ok(marked(wrote, 'student').some((text) => text.includes('새로 쓴 문장')), '학생이 쓴 문장은 학생 몫입니다.');
+    // 학생이 공백을 줄여 다시 냄(선생님이 넣은 공백을 되돌림) → 공백만 바뀐 같은 자리라 학생이 쓴 조각은 없다
+    const trimmed = attributeWritingChanges(original, [{ base_content: original, edited_content: edited }], '가나다\n라마바');
+    assert.equal(currentOf(trimmed), '가나다\n라마바');
+    assert.equal(originalOf(trimmed), original);
+    assert.deepEqual(marked(trimmed, 'student'), []);
+});
