@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import {
     CLAW_DECOR_RARITIES, CLAW_DEFAULT_PRIZE_SETTINGS, CLAW_PRIZE_KINDS, CLAW_PRIZE_LIMITS, scaleClawGroup, sumClawPrizeSettings
 } from './prizeTable';
-import { rebalancePoints } from './clawPrizeBalance';
+import { othersTotal, rebalancePoints } from './clawPrizeBalance';
 
 /**
  * 교사 상품 설정 판 — 상품마다 **나올 확률(%)** 을 직접 넣는다(포인트 금액별·선생님 선물별·수호룡 아이템 등급별).
@@ -62,6 +62,13 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
 
     // 차이를 가장 큰 포인트 줄에 더한다(0 아래로는 내리지 않는다). 포인트 줄이 없으면 맞추지 않는다.
     const fillTo100 = () => {
+        // 넘칠 때는 가장 큰 줄 하나만 깎으면(0 아래로는 못 내려) 다 못 줄이므로 포인트 줄 전체를 비율대로 줄인다(2026-10-22 점검).
+        if (total > 100 && draft.points.length) {
+            const target = Math.max(0, round1(100 - othersTotal(draft)));
+            const scaled = scaleClawGroup(draft.points.map((row) => row.percent), target);
+            set({ points: draft.points.map((row, index) => ({ ...row, percent: scaled.at(index) })) });
+            return;
+        }
         const target = draft.points.reduce((best, row) => (Number(row.percent) > Number(best?.percent ?? -1) ? row : best), null);
         if (!target) return;
         const next = Math.max(0, round1(Number(target.percent || 0) + (100 - total)));
@@ -162,7 +169,7 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
                 숫자는 <b>인형 하나를 뽑았을 때 그 상품이 나올 확률</b>이에요. 0%로 두면 나오지 않아요. 묶음 <b>전체</b> 칸을 바꾸면 안의 상품이 원래 비율대로 함께 바뀌어요.
                 줄 수 없는 상품(그 학생이 받을 아이템이 없는 등급)의 확률은 포인트로 가요(꽝 없음).
             </p>
-            <button type="button" className="claw-prize-settings__reset" onClick={() => onChange(structuredClone(CLAW_DEFAULT_PRIZE_SETTINGS))}>
+            <button type="button" className="claw-prize-settings__reset" onClick={() => { balanceMemo.current = null; setNotice(''); onChange(structuredClone(CLAW_DEFAULT_PRIZE_SETTINGS)); }}>
                 기본값으로 되돌리기
             </button>
         </footer>

@@ -82,11 +82,27 @@ test('포인트 줄이 하나도 없으면 받을 곳이 없어 맞추지 않는
 
 test('화면은 선물·아이템·선물 삭제만 자동 맞추기를 거치고, 포인트 직접 입력은 그대로 둔다', async () => {
     const source = await readFile(new URL('../src/modules/game/spelling-claw/ClawPrizeSettings.jsx', import.meta.url), 'utf8');
-    assert.match(source, /import \{ rebalancePoints \} from '\.\/clawPrizeBalance'/);
+    assert.match(source, /import \{ othersTotal, rebalancePoints \} from '\.\/clawPrizeBalance'/);
     assert.match(source, /setBalanced\(\{ gifts: draft\.gifts\.map/);
     assert.match(source, /setBalanced\(\{ decor: \{ \.\.\.draft\.decor, \[rarity\]: value \} \}/);
     assert.match(source, /if \(key === 'gifts'\) setBalanced\(patch, \{ group: 'gifts' \}\); else set\(patch\)/);
     // 포인트 줄 입력은 자동으로 맞추지 않는다
     assert.match(source, /updateRow\('points', row\.id, \{ percent: value \}\)/);
     assert.match(source, /claw-prize-settings__notice/);
+});
+
+test('0~100 을 벗어난 값을 직접 쓰면 칸 값부터 바로잡는다(150→100, -10→0) — 2026-10-22 점검', () => {
+    const over = rebalancePoints({ ...fresh(), gifts: [{ id: 'g1', name: '자리 고르기권', percent: '150' }] }, null, { group: 'gifts', id: 'g1' });
+    assert.equal(over.clamped, true);
+    assert.ok(Number(over.draft.gifts[0].percent) <= 100); // 100 으로 바로잡힌 뒤 다른 묶음 몫을 빼고 남는 만큼만
+    assert.equal(sumClawPrizeSettings(over.draft).total, 100);
+    const under = rebalancePoints({ ...fresh(), gifts: [{ id: 'g1', name: '자리 고르기권', percent: '-10' }] }, null, { group: 'gifts', id: 'g1' });
+    assert.equal(Number(under.draft.gifts[0].percent), 0);
+    assert.equal(sumClawPrizeSettings(under.draft).total, 100);
+});
+
+test('화면: 100%로 맞추기는 넘칠 때 포인트 줄을 비율대로 줄이고, 기본값 복원은 안내·기억을 비운다', async () => {
+    const source = await readFile(new URL('../src/modules/game/spelling-claw/ClawPrizeSettings.jsx', import.meta.url), 'utf8');
+    assert.match(source, /if \(total > 100 && draft\.points\.length\)/);
+    assert.match(source, /balanceMemo\.current = null; setNotice\(''\); onChange\(structuredClone\(CLAW_DEFAULT_PRIZE_SETTINGS\)\)/);
 });

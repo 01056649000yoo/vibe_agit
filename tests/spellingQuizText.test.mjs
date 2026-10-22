@@ -87,3 +87,25 @@ test('많이 푸는 학생도 80판 동안 같은 말·같은 정답이 다시 �
         seenKeys.unshift(...quiz.map((item) => item.entryKey)); seenAnswers.unshift(...quiz.map((item) => item.answer));
     }
 });
+
+test('조사를 줄줄이 이은 말(이가·이이)은 정답으로 보지 않는다', () => {
+    const item = { kind: 'write', answer: '이 사람', accepted: ['이 사람'], strictSpacing: true };
+    assert.equal(gradeSpellingAnswer(item, '이 사람').correct, true);
+    assert.equal(gradeSpellingAnswer(item, '이 사람이').correct, true);
+    assert.equal(gradeSpellingAnswer(item, '이 사람은').correct, true);
+    assert.equal(gradeSpellingAnswer(item, '이 사람에서도').correct, true);
+    assert.equal(gradeSpellingAnswer(item, '이 사람이가').correct, false);
+    assert.equal(gradeSpellingAnswer(item, '이 사람이이').correct, false);
+});
+
+test('같은 정답을 허용해 채울 때도 한 판은 요청한 문제 수를 넘지 않는다', () => {
+    const make = (n, kind, answer) => ({ id: `${kind}${n}`, entryKey: `k-${kind}-${n}`, kind, answer, source: 'base', level: 'daily', type: kind, prompt: `p${n}`, choices: kind === 'choice' ? [answer, `${answer}x`] : undefined });
+    const pool = [
+        ...[1, 2, 3, 4].map((n) => make(n, 'write', '베개')),
+        ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => make(n, 'choice', `낱말${n}`)),
+    ];
+    for (let round = 0; round < 50; round += 1) {
+        const quiz = createFreshSpellingQuiz(pool, [], { count: 10, writeCount: 4 });
+        assert.ok(quiz.length <= 10, `문제가 ${quiz.length}개 나왔습니다`);
+    }
+});

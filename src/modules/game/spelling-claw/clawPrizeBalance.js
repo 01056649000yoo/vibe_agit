@@ -37,19 +37,39 @@ const limitOthers = (draft, edited) => {
     return { clamped: true, draft: { ...draft, decor: Object.fromEntries(CLAW_DECOR_RARITIES.map(({ rarity }, index) => [rarity, scaled.at(index)])) } };
 };
 
+/** 방금 고친 칸이 0~100 을 벗어난 숫자(`150`·`-10`)면 칸 값 자체를 0 또는 100 으로 바로잡는다 — 합계만 맞고 칸에는 `150` 이 남던 것(2026-10-22 점검). 빈 칸·입력 중(`1.`)은 그대로 둔다. */
+const outOfRange = (value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isFinite(number) && (number > 100 || number < 0) ? round1(asPercent(number)) : null;
+};
+const boundEdited = (draft, edited) => {
+    if (edited?.group === 'gifts' && edited.id) {
+        const row = draft.gifts.find((item) => item.id === edited.id);
+        const fixed = row ? outOfRange(row.percent) : null;
+        if (fixed !== null) return { clamped: true, draft: { ...draft, gifts: draft.gifts.map((item) => (item.id === edited.id ? { ...item, percent: fixed } : item)) } };
+    }
+    if (edited?.group === 'decor' && edited.rarity) {
+        const fixed = outOfRange(Reflect.get(draft.decor, edited.rarity));
+        if (fixed !== null) return { clamped: true, draft: { ...draft, decor: { ...draft.decor, [edited.rarity]: fixed } } };
+    }
+    return { clamped: false, draft };
+};
+
 /**
  * 선물·아이템이 바뀐 뒤의 `draft` 를 받아 포인트를 나머지(100 − 선물 − 아이템)로 다시 나눈다.
  * @returns {{ draft: object, memo: object|null, clamped: boolean }} `memo` 는 다음 호출에 그대로 넘긴다(처음엔 null).
  *   포인트 줄이 하나도 없으면 받을 곳이 없어 합계를 맞추지 않는다(화면의 `100%로 맞추기`·경고가 그대로 있다).
  */
 export const rebalancePoints = (draft, memo, edited = null) => {
-    const limited = limitOthers(draft, edited);
+    const bounded = boundEdited(draft, edited);
+    const limited = limitOthers(bounded.draft, edited);
     const next = limited.draft;
     const rows = next.points;
-    if (!rows.length) return { draft: next, memo, clamped: limited.clamped };
+    if (!rows.length) return { draft: next, memo, clamped: limited.clamped || bounded.clamped };
     const target = Math.max(0, round1(100 - othersTotal(next)));
     const base = memo && memo.signature === signature(rows) ? memo.base : rows.map((row) => asPercent(row.percent));
     const scaled = scaleClawGroup(base, target);
     const points = rows.map((row, index) => ({ ...row, percent: scaled.at(index) }));
-    return { draft: { ...next, points }, memo: { signature: signature(points), base }, clamped: limited.clamped };
+    return { draft: { ...next, points }, memo: { signature: signature(points), base }, clamped: limited.clamped || bounded.clamped };
 };

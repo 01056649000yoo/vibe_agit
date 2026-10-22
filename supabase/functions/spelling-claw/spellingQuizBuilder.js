@@ -145,6 +145,8 @@ export const spellingSourcesFromLearningEntries = (rows, source = 'common') => r
 const isHangul = (char) => /[가-힣]/u.test(char || '');
 /** 낱말 뒤에 붙어 낱말을 이루지 않는 조사(들)만으로 된 꼬리인가. */
 const JOSA_ONLY = /^(?:이에요|예요|이라고|라고|입니다|이다|에서|에게|께서|으로|까지|부터|처럼|보다|밖에|이랑|한테|이|가|은|는|을|를|과|와|도|만|의|에|께|로|랑|나)+$/u;
+// 채점용: 조사 하나(뒤에 `도`·`만`·`는`·`은` 하나까지). 조사를 줄줄이 이은 말(`이가`·`이이`)은 정답으로 보지 않는다(2026-10-22 점검).
+const JOSA_TAIL = /^(?:이에요|예요|이라고|라고|입니다|이다|에서|에게|께서|으로|까지|부터|처럼|보다|밖에|이랑|한테|이|가|은|는|을|를|과|와|도|만|의|에|께|로|랑|나)(?:도|만|는|은)?$/u;
 const PARTICLE_FORMS = new Map(Object.entries({
     가: ['가', '이'], 이: ['가', '이'], 는: ['는', '은'], 은: ['는', '은'], 를: ['를', '을'], 을: ['를', '을'],
     와: ['와', '과'], 과: ['와', '과'], 라고: ['라고', '이라고'], 이라고: ['라고', '이라고'], 예요: ['예요', '이에요'], 이에요: ['예요', '이에요']
@@ -369,6 +371,8 @@ export const createSpellingQuiz = (pool, {
     const used = new Set();
     const take = (kind, limit) => {
         for (const key of order) {
+            // 같은 정답을 허용해 다시 채울 때도 전체가 `count` 를 넘지 않는다(2026-10-22 점검: 쓰기 4 + 고르기 8 처럼 12문제가 나갈 수 있었다).
+            if (picked.length >= count) return;
             if (picked.filter((item) => item.kind === kind).length >= limit) return;
             if (used.has(key)) continue;
             const options = byEntry.get(key).filter((item) => item.kind === kind && (!dedupeAnswers || !usedAnswers.has(answerKey(item))));
@@ -427,7 +431,7 @@ export const gradeSpellingAnswer = (item, input) => {
     if (!given) return { correct: false, nearMiss: false };
     if (accepted.includes(given)) return { correct: true, nearMiss: false };
     // 학생이 낱말에 조사까지 붙여 쓴 것(`이 사람은`)도 맞게 본다 — 고칠 곳이 `이 사람` 일 때(2026-10-22 세 모델 풀이에서 발견).
-    if (item.kind === 'write' && accepted.some((answer) => given.startsWith(answer) && JOSA_ONLY.test(given.slice(answer.length)))) {
+    if (item.kind === 'write' && accepted.some((answer) => given.startsWith(answer) && JOSA_TAIL.test(given.slice(answer.length)))) {
         return { correct: true, nearMiss: false };
     }
     const nearMiss = item.kind === 'write' && !item.strictSpacing
