@@ -1,6 +1,4 @@
--- 수호룡 퀴즈 아레나 문제 세트 저장·공유 — 마이그레이션 **초안**(2026-10-22, 적용 전).
--- 설계: docs/QUIZ_ARENA_PLAN.md. 적용할 때 supabase/migrations/<다음 번호>_quiz_arena_sets.sql 로 옮기고 스모크는
--- tests/sql/<같은 이름>.smoke.sql 로 옮긴다(선생님이 "적용해" 라고 한 뒤에만).
+-- 수호룡 퀴즈 아레나 문제 세트 저장·공유(2026-10-23 선생님 `적용해`). 설계: docs/QUIZ_ARENA_PLAN.md.
 --
 -- 지키는 규칙(SECURITY_HARNESS): 표는 RLS 를 켜고 직접 권한을 모두 닫는다 · 읽기/쓰기는 SECURITY DEFINER RPC 로만 ·
 -- 함수마다 SET search_path · anon 에 열지 않는다 · WHERE 없는 UPDATE/DELETE 없음 · 글자 수 한도는 DB 에서도 막는다.

@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-23 — 퀴즈 아레나 문제 세트 DB 적용 (Claude)
+- **한 일**: 선생님 `적용해` 로 `20261406_quiz_arena_sets`(세트 2표·RPC 7개, 지금은 관리자만)를 `--only` 로 적용(대기 중이던 `20261405` 는 건드리지 않음). 선생님 결정 기록: 전체 공유·공유자 이름 숨김·점수→포인트는 교사 설정·손님은 본명 입장(`docs/QUIZ_ARENA_PLAN.md`).
+- **변경**: `supabase/migrations/20261406_quiz_arena_sets.sql`, `tests/sql/20261406_quiz_arena_sets.smoke.sql`(초안 폴더에서 이동), ROADMAP 보관(`roadmap:archive`).
+- **결과/검증**: `migrate:check` 통과, 적용 후 스모크 통과(롤백). `test:all` 1695개 통과(ROADMAP 보관 뒤). `smoke:all` 전체는 10분 넘어 돌리지 않음.
+- **남은 것**: OI-038, `20261405` 적용·푸시는 대기.
+
 ## 2026-10-22 — 수호룡 퀴즈 아레나 아지트 병합 시작: 관리자 전용 메뉴·기본 문제 세트 (Claude)
 - **한 일**: 선생님 결정(아지트 병합·관리자 계정에서만 개발·시험)으로 교사 `아지트 놀이터` 의 `수호룡의 인형뽑기` 아래에 `⚔️ 수호룡 퀴즈 아레나`(`quiz-arena`, `adminOnly`, 개발중 표시) 추가. 어휘(3~6학년)·맞춤법 자료로 **기본 문제 세트**(어휘 4지선다·맞춤법 O/X·섞기)를 만드는 순수 함수와 미리보기 화면, 개발실 장면. 교사 직접 출제·공유를 위한 **DB 초안**(세트 2표+RPC 7개, 지금은 관리자만) 작성. 설계·순서는 `docs/QUIZ_ARENA_PLAN.md`.
 - **변경**: `src/modules/game/quiz-arena/*`, `RegisteredGameModuleCards.jsx`(개발중 알약), `registry.js`·`teacherGuides.js`·`teacherGuideRegistry.js`, `src/dev/QuizArenaPreview.jsx`, `supabase/migration-drafts/quiz_arena(.smoke).sql`(**미적용 초안**), FEATURE_MAP v1.26.32·TECH_GLOSSARY, 시험 2개. 게임 서버(별도 저장소 `suhoryong-arena`)는 대기실 놀이·입장권 이어받기·조기 종료 기본 끄기·선택창 글씨 수정을 컨테이너에 배포함(그쪽 STATUS 에 기록, 아지트 저장소 밖 인프라 변경).
