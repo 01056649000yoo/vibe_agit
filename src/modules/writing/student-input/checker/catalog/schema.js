@@ -1,3 +1,5 @@
+import { fixParticles } from './koreanText.js';
+
 const freezeSubcategories = (subcategories) => Object.freeze(
     subcategories.map((subcategory) => Object.freeze(subcategory))
 );
@@ -141,7 +143,7 @@ export const reference = (
     searchable: options.searchable || [
         ...new Set([...splitReferenceChoices(question), answer])
     ],
-    explanation,
+    explanation: fixParticles(explanation),
     examples,
     source: options.sourceType === 'norm'
         ? NORM_SOURCE

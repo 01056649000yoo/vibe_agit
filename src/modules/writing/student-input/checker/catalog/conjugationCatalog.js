@@ -24,7 +24,7 @@ export const CONJUGATION_SPELLING_ENTRIES = defineSpellingEntries(
         reference(302, "expansion-kkeokda", "inflection", "exact", "expansion", "꺾다 / 꺽다", "꺾다", "휘어서 구부리거나 경기에서 이긴다는 뜻이에요. ‘꺽다’가 아니라 ‘꺾다’로 적어요.", ["꽃가지를 함부로 꺾지 않아요.","우리 팀이 상대 팀을 꺾었어요."]),
         reference(303, "expansion-geodeobutida", "inflection", "exact", "expansion", "걷어붙이다 / 걷어부치다", "걷어붙이다", "소매나 바짓가랑이를 걷어서 붙여 놓는다는 뜻이에요. ‘걷어부치다’가 아니라 ‘걷어붙이다’로 적어요.", ["소매를 걷어붙이고 청소했어요.","바지를 걷어붙이고 개울을 건넜어요."]),
         reference(304, "expansion-gyeotdeurida", "inflection", "exact", "expansion", "곁들이다 / 곁드리다", "곁들이다", "주된 것에 다른 것을 함께 더한다는 뜻이에요. ‘곁드리다’가 아니라 ‘곁들이다’로 적어요.", ["빵에 우유를 곁들여 먹었어요.","발표에 그림을 곁들였어요."]),
-        reference(305, "expansion-natchuda", "inflection", "exact", "expansion", "낮추다 / 낮히다", "낮추다", "높이거나 크던 것을 낮게 만든다는 뜻이에요. ‘낮히다’가 아니라 ‘낮추다’로 적어요.", ["목소리를 조금 낮추어 말했어요.","의자의 높이를 낮추었어요."]),
+        reference(305, "expansion-natchuda", "inflection", "exact", "expansion", "낮추다 / 낮히다", "낮추다", "높거나 큰 것을 낮게 만든다는 뜻이에요. ‘낮히다’가 아니라 ‘낮추다’로 적어요.", ["목소리를 조금 낮추어 말했어요.","의자의 높이를 낮추었어요."]),
         reference(306, "expansion-nopida", "passive-causative", "exact", "expansion", "높이다 / 높히다", "높이다", "높게 하거나 정도를 크게 만든다는 뜻이에요. ‘높히다’가 아니라 ‘높이다’로 적어요.", ["상자의 높이를 높였어요.","집중력을 높이는 연습을 했어요."]),
         reference(307, "expansion-deopida", "passive-causative", "exact", "expansion", "덮이다 / 덮히다", "덮이다", "무엇이 위를 가리게 된다는 뜻이에요. ‘덮히다’가 아니라 ‘덮이다’로 적어요.", ["산이 흰 눈으로 덮였어요.","하늘이 먹구름에 덮였어요."]),
         reference(308, "expansion-doenoeda", "inflection", "exact", "expansion", "되뇌다 / 되내다", "되뇌다", "같은 말을 되풀이해 말한다는 뜻이에요. ‘되내다’가 아니라 ‘되뇌다’로 적어요.", ["중요한 문장을 속으로 되뇌었어요.","약속을 여러 번 되뇌며 기억했어요."]),

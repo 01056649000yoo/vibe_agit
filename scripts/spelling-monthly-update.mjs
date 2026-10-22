@@ -23,6 +23,7 @@
  * 자동 게시한 것은 관리자 화면에서 하나씩 끄거나, 한 달 치를 한꺼번에 끌 수 있다(spelling_monthly_candidates.entry_id).
  */
 import { spawnSync } from 'node:child_process';
+import { fixParticles } from '../src/modules/writing/student-input/checker/catalog/koreanText.js';
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -73,7 +74,7 @@ const spacingOnly = (wrong, right) => wrong.replace(/ /g, '') === right.replace(
 /** 아이에게 보일 한 줄 설명(유료 AI 없이 틀로). */
 export const explanationFor = (wrong, right) => (spacingOnly(wrong, right)
     ? `띄어쓰기를 바르게 하면 ‘${right}’예요.`
-    : `‘${wrong}’ 대신 ‘${right}’라고 써요.`);
+    : fixParticles(`‘${wrong}’ 대신 ‘${right}’라고 써요.`));
 
 /** 사전에 없는 낱말들(hunspell -l). 사전이 없으면 null — 그러면 이번 달은 사전 관문을 지날 수 없어 모두 보류된다. */
 const unknownWords = (words) => {

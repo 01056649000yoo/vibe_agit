@@ -10,6 +10,7 @@ import {
     getElementarySpellingEntries,
     searchSpellingEntries
 } from './elementarySpellingEntries.js';
+import { fixParticles } from './catalog/koreanText.js';
 import { PENDING_SPELLING_ENABLED } from './pending/config.js';
 import { PENDING_SPELLING_ENTRIES } from './pending/pendingSpellingEntries.js';
 import { findPendingSpellingIssues, PENDING_SPELLING_DETECTION_RULES } from './pending/pendingSpellingDetector.js';
@@ -41,7 +42,7 @@ export const learningEntriesAsBookEntries = (rows = []) => rows
         id: `${row.scope || 'common'}-${row.id}`,
         question: `${row.correct_expression} / ${row.wrong_expression}`,
         answer: row.correct_expression,
-        explanation: row.explanation || `‘${row.wrong_expression}’ 대신 ‘${row.correct_expression}’라고 써요.`,
+        explanation: row.explanation || fixParticles(`‘${row.wrong_expression}’ 대신 ‘${row.correct_expression}’라고 써요.`),
         examples: Array.isArray(row.examples) && row.examples.length ? row.examples : [row.correct_expression]
     }));
 

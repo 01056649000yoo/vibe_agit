@@ -48,7 +48,7 @@ test('모든 문제가 바르게 만들어진다 — 정답이 보기에 있고,
 });
 
 test('주관식 채점: 앞뒤 공백·끝 문장부호는 봐주고, 띄어쓰기 문제는 띄어쓰기까지 맞아야 한다', () => {
-    const fix = basePool.find((item) => item.entryKey === 'base:an-anh' && item.type === 'fixWrite' && item.answer === '않');
+    const fix = basePool.find((item) => item.entryKey === 'base:an-anh' && item.type === 'fixWrite' && item.accepted.includes('않') && item.accepted.includes('않았어요'));
     for (const answer of ['않', ' 않았어요. ', '나는 약속을 잊지 않았어요']) assert.ok(gradeSpellingAnswer(fix, answer).correct, answer);
     assert.ok(!gradeSpellingAnswer(fix, '안았어요').correct);
     const spacing = basePool.find((item) => item.type === 'spacingWrite');

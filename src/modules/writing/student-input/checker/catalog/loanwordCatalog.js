@@ -41,7 +41,7 @@ export const LOANWORD_SPELLING_ENTRIES = defineSpellingEntries(
         reference(390, "expansion-senteo", "loanword", "exact", "expansion", "센터 / 센타", "센터", "외국에서 들어온 이 말은 한글로 ‘센터’라고 적어요. ‘센타’로 적지 않아요.", ["주민 센터에서 안내를 받았어요.","과학 체험 센터에 다녀왔어요."]),
         reference(391, "expansion-orijineol", "loanword", "exact", "expansion", "오리지널 / 오리지날", "오리지널", "외국에서 들어온 이 말은 한글로 ‘오리지널’라고 적어요. ‘오리지날’로 적지 않아요.", ["이 노래의 오리지널 곡을 들었어요.","오리지널 작품을 전시했어요."]),
         reference(392, "expansion-baelleonseu", "loanword", "exact", "expansion", "밸런스 / 발란스", "밸런스", "외국에서 들어온 이 말은 한글로 ‘밸런스’라고 적어요. ‘발란스’로 적지 않아요.", ["자전거를 탈 때 밸런스를 잡았어요.","공부와 놀이의 밸런스가 필요해요."]),
-        reference(393, "expansion-syaesi", "loanword", "exact", "expansion", "섀시 / 샷시", "섀시", "외국에서 들어온 이 말은 한글로 ‘섀시’라고 적어요. ‘샷시’로 적지 않아요.", ["창문의 섀시를 새로 고쳤어요.","튼튼한 섀시가 유리를 받치고 있어요."]),
+        reference(393, "expansion-syaesi", "loanword", "exact", "expansion", "새시 / 샷시", "새시", "창틀을 뜻하는 외래어는 한글로 ‘새시’라고 적어요. ‘샷시’로 적지 않아요.", ["창문의 새시를 새로 고쳤어요.","튼튼한 새시가 유리를 받치고 있어요."]),
         reference(394, "expansion-konsepteu", "loanword", "exact", "expansion", "콘셉트 / 컨셉트", "콘셉트", "외국에서 들어온 이 말은 한글로 ‘콘셉트’라고 적어요. ‘컨셉트’로 적지 않아요.", ["축제의 콘셉트를 정했어요.","그림의 콘셉트가 재미있어요."]),
         reference(395, "expansion-tekeunolloji", "loanword", "exact", "expansion", "테크놀로지 / 테크놀러지", "테크놀로지", "외국에서 들어온 이 말은 한글로 ‘테크놀로지’라고 적어요. ‘테크놀러지’로 적지 않아요.", ["새로운 테크놀로지가 생활을 바꾸었어요.","친환경 테크놀로지를 소개했어요."]),
         reference(396, "expansion-baeteon", "loanword", "exact", "expansion", "배턴 / 바톤", "배턴", "외국에서 들어온 이 말은 한글로 ‘배턴’라고 적어요. ‘바톤’로 적지 않아요.", ["이어달리기에서 배턴을 건넸어요.","다음 주자에게 배턴이 전달되었어요."]),

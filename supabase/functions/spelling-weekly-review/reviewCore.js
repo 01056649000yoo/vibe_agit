@@ -47,6 +47,7 @@ export const REVIEW_INSTRUCTIONS = [
     '입력은 기본 500개와 현재 공통 자료의 정확 일치를 코드로 제거한 뒤의 후보다.',
     'similar_matches는 전체 자료가 아니라 코드가 고른 유사 항목 최대 3개이므로 참고만 한다.',
     'recommend/caution에는 짧은 바른 표현, 40자 이하 라벨, 학생용 설명, 바른 예문 최대 4개를 작성한다.',
+    '학생용 설명(explanation)에는 어느 학급에서 나왔는지·몇 번 나왔는지·자료 분류 같은 만든 사람용 말을 쓰지 않는다. 그런 판단은 reason 에만 쓴다.',
     '학생 글·학생·학급 정보는 추측하지 않는다.'
 ].join('\n');
 export const MAX_CANDIDATES = 200;
@@ -58,6 +59,17 @@ export const normalizeSpellingValue = (value) => String(value || '')
     .replace(/[\s/·,?!."'’“”()_-]/g, '');
 
 export const trimText = (value, limit) => String(value || '').normalize('NFC').trim().slice(0, limit);
+
+/**
+ * 학생에게 보이는 설명에서 만든 사람용 메모를 뺀다(2026-10-22: `한 학급에서만 나온 것이므로 주의가 필요합니다` 같은 문장이
+ * 해설 칸에 그대로 들어간 자료 8건 발견). 검수 판단은 `reason` 칸에만 쓴다.
+ */
+const MAKER_NOTE = /학급에서만|한 번 나온|공통 자료|참고 자료|주의 자료|주의 항목|주의가 필요|조심스러워|class_count|후보|검수/u;
+export const stripMakerNotes = (text) => String(text || '').normalize('NFC')
+    .split(/(?<=[.!?。])\s+/u)
+    .filter((sentence) => sentence && !MAKER_NOTE.test(sentence))
+    .join(' ')
+    .trim();
 
 /*
  * ⚠️ 이 파일의 계산은 Edge 함수의 **CPU 시간 제한** 안에서 돈다(2026-10-01). 후보가 2,000개를 넘자
@@ -307,7 +319,7 @@ export const cleanReview = (candidate, review, cacheHit) => {
         verdict,
         correct_expression: correctExpression,
         label: trimText(review?.label, 40) || '미분류',
-        explanation: trimText(review?.explanation, 600) || '관리자가 직접 확인해 주세요.',
+        explanation: trimText(stripMakerNotes(review?.explanation), 600) || '관리자가 직접 확인해 주세요.',
         examples: (Array.isArray(review?.examples) ? review.examples : [])
             .map((item) => trimText(item, 150)).filter(Boolean).slice(0, 4),
         reason: reason || '관리자 확인이 필요합니다.',

@@ -6185,13 +6185,13 @@
     {
       "id": "elementary-expansion-syaesi",
       "entryId": "expansion-syaesi",
-      "label": "섀시 / 샷시",
+      "label": "새시 / 샷시",
       "patterns": [
         {
           "text": "샷시",
           "target": "샷시",
-          "right": "섀시",
-          "lookup": "섀시"
+          "right": "새시",
+          "lookup": "새시"
         }
       ]
     },

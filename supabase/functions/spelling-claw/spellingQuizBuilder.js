@@ -49,6 +49,7 @@ export const normalizeQuizAnswer = (value) => nfc(value).trim().replace(/[.!?。
 const withoutSpaces = (value) => nfc(value).replace(/\s+/g, '');
 const isSpacingOnly = (wrong, right) => wrong !== right && withoutSpaces(wrong) === withoutSpaces(right);
 const countOccurrences = (text, part) => (part ? text.split(part).length - 1 : 0);
+const hangulCount = (value) => [...value.replace(/[^가-힣]/gu, '')].length;
 const letterCount = (value) => [...withoutSpaces(value)].length;
 /** 예문에서 고칠 곳이 든 어절(문장부호 뗌). `잊지 안았어요` 를 고칠 때 `않았어요` 로 써도 맞게 한다. */
 const wordAround = (sentence, focus) => {
@@ -98,6 +99,12 @@ const baseSource = (entry, patterns = []) => {
     const choices = nfc(entry.question).split('/').map((choice) => choice.trim()).filter(Boolean);
     if (choices.length === 2 && choices.includes(entry.answer)) {
         const wrong = choices.find((choice) => choice !== entry.answer);
+        // 검출 패턴은 `있엇` → `있었` 처럼 낱말 앞부분만 잡을 때가 있다. 보기가 낱말이 아니라 조각이 되므로,
+        // 낱말 전체(`있었다 / 있엇다`)가 질문에 있으면 그 쪽만 쓴다(2026-10-22).
+        for (let index = pairs.length - 1; index >= 0; index -= 1) {
+            const pair = pairs[index];
+            if (pair.wrong === pair.focusWrong && pair.wrong !== wrong && wrong.includes(pair.wrong) && entry.answer.includes(pair.right)) pairs.splice(index, 1);
+        }
         addPair(pairs, { wrong, right: entry.answer, focusWrong: wrong, focusRight: entry.answer });
     }
     return {
@@ -134,51 +141,123 @@ export const spellingSourcesFromLearningEntries = (rows, source = 'common') => r
         };
     });
 
+const isHangul = (char) => /[가-힣]/u.test(char || '');
+/** 낱말 뒤에 붙어 낱말을 이루지 않는 조사(들)만으로 된 꼬리인가. */
+const JOSA_ONLY = /^(?:이에요|예요|이라고|라고|입니다|이다|에서|에게|께서|으로|까지|부터|처럼|보다|밖에|이랑|한테|이|가|은|는|을|를|과|와|도|만|의|에|께|로|랑|나)+$/u;
+const PARTICLE_FORMS = new Map(Object.entries({
+    가: ['가', '이'], 이: ['가', '이'], 는: ['는', '은'], 은: ['는', '은'], 를: ['를', '을'], 을: ['를', '을'],
+    와: ['와', '과'], 과: ['와', '과'], 라고: ['라고', '이라고'], 이라고: ['라고', '이라고'], 예요: ['예요', '이에요'], 이에요: ['예요', '이에요']
+}));
+const LEADING_PARTICLE = /^(이라고|이에요|으로|라고|예요|가|이|는|은|를|을|와|과|로)(?![가-힣])/u;
+/** 낱말을 바꿔 넣은 뒤 바로 붙은 조사를 새 낱말의 받침에 맞춘다(`로봇이` → `로보트가`). 받침에 맞지 않는 조사가 붙은 비현실적 오답을 막는다. */
+export const matchLeadingParticle = (after, word) => {
+    const match = LEADING_PARTICLE.exec(after);
+    const code = (word.slice(-1).codePointAt(0) ?? 0) - 0xAC00;
+    if (!match || code < 0 || code > 11171) return after;
+    const finalSound = code % 28;
+    const particle = match[1];
+    let fixed;
+    if (particle === '로' || particle === '으로') fixed = finalSound === 0 || finalSound === 8 ? '로' : '으로';
+    else {
+        const forms = PARTICLE_FORMS.get(particle);
+        fixed = forms ? forms[finalSound === 0 ? 0 : 1] : particle;
+    }
+    return fixed + after.slice(particle.length);
+};
+
+/**
+ * 예문 속 고칠 곳을 **낱말 단위로** 넓힌다. 고칠 곳이 낱말의 일부(`맛＿＿＿` 의 `있겠다`, `놀랐` 의 `다`)이면 그대로 보기로 쓰면
+ * 낱말이 잘린 보기가 되므로, 앞쪽에 붙은 글자와 조사가 아닌 뒤쪽 꼬리까지 포함한다. 조사만 붙었으면 그대로 둔다.
+ */
+const wholeWordView = (sentence, pair) => {
+    const at = sentence.indexOf(pair.focusRight);
+    if (at < 0) return null;
+    let start = at;
+    while (start > 0 && isHangul(sentence[start - 1])) start -= 1;
+    const focusEnd = at + pair.focusRight.length;
+    let tailEnd = focusEnd;
+    while (tailEnd < sentence.length && isHangul(sentence[tailEnd])) tailEnd += 1;
+    const tail = sentence.slice(focusEnd, tailEnd);
+    // `싫지만` 의 `만` 처럼 어미 `-지` 뒤에 붙은 말은 조사가 아니라 낱말의 일부다.
+    const tailIsParticle = JOSA_ONLY.test(tail) && !(pair.focusRight.endsWith('지') && tail.startsWith('만'));
+    const end = tail && !tailIsParticle ? tailEnd : focusEnd;
+    const prefix = sentence.slice(start, at);
+    const suffix = sentence.slice(focusEnd, end);
+    return {
+        right: prefix + pair.focusRight + suffix,
+        wrong: prefix + pair.focusWrong + suffix,
+        before: sentence.slice(0, start),
+        after: sentence.slice(end),
+        widened: Boolean(prefix || suffix)
+    };
+};
+const sentenceWith = (view, word) => view.before + word + matchLeadingParticle(view.after, word);
+
 /** 재료 하나에서 만들 수 있는 문제를 모두 만든다. */
 const itemsFromSource = (src) => {
     const items = [];
     const base = { entryKey: src.key, source: src.source, label: src.label, explanation: src.explanation, level: src.level || 'daily' };
     src.pairs.forEach((pair, pairIndex) => {
+        // `든, 든` 처럼 한 문제에 빈칸이 둘인 연습 문제 조각은 낱개 문제로 만들 수 없다.
+        if (pair.focusRight.includes(',') || pair.focusWrong.includes(',')) return;
         const spacing = isSpacingOnly(pair.focusWrong, pair.focusRight);
         // 문맥 항목(검출 패턴이 `숙제하는 데 한 시간이 걸` 처럼 낱말 중간에서 끊긴 조각)은 그대로 보이면 어색하다.
         // 바른 문맥이 들어 있는 예문이 있으면 예문 전체로 보이고, 없으면 고르기 문제를 만들지 않는다.
         const isContext = pair.wrong !== pair.focusWrong;
         const contextExample = isContext ? src.examples.find((sentence) => countOccurrences(sentence, pair.right) === 1) : null;
-        if (!isContext || contextExample) {
-            const right = contextExample || pair.right;
-            const wrong = contextExample ? contextExample.replace(pair.right, pair.wrong) : pair.wrong;
+        // 예문 속에 바른 말이 꼭 한 번 나오는 것만 쓴다(두 번이면 어디를 비울지 모호하다).
+        let example = src.examples.find((sentence) => countOccurrences(sentence, pair.focusRight) === 1);
+        let view = example ? wholeWordView(example, pair) : null;
+        // `닫히다 / 닫치다` 처럼 사전 꼴인데 예문에는 활용형(`닫혔어요`)으로만 있으면 어간(`닫히` / `닫치`)으로 찾아 예문 속 낱말로 보인다.
+        if (!view && pair.focusRight.endsWith('다') && pair.focusWrong.endsWith('다') && pair.focusRight.length >= 3) {
+            const stemPair = { focusRight: pair.focusRight.slice(0, -1), focusWrong: pair.focusWrong.slice(0, -1) };
+            const stemExample = src.examples.find((sentence) => countOccurrences(sentence, stemPair.focusRight) === 1);
+            const stemView = stemExample ? wholeWordView(stemExample, stemPair) : null;
+            if (stemView?.right.endsWith('다') || stemView?.widened) { example = stemExample; view = stemView; }
+        }
+        // `-ㄴ 뒤`·`-을 텐데` 처럼 앞말이 없는 어미 표시는 예문의 실제 낱말로만 보인다.
+        const isAffixMark = pair.focusRight.startsWith('-') || pair.focusWrong.startsWith('-');
+        if ((!isContext && !isAffixMark) || contextExample) {
+            // 낱말만 보이면 틀린 쪽도 다른 뜻의 맞는 말일 수 있다(금새·바다가·대게·번번히). 예문이 있으면 예문 속에서 고르게 한다.
+            const inSentence = !isContext && view ? view : null;
+            const right = contextExample || (inSentence ? example : pair.right);
+            const wrong = contextExample ? contextExample.replace(pair.right, pair.wrong) : inSentence ? sentenceWith(inSentence, inSentence.wrong) : pair.wrong;
             items.push({
                 ...base, id: `${src.key}#${pairIndex}:choose`, type: 'choose', kind: 'choice',
                 prompt: '바른 표현을 고르세요.', choices: [right, wrong], answer: right,
                 strictSpacing: true, solution: right
             });
         }
-        // 예문 속에 바른 말이 꼭 한 번 나오는 것만 쓴다(두 번이면 어디를 비울지 모호하다).
-        const example = src.examples.find((sentence) => countOccurrences(sentence, pair.focusRight) === 1);
-        if (example) {
-            const blanked = example.replace(pair.focusRight, QUIZ_BLANK);
-            const wrongSentence = example.replace(pair.focusRight, pair.focusWrong);
-            items.push({
+        if (view) {
+            // 빈칸 바로 뒤에 붙은 조사는 보기에 함께 넣는다(`로봇이 / 로보트가`) — 조사만 보고 정답을 알거나 호응이 어긋나지 않게.
+            const particle = LEADING_PARTICLE.exec(view.after)?.[1] || '';
+            const rest = view.after.slice(particle.length);
+            // 문장 전체가 빈칸이면(`＿＿＿.`) 단서가 없어 고를 수 없다 — 남는 한글이 두 자 이상일 때만 낸다(2026-10-22).
+            if (hangulCount(view.before + rest) >= 2) items.push({
                 ...base, id: `${src.key}#${pairIndex}:blankChoose`, type: 'blankChoose', kind: 'choice',
-                prompt: blanked, choices: [pair.focusRight, pair.focusWrong], answer: pair.focusRight,
+                prompt: view.before + QUIZ_BLANK + rest,
+                choices: [view.right + particle, view.wrong + matchLeadingParticle(particle, view.wrong)], answer: view.right + particle,
                 strictSpacing: true, solution: example
             });
-            if (!spacing && letterCount(pair.focusRight) <= MAX_WRITE_LENGTH && wrongSentence !== example) {
+            const wrongSentence = sentenceWith(view, view.wrong);
+            if (!spacing && letterCount(view.right) <= MAX_WRITE_LENGTH && wrongSentence !== example) {
                 items.push({
                     ...base, id: `${src.key}#${pairIndex}:fixWrite`, type: 'fixWrite', kind: 'write',
-                    prompt: wrongSentence, highlight: pair.focusWrong, hint: '틀린 곳을 바르게 고쳐 쓰세요',
-                    answer: pair.focusRight,
-                    accepted: [pair.focusRight, wordAround(example, pair.focusRight), example].filter(Boolean),
+                    prompt: wrongSentence, highlight: view.wrong, hint: '틀린 곳을 바르게 고쳐 쓰세요',
+                    answer: view.right,
+                    accepted: [view.right, pair.focusRight, wordAround(example, pair.focusRight), example].filter(Boolean),
                     strictSpacing: false, solution: example
                 });
             }
         }
-        if (spacing && letterCount(pair.focusRight) <= MAX_WRITE_LENGTH + 4) {
+        // 문맥 항목은 문장 없이 낱말만 보이면 정답이 하나로 정해지지 않는다(`갈 걸` → 갈걸 / 갈 것을).
+        if (spacing && !(isContext && !view) && !(isAffixMark && !view) && letterCount(view?.right || pair.focusRight) <= MAX_WRITE_LENGTH + 4) {
+            const answer = view?.right || pair.focusRight;
             items.push({
                 ...base, id: `${src.key}#${pairIndex}:spacingWrite`, type: 'spacingWrite', kind: 'write',
-                prompt: example ? example.replace(pair.focusRight, pair.focusWrong) : pair.focusWrong,
-                highlight: pair.focusWrong, hint: '띄어쓰기를 바르게 고쳐 쓰세요',
-                answer: pair.focusRight, accepted: [pair.focusRight, example || pair.focusRight],
+                prompt: view ? sentenceWith(view, view.wrong) : pair.focusWrong,
+                highlight: view?.wrong || pair.focusWrong, hint: '띄어쓰기를 바르게 고쳐 쓰세요',
+                answer, accepted: [answer, pair.focusRight, example || pair.focusRight],
                 strictSpacing: true, solution: example || pair.focusRight
             });
         }
@@ -186,14 +265,41 @@ const itemsFromSource = (src) => {
     return items;
 };
 
+/**
+ * 퀴즈에서 뺀 항목(2026-10-22 교차 점검): 틀리다고 한 쪽도 표준어이거나 붙여 쓰기가 허용되어 정답이 둘이 되거나, 규범이 불확실한 것.
+ * 수첩 검색·밑줄 쪽 처리는 그대로이고 인형뽑기 퀴즈에서만 뺀다.
+ */
+export const SPELLING_QUIZ_SKIPPED_ENTRIES = Object.freeze({
+    'base:aneun-cheokhada': '‘아는척하다’ 붙여 쓰기 허용(한글 맞춤법 제47항)',
+    'base:bon-chehada': '‘본체하다’ 붙여 쓰기 허용(한글 맞춤법 제47항)',
+    'base:expansion-matdaktteurida': '‘맞닥트리다’도 표준어(복수 표준어)',
+    'base:x-35cb237de5': '‘길다란’도 표준어(길다랗다)',
+    'base:x-a389e4f07d': '‘여지껏’도 표준어',
+    'base:x-f5e6d83360': '‘지리하다’도 표준어',
+    'base:x-59b74c47e6': '‘알타리무’도 표준어(복수 표준어)',
+    'base:expansion-seomtteuk': '‘섬뜻’도 쓰이는 표준어(규범 확인 전까지 뺌)',
+    'base:x-35034f0eeb': '‘랍스터’ 규범 표기 확인 전까지 뺌',
+    'base:practice-spelling-quiz-059': '‘건들다’ 표준어 여부 확인 전까지 뺌',
+    'base:x-63bff7f0c3': '‘찌게개’는 학생이 쓰지 않는 꼴(찌개 / 찌게 항목이 따로 있음)',
+    'base:practice-spelling-quiz-010': '‘안 했다 / 않았다’ — ‘않다’도 본동사로 쓰여 정답이 둘로 읽힘',
+    'base:x-f61ae49ef4': '‘궁시렁거리다’ 표준어 여부 확인 전까지 뺌'
+});
+
 /** 모든 재료 → 문제 묶음. 같은 항목 키가 겹치면(공통 자료가 학급 자료와 같으면) 먼저 온 것을 쓴다. */
 export const buildSpellingQuizPool = (sources) => {
     const seen = new Set();
+    const asked = new Set();
     const items = [];
     for (const src of sources) {
-        if (seen.has(src.key)) continue;
+        if (seen.has(src.key) || Reflect.has(SPELLING_QUIZ_SKIPPED_ENTRIES, src.key)) continue;
         seen.add(src.key);
-        items.push(...itemsFromSource(src));
+        for (const item of itemsFromSource(src)) {
+            // 같은 항목의 검출 패턴이 여러 개여도 똑같은 문제는 한 번만 둔다.
+            const signature = `${item.entryKey}|${item.type}|${item.prompt}|${item.answer}`;
+            if (asked.has(signature)) continue;
+            asked.add(signature);
+            items.push(item);
+        }
     }
     return items;
 };

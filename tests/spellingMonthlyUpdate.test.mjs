@@ -40,7 +40,7 @@ test('증거 관문: 2개 학급·3번 이상, 회색 점선 고르기는 받아
 
 test('설명은 유료 AI 없이 틀로', () => {
     assert.equal(explanationFor('방학때', '방학 때'), '띄어쓰기를 바르게 하면 ‘방학 때’예요.');
-    assert.equal(explanationFor('게속', '계속'), '‘게속’ 대신 ‘계속’라고 써요.');
+    assert.equal(explanationFor('게속', '계속'), '‘게속’ 대신 ‘계속’이라고 써요.');
 });
 
 test('맞는 낱말을 잘못 고른 실수·바른 낱말 속 밑줄은 자동으로 넣지 않고 보류한다', async () => {
@@ -61,7 +61,7 @@ test('자동 게시 SQL 은 공통 자료의 필수 칸(만든 사람·승인자
     const sql = publishEntrySql({ wrong: '게속', right: '계속' }, '00000000-0000-0000-0000-000000000001');
     assert.match(sql, /created_by, approved_by, approved_at\)/);
     assert.match(sql, /'monthly', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', now\(\)/);
-    assert.match(sql, /'‘게속’ 대신 ‘계속’라고 써요\.'/);
+    assert.match(sql, /'‘게속’ 대신 ‘계속’이라고 써요\.'/);
 });
 
 test('사전 관문: 틀린 꼴이 다른 뜻 표제어면 보류, 바른 꼴을 가리키는 비표준 표제어는 통과, 띄어쓰기만 다르면 묻지 않는다', async () => {
