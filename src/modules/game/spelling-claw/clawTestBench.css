@@ -142,6 +142,7 @@
 .claw-prize-settings__total.is-ok { background: var(--ui-success-soft); color: var(--ui-success); }
 .claw-prize-settings__total.is-off { background: var(--ui-warning-soft); color: var(--ui-warning); }
 .claw-prize-settings__total button { margin-left: auto; padding: 6px 12px; border: 1px solid currentColor; border-radius: var(--ui-radius-md); background: var(--ui-surface); color: inherit; font: inherit; font-weight: 900; cursor: pointer; }
+.claw-prize-settings__notice { margin: 0; padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-md); background: var(--ui-warning-soft); color: var(--ui-warning); font-size: var(--ui-text-md); font-weight: 800; }
 .claw-prize-settings__row > span, .claw-prize-settings__amount { grid-column: 1; font-weight: 800; white-space: nowrap; }
 .claw-prize-settings__row > b { text-align: right; font-size: var(--ui-text-md); color: var(--ui-primary); }
 .claw-prize-settings__amount { display: inline-flex; gap: 6px; align-items: center; }

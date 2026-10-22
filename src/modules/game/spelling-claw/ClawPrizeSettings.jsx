@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
     CLAW_DECOR_RARITIES, CLAW_DEFAULT_PRIZE_SETTINGS, CLAW_PRIZE_KINDS, CLAW_PRIZE_LIMITS, scaleClawGroup, sumClawPrizeSettings
 } from './prizeTable';
+import { rebalancePoints } from './clawPrizeBalance';
 
 /**
  * 교사 상품 설정 판 — 상품마다 **나올 확률(%)** 을 직접 넣는다(포인트 금액별·선생님 선물별·수호룡 아이템 등급별).
  * 모두 더하면 100% 가 되어야 하고, 합계는 늘 보인다. 100% 가 아니면 `100%로 맞추기` 가 차이를 가장 큰 포인트 줄에 더한다.
  * 맨 위 막대는 묶음별 합(포인트·선물·아이템)을 한눈에 보여 준다 — 학생마다 달라지지 않는, 교사가 넣은 값 그대로다.
  * 묶음마다 `전체` 칸으로 묶음 합을 바로 바꾼다(예: 선생님 선물 1% → 2%). 안의 줄은 원래 비율대로 늘거나 준다.
+ * **선생님 선물·수호룡 아이템 확률을 바꾸면 포인트 확률이 그 차이만큼 자동으로 늘거나 줄어 합계가 늘 100%로 유지된다**(2026-10-22, `clawPrizeBalance.js`).
+ * 포인트 줄을 직접 고치는 것은 자동으로 맞추지 않는다 — 그때만 합계 경고와 `100%로 맞추기` 가 나온다.
  * `draft` 는 입력 중인 그대로(이름 끝 띄어쓰기 등)이고, 추첨·학생 공개 확률은 부모가 `normalizeClawPrizeSettings` 로 검증한 값을 쓴다.
  */
 const newId = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -38,6 +41,15 @@ const PercentInput = ({ value, onChange, label }) => <label className="claw-priz
 
 const ClawPrizeSettings = ({ draft, onChange }) => {
     const set = (patch) => onChange({ ...draft, ...patch });
+    // 선물·아이템을 바꾸면 포인트가 나머지를 받아 합계를 100% 로 유지한다. 비율 기준은 ref 에 둔다(키를 칠 때마다 끝수가 쌓이지 않게).
+    const balanceMemo = useRef(null);
+    const [notice, setNotice] = useState('');
+    const setBalanced = (patch, edited = null) => {
+        const result = rebalancePoints({ ...draft, ...patch }, balanceMemo.current, edited);
+        balanceMemo.current = result.memo;
+        setNotice(result.clamped ? '선물과 수호룡 아이템 확률의 합은 100%를 넘을 수 없어요. 넘는 만큼 줄였어요.' : '');
+        onChange(result.draft);
+    };
     const { total, kinds } = sumClawPrizeSettings(draft);
     const isComplete = Math.abs(total - 100) < 0.05;
     const kindLabel = (kind) => CLAW_PRIZE_KINDS.find((item) => item.kind === kind)?.label;
@@ -58,11 +70,13 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
     const scaleList = (key, target) => {
         const rows = Reflect.get(draft, key);
         const next = scaleClawGroup(rows.map((row) => row.percent), target);
-        set({ [key]: rows.map((row, index) => ({ ...row, percent: next.at(index) })) });
+        const patch = { [key]: rows.map((row, index) => ({ ...row, percent: next.at(index) })) };
+        // 선물 묶음은 자동 맞추기, 포인트 묶음은 선생님이 정한 그대로(합계 경고가 알려 준다)
+        if (key === 'gifts') setBalanced(patch, { group: 'gifts' }); else set(patch);
     };
     const scaleDecor = (target) => {
         const next = scaleClawGroup(CLAW_DECOR_RARITIES.map(({ rarity }) => Reflect.get(draft.decor, rarity)), target);
-        set({ decor: Object.fromEntries(CLAW_DECOR_RARITIES.map(({ rarity }, index) => [rarity, next.at(index)])) });
+        setBalanced({ decor: Object.fromEntries(CLAW_DECOR_RARITIES.map(({ rarity }, index) => [rarity, next.at(index)])) }, { group: 'decor' });
     };
     const updateRow = (key, id, patch) => set({ [key]: Reflect.get(draft, key).map((row) => row.id === id ? { ...row, ...patch } : row) });
 
@@ -84,7 +98,7 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
             <div className={`claw-prize-settings__total${isComplete ? ' is-ok' : ' is-off'}`} role="status">
                 <span aria-hidden="true">{isComplete ? '✓' : '⚠'}</span>
                 <b>합계 {total}%</b>
-                {isComplete ? <span>모든 상품의 확률을 더해 100%예요.</span> : <>
+                {isComplete ? <span>모든 상품의 확률을 더해 100%예요. 선물·아이템을 바꾸면 포인트가 알아서 맞춰져요.</span> : <>
                     <span>{total < 100 ? `${round1(100 - total)}%가 모자라요.` : `${round1(total - 100)}%가 넘쳐요.`} 100%가 되어야 해요.</span>
                     <button type="button" onClick={fillTo100} disabled={!draft.points.length}>100%로 맞추기</button>
                 </>}
@@ -118,7 +132,7 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
                     {CLAW_DECOR_RARITIES.map(({ rarity, label }) => <div key={rarity} className="claw-prize-settings__row">
                         <span>{label}</span>
                         <PercentInput label={`${label} 등급`} value={Reflect.get(draft.decor, rarity)}
-                            onChange={(value) => set({ decor: { ...draft.decor, [rarity]: value } })} />
+                            onChange={(value) => setBalanced({ decor: { ...draft.decor, [rarity]: value } }, { group: 'decor', rarity })} />
                     </div>)}
                     <small>학생이 지금 단계에서 상점에서 살 수 있고 아직 없는 아이템만 나와요. 그런 아이템이 없는 등급의 확률은 포인트로 가요.</small>
                 </fieldset>
@@ -131,9 +145,10 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
                     {draft.gifts.map((row) => <div key={row.id} className="claw-prize-settings__row claw-prize-settings__row--gift">
                         <input type="text" value={row.name} maxLength={CLAW_PRIZE_LIMITS.giftName} placeholder="예: 자리 고르기권" aria-label="선물 이름"
                             onChange={(e) => updateRow('gifts', row.id, { name: e.target.value })} />
-                        <PercentInput label={row.name || '선물'} value={row.percent} onChange={(value) => updateRow('gifts', row.id, { percent: value })} />
+                        <PercentInput label={row.name || '선물'} value={row.percent}
+                            onChange={(value) => setBalanced({ gifts: draft.gifts.map((item) => (item.id === row.id ? { ...item, percent: value } : item)) }, { group: 'gifts', id: row.id })} />
                         <button type="button" aria-label={`${row.name || '선물'} 빼기`}
-                            onClick={() => set({ gifts: draft.gifts.filter((item) => item.id !== row.id) })}>✕</button>
+                            onClick={() => setBalanced({ gifts: draft.gifts.filter((item) => item.id !== row.id) })}>✕</button>
                     </div>)}
                     {draft.gifts.length < CLAW_PRIZE_LIMITS.gifts && <button type="button" className="claw-prize-settings__add"
                         onClick={() => set({ gifts: [...draft.gifts, { id: newId('g'), name: '', percent: 0 }] })}>+ 선물 추가</button>}
@@ -141,6 +156,7 @@ const ClawPrizeSettings = ({ draft, onChange }) => {
             </div>
         </div>
 
+        {notice && <p className="claw-prize-settings__notice" role="status">{notice}</p>}
         <footer className="claw-prize-settings__footer">
             <p>
                 숫자는 <b>인형 하나를 뽑았을 때 그 상품이 나올 확률</b>이에요. 0%로 두면 나오지 않아요. 묶음 <b>전체</b> 칸을 바꾸면 안의 상품이 원래 비율대로 함께 바뀌어요.
