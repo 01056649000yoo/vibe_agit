@@ -26,6 +26,7 @@ import { labActivitiesManifest } from './writing/lab-activities/manifest';
 import { classAgitManifest } from './class-agit/manifest';
 import { classTimetableManifest } from './tool/class-timetable/manifest';
 import { spellingClawManifest } from './game/spelling-claw/manifest';
+import { quizArenaManifest } from './game/quiz-arena/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -47,6 +48,7 @@ const manifests = [
   classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
   classTimetableManifest, // src/modules/tool/class-timetable/ (new:module, 공개 전)
   spellingClawManifest, // src/modules/game/spelling-claw/ (학급별 켜기, 기본 꺼짐)
+  quizArenaManifest, // src/modules/game/quiz-arena/ (new:module, 공개 전)
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

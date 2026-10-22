@@ -28,6 +28,7 @@ const TeacherLayoutPreview = lazy(() => import('./TeacherLayoutPreview.jsx'))
 const WritingChangePreview = lazy(() => import('./WritingChangePreview.jsx'))
 const TeacherEditRoundsPreview = lazy(() => import('./TeacherEditRoundsPreview.jsx'))
 const SpellingClawPreview = lazy(() => import('./SpellingClawPreview.jsx'))
+const QuizArenaPreview = lazy(() => import('./QuizArenaPreview.jsx'))
 const TeacherAccountMenuPreview = lazy(() => import('./TeacherAccountMenuPreview.jsx'))
 const StudentInputPreview = lazy(() => import('./StudentInputPreview.jsx'))
 const MissionFormPreview = lazy(() => import('./MissionFormPreview.jsx'))
@@ -187,6 +188,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '알림장 쓰기 · 서식',
     description: '설정창·머리말·도구 세 폭에서 서식 1·2·3 불러오기와 저장이 넘치지 않는지 본다',
     Component: NoticeComposerPreview,
+  }),
+  Object.freeze({
+    id: 'quiz-arena',
+    icon: '⚔️',
+    title: '수호룡 퀴즈 아레나(관리자 시험)',
+    description: '어휘·맞춤법 자료로 기본 문제 세트를 만들어 미리 보고, 결투장 선생님 입구로 가는 길을 본다',
+    Component: QuizArenaPreview,
   }),
   Object.freeze({
     id: 'class-timetable',

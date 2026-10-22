@@ -267,6 +267,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                         >
                             <span style={{ fontSize: '1.3rem' }}>{module.icon || '🎮'}</span>
                             <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', fontWeight: '900' }}>{module.name}</span>
+                            {module.adminOnly && <span style={{ flex: '0 0 auto', padding: '1px 7px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontSize: '0.8rem', fontWeight: '900' }}>개발중</span>}
                             <TeacherCountBadge count={Number(moduleBadges[module.id]) || 0} label="처리할 일" />
                             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOn ? '#22C55E' : '#94A3B8', flex: '0 0 auto' }} />
                         </button>
