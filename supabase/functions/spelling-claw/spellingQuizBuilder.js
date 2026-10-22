@@ -36,11 +36,12 @@ export const SPELLING_QUIZ_LEVELS = Object.freeze({
 
 export const QUIZ_BLANK = '＿＿＿';
 /**
- * 퀴즈마다 꼭 넣는 재료 수(2026-10-03 선생님 결정): 관리자가 게시한 **공통 자료**에서 2문제는 무조건.
- * 공통 자료는 학생들이 실제로 자주 틀린 표현이라 기본 사전 486개 사이에 묻혀 평균 1.3문제만 나왔다.
- * 나머지 칸은 전처럼 무작위라 공통 자료가 더 나올 수도 있다. 공통 자료가 모자라면 있는 만큼만.
+ * 퀴즈마다 꼭 넣는 재료 수: 관리자가 게시한 **공통 자료**에서 1문제는 무조건.
+ * 2026-10-03 선생님 결정은 2문제였으나, 공통 자료가 86개뿐이라 한 판의 22%를 차지해 같은 말이 자주 다시 나왔다
+ * (학생 기록 7,067판 분석, 2026-10-22 선생님 결정으로 1문제로 줄임). 나머지 칸은 무작위라 더 나올 수도 있다.
+ * 공통 자료가 모자라면 있는 만큼만.
  */
-export const SPELLING_QUIZ_GUARANTEED = Object.freeze({ common: 2 });
+export const SPELLING_QUIZ_GUARANTEED = Object.freeze({ common: 1 });
 const MAX_WRITE_LENGTH = 10;
 
 const nfc = (value) => String(value ?? '').normalize('NFC');
@@ -339,11 +340,19 @@ export const SPELLING_QUIZ_BOOK_LIMIT = 1;
 
 export const createSpellingQuiz = (pool, {
     count = 10, writeCount = 4, random = Math.random, preferredEntryKeys = [], guaranteed = SPELLING_QUIZ_GUARANTEED,
-    bookLimit = SPELLING_QUIZ_BOOK_LIMIT, excludeEntryKeys = []
+    bookLimit = SPELLING_QUIZ_BOOK_LIMIT, excludeEntryKeys = [], excludeAnswers = []
 } = {}) => {
+    // 서로 다른 항목이 같은 정답을 내는 문제(베개 / 배게 가 여러 자료에 있을 때)는 이미 푼 정답이면 빼고, 한 판 안에서도 한 번만 낸다.
+    const answerKey = (item) => withoutSpaces(normalizeQuizAnswer(item.answer));
+    const blocked = new Set(excludeAnswers.map((answer) => withoutSpaces(normalizeQuizAnswer(answer))));
     const byEntry = new Map();
-    for (const item of pool) byEntry.set(item.entryKey, [...(byEntry.get(item.entryKey) || []), item]);
+    for (const item of pool) {
+        if (blocked.has(answerKey(item))) continue;
+        byEntry.set(item.entryKey, [...(byEntry.get(item.entryKey) || []), item]);
+    }
     for (const key of excludeEntryKeys) byEntry.delete(key);
+    const usedAnswers = new Set();
+    let dedupeAnswers = true;
     // 꼭 넣을 재료(공통 자료 2개)를 무작위로 골라 먼저 낼 항목 앞에 둔다 — 아래 take 가 먼저 낼 항목부터 쓰므로 반드시 들어간다.
     const mustKeys = Object.entries(guaranteed || {}).flatMap(([source, need]) => shuffle(
         [...byEntry.keys()].filter((key) => byEntry.get(key)[0]?.source === source && !preferredEntryKeys.includes(key)), random
@@ -362,14 +371,22 @@ export const createSpellingQuiz = (pool, {
         for (const key of order) {
             if (picked.filter((item) => item.kind === kind).length >= limit) return;
             if (used.has(key)) continue;
-            const options = byEntry.get(key).filter((item) => item.kind === kind);
+            const options = byEntry.get(key).filter((item) => item.kind === kind && (!dedupeAnswers || !usedAnswers.has(answerKey(item))));
             if (!options.length) continue;
             used.add(key);
-            picked.push(options[Math.floor(random() * options.length)]);
+            const chosen = options[Math.floor(random() * options.length)];
+            usedAnswers.add(answerKey(chosen));
+            picked.push(chosen);
         }
     };
     take('write', Math.min(writeCount, count));
     take('choice', count - picked.length);
+    // 같은 정답을 빼다가 문제가 모자라면(작은 자료 묶음) 같은 정답도 허용해 10문제를 채운다.
+    if (picked.length < count) {
+        dedupeAnswers = false;
+        take('write', Math.min(writeCount, count));
+        take('choice', count - picked.filter((item) => item.kind === 'write').length);
+    }
     return shuffle(picked, random).map((item, index) => ({
         ...item,
         number: index + 1,
@@ -384,8 +401,11 @@ export const createSpellingQuiz = (pool, {
 export const createFreshSpellingQuiz = (pool, seenEntryKeys = [], options = {}) => {
     const count = options.count ?? 10;
     const seen = [...new Set(seenEntryKeys)];
+    const seenAnswers = [...new Set(options.seenAnswers ?? [])];
+    // 오래된 기록부터 줄여 가며(절반씩) 문제가 모자라지 않게 한다 — 푼 말과 푼 정답을 같은 비율로 줄인다.
     for (let keep = seen.length; keep >= 0; keep = keep > 0 ? Math.floor(keep / 2) : -1) {
-        const quiz = createSpellingQuiz(pool, { ...options, excludeEntryKeys: seen.slice(0, keep) });
+        const answerKeep = seen.length ? Math.ceil(seenAnswers.length * keep / seen.length) : 0;
+        const quiz = createSpellingQuiz(pool, { ...options, excludeEntryKeys: seen.slice(0, keep), excludeAnswers: seenAnswers.slice(0, answerKeep) });
         if (quiz.length >= count) return quiz;
     }
     return createSpellingQuiz(pool, options);

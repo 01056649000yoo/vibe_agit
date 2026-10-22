@@ -105,13 +105,16 @@ const quizStart = async (userClient: ReturnType<typeof createClient>, admin: Ret
         ...(await loadBaseSources())
     ])
     const writeCount = Reflect.get(SPELLING_QUIZ_LEVELS, settings.quizLevel)?.writeCount ?? 4
-    // 전에 푼 적 없는 말로만 낸다(최근 30번 치 — 가장 최근에 푼 말이 앞). 새 말이 바닥나면 오래전에 푼 말부터 다시 낸다.
+    // 전에 푼 적 없는 말·정답으로만 낸다(최근 100번 치 — 가장 최근에 푼 말이 앞). 새 말이 바닥나면 오래전에 푼 말부터 다시 낸다.
+    // (2026-10-22: 30판 → 100판. 판을 많이 하는 학생은 30판이 지나면 푼 말이 다시 나왔다.)
     const { data: recentAttempts } = await admin.from('spelling_claw_quiz_attempts').select('questions')
-        .eq('student_id', context.student_id).order('created_at', { ascending: false }).limit(30)
-    const seenEntryKeys = (recentAttempts ?? []).flatMap((attempt: { questions: unknown }) => Array.isArray(attempt.questions)
-        ? (attempt.questions as { entryKey?: string }[]).map((item) => item?.entryKey).filter((key): key is string => typeof key === 'string')
+        .eq('student_id', context.student_id).order('created_at', { ascending: false }).limit(100)
+    const seenQuestions = (recentAttempts ?? []).flatMap((attempt: { questions: unknown }) => Array.isArray(attempt.questions)
+        ? (attempt.questions as { entryKey?: string, answer?: string }[])
         : [])
-    const quiz = createFreshSpellingQuiz(pool, seenEntryKeys, { count: QUIZ_COUNT, writeCount })
+    const seenEntryKeys = seenQuestions.map((item) => item?.entryKey).filter((key): key is string => typeof key === 'string')
+    const seenAnswers = seenQuestions.map((item) => item?.answer).filter((answer): answer is string => typeof answer === 'string')
+    const quiz = createFreshSpellingQuiz(pool, seenEntryKeys, { count: QUIZ_COUNT, writeCount, seenAnswers })
     if (quiz.length < QUIZ_COUNT) throw new Error('quiz_pool_too_small')
     const attemptId = await rpcOrThrow(admin, 'spelling_claw_issue_quiz_v1', {
         p_student_id: context.student_id, p_questions: quiz, p_pass_count: settings.passCount

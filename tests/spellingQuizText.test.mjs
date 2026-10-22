@@ -7,6 +7,7 @@ import {
     QUIZ_BLANK,
     matchLeadingParticle,
     gradeSpellingAnswer,
+    createFreshSpellingQuiz,
     buildSpellingQuizPool,
     spellingSourcesFromCatalog
 } from '../supabase/functions/spelling-claw/spellingQuizBuilder.js';
@@ -66,4 +67,23 @@ test('주관식은 정답 뒤에 조사까지 붙여 써도 맞게 본다', () =
     assert.ok(item, '이 사람 문제가 있어야 합니다.');
     for (const given of ['이 사람', '이 사람은', ' 이 사람을 ']) assert.ok(gradeSpellingAnswer(item, given).correct, given);
     assert.ok(!gradeSpellingAnswer(item, '이사람은').correct);
+});
+
+test('많이 푸는 학생도 80판 동안 같은 말·같은 정답이 다시 나오지 않는다', () => {
+    let seed = 7;
+    const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const seenKeys = []; const seenAnswers = []; // 가장 최근이 앞
+    const askedKeys = new Set(); const askedAnswers = new Set();
+    for (let round = 0; round < 80; round += 1) {
+        const quiz = createFreshSpellingQuiz(pool, seenKeys, { count: 10, writeCount: 4, random, seenAnswers });
+        assert.equal(quiz.length, 10);
+        assert.equal(new Set(quiz.map((item) => item.answer.replace(/\s/gu, ''))).size, 10, '한 판 안에 같은 정답이 둘 있습니다.');
+        for (const item of quiz) {
+            const answer = item.answer.replace(/\s/gu, '');
+            assert.ok(!askedKeys.has(item.entryKey), `${round + 1}번째 판에서 ${item.entryKey} 가 다시 나왔습니다.`);
+            assert.ok(!askedAnswers.has(answer), `${round + 1}번째 판에서 정답 ${item.answer} 가 다시 나왔습니다.`);
+            askedKeys.add(item.entryKey); askedAnswers.add(answer);
+        }
+        seenKeys.unshift(...quiz.map((item) => item.entryKey)); seenAnswers.unshift(...quiz.map((item) => item.answer));
+    }
 });
