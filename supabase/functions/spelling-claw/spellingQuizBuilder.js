@@ -282,6 +282,20 @@ export const SPELLING_QUIZ_SKIPPED_ENTRIES = Object.freeze({
     'base:practice-spelling-quiz-059': '‘건들다’ 표준어 여부 확인 전까지 뺌',
     'base:x-63bff7f0c3': '‘찌게개’는 학생이 쓰지 않는 꼴(찌개 / 찌게 항목이 따로 있음)',
     'base:practice-spelling-quiz-010': '‘안 했다 / 않았다’ — ‘않다’도 본동사로 쓰여 정답이 둘로 읽힘',
+    'base:x-079ca25c50': '‘상판대기 / 쌍판대기’ 모델 풀이에서 의견이 갈림 — 규범 확인 전까지 뺌',
+    'base:x-3cd1217ab9': '‘가득이’를 고치면 ‘가득’도 ‘가득히’도 바른 말',
+    'base:x-37f61123bd': '‘전선대’ 표준어 여부 확인 전까지 뺌',
+    'base:x-c96c83c2c5': '‘귀엣고리’ 표준어 여부 확인 전까지 뺌',
+    'base:x-dc24584f6a': '‘짜증나다 / 짜증 나다’ 둘 다 쓰임',
+    'base:hal-geol': '‘할 걸 / 할걸’ 문맥 없이는 정답이 둘',
+    'base:practice-spelling-quiz-093': '‘나도 한번 / 한 번 해 보고 싶다’ 문맥에 따라 둘 다 맞음',
+    'base:practice-spelling-quiz-086': '‘갈 걸’ 도 바른 말이라 오답 보기가 하나로 정해지지 않음',
+    'base:x-d07cba09a7': '‘허위적거리다’ 표준어 여부 확인 전까지 뺌',
+    'base:x-b14dcfdc77': '‘소나기비’ 표준어 여부 확인 전까지 뺌',
+    'base:x-9b5f76f853': '‘빈자떡’ 표준어 여부 확인 전까지 뺌',
+    'base:x-2e22b0737a': '‘애닯다’ 표준어 여부 확인 전까지 뺌',
+    'base:expansion-meoritgireum': '‘머릿기름 / 머리기름’ 둘 다 쓰임',
+    'base:x-c352b76991': '‘괴퍅하다’ 표준어 여부 확인 전까지 뺌',
     'base:x-f61ae49ef4': '‘궁시렁거리다’ 표준어 여부 확인 전까지 뺌'
 });
 
@@ -392,6 +406,10 @@ export const gradeSpellingAnswer = (item, input) => {
     const given = normalizeQuizAnswer(input);
     if (!given) return { correct: false, nearMiss: false };
     if (accepted.includes(given)) return { correct: true, nearMiss: false };
+    // 학생이 낱말에 조사까지 붙여 쓴 것(`이 사람은`)도 맞게 본다 — 고칠 곳이 `이 사람` 일 때(2026-10-22 세 모델 풀이에서 발견).
+    if (item.kind === 'write' && accepted.some((answer) => given.startsWith(answer) && JOSA_ONLY.test(given.slice(answer.length)))) {
+        return { correct: true, nearMiss: false };
+    }
     const nearMiss = item.kind === 'write' && !item.strictSpacing
         && accepted.some((answer) => withoutSpaces(given) === withoutSpaces(answer));
     return { correct: false, nearMiss };

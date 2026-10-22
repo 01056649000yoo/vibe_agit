@@ -6,6 +6,7 @@ import { fixParticles } from '../src/modules/writing/student-input/checker/catal
 import {
     QUIZ_BLANK,
     matchLeadingParticle,
+    gradeSpellingAnswer,
     buildSpellingQuizPool,
     spellingSourcesFromCatalog
 } from '../supabase/functions/spelling-claw/spellingQuizBuilder.js';
@@ -58,4 +59,11 @@ test('학생용 설명에서 만든 사람용 메모 문장을 뺀다', () => {
     assert.equal(stripMakerNotes('‘바꼈다’는 틀려요. 하지만 이 표현은 한 학급에서만 나온 것이므로 주의가 필요합니다.'), '‘바꼈다’는 틀려요.');
     assert.equal(stripMakerNotes('‘게’는 앞말과 띄어 써요. 한 번 나온 표현이라 공통 자료로 삼기에는 조심스러워요.'), '‘게’는 앞말과 띄어 써요.');
     assert.equal(stripMakerNotes('‘뵈다’는 ‘보이다’의 준말이에요.'), '‘뵈다’는 ‘보이다’의 준말이에요.');
+});
+
+test('주관식은 정답 뒤에 조사까지 붙여 써도 맞게 본다', () => {
+    const item = pool.find((entry) => entry.type === 'spacingWrite' && entry.answer === '이 사람');
+    assert.ok(item, '이 사람 문제가 있어야 합니다.');
+    for (const given of ['이 사람', '이 사람은', ' 이 사람을 ']) assert.ok(gradeSpellingAnswer(item, given).correct, given);
+    assert.ok(!gradeSpellingAnswer(item, '이사람은').correct);
 });

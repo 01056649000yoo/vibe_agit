@@ -63,3 +63,7 @@ UPDATE public.spelling_learning_entries
 UPDATE public.spelling_learning_entries
    SET explanation = '‘세’와 ‘번’은 서로 다른 낱말이라 띄어 써요. 수를 나타내는 말과 단위는 띄어 쓰는 것이 원칙이에요.', updated_at = now()
  WHERE scope = 'common' AND wrong_expression = '세번' AND correct_expression = '세 번';
+
+-- 4) 질문 해준 / 질문해준 — '질문해 준'이 원칙이고 붙여 쓰기도 허용이라 정답이 하나로 정해지지 않는다(세 모델 풀이에서 발견)
+UPDATE public.spelling_learning_entries SET status = 'disabled', updated_at = now()
+ WHERE scope = 'common' AND wrong_expression = '질문 해준' AND correct_expression = '질문해준' AND status <> 'disabled';
