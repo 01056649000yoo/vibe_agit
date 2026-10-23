@@ -8,9 +8,10 @@ const GROUPS = [
     { id: 'vocab-4', label: '어휘 4학년', leveled: true, match: (set, level) => set.kind === 'vocab' && set.grade === 4 && (!level || set.level === level) },
     { id: 'vocab-5', label: '어휘 5학년', leveled: true, match: (set, level) => set.kind === 'vocab' && set.grade === 5 && (!level || set.level === level) },
     { id: 'vocab-6', label: '어휘 6학년', leveled: true, match: (set, level) => set.kind === 'vocab' && set.grade === 6 && (!level || set.level === level) },
-    { id: 'spelling-low', label: '맞춤법 하(쉬움)', match: (set) => set.id.startsWith('official-spelling-low-') },
-    { id: 'spelling-mid', label: '맞춤법 중(보통)', match: (set) => set.id.startsWith('official-spelling-mid-') },
-    { id: 'spelling-high', label: '맞춤법 상(어려움)', match: (set) => set.id.startsWith('official-spelling-high-') }
+    { id: 'spelling-3', label: '맞춤법 3학년', match: (set) => set.kind === 'spelling' && set.grade === 3 },
+    { id: 'spelling-4', label: '맞춤법 4학년', match: (set) => set.kind === 'spelling' && set.grade === 4 },
+    { id: 'spelling-5', label: '맞춤법 5학년', match: (set) => set.kind === 'spelling' && set.grade === 5 },
+    { id: 'spelling-6', label: '맞춤법 6학년', match: (set) => set.kind === 'spelling' && set.grade === 6 }
 ];
 const LEVELS = [{ id: 0, label: '전체' }, { id: 1, label: '쉬움' }, { id: 2, label: '보통' }, { id: 3, label: '어려움' }];
 const FORMAT_LABELS = { ox: 'O/X', c2: '2지선다', c4: '4지선다' };

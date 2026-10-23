@@ -4,18 +4,18 @@ import { readFileSync } from 'node:fs';
 import { buildOfficialFile } from '../scripts/build-quiz-arena-official-sets.mjs';
 import { validateArenaQuestions } from '../src/modules/game/quiz-arena/quizSetBuilder.js';
 
-// 퀴즈 아레나 기본(공식) 세트(2026-10-23 판): 어휘 학년×수준별 · 맞춤법 하·중·상 10세트씩. 문항 형식은 O/X·2지선다·4지선다가 섞인다.
+// 퀴즈 아레나 기본(공식) 세트(2026-10-23 판): 어휘 학년×수준별 · 맞춤법 학년(3~6)별. 문항 형식은 O/X·2지선다·4지선다가 섞인다.
 const file = JSON.parse(readFileSync('public/quiz-arena/official-sets-v1.json', 'utf8'));
 const vocab = file.sets.filter((set) => set.kind === 'vocab');
 const spelling = file.sets.filter((set) => set.kind === 'spelling');
 const kindsOf = (set) => new Set(set.questions.map((q) => q.kind));
 
-test('세트 구성: 어휘는 학년(3~6)×수준(1~3) 모두 있고, 맞춤법은 수준별 10세트, 크기는 15·20', () => {
+test('세트 구성: 어휘는 학년(3~6)×수준(1~3) 모두 있고, 맞춤법은 학년(3~6)마다 여러 세트, 크기는 15·20', () => {
     assert.equal(file.version, 1);
     for (const grade of [3, 4, 5, 6]) for (const level of [1, 2, 3]) {
         assert.ok(vocab.filter((set) => set.grade === grade && set.level === level).length >= 2, `${grade}학년 수준 ${level} 세트가 모자랍니다`);
     }
-    for (const level of ['low', 'mid', 'high']) assert.equal(spelling.filter((set) => set.id.startsWith(`official-spelling-${level}-`)).length, 10);
+    for (const grade of [3, 4, 5, 6]) assert.ok(spelling.filter((set) => set.grade === grade).length >= 10, `${grade}학년 맞춤법 세트가 모자랍니다`);
     file.sets.forEach((set) => assert.ok([15, 20].includes(set.questions.length), `${set.id}: ${set.questions.length}문제`));
     assert.equal(new Set(file.sets.map((set) => set.id)).size, file.sets.length);
     // 한 세트의 낱말은 모두 같은 수준이다(어휘)
@@ -56,7 +56,7 @@ test('어휘: 한 학년 안에서 낱말이 겹치지 않고, 정답이 문제�
     }
 });
 
-test('맞춤법: 같은 문제가 두 번 나오지 않고, 4지선다는 정답이 하나뿐이도록 보기를 다른 항목에서 가져온다', () => {
+test('맞춤법: 같은 문제가 두 번 나오지 않고, 한 항목은 같은 형식으로 한 번만, 4지선다는 정답이 하나뿐이도록 보기를 다른 항목에서 가져온다', () => {
     const texts = spelling.flatMap((set) => set.questions.map((q) => `${q.kind}|${q.text}|${q.choices?.join('/') ?? ''}`));
     assert.equal(new Set(texts).size, texts.length, '같은 문제가 있습니다');
     for (const set of spelling) for (const q of set.questions.filter((item) => item.kind === 'c4')) {

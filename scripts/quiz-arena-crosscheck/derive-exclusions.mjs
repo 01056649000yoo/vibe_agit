@@ -12,7 +12,7 @@ const lookupEntries = rj('public/spelling/elementary-lookup-v1.json').lookupEntr
 const exclPath = `${R}scripts/quiz-arena-official-exclusions.json`;
 const excl = rj('scripts/quiz-arena-official-exclusions.json');
 excl.confusable ??= []; excl.badForms ??= [];
-const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, lookupEntries, difficulty: rj('scripts/quiz-arena-spelling-difficulty.json'), exclusions: excl });
+const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, lookupEntries, grades: rj('scripts/quiz-arena-spelling-grade.json'), exclusions: excl });
 const byId = new Map(sets.map((s) => [s.id, s]));
 const fileSets = new Map(rj('public/quiz-arena/official-sets-v1.json').sets.map((s) => [s.id, s]));
 const rows = JSON.parse(fs.readFileSync(`${D}/cmp-r${round}.json`, 'utf8'));
@@ -23,9 +23,14 @@ const done = new Set(fs.existsSync(donePath) ? JSON.parse(fs.readFileSync(donePa
 const circled = { '①': 0, '②': 1, '③': 2, '④': 3 };
 const add = { vocab: new Set(excl.vocab), spelling: new Set(excl.spelling), confusable: new Set(excl.confusable.map((p) => p.join('|'))), badForms: new Set(excl.badForms) };
 let bad = 0, pass = 0;
+// 풀이한 뒤 세트가 다시 만들어져도 맞도록 번호(세트·순서)가 아니라 **문제 내용(key)** 으로 지금 세트의 문제를 찾는다
+const byKey = new Map();
+for (const set of sets) set.questions.forEach((question) => byKey.set(keyOf(question), { set, question }));
 for (const r of rows) {
-  const set = byId.get(r.set); const q = set?.questions[r.no - 1];
-  if (!q) continue;
+  const solvedKey = solved.get(r.id);
+  const found = byKey.get(solvedKey);
+  if (!found) { if (!r.wrong.length && !r.unsure.length) done.add(solvedKey); continue; } // 지금 세트에 없는 문제도 통과 기록은 남긴다(다시 나오면 재사용)
+  const { set, question: q } = found;
   const flagged = r.wrong.length || r.unsure.length;
   if (!flagged) { done.add(solved.get(r.id)); pass += 1; continue; }
   bad += 1;

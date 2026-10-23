@@ -5,8 +5,8 @@
  *   node scripts/build-quiz-arena-official-sets.mjs          # 만들어 쓰기
  *   node scripts/build-quiz-arena-official-sets.mjs --check  # 쓰지 않고 지금 파일과 같은지만 본다(다르면 종료 코드 1)
  *
- * 입력: 학년별 어휘(`public/data/gradeN_vocab.json`), 맞춤법 문제 재료(인형뽑기와 같은 풀), 맞춤법 항목 수준 표
- * (`scripts/quiz-arena-spelling-difficulty.json`, 두 모델 분류의 합의), 검토에서 뺀 자료(`scripts/quiz-arena-official-exclusions.json`).
+ * 입력: 학년별 어휘(`public/data/gradeN_vocab.json`), 맞춤법 문제 재료(인형뽑기와 같은 풀), 맞춤법 항목 학년 표
+ * (`scripts/quiz-arena-spelling-grade.json`, 두 모델 분류의 합의), 검토에서 뺀 자료(`scripts/quiz-arena-official-exclusions.json`).
  * 같은 입력이면 같은 파일이 나온다(난수는 고정 씨앗).
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -20,9 +20,9 @@ export const buildOfficialFile = () => {
     const vocabByGrade = Object.fromEntries([3, 4, 5, 6].map((grade) => [grade, read(`public/data/grade${grade}_vocab.json`)]));
     const pool = buildSpellingQuizPool(spellingSourcesFromCatalog(read('public/spelling/elementary-lookup-v1.json'), read('public/spelling/elementary-detection-v1.json')));
     const lookupEntries = read('public/spelling/elementary-lookup-v1.json').lookupEntries;
-    const difficulty = read('scripts/quiz-arena-spelling-difficulty.json');
+    const grades = read('scripts/quiz-arena-spelling-grade.json');
     const exclusions = existsSync('scripts/quiz-arena-official-exclusions.json') ? read('scripts/quiz-arena-official-exclusions.json') : {};
-    const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, lookupEntries, difficulty, exclusions });
+    const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, lookupEntries, grades, exclusions });
     // 서버로 보낼 때 필요 없는 검토용 표식(meta)은 파일에도 두지 않는다
     const clean = sets.map((set) => ({ ...set, questions: set.questions.map(stripMeta) }));
     return `${JSON.stringify({ version: 1, sets: clean }, null, 1)}\n`;
