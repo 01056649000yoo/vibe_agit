@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-23 — 퀴즈 아레나 기본 문제 세트 70개와 탭 화면 (Claude)
+- **한 일**: 선생님 요청(관리자 기본 세트 + 교사 세트 + 공유방 구조, GPT·제미나이 검토)으로 **기본(공식) 세트 70개·1225문제** 생성 — 어휘 3~6학년 학년별 10세트, 맞춤법 하·중·상 10세트씩, 세트마다 15·20문제, 난이도 섞음. 맞춤법 항목 1323개의 난이도는 Codex(`gpt-6.1-sol` medium)·아르곤이 따로 분류해 합의. 문제는 두 모델이 여덟 번(처음 전체+7번 재검토) 검토, 지적 297건 제외·대체, 마지막 판 지적 0건. 교사 화면을 `기본 세트`·`내 세트`·`새로 만들기` 탭 + 문제 카드 미리보기로 개편(가져오기·저장·공유 올리기·삭제는 `20261406` 함수 사용).
+- **변경**: `src/modules/game/quiz-arena/`(officialSets·quizArenaApi·SetPreview·OfficialSetsTab·MySetsTab·CreateTab·TeacherEntry), `scripts/build-quiz-arena-official-sets.mjs`·`quiz-arena-spelling-difficulty.json`·`quiz-arena-official-exclusions.json`, `public/quiz-arena/official-sets-v1.json`, 개발실 흉내 DB, 시험 2개, FEATURE_MAP v1.26.33·도움말·계획 문서. 모델에는 공개 자료(어휘·맞춤법)만 보냈다(학생 정보 없음). Codex 5시간 창 69%→약 40%대 사용.
+- **결과/검증**: `test:all`·eslint·빌드 통과, 개발실에서 폭 1100·390 렌더링과 가져오기→내 세트→공유→삭제→새로 만들기→저장 흐름 확인(가로 넘침·오류 없음). 최종 파일의 모든 문제가 검토 기록에 있음. 아직 배포·푸시하지 않음.
+- **남은 것**: OI-038(공유방 탭·문제 직접 입력·편집·방 바로 열기·AI 정리).
+
 ## 2026-10-23 — 로컬 배포·`20261405` 적용·푸시 (Claude)
 - **한 일**: 선생님 `배포`·`적용해`·`푸시` 로 Edge 함수 동기화(`spelling-claw` 등) + `npm run deploy:local`(앱에 퀴즈 아레나 관리자 메뉴·인형뽑기 재점검 고침 포함) + 대기 중이던 `20261405`(공통 맞춤법 자료 정리) `--only` 적용 + 푸시. 게임 서버 저장소(`suhoryong-arena`)도 푸시.
 - **변경**: 운영 DB `20261405` 적용(데이터만, `재밌게`·`질문 해준` 끔·만든 사람용 메모 문장 0건 확인). 적용 로그의 `SET LOCAL … transaction blocks` 경고는 이 표와 무관한 프로필 보호 우회 설정이라 영향 없음. 앱·Edge 는 맥미니 로컬 배포(git 밖).

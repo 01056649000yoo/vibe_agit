@@ -30,3 +30,15 @@ test('quiz-arena: 인형뽑기 바로 아래에 놓이고 도움말도 관리자
     const guides = readFileSync('src/constants/teacherGuides.js', 'utf8');
     assert.match(guides, /'quiz-arena': \{\n\s+title: '수호룡 퀴즈 아레나',\n\s+adminOnly: true,/);
 });
+
+test('quiz-arena: 화면은 기본 세트·내 세트·새로 만들기 탭이고 데이터 길은 적용된 DB 함수 이름만 쓴다', () => {
+    const entry = readFileSync('src/modules/game/quiz-arena/TeacherEntry.jsx', 'utf8');
+    for (const label of ['기본 세트', '내 세트', '새로 만들기']) assert.ok(entry.includes(`label: '${label}'`), `${label} 탭이 없습니다.`);
+    const api = readFileSync('src/modules/game/quiz-arena/quizArenaApi.js', 'utf8');
+    const migration = readFileSync('supabase/migrations/20261406_quiz_arena_sets.sql', 'utf8');
+    const called = [...api.matchAll(/rpc\('([a-z_0-9]+)'/g)].map((match) => match.at(1));
+    assert.ok(called.length >= 5, '데이터 함수 호출이 너무 적습니다.');
+    for (const name of called) assert.ok(migration.includes(`FUNCTION public.${name}(`), `${name} 가 20261406 에 없습니다.`);
+    // 기본 세트는 정적 파일에서 열 때 한 번만 받는다(DB 요청 없음)
+    assert.match(api, /fetch\('\/quiz-arena\/official-sets-v1\.json'\)/);
+});
