@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck05",
   "deckNumber": 5,
@@ -15,8 +15,8 @@
     "examplesChanged": 0,
     "acceptedAnswersChanged": 0,
     "usageDistinctionsAuthored": 40,
-    "priorityItems": 1,
-    "sampleItems": 39,
+    "priorityItems": 0,
+    "sampleItems": 40,
     "correctedItems": 0,
     "autoDraftCorrectionRate": 0
   },
@@ -54,7 +54,7 @@
               "isCorrect": true
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -336,9 +336,9 @@
       "category": "과학과 기술",
       "level": 1,
       "sourceDefinition": "어떤 일을 할 때 편리하게 쓰이는 물건을 말해요.",
-      "sourceExample": "길이를 잴 때는 자라는 도구를 사용하면 아주 정확해요.",
+      "sourceExample": "길이를 잴 때는 '자'라는 도구를 사용하면 아주 정확해요.",
       "definition": "어떤 일을 할 때 편리하게 쓰이는 물건을 말해요.",
-      "example": "길이를 잴 때는 자라는 도구를 사용하면 아주 정확해요.",
+      "example": "길이를 잴 때는 '자'라는 도구를 사용하면 아주 정확해요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -360,11 +360,11 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+              "value": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -375,7 +375,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "길이를 잴 때는 자라는 ＿＿＿＿를 사용하면 아주 정확해요.",
+          "prompt": "길이를 잴 때는 '자'라는 ＿＿＿＿를 사용하면 아주 정확해요.",
           "options": [
             {
               "value": "관찰",
@@ -404,7 +404,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "길이를 잴 때는 자라는 ＿＿＿＿를 사용하면 아주 정확해요.",
+          "prompt": "길이를 잴 때는 '자'라는 ＿＿＿＿를 사용하면 아주 정확해요.",
           "acceptedAnswers": [
             "도구"
           ]
@@ -418,7 +418,7 @@
               "isCorrect": false
             },
             {
-              "value": "길이를 잴 때는 자라는 도구를 사용하면 아주 정확해요.",
+              "value": "길이를 잴 때는 '자'라는 도구를 사용하면 아주 정확해요.",
               "isCorrect": true
             }
           ],
@@ -437,9 +437,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 1,
-      "sourceDefinition": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+      "sourceDefinition": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
       "sourceExample": "일기장에 오늘 있었던 일을 정성껏 한 문장씩 써 내려갔어.",
-      "definition": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+      "definition": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
       "example": "일기장에 오늘 있었던 일을 정성껏 한 문장씩 써 내려갔어.",
       "flags": [],
       "duplicateReview": null,
@@ -458,7 +458,7 @@
           "prompt": "‘문장’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": true
             },
             {
@@ -470,7 +470,7 @@
               "isCorrect": false
             },
             {
-              "value": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+              "value": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
               "isCorrect": false
             }
           ]
@@ -499,7 +499,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "문장"
           ]
@@ -524,7 +524,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘각’의 쓰임이에요. ‘문장’은 생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+          "explanation": "이 문장은 원래 ‘각’의 쓰임이에요. ‘문장’은 생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -568,7 +568,7 @@
               "isCorrect": true
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -743,13 +743,11 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 1,
-      "sourceDefinition": "전체 중에서 어느 한 부분을 말해요.",
+      "sourceDefinition": "전체를 이루는 것 가운데 한 조각이나 한쪽을 말해요.",
       "sourceExample": "피자 전체 중에서 내가 먹고 싶은 부분만 한 조각 떼어 냈어.",
-      "definition": "전체 중에서 어느 한 부분을 말해요.",
+      "definition": "전체를 이루는 것 가운데 한 조각이나 한쪽을 말해요.",
       "example": "피자 전체 중에서 내가 먹고 싶은 부분만 한 조각 떼어 냈어.",
-      "flags": [
-        "definition_contains_word"
-      ],
+      "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
@@ -758,10 +756,8 @@
         "acceptedAnswers": false
       },
       "reviewOrigin": "assisted_codex_candidate",
-      "reviewPriority": "priority",
-      "reviewReasons": [
-        "definition_contains_word"
-      ],
+      "reviewPriority": "sample",
+      "reviewReasons": [],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
@@ -780,7 +776,7 @@
               "isCorrect": false
             },
             {
-              "value": "전체 중에서 어느 한 부분을 말해요.",
+              "value": "전체를 이루는 것 가운데 한 조각이나 한쪽을 말해요.",
               "isCorrect": true
             }
           ]
@@ -809,7 +805,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "전체 중에서 어느 한 부분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "전체를 이루는 것 가운데 한 조각이나 한쪽을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "부분"
           ]
@@ -834,12 +830,10 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘감염’의 쓰임이에요. ‘부분’은 전체 중에서 어느 한 부분을 말해요.",
+          "explanation": "이 문장은 원래 ‘감염’의 쓰임이에요. ‘부분’은 전체를 이루는 것 가운데 한 조각이나 한쪽을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
-          "reviewPriority": "priority",
-          "reviewReasons": [
-            "definition_contains_word"
-          ],
+          "reviewPriority": "sample",
+          "reviewReasons": [],
           "sourceItemKey": "vocab:g3:감염"
         }
       }
@@ -851,9 +845,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "여러 가지 중에서 내 마음에 드는 것을 고르는 것을 말해요.",
+      "sourceDefinition": "여러 가지 가운데에서 필요한 것이나 알맞은 것을 고르는 것을 말해요.",
       "sourceExample": "오늘 점심 메뉴로 비빔밥과 볶음밥 중 무엇을 먹을지 선택했어.",
-      "definition": "여러 가지 중에서 내 마음에 드는 것을 고르는 것을 말해요.",
+      "definition": "여러 가지 가운데에서 필요한 것이나 알맞은 것을 고르는 것을 말해요.",
       "example": "오늘 점심 메뉴로 비빔밥과 볶음밥 중 무엇을 먹을지 선택했어.",
       "flags": [],
       "duplicateReview": null,
@@ -872,7 +866,7 @@
           "prompt": "‘선택’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "여러 가지 중에서 내 마음에 드는 것을 고르는 것을 말해요.",
+              "value": "여러 가지 가운데에서 필요한 것이나 알맞은 것을 고르는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -880,7 +874,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -913,7 +907,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "여러 가지 중에서 내 마음에 드는 것을 고르는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "여러 가지 가운데에서 필요한 것이나 알맞은 것을 고르는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "선택"
           ]
@@ -938,7 +932,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘선택’은 여러 가지 중에서 내 마음에 드는 것을 고르는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘선택’은 여러 가지 가운데에서 필요한 것이나 알맞은 것을 고르는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1055,10 +1049,10 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 1,
-      "sourceDefinition": "다치거나 나쁜 일이 생길 것 같은 조마조마한 상태예요.",
-      "sourceExample": "차길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
-      "definition": "다치거나 나쁜 일이 생길 것 같은 조마조마한 상태예요.",
-      "example": "차길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
+      "sourceDefinition": "다치거나 손해를 입는 등 나쁜 일이 생길 가능성이 있는 상태를 말해요.",
+      "sourceExample": "찻길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
+      "definition": "다치거나 손해를 입는 등 나쁜 일이 생길 가능성이 있는 상태를 말해요.",
+      "example": "찻길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1084,7 +1078,7 @@
               "isCorrect": false
             },
             {
-              "value": "다치거나 나쁜 일이 생길 것 같은 조마조마한 상태예요.",
+              "value": "다치거나 손해를 입는 등 나쁜 일이 생길 가능성이 있는 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -1095,7 +1089,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "차길 근처에서 공놀이를 하는 것은 아주 ＿＿＿＿한 행동이야.",
+          "prompt": "찻길 근처에서 공놀이를 하는 것은 아주 ＿＿＿＿한 행동이야.",
           "options": [
             {
               "value": "위험",
@@ -1117,14 +1111,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "다치거나 나쁜 일이 생길 것 같은 조마조마한 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다치거나 손해를 입는 등 나쁜 일이 생길 가능성이 있는 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "위험"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "차길 근처에서 공놀이를 하는 것은 아주 ＿＿＿＿한 행동이야.",
+          "prompt": "찻길 근처에서 공놀이를 하는 것은 아주 ＿＿＿＿한 행동이야.",
           "acceptedAnswers": [
             "위험"
           ]
@@ -1134,7 +1128,7 @@
           "prompt": "다음 중 ‘위험’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "차길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
+              "value": "찻길 근처에서 공놀이를 하는 것은 아주 위험한 행동이야.",
               "isCorrect": true
             },
             {
@@ -1142,7 +1136,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘개념’의 쓰임이에요. ‘위험’은 다치거나 나쁜 일이 생길 것 같은 조마조마한 상태예요.",
+          "explanation": "이 문장은 원래 ‘개념’의 쓰임이에요. ‘위험’은 다치거나 손해를 입는 등 나쁜 일이 생길 가능성이 있는 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1157,9 +1151,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 1,
-      "sourceDefinition": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+      "sourceDefinition": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
       "sourceExample": "10과 7의 차는 3이에요.",
-      "definition": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+      "definition": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
       "example": "10과 7의 차는 3이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -1178,7 +1172,7 @@
           "prompt": "‘차’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "수를 더하거나 빼서 알맞은 답을 구하는 과정이에요.",
+              "value": "수를 더하거나 빼거나 곱하거나 나누는 등의 방법으로 값을 구하는 과정이에요.",
               "isCorrect": false
             },
             {
@@ -1186,11 +1180,11 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일이 일어난 차례나 번수를 말해요.",
+              "value": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+              "value": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
               "isCorrect": true
             }
           ]
@@ -1219,7 +1213,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "차"
           ]
@@ -1244,7 +1238,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘차’는 큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘차’는 어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1394,7 +1388,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1463,9 +1457,9 @@
       "meaningNumber": 1,
       "category": "시간과 생활",
       "level": 1,
-      "sourceDefinition": "특별한 일이 없는 보통 때의 모습을 말해요.",
+      "sourceDefinition": "특별한 일이 없는 보통 때를 말해요.",
       "sourceExample": "나는 평소에 운동장에서 축구하는 것을 가장 좋아해.",
-      "definition": "특별한 일이 없는 보통 때의 모습을 말해요.",
+      "definition": "특별한 일이 없는 보통 때를 말해요.",
       "example": "나는 평소에 운동장에서 축구하는 것을 가장 좋아해.",
       "flags": [],
       "duplicateReview": null,
@@ -1492,11 +1486,11 @@
               "isCorrect": false
             },
             {
-              "value": "특별한 일이 없는 보통 때의 모습을 말해요.",
+              "value": "특별한 일이 없는 보통 때를 말해요.",
               "isCorrect": true
             },
             {
-              "value": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+              "value": "밤 12시부터 낮 12시까지의 시간을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1525,7 +1519,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "특별한 일이 없는 보통 때의 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "특별한 일이 없는 보통 때를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "평소"
           ]
@@ -1550,7 +1544,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘건축물’의 쓰임이에요. ‘평소’는 특별한 일이 없는 보통 때의 모습을 말해요.",
+          "explanation": "이 문장은 원래 ‘건축물’의 쓰임이에요. ‘평소’는 특별한 일이 없는 보통 때를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1590,7 +1584,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1644,7 +1638,7 @@
           "prompt": "다음 중 ‘협력’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 협력하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 협력되어 쉬어야 해.",
               "isCorrect": false
             },
             {
@@ -1790,7 +1784,7 @@
           "prompt": "‘개선’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -1871,9 +1865,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+      "sourceDefinition": "북극과 남극 주변의 매우 추운 지역을 말해요.",
       "sourceExample": "극지방은 1년 내내 얼음과 눈으로 덮여 있는 아주 추운 동네야.",
-      "definition": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+      "definition": "북극과 남극 주변의 매우 추운 지역을 말해요.",
       "example": "극지방은 1년 내내 얼음과 눈으로 덮여 있는 아주 추운 동네야.",
       "flags": [],
       "duplicateReview": null,
@@ -1896,11 +1890,11 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": true
             },
             {
@@ -1933,7 +1927,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "북극과 남극 주변의 매우 추운 지역을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "극지방"
           ]
@@ -1958,7 +1952,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘극지방’은 지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘극지방’은 북극과 남극 주변의 매우 추운 지역을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1994,7 +1988,7 @@
           "prompt": "‘대응’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2206,7 +2200,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2300,7 +2294,7 @@
           "prompt": "‘생활 방식’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2382,9 +2376,9 @@
       "category": "숫자와 연산",
       "level": 2,
       "sourceDefinition": "1보다 작은 값을 나타낼 때 점(.)을 찍어 표현하는 숫자예요.",
-      "sourceExample": "내 키는 135.2센티미터인데, 여기서 점 뒤의 2가 소수예요.",
+      "sourceExample": "내 키를 나타낸 135.2는 소수이고, 그 안의 점은 소수점이에요.",
       "definition": "1보다 작은 값을 나타낼 때 점(.)을 찍어 표현하는 숫자예요.",
-      "example": "내 키는 135.2센티미터인데, 여기서 점 뒤의 2가 소수예요.",
+      "example": "내 키를 나타낸 135.2는 소수이고, 그 안의 점은 소수점이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2421,7 +2415,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "내 키는 135.2센티미터인데, 여기서 점 뒤의 2가 ＿＿＿＿예요.",
+          "prompt": "내 키를 나타낸 135.2는 ＿＿＿＿이고, 그 안의 점은 소수점이에요.",
           "options": [
             {
               "value": "가분수",
@@ -2450,7 +2444,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "내 키는 135.2센티미터인데, 여기서 점 뒤의 2가 ＿＿＿＿예요.",
+          "prompt": "내 키를 나타낸 135.2는 ＿＿＿＿이고, 그 안의 점은 소수점이에요.",
           "acceptedAnswers": [
             "소수"
           ]
@@ -2464,7 +2458,7 @@
               "isCorrect": false
             },
             {
-              "value": "내 키는 135.2센티미터인데, 여기서 점 뒤의 2가 소수예요.",
+              "value": "내 키를 나타낸 135.2는 소수이고, 그 안의 점은 소수점이에요.",
               "isCorrect": true
             }
           ],
@@ -2508,11 +2502,11 @@
               "isCorrect": true
             },
             {
-              "value": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+              "value": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+              "value": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
               "isCorrect": false
             },
             {
@@ -2606,7 +2600,7 @@
           "prompt": "‘유래’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -2708,7 +2702,7 @@
           "prompt": "‘전달’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2810,7 +2804,7 @@
           "prompt": "‘증거’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -3022,7 +3016,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3324,7 +3318,7 @@
               "isCorrect": true
             },
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -3332,7 +3326,7 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3422,7 +3416,7 @@
           "prompt": "‘현실’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3503,9 +3497,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 2,
-      "sourceDefinition": "탁해진 실내 공기를 내보내고 바깥의 신선한 공기를 들이마시는 일이에요.",
+      "sourceDefinition": "실내의 탁한 공기를 내보내고 바깥의 신선한 공기가 들어오게 하는 일이에요.",
       "sourceExample": "쉬는 시간마다 교실 창문을 열어 환기를 시키면 머리가 맑아져.",
-      "definition": "탁해진 실내 공기를 내보내고 바깥의 신선한 공기를 들이마시는 일이에요.",
+      "definition": "실내의 탁한 공기를 내보내고 바깥의 신선한 공기가 들어오게 하는 일이에요.",
       "example": "쉬는 시간마다 교실 창문을 열어 환기를 시키면 머리가 맑아져.",
       "flags": [],
       "duplicateReview": null,
@@ -3532,7 +3526,7 @@
               "isCorrect": false
             },
             {
-              "value": "탁해진 실내 공기를 내보내고 바깥의 신선한 공기를 들이마시는 일이에요.",
+              "value": "실내의 탁한 공기를 내보내고 바깥의 신선한 공기가 들어오게 하는 일이에요.",
               "isCorrect": true
             },
             {
@@ -3565,7 +3559,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "탁해진 실내 공기를 내보내고 바깥의 신선한 공기를 들이마시는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "실내의 탁한 공기를 내보내고 바깥의 신선한 공기가 들어오게 하는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "환기"
           ]
@@ -3590,7 +3584,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공유’의 쓰임이에요. ‘환기’는 탁해진 실내 공기를 내보내고 바깥의 신선한 공기를 들이마시는 일이에요.",
+          "explanation": "이 문장은 원래 ‘공유’의 쓰임이에요. ‘환기’는 실내의 탁한 공기를 내보내고 바깥의 신선한 공기가 들어오게 하는 일이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3630,7 +3624,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+              "value": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
               "isCorrect": false
             },
             {
@@ -3707,9 +3701,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 3,
-      "sourceDefinition": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+      "sourceDefinition": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
       "sourceExample": "모둠 활동에서 각자 자기 구실을 다해야 멋진 결과물이 나와.",
-      "definition": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+      "definition": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
       "example": "모둠 활동에서 각자 자기 구실을 다해야 멋진 결과물이 나와.",
       "flags": [],
       "duplicateReview": null,
@@ -3728,7 +3722,7 @@
           "prompt": "‘구실’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": true
             },
             {
@@ -3769,7 +3763,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "자기가 맡은 의무나 책임을 다하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자기가 맡아서 해야 할 일이나 책임을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "구실"
           ]
@@ -3794,7 +3788,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘과밀’의 쓰임이에요. ‘구실’은 자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘과밀’의 쓰임이에요. ‘구실’은 자기가 맡아서 해야 할 일이나 책임을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3830,7 +3824,7 @@
           "prompt": "‘소외’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3911,10 +3905,10 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 3,
-      "sourceDefinition": "소리를 녹음하거나 진동을 전달하기 위해 만든 평평한 판이에요.",
-      "sourceExample": "악기의 울림통 안에 있는 음판이 소리를 더 크게 만들어 줘.",
-      "definition": "소리를 녹음하거나 진동을 전달하기 위해 만든 평평한 판이에요.",
-      "example": "악기의 울림통 안에 있는 음판이 소리를 더 크게 만들어 줘.",
+      "sourceDefinition": "실로폰 같은 악기에서 두드리면 소리가 나도록 만든 나무나 금속 등의 판을 말해요.",
+      "sourceExample": "실로폰의 음판을 채로 두드리니 맑은 소리가 났어.",
+      "definition": "실로폰 같은 악기에서 두드리면 소리가 나도록 만든 나무나 금속 등의 판을 말해요.",
+      "example": "실로폰의 음판을 채로 두드리니 맑은 소리가 났어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3940,7 +3934,7 @@
               "isCorrect": false
             },
             {
-              "value": "소리를 녹음하거나 진동을 전달하기 위해 만든 평평한 판이에요.",
+              "value": "실로폰 같은 악기에서 두드리면 소리가 나도록 만든 나무나 금속 등의 판을 말해요.",
               "isCorrect": true
             },
             {
@@ -3951,7 +3945,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "악기의 울림통 안에 있는 ＿＿＿＿이 소리를 더 크게 만들어 줘.",
+          "prompt": "실로폰의 ＿＿＿＿을 채로 두드리니 맑은 소리가 났어.",
           "options": [
             {
               "value": "음판",
@@ -3973,14 +3967,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "소리를 녹음하거나 진동을 전달하기 위해 만든 평평한 판이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "실로폰 같은 악기에서 두드리면 소리가 나도록 만든 나무나 금속 등의 판을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "음판"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "악기의 울림통 안에 있는 ＿＿＿＿이 소리를 더 크게 만들어 줘.",
+          "prompt": "실로폰의 ＿＿＿＿을 채로 두드리니 맑은 소리가 났어.",
           "acceptedAnswers": [
             "음판"
           ]
@@ -3990,7 +3984,7 @@
           "prompt": "다음 중 ‘음판’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "악기의 울림통 안에 있는 음판이 소리를 더 크게 만들어 줘.",
+              "value": "실로폰의 음판을 채로 두드리니 맑은 소리가 났어.",
               "isCorrect": true
             },
             {
@@ -3998,7 +3992,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘과거’의 쓰임이에요. ‘음판’은 소리를 녹음하거나 진동을 전달하기 위해 만든 평평한 판이에요.",
+          "explanation": "이 문장은 원래 ‘과거’의 쓰임이에요. ‘음판’은 실로폰 같은 악기에서 두드리면 소리가 나도록 만든 나무나 금속 등의 판을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -4013,9 +4007,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 3,
-      "sourceDefinition": "직장을 다니는 사람이 특별한 사정이 생겨 잠시 일을 쉬는 것을 말해요.",
+      "sourceDefinition": "직장에 소속된 신분은 유지하면서 특별한 사정으로 일정 기간 일을 쉬는 것을 말해요.",
       "sourceExample": "선생님께서 아기를 키우기 위해 잠시 육아 휴직을 하시게 되었어.",
-      "definition": "직장을 다니는 사람이 특별한 사정이 생겨 잠시 일을 쉬는 것을 말해요.",
+      "definition": "직장에 소속된 신분은 유지하면서 특별한 사정으로 일정 기간 일을 쉬는 것을 말해요.",
       "example": "선생님께서 아기를 키우기 위해 잠시 육아 휴직을 하시게 되었어.",
       "flags": [],
       "duplicateReview": null,
@@ -4034,7 +4028,7 @@
           "prompt": "‘휴직’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4046,7 +4040,7 @@
               "isCorrect": false
             },
             {
-              "value": "직장을 다니는 사람이 특별한 사정이 생겨 잠시 일을 쉬는 것을 말해요.",
+              "value": "직장에 소속된 신분은 유지하면서 특별한 사정으로 일정 기간 일을 쉬는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -4075,7 +4069,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "직장을 다니는 사람이 특별한 사정이 생겨 잠시 일을 쉬는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "직장에 소속된 신분은 유지하면서 특별한 사정으로 일정 기간 일을 쉬는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "휴직"
           ]
@@ -4100,7 +4094,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘관련’의 쓰임이에요. ‘휴직’은 직장을 다니는 사람이 특별한 사정이 생겨 잠시 일을 쉬는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘관련’의 쓰임이에요. ‘휴직’은 직장에 소속된 신분은 유지하면서 특별한 사정으로 일정 기간 일을 쉬는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

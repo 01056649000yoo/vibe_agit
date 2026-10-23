@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "draft_not_for_student_delivery",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "deckCountPerGrade": 10,
   "grades": [
     {
@@ -1500,9 +1500,7 @@
               "category": "모양과 도형",
               "level": 1,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g3:선택",
@@ -4562,9 +4560,7 @@
               "category": "과학 기구",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "example_missing_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g4:출처",
@@ -4654,9 +4650,7 @@
               "category": "비교와 분류",
               "level": 1,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g4:자석",
@@ -5080,9 +5074,7 @@
               "category": "에너지와 힘",
               "level": 2,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g4:노선도",
@@ -5612,9 +5604,7 @@
               "category": "지구와 우주",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g4:퇴적",
@@ -6533,9 +6523,7 @@
               "category": "동식물과 생물",
               "level": 2,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g4:용암",
@@ -7274,9 +7262,7 @@
               "category": "우리 역사",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g5:동형어",
@@ -9657,9 +9643,7 @@
               "category": "동식물과 생물",
               "level": 2,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g5:열거",
@@ -10868,9 +10852,7 @@
               "category": "지구와 우주",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g6:중화학 공업",
@@ -10894,9 +10876,7 @@
               "category": "사회와 소통",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "example_missing_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g6:표본",
@@ -11076,9 +11056,7 @@
               "category": "동식물과 생물",
               "level": 2,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g6:영구",
@@ -11126,9 +11104,7 @@
               "category": "에너지와 힘",
               "level": 2,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "definition_contains_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g6:헌법",
@@ -13247,9 +13223,7 @@
               "category": "사회와 소통",
               "level": 3,
               "reviewStatus": "auto_candidate",
-              "flags": [
-                "example_missing_word"
-              ]
+              "flags": []
             },
             {
               "itemKey": "vocab:g6:역량",

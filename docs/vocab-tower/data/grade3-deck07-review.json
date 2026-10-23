@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck07",
   "deckNumber": 7,
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "도형에서 점과 점을 이은 곧은 선분을 말해요.",
+              "value": "다각형의 둘레를 이루는 선분 하나하나를 말해요.",
               "isCorrect": false
             }
           ]
@@ -152,7 +152,7 @@
           "prompt": "‘감동’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -164,7 +164,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+              "value": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -233,9 +233,9 @@
       "meaningNumber": 1,
       "category": "학교생활",
       "level": 1,
-      "sourceDefinition": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+      "sourceDefinition": "직접 현장에 가서 보고 배우는 활동을 말해요.",
       "sourceExample": "내일은 우리 반 모두가 과학관으로 견학을 가는 날이야.",
-      "definition": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+      "definition": "직접 현장에 가서 보고 배우는 활동을 말해요.",
       "example": "내일은 우리 반 모두가 과학관으로 견학을 가는 날이야.",
       "flags": [],
       "duplicateReview": null,
@@ -262,7 +262,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": true
             },
             {
@@ -295,7 +295,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "직접 현장에 가서 보고 배우는 활동을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "견학"
           ]
@@ -320,7 +320,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가상’의 쓰임이에요. ‘견학’은 직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+          "explanation": "이 문장은 원래 ‘가상’의 쓰임이에요. ‘견학’은 직접 현장에 가서 보고 배우는 활동을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -462,7 +462,7 @@
               "isCorrect": true
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -470,7 +470,7 @@
               "isCorrect": false
             },
             {
-              "value": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+              "value": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
               "isCorrect": false
             }
           ]
@@ -618,7 +618,7 @@
           "prompt": "다음 중 ‘도시’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 도시가 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 도시만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             },
             {
@@ -642,9 +642,9 @@
       "category": "학교생활",
       "level": 1,
       "sourceDefinition": "몸에 입고 있는 옷의 모양이나 차림새를 말해요.",
-      "sourceExample": "체육 시간에는 활동하기 편한 체육복 복장으로 갈아입어야 해.",
+      "sourceExample": "체육 시간에는 활동하기 편한 복장을 갖추어야 해.",
       "definition": "몸에 입고 있는 옷의 모양이나 차림새를 말해요.",
-      "example": "체육 시간에는 활동하기 편한 체육복 복장으로 갈아입어야 해.",
+      "example": "체육 시간에는 활동하기 편한 복장을 갖추어야 해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -666,7 +666,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -681,7 +681,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "체육 시간에는 활동하기 편한 체육복 ＿＿＿＿으로 갈아입어야 해.",
+          "prompt": "체육 시간에는 활동하기 편한 ＿＿＿＿을 갖추어야 해.",
           "options": [
             {
               "value": "복장",
@@ -710,7 +710,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "체육 시간에는 활동하기 편한 체육복 ＿＿＿＿으로 갈아입어야 해.",
+          "prompt": "체육 시간에는 활동하기 편한 ＿＿＿＿을 갖추어야 해.",
           "acceptedAnswers": [
             "복장"
           ]
@@ -720,11 +720,11 @@
           "prompt": "다음 중 ‘복장’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "체육 시간에는 활동하기 편한 체육복 복장으로 갈아입어야 해.",
+              "value": "체육 시간에는 활동하기 편한 복장을 갖추어야 해.",
               "isCorrect": true
             },
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 복장이 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 복장만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             }
           ],
@@ -878,7 +878,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -947,9 +947,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "한 번만 쓰고 버리도록 만들어진 물건을 말해요.",
+      "sourceDefinition": "한 번만 쓰고 버리도록 되어 있는 것을 말해요.",
       "sourceExample": "지구가 아프지 않게 일회용 종이컵 대신 개인 텀블러를 사용하자.",
-      "definition": "한 번만 쓰고 버리도록 만들어진 물건을 말해요.",
+      "definition": "한 번만 쓰고 버리도록 되어 있는 것을 말해요.",
       "example": "지구가 아프지 않게 일회용 종이컵 대신 개인 텀블러를 사용하자.",
       "flags": [],
       "duplicateReview": null,
@@ -972,7 +972,7 @@
               "isCorrect": false
             },
             {
-              "value": "한 번만 쓰고 버리도록 만들어진 물건을 말해요.",
+              "value": "한 번만 쓰고 버리도록 되어 있는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -1009,7 +1009,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "한 번만 쓰고 버리도록 만들어진 물건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "한 번만 쓰고 버리도록 되어 있는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "일회용"
           ]
@@ -1034,7 +1034,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘감지’의 쓰임이에요. ‘일회용’은 한 번만 쓰고 버리도록 만들어진 물건을 말해요.",
+          "explanation": "이 문장은 원래 ‘감지’의 쓰임이에요. ‘일회용’은 한 번만 쓰고 버리도록 되어 있는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1336,7 +1336,7 @@
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 중요하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 중요되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
@@ -1482,7 +1482,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1559,9 +1559,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 1,
-      "sourceDefinition": "어떤 일이 일어난 차례나 번수를 말해요.",
+      "sourceDefinition": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
       "sourceExample": "오늘 줄넘기를 몇 번 했는지 횟수를 세어 보았어요.",
-      "definition": "어떤 일이 일어난 차례나 번수를 말해요.",
+      "definition": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
       "example": "오늘 줄넘기를 몇 번 했는지 횟수를 세어 보았어요.",
       "flags": [],
       "duplicateReview": null,
@@ -1580,11 +1580,11 @@
           "prompt": "‘횟수’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "수를 더하거나 빼서 알맞은 답을 구하는 과정이에요.",
+              "value": "수를 더하거나 빼거나 곱하거나 나누는 등의 방법으로 값을 구하는 과정이에요.",
               "isCorrect": false
             },
             {
-              "value": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+              "value": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
               "isCorrect": false
             },
             {
@@ -1592,7 +1592,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일이 일어난 차례나 번수를 말해요.",
+              "value": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
               "isCorrect": true
             }
           ]
@@ -1621,7 +1621,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 일이 일어난 차례나 번수를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "횟수"
           ]
@@ -1638,7 +1638,7 @@
           "prompt": "다음 중 ‘횟수’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 횟수하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 횟수되어 쉬어야 해.",
               "isCorrect": false
             },
             {
@@ -1646,7 +1646,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘횟수’는 어떤 일이 일어난 차례나 번수를 말해요.",
+          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘횟수’는 어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1706,7 +1706,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -1906,7 +1906,7 @@
           "prompt": "‘교통로’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2008,7 +2008,7 @@
           "prompt": "‘기준’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2192,9 +2192,9 @@
       "category": "활동과 순서",
       "level": 2,
       "sourceDefinition": "어떤 일을 하려고 하는 이유나 이루고 싶은 목표를 말해요.",
-      "sourceExample": "우리가 오늘 도서관에 모인 목적은 숙제를 같이 하기 위해서야.",
+      "sourceExample": "우리가 오늘 도서관에 모인 목적은 숙제를 함께 하는 거야.",
       "definition": "어떤 일을 하려고 하는 이유나 이루고 싶은 목표를 말해요.",
-      "example": "우리가 오늘 도서관에 모인 목적은 숙제를 같이 하기 위해서야.",
+      "example": "우리가 오늘 도서관에 모인 목적은 숙제를 함께 하는 거야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2231,7 +2231,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우리가 오늘 도서관에 모인 ＿＿＿＿은 숙제를 같이 하기 위해서야.",
+          "prompt": "우리가 오늘 도서관에 모인 ＿＿＿＿은 숙제를 함께 하는 거야.",
           "options": [
             {
               "value": "과정",
@@ -2260,7 +2260,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우리가 오늘 도서관에 모인 ＿＿＿＿은 숙제를 같이 하기 위해서야.",
+          "prompt": "우리가 오늘 도서관에 모인 ＿＿＿＿은 숙제를 함께 하는 거야.",
           "acceptedAnswers": [
             "목적"
           ]
@@ -2274,7 +2274,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리가 오늘 도서관에 모인 목적은 숙제를 같이 하기 위해서야.",
+              "value": "우리가 오늘 도서관에 모인 목적은 숙제를 함께 하는 거야.",
               "isCorrect": true
             }
           ],
@@ -2314,7 +2314,7 @@
           "prompt": "‘복지’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2701,9 +2701,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "어떤 일이 일어나고 있는 바로 그 시간에 동시에 진행되는 것을 말해요.",
+      "sourceDefinition": "어떤 일이 실제로 일어나고 있는 바로 그 시간을 말해요.",
       "sourceExample": "유튜브에서 좋아하는 가수의 공연을 실시간 영상으로 시청했어.",
-      "definition": "어떤 일이 일어나고 있는 바로 그 시간에 동시에 진행되는 것을 말해요.",
+      "definition": "어떤 일이 실제로 일어나고 있는 바로 그 시간을 말해요.",
       "example": "유튜브에서 좋아하는 가수의 공연을 실시간 영상으로 시청했어.",
       "flags": [],
       "duplicateReview": null,
@@ -2726,11 +2726,11 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일이 일어나고 있는 바로 그 시간에 동시에 진행되는 것을 말해요.",
+              "value": "어떤 일이 실제로 일어나고 있는 바로 그 시간을 말해요.",
               "isCorrect": true
             },
             {
@@ -2763,7 +2763,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 일이 일어나고 있는 바로 그 시간에 동시에 진행되는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일이 실제로 일어나고 있는 바로 그 시간을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "실시간"
           ]
@@ -2784,11 +2784,11 @@
               "isCorrect": true
             },
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 실시간란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 실시간란다.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고유어’의 쓰임이에요. ‘실시간’은 어떤 일이 일어나고 있는 바로 그 시간에 동시에 진행되는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘고유어’의 쓰임이에요. ‘실시간’은 어떤 일이 실제로 일어나고 있는 바로 그 시간을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2824,7 +2824,7 @@
           "prompt": "‘역할’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2930,7 +2930,7 @@
               "isCorrect": true
             },
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -3211,9 +3211,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "병을 고치기 위해 약을 짓거나 치료 방법을 정해주는 일이에요.",
+      "sourceDefinition": "의사가 병을 치료하기 위해 약의 종류와 양, 사용 방법이나 치료 방법을 정하는 일이에요.",
       "sourceExample": "의사 선생님의 처방에 따라 약을 먹었더니 몸이 금방 나았어.",
-      "definition": "병을 고치기 위해 약을 짓거나 치료 방법을 정해주는 일이에요.",
+      "definition": "의사가 병을 치료하기 위해 약의 종류와 양, 사용 방법이나 치료 방법을 정하는 일이에요.",
       "example": "의사 선생님의 처방에 따라 약을 먹었더니 몸이 금방 나았어.",
       "flags": [],
       "duplicateReview": null,
@@ -3232,7 +3232,7 @@
           "prompt": "‘처방’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3244,7 +3244,7 @@
               "isCorrect": false
             },
             {
-              "value": "병을 고치기 위해 약을 짓거나 치료 방법을 정해주는 일이에요.",
+              "value": "의사가 병을 치료하기 위해 약의 종류와 양, 사용 방법이나 치료 방법을 정하는 일이에요.",
               "isCorrect": true
             }
           ]
@@ -3273,7 +3273,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "병을 고치기 위해 약을 짓거나 치료 방법을 정해주는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "의사가 병을 치료하기 위해 약의 종류와 양, 사용 방법이나 치료 방법을 정하는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "처방"
           ]
@@ -3298,7 +3298,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘처방’은 병을 고치기 위해 약을 짓거나 치료 방법을 정해주는 일이에요.",
+          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘처방’은 의사가 병을 치료하기 위해 약의 종류와 양, 사용 방법이나 치료 방법을 정하는 일이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3313,9 +3313,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 2,
-      "sourceDefinition": "어떤 사물이나 상황을 보고 옳고 그름을 결정하는 생각이에요.",
+      "sourceDefinition": "사물이나 상황을 살펴 무엇이 맞는지, 어떠한지 등을 생각하여 정하는 것을 말해요.",
       "sourceExample": "중요한 일을 결정할 때는 여러 번 생각하고 신중하게 판단해야 해.",
-      "definition": "어떤 사물이나 상황을 보고 옳고 그름을 결정하는 생각이에요.",
+      "definition": "사물이나 상황을 살펴 무엇이 맞는지, 어떠한지 등을 생각하여 정하는 것을 말해요.",
       "example": "중요한 일을 결정할 때는 여러 번 생각하고 신중하게 판단해야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -3334,11 +3334,11 @@
           "prompt": "‘판단’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 상황을 보고 옳고 그름을 결정하는 생각이에요.",
+              "value": "사물이나 상황을 살펴 무엇이 맞는지, 어떠한지 등을 생각하여 정하는 것을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -3375,7 +3375,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 사물이나 상황을 보고 옳고 그름을 결정하는 생각이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사물이나 상황을 살펴 무엇이 맞는지, 어떠한지 등을 생각하여 정하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "판단"
           ]
@@ -3400,7 +3400,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공기’의 쓰임이에요. ‘판단’은 어떤 사물이나 상황을 보고 옳고 그름을 결정하는 생각이에요.",
+          "explanation": "이 문장은 원래 ‘공기’의 쓰임이에요. ‘판단’은 사물이나 상황을 살펴 무엇이 맞는지, 어떠한지 등을 생각하여 정하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3415,9 +3415,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "찍어온 영상이나 글을 잘 다듬어서 완성된 작품으로 만드는 일이에요.",
+      "sourceDefinition": "글이나 사진, 영상 등을 목적에 맞게 고르고 다듬어 하나로 엮는 일이에요.",
       "sourceExample": "국어 시간에 찍은 광고 영상을 친구들과 함께 예쁘게 편집했어.",
-      "definition": "찍어온 영상이나 글을 잘 다듬어서 완성된 작품으로 만드는 일이에요.",
+      "definition": "글이나 사진, 영상 등을 목적에 맞게 고르고 다듬어 하나로 엮는 일이에요.",
       "example": "국어 시간에 찍은 광고 영상을 친구들과 함께 예쁘게 편집했어.",
       "flags": [],
       "duplicateReview": null,
@@ -3440,11 +3440,11 @@
               "isCorrect": false
             },
             {
-              "value": "찍어온 영상이나 글을 잘 다듬어서 완성된 작품으로 만드는 일이에요.",
+              "value": "글이나 사진, 영상 등을 목적에 맞게 고르고 다듬어 하나로 엮는 일이에요.",
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3477,7 +3477,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "찍어온 영상이나 글을 잘 다듬어서 완성된 작품으로 만드는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "글이나 사진, 영상 등을 목적에 맞게 고르고 다듬어 하나로 엮는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "편집"
           ]
@@ -3502,7 +3502,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공손’의 쓰임이에요. ‘편집’은 찍어온 영상이나 글을 잘 다듬어서 완성된 작품으로 만드는 일이에요.",
+          "explanation": "이 문장은 원래 ‘공손’의 쓰임이에요. ‘편집’은 글이나 사진, 영상 등을 목적에 맞게 고르고 다듬어 하나로 엮는 일이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3538,7 +3538,7 @@
           "prompt": "‘고령화’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3644,11 +3644,11 @@
               "isCorrect": false
             },
             {
-              "value": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
+              "value": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -3721,9 +3721,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+      "sourceDefinition": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
       "sourceExample": "학자들은 오래된 문헌을 연구해서 우리 조상들의 지혜를 찾아내.",
-      "definition": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+      "definition": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
       "example": "학자들은 오래된 문헌을 연구해서 우리 조상들의 지혜를 찾아내.",
       "flags": [],
       "duplicateReview": null,
@@ -3742,7 +3742,7 @@
           "prompt": "‘문헌’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+              "value": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
               "isCorrect": true
             },
             {
@@ -3783,7 +3783,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "문헌"
           ]
@@ -3808,7 +3808,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘문헌’은 옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘문헌’은 어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3852,7 +3852,7 @@
               "isCorrect": true
             },
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {
@@ -3946,7 +3946,7 @@
           "prompt": "‘저작권’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4027,9 +4027,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 3,
-      "sourceDefinition": "액체 상태인 물이 열을 받아 기체인 수증기로 변해 공기 중으로 날아가는 현상이에요.",
+      "sourceDefinition": "액체가 표면에서 기체로 변하는 현상을 말해요.",
       "sourceExample": "젖은 빨래가 마르는 이유는 옷 속의 물이 증발했기 때문이야.",
-      "definition": "액체 상태인 물이 열을 받아 기체인 수증기로 변해 공기 중으로 날아가는 현상이에요.",
+      "definition": "액체가 표면에서 기체로 변하는 현상을 말해요.",
       "example": "젖은 빨래가 마르는 이유는 옷 속의 물이 증발했기 때문이야.",
       "flags": [],
       "duplicateReview": null,
@@ -4060,7 +4060,7 @@
               "isCorrect": false
             },
             {
-              "value": "액체 상태인 물이 열을 받아 기체인 수증기로 변해 공기 중으로 날아가는 현상이에요.",
+              "value": "액체가 표면에서 기체로 변하는 현상을 말해요.",
               "isCorrect": true
             }
           ]
@@ -4089,7 +4089,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "액체 상태인 물이 열을 받아 기체인 수증기로 변해 공기 중으로 날아가는 현상이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "액체가 표면에서 기체로 변하는 현상을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "증발"
           ]
@@ -4114,7 +4114,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘과밀’의 쓰임이에요. ‘증발’은 액체 상태인 물이 열을 받아 기체인 수증기로 변해 공기 중으로 날아가는 현상이에요.",
+          "explanation": "이 문장은 원래 ‘과밀’의 쓰임이에요. ‘증발’은 액체가 표면에서 기체로 변하는 현상을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

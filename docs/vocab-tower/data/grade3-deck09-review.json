@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck09",
   "deckNumber": 9,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 1,
-      "sourceDefinition": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+      "sourceDefinition": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
       "sourceExample": "경복궁은 우리나라를 대표하는 아주 아름다운 전통 건축물이야.",
-      "definition": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+      "definition": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
       "example": "경복궁은 우리나라를 대표하는 아주 아름다운 전통 건축물이야.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘건축물’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+              "value": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
               "isCorrect": true
             },
             {
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "건축물"
           ]
@@ -116,7 +116,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘건축물’은 집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘건축물’은 집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -258,7 +258,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -266,7 +266,7 @@
               "isCorrect": true
             },
             {
-              "value": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+              "value": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -437,9 +437,9 @@
       "meaningNumber": 1,
       "category": "학교생활",
       "level": 1,
-      "sourceDefinition": "어떤 일을 하지 못하게 막는 규칙을 말해요.",
+      "sourceDefinition": "어떤 일을 하지 못하게 막는 것을 말해요.",
       "sourceExample": "복도에서는 안전을 위해 뛰는 것이 금지되어 있어.",
-      "definition": "어떤 일을 하지 못하게 막는 규칙을 말해요.",
+      "definition": "어떤 일을 하지 못하게 막는 것을 말해요.",
       "example": "복도에서는 안전을 위해 뛰는 것이 금지되어 있어.",
       "flags": [],
       "duplicateReview": null,
@@ -458,7 +458,7 @@
           "prompt": "‘금지’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 일을 하지 못하게 막는 규칙을 말해요.",
+              "value": "어떤 일을 하지 못하게 막는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -466,7 +466,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -499,7 +499,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 일을 하지 못하게 막는 규칙을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일을 하지 못하게 막는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "금지"
           ]
@@ -524,7 +524,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘각’의 쓰임이에요. ‘금지’는 어떤 일을 하지 못하게 막는 규칙을 말해요.",
+          "explanation": "이 문장은 원래 ‘각’의 쓰임이에요. ‘금지’는 어떤 일을 하지 못하게 막는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -539,9 +539,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 1,
-      "sourceDefinition": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+      "sourceDefinition": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
       "sourceExample": "독감에 걸리면 열이 많이 나고 온몸이 아플 수 있으니 조심해야 해.",
-      "definition": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+      "definition": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
       "example": "독감에 걸리면 열이 많이 나고 온몸이 아플 수 있으니 조심해야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -564,11 +564,11 @@
               "isCorrect": false
             },
             {
-              "value": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+              "value": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
               "isCorrect": true
             },
             {
-              "value": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+              "value": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
               "isCorrect": false
             },
             {
@@ -601,7 +601,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "독감"
           ]
@@ -626,7 +626,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘독감’은 바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘독감’은 인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -724,7 +724,7 @@
               "isCorrect": true
             },
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 보호가 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 보호만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             }
           ],
@@ -976,7 +976,7 @@
               "isCorrect": true
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -1082,7 +1082,7 @@
               "isCorrect": true
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1384,7 +1384,7 @@
               "isCorrect": true
             },
             {
-              "value": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+              "value": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
               "isCorrect": false
             },
             {
@@ -1584,7 +1584,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1661,9 +1661,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "눈앞에 펼쳐진 아름다운 모습이나 경치를 말해요.",
+      "sourceDefinition": "눈앞에 펼쳐진 자연이나 거리 등의 모습을 말해요.",
       "sourceExample": "창밖으로 보이는 하얀 눈 덮인 산의 풍경이 정말 멋져.",
-      "definition": "눈앞에 펼쳐진 아름다운 모습이나 경치를 말해요.",
+      "definition": "눈앞에 펼쳐진 자연이나 거리 등의 모습을 말해요.",
       "example": "창밖으로 보이는 하얀 눈 덮인 산의 풍경이 정말 멋져.",
       "flags": [],
       "duplicateReview": null,
@@ -1682,7 +1682,7 @@
           "prompt": "‘풍경’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "눈앞에 펼쳐진 아름다운 모습이나 경치를 말해요.",
+              "value": "눈앞에 펼쳐진 자연이나 거리 등의 모습을 말해요.",
               "isCorrect": true
             },
             {
@@ -1723,7 +1723,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "눈앞에 펼쳐진 아름다운 모습이나 경치를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "눈앞에 펼쳐진 자연이나 거리 등의 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "풍경"
           ]
@@ -1744,11 +1744,11 @@
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 풍경하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 풍경되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘풍경’은 눈앞에 펼쳐진 아름다운 모습이나 경치를 말해요.",
+          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘풍경’은 눈앞에 펼쳐진 자연이나 거리 등의 모습을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1792,7 +1792,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2094,7 +2094,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2192,7 +2192,7 @@
           "prompt": "‘소통’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2396,7 +2396,7 @@
           "prompt": "‘수집’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2658,7 +2658,7 @@
           "prompt": "다음 중 ‘예방’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 예방란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 예방란다.",
               "isCorrect": false
             },
             {
@@ -2702,7 +2702,7 @@
           "prompt": "‘오염’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -2714,7 +2714,7 @@
               "isCorrect": true
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2808,7 +2808,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2910,7 +2910,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3110,7 +3110,7 @@
           "prompt": "‘풍습’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -3318,7 +3318,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3395,9 +3395,9 @@
       "meaningNumber": 1,
       "category": "활동과 순서",
       "level": 2,
-      "sourceDefinition": "알고 있는 것을 다른 곳에 잘 써먹는 것을 말해요.",
+      "sourceDefinition": "지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.",
       "sourceExample": "수업 시간에 배운 내용을 활용해서 멋진 일기를 썼어요.",
-      "definition": "알고 있는 것을 다른 곳에 잘 써먹는 것을 말해요.",
+      "definition": "지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.",
       "example": "수업 시간에 배운 내용을 활용해서 멋진 일기를 썼어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3420,7 +3420,7 @@
               "isCorrect": false
             },
             {
-              "value": "알고 있는 것을 다른 곳에 잘 써먹는 것을 말해요.",
+              "value": "지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3457,7 +3457,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "알고 있는 것을 다른 곳에 잘 써먹는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "활용"
           ]
@@ -3482,7 +3482,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공기’의 쓰임이에요. ‘활용’은 알고 있는 것을 다른 곳에 잘 써먹는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공기’의 쓰임이에요. ‘활용’은 지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3522,7 +3522,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3599,9 +3599,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 3,
-      "sourceDefinition": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+      "sourceDefinition": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
       "sourceExample": "발표 자료에서 부족한 설명 부분을 친구들의 도움을 받아 보완했어.",
-      "definition": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+      "definition": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
       "example": "발표 자료에서 부족한 설명 부분을 친구들의 도움을 받아 보완했어.",
       "flags": [],
       "duplicateReview": null,
@@ -3632,7 +3632,7 @@
               "isCorrect": false
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3661,7 +3661,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "보완"
           ]
@@ -3686,7 +3686,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘보완’은 모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘보완’은 모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3730,11 +3730,11 @@
               "isCorrect": false
             },
             {
-              "value": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
+              "value": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3803,9 +3803,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+      "sourceDefinition": "전체에서 일부를 줄이거나 빼는 것을 말해요.",
       "sourceExample": "제목이 너무 길어서 앞부분을 생략하고 간단히 적었어.",
-      "definition": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+      "definition": "전체에서 일부를 줄이거나 빼는 것을 말해요.",
       "example": "제목이 너무 길어서 앞부분을 생략하고 간단히 적었어.",
       "flags": [],
       "duplicateReview": null,
@@ -3828,7 +3828,7 @@
               "isCorrect": false
             },
             {
-              "value": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+              "value": "전체에서 일부를 줄이거나 빼는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3865,7 +3865,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "전체에서 일부를 줄이거나 빼는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "생략"
           ]
@@ -3890,7 +3890,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘생략’은 줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘생략’은 전체에서 일부를 줄이거나 빼는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3906,9 +3906,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "무서운 말이나 행동으로 상대방을 겁주고 괴롭히는 것을 말해요.",
-      "sourceExample": "누구도 친구를 괴롭히거나 마음을 아프게 하는 위협을 해서는 안 돼.",
+      "sourceExample": "누구도 친구에게 겁을 주거나 괴롭히는 위협을 해서는 안 돼.",
       "definition": "무서운 말이나 행동으로 상대방을 겁주고 괴롭히는 것을 말해요.",
-      "example": "누구도 친구를 괴롭히거나 마음을 아프게 하는 위협을 해서는 안 돼.",
+      "example": "누구도 친구에게 겁을 주거나 괴롭히는 위협을 해서는 안 돼.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3926,7 +3926,7 @@
           "prompt": "‘위협’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3945,7 +3945,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "누구도 친구를 괴롭히거나 마음을 아프게 하는 ＿＿＿＿을 해서는 안 돼.",
+          "prompt": "누구도 친구에게 겁을 주거나 괴롭히는 ＿＿＿＿을 해서는 안 돼.",
           "options": [
             {
               "value": "위협",
@@ -3974,7 +3974,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "누구도 친구를 괴롭히거나 마음을 아프게 하는 ＿＿＿＿을 해서는 안 돼.",
+          "prompt": "누구도 친구에게 겁을 주거나 괴롭히는 ＿＿＿＿을 해서는 안 돼.",
           "acceptedAnswers": [
             "위협"
           ]
@@ -3984,7 +3984,7 @@
           "prompt": "다음 중 ‘위협’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "누구도 친구를 괴롭히거나 마음을 아프게 하는 위협을 해서는 안 돼.",
+              "value": "누구도 친구에게 겁을 주거나 괴롭히는 위협을 해서는 안 돼.",
               "isCorrect": true
             },
             {
@@ -4007,9 +4007,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 3,
-      "sourceDefinition": "한쪽으로 치우친 생각 때문에 어떤 대상을 나쁘게 오해하는 마음이에요.",
+      "sourceDefinition": "공정하게 살피지 않고 한쪽으로 치우쳐 가지게 된 생각을 말해요.",
       "sourceExample": "우리는 편견을 버리고 모든 사람을 공평하게 대하는 마음을 가져야 해.",
-      "definition": "한쪽으로 치우친 생각 때문에 어떤 대상을 나쁘게 오해하는 마음이에요.",
+      "definition": "공정하게 살피지 않고 한쪽으로 치우쳐 가지게 된 생각을 말해요.",
       "example": "우리는 편견을 버리고 모든 사람을 공평하게 대하는 마음을 가져야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -4032,7 +4032,7 @@
               "isCorrect": false
             },
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {
@@ -4040,7 +4040,7 @@
               "isCorrect": false
             },
             {
-              "value": "한쪽으로 치우친 생각 때문에 어떤 대상을 나쁘게 오해하는 마음이에요.",
+              "value": "공정하게 살피지 않고 한쪽으로 치우쳐 가지게 된 생각을 말해요.",
               "isCorrect": true
             }
           ]
@@ -4069,7 +4069,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "한쪽으로 치우친 생각 때문에 어떤 대상을 나쁘게 오해하는 마음이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "공정하게 살피지 않고 한쪽으로 치우쳐 가지게 된 생각을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "편견"
           ]
@@ -4094,7 +4094,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘편견’은 한쪽으로 치우친 생각 때문에 어떤 대상을 나쁘게 오해하는 마음이에요.",
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘편견’은 공정하게 살피지 않고 한쪽으로 치우쳐 가지게 된 생각을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

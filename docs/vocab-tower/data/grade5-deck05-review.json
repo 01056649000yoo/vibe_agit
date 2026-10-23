@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck05",
   "deckNumber": 5,
@@ -210,7 +210,7 @@
           "prompt": "다음 중 ‘기록’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 기록을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 기록기를 틀어 습도를 높였어.",
               "isCorrect": false
             },
             {
@@ -266,7 +266,7 @@
               "isCorrect": true
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": false
             }
           ]
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 모형을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 모형기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -539,10 +539,10 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 1,
-      "sourceDefinition": "1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
-      "sourceExample": "0이나 분수는 자연수가 아니지만, 우리가 세는 개수는 자연수야.",
-      "definition": "1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
-      "example": "0이나 분수는 자연수가 아니지만, 우리가 세는 개수는 자연수야.",
+      "sourceDefinition": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
+      "sourceExample": "물건을 하나, 둘, 셋 셀 때 쓰는 1, 2, 3 같은 수가 자연수야.",
+      "definition": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
+      "example": "물건을 하나, 둘, 셋 셀 때 쓰는 1, 2, 3 같은 수가 자연수야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -564,7 +564,7 @@
               "isCorrect": false
             },
             {
-              "value": "1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
+              "value": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
               "isCorrect": true
             },
             {
@@ -579,7 +579,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "0이나 분수는 ＿＿＿＿가 아니지만, 우리가 세는 개수는 자연수야.",
+          "prompt": "물건을 하나, 둘, 셋 셀 때 쓰는 1, 2, 3 같은 수가 ＿＿＿＿야.",
           "options": [
             {
               "value": "계산식",
@@ -601,14 +601,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "자연수"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "0이나 분수는 ＿＿＿＿가 아니지만, 우리가 세는 개수는 자연수야.",
+          "prompt": "물건을 하나, 둘, 셋 셀 때 쓰는 1, 2, 3 같은 수가 ＿＿＿＿야.",
           "acceptedAnswers": [
             "자연수"
           ]
@@ -622,11 +622,11 @@
               "isCorrect": false
             },
             {
-              "value": "0이나 분수는 자연수가 아니지만, 우리가 세는 개수는 자연수야.",
+              "value": "물건을 하나, 둘, 셋 셀 때 쓰는 1, 2, 3 같은 수가 자연수야.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘자연수’는 1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘자연수’는 1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -928,7 +928,7 @@
               "isCorrect": true
             },
             {
-              "value": "법은 도덕과 달리 어겼을 때 벌을 받는 강화를 가지고 있어요.",
+              "value": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 강화를 가지고 있어요.",
               "isCorrect": false
             }
           ],
@@ -980,7 +980,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1355,9 +1355,9 @@
       "meaningNumber": 1,
       "category": "동식물과 생물",
       "level": 2,
-      "sourceDefinition": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+      "sourceDefinition": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
       "sourceExample": "갯벌은 게와 조개 같은 수많은 생물의 소중한 서식지란다.",
-      "definition": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+      "definition": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
       "example": "갯벌은 게와 조개 같은 수많은 생물의 소중한 서식지란다.",
       "flags": [],
       "duplicateReview": null,
@@ -1380,7 +1380,7 @@
               "isCorrect": false
             },
             {
-              "value": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+              "value": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
               "isCorrect": true
             },
             {
@@ -1417,7 +1417,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "서식지"
           ]
@@ -1442,7 +1442,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개화’의 쓰임이에요. ‘서식지’는 동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+          "explanation": "이 문장은 원래 ‘개화’의 쓰임이에요. ‘서식지’는 동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1661,9 +1661,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 2,
-      "sourceDefinition": "남의 도움 없이 우리 스스로의 힘으로 나라를 세우고 지키는 독립이에요.",
+      "sourceDefinition": "다른 나라의 지배나 간섭을 받지 않고 스스로 나라를 다스리는 것을 말해요.",
       "sourceExample": "독립 협회는 우리나라가 외세의 간섭 없이 자주독립 국가가 되길 원했어요.",
-      "definition": "남의 도움 없이 우리 스스로의 힘으로 나라를 세우고 지키는 독립이에요.",
+      "definition": "다른 나라의 지배나 간섭을 받지 않고 스스로 나라를 다스리는 것을 말해요.",
       "example": "독립 협회는 우리나라가 외세의 간섭 없이 자주독립 국가가 되길 원했어요.",
       "flags": [],
       "duplicateReview": null,
@@ -1682,7 +1682,7 @@
           "prompt": "‘자주독립’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "남의 도움 없이 우리 스스로의 힘으로 나라를 세우고 지키는 독립이에요.",
+              "value": "다른 나라의 지배나 간섭을 받지 않고 스스로 나라를 다스리는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -1723,7 +1723,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "남의 도움 없이 우리 스스로의 힘으로 나라를 세우고 지키는 독립이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 나라의 지배나 간섭을 받지 않고 스스로 나라를 다스리는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "자주독립"
           ]
@@ -1748,7 +1748,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘자주독립’은 남의 도움 없이 우리 스스로의 힘으로 나라를 세우고 지키는 독립이에요.",
+          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘자주독립’은 다른 나라의 지배나 간섭을 받지 않고 스스로 나라를 다스리는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1792,7 +1792,7 @@
               "isCorrect": true
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2273,9 +2273,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 2,
-      "sourceDefinition": "태양을 중심으로 그 주위를 도는 행성들과 위성들의 모임이에요.",
+      "sourceDefinition": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등의 천체를 모두 합한 것을 말해요.",
       "sourceExample": "우리가 사는 지구는 태양계 가족의 셋째 행성이지.",
-      "definition": "태양을 중심으로 그 주위를 도는 행성들과 위성들의 모임이에요.",
+      "definition": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등의 천체를 모두 합한 것을 말해요.",
       "example": "우리가 사는 지구는 태양계 가족의 셋째 행성이지.",
       "flags": [],
       "duplicateReview": null,
@@ -2298,15 +2298,15 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "태양을 중심으로 그 주위를 도는 행성들과 위성들의 모임이에요.",
+              "value": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등의 천체를 모두 합한 것을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2335,7 +2335,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "태양을 중심으로 그 주위를 도는 행성들과 위성들의 모임이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등의 천체를 모두 합한 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "태양계"
           ]
@@ -2360,7 +2360,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘태양계’는 태양을 중심으로 그 주위를 도는 행성들과 위성들의 모임이에요.",
+          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘태양계’는 태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등의 천체를 모두 합한 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2396,7 +2396,7 @@
           "prompt": "‘가능성’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+              "value": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2600,7 +2600,7 @@
           "prompt": "‘고기압’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 광학현미경했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 광학현미경 활동을 펼쳤어요.",
               "isCorrect": false
             }
           ],
@@ -3089,9 +3089,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "두 개 이상의 단어가 합쳐져서 만들어진 새로운 단어를 말해요.",
+      "sourceDefinition": "어근끼리 합쳐지거나 어근에 접사가 붙어서 만들어진 단어를 말해요. ‘밤나무’나 ‘풋사과’가 그 예예요.",
       "sourceExample": "'밤'과 '나무'가 합쳐진 '밤나무'는 대표적인 복합어야.",
-      "definition": "두 개 이상의 단어가 합쳐져서 만들어진 새로운 단어를 말해요.",
+      "definition": "어근끼리 합쳐지거나 어근에 접사가 붙어서 만들어진 단어를 말해요. ‘밤나무’나 ‘풋사과’가 그 예예요.",
       "example": "'밤'과 '나무'가 합쳐진 '밤나무'는 대표적인 복합어야.",
       "flags": [],
       "duplicateReview": null,
@@ -3110,7 +3110,7 @@
           "prompt": "‘복합어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -3118,7 +3118,7 @@
               "isCorrect": false
             },
             {
-              "value": "두 개 이상의 단어가 합쳐져서 만들어진 새로운 단어를 말해요.",
+              "value": "어근끼리 합쳐지거나 어근에 접사가 붙어서 만들어진 단어를 말해요. ‘밤나무’나 ‘풋사과’가 그 예예요.",
               "isCorrect": true
             },
             {
@@ -3151,7 +3151,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "두 개 이상의 단어가 합쳐져서 만들어진 새로운 단어를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어근끼리 합쳐지거나 어근에 접사가 붙어서 만들어진 단어를 말해요. ‘밤나무’나 ‘풋사과’가 그 예예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "복합어"
           ]
@@ -3176,7 +3176,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고기압’의 쓰임이에요. ‘복합어’는 두 개 이상의 단어가 합쳐져서 만들어진 새로운 단어를 말해요.",
+          "explanation": "이 문장은 원래 ‘고기압’의 쓰임이에요. ‘복합어’는 어근끼리 합쳐지거나 어근에 접사가 붙어서 만들어진 단어를 말해요. ‘밤나무’나 ‘풋사과’가 그 예예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3270,7 +3270,7 @@
           "prompt": "다음 중 ‘예외’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "슬퍼하는 친구의 마음을 예외해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 예외해 주면 큰 위로가 된단다.",
               "isCorrect": false
             },
             {
@@ -3498,9 +3498,9 @@
       "category": "물질의 성질",
       "level": 3,
       "sourceDefinition": "속이 쓰릴 때 산성인 위액을 중화시키기 위해 먹는 염기성 약이에요.",
-      "sourceExample": "제산제는 우리 몸속의 산성을 약하게 만들어 속을 편하게 해 줘.",
+      "sourceExample": "제산제는 위 속의 지나친 위산을 중화해 속쓰림을 줄여 줘.",
       "definition": "속이 쓰릴 때 산성인 위액을 중화시키기 위해 먹는 염기성 약이에요.",
-      "example": "제산제는 우리 몸속의 산성을 약하게 만들어 속을 편하게 해 줘.",
+      "example": "제산제는 위 속의 지나친 위산을 중화해 속쓰림을 줄여 줘.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3522,7 +3522,7 @@
               "isCorrect": false
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
@@ -3537,7 +3537,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿는 우리 몸속의 산성을 약하게 만들어 속을 편하게 해 줘.",
+          "prompt": "＿＿＿＿는 위 속의 지나친 위산을 중화해 속쓰림을 줄여 줘.",
           "options": [
             {
               "value": "제산제",
@@ -3566,7 +3566,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿는 우리 몸속의 산성을 약하게 만들어 속을 편하게 해 줘.",
+          "prompt": "＿＿＿＿는 위 속의 지나친 위산을 중화해 속쓰림을 줄여 줘.",
           "acceptedAnswers": [
             "제산제"
           ]
@@ -3576,7 +3576,7 @@
           "prompt": "다음 중 ‘제산제’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "제산제는 우리 몸속의 산성을 약하게 만들어 속을 편하게 해 줘.",
+              "value": "제산제는 위 속의 지나친 위산을 중화해 속쓰림을 줄여 줘.",
               "isCorrect": true
             },
             {
@@ -3861,7 +3861,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]
@@ -4060,7 +4060,7 @@
               "isCorrect": false
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "status": "review_workspace_candidates_not_for_student_delivery",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "deckCount": 40,
   "itemCount": 1573,
-  "priorityItemCount": 46,
-  "pendingPriorityItemCount": 28,
-  "sampleItemCount": 1527,
-  "teacherConfirmedDeckCount": 20,
-  "editorialReviewDeckCount": 20,
+  "priorityItemCount": 37,
+  "pendingPriorityItemCount": 17,
+  "sampleItemCount": 1536,
+  "teacherConfirmedDeckCount": 27,
+  "editorialReviewDeckCount": 13,
   "decks": [
     {
       "grade": 3,
@@ -16,8 +16,8 @@
       "deckNumber": 1,
       "itemCount": 40,
       "reviewMode": "manual",
-      "priorityItems": 18,
-      "sampleItems": 22,
+      "priorityItems": 20,
+      "sampleItems": 20,
       "artifact": "grade3-deck01-review.json"
     },
     {
@@ -56,8 +56,8 @@
       "deckNumber": 5,
       "itemCount": 40,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 39,
+      "priorityItems": 0,
+      "sampleItems": 40,
       "artifact": "grade3-deck05-review.json"
     },
     {
@@ -136,8 +136,8 @@
       "deckNumber": 3,
       "itemCount": 40,
       "reviewMode": "assisted",
-      "priorityItems": 2,
-      "sampleItems": 38,
+      "priorityItems": 1,
+      "sampleItems": 39,
       "artifact": "grade4-deck03-review.json"
     },
     {
@@ -146,8 +146,8 @@
       "deckNumber": 4,
       "itemCount": 40,
       "reviewMode": "assisted",
-      "priorityItems": 4,
-      "sampleItems": 36,
+      "priorityItems": 3,
+      "sampleItems": 37,
       "artifact": "grade4-deck04-review.json"
     },
     {
@@ -156,8 +156,8 @@
       "deckNumber": 5,
       "itemCount": 40,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 39,
+      "priorityItems": 0,
+      "sampleItems": 40,
       "artifact": "grade4-deck05-review.json"
     },
     {
@@ -166,8 +166,8 @@
       "deckNumber": 6,
       "itemCount": 39,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 38,
+      "priorityItems": 0,
+      "sampleItems": 39,
       "artifact": "grade4-deck06-review.json"
     },
     {
@@ -196,8 +196,8 @@
       "deckNumber": 9,
       "itemCount": 39,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 38,
+      "priorityItems": 0,
+      "sampleItems": 39,
       "artifact": "grade4-deck09-review.json"
     },
     {
@@ -216,8 +216,8 @@
       "deckNumber": 1,
       "itemCount": 40,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 39,
+      "priorityItems": 0,
+      "sampleItems": 40,
       "artifact": "grade5-deck01-review.json"
     },
     {
@@ -286,8 +286,8 @@
       "deckNumber": 8,
       "itemCount": 39,
       "reviewMode": "assisted",
-      "priorityItems": 1,
-      "sampleItems": 38,
+      "priorityItems": 0,
+      "sampleItems": 39,
       "artifact": "grade5-deck08-review.json"
     },
     {
@@ -316,8 +316,8 @@
       "deckNumber": 1,
       "itemCount": 39,
       "reviewMode": "assisted",
-      "priorityItems": 2,
-      "sampleItems": 37,
+      "priorityItems": 1,
+      "sampleItems": 38,
       "artifact": "grade6-deck01-review.json"
     },
     {
@@ -326,8 +326,8 @@
       "deckNumber": 2,
       "itemCount": 39,
       "reviewMode": "assisted",
-      "priorityItems": 2,
-      "sampleItems": 37,
+      "priorityItems": 0,
+      "sampleItems": 39,
       "artifact": "grade6-deck02-review.json"
     },
     {

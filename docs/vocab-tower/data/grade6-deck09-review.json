@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 6,
   "deckId": "grade6-deck09",
   "deckNumber": 9,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 1,
-      "sourceDefinition": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+      "sourceDefinition": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
       "sourceExample": "텔레비전 광고에서 본 맛있는 아이스크림이 먹고 싶어졌어.",
-      "definition": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+      "definition": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
       "example": "텔레비전 광고에서 본 맛있는 아이스크림이 먹고 싶어졌어.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘광고’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+              "value": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
               "isCorrect": true
             },
             {
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+              "value": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "광고"
           ]
@@ -112,11 +112,11 @@
               "isCorrect": true
             },
             {
-              "value": "우리 집 광고부를 적어보니 이번 달에는 식비로 지출이 가장 많았어.",
+              "value": "광고는 회사에서 일해 소득을 얻고, 필요한 물건을 사는 경제 활동을 해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가계’의 쓰임이에요. ‘광고’는 물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+          "explanation": "이 문장은 원래 ‘가계’의 쓰임이에요. ‘광고’는 물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -160,7 +160,7 @@
               "isCorrect": true
             },
             {
-              "value": "평평한 땅이나 물체 바닥의 넓이를 숫자로 나타낸 것이예요.",
+              "value": "도형이나 물체의 표면이 차지하는 넓이를 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -254,7 +254,7 @@
           "prompt": "‘산업’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
               "isCorrect": false
             },
             {
@@ -572,7 +572,7 @@
               "isCorrect": false
             },
             {
-              "value": "굽지 않고 곧게 뻗은 선을 말해요.",
+              "value": "양쪽으로 끝없이 뻗어 있는 곧은 선을 말해요.",
               "isCorrect": false
             }
           ]
@@ -666,7 +666,7 @@
               "isCorrect": false
             },
             {
-              "value": "전기가 흐를 수 있도록 구리선을 비닐로 감싸 만든 줄이에요.",
+              "value": "전기를 전달하기 위해 금속 등 전기가 잘 통하는 재료로 만든 줄을 말해요.",
               "isCorrect": false
             },
             {
@@ -674,7 +674,7 @@
               "isCorrect": true
             },
             {
-              "value": "전기를 담아 두었다가 필요할 때 꺼내 쓰는 물건이에요.",
+              "value": "화학 에너지 등을 전기 에너지로 바꾸어 전류가 흐르게 하는 장치를 말해요.",
               "isCorrect": false
             }
           ]
@@ -772,7 +772,7 @@
               "isCorrect": false
             },
             {
-              "value": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+              "value": "물기나 습기가 적어 메마른 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -1049,9 +1049,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 2,
-      "sourceDefinition": "분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.",
+      "sourceDefinition": "분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.",
       "sourceExample": "비율을 분수로 나타낼 때 비교하는 양은 항상 분자 자리에 와.",
-      "definition": "분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.",
+      "definition": "분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.",
       "example": "비율을 분수로 나타낼 때 비교하는 양은 항상 분자 자리에 와.",
       "flags": [],
       "duplicateReview": null,
@@ -1070,7 +1070,7 @@
           "prompt": "‘분자’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.",
+              "value": "분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.",
               "isCorrect": false
             },
             {
@@ -1078,11 +1078,11 @@
               "isCorrect": false
             },
             {
-              "value": "분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.",
+              "value": "분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.",
               "isCorrect": true
             },
             {
-              "value": "숫자가 일정한 간격으로 적혀 있는 곧은 선이에요.",
+              "value": "곧은 선 위에 0을 기준으로 정하고, 일정한 길이를 단위로 삼아 수의 위치를 나타낸 선이에요.",
               "isCorrect": false
             }
           ]
@@ -1111,7 +1111,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "분자"
           ]
@@ -1136,7 +1136,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘거리’의 쓰임이에요. ‘분자’는 분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.",
+          "explanation": "이 문장은 원래 ‘거리’의 쓰임이에요. ‘분자’는 분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "설탕이나 소금이 물에 골고루 섞여 투명하게 변한 상태예요.",
+              "value": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
               "isCorrect": false
             },
             {
@@ -1278,7 +1278,7 @@
               "isCorrect": true
             },
             {
-              "value": "야구에서 타자가 안타를 치고 나갈 수 있는 비율을 말해요.",
+              "value": "야구에서 전체 타수에 대한 안타 수의 비율을 말해요.",
               "isCorrect": false
             },
             {
@@ -1355,9 +1355,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 2,
-      "sourceDefinition": "먹은 음식물을 몸에 흡수하기 쉽게 작게 부수는 과정이에요.",
+      "sourceDefinition": "먹은 음식물을 잘게 부수고 몸에 흡수할 수 있는 물질로 분해하는 과정이에요.",
       "sourceExample": "소화 기관에는 입, 식도, 위, 소장, 대장 등이 포함돼.",
-      "definition": "먹은 음식물을 몸에 흡수하기 쉽게 작게 부수는 과정이에요.",
+      "definition": "먹은 음식물을 잘게 부수고 몸에 흡수할 수 있는 물질로 분해하는 과정이에요.",
       "example": "소화 기관에는 입, 식도, 위, 소장, 대장 등이 포함돼.",
       "flags": [],
       "duplicateReview": null,
@@ -1380,7 +1380,7 @@
               "isCorrect": false
             },
             {
-              "value": "먹은 음식물을 몸에 흡수하기 쉽게 작게 부수는 과정이에요.",
+              "value": "먹은 음식물을 잘게 부수고 몸에 흡수할 수 있는 물질로 분해하는 과정이에요.",
               "isCorrect": true
             },
             {
@@ -1417,7 +1417,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "먹은 음식물을 몸에 흡수하기 쉽게 작게 부수는 과정이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "먹은 음식물을 잘게 부수고 몸에 흡수할 수 있는 물질로 분해하는 과정이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "소화"
           ]
@@ -1442,7 +1442,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘견문’의 쓰임이에요. ‘소화’는 먹은 음식물을 몸에 흡수하기 쉽게 작게 부수는 과정이에요.",
+          "explanation": "이 문장은 원래 ‘견문’의 쓰임이에요. ‘소화’는 먹은 음식물을 잘게 부수고 몸에 흡수할 수 있는 물질로 분해하는 과정이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1482,7 +1482,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -1584,7 +1584,7 @@
               "isCorrect": false
             },
             {
-              "value": "집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.",
+              "value": "집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.",
               "isCorrect": false
             },
             {
@@ -1638,7 +1638,7 @@
           "prompt": "다음 중 ‘암호’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 암호가야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 암호로 끝나.",
               "isCorrect": false
             },
             {
@@ -1764,9 +1764,9 @@
       "category": "비교와 분류",
       "level": 2,
       "sourceDefinition": "어떤 활동이나 힘이 미치는 일정한 범위예요.",
-      "sourceExample": "그래프에서 각 항목이 차지하는 영역의 넓이가 바로 비율이야.",
+      "sourceExample": "요즘은 인공지능이 예술과 의학 등 다양한 영역에서 활용되고 있어.",
       "definition": "어떤 활동이나 힘이 미치는 일정한 범위예요.",
-      "example": "그래프에서 각 항목이 차지하는 영역의 넓이가 바로 비율이야.",
+      "example": "요즘은 인공지능이 예술과 의학 등 다양한 영역에서 활용되고 있어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1803,7 +1803,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "그래프에서 각 항목이 차지하는 ＿＿＿＿의 넓이가 바로 비율이야.",
+          "prompt": "요즘은 인공지능이 예술과 의학 등 다양한 ＿＿＿＿에서 활용되고 있어.",
           "options": [
             {
               "value": "구분",
@@ -1832,7 +1832,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "그래프에서 각 항목이 차지하는 ＿＿＿＿의 넓이가 바로 비율이야.",
+          "prompt": "요즘은 인공지능이 예술과 의학 등 다양한 ＿＿＿＿에서 활용되고 있어.",
           "acceptedAnswers": [
             "영역"
           ]
@@ -1842,11 +1842,11 @@
           "prompt": "다음 중 ‘영역’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 영역이야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 영역로 끝나.",
               "isCorrect": false
             },
             {
-              "value": "그래프에서 각 항목이 차지하는 영역의 넓이가 바로 비율이야.",
+              "value": "요즘은 인공지능이 예술과 의학 등 다양한 영역에서 활용되고 있어.",
               "isCorrect": true
             }
           ],
@@ -1967,9 +1967,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "사계절이 뚜렷하고 날씨가 온화해서 사람이 살기에 가장 좋은 기후예요.",
+      "sourceDefinition": "열대와 한대 사이에 있으며, 대체로 기온이 온화한 기후를 말해요.",
       "sourceExample": "우리나라를 포함한 많은 나라가 살기 좋은 온대 기후에 속해 있어.",
-      "definition": "사계절이 뚜렷하고 날씨가 온화해서 사람이 살기에 가장 좋은 기후예요.",
+      "definition": "열대와 한대 사이에 있으며, 대체로 기온이 온화한 기후를 말해요.",
       "example": "우리나라를 포함한 많은 나라가 살기 좋은 온대 기후에 속해 있어.",
       "flags": [],
       "duplicateReview": null,
@@ -2000,7 +2000,7 @@
               "isCorrect": false
             },
             {
-              "value": "사계절이 뚜렷하고 날씨가 온화해서 사람이 살기에 가장 좋은 기후예요.",
+              "value": "열대와 한대 사이에 있으며, 대체로 기온이 온화한 기후를 말해요.",
               "isCorrect": true
             }
           ]
@@ -2029,7 +2029,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "사계절이 뚜렷하고 날씨가 온화해서 사람이 살기에 가장 좋은 기후예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "열대와 한대 사이에 있으며, 대체로 기온이 온화한 기후를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "온대"
           ]
@@ -2054,7 +2054,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘온대’는 사계절이 뚜렷하고 날씨가 온화해서 사람이 살기에 가장 좋은 기후예요.",
+          "explanation": "이 문장은 원래 ‘경도’의 쓰임이에요. ‘온대’는 열대와 한대 사이에 있으며, 대체로 기온이 온화한 기후를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2069,9 +2069,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 2,
-      "sourceDefinition": "어떤 물건이나 농작물이 가장 많이 생산되는 지역을 말해요.",
+      "sourceDefinition": "어떤 물건이나 농작물이 주로 많이 생산되는 지역을 말해요.",
       "sourceExample": "대구는 맛있는 사과가 많이 나는 사과의 주산지로 아주 유명해.",
-      "definition": "어떤 물건이나 농작물이 가장 많이 생산되는 지역을 말해요.",
+      "definition": "어떤 물건이나 농작물이 주로 많이 생산되는 지역을 말해요.",
       "example": "대구는 맛있는 사과가 많이 나는 사과의 주산지로 아주 유명해.",
       "flags": [],
       "duplicateReview": null,
@@ -2090,7 +2090,7 @@
           "prompt": "‘주산지’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 물건이나 농작물이 가장 많이 생산되는 지역을 말해요.",
+              "value": "어떤 물건이나 농작물이 주로 많이 생산되는 지역을 말해요.",
               "isCorrect": true
             },
             {
@@ -2131,7 +2131,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 물건이나 농작물이 가장 많이 생산되는 지역을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 물건이나 농작물이 주로 많이 생산되는 지역을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "주산지"
           ]
@@ -2156,7 +2156,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘경제’의 쓰임이에요. ‘주산지’는 어떤 물건이나 농작물이 가장 많이 생산되는 지역을 말해요.",
+          "explanation": "이 문장은 원래 ‘경제’의 쓰임이에요. ‘주산지’는 어떤 물건이나 농작물이 주로 많이 생산되는 지역을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2306,7 +2306,7 @@
               "isCorrect": true
             },
             {
-              "value": "남을 대할 때 스스로 부끄럽지 않게 세우는 얼굴이나 도리예요.",
+              "value": "다른 사람 앞에서 지키고 싶어 하는 자신의 품위나 사회적 위치를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2477,9 +2477,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.",
+      "sourceDefinition": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.",
       "sourceExample": "'먹는 배'와 '배가 나오다'처럼 여러 뜻을 가진 말은 다의어야.",
-      "definition": "하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.",
+      "definition": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.",
       "example": "'먹는 배'와 '배가 나오다'처럼 여러 뜻을 가진 말은 다의어야.",
       "flags": [],
       "duplicateReview": null,
@@ -2498,7 +2498,7 @@
           "prompt": "‘다의어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.",
               "isCorrect": true
             },
             {
@@ -2539,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "다의어"
           ]
@@ -2564,7 +2564,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고산’의 쓰임이에요. ‘다의어’는 하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.",
+          "explanation": "이 문장은 원래 ‘고산’의 쓰임이에요. ‘다의어’는 하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2612,7 +2612,7 @@
               "isCorrect": false
             },
             {
-              "value": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+              "value": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2727,7 +2727,7 @@
           "prompt": "‘백야’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "자원이나 물자가 다 써버려서 하나도 남지 않게 되는 상태예요.",
+              "value": "자원이나 물자 등이 다 쓰여 없어지는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2811,9 +2811,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 3,
-      "sourceDefinition": "정부에 속하지 않고 시민들이 자발적으로 만든 단체나 활동을 말해요.",
+      "sourceDefinition": "정부에 속하지 않거나 정부가 주도하지 않는 것을 말해요.",
       "sourceExample": "비정부 기구(NGO)는 환경 보호나 기아 구제 활동을 활발하게 펼쳐.",
-      "definition": "정부에 속하지 않고 시민들이 자발적으로 만든 단체나 활동을 말해요.",
+      "definition": "정부에 속하지 않거나 정부가 주도하지 않는 것을 말해요.",
       "example": "비정부 기구(NGO)는 환경 보호나 기아 구제 활동을 활발하게 펼쳐.",
       "flags": [],
       "duplicateReview": null,
@@ -2844,7 +2844,7 @@
               "isCorrect": false
             },
             {
-              "value": "정부에 속하지 않고 시민들이 자발적으로 만든 단체나 활동을 말해요.",
+              "value": "정부에 속하지 않거나 정부가 주도하지 않는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2873,7 +2873,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "정부에 속하지 않고 시민들이 자발적으로 만든 단체나 활동을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "정부에 속하지 않거나 정부가 주도하지 않는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "비정부"
           ]
@@ -2898,7 +2898,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공단’의 쓰임이에요. ‘비정부’는 정부에 속하지 않고 시민들이 자발적으로 만든 단체나 활동을 말해요.",
+          "explanation": "이 문장은 원래 ‘공단’의 쓰임이에요. ‘비정부’는 정부에 속하지 않거나 정부가 주도하지 않는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3015,9 +3015,9 @@
       "meaningNumber": 1,
       "category": "활동과 순서",
       "level": 3,
-      "sourceDefinition": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+      "sourceDefinition": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
       "sourceExample": "모둠 친구들이 서로 배려하니 회의가 아주 원활하게 진행됐어.",
-      "definition": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+      "definition": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
       "example": "모둠 친구들이 서로 배려하니 회의가 아주 원활하게 진행됐어.",
       "flags": [],
       "duplicateReview": null,
@@ -3036,11 +3036,11 @@
           "prompt": "‘원활’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+              "value": "알맞은 정도를 지나치게 넘어선 상태를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+              "value": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -3077,7 +3077,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "원활"
           ]
@@ -3102,7 +3102,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공간’의 쓰임이에요. ‘원활’은 막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+          "explanation": "이 문장은 원래 ‘공간’의 쓰임이에요. ‘원활’은 일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3117,9 +3117,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 3,
-      "sourceDefinition": "지구에서 보았을 때 달의 모양이 날마다 변해 보이는 모습이에요.",
+      "sourceDefinition": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
       "sourceExample": "초승달, 상현달, 보름달 등 달의 위상은 약 한 달 주기로 반복돼.",
-      "definition": "지구에서 보았을 때 달의 모양이 날마다 변해 보이는 모습이에요.",
+      "definition": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
       "example": "초승달, 상현달, 보름달 등 달의 위상은 약 한 달 주기로 반복돼.",
       "flags": [],
       "duplicateReview": null,
@@ -3142,11 +3142,11 @@
               "isCorrect": false
             },
             {
-              "value": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+              "value": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
               "isCorrect": false
             },
             {
-              "value": "지구에서 보았을 때 달의 모양이 날마다 변해 보이는 모습이에요.",
+              "value": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
               "isCorrect": true
             },
             {
@@ -3179,7 +3179,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구에서 보았을 때 달의 모양이 날마다 변해 보이는 모습이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "위상"
           ]
@@ -3204,7 +3204,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘위상’은 지구에서 보았을 때 달의 모양이 날마다 변해 보이는 모습이에요.",
+          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘위상’은 태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3526,9 +3526,9 @@
       "category": "숫자와 연산",
       "level": 3,
       "sourceDefinition": "분모가 다른 분수들의 분모를 같게 맞추는 과정이에요.",
-      "sourceExample": "분모를 통분해야 분수끼리 크기를 정확히 비교할 수 있어.",
+      "sourceExample": "분모가 다른 분수는 통분하여 분모를 같게 맞추면 크기를 비교하기 쉬워.",
       "definition": "분모가 다른 분수들의 분모를 같게 맞추는 과정이에요.",
-      "example": "분모를 통분해야 분수끼리 크기를 정확히 비교할 수 있어.",
+      "example": "분모가 다른 분수는 통분하여 분모를 같게 맞추면 크기를 비교하기 쉬워.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3565,7 +3565,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "분모를 ＿＿＿＿해야 분수끼리 크기를 정확히 비교할 수 있어.",
+          "prompt": "분모가 다른 분수는 ＿＿＿＿하여 분모를 같게 맞추면 크기를 비교하기 쉬워.",
           "options": [
             {
               "value": "통분",
@@ -3594,7 +3594,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "분모를 ＿＿＿＿해야 분수끼리 크기를 정확히 비교할 수 있어.",
+          "prompt": "분모가 다른 분수는 ＿＿＿＿하여 분모를 같게 맞추면 크기를 비교하기 쉬워.",
           "acceptedAnswers": [
             "통분"
           ]
@@ -3604,7 +3604,7 @@
           "prompt": "다음 중 ‘통분’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "분모를 통분해야 분수끼리 크기를 정확히 비교할 수 있어.",
+              "value": "분모가 다른 분수는 통분하여 분모를 같게 맞추면 크기를 비교하기 쉬워.",
               "isCorrect": true
             },
             {
@@ -3758,7 +3758,7 @@
               "isCorrect": false
             },
             {
-              "value": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+              "value": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
               "isCorrect": false
             },
             {
@@ -3831,9 +3831,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 3,
-      "sourceDefinition": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+      "sourceDefinition": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
       "sourceExample": "원기둥의 위아래 두 밑면은 서로 합동인 원 모양이야.",
-      "definition": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+      "definition": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
       "example": "원기둥의 위아래 두 밑면은 서로 합동인 원 모양이야.",
       "flags": [],
       "duplicateReview": null,
@@ -3856,7 +3856,7 @@
               "isCorrect": false
             },
             {
-              "value": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+              "value": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
               "isCorrect": true
             },
             {
@@ -3864,7 +3864,7 @@
               "isCorrect": false
             },
             {
-              "value": "입체도형의 모서리를 잘라 평면 위에 펼쳐 놓은 그림이에요.",
+              "value": "입체도형의 겉면을 알맞게 잘라 평면에 펼쳐 놓은 그림을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3893,7 +3893,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "합동"
           ]
@@ -3918,7 +3918,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘합동’은 모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘합동’은 두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

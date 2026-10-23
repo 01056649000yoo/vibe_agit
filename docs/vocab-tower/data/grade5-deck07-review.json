@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck07",
   "deckNumber": 7,
@@ -258,7 +258,7 @@
               "isCorrect": false
             },
             {
-              "value": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+              "value": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 국토를 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 국토기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -902,7 +902,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             },
             {
@@ -976,9 +976,9 @@
       "category": "우리 역사",
       "level": 2,
       "sourceDefinition": "금속을 녹여 만든 글자 조각으로, 책을 대량으로 찍어낼 수 있게 했어요.",
-      "sourceExample": "직지심체요절은 세계에서 가장 오래된 금속 활자로 찍은 책이에요.",
+      "sourceExample": "직지심체요절은 현재 남아 있는 금속 활자로 찍은 책 가운데 세계에서 가장 오래된 책이에요.",
       "definition": "금속을 녹여 만든 글자 조각으로, 책을 대량으로 찍어낼 수 있게 했어요.",
-      "example": "직지심체요절은 세계에서 가장 오래된 금속 활자로 찍은 책이에요.",
+      "example": "직지심체요절은 현재 남아 있는 금속 활자로 찍은 책 가운데 세계에서 가장 오래된 책이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1015,7 +1015,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "직지심체요절은 세계에서 가장 오래된 ＿＿＿＿로 찍은 책이에요.",
+          "prompt": "직지심체요절은 현재 남아 있는 ＿＿＿＿로 찍은 책 가운데 세계에서 가장 오래된 책이에요.",
           "options": [
             {
               "value": "강화",
@@ -1044,7 +1044,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "직지심체요절은 세계에서 가장 오래된 ＿＿＿＿로 찍은 책이에요.",
+          "prompt": "직지심체요절은 현재 남아 있는 ＿＿＿＿로 찍은 책 가운데 세계에서 가장 오래된 책이에요.",
           "acceptedAnswers": [
             "금속 활자"
           ]
@@ -1058,7 +1058,7 @@
               "isCorrect": false
             },
             {
-              "value": "직지심체요절은 세계에서 가장 오래된 금속 활자로 찍은 책이에요.",
+              "value": "직지심체요절은 현재 남아 있는 금속 활자로 찍은 책 가운데 세계에서 가장 오래된 책이에요.",
               "isCorrect": true
             }
           ],
@@ -1412,7 +1412,7 @@
               "isCorrect": true
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1518,7 +1518,7 @@
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1612,11 +1612,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             },
             {
@@ -1791,9 +1791,9 @@
       "meaningNumber": 1,
       "category": "동식물과 생물",
       "level": 2,
-      "sourceDefinition": "생태계에서 스스로 양분을 만들지 못하고 다른 생물을 먹는 활동이에요.",
+      "sourceDefinition": "돈이나 물건, 시간, 힘 따위를 써서 없애는 것을 말해요.",
       "sourceExample": "메뚜기는 풀을 먹고 사는 소비자의 한 종류란다.",
-      "definition": "생태계에서 스스로 양분을 만들지 못하고 다른 생물을 먹는 활동이에요.",
+      "definition": "돈이나 물건, 시간, 힘 따위를 써서 없애는 것을 말해요.",
       "example": "메뚜기는 풀을 먹고 사는 소비자의 한 종류란다.",
       "flags": [],
       "duplicateReview": null,
@@ -1816,7 +1816,7 @@
               "isCorrect": false
             },
             {
-              "value": "생태계에서 스스로 양분을 만들지 못하고 다른 생물을 먹는 활동이에요.",
+              "value": "돈이나 물건, 시간, 힘 따위를 써서 없애는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -1824,7 +1824,7 @@
               "isCorrect": false
             },
             {
-              "value": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+              "value": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
               "isCorrect": false
             }
           ]
@@ -1853,7 +1853,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "생태계에서 스스로 양분을 만들지 못하고 다른 생물을 먹는 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "돈이나 물건, 시간, 힘 따위를 써서 없애는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "소비"
           ]
@@ -1878,7 +1878,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘소비’는 생태계에서 스스로 양분을 만들지 못하고 다른 생물을 먹는 활동이에요.",
+          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘소비’는 돈이나 물건, 시간, 힘 따위를 써서 없애는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1918,7 +1918,7 @@
               "isCorrect": false
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -1926,7 +1926,7 @@
               "isCorrect": true
             },
             {
-              "value": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+              "value": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
               "isCorrect": false
             }
           ]
@@ -2098,9 +2098,9 @@
       "category": "자연과 환경",
       "level": 2,
       "sourceDefinition": "공기 중의 수증기를 없애서 습도를 낮추는 것을 말해요.",
-      "sourceExample": "장마철에 집 안이 눅눅해서 제습기를 틀어 제습을 했어.",
+      "sourceExample": "장마철에 집 안이 눅눅해서 제습기를 틀었더니 훨씬 뽀송뽀송해졌어.",
       "definition": "공기 중의 수증기를 없애서 습도를 낮추는 것을 말해요.",
-      "example": "장마철에 집 안이 눅눅해서 제습기를 틀어 제습을 했어.",
+      "example": "장마철에 집 안이 눅눅해서 제습기를 틀었더니 훨씬 뽀송뽀송해졌어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2126,7 +2126,7 @@
               "isCorrect": false
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -2137,7 +2137,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "장마철에 집 안이 눅눅해서 ＿＿＿＿기를 틀어 제습을 했어.",
+          "prompt": "장마철에 집 안이 눅눅해서 ＿＿＿＿기를 틀었더니 훨씬 뽀송뽀송해졌어.",
           "options": [
             {
               "value": "가습",
@@ -2166,7 +2166,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "장마철에 집 안이 눅눅해서 ＿＿＿＿기를 틀어 제습을 했어.",
+          "prompt": "장마철에 집 안이 눅눅해서 ＿＿＿＿기를 틀었더니 훨씬 뽀송뽀송해졌어.",
           "acceptedAnswers": [
             "제습"
           ]
@@ -2176,7 +2176,7 @@
           "prompt": "다음 중 ‘제습’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "장마철에 집 안이 눅눅해서 제습기를 틀어 제습을 했어.",
+              "value": "장마철에 집 안이 눅눅해서 제습기를 틀었더니 훨씬 뽀송뽀송해졌어.",
               "isCorrect": true
             },
             {
@@ -2334,7 +2334,7 @@
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2607,9 +2607,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+      "sourceDefinition": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
       "sourceExample": "'손'은 신체 부위라는 뜻도 있고, '일손'처럼 사람의 힘이라는 뜻도 있는 다의어야.",
-      "definition": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+      "definition": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
       "example": "'손'은 신체 부위라는 뜻도 있고, '일손'처럼 사람의 힘이라는 뜻도 있는 다의어야.",
       "flags": [],
       "duplicateReview": null,
@@ -2632,7 +2632,7 @@
               "isCorrect": false
             },
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": true
             },
             {
@@ -2669,7 +2669,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "다의어"
           ]
@@ -2686,7 +2686,7 @@
           "prompt": "다음 중 ‘다의어’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 다의어했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 다의어 활동을 펼쳤어요.",
               "isCorrect": false
             },
             {
@@ -2694,7 +2694,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계몽’의 쓰임이에요. ‘다의어’는 하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+          "explanation": "이 문장은 원래 ‘계몽’의 쓰임이에요. ‘다의어’는 하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2792,7 +2792,7 @@
               "isCorrect": true
             },
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 단열했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 단열 활동을 펼쳤어요.",
               "isCorrect": false
             }
           ],
@@ -3321,9 +3321,9 @@
       "meaningNumber": 1,
       "category": "물질의 성질",
       "level": 3,
-      "sourceDefinition": "물질이 액체에 골고루 섞여 투명하게 변한 상태를 말해요.",
+      "sourceDefinition": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
       "sourceExample": "물에 설탕을 넣고 저었더니 달콤한 설탕 용액이 되었어.",
-      "definition": "물질이 액체에 골고루 섞여 투명하게 변한 상태를 말해요.",
+      "definition": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
       "example": "물에 설탕을 넣고 저었더니 달콤한 설탕 용액이 되었어.",
       "flags": [],
       "duplicateReview": null,
@@ -3342,7 +3342,7 @@
           "prompt": "‘용액’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물질이 액체에 골고루 섞여 투명하게 변한 상태를 말해요.",
+              "value": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
               "isCorrect": true
             },
             {
@@ -3350,7 +3350,7 @@
               "isCorrect": false
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
@@ -3383,7 +3383,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "물질이 액체에 골고루 섞여 투명하게 변한 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "용액"
           ]
@@ -3404,11 +3404,11 @@
               "isCorrect": true
             },
             {
-              "value": "슬퍼하는 친구의 마음을 용액해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 용액해 주면 큰 위로가 된단다.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘용액’은 물질이 액체에 골고루 섞여 투명하게 변한 상태를 말해요.",
+          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘용액’은 어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3762,7 +3762,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]

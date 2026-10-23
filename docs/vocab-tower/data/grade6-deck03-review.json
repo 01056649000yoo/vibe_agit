@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 6,
   "deckId": "grade6-deck03",
   "deckNumber": 3,
@@ -112,7 +112,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 집 가열부를 적어보니 이번 달에는 식비로 지출이 가장 많았어.",
+              "value": "가열은 회사에서 일해 소득을 얻고, 필요한 물건을 사는 경제 활동을 해.",
               "isCorrect": false
             }
           ],
@@ -462,7 +462,7 @@
               "isCorrect": true
             },
             {
-              "value": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+              "value": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -470,7 +470,7 @@
               "isCorrect": false
             },
             {
-              "value": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+              "value": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -641,9 +641,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "하늘과 땅이 맞닿아 보이는 경계 선을 말해요.",
+      "sourceDefinition": "하늘과 땅이 맞닿아 보이는 경계선을 말해요.",
       "sourceExample": "넓은 평야에서 지평선 너머로 해가 지는 모습이 아주 아름다웠어.",
-      "definition": "하늘과 땅이 맞닿아 보이는 경계 선을 말해요.",
+      "definition": "하늘과 땅이 맞닿아 보이는 경계선을 말해요.",
       "example": "넓은 평야에서 지평선 너머로 해가 지는 모습이 아주 아름다웠어.",
       "flags": [],
       "duplicateReview": null,
@@ -662,7 +662,7 @@
           "prompt": "‘지평선’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+              "value": "물기나 습기가 적어 메마른 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -670,7 +670,7 @@
               "isCorrect": false
             },
             {
-              "value": "하늘과 땅이 맞닿아 보이는 경계 선을 말해요.",
+              "value": "하늘과 땅이 맞닿아 보이는 경계선을 말해요.",
               "isCorrect": true
             },
             {
@@ -703,7 +703,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "하늘과 땅이 맞닿아 보이는 경계 선을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "하늘과 땅이 맞닿아 보이는 경계선을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "지평선"
           ]
@@ -728,7 +728,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감사’의 쓰임이에요. ‘지평선’은 하늘과 땅이 맞닿아 보이는 경계 선을 말해요.",
+          "explanation": "이 문장은 원래 ‘감사’의 쓰임이에요. ‘지평선’은 하늘과 땅이 맞닿아 보이는 경계선을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1050,9 +1050,9 @@
       "category": "나와 몸",
       "level": 2,
       "sourceDefinition": "우리 몸을 지탱하고 장기를 보호하는 뼈의 전체적인 짜임새예요.",
-      "sourceExample": "뼈와 근육이 모여 우리 몸의 튼튼한 골격을 이루고 있어.",
+      "sourceExample": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 골격을 이루고 있어.",
       "definition": "우리 몸을 지탱하고 장기를 보호하는 뼈의 전체적인 짜임새예요.",
-      "example": "뼈와 근육이 모여 우리 몸의 튼튼한 골격을 이루고 있어.",
+      "example": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 골격을 이루고 있어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1089,7 +1089,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "뼈와 근육이 모여 우리 몸의 튼튼한 ＿＿＿＿을 이루고 있어.",
+          "prompt": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 ＿＿＿＿을 이루고 있어.",
           "options": [
             {
               "value": "골격",
@@ -1118,7 +1118,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "뼈와 근육이 모여 우리 몸의 튼튼한 ＿＿＿＿을 이루고 있어.",
+          "prompt": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 ＿＿＿＿을 이루고 있어.",
           "acceptedAnswers": [
             "골격"
           ]
@@ -1128,7 +1128,7 @@
           "prompt": "다음 중 ‘골격’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 골격을 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 골격을 이루고 있어.",
               "isCorrect": true
             },
             {
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -1356,9 +1356,9 @@
       "category": "비교와 분류",
       "level": 2,
       "sourceDefinition": "성질이나 특징에 따라 갈라 나누는 것을 말해요.",
-      "sourceExample": "비율 그래프에는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
+      "sourceExample": "비율 그래프는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
       "definition": "성질이나 특징에 따라 갈라 나누는 것을 말해요.",
-      "example": "비율 그래프에는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
+      "example": "비율 그래프는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1395,7 +1395,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "비율 그래프에는 크게 띠그래프와 원그래프 두 종류로 ＿＿＿＿돼.",
+          "prompt": "비율 그래프는 크게 띠그래프와 원그래프 두 종류로 ＿＿＿＿돼.",
           "options": [
             {
               "value": "구성",
@@ -1424,7 +1424,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "비율 그래프에는 크게 띠그래프와 원그래프 두 종류로 ＿＿＿＿돼.",
+          "prompt": "비율 그래프는 크게 띠그래프와 원그래프 두 종류로 ＿＿＿＿돼.",
           "acceptedAnswers": [
             "구분"
           ]
@@ -1438,7 +1438,7 @@
               "isCorrect": false
             },
             {
-              "value": "비율 그래프에는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
+              "value": "비율 그래프는 크게 띠그래프와 원그래프 두 종류로 구분돼.",
               "isCorrect": true
             }
           ],
@@ -1540,7 +1540,7 @@
               "isCorrect": true
             },
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 국무총리가야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 국무총리로 끝나.",
               "isCorrect": false
             }
           ],
@@ -1866,9 +1866,9 @@
       "category": "말과 글",
       "level": 2,
       "sourceDefinition": "어떤 현상을 더 생생하게 나타내기 위해 다른 사물에 빗대어 표현하는 거예요.",
-      "sourceExample": "'내 마음은 호수요'처럼 빗대어 표현하는 것을 비유법이라고 해.",
+      "sourceExample": "'내 마음은 호수요'처럼 내 마음을 호수에 빗대어 표현하는 것을 비유라고 해.",
       "definition": "어떤 현상을 더 생생하게 나타내기 위해 다른 사물에 빗대어 표현하는 거예요.",
-      "example": "'내 마음은 호수요'처럼 빗대어 표현하는 것을 비유법이라고 해.",
+      "example": "'내 마음은 호수요'처럼 내 마음을 호수에 빗대어 표현하는 것을 비유라고 해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1905,7 +1905,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "'내 마음은 호수요'처럼 빗대어 표현하는 것을 ＿＿＿＿법이라고 해.",
+          "prompt": "'내 마음은 호수요'처럼 내 마음을 호수에 빗대어 표현하는 것을 ＿＿＿＿라고 해.",
           "options": [
             {
               "value": "비유",
@@ -1934,7 +1934,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "'내 마음은 호수요'처럼 빗대어 표현하는 것을 ＿＿＿＿법이라고 해.",
+          "prompt": "'내 마음은 호수요'처럼 내 마음을 호수에 빗대어 표현하는 것을 ＿＿＿＿라고 해.",
           "acceptedAnswers": [
             "비유"
           ]
@@ -1944,7 +1944,7 @@
           "prompt": "다음 중 ‘비유’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "'내 마음은 호수요'처럼 빗대어 표현하는 것을 비유법이라고 해.",
+              "value": "'내 마음은 호수요'처럼 내 마음을 호수에 빗대어 표현하는 것을 비유라고 해.",
               "isCorrect": true
             },
             {
@@ -1967,9 +1967,9 @@
       "meaningNumber": 1,
       "category": "시간과 생활",
       "level": 2,
-      "sourceDefinition": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+      "sourceDefinition": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
       "sourceExample": "추석이나 설날 같은 우리 명절은 음력을 기준으로 날짜를 정해.",
-      "definition": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+      "definition": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
       "example": "추석이나 설날 같은 우리 명절은 음력을 기준으로 날짜를 정해.",
       "flags": [],
       "duplicateReview": null,
@@ -2000,7 +2000,7 @@
               "isCorrect": false
             },
             {
-              "value": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+              "value": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
               "isCorrect": true
             }
           ]
@@ -2029,7 +2029,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "음력"
           ]
@@ -2054,7 +2054,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경공업’의 쓰임이에요. ‘음력’은 달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+          "explanation": "이 문장은 원래 ‘경공업’의 쓰임이에요. ‘음력’은 달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2298,7 +2298,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -2600,7 +2600,7 @@
           "prompt": "‘고도’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+              "value": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
               "isCorrect": false
             },
             {
@@ -2612,7 +2612,7 @@
               "isCorrect": false
             },
             {
-              "value": "태양이나 별이 하늘의 정남쪽 하늘에 위치하는 순간이에요.",
+              "value": "태양이나 별이 하루 중 정남쪽 하늘에 위치하는 순간이에요.",
               "isCorrect": false
             }
           ]
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 광학을 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 광학을 이루고 있어.",
               "isCorrect": false
             }
           ],
@@ -2804,7 +2804,7 @@
           "prompt": "‘광합성’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+              "value": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
               "isCorrect": false
             },
             {
@@ -3428,7 +3428,7 @@
               "isCorrect": false
             },
             {
-              "value": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+              "value": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3513,8 +3513,8 @@
             "sourceIndex": 36,
             "category": "말과 글",
             "level": 3,
-            "definition": "'A는 B이다'처럼 무엇을 직접 빗대어 표현하는 비유법이에요.",
-            "example": "'선생님은 천사이다'라는 표현은 은유법을 사용한 거야."
+            "definition": "‘처럼’, ‘같이’ 등의 말을 쓰지 않고 한 대상을 다른 대상인 것처럼 나타내는 표현 방법이에요.",
+            "example": "'선생님은 천사이다'라는 문장은 선생님을 천사에 빗댄 은유 표현이야."
           },
           {
             "sourceIndex": 85,
@@ -3832,9 +3832,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "법률이 헌법에 어긋나지 않는지, 대통령을 탄핵할지 등을 심판하는 곳이에요.",
-      "sourceExample": "어떤 법이 국민의 자유를 침해하면 헌법재판소에서 무효라고 판결할 수 있어.",
+      "sourceExample": "헌법재판소는 어떤 법률이 헌법에 어긋나는지 심판할 수 있어.",
       "definition": "법률이 헌법에 어긋나지 않는지, 대통령을 탄핵할지 등을 심판하는 곳이에요.",
-      "example": "어떤 법이 국민의 자유를 침해하면 헌법재판소에서 무효라고 판결할 수 있어.",
+      "example": "헌법재판소는 어떤 법률이 헌법에 어긋나는지 심판할 수 있어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3871,7 +3871,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "어떤 법이 국민의 자유를 침해하면 ＿＿＿＿에서 무효라고 판결할 수 있어.",
+          "prompt": "＿＿＿＿는 어떤 법률이 헌법에 어긋나는지 심판할 수 있어.",
           "options": [
             {
               "value": "간선제",
@@ -3900,7 +3900,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "어떤 법이 국민의 자유를 침해하면 ＿＿＿＿에서 무효라고 판결할 수 있어.",
+          "prompt": "＿＿＿＿는 어떤 법률이 헌법에 어긋나는지 심판할 수 있어.",
           "acceptedAnswers": [
             "헌법재판소"
           ]
@@ -3914,7 +3914,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 법이 국민의 자유를 침해하면 헌법재판소에서 무효라고 판결할 수 있어.",
+              "value": "헌법재판소는 어떤 법률이 헌법에 어긋나는지 심판할 수 있어.",
               "isCorrect": true
             }
           ],

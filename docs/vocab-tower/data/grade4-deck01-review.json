@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 4,
   "deckId": "grade4-deck01",
   "deckNumber": 1,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+      "sourceDefinition": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
       "sourceExample": "어제 읽은 동화책의 마지막 장면이 너무 슬퍼서 큰 감동을 받았어.",
-      "definition": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+      "definition": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
       "example": "어제 읽은 동화책의 마지막 장면이 너무 슬퍼서 큰 감동을 받았어.",
       "flags": [],
       "duplicateReview": null,
@@ -50,11 +50,11 @@
           "prompt": "‘감동’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "감동"
           ]
@@ -112,11 +112,11 @@
               "isCorrect": true
             },
             {
-              "value": "4분의 4나 4분의 5처럼 머리가 몸통보다 큰 분수가 감동예요.",
+              "value": "4분의 4나 4분의 5처럼 분자가 분모와 같거나 분모보다 큰 분수가 감동예요.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가분수’의 쓰임이에요. ‘감동’은 좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+          "explanation": "이 문장은 원래 ‘가분수’의 쓰임이에요. ‘감동’은 어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -164,7 +164,7 @@
               "isCorrect": false
             },
             {
-              "value": "전체 중에서 일부분이나 일정한 몫을 말해요.",
+              "value": "전체 가운데 어느 한 부분을 말해요.",
               "isCorrect": false
             }
           ]
@@ -470,7 +470,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리가 눈으로 볼 수 있고 만질 수 있는 구체적인 모양을 가진 물건이에요.",
+              "value": "모양을 가지고 공간을 차지하는 구체적인 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -870,11 +870,11 @@
               "isCorrect": true
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -976,7 +976,7 @@
               "isCorrect": true
             },
             {
-              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "value": "액체 속에 생기는 기체 방울을 말해요.",
               "isCorrect": false
             },
             {
@@ -1082,7 +1082,7 @@
               "isCorrect": true
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -1384,7 +1384,7 @@
               "isCorrect": true
             },
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1588,7 +1588,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+              "value": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
               "isCorrect": false
             },
             {
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "value": "평면이나 물체의 표면, 땅 등의 넓이를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2294,7 +2294,7 @@
           "prompt": "‘수증기’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2404,7 +2404,7 @@
               "isCorrect": false
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -2478,9 +2478,9 @@
       "category": "모양과 도형",
       "level": 2,
       "sourceDefinition": "두 변의 길이가 서로 똑같은 삼각형을 말해요.",
-      "sourceExample": "이등변삼각형은 아래에 있는 두 각의 크기도 서로 같아요.",
+      "sourceExample": "이등변삼각형에서는 길이가 같은 두 변을 각각 마주 보는 두 각의 크기도 서로 같아요.",
       "definition": "두 변의 길이가 서로 똑같은 삼각형을 말해요.",
-      "example": "이등변삼각형은 아래에 있는 두 각의 크기도 서로 같아요.",
+      "example": "이등변삼각형에서는 길이가 같은 두 변을 각각 마주 보는 두 각의 크기도 서로 같아요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2517,7 +2517,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿은 아래에 있는 두 각의 크기도 서로 같아요.",
+          "prompt": "＿＿＿＿에서는 길이가 같은 두 변을 각각 마주 보는 두 각의 크기도 서로 같아요.",
           "options": [
             {
               "value": "각도",
@@ -2546,7 +2546,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿은 아래에 있는 두 각의 크기도 서로 같아요.",
+          "prompt": "＿＿＿＿에서는 길이가 같은 두 변을 각각 마주 보는 두 각의 크기도 서로 같아요.",
           "acceptedAnswers": [
             "이등변삼각형"
           ]
@@ -2556,7 +2556,7 @@
           "prompt": "다음 중 ‘이등변삼각형’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이등변삼각형은 아래에 있는 두 각의 크기도 서로 같아요.",
+              "value": "이등변삼각형에서는 길이가 같은 두 변을 각각 마주 보는 두 각의 크기도 서로 같아요.",
               "isCorrect": true
             },
             {
@@ -2580,9 +2580,9 @@
       "category": "생각과 공부",
       "level": 2,
       "sourceDefinition": "어떤 사실을 알아내는 데 바탕이 되는 정보나 숫자들을 말해요.",
-      "sourceExample": "우유 급식 인원을 파악하기 위해 친구들의 희망 자료를 모았어요.",
+      "sourceExample": "우유 급식 신청 여부를 조사한 자료로 신청 인원을 파악했어요.",
       "definition": "어떤 사실을 알아내는 데 바탕이 되는 정보나 숫자들을 말해요.",
-      "example": "우유 급식 인원을 파악하기 위해 친구들의 희망 자료를 모았어요.",
+      "example": "우유 급식 신청 여부를 조사한 자료로 신청 인원을 파악했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2600,7 +2600,7 @@
           "prompt": "‘자료’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2619,7 +2619,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우유 급식 인원을 파악하기 위해 친구들의 희망 ＿＿＿＿를 모았어요.",
+          "prompt": "우유 급식 신청 여부를 조사한 ＿＿＿＿로 신청 인원을 파악했어요.",
           "options": [
             {
               "value": "개념",
@@ -2648,7 +2648,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우유 급식 인원을 파악하기 위해 친구들의 희망 ＿＿＿＿를 모았어요.",
+          "prompt": "우유 급식 신청 여부를 조사한 ＿＿＿＿로 신청 인원을 파악했어요.",
           "acceptedAnswers": [
             "자료"
           ]
@@ -2662,7 +2662,7 @@
               "isCorrect": false
             },
             {
-              "value": "우유 급식 인원을 파악하기 위해 친구들의 희망 자료를 모았어요.",
+              "value": "우유 급식 신청 여부를 조사한 자료로 신청 인원을 파악했어요.",
               "isCorrect": true
             }
           ],
@@ -2783,9 +2783,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 2,
-      "sourceDefinition": "태양과 태양의 영향을 받는 행성들이 모여 있는 가족 같은 모임이에요.",
+      "sourceDefinition": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등이 모인 체계를 말해요.",
       "sourceExample": "우리가 사는 지구는 태양계의 여덟 개 행성 중 하나예요.",
-      "definition": "태양과 태양의 영향을 받는 행성들이 모여 있는 가족 같은 모임이에요.",
+      "definition": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등이 모인 체계를 말해요.",
       "example": "우리가 사는 지구는 태양계의 여덟 개 행성 중 하나예요.",
       "flags": [],
       "duplicateReview": null,
@@ -2816,7 +2816,7 @@
               "isCorrect": false
             },
             {
-              "value": "태양과 태양의 영향을 받는 행성들이 모여 있는 가족 같은 모임이에요.",
+              "value": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등이 모인 체계를 말해요.",
               "isCorrect": true
             }
           ]
@@ -2845,7 +2845,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "태양과 태양의 영향을 받는 행성들이 모여 있는 가족 같은 모임이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등이 모인 체계를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "태양계"
           ]
@@ -2870,7 +2870,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘태양계’는 태양과 태양의 영향을 받는 행성들이 모여 있는 가족 같은 모임이에요.",
+          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘태양계’는 태양과 그 주위를 도는 행성, 위성, 소행성, 혜성 등이 모인 체계를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2885,9 +2885,9 @@
       "meaningNumber": 1,
       "category": "경제와 생활",
       "level": 2,
-      "sourceDefinition": "물건이 얼마나 잘 만들어졌고 튼튼한지를 나타내는 성질이에요.",
+      "sourceDefinition": "물건의 기능, 맛, 튼튼함 등 그 물건이 얼마나 좋은지를 나타내는 성질을 말해요.",
       "sourceExample": "물건을 살 때는 가격뿐만 아니라 품질이 좋은지도 꼭 확인해야 해요.",
-      "definition": "물건이 얼마나 잘 만들어졌고 튼튼한지를 나타내는 성질이에요.",
+      "definition": "물건의 기능, 맛, 튼튼함 등 그 물건이 얼마나 좋은지를 나타내는 성질을 말해요.",
       "example": "물건을 살 때는 가격뿐만 아니라 품질이 좋은지도 꼭 확인해야 해요.",
       "flags": [],
       "duplicateReview": null,
@@ -2906,7 +2906,7 @@
           "prompt": "‘품질’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건이 얼마나 잘 만들어졌고 튼튼한지를 나타내는 성질이에요.",
+              "value": "물건의 기능, 맛, 튼튼함 등 그 물건이 얼마나 좋은지를 나타내는 성질을 말해요.",
               "isCorrect": true
             },
             {
@@ -2918,7 +2918,7 @@
               "isCorrect": false
             },
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2947,7 +2947,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "물건이 얼마나 잘 만들어졌고 튼튼한지를 나타내는 성질이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물건의 기능, 맛, 튼튼함 등 그 물건이 얼마나 좋은지를 나타내는 성질을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "품질"
           ]
@@ -2972,7 +2972,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공손’의 쓰임이에요. ‘품질’은 물건이 얼마나 잘 만들어졌고 튼튼한지를 나타내는 성질이에요.",
+          "explanation": "이 문장은 원래 ‘공손’의 쓰임이에요. ‘품질’은 물건의 기능, 맛, 튼튼함 등 그 물건이 얼마나 좋은지를 나타내는 성질을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3020,7 +3020,7 @@
               "isCorrect": false
             },
             {
-              "value": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+              "value": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3428,7 +3428,7 @@
               "isCorrect": false
             },
             {
-              "value": "비가 많이 와서 산의 흙과 바위가 한꺼번에 아래로 무너져 내리는 일이에요.",
+              "value": "산의 흙이나 바위가 한꺼번에 아래로 무너져 내리는 현상을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3497,10 +3497,10 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 3,
-      "sourceDefinition": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
-      "sourceExample": "한쪽이 아주 넓게 벌어진 삼각형을 둔각삼각형이라고 불러요.",
-      "definition": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
-      "example": "한쪽이 아주 넓게 벌어진 삼각형을 둔각삼각형이라고 불러요.",
+      "sourceDefinition": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
+      "sourceExample": "한 각이 120도인 삼각형은 둔각삼각형이에요.",
+      "definition": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
+      "example": "한 각이 120도인 삼각형은 둔각삼각형이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3518,7 +3518,7 @@
           "prompt": "‘둔각삼각형’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선이에요.",
+              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선분이에요.",
               "isCorrect": false
             },
             {
@@ -3526,7 +3526,7 @@
               "isCorrect": false
             },
             {
-              "value": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
+              "value": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
               "isCorrect": true
             },
             {
@@ -3537,7 +3537,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "한쪽이 아주 넓게 벌어진 삼각형을 ＿＿＿＿이라고 불러요.",
+          "prompt": "한 각이 120도인 삼각형은 ＿＿＿＿이에요.",
           "options": [
             {
               "value": "둔각삼각형",
@@ -3559,14 +3559,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "둔각삼각형"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "한쪽이 아주 넓게 벌어진 삼각형을 ＿＿＿＿이라고 불러요.",
+          "prompt": "한 각이 120도인 삼각형은 ＿＿＿＿이에요.",
           "acceptedAnswers": [
             "둔각삼각형"
           ]
@@ -3576,7 +3576,7 @@
           "prompt": "다음 중 ‘둔각삼각형’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "한쪽이 아주 넓게 벌어진 삼각형을 둔각삼각형이라고 불러요.",
+              "value": "한 각이 120도인 삼각형은 둔각삼각형이에요.",
               "isCorrect": true
             },
             {
@@ -3584,7 +3584,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘둔각삼각형’은 세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘둔각삼각형’은 세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3620,11 +3620,11 @@
           "prompt": "‘분석’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 일을 결정하기 전에 틀린 곳이나 문제는 없는지 자세히 살피는 거예요.",
+              "value": "어떤 내용이나 일에 문제가 없는지 자세히 살펴보는 거예요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 신중하게 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {
@@ -4032,7 +4032,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.",
+              "value": "사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.",
               "isCorrect": false
             },
             {

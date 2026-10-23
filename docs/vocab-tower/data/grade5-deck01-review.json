@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck01",
   "deckNumber": 1,
@@ -15,8 +15,8 @@
     "examplesChanged": 0,
     "acceptedAnswersChanged": 0,
     "usageDistinctionsAuthored": 40,
-    "priorityItems": 1,
-    "sampleItems": 39,
+    "priorityItems": 0,
+    "sampleItems": 40,
     "correctedItems": 0,
     "autoDraftCorrectionRate": 0
   },
@@ -131,10 +131,10 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "상대방의 기분이나 생각이 나와 같다고 느끼는 따뜻한 마음이에요.",
-      "sourceExample": "슬퍼하는 친구의 마음을 공감해 주면 큰 위로가 된단다.",
-      "definition": "상대방의 기분이나 생각이 나와 같다고 느끼는 따뜻한 마음이에요.",
-      "example": "슬퍼하는 친구의 마음을 공감해 주면 큰 위로가 된단다.",
+      "sourceDefinition": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
+      "sourceExample": "슬퍼하는 친구의 마음에 공감해 주면 큰 위로가 된단다.",
+      "definition": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
+      "example": "슬퍼하는 친구의 마음에 공감해 주면 큰 위로가 된단다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -156,7 +156,7 @@
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 따뜻한 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -171,7 +171,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "슬퍼하는 친구의 마음을 ＿＿＿＿해 주면 큰 위로가 된단다.",
+          "prompt": "슬퍼하는 친구의 마음에 ＿＿＿＿해 주면 큰 위로가 된단다.",
           "options": [
             {
               "value": "표현",
@@ -193,14 +193,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "상대방의 기분이나 생각이 나와 같다고 느끼는 따뜻한 마음이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "공감"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "슬퍼하는 친구의 마음을 ＿＿＿＿해 주면 큰 위로가 된단다.",
+          "prompt": "슬퍼하는 친구의 마음에 ＿＿＿＿해 주면 큰 위로가 된단다.",
           "acceptedAnswers": [
             "공감"
           ]
@@ -214,11 +214,11 @@
               "isCorrect": false
             },
             {
-              "value": "슬퍼하는 친구의 마음을 공감해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 공감해 주면 큰 위로가 된단다.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘공감’은 상대방의 기분이나 생각이 나와 같다고 느끼는 따뜻한 마음이에요.",
+          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘공감’은 다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 반복을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 반복기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -948,9 +948,9 @@
       "category": "숫자와 연산",
       "level": 2,
       "sourceDefinition": "분자가 1인 분수로, 분수를 세는 가장 기본이 되는 크기예요.",
-      "sourceExample": "1/4은 전체를 4로 나눈 것 중의 한 조각인 단위분수야.",
+      "sourceExample": "1/4은 전체를 똑같이 4개로 나눈 것 중 한 조각을 나타내는 단위분수야.",
       "definition": "분자가 1인 분수로, 분수를 세는 가장 기본이 되는 크기예요.",
-      "example": "1/4은 전체를 4로 나눈 것 중의 한 조각인 단위분수야.",
+      "example": "1/4은 전체를 똑같이 4개로 나눈 것 중 한 조각을 나타내는 단위분수야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -987,7 +987,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "1/4은 전체를 4로 나눈 것 중의 한 조각인 ＿＿＿＿야.",
+          "prompt": "1/4은 전체를 똑같이 4개로 나눈 것 중 한 조각을 나타내는 ＿＿＿＿야.",
           "options": [
             {
               "value": "기호",
@@ -1016,7 +1016,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "1/4은 전체를 4로 나눈 것 중의 한 조각인 ＿＿＿＿야.",
+          "prompt": "1/4은 전체를 똑같이 4개로 나눈 것 중 한 조각을 나타내는 ＿＿＿＿야.",
           "acceptedAnswers": [
             "단위분수"
           ]
@@ -1030,7 +1030,7 @@
               "isCorrect": false
             },
             {
-              "value": "1/4은 전체를 4로 나눈 것 중의 한 조각인 단위분수야.",
+              "value": "1/4은 전체를 똑같이 4개로 나눈 것 중 한 조각을 나타내는 단위분수야.",
               "isCorrect": true
             }
           ],
@@ -1082,7 +1082,7 @@
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             }
           ]
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1560,9 +1560,9 @@
       "category": "말과 글",
       "level": 2,
       "sourceDefinition": "단어의 뜻을 이해하기 쉽게 들어 놓은 보기 문장을 말해요.",
-      "sourceExample": "국어 사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
+      "sourceExample": "국어사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
       "definition": "단어의 뜻을 이해하기 쉽게 들어 놓은 보기 문장을 말해요.",
-      "example": "국어 사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
+      "example": "국어사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1599,7 +1599,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "국어 사전에서 단어를 찾은 뒤에 ＿＿＿＿을 읽어 보았어.",
+          "prompt": "국어사전에서 단어를 찾은 뒤에 ＿＿＿＿을 읽어 보았어.",
           "options": [
             {
               "value": "과장",
@@ -1628,7 +1628,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "국어 사전에서 단어를 찾은 뒤에 ＿＿＿＿을 읽어 보았어.",
+          "prompt": "국어사전에서 단어를 찾은 뒤에 ＿＿＿＿을 읽어 보았어.",
           "acceptedAnswers": [
             "예문"
           ]
@@ -1642,7 +1642,7 @@
               "isCorrect": false
             },
             {
-              "value": "국어 사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
+              "value": "국어사전에서 단어를 찾은 뒤에 예문을 읽어 보았어.",
               "isCorrect": true
             }
           ],
@@ -1865,9 +1865,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "자기의 의견을 굽히지 않고 당당하게 내세우는 것을 말해요.",
+      "sourceDefinition": "자기의 의견이나 생각을 내세우는 것, 또는 그 의견이나 생각을 말해요.",
       "sourceExample": "학급 회의 시간에 급식 잔반을 줄여야 한다는 주장을 펼쳤어.",
-      "definition": "자기의 의견을 굽히지 않고 당당하게 내세우는 것을 말해요.",
+      "definition": "자기의 의견이나 생각을 내세우는 것, 또는 그 의견이나 생각을 말해요.",
       "example": "학급 회의 시간에 급식 잔반을 줄여야 한다는 주장을 펼쳤어.",
       "flags": [],
       "duplicateReview": null,
@@ -1894,11 +1894,11 @@
               "isCorrect": false
             },
             {
-              "value": "자기의 의견을 굽히지 않고 당당하게 내세우는 것을 말해요.",
+              "value": "자기의 의견이나 생각을 내세우는 것, 또는 그 의견이나 생각을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1927,7 +1927,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "자기의 의견을 굽히지 않고 당당하게 내세우는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자기의 의견이나 생각을 내세우는 것, 또는 그 의견이나 생각을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "주장"
           ]
@@ -1952,7 +1952,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘주장’은 자기의 의견을 굽히지 않고 당당하게 내세우는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘주장’은 자기의 의견이나 생각을 내세우는 것, 또는 그 의견이나 생각을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2200,11 +2200,11 @@
               "isCorrect": true
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2273,9 +2273,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "자연에서 실제로 일어나는 모든 일이나 관찰되는 모습이에요.",
+      "sourceDefinition": "자연이나 사회에서 실제로 나타나 관찰할 수 있는 일이나 모습을 말해요.",
       "sourceExample": "비가 온 뒤 무지개가 뜨는 것은 아주 아름다운 자연 현상이야.",
-      "definition": "자연에서 실제로 일어나는 모든 일이나 관찰되는 모습이에요.",
+      "definition": "자연이나 사회에서 실제로 나타나 관찰할 수 있는 일이나 모습을 말해요.",
       "example": "비가 온 뒤 무지개가 뜨는 것은 아주 아름다운 자연 현상이야.",
       "flags": [],
       "duplicateReview": null,
@@ -2298,11 +2298,11 @@
               "isCorrect": false
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
-              "value": "자연에서 실제로 일어나는 모든 일이나 관찰되는 모습이에요.",
+              "value": "자연이나 사회에서 실제로 나타나 관찰할 수 있는 일이나 모습을 말해요.",
               "isCorrect": true
             },
             {
@@ -2335,7 +2335,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "자연에서 실제로 일어나는 모든 일이나 관찰되는 모습이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자연이나 사회에서 실제로 나타나 관찰할 수 있는 일이나 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "현상"
           ]
@@ -2360,7 +2360,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘현상’은 자연에서 실제로 일어나는 모든 일이나 관찰되는 모습이에요.",
+          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘현상’은 자연이나 사회에서 실제로 나타나 관찰할 수 있는 일이나 모습을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2376,9 +2376,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "하기 싫어도 법이나 규칙에 따라 억지로 하게 만드는 성질이에요.",
-      "sourceExample": "법은 도덕과 달리 어겼을 때 벌을 받는 강제성을 가지고 있어요.",
+      "sourceExample": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 강제성을 가지고 있어요.",
       "definition": "하기 싫어도 법이나 규칙에 따라 억지로 하게 만드는 성질이에요.",
-      "example": "법은 도덕과 달리 어겼을 때 벌을 받는 강제성을 가지고 있어요.",
+      "example": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 강제성을 가지고 있어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2415,7 +2415,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "법은 도덕과 달리 어겼을 때 벌을 받는 ＿＿＿＿을 가지고 있어요.",
+          "prompt": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 ＿＿＿＿을 가지고 있어요.",
           "options": [
             {
               "value": "규정",
@@ -2444,7 +2444,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "법은 도덕과 달리 어겼을 때 벌을 받는 ＿＿＿＿을 가지고 있어요.",
+          "prompt": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 ＿＿＿＿을 가지고 있어요.",
           "acceptedAnswers": [
             "강제성"
           ]
@@ -2454,11 +2454,11 @@
           "prompt": "다음 중 ‘강제성’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 강제성했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 강제성 활동을 펼쳤어요.",
               "isCorrect": false
             },
             {
-              "value": "법은 도덕과 달리 어겼을 때 벌을 받는 강제성을 가지고 있어요.",
+              "value": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 강제성을 가지고 있어요.",
               "isCorrect": true
             }
           ],
@@ -2477,13 +2477,11 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "서로 마주 앉아서 담판을 지어 결판을 내는 아주 중요한 대화예요.",
+      "sourceDefinition": "서로 마주하여 의논하고 어떤 일의 결론을 짓는 것을 말해요.",
       "sourceExample": "고려의 서희 장군은 적장과 당당한 담판을 벌여 강동 6주를 되찾았어요.",
-      "definition": "서로 마주 앉아서 담판을 지어 결판을 내는 아주 중요한 대화예요.",
+      "definition": "서로 마주하여 의논하고 어떤 일의 결론을 짓는 것을 말해요.",
       "example": "고려의 서희 장군은 적장과 당당한 담판을 벌여 강동 6주를 되찾았어요.",
-      "flags": [
-        "definition_contains_word"
-      ],
+      "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
@@ -2492,17 +2490,15 @@
         "acceptedAnswers": false
       },
       "reviewOrigin": "assisted_codex_candidate",
-      "reviewPriority": "priority",
-      "reviewReasons": [
-        "definition_contains_word"
-      ],
+      "reviewPriority": "sample",
+      "reviewReasons": [],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
           "prompt": "‘담판’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "서로 마주 앉아서 담판을 지어 결판을 내는 아주 중요한 대화예요.",
+              "value": "서로 마주하여 의논하고 어떤 일의 결론을 짓는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -2543,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "서로 마주 앉아서 담판을 지어 결판을 내는 아주 중요한 대화예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "서로 마주하여 의논하고 어떤 일의 결론을 짓는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "담판"
           ]
@@ -2568,12 +2564,10 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘담판’은 서로 마주 앉아서 담판을 지어 결판을 내는 아주 중요한 대화예요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘담판’은 서로 마주하여 의논하고 어떤 일의 결론을 짓는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
-          "reviewPriority": "priority",
-          "reviewReasons": [
-            "definition_contains_word"
-          ],
+          "reviewPriority": "sample",
+          "reviewReasons": [],
           "sourceItemKey": "vocab:g5:고려"
         }
       }
@@ -2606,7 +2600,7 @@
           "prompt": "‘동형어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -2664,7 +2658,7 @@
           "prompt": "다음 중 ‘동형어’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 동형어했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 동형어 활동을 펼쳤어요.",
               "isCorrect": false
             },
             {
@@ -2720,7 +2714,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]
@@ -2818,7 +2812,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 장소에서 생물과 비생물 요소가 서로 영향을 주고받으며 사는 시스템이에요.",
+              "value": "어느 지역의 생물과 물, 흙, 햇빛 같은 비생물 요소가 서로 영향을 주고받는 하나의 체계를 말해요.",
               "isCorrect": false
             },
             {
@@ -3095,9 +3089,9 @@
       "meaningNumber": 1,
       "category": "물질의 성질",
       "level": 3,
-      "sourceDefinition": "어떤 물질이 액체 속에 골고루 섞여 들어가는 현상을 말해요.",
+      "sourceDefinition": "어떤 물질이 다른 물질에 녹아 전체에 고르게 섞이는 현상을 말해요.",
       "sourceExample": "따뜻한 물에 가루약이 녹는 것을 용해 현상이라고 불러.",
-      "definition": "어떤 물질이 액체 속에 골고루 섞여 들어가는 현상을 말해요.",
+      "definition": "어떤 물질이 다른 물질에 녹아 전체에 고르게 섞이는 현상을 말해요.",
       "example": "따뜻한 물에 가루약이 녹는 것을 용해 현상이라고 불러.",
       "flags": [],
       "duplicateReview": null,
@@ -3120,11 +3114,11 @@
               "isCorrect": false
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 물질이 액체 속에 골고루 섞여 들어가는 현상을 말해요.",
+              "value": "어떤 물질이 다른 물질에 녹아 전체에 고르게 섞이는 현상을 말해요.",
               "isCorrect": true
             },
             {
@@ -3157,7 +3151,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 물질이 액체 속에 골고루 섞여 들어가는 현상을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 물질이 다른 물질에 녹아 전체에 고르게 섞이는 현상을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "용해"
           ]
@@ -3182,7 +3176,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘용해’는 어떤 물질이 액체 속에 골고루 섞여 들어가는 현상을 말해요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘용해’는 어떤 물질이 다른 물질에 녹아 전체에 고르게 섞이는 현상을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3299,9 +3293,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "전쟁이나 재난으로 살던 곳을 잃고 떠도는 사람들을 말해요.",
+      "sourceDefinition": "전쟁이나 재난, 나라가 망한 일로 살던 곳을 잃고 떠도는 사람들을 말해요.",
       "sourceExample": "고구려와 발해가 멸망한 뒤 많은 유민이 다른 지역으로 흩어졌어요.",
-      "definition": "전쟁이나 재난으로 살던 곳을 잃고 떠도는 사람들을 말해요.",
+      "definition": "전쟁이나 재난, 나라가 망한 일로 살던 곳을 잃고 떠도는 사람들을 말해요.",
       "example": "고구려와 발해가 멸망한 뒤 많은 유민이 다른 지역으로 흩어졌어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3320,7 +3314,7 @@
           "prompt": "‘유민’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전쟁이나 재난으로 살던 곳을 잃고 떠도는 사람들을 말해요.",
+              "value": "전쟁이나 재난, 나라가 망한 일로 살던 곳을 잃고 떠도는 사람들을 말해요.",
               "isCorrect": true
             },
             {
@@ -3361,7 +3355,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "전쟁이나 재난으로 살던 곳을 잃고 떠도는 사람들을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "전쟁이나 재난, 나라가 망한 일로 살던 곳을 잃고 떠도는 사람들을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "유민"
           ]
@@ -3386,7 +3380,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘유민’은 전쟁이나 재난으로 살던 곳을 잃고 떠도는 사람들을 말해요.",
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘유민’은 전쟁이나 재난, 나라가 망한 일로 살던 곳을 잃고 떠도는 사람들을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3586,7 +3580,7 @@
               "isCorrect": true
             },
             {
-              "value": "슬퍼하는 친구의 마음을 전개도해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 전개도해 주면 큰 위로가 된단다.",
               "isCorrect": false
             }
           ],
@@ -4038,7 +4032,7 @@
               "isCorrect": false
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {

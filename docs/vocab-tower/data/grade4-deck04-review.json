@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 4,
   "deckId": "grade4-deck04",
   "deckNumber": 4,
@@ -15,8 +15,8 @@
     "examplesChanged": 0,
     "acceptedAnswersChanged": 0,
     "usageDistinctionsAuthored": 40,
-    "priorityItems": 4,
-    "sampleItems": 36,
+    "priorityItems": 3,
+    "sampleItems": 37,
     "correctedItems": 0,
     "autoDraftCorrectionRate": 0
   },
@@ -54,11 +54,11 @@
               "isCorrect": true
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -112,7 +112,7 @@
               "isCorrect": true
             },
             {
-              "value": "4분의 4나 4분의 5처럼 머리가 몸통보다 큰 분수가 노력예요.",
+              "value": "4분의 4나 4분의 5처럼 분자가 분모와 같거나 분모보다 큰 분수가 노력예요.",
               "isCorrect": false
             }
           ],
@@ -360,7 +360,7 @@
               "isCorrect": false
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -437,13 +437,11 @@
       "meaningNumber": 1,
       "category": "비교와 분류",
       "level": 1,
-      "sourceDefinition": "전체 중에서 일부분이나 일정한 몫을 말해요.",
+      "sourceDefinition": "전체 가운데 어느 한 부분을 말해요.",
       "sourceExample": "전체 사과 중에서 일부를 친구에게 나누어 주었어요.",
-      "definition": "전체 중에서 일부분이나 일정한 몫을 말해요.",
+      "definition": "전체 가운데 어느 한 부분을 말해요.",
       "example": "전체 사과 중에서 일부를 친구에게 나누어 주었어요.",
-      "flags": [
-        "definition_contains_word"
-      ],
+      "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
@@ -452,17 +450,15 @@
         "acceptedAnswers": false
       },
       "reviewOrigin": "assisted_codex_candidate",
-      "reviewPriority": "priority",
-      "reviewReasons": [
-        "definition_contains_word"
-      ],
+      "reviewPriority": "sample",
+      "reviewReasons": [],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
           "prompt": "‘일부’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전체 중에서 일부분이나 일정한 몫을 말해요.",
+              "value": "전체 가운데 어느 한 부분을 말해요.",
               "isCorrect": true
             },
             {
@@ -503,7 +499,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "전체 중에서 일부분이나 일정한 몫을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "전체 가운데 어느 한 부분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "일부"
           ]
@@ -528,12 +524,10 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘일부’는 전체 중에서 일부분이나 일정한 몫을 말해요.",
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘일부’는 전체 가운데 어느 한 부분을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
-          "reviewPriority": "priority",
-          "reviewReasons": [
-            "definition_contains_word"
-          ],
+          "reviewPriority": "sample",
+          "reviewReasons": [],
           "sourceItemKey": "vocab:g4:갈등"
         }
       }
@@ -566,7 +560,7 @@
           "prompt": "‘자석’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "자석에서 힘이 가장 강한 양쪽 끝부분으로, N극과 S극이 있어요.",
+              "value": "자석에서 힘이 가장 센 양쪽 끝부분을 말해요. 서로 다른 두 가지가 있어요.",
               "isCorrect": false
             },
             {
@@ -574,7 +568,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 물체를 누르는 힘을 말해요.",
+              "value": "일정한 넓이에 수직으로 작용하는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -648,9 +642,9 @@
       "category": "숫자와 연산",
       "level": 1,
       "sourceDefinition": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
-      "sourceExample": "분수나 소수와 달리 딱 떨어지는 숫자를 자연수라고 해요.",
+      "sourceExample": "물건의 개수를 셀 때 쓰는 1, 2, 3과 같은 수를 자연수라고 해요.",
       "definition": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
-      "example": "분수나 소수와 달리 딱 떨어지는 숫자를 자연수라고 해요.",
+      "example": "물건의 개수를 셀 때 쓰는 1, 2, 3과 같은 수를 자연수라고 해요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -687,7 +681,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "분수나 소수와 달리 딱 떨어지는 숫자를 ＿＿＿＿라고 해요.",
+          "prompt": "물건의 개수를 셀 때 쓰는 1, 2, 3과 같은 수를 ＿＿＿＿라고 해요.",
           "options": [
             {
               "value": "자연수",
@@ -716,7 +710,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "분수나 소수와 달리 딱 떨어지는 숫자를 ＿＿＿＿라고 해요.",
+          "prompt": "물건의 개수를 셀 때 쓰는 1, 2, 3과 같은 수를 ＿＿＿＿라고 해요.",
           "acceptedAnswers": [
             "자연수"
           ]
@@ -726,7 +720,7 @@
           "prompt": "다음 중 ‘자연수’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "분수나 소수와 달리 딱 떨어지는 숫자를 자연수라고 해요.",
+              "value": "물건의 개수를 셀 때 쓰는 1, 2, 3과 같은 수를 자연수라고 해요.",
               "isCorrect": true
             },
             {
@@ -953,9 +947,9 @@
       "meaningNumber": 1,
       "category": "경제와 생활",
       "level": 1,
-      "sourceDefinition": "어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.",
+      "sourceDefinition": "어떤 지역에서 특별히 많이 나거나 품질이 좋아 그 지역을 대표하는 물건이나 농작물이에요.",
       "sourceExample": "상주의 곶감이나 나주의 배는 그 지역의 아주 유명한 특산물이에요.",
-      "definition": "어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.",
+      "definition": "어떤 지역에서 특별히 많이 나거나 품질이 좋아 그 지역을 대표하는 물건이나 농작물이에요.",
       "example": "상주의 곶감이나 나주의 배는 그 지역의 아주 유명한 특산물이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -978,7 +972,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.",
+              "value": "어떤 지역에서 특별히 많이 나거나 품질이 좋아 그 지역을 대표하는 물건이나 농작물이에요.",
               "isCorrect": true
             },
             {
@@ -1015,7 +1009,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 지역에서 특별히 많이 나거나 품질이 좋아 그 지역을 대표하는 물건이나 농작물이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "특산물"
           ]
@@ -1040,7 +1034,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘강수량’의 쓰임이에요. ‘특산물’은 어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.",
+          "explanation": "이 문장은 원래 ‘강수량’의 쓰임이에요. ‘특산물’은 어떤 지역에서 특별히 많이 나거나 품질이 좋아 그 지역을 대표하는 물건이나 농작물이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1080,7 +1074,7 @@
               "isCorrect": false
             },
             {
-              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "value": "액체 속에 생기는 기체 방울을 말해요.",
               "isCorrect": false
             },
             {
@@ -1157,9 +1151,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+      "sourceDefinition": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
       "sourceExample": "올해는 여름철 강수량이 예년보다 훨씬 많아 비가 자주 왔어요.",
-      "definition": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+      "definition": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
       "example": "올해는 여름철 강수량이 예년보다 훨씬 많아 비가 자주 왔어요.",
       "flags": [],
       "duplicateReview": null,
@@ -1190,7 +1184,7 @@
               "isCorrect": false
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -1219,7 +1213,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "강수량"
           ]
@@ -1244,7 +1238,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘건의’의 쓰임이에요. ‘강수량’은 일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+          "explanation": "이 문장은 원래 ‘건의’의 쓰임이에요. ‘강수량’은 일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1390,7 +1384,7 @@
               "isCorrect": true
             },
             {
-              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "value": "평면이나 물체의 표면, 땅 등의 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -1521,7 +1515,7 @@
               "isCorrect": true
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1798,9 +1792,9 @@
       "category": "생각과 공부",
       "level": 2,
       "sourceDefinition": "잘못된 부분을 바로잡거나 고치는 것을 말해요.",
-      "sourceExample": "수학 문제를 풀다가 틀린 부분을 발견해서 정답을 수정했어요.",
+      "sourceExample": "수학 문제를 풀다가 틀린 부분을 발견해서 답을 수정했어요.",
       "definition": "잘못된 부분을 바로잡거나 고치는 것을 말해요.",
-      "example": "수학 문제를 풀다가 틀린 부분을 발견해서 정답을 수정했어요.",
+      "example": "수학 문제를 풀다가 틀린 부분을 발견해서 답을 수정했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1818,7 +1812,7 @@
           "prompt": "‘수정’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -1837,7 +1831,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "수학 문제를 풀다가 틀린 부분을 발견해서 정답을 ＿＿＿＿했어요.",
+          "prompt": "수학 문제를 풀다가 틀린 부분을 발견해서 답을 ＿＿＿＿했어요.",
           "options": [
             {
               "value": "개념",
@@ -1866,7 +1860,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "수학 문제를 풀다가 틀린 부분을 발견해서 정답을 ＿＿＿＿했어요.",
+          "prompt": "수학 문제를 풀다가 틀린 부분을 발견해서 답을 ＿＿＿＿했어요.",
           "acceptedAnswers": [
             "수정"
           ]
@@ -1880,7 +1874,7 @@
               "isCorrect": false
             },
             {
-              "value": "수학 문제를 풀다가 틀린 부분을 발견해서 정답을 수정했어요.",
+              "value": "수학 문제를 풀다가 틀린 부분을 발견해서 답을 수정했어요.",
               "isCorrect": true
             }
           ],
@@ -2030,7 +2024,7 @@
               "isCorrect": false
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2103,9 +2097,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "사람이 만든 것이 아니라 자연이 스스로 만들어낸 아름다운 보물이에요.",
+      "sourceDefinition": "아름다움이나 과학적 가치 등이 뛰어나 후손에게 물려주도록 보호할 만한 자연환경이나 자연물을 말해요.",
       "sourceExample": "제주도의 성산 일출봉은 세계적으로 인정받은 아름다운 자연유산이에요.",
-      "definition": "사람이 만든 것이 아니라 자연이 스스로 만들어낸 아름다운 보물이에요.",
+      "definition": "아름다움이나 과학적 가치 등이 뛰어나 후손에게 물려주도록 보호할 만한 자연환경이나 자연물을 말해요.",
       "example": "제주도의 성산 일출봉은 세계적으로 인정받은 아름다운 자연유산이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -2124,11 +2118,11 @@
           "prompt": "‘자연유산’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "사람이 만든 것이 아니라 자연이 스스로 만들어낸 아름다운 보물이에요.",
+              "value": "아름다움이나 과학적 가치 등이 뛰어나 후손에게 물려주도록 보호할 만한 자연환경이나 자연물을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2165,7 +2159,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "사람이 만든 것이 아니라 자연이 스스로 만들어낸 아름다운 보물이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "아름다움이나 과학적 가치 등이 뛰어나 후손에게 물려주도록 보호할 만한 자연환경이나 자연물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "자연유산"
           ]
@@ -2190,7 +2184,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘자연유산’은 사람이 만든 것이 아니라 자연이 스스로 만들어낸 아름다운 보물이에요.",
+          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘자연유산’은 아름다움이나 과학적 가치 등이 뛰어나 후손에게 물려주도록 보호할 만한 자연환경이나 자연물을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2340,7 +2334,7 @@
               "isCorrect": true
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2409,9 +2403,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 2,
-      "sourceDefinition": "종이를 반듯하게 두 번 접었을 때 생기는 반듯한 'ㄴ'자 모양의 각이에요.",
+      "sourceDefinition": "두 직선이 만나 이루는 각 가운데 90도인 각을 말해요.",
       "sourceExample": "삼각자에서 가장 반듯한 모서리 부분이 바로 직각이에요.",
-      "definition": "종이를 반듯하게 두 번 접었을 때 생기는 반듯한 'ㄴ'자 모양의 각이에요.",
+      "definition": "두 직선이 만나 이루는 각 가운데 90도인 각을 말해요.",
       "example": "삼각자에서 가장 반듯한 모서리 부분이 바로 직각이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -2442,7 +2436,7 @@
               "isCorrect": false
             },
             {
-              "value": "종이를 반듯하게 두 번 접었을 때 생기는 반듯한 'ㄴ'자 모양의 각이에요.",
+              "value": "두 직선이 만나 이루는 각 가운데 90도인 각을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2471,7 +2465,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "종이를 반듯하게 두 번 접었을 때 생기는 반듯한 'ㄴ'자 모양의 각이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "두 직선이 만나 이루는 각 가운데 90도인 각을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "직각"
           ]
@@ -2488,7 +2482,7 @@
           "prompt": "다음 중 ‘직각’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "친구가 슬플 때 그 마음을 직각해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 직각해 주면 큰 힘이 된단다.",
               "isCorrect": false
             },
             {
@@ -2496,7 +2490,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘직각’은 종이를 반듯하게 두 번 접었을 때 생기는 반듯한 'ㄴ'자 모양의 각이에요.",
+          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘직각’은 두 직선이 만나 이루는 각 가운데 90도인 각을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2720,7 +2714,7 @@
           "prompt": "다음 중 ‘채집’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "친구가 슬플 때 그 마음을 채집해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 채집해 주면 큰 힘이 된단다.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2758,7 @@
           "prompt": "‘판단’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2874,7 +2868,7 @@
               "isCorrect": false
             },
             {
-              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "value": "평면이나 물체의 표면, 땅 등의 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -2963,7 +2957,7 @@
             "sourceIndex": 48,
             "category": "활동과 순서",
             "level": 2,
-            "definition": "알고 있는 지식이나 물건을 목적에 맞게 잘 써먹는 것을 말해요.",
+            "definition": "지식이나 물건 등의 쓸모를 살려 목적에 맞게 잘 사용하는 것을 말해요.",
             "example": "수업 시간에 배운 내용을 활용해서 멋진 시를 한 편 썼어요."
           },
           {
@@ -3110,7 +3104,7 @@
               "isCorrect": false
             },
             {
-              "value": "훌륭한 사람이 이루어 놓은 큰 성과나 일을 말해요.",
+              "value": "어떤 일에 힘써 이루어 놓은 성과를 말해요.",
               "isCorrect": false
             }
           ]
@@ -3281,9 +3275,9 @@
       "meaningNumber": 1,
       "category": "동식물과 생물",
       "level": 3,
-      "sourceDefinition": "햇빛, 물, 공기, 흙처럼 살아있지 않지만 생태계에 꼭 필요한 요소들이에요.",
+      "sourceDefinition": "햇빛, 물, 공기, 흙처럼 살아 있지 않은 것을 말해요.",
       "sourceExample": "생태계는 살아있는 생물과 비생물 요소가 서로 영향을 주고받으며 유지돼요.",
-      "definition": "햇빛, 물, 공기, 흙처럼 살아있지 않지만 생태계에 꼭 필요한 요소들이에요.",
+      "definition": "햇빛, 물, 공기, 흙처럼 살아 있지 않은 것을 말해요.",
       "example": "생태계는 살아있는 생물과 비생물 요소가 서로 영향을 주고받으며 유지돼요.",
       "flags": [],
       "duplicateReview": null,
@@ -3314,7 +3308,7 @@
               "isCorrect": false
             },
             {
-              "value": "햇빛, 물, 공기, 흙처럼 살아있지 않지만 생태계에 꼭 필요한 요소들이에요.",
+              "value": "햇빛, 물, 공기, 흙처럼 살아 있지 않은 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3343,7 +3337,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "햇빛, 물, 공기, 흙처럼 살아있지 않지만 생태계에 꼭 필요한 요소들이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "햇빛, 물, 공기, 흙처럼 살아 있지 않은 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "비생물"
           ]
@@ -3368,7 +3362,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘비생물’은 햇빛, 물, 공기, 흙처럼 살아있지 않지만 생태계에 꼭 필요한 요소들이에요.",
+          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘비생물’은 햇빛, 물, 공기, 흙처럼 살아 있지 않은 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3408,7 +3402,7 @@
               "isCorrect": true
             },
             {
-              "value": "사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.",
+              "value": "사람들이 살아가는 데 필요한 물건이나 서비스를 만들고, 나누고, 쓰는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -3416,7 +3410,7 @@
               "isCorrect": false
             },
             {
-              "value": "사람들의 욕심에 비해 자원의 양이 턱없이 부족한 상태를 말해요.",
+              "value": "사람들이 원하는 양에 비해 자원의 양이 부족한 상태를 말해요.",
               "isCorrect": false
             }
           ]
@@ -3486,9 +3480,9 @@
       "category": "모양과 도형",
       "level": 3,
       "sourceDefinition": "세 각이 모두 예각(90도보다 작은 각)인 삼각형이에요.",
-      "sourceExample": "뾰족뾰족한 세 각을 가진 삼각형이 바로 예각삼각형이에요.",
+      "sourceExample": "세 각이 모두 90도보다 작은 삼각형이 바로 예각삼각형이에요.",
       "definition": "세 각이 모두 예각(90도보다 작은 각)인 삼각형이에요.",
-      "example": "뾰족뾰족한 세 각을 가진 삼각형이 바로 예각삼각형이에요.",
+      "example": "세 각이 모두 90도보다 작은 삼각형이 바로 예각삼각형이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3506,7 +3500,7 @@
           "prompt": "‘예각삼각형’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선이에요.",
+              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선분이에요.",
               "isCorrect": false
             },
             {
@@ -3518,14 +3512,14 @@
               "isCorrect": false
             },
             {
-              "value": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
+              "value": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "뾰족뾰족한 세 각을 가진 삼각형이 바로 ＿＿＿＿이에요.",
+          "prompt": "세 각이 모두 90도보다 작은 삼각형이 바로 ＿＿＿＿이에요.",
           "options": [
             {
               "value": "대각선",
@@ -3554,7 +3548,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "뾰족뾰족한 세 각을 가진 삼각형이 바로 ＿＿＿＿이에요.",
+          "prompt": "세 각이 모두 90도보다 작은 삼각형이 바로 ＿＿＿＿이에요.",
           "acceptedAnswers": [
             "예각삼각형"
           ]
@@ -3568,7 +3562,7 @@
               "isCorrect": false
             },
             {
-              "value": "뾰족뾰족한 세 각을 가진 삼각형이 바로 예각삼각형이에요.",
+              "value": "세 각이 모두 90도보다 작은 삼각형이 바로 예각삼각형이에요.",
               "isCorrect": true
             }
           ],
@@ -3587,9 +3581,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 3,
-      "sourceDefinition": "지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.",
+      "sourceDefinition": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
       "sourceExample": "달은 지구 주위를 돌기 때문에 날마다 위상이 조금씩 바뀌어 보여요.",
-      "definition": "지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.",
+      "definition": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
       "example": "달은 지구 주위를 돌기 때문에 날마다 위상이 조금씩 바뀌어 보여요.",
       "flags": [],
       "duplicateReview": null,
@@ -3608,7 +3602,7 @@
           "prompt": "‘위상’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "행성의 주위를 일정한 길을 따라 도는 별이에요. 지구의 위성은 '달'이에요.",
+              "value": "행성의 주위를 일정한 길을 따라 도는 천체예요. 지구 주위를 도는 것은 '달'이에요.",
               "isCorrect": false
             },
             {
@@ -3616,7 +3610,7 @@
               "isCorrect": false
             },
             {
-              "value": "지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.",
+              "value": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
               "isCorrect": true
             },
             {
@@ -3649,7 +3643,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "위상"
           ]
@@ -3674,7 +3668,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘위상’은 지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.",
+          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘위상’은 태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3689,9 +3683,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 3,
-      "sourceDefinition": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+      "sourceDefinition": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
       "sourceExample": "차가운 컵 겉면에 물방울이 맺히는 것은 공기 중의 수증기가 응결했기 때문이에요.",
-      "definition": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+      "definition": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
       "example": "차가운 컵 겉면에 물방울이 맺히는 것은 공기 중의 수증기가 응결했기 때문이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -3722,7 +3716,7 @@
               "isCorrect": false
             },
             {
-              "value": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+              "value": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3751,7 +3745,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "응결"
           ]
@@ -3776,7 +3770,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘응결’은 수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘응결’은 수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3914,7 +3908,7 @@
           "prompt": "‘통계 자료’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 일을 결정하기 전에 틀린 곳이나 문제는 없는지 자세히 살피는 거예요.",
+              "value": "어떤 내용이나 일에 문제가 없는지 자세히 살펴보는 거예요.",
               "isCorrect": false
             },
             {
@@ -3922,7 +3916,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 신중하게 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 6,
   "deckId": "grade6-deck04",
   "deckNumber": 4,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+      "sourceDefinition": "물기나 습기가 적어 메마른 상태를 말해요.",
       "sourceExample": "사막은 1년 내내 비가 거의 오지 않는 아주 건조한 기후를 가졌어.",
-      "definition": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+      "definition": "물기나 습기가 적어 메마른 상태를 말해요.",
       "example": "사막은 1년 내내 비가 거의 오지 않는 아주 건조한 기후를 가졌어.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘건조’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+              "value": "물기나 습기가 적어 메마른 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "적도 근처의 아주 덥고 비가 많이 오는 기후나 지역을 말해요.",
+              "value": "적도 가까이에 있어 일 년 내내 기온이 높은 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물기나 습기가 적어 메마른 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "건조"
           ]
@@ -112,11 +112,11 @@
               "isCorrect": true
             },
             {
-              "value": "우리 집 건조부를 적어보니 이번 달에는 식비로 지출이 가장 많았어.",
+              "value": "건조는 회사에서 일해 소득을 얻고, 필요한 물건을 사는 경제 활동을 해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가계’의 쓰임이에요. ‘건조’는 비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+          "explanation": "이 문장은 원래 ‘가계’의 쓰임이에요. ‘건조’는 물기나 습기가 적어 메마른 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -233,9 +233,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 1,
-      "sourceDefinition": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+      "sourceDefinition": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
       "sourceExample": "우리나라는 아시아 대륙의 동쪽 끝부분에 위치하고 있어.",
-      "definition": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+      "definition": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
       "example": "우리나라는 아시아 대륙의 동쪽 끝부분에 위치하고 있어.",
       "flags": [],
       "duplicateReview": null,
@@ -258,15 +258,15 @@
               "isCorrect": false
             },
             {
-              "value": "천체 망원경 등의 도구를 사용해서 별이나 행성의 움직임을 자세히 살피는 거예요.",
+              "value": "기구를 이용해 천체나 자연 현상을 자세히 살피고 측정하는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": true
             },
             {
-              "value": "지구의 가장 위쪽 끝인 북극과 아래쪽 끝인 남극 지역을 말해요.",
+              "value": "지구의 북극과 남극 주변 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -295,7 +295,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "대륙"
           ]
@@ -320,7 +320,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘대륙’은 바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘대륙’은 바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -356,7 +356,7 @@
           "prompt": "‘민주주의’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+              "value": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -364,7 +364,7 @@
               "isCorrect": false
             },
             {
-              "value": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+              "value": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -976,7 +976,7 @@
               "isCorrect": true
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -1540,7 +1540,7 @@
               "isCorrect": true
             },
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 비속어가야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 비속어로 끝나.",
               "isCorrect": false
             }
           ],
@@ -1638,7 +1638,7 @@
           "prompt": "다음 중 ‘사례’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 사례가야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 사례로 끝나.",
               "isCorrect": false
             },
             {
@@ -1842,7 +1842,7 @@
           "prompt": "다음 중 ‘수직’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 수직이야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 수직로 끝나.",
               "isCorrect": false
             },
             {
@@ -1890,7 +1890,7 @@
               "isCorrect": false
             },
             {
-              "value": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+              "value": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
               "isCorrect": false
             },
             {
@@ -2298,7 +2298,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -2477,9 +2477,9 @@
       "meaningNumber": 1,
       "category": "활동과 순서",
       "level": 3,
-      "sourceDefinition": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+      "sourceDefinition": "알맞은 정도를 지나치게 넘어선 상태를 말해요.",
       "sourceExample": "과도한 게임 이용은 건강을 해칠 수 있으니 스스로 조절해야 해.",
-      "definition": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+      "definition": "알맞은 정도를 지나치게 넘어선 상태를 말해요.",
       "example": "과도한 게임 이용은 건강을 해칠 수 있으니 스스로 조절해야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -2498,7 +2498,7 @@
           "prompt": "‘과도’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+              "value": "알맞은 정도를 지나치게 넘어선 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -2510,7 +2510,7 @@
               "isCorrect": false
             },
             {
-              "value": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+              "value": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2539,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "알맞은 정도를 지나치게 넘어선 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "과도"
           ]
@@ -2564,7 +2564,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘계산기’의 쓰임이에요. ‘과도’는 정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+          "explanation": "이 문장은 원래 ‘계산기’의 쓰임이에요. ‘과도’는 알맞은 정도를 지나치게 넘어선 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2579,9 +2579,9 @@
       "meaningNumber": 1,
       "category": "동식물과 생물",
       "level": 3,
-      "sourceDefinition": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+      "sourceDefinition": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
       "sourceExample": "현미경으로 잎을 관찰하면 입술 모양을 닮은 기공을 찾을 수 있어.",
-      "definition": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+      "definition": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
       "example": "현미경으로 잎을 관찰하면 입술 모양을 닮은 기공을 찾을 수 있어.",
       "flags": [],
       "duplicateReview": null,
@@ -2604,7 +2604,7 @@
               "isCorrect": false
             },
             {
-              "value": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+              "value": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
               "isCorrect": true
             },
             {
@@ -2641,7 +2641,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "기공"
           ]
@@ -2666,7 +2666,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘고갈’의 쓰임이에요. ‘기공’은 식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+          "explanation": "이 문장은 원래 ‘고갈’의 쓰임이에요. ‘기공’은 주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2886,9 +2886,9 @@
       "category": "지리",
       "level": 3,
       "sourceDefinition": "적도를 기준으로 지구의 북쪽 부분의 위치를 나타내는 위도예요.",
-      "sourceExample": "우리나라는 북위에 위치하고 있어서 태양이 항상 남쪽 하늘에 보여.",
+      "sourceExample": "우리나라는 적도 북쪽에 있어 위치를 북위로 나타내.",
       "definition": "적도를 기준으로 지구의 북쪽 부분의 위치를 나타내는 위도예요.",
-      "example": "우리나라는 북위에 위치하고 있어서 태양이 항상 남쪽 하늘에 보여.",
+      "example": "우리나라는 적도 북쪽에 있어 위치를 북위로 나타내.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2925,7 +2925,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우리나라는 ＿＿＿＿에 위치하고 있어서 태양이 항상 남쪽 하늘에 보여.",
+          "prompt": "우리나라는 적도 북쪽에 있어 위치를 ＿＿＿＿로 나타내.",
           "options": [
             {
               "value": "경도",
@@ -2954,7 +2954,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우리나라는 ＿＿＿＿에 위치하고 있어서 태양이 항상 남쪽 하늘에 보여.",
+          "prompt": "우리나라는 적도 북쪽에 있어 위치를 ＿＿＿＿로 나타내.",
           "acceptedAnswers": [
             "북위"
           ]
@@ -2964,7 +2964,7 @@
           "prompt": "다음 중 ‘북위’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "우리나라는 북위에 위치하고 있어서 태양이 항상 남쪽 하늘에 보여.",
+              "value": "우리나라는 적도 북쪽에 있어 위치를 북위로 나타내.",
               "isCorrect": true
             },
             {
@@ -3176,17 +3176,17 @@
               "isCorrect": true
             },
             {
-              "value": "내 키가 하늘에 닿을 만큼 컸다고 비해서 말하며 웃었어.",
+              "value": "비한 게임 이용은 건강을 해칠 수 있으니 스스로 조절해야 해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘비’는 두 수를 나눗셈으로 비교하기 위해 기호 ':'를 써서 나타낸 것이에요.",
+          "explanation": "이 문장은 원래 ‘과도’의 쓰임이에요. ‘비’는 두 수를 나눗셈으로 비교하기 위해 기호 ':'를 써서 나타낸 것이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "priority",
           "reviewReasons": [
             "definition_contains_word"
           ],
-          "sourceItemKey": "vocab:g6:과장"
+          "sourceItemKey": "vocab:g6:과도"
         }
       }
     },
@@ -3197,9 +3197,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+      "sourceDefinition": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
       "sourceExample": "국어 시간에 조상님들의 멋과 풍류가 담긴 시조 한 편을 배웠어.",
-      "definition": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+      "definition": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
       "example": "국어 시간에 조상님들의 멋과 풍류가 담긴 시조 한 편을 배웠어.",
       "flags": [],
       "duplicateReview": null,
@@ -3230,7 +3230,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+              "value": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
               "isCorrect": true
             }
           ]
@@ -3259,7 +3259,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "시조"
           ]
@@ -3284,7 +3284,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘시조’는 우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘시조’는 보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3401,9 +3401,9 @@
       "meaningNumber": 1,
       "category": "에너지와 힘",
       "level": 3,
-      "sourceDefinition": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+      "sourceDefinition": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
       "sourceExample": "뜨거운 국에 담긴 쇠숟가락 끝이 뜨거워지는 것은 전도 때문이야.",
-      "definition": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+      "definition": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
       "example": "뜨거운 국에 담긴 쇠숟가락 끝이 뜨거워지는 것은 전도 때문이야.",
       "flags": [],
       "duplicateReview": null,
@@ -3426,7 +3426,7 @@
               "isCorrect": false
             },
             {
-              "value": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+              "value": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
               "isCorrect": true
             },
             {
@@ -3463,7 +3463,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "고체 물질을 따라 열이 차례대로 전달되는 방식이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "전도"
           ]
@@ -3488,7 +3488,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공전’의 쓰임이에요. ‘전도’는 고체 물질을 따라 열이 차례대로 전달되는 방식이에요.",
+          "explanation": "이 문장은 원래 ‘공전’의 쓰임이에요. ‘전도’는 물질 자체가 이동하지 않은 채 온도가 높은 곳에서 낮은 곳으로 열이 전달되는 현상을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

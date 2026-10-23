@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 4,
   "deckId": "grade4-deck02",
   "deckNumber": 2,
@@ -112,7 +112,7 @@
               "isCorrect": true
             },
             {
-              "value": "4분의 4나 4분의 5처럼 머리가 몸통보다 큰 분수가 곡선예요.",
+              "value": "4분의 4나 4분의 5처럼 분자가 분모와 같거나 분모보다 큰 분수가 곡선예요.",
               "isCorrect": false
             }
           ],
@@ -131,10 +131,10 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
-      "sourceExample": "친구가 슬플 때 그 마음을 공감해 주면 큰 힘이 된단다.",
-      "definition": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
-      "example": "친구가 슬플 때 그 마음을 공감해 주면 큰 힘이 된단다.",
+      "sourceDefinition": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
+      "sourceExample": "친구가 슬플 때 그 마음에 공감해 주면 큰 힘이 된단다.",
+      "definition": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
+      "example": "친구가 슬플 때 그 마음에 공감해 주면 큰 힘이 된단다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -152,11 +152,11 @@
           "prompt": "‘공감’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -171,7 +171,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "친구가 슬플 때 그 마음을 ＿＿＿＿해 주면 큰 힘이 된단다.",
+          "prompt": "친구가 슬플 때 그 마음에 ＿＿＿＿해 주면 큰 힘이 된단다.",
           "options": [
             {
               "value": "감동",
@@ -193,14 +193,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "공감"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "친구가 슬플 때 그 마음을 ＿＿＿＿해 주면 큰 힘이 된단다.",
+          "prompt": "친구가 슬플 때 그 마음에 ＿＿＿＿해 주면 큰 힘이 된단다.",
           "acceptedAnswers": [
             "공감"
           ]
@@ -214,11 +214,11 @@
               "isCorrect": false
             },
             {
-              "value": "친구가 슬플 때 그 마음을 공감해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 공감해 주면 큰 힘이 된단다.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘가상 현실’의 쓰임이에요. ‘공감’은 상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+          "explanation": "이 문장은 원래 ‘가상 현실’의 쓰임이에요. ‘공감’은 다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -356,7 +356,7 @@
           "prompt": "‘기온’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "value": "액체 속에 생기는 기체 방울을 말해요.",
               "isCorrect": false
             },
             {
@@ -749,9 +749,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 1,
-      "sourceDefinition": "위에서 내려다본 땅의 모습을 일정한 약속을 정해 종이에 그린 그림이에요.",
+      "sourceDefinition": "땅의 모습을 일정한 비율로 줄여 기호와 색 등의 약속에 따라 나타낸 그림이에요.",
       "sourceExample": "지도를 펴고 우리 집 근처에 어떤 공원이 있는지 찾아보았어요.",
-      "definition": "위에서 내려다본 땅의 모습을 일정한 약속을 정해 종이에 그린 그림이에요.",
+      "definition": "땅의 모습을 일정한 비율로 줄여 기호와 색 등의 약속에 따라 나타낸 그림이에요.",
       "example": "지도를 펴고 우리 집 근처에 어떤 공원이 있는지 찾아보았어요.",
       "flags": [],
       "duplicateReview": null,
@@ -782,7 +782,7 @@
               "isCorrect": false
             },
             {
-              "value": "위에서 내려다본 땅의 모습을 일정한 약속을 정해 종이에 그린 그림이에요.",
+              "value": "땅의 모습을 일정한 비율로 줄여 기호와 색 등의 약속에 따라 나타낸 그림이에요.",
               "isCorrect": true
             }
           ]
@@ -811,7 +811,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "위에서 내려다본 땅의 모습을 일정한 약속을 정해 종이에 그린 그림이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "땅의 모습을 일정한 비율로 줄여 기호와 색 등의 약속에 따라 나타낸 그림이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "지도"
           ]
@@ -836,7 +836,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘감압’의 쓰임이에요. ‘지도’는 위에서 내려다본 땅의 모습을 일정한 약속을 정해 종이에 그린 그림이에요.",
+          "explanation": "이 문장은 원래 ‘감압’의 쓰임이에요. ‘지도’는 땅의 모습을 일정한 비율로 줄여 기호와 색 등의 약속에 따라 나타낸 그림이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -851,9 +851,9 @@
       "meaningNumber": 1,
       "category": "물질의 성질",
       "level": 1,
-      "sourceDefinition": "물체의 가장 바깥쪽 면이나 겉모습을 말해요.",
+      "sourceDefinition": "물체의 가장 바깥쪽 면을 말해요.",
       "sourceExample": "거친 표면을 가진 돌을 만져보니 까끌까끌한 느낌이 들었어요.",
-      "definition": "물체의 가장 바깥쪽 면이나 겉모습을 말해요.",
+      "definition": "물체의 가장 바깥쪽 면을 말해요.",
       "example": "거친 표면을 가진 돌을 만져보니 까끌까끌한 느낌이 들었어요.",
       "flags": [],
       "duplicateReview": null,
@@ -872,7 +872,7 @@
           "prompt": "‘표면’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물체의 가장 바깥쪽 면이나 겉모습을 말해요.",
+              "value": "물체의 가장 바깥쪽 면을 말해요.",
               "isCorrect": true
             },
             {
@@ -884,7 +884,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리가 눈으로 볼 수 있고 만질 수 있는 구체적인 모양을 가진 물건이에요.",
+              "value": "모양을 가지고 공간을 차지하는 구체적인 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -913,7 +913,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "물체의 가장 바깥쪽 면이나 겉모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물체의 가장 바깥쪽 면을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "표면"
           ]
@@ -938,7 +938,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘강수량’의 쓰임이에요. ‘표면’은 물체의 가장 바깥쪽 면이나 겉모습을 말해요.",
+          "explanation": "이 문장은 원래 ‘강수량’의 쓰임이에요. ‘표면’은 물체의 가장 바깥쪽 면을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -982,7 +982,7 @@
               "isCorrect": true
             },
             {
-              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "value": "액체 속에 생기는 기체 방울을 말해요.",
               "isCorrect": false
             },
             {
@@ -1076,11 +1076,11 @@
           "prompt": "‘흥미’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1382,7 +1382,7 @@
           "prompt": "‘근거’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -1590,7 +1590,7 @@
               "isCorrect": false
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -1668,9 +1668,9 @@
       "category": "경제와 생활",
       "level": 2,
       "sourceDefinition": "어떤 물건을 사거나 일을 하는 데 들어가는 돈을 말해요.",
-      "sourceExample": "가족 여행을 가기 위해 비행기 표값과 숙박 비용을 미리 계산해 보았어요.",
+      "sourceExample": "가족 여행을 가기 위해 비행기 푯값과 숙박 비용을 미리 계산해 보았어요.",
       "definition": "어떤 물건을 사거나 일을 하는 데 들어가는 돈을 말해요.",
-      "example": "가족 여행을 가기 위해 비행기 표값과 숙박 비용을 미리 계산해 보았어요.",
+      "example": "가족 여행을 가기 위해 비행기 푯값과 숙박 비용을 미리 계산해 보았어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1696,7 +1696,7 @@
               "isCorrect": false
             },
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1707,7 +1707,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "가족 여행을 가기 위해 비행기 표값과 숙박 ＿＿＿＿을 미리 계산해 보았어요.",
+          "prompt": "가족 여행을 가기 위해 비행기 푯값과 숙박 ＿＿＿＿을 미리 계산해 보았어요.",
           "options": [
             {
               "value": "공업",
@@ -1736,7 +1736,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "가족 여행을 가기 위해 비행기 표값과 숙박 ＿＿＿＿을 미리 계산해 보았어요.",
+          "prompt": "가족 여행을 가기 위해 비행기 푯값과 숙박 ＿＿＿＿을 미리 계산해 보았어요.",
           "acceptedAnswers": [
             "비용"
           ]
@@ -1746,7 +1746,7 @@
           "prompt": "다음 중 ‘비용’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "가족 여행을 가기 위해 비행기 표값과 숙박 비용을 미리 계산해 보았어요.",
+              "value": "가족 여행을 가기 위해 비행기 푯값과 숙박 비용을 미리 계산해 보았어요.",
               "isCorrect": true
             },
             {
@@ -2001,9 +2001,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 2,
-      "sourceDefinition": "0.1이나 0.5처럼 점(.)을 찍어서 나타내는 분수와 비슷한 수예요.",
+      "sourceDefinition": "점(.)을 찍어 0.1, 0.01처럼 1보다 작은 자릿값까지 나타내는 수를 말해요.",
       "sourceExample": "내 키는 135.5센티미터라고 소수를 사용해서 말할 수 있어요.",
-      "definition": "0.1이나 0.5처럼 점(.)을 찍어서 나타내는 분수와 비슷한 수예요.",
+      "definition": "점(.)을 찍어 0.1, 0.01처럼 1보다 작은 자릿값까지 나타내는 수를 말해요.",
       "example": "내 키는 135.5센티미터라고 소수를 사용해서 말할 수 있어요.",
       "flags": [],
       "duplicateReview": null,
@@ -2034,7 +2034,7 @@
               "isCorrect": false
             },
             {
-              "value": "0.1이나 0.5처럼 점(.)을 찍어서 나타내는 분수와 비슷한 수예요.",
+              "value": "점(.)을 찍어 0.1, 0.01처럼 1보다 작은 자릿값까지 나타내는 수를 말해요.",
               "isCorrect": true
             }
           ]
@@ -2063,7 +2063,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "0.1이나 0.5처럼 점(.)을 찍어서 나타내는 분수와 비슷한 수예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "점(.)을 찍어 0.1, 0.01처럼 1보다 작은 자릿값까지 나타내는 수를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "소수"
           ]
@@ -2088,7 +2088,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘소수’는 0.1이나 0.5처럼 점(.)을 찍어서 나타내는 분수와 비슷한 수예요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘소수’는 점(.)을 찍어 0.1, 0.01처럼 1보다 작은 자릿값까지 나타내는 수를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2128,7 +2128,7 @@
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2238,7 +2238,7 @@
               "isCorrect": false
             },
             {
-              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "value": "연극이나 영화에서 등장인물이 하는 말을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2307,9 +2307,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 2,
-      "sourceDefinition": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+      "sourceDefinition": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
       "sourceExample": "강화도에 있는 고인돌 유적지에 가서 선사 시대 모습을 상상해 보았어요.",
-      "definition": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+      "definition": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
       "example": "강화도에 있는 고인돌 유적지에 가서 선사 시대 모습을 상상해 보았어요.",
       "flags": [],
       "duplicateReview": null,
@@ -2336,7 +2336,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+              "value": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
               "isCorrect": true
             },
             {
@@ -2369,7 +2369,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "유적지"
           ]
@@ -2394,7 +2394,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘유적지’는 옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘유적지’는 옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2488,7 +2488,7 @@
           "prompt": "다음 중 ‘정사각형’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "친구가 슬플 때 그 마음을 정사각형해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 정사각형해 주면 큰 힘이 된단다.",
               "isCorrect": false
             },
             {
@@ -2634,7 +2634,7 @@
           "prompt": "‘탐구’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2715,9 +2715,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 2,
-      "sourceDefinition": "다른 도와 달리 스스로 결정하는 권한이 더 많은 도로, '제주'와 '강원'이 있어요.",
+      "sourceDefinition": "일반적인 도보다 지역의 일을 스스로 결정하고 처리할 권한이 더 많이 주어진 도를 말해요.",
       "sourceExample": "제주특별자치도는 아름다운 자연경관으로 아주 유명한 곳이에요.",
-      "definition": "다른 도와 달리 스스로 결정하는 권한이 더 많은 도로, '제주'와 '강원'이 있어요.",
+      "definition": "일반적인 도보다 지역의 일을 스스로 결정하고 처리할 권한이 더 많이 주어진 도를 말해요.",
       "example": "제주특별자치도는 아름다운 자연경관으로 아주 유명한 곳이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -2744,11 +2744,11 @@
               "isCorrect": false
             },
             {
-              "value": "다른 도와 달리 스스로 결정하는 권한이 더 많은 도로, '제주'와 '강원'이 있어요.",
+              "value": "일반적인 도보다 지역의 일을 스스로 결정하고 처리할 권한이 더 많이 주어진 도를 말해요.",
               "isCorrect": true
             },
             {
-              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "value": "평면이나 물체의 표면, 땅 등의 넓이를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2777,7 +2777,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "다른 도와 달리 스스로 결정하는 권한이 더 많은 도로, '제주'와 '강원'이 있어요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일반적인 도보다 지역의 일을 스스로 결정하고 처리할 권한이 더 많이 주어진 도를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "특별자치도"
           ]
@@ -2798,11 +2798,11 @@
               "isCorrect": true
             },
             {
-              "value": "친구가 슬플 때 그 마음을 특별자치도해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 특별자치도해 주면 큰 힘이 된단다.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘특별자치도’는 다른 도와 달리 스스로 결정하는 권한이 더 많은 도로, '제주'와 '강원'이 있어요.",
+          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘특별자치도’는 일반적인 도보다 지역의 일을 스스로 결정하고 처리할 권한이 더 많이 주어진 도를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2817,9 +2817,9 @@
       "meaningNumber": 1,
       "category": "경제와 생활",
       "level": 2,
-      "sourceDefinition": "수량이나 범위가 딱 정해져 있어서 마음대로 늘릴 수 없는 상태예요.",
+      "sourceDefinition": "수량이나 범위 등을 일정하게 정하거나 제한하는 것을 말해요.",
       "sourceExample": "이 장난감은 100개만 파는 한정 상품이라 빨리 사야 해요.",
-      "definition": "수량이나 범위가 딱 정해져 있어서 마음대로 늘릴 수 없는 상태예요.",
+      "definition": "수량이나 범위 등을 일정하게 정하거나 제한하는 것을 말해요.",
       "example": "이 장난감은 100개만 파는 한정 상품이라 빨리 사야 해요.",
       "flags": [],
       "duplicateReview": null,
@@ -2846,11 +2846,11 @@
               "isCorrect": false
             },
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "수량이나 범위가 딱 정해져 있어서 마음대로 늘릴 수 없는 상태예요.",
+              "value": "수량이나 범위 등을 일정하게 정하거나 제한하는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2879,7 +2879,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "수량이나 범위가 딱 정해져 있어서 마음대로 늘릴 수 없는 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "수량이나 범위 등을 일정하게 정하거나 제한하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "한정"
           ]
@@ -2904,7 +2904,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공동체’의 쓰임이에요. ‘한정’은 수량이나 범위가 딱 정해져 있어서 마음대로 늘릴 수 없는 상태예요.",
+          "explanation": "이 문장은 원래 ‘공동체’의 쓰임이에요. ‘한정’은 수량이나 범위 등을 일정하게 정하거나 제한하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3022,9 +3022,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "건물이나 시설이 만들어진 지 오래되어 낡고 헐게 된 상태를 말해요.",
-      "sourceExample": "놀이터 시설의 노후화로 인해 아이들이 안전하게 놀 수 있게 새것으로 교체했어요.",
+      "sourceExample": "놀이터 시설의 노후화로 안전이 걱정되어 낡은 시설을 새것으로 교체했어요.",
       "definition": "건물이나 시설이 만들어진 지 오래되어 낡고 헐게 된 상태를 말해요.",
-      "example": "놀이터 시설의 노후화로 인해 아이들이 안전하게 놀 수 있게 새것으로 교체했어요.",
+      "example": "놀이터 시설의 노후화로 안전이 걱정되어 낡은 시설을 새것으로 교체했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3061,7 +3061,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "놀이터 시설의 ＿＿＿＿로 인해 아이들이 안전하게 놀 수 있게 새것으로 교체했어요.",
+          "prompt": "놀이터 시설의 ＿＿＿＿로 안전이 걱정되어 낡은 시설을 새것으로 교체했어요.",
           "options": [
             {
               "value": "공동체",
@@ -3090,7 +3090,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "놀이터 시설의 ＿＿＿＿로 인해 아이들이 안전하게 놀 수 있게 새것으로 교체했어요.",
+          "prompt": "놀이터 시설의 ＿＿＿＿로 안전이 걱정되어 낡은 시설을 새것으로 교체했어요.",
           "acceptedAnswers": [
             "노후화"
           ]
@@ -3104,7 +3104,7 @@
               "isCorrect": false
             },
             {
-              "value": "놀이터 시설의 노후화로 인해 아이들이 안전하게 놀 수 있게 새것으로 교체했어요.",
+              "value": "놀이터 시설의 노후화로 안전이 걱정되어 낡은 시설을 새것으로 교체했어요.",
               "isCorrect": true
             }
           ],
@@ -3254,7 +3254,7 @@
               "isCorrect": false
             },
             {
-              "value": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+              "value": "수증기가 차가워져 액체인 물방울로 변하는 현상을 말해요.",
               "isCorrect": false
             },
             {
@@ -3532,9 +3532,9 @@
       "category": "모양과 도형",
       "level": 3,
       "sourceDefinition": "어떤 직선과 직각으로 만나는 선을 말해요.",
-      "sourceExample": "반듯하게 세워진 기둥은 바닥과 수선을 이루고 있어요.",
+      "sourceExample": "반듯하게 세워진 기둥은 바닥과 수직을 이루는 수선과 같아요.",
       "definition": "어떤 직선과 직각으로 만나는 선을 말해요.",
-      "example": "반듯하게 세워진 기둥은 바닥과 수선을 이루고 있어요.",
+      "example": "반듯하게 세워진 기둥은 바닥과 수직을 이루는 수선과 같아요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3552,7 +3552,7 @@
           "prompt": "‘수선’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선이에요.",
+              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선분이에요.",
               "isCorrect": false
             },
             {
@@ -3564,14 +3564,14 @@
               "isCorrect": true
             },
             {
-              "value": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
+              "value": "세 각 중 한 각이 90도보다 크고 180도보다 작은 삼각형이에요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "반듯하게 세워진 기둥은 바닥과 ＿＿＿＿을 이루고 있어요.",
+          "prompt": "반듯하게 세워진 기둥은 바닥과 수직을 이루는 ＿＿＿＿과 같아요.",
           "options": [
             {
               "value": "수선",
@@ -3600,7 +3600,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "반듯하게 세워진 기둥은 바닥과 ＿＿＿＿을 이루고 있어요.",
+          "prompt": "반듯하게 세워진 기둥은 바닥과 수직을 이루는 ＿＿＿＿과 같아요.",
           "acceptedAnswers": [
             "수선"
           ]
@@ -3610,7 +3610,7 @@
           "prompt": "다음 중 ‘수선’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "반듯하게 세워진 기둥은 바닥과 수선을 이루고 있어요.",
+              "value": "반듯하게 세워진 기둥은 바닥과 수직을 이루는 수선과 같아요.",
               "isCorrect": true
             },
             {
@@ -3633,9 +3633,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 3,
-      "sourceDefinition": "수학적인 현상이 일어나는 근본적인 규칙이나 바탕이에요.",
+      "sourceDefinition": "사물의 이치나 어떤 현상이 일어나는 바탕이 되는 법칙을 말해요.",
       "sourceExample": "곱셈의 원리를 알면 큰 숫자도 쉽게 계산할 수 있어요.",
-      "definition": "수학적인 현상이 일어나는 근본적인 규칙이나 바탕이에요.",
+      "definition": "사물의 이치나 어떤 현상이 일어나는 바탕이 되는 법칙을 말해요.",
       "example": "곱셈의 원리를 알면 큰 숫자도 쉽게 계산할 수 있어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3654,11 +3654,11 @@
           "prompt": "‘원리’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 일을 결정하기 전에 틀린 곳이나 문제는 없는지 자세히 살피는 거예요.",
+              "value": "어떤 내용이나 일에 문제가 없는지 자세히 살펴보는 거예요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 신중하게 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {
@@ -3666,7 +3666,7 @@
               "isCorrect": false
             },
             {
-              "value": "수학적인 현상이 일어나는 근본적인 규칙이나 바탕이에요.",
+              "value": "사물의 이치나 어떤 현상이 일어나는 바탕이 되는 법칙을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3695,7 +3695,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "수학적인 현상이 일어나는 근본적인 규칙이나 바탕이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사물의 이치나 어떤 현상이 일어나는 바탕이 되는 법칙을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "원리"
           ]
@@ -3720,7 +3720,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘관련’의 쓰임이에요. ‘원리’는 수학적인 현상이 일어나는 근본적인 규칙이나 바탕이에요.",
+          "explanation": "이 문장은 원래 ‘관련’의 쓰임이에요. ‘원리’는 사물의 이치나 어떤 현상이 일어나는 바탕이 되는 법칙을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],

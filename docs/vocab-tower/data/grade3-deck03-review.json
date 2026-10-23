@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck03",
   "deckNumber": 3,
@@ -160,7 +160,7 @@
               "isCorrect": true
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -254,7 +254,7 @@
           "prompt": "‘명절’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+              "value": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
               "isCorrect": false
             },
             {
@@ -364,7 +364,7 @@
               "isCorrect": false
             },
             {
-              "value": "도형에서 점과 점을 이은 곧은 선분을 말해요.",
+              "value": "다각형의 둘레를 이루는 선분 하나하나를 말해요.",
               "isCorrect": false
             },
             {
@@ -438,9 +438,9 @@
       "category": "비교와 분류",
       "level": 1,
       "sourceDefinition": "비슷한 것끼리 무리를 지어 나누는 것을 말해요.",
-      "sourceExample": "쓰레기를 버릴 때는 재질에 따라 분리해서 분류해야 해요.",
+      "sourceExample": "쓰레기를 버릴 때는 재질에 따라 알맞게 분류해야 해요.",
       "definition": "비슷한 것끼리 무리를 지어 나누는 것을 말해요.",
-      "example": "쓰레기를 버릴 때는 재질에 따라 분리해서 분류해야 해요.",
+      "example": "쓰레기를 버릴 때는 재질에 따라 알맞게 분류해야 해요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -477,7 +477,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "쓰레기를 버릴 때는 재질에 따라 분리해서 ＿＿＿＿해야 해요.",
+          "prompt": "쓰레기를 버릴 때는 재질에 따라 알맞게 ＿＿＿＿해야 해요.",
           "options": [
             {
               "value": "공통",
@@ -506,7 +506,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "쓰레기를 버릴 때는 재질에 따라 분리해서 ＿＿＿＿해야 해요.",
+          "prompt": "쓰레기를 버릴 때는 재질에 따라 알맞게 ＿＿＿＿해야 해요.",
           "acceptedAnswers": [
             "분류"
           ]
@@ -516,7 +516,7 @@
           "prompt": "다음 중 ‘분류’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "쓰레기를 버릴 때는 재질에 따라 분리해서 분류해야 해요.",
+              "value": "쓰레기를 버릴 때는 재질에 따라 알맞게 분류해야 해요.",
               "isCorrect": true
             },
             {
@@ -539,9 +539,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 1,
-      "sourceDefinition": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+      "sourceDefinition": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
       "sourceExample": "모르는 단어가 나오면 사전을 찾아서 정확한 뜻을 공부했어.",
-      "definition": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+      "definition": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
       "example": "모르는 단어가 나오면 사전을 찾아서 정확한 뜻을 공부했어.",
       "flags": [],
       "duplicateReview": null,
@@ -564,7 +564,7 @@
               "isCorrect": false
             },
             {
-              "value": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+              "value": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
               "isCorrect": true
             },
             {
@@ -601,7 +601,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "사전"
           ]
@@ -626,7 +626,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘사전’은 단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘사전’은 낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -642,9 +642,9 @@
       "category": "사회와 소통",
       "level": 1,
       "sourceDefinition": "멀리 떨어져 있는 사람의 형편이나 새로운 사건을 알리는 말이나 글이에요.",
-      "sourceExample": "전학 간 친구에게서 반가운 편지 소식이 도착했어.",
+      "sourceExample": "전학 간 친구에게서 반가운 소식이 담긴 편지가 도착했어.",
       "definition": "멀리 떨어져 있는 사람의 형편이나 새로운 사건을 알리는 말이나 글이에요.",
-      "example": "전학 간 친구에게서 반가운 편지 소식이 도착했어.",
+      "example": "전학 간 친구에게서 반가운 소식이 담긴 편지가 도착했어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -681,7 +681,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "전학 간 친구에게서 반가운 편지 ＿＿＿＿이 도착했어.",
+          "prompt": "전학 간 친구에게서 반가운 ＿＿＿＿이 담긴 편지가 도착했어.",
           "options": [
             {
               "value": "소식",
@@ -710,7 +710,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "전학 간 친구에게서 반가운 편지 ＿＿＿＿이 도착했어.",
+          "prompt": "전학 간 친구에게서 반가운 ＿＿＿＿이 담긴 편지가 도착했어.",
           "acceptedAnswers": [
             "소식"
           ]
@@ -720,7 +720,7 @@
           "prompt": "다음 중 ‘소식’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "전학 간 친구에게서 반가운 편지 소식이 도착했어.",
+              "value": "전학 간 친구에게서 반가운 소식이 담긴 편지가 도착했어.",
               "isCorrect": true
             },
             {
@@ -768,11 +768,11 @@
               "isCorrect": false
             },
             {
-              "value": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+              "value": "밤 12시부터 낮 12시까지의 시간을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "낮 12시부터 밤 12시까지의 시간을 말해요. 점심 먹고 난 뒤예요.",
+              "value": "낮 12시부터 밤 12시까지의 시간을 말해요.",
               "isCorrect": false
             },
             {
@@ -845,9 +845,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "땅에 뿌리를 내리고 잎과 꽃을 피우며 자라는 살아있는 생물이에요.",
+      "sourceDefinition": "풀과 나무처럼 대체로 햇빛을 이용해 스스로 양분을 만들며 살아가는 생물을 말해요.",
       "sourceExample": "베란다에 놓인 화분 속 식물에게 물을 주니 파릇파릇하게 자랐어.",
-      "definition": "땅에 뿌리를 내리고 잎과 꽃을 피우며 자라는 살아있는 생물이에요.",
+      "definition": "풀과 나무처럼 대체로 햇빛을 이용해 스스로 양분을 만들며 살아가는 생물을 말해요.",
       "example": "베란다에 놓인 화분 속 식물에게 물을 주니 파릇파릇하게 자랐어.",
       "flags": [],
       "duplicateReview": null,
@@ -866,7 +866,7 @@
           "prompt": "‘식물’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "땅에 뿌리를 내리고 잎과 꽃을 피우며 자라는 살아있는 생물이에요.",
+              "value": "풀과 나무처럼 대체로 햇빛을 이용해 스스로 양분을 만들며 살아가는 생물을 말해요.",
               "isCorrect": true
             },
             {
@@ -907,7 +907,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "땅에 뿌리를 내리고 잎과 꽃을 피우며 자라는 살아있는 생물이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "풀과 나무처럼 대체로 햇빛을 이용해 스스로 양분을 만들며 살아가는 생물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "식물"
           ]
@@ -932,7 +932,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감염’의 쓰임이에요. ‘식물’은 땅에 뿌리를 내리고 잎과 꽃을 피우며 자라는 살아있는 생물이에요.",
+          "explanation": "이 문장은 원래 ‘감염’의 쓰임이에요. ‘식물’은 풀과 나무처럼 대체로 햇빛을 이용해 스스로 양분을 만들며 살아가는 생물을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -980,7 +980,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1180,7 +1180,7 @@
               "isCorrect": false
             },
             {
-              "value": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+              "value": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
               "isCorrect": false
             },
             {
@@ -1384,7 +1384,7 @@
               "isCorrect": true
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1482,7 +1482,7 @@
               "isCorrect": false
             },
             {
-              "value": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+              "value": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
               "isCorrect": false
             },
             {
@@ -1490,7 +1490,7 @@
               "isCorrect": true
             },
             {
-              "value": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+              "value": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1560,9 +1560,9 @@
       "category": "학교생활",
       "level": 1,
       "sourceDefinition": "우리가 모여서 공부하고 친구들과 신나게 뛰노는 배움터예요.",
-      "sourceExample": "즐거운 학교 생활을 위해 서로 배려하고 존중하며 지내자.",
+      "sourceExample": "즐거운 학교생활을 위해 서로 배려하고 존중하며 지내자.",
       "definition": "우리가 모여서 공부하고 친구들과 신나게 뛰노는 배움터예요.",
-      "example": "즐거운 학교 생활을 위해 서로 배려하고 존중하며 지내자.",
+      "example": "즐거운 학교생활을 위해 서로 배려하고 존중하며 지내자.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1584,7 +1584,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1599,7 +1599,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "즐거운 ＿＿＿＿ 생활을 위해 서로 배려하고 존중하며 지내자.",
+          "prompt": "즐거운 ＿＿＿＿생활을 위해 서로 배려하고 존중하며 지내자.",
           "options": [
             {
               "value": "게시판",
@@ -1628,7 +1628,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "즐거운 ＿＿＿＿ 생활을 위해 서로 배려하고 존중하며 지내자.",
+          "prompt": "즐거운 ＿＿＿＿생활을 위해 서로 배려하고 존중하며 지내자.",
           "acceptedAnswers": [
             "학교"
           ]
@@ -1638,11 +1638,11 @@
           "prompt": "다음 중 ‘학교’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 학교하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 학교되어 쉬어야 해.",
               "isCorrect": false
             },
             {
-              "value": "즐거운 학교 생활을 위해 서로 배려하고 존중하며 지내자.",
+              "value": "즐거운 학교생활을 위해 서로 배려하고 존중하며 지내자.",
               "isCorrect": true
             }
           ],
@@ -1744,7 +1744,7 @@
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 환경하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 환경되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
@@ -1764,9 +1764,9 @@
       "category": "말과 글",
       "level": 2,
       "sourceDefinition": "옛날부터 우리 민족이 써 온 우리만의 순수한 말을 말해요.",
-      "sourceExample": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 고유어란다.",
+      "sourceExample": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 고유어란다.",
       "definition": "옛날부터 우리 민족이 써 온 우리만의 순수한 말을 말해요.",
-      "example": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 고유어란다.",
+      "example": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 고유어란다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1803,7 +1803,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 ＿＿＿＿란다.",
+          "prompt": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 ＿＿＿＿란다.",
           "options": [
             {
               "value": "계획서",
@@ -1832,7 +1832,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 ＿＿＿＿란다.",
+          "prompt": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 ＿＿＿＿란다.",
           "acceptedAnswers": [
             "고유어"
           ]
@@ -1846,7 +1846,7 @@
               "isCorrect": false
             },
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 고유어란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 고유어란다.",
               "isCorrect": true
             }
           ],
@@ -1886,7 +1886,7 @@
           "prompt": "‘규범’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -1992,7 +1992,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2171,9 +2171,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 2,
-      "sourceDefinition": "분수에서 가로선 아래에 있는 수로, 전체를 몇 개로 나눴는지 알려줘요.",
+      "sourceDefinition": "분수에서 가로선 아래에 있는 수로, 전체를 똑같이 몇 부분으로 나누었는지 알려줘요.",
       "sourceExample": "분수 3분의 1에서 숫자 3이 바로 분모예요.",
-      "definition": "분수에서 가로선 아래에 있는 수로, 전체를 몇 개로 나눴는지 알려줘요.",
+      "definition": "분수에서 가로선 아래에 있는 수로, 전체를 똑같이 몇 부분으로 나누었는지 알려줘요.",
       "example": "분수 3분의 1에서 숫자 3이 바로 분모예요.",
       "flags": [],
       "duplicateReview": null,
@@ -2196,7 +2196,7 @@
               "isCorrect": false
             },
             {
-              "value": "분수에서 가로선 아래에 있는 수로, 전체를 몇 개로 나눴는지 알려줘요.",
+              "value": "분수에서 가로선 아래에 있는 수로, 전체를 똑같이 몇 부분으로 나누었는지 알려줘요.",
               "isCorrect": true
             },
             {
@@ -2233,7 +2233,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "분수에서 가로선 아래에 있는 수로, 전체를 몇 개로 나눴는지 알려줘요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "분수에서 가로선 아래에 있는 수로, 전체를 똑같이 몇 부분으로 나누었는지 알려줘요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "분모"
           ]
@@ -2258,7 +2258,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계획서’의 쓰임이에요. ‘분모’는 분수에서 가로선 아래에 있는 수로, 전체를 몇 개로 나눴는지 알려줘요.",
+          "explanation": "이 문장은 원래 ‘계획서’의 쓰임이에요. ‘분모’는 분수에서 가로선 아래에 있는 수로, 전체를 똑같이 몇 부분으로 나누었는지 알려줘요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2274,9 +2274,9 @@
       "category": "자연과 환경",
       "level": 2,
       "sourceDefinition": "가축이나 짐승을 먹여 키우고 보살피는 것을 말해요.",
-      "sourceExample": "우리 집에서는 귀여운 강아지를 정성껏 사육하고 있어.",
+      "sourceExample": "농장에서는 소와 돼지 같은 가축을 정성껏 사육하고 있어.",
       "definition": "가축이나 짐승을 먹여 키우고 보살피는 것을 말해요.",
-      "example": "우리 집에서는 귀여운 강아지를 정성껏 사육하고 있어.",
+      "example": "농장에서는 소와 돼지 같은 가축을 정성껏 사육하고 있어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2294,7 +2294,7 @@
           "prompt": "‘사육’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -2306,14 +2306,14 @@
               "isCorrect": true
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우리 집에서는 귀여운 강아지를 정성껏 ＿＿＿＿하고 있어.",
+          "prompt": "농장에서는 소와 돼지 같은 가축을 정성껏 ＿＿＿＿하고 있어.",
           "options": [
             {
               "value": "사육",
@@ -2342,7 +2342,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우리 집에서는 귀여운 강아지를 정성껏 ＿＿＿＿하고 있어.",
+          "prompt": "농장에서는 소와 돼지 같은 가축을 정성껏 ＿＿＿＿하고 있어.",
           "acceptedAnswers": [
             "사육"
           ]
@@ -2352,7 +2352,7 @@
           "prompt": "다음 중 ‘사육’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "우리 집에서는 귀여운 강아지를 정성껏 사육하고 있어.",
+              "value": "농장에서는 소와 돼지 같은 가축을 정성껏 사육하고 있어.",
               "isCorrect": true
             },
             {
@@ -2375,9 +2375,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "보이지 않는 추상적인 뜻을 구체적인 물건이나 모양으로 나타낸 거예요.",
+      "sourceDefinition": "눈에 보이지 않는 생각이나 뜻을 어떤 사물이나 모양으로 나타내는 것을 말해요.",
       "sourceExample": "비둘기는 평화를 상징하는 새로 널리 알려져 있어.",
-      "definition": "보이지 않는 추상적인 뜻을 구체적인 물건이나 모양으로 나타낸 거예요.",
+      "definition": "눈에 보이지 않는 생각이나 뜻을 어떤 사물이나 모양으로 나타내는 것을 말해요.",
       "example": "비둘기는 평화를 상징하는 새로 널리 알려져 있어.",
       "flags": [],
       "duplicateReview": null,
@@ -2396,7 +2396,7 @@
           "prompt": "‘상징’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2408,7 +2408,7 @@
               "isCorrect": false
             },
             {
-              "value": "보이지 않는 추상적인 뜻을 구체적인 물건이나 모양으로 나타낸 거예요.",
+              "value": "눈에 보이지 않는 생각이나 뜻을 어떤 사물이나 모양으로 나타내는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2437,7 +2437,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "보이지 않는 추상적인 뜻을 구체적인 물건이나 모양으로 나타낸 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "눈에 보이지 않는 생각이나 뜻을 어떤 사물이나 모양으로 나타내는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "상징"
           ]
@@ -2462,7 +2462,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘고유’의 쓰임이에요. ‘상징’은 보이지 않는 추상적인 뜻을 구체적인 물건이나 모양으로 나타낸 거예요.",
+          "explanation": "이 문장은 원래 ‘고유’의 쓰임이에요. ‘상징’은 눈에 보이지 않는 생각이나 뜻을 어떤 사물이나 모양으로 나타내는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2477,9 +2477,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 2,
-      "sourceDefinition": "기울어지지 않고 평평하고 나란한 상태를 말해요.",
+      "sourceDefinition": "고요한 물의 표면처럼 어느 한쪽으로 기울지 않고 옆으로 평평하게 놓인 상태를 말해요.",
       "sourceExample": "시소의 양쪽 무게가 같아지면 어느 한쪽으로도 기울지 않고 수평이 돼.",
-      "definition": "기울어지지 않고 평평하고 나란한 상태를 말해요.",
+      "definition": "고요한 물의 표면처럼 어느 한쪽으로 기울지 않고 옆으로 평평하게 놓인 상태를 말해요.",
       "example": "시소의 양쪽 무게가 같아지면 어느 한쪽으로도 기울지 않고 수평이 돼.",
       "flags": [],
       "duplicateReview": null,
@@ -2498,7 +2498,7 @@
           "prompt": "‘수평’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "기울어지지 않고 평평하고 나란한 상태를 말해요.",
+              "value": "고요한 물의 표면처럼 어느 한쪽으로 기울지 않고 옆으로 평평하게 놓인 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -2539,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "기울어지지 않고 평평하고 나란한 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "고요한 물의 표면처럼 어느 한쪽으로 기울지 않고 옆으로 평평하게 놓인 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "수평"
           ]
@@ -2564,7 +2564,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘수평’은 기울어지지 않고 평평하고 나란한 상태를 말해요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘수평’은 고요한 물의 표면처럼 어느 한쪽으로 기울지 않고 옆으로 평평하게 놓인 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2600,7 +2600,7 @@
           "prompt": "‘요양원’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2706,7 +2706,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 인공위성란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 인공위성란다.",
               "isCorrect": false
             }
           ],
@@ -2804,7 +2804,7 @@
           "prompt": "‘점검’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -3216,7 +3216,7 @@
               "isCorrect": false
             },
             {
-              "value": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+              "value": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -3293,9 +3293,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "학생이 너무 적어서 운영하던 학교가 문을 닫는 것을 말해요.",
+      "sourceDefinition": "운영하던 학교가 문을 닫는 것, 또는 그렇게 문을 닫은 학교를 말해요.",
       "sourceExample": "시골 마을의 작은 학교가 폐교가 되어 마을 사람들이 슬퍼하셨어.",
-      "definition": "학생이 너무 적어서 운영하던 학교가 문을 닫는 것을 말해요.",
+      "definition": "운영하던 학교가 문을 닫는 것, 또는 그렇게 문을 닫은 학교를 말해요.",
       "example": "시골 마을의 작은 학교가 폐교가 되어 마을 사람들이 슬퍼하셨어.",
       "flags": [],
       "duplicateReview": null,
@@ -3314,11 +3314,11 @@
           "prompt": "‘폐교’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "학생이 너무 적어서 운영하던 학교가 문을 닫는 것을 말해요.",
+              "value": "운영하던 학교가 문을 닫는 것, 또는 그렇게 문을 닫은 학교를 말해요.",
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3355,7 +3355,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "학생이 너무 적어서 운영하던 학교가 문을 닫는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "운영하던 학교가 문을 닫는 것, 또는 그렇게 문을 닫은 학교를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "폐교"
           ]
@@ -3380,7 +3380,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘폐교’는 학생이 너무 적어서 운영하던 학교가 문을 닫는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘폐교’는 운영하던 학교가 문을 닫는 것, 또는 그렇게 문을 닫은 학교를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3497,10 +3497,10 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 3,
-      "sourceDefinition": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
-      "sourceExample": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리하며 쉬어야 해.",
-      "definition": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
-      "example": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리하며 쉬어야 해.",
+      "sourceDefinition": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
+      "sourceExample": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리되어 쉬어야 해.",
+      "definition": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
+      "example": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리되어 쉬어야 해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3526,7 +3526,7 @@
               "isCorrect": false
             },
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3537,7 +3537,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 ＿＿＿＿하며 쉬어야 해.",
+          "prompt": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 ＿＿＿＿되어 쉬어야 해.",
           "options": [
             {
               "value": "격리",
@@ -3559,14 +3559,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "격리"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 ＿＿＿＿하며 쉬어야 해.",
+          "prompt": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 ＿＿＿＿되어 쉬어야 해.",
           "acceptedAnswers": [
             "격리"
           ]
@@ -3576,7 +3576,7 @@
           "prompt": "다음 중 ‘격리’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 격리되어 쉬어야 해.",
               "isCorrect": true
             },
             {
@@ -3584,7 +3584,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공학자’의 쓰임이에요. ‘격리’는 전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+          "explanation": "이 문장은 원래 ‘공학자’의 쓰임이에요. ‘격리’는 다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3803,10 +3803,10 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "어떤 일이 일어난 해나 시대를 묶어서 부르는 말이에요.",
-      "sourceExample": "이 유적지는 고구려 연대의 특징을 잘 보여주고 있어.",
-      "definition": "어떤 일이 일어난 해나 시대를 묶어서 부르는 말이에요.",
-      "example": "이 유적지는 고구려 연대의 특징을 잘 보여주고 있어.",
+      "sourceDefinition": "어떤 일이 일어난 해나 시대를 말해요.",
+      "sourceExample": "박물관에서 이 도자기가 만들어진 연대를 확인해 보았어.",
+      "definition": "어떤 일이 일어난 해나 시대를 말해요.",
+      "example": "박물관에서 이 도자기가 만들어진 연대를 확인해 보았어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3828,7 +3828,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일이 일어난 해나 시대를 묶어서 부르는 말이에요.",
+              "value": "어떤 일이 일어난 해나 시대를 말해요.",
               "isCorrect": true
             },
             {
@@ -3836,14 +3836,14 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+              "value": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "이 유적지는 고구려 ＿＿＿＿의 특징을 잘 보여주고 있어.",
+          "prompt": "박물관에서 이 도자기가 만들어진 ＿＿＿＿를 확인해 보았어.",
           "options": [
             {
               "value": "고유",
@@ -3865,14 +3865,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 일이 일어난 해나 시대를 묶어서 부르는 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일이 일어난 해나 시대를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "연대"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "이 유적지는 고구려 ＿＿＿＿의 특징을 잘 보여주고 있어.",
+          "prompt": "박물관에서 이 도자기가 만들어진 ＿＿＿＿를 확인해 보았어.",
           "acceptedAnswers": [
             "연대"
           ]
@@ -3886,11 +3886,11 @@
               "isCorrect": false
             },
             {
-              "value": "이 유적지는 고구려 연대의 특징을 잘 보여주고 있어.",
+              "value": "박물관에서 이 도자기가 만들어진 연대를 확인해 보았어.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘연대’는 어떤 일이 일어난 해나 시대를 묶어서 부르는 말이에요.",
+          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘연대’는 어떤 일이 일어난 해나 시대를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3926,7 +3926,7 @@
           "prompt": "‘재판’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4036,7 +4036,7 @@
               "isCorrect": false
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {

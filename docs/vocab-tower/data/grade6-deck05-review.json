@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 6,
   "deckId": "grade6-deck05",
   "deckNumber": 5,
@@ -54,7 +54,7 @@
               "isCorrect": true
             },
             {
-              "value": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+              "value": "물기나 습기가 적어 메마른 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "적도 근처의 아주 덥고 비가 많이 오는 기후나 지역을 말해요.",
+              "value": "적도 가까이에 있어 일 년 내내 기온이 높은 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -112,7 +112,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 집 경관부를 적어보니 이번 달에는 식비로 지출이 가장 많았어.",
+              "value": "경관은 회사에서 일해 소득을 얻고, 필요한 물건을 사는 경제 활동을 해.",
               "isCorrect": false
             }
           ],
@@ -152,7 +152,7 @@
           "prompt": "‘대양’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             },
             {
@@ -160,11 +160,11 @@
               "isCorrect": true
             },
             {
-              "value": "천체 망원경 등의 도구를 사용해서 별이나 행성의 움직임을 자세히 살피는 거예요.",
+              "value": "기구를 이용해 천체나 자연 현상을 자세히 살피고 측정하는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "지구의 가장 위쪽 끝인 북극과 아래쪽 끝인 남극 지역을 말해요.",
+              "value": "지구의 북극과 남극 주변 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -233,9 +233,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 1,
-      "sourceDefinition": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+      "sourceDefinition": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
       "sourceExample": "어제 우리 학교 과학 축제 소식이 뉴스에 방영되었어.",
-      "definition": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+      "definition": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
       "example": "어제 우리 학교 과학 축제 소식이 뉴스에 방영되었어.",
       "flags": [],
       "duplicateReview": null,
@@ -254,7 +254,7 @@
           "prompt": "‘방영’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+              "value": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -262,7 +262,7 @@
               "isCorrect": false
             },
             {
-              "value": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+              "value": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -295,7 +295,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "방영"
           ]
@@ -320,7 +320,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘방영’은 텔레비전을 통해 영상 소식을 널리 보여주는 일을 말해요.",
+          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘방영’은 텔레비전으로 영화나 드라마 등의 영상을 방송하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -520,15 +520,15 @@
               "isCorrect": true
             },
             {
-              "value": "감사원에서는 나라의 예산이 낭비되지 않았는지 철저하게 식을 진행해.",
+              "value": "우리 몸의 식 기관은 주변 정보를 받아들여 뇌로 전달해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감사’의 쓰임이에요. ‘식’은 수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
+          "explanation": "이 문장은 원래 ‘감각’의 쓰임이에요. ‘식’은 수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
-          "sourceItemKey": "vocab:g6:감사"
+          "sourceItemKey": "vocab:g6:감각"
         }
       }
     },
@@ -845,9 +845,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.",
+      "sourceDefinition": "집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.",
       "sourceExample": "건축 설계도를 그릴 때는 일정한 비율로 줄여서 그리는 축척이 쓰여.",
-      "definition": "집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.",
+      "definition": "집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.",
       "example": "건축 설계도를 그릴 때는 일정한 비율로 줄여서 그리는 축척이 쓰여.",
       "flags": [],
       "duplicateReview": null,
@@ -866,7 +866,7 @@
           "prompt": "‘건축’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.",
+              "value": "집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.",
               "isCorrect": true
             },
             {
@@ -907,7 +907,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "건축"
           ]
@@ -932,7 +932,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘객관적’의 쓰임이에요. ‘건축’은 집이나 다리 같은 건물을 짓는 일이나 기술을 말해요.",
+          "explanation": "이 문장은 원래 ‘객관적’의 쓰임이에요. ‘건축’은 집이나 학교 같은 건물을 짓는 일이나 기술을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1074,7 +1074,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -1559,9 +1559,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "살아가는데 필요한 돈이나 물건이 턱없이 부족하여 가난한 상태예요.",
+      "sourceDefinition": "살아가는 데 필요한 돈이나 물건이 매우 부족하여 가난한 상태예요.",
       "sourceExample": "우리는 전 세계의 빈곤 문제를 해결하기 위해 함께 관심을 가져야 해.",
-      "definition": "살아가는데 필요한 돈이나 물건이 턱없이 부족하여 가난한 상태예요.",
+      "definition": "살아가는 데 필요한 돈이나 물건이 매우 부족하여 가난한 상태예요.",
       "example": "우리는 전 세계의 빈곤 문제를 해결하기 위해 함께 관심을 가져야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -1592,7 +1592,7 @@
               "isCorrect": false
             },
             {
-              "value": "살아가는데 필요한 돈이나 물건이 턱없이 부족하여 가난한 상태예요.",
+              "value": "살아가는 데 필요한 돈이나 물건이 매우 부족하여 가난한 상태예요.",
               "isCorrect": true
             }
           ]
@@ -1621,7 +1621,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "살아가는데 필요한 돈이나 물건이 턱없이 부족하여 가난한 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "살아가는 데 필요한 돈이나 물건이 매우 부족하여 가난한 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "빈곤"
           ]
@@ -1646,7 +1646,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경계’의 쓰임이에요. ‘빈곤’은 살아가는데 필요한 돈이나 물건이 턱없이 부족하여 가난한 상태예요.",
+          "explanation": "이 문장은 원래 ‘경계’의 쓰임이에요. ‘빈곤’은 살아가는 데 필요한 돈이나 물건이 매우 부족하여 가난한 상태예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1690,7 +1690,7 @@
               "isCorrect": false
             },
             {
-              "value": "남을 대할 때 스스로 부끄럽지 않게 세우는 얼굴이나 도리예요.",
+              "value": "다른 사람 앞에서 지키고 싶어 하는 자신의 품위나 사회적 위치를 말해요.",
               "isCorrect": false
             },
             {
@@ -1744,7 +1744,7 @@
               "isCorrect": true
             },
             {
-              "value": "이 동화책은 주인공들이 행복하게 살게 되는 해피엔딩 사기가야.",
+              "value": "이 동화책은 주인공들이 오래오래 행복하게 살게 되는 사기로 끝나.",
               "isCorrect": false
             }
           ],
@@ -2098,7 +2098,7 @@
               "isCorrect": false
             },
             {
-              "value": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+              "value": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
               "isCorrect": false
             },
             {
@@ -2273,10 +2273,10 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "바람의 세기나 바람이 불어오는 양을 말해요.",
-      "sourceExample": "바닷가에는 풍량이 세서 거대한 파도가 칠 수도 있으니 조심해야 해.",
-      "definition": "바람의 세기나 바람이 불어오는 양을 말해요.",
-      "example": "바닷가에는 풍량이 세서 거대한 파도가 칠 수도 있으니 조심해야 해.",
+      "sourceDefinition": "일정한 시간 동안 일정한 곳을 지나가는 공기의 양을 말해요.",
+      "sourceExample": "선풍기의 풍량을 높였더니 더 많은 바람이 나왔어.",
+      "definition": "일정한 시간 동안 일정한 곳을 지나가는 공기의 양을 말해요.",
+      "example": "선풍기의 풍량을 높였더니 더 많은 바람이 나왔어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2302,7 +2302,7 @@
               "isCorrect": false
             },
             {
-              "value": "바람의 세기나 바람이 불어오는 양을 말해요.",
+              "value": "일정한 시간 동안 일정한 곳을 지나가는 공기의 양을 말해요.",
               "isCorrect": true
             },
             {
@@ -2313,7 +2313,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "바닷가에는 ＿＿＿＿이 세서 거대한 파도가 칠 수도 있으니 조심해야 해.",
+          "prompt": "선풍기의 ＿＿＿＿을 높였더니 더 많은 바람이 나왔어.",
           "options": [
             {
               "value": "풍량",
@@ -2335,14 +2335,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "바람의 세기나 바람이 불어오는 양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일정한 시간 동안 일정한 곳을 지나가는 공기의 양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "풍량"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "바닷가에는 ＿＿＿＿이 세서 거대한 파도가 칠 수도 있으니 조심해야 해.",
+          "prompt": "선풍기의 ＿＿＿＿을 높였더니 더 많은 바람이 나왔어.",
           "acceptedAnswers": [
             "풍량"
           ]
@@ -2352,7 +2352,7 @@
           "prompt": "다음 중 ‘풍량’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "바닷가에는 풍량이 세서 거대한 파도가 칠 수도 있으니 조심해야 해.",
+              "value": "선풍기의 풍량을 높였더니 더 많은 바람이 나왔어.",
               "isCorrect": true
             },
             {
@@ -2360,7 +2360,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘계산기’의 쓰임이에요. ‘풍량’은 바람의 세기나 바람이 불어오는 양을 말해요.",
+          "explanation": "이 문장은 원래 ‘계산기’의 쓰임이에요. ‘풍량’은 일정한 시간 동안 일정한 곳을 지나가는 공기의 양을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2658,7 +2658,7 @@
           "prompt": "다음 중 ‘독재’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 독재를 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 독재를 이루고 있어.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 변인을 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 변인을 이루고 있어.",
               "isCorrect": false
             }
           ],
@@ -2784,9 +2784,9 @@
       "category": "숫자와 연산",
       "level": 3,
       "sourceDefinition": "기준량에 대한 비교하는 양의 크기를 말해요.",
-      "sourceExample": "전체 타석 중에서 안타를 친 비율을 구하면 타율이 돼.",
+      "sourceExample": "전체 타수에 대한 안타 수의 비율을 구하면 타율이 돼.",
       "definition": "기준량에 대한 비교하는 양의 크기를 말해요.",
-      "example": "전체 타석 중에서 안타를 친 비율을 구하면 타율이 돼.",
+      "example": "전체 타수에 대한 안타 수의 비율을 구하면 타율이 돼.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2823,7 +2823,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "전체 타석 중에서 안타를 친 ＿＿＿＿을 구하면 타율이 돼.",
+          "prompt": "전체 타수에 대한 안타 수의 ＿＿＿＿을 구하면 타율이 돼.",
           "options": [
             {
               "value": "기준량",
@@ -2852,7 +2852,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "전체 타석 중에서 안타를 친 ＿＿＿＿을 구하면 타율이 돼.",
+          "prompt": "전체 타수에 대한 안타 수의 ＿＿＿＿을 구하면 타율이 돼.",
           "acceptedAnswers": [
             "비율"
           ]
@@ -2866,7 +2866,7 @@
               "isCorrect": false
             },
             {
-              "value": "전체 타석 중에서 안타를 친 비율을 구하면 타율이 돼.",
+              "value": "전체 타수에 대한 안타 수의 비율을 구하면 타율이 돼.",
               "isCorrect": true
             }
           ],
@@ -2910,7 +2910,7 @@
               "isCorrect": true
             },
             {
-              "value": "정도를 지나쳐서 너무 과하거나 알맞은 수준을 넘어선 상태예요.",
+              "value": "알맞은 정도를 지나치게 넘어선 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -2918,7 +2918,7 @@
               "isCorrect": false
             },
             {
-              "value": "막힘이 없이 미끄럽고 부드럽게 잘 진행되는 상태예요.",
+              "value": "일이 막힘없이 순조롭게 진행되는 상태를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2968,7 +2968,7 @@
               "isCorrect": true
             },
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 살포를 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 살포를 이루고 있어.",
               "isCorrect": false
             }
           ],
@@ -3016,7 +3016,7 @@
               "isCorrect": true
             },
             {
-              "value": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+              "value": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
               "isCorrect": false
             },
             {
@@ -3191,9 +3191,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 3,
-      "sourceDefinition": "어떤 영토나 바다를 자기 나라의 땅으로 다스릴 수 있는 권리예요.",
+      "sourceDefinition": "어떤 영토나 해역 등을 자기 나라에 속한 것으로 차지하고 다스릴 수 있는 권리를 말해요.",
       "sourceExample": "독도는 역사적으로나 지리적으로 우리나라가 확실한 영유권을 가진 땅이야.",
-      "definition": "어떤 영토나 바다를 자기 나라의 땅으로 다스릴 수 있는 권리예요.",
+      "definition": "어떤 영토나 해역 등을 자기 나라에 속한 것으로 차지하고 다스릴 수 있는 권리를 말해요.",
       "example": "독도는 역사적으로나 지리적으로 우리나라가 확실한 영유권을 가진 땅이야.",
       "flags": [],
       "duplicateReview": null,
@@ -3224,7 +3224,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 영토나 바다를 자기 나라의 땅으로 다스릴 수 있는 권리예요.",
+              "value": "어떤 영토나 해역 등을 자기 나라에 속한 것으로 차지하고 다스릴 수 있는 권리를 말해요.",
               "isCorrect": true
             }
           ]
@@ -3253,7 +3253,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 영토나 바다를 자기 나라의 땅으로 다스릴 수 있는 권리예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 영토나 해역 등을 자기 나라에 속한 것으로 차지하고 다스릴 수 있는 권리를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "영유권"
           ]
@@ -3278,7 +3278,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공전’의 쓰임이에요. ‘영유권’은 어떤 영토나 바다를 자기 나라의 땅으로 다스릴 수 있는 권리예요.",
+          "explanation": "이 문장은 원래 ‘공전’의 쓰임이에요. ‘영유권’은 어떤 영토나 해역 등을 자기 나라에 속한 것으로 차지하고 다스릴 수 있는 권리를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3497,9 +3497,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 3,
-      "sourceDefinition": "나라의 의사를 스스로 결정할 수 있는 국민의 최고의 권력이에요.",
+      "sourceDefinition": "나라의 의사를 스스로 결정할 수 있는 최고의 권력이에요.",
       "sourceExample": "우리나라의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나와.",
-      "definition": "나라의 의사를 스스로 결정할 수 있는 국민의 최고의 권력이에요.",
+      "definition": "나라의 의사를 스스로 결정할 수 있는 최고의 권력이에요.",
       "example": "우리나라의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나와.",
       "flags": [],
       "duplicateReview": null,
@@ -3526,7 +3526,7 @@
               "isCorrect": false
             },
             {
-              "value": "나라의 의사를 스스로 결정할 수 있는 국민의 최고의 권력이에요.",
+              "value": "나라의 의사를 스스로 결정할 수 있는 최고의 권력이에요.",
               "isCorrect": true
             },
             {
@@ -3559,7 +3559,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "나라의 의사를 스스로 결정할 수 있는 국민의 최고의 권력이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "나라의 의사를 스스로 결정할 수 있는 최고의 권력이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "주권"
           ]
@@ -3584,7 +3584,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘관용 표현’의 쓰임이에요. ‘주권’은 나라의 의사를 스스로 결정할 수 있는 국민의 최고의 권력이에요.",
+          "explanation": "이 문장은 원래 ‘관용 표현’의 쓰임이에요. ‘주권’은 나라의 의사를 스스로 결정할 수 있는 최고의 권력이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3734,7 +3734,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+              "value": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
               "isCorrect": false
             }
           ]

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck08",
   "deckNumber": 8,
@@ -15,8 +15,8 @@
     "examplesChanged": 0,
     "acceptedAnswersChanged": 0,
     "usageDistinctionsAuthored": 39,
-    "priorityItems": 1,
-    "sampleItems": 38,
+    "priorityItems": 0,
+    "sampleItems": 39,
     "correctedItems": 0,
     "autoDraftCorrectionRate": 0
   },
@@ -30,9 +30,9 @@
       "category": "사회와 소통",
       "level": 1,
       "sourceDefinition": "사람들이 함께 살아가기 위해 국가가 정한 강제적인 약속이에요.",
-      "sourceExample": "교통 법규를 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
+      "sourceExample": "나라에서 정한 법을 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
       "definition": "사람들이 함께 살아가기 위해 국가가 정한 강제적인 약속이에요.",
-      "example": "교통 법규를 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
+      "example": "나라에서 정한 법을 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -69,7 +69,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "교통 ＿＿＿＿규를 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
+          "prompt": "나라에서 정한 ＿＿＿＿을 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
           "options": [
             {
               "value": "반대",
@@ -98,7 +98,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "교통 ＿＿＿＿규를 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
+          "prompt": "나라에서 정한 ＿＿＿＿을 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
           "acceptedAnswers": [
             "법"
           ]
@@ -108,7 +108,7 @@
           "prompt": "다음 중 ‘법’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "교통 법규를 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
+              "value": "나라에서 정한 법을 잘 지키는 것은 우리 모두의 안전을 위한 약속이에요.",
               "isCorrect": true
             },
             {
@@ -210,7 +210,7 @@
           "prompt": "다음 중 ‘사실’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 사실을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 사실기를 틀어 습도를 높였어.",
               "isCorrect": false
             },
             {
@@ -266,7 +266,7 @@
               "isCorrect": true
             },
             {
-              "value": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+              "value": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 수도권을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 수도권기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1282,11 +1282,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -1355,13 +1355,11 @@
       "meaningNumber": 1,
       "category": "동식물과 생물",
       "level": 2,
-      "sourceDefinition": "생물이 살아나고 활동하는 데 꼭 필요한 영양분을 말해요.",
+      "sourceDefinition": "생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.",
       "sourceExample": "식물은 잎에서 햇빛을 받아 스스로 양분을 만들어 쑥쑥 자라나.",
-      "definition": "생물이 살아나고 활동하는 데 꼭 필요한 영양분을 말해요.",
+      "definition": "생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.",
       "example": "식물은 잎에서 햇빛을 받아 스스로 양분을 만들어 쑥쑥 자라나.",
-      "flags": [
-        "definition_contains_word"
-      ],
+      "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
@@ -1370,10 +1368,8 @@
         "acceptedAnswers": false
       },
       "reviewOrigin": "assisted_codex_candidate",
-      "reviewPriority": "priority",
-      "reviewReasons": [
-        "definition_contains_word"
-      ],
+      "reviewPriority": "sample",
+      "reviewReasons": [],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
@@ -1384,7 +1380,7 @@
               "isCorrect": false
             },
             {
-              "value": "생물이 살아나고 활동하는 데 꼭 필요한 영양분을 말해요.",
+              "value": "생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.",
               "isCorrect": true
             },
             {
@@ -1392,7 +1388,7 @@
               "isCorrect": false
             },
             {
-              "value": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+              "value": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
               "isCorrect": false
             }
           ]
@@ -1421,7 +1417,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "생물이 살아나고 활동하는 데 꼭 필요한 영양분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "양분"
           ]
@@ -1446,12 +1442,10 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개화’의 쓰임이에요. ‘양분’은 생물이 살아나고 활동하는 데 꼭 필요한 영양분을 말해요.",
+          "explanation": "이 문장은 원래 ‘개화’의 쓰임이에요. ‘양분’은 생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
-          "reviewPriority": "priority",
-          "reviewReasons": [
-            "definition_contains_word"
-          ],
+          "reviewPriority": "sample",
+          "reviewReasons": [],
           "sourceItemKey": "vocab:g5:개화"
         }
       }
@@ -1463,9 +1457,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 2,
-      "sourceDefinition": "여러 가지 예나 사실을 하나하나 죽 늘어놓는 것을 말해요.",
+      "sourceDefinition": "여러 가지 예나 사실을 하나하나 들어서 말하는 것을 말해요.",
       "sourceExample": "내가 좋아하는 과일로 사과, 배, 포도, 딸기를 열거해 보았어.",
-      "definition": "여러 가지 예나 사실을 하나하나 죽 늘어놓는 것을 말해요.",
+      "definition": "여러 가지 예나 사실을 하나하나 들어서 말하는 것을 말해요.",
       "example": "내가 좋아하는 과일로 사과, 배, 포도, 딸기를 열거해 보았어.",
       "flags": [],
       "duplicateReview": null,
@@ -1492,7 +1486,7 @@
               "isCorrect": false
             },
             {
-              "value": "여러 가지 예나 사실을 하나하나 죽 늘어놓는 것을 말해요.",
+              "value": "여러 가지 예나 사실을 하나하나 들어서 말하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -1525,7 +1519,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "여러 가지 예나 사실을 하나하나 죽 늘어놓는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "여러 가지 예나 사실을 하나하나 들어서 말하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "열거"
           ]
@@ -1550,7 +1544,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘건국’의 쓰임이에요. ‘열거’는 여러 가지 예나 사실을 하나하나 죽 늘어놓는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘건국’의 쓰임이에요. ‘열거’는 여러 가지 예나 사실을 하나하나 들어서 말하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1668,9 +1662,9 @@
       "category": "생각과 공부",
       "level": 2,
       "sourceDefinition": "앞으로 일어날 일을 미리 짐작해서 생각하는 거예요.",
-      "sourceExample": "주머니에서 꺼낸 공이 어떤 색일지 미리 예상해 보았어.",
+      "sourceExample": "주머니에서 꺼낼 공이 어떤 색일지 미리 예상해 보았어.",
       "definition": "앞으로 일어날 일을 미리 짐작해서 생각하는 거예요.",
-      "example": "주머니에서 꺼낸 공이 어떤 색일지 미리 예상해 보았어.",
+      "example": "주머니에서 꺼낼 공이 어떤 색일지 미리 예상해 보았어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1707,7 +1701,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "주머니에서 꺼낸 공이 어떤 색일지 미리 ＿＿＿＿해 보았어.",
+          "prompt": "주머니에서 꺼낼 공이 어떤 색일지 미리 ＿＿＿＿해 보았어.",
           "options": [
             {
               "value": "근거",
@@ -1736,7 +1730,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "주머니에서 꺼낸 공이 어떤 색일지 미리 ＿＿＿＿해 보았어.",
+          "prompt": "주머니에서 꺼낼 공이 어떤 색일지 미리 ＿＿＿＿해 보았어.",
           "acceptedAnswers": [
             "예상"
           ]
@@ -1746,7 +1740,7 @@
           "prompt": "다음 중 ‘예상’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "주머니에서 꺼낸 공이 어떤 색일지 미리 예상해 보았어.",
+              "value": "주머니에서 꺼낼 공이 어떤 색일지 미리 예상해 보았어.",
               "isCorrect": true
             },
             {
@@ -1802,7 +1796,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1896,7 +1890,7 @@
               "isCorrect": false
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -1904,7 +1898,7 @@
               "isCorrect": true
             },
             {
-              "value": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+              "value": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
               "isCorrect": false
             }
           ]
@@ -2104,7 +2098,7 @@
               "isCorrect": false
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -2210,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2406,11 +2400,11 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {
-              "value": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+              "value": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2688,9 +2682,9 @@
       "category": "말과 글",
       "level": 3,
       "sourceDefinition": "더 이상 쪼갤 수 없는 하나의 뿌리로 된 단어를 말해요.",
-      "sourceExample": "'하늘', '바다'처럼 그 자체로 뜻이 하나인 낱말을 단일어라고 해.",
+      "sourceExample": "‘하늘’, ‘바다’처럼 하나의 어근으로 이루어진 낱말을 단일어라고 해.",
       "definition": "더 이상 쪼갤 수 없는 하나의 뿌리로 된 단어를 말해요.",
-      "example": "'하늘', '바다'처럼 그 자체로 뜻이 하나인 낱말을 단일어라고 해.",
+      "example": "‘하늘’, ‘바다’처럼 하나의 어근으로 이루어진 낱말을 단일어라고 해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2708,7 +2702,7 @@
           "prompt": "‘단일어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -2727,7 +2721,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "'하늘', '바다'처럼 그 자체로 뜻이 하나인 낱말을 ＿＿＿＿라고 해.",
+          "prompt": "‘하늘’, ‘바다’처럼 하나의 어근으로 이루어진 낱말을 ＿＿＿＿라고 해.",
           "options": [
             {
               "value": "단일어",
@@ -2756,7 +2750,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "'하늘', '바다'처럼 그 자체로 뜻이 하나인 낱말을 ＿＿＿＿라고 해.",
+          "prompt": "‘하늘’, ‘바다’처럼 하나의 어근으로 이루어진 낱말을 ＿＿＿＿라고 해.",
           "acceptedAnswers": [
             "단일어"
           ]
@@ -2766,7 +2760,7 @@
           "prompt": "다음 중 ‘단일어’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "'하늘', '바다'처럼 그 자체로 뜻이 하나인 낱말을 단일어라고 해.",
+              "value": "‘하늘’, ‘바다’처럼 하나의 어근으로 이루어진 낱말을 단일어라고 해.",
               "isCorrect": true
             },
             {
@@ -2891,9 +2885,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 3,
-      "sourceDefinition": "상대방의 의견이 틀렸음을 지적하며 다시 공격하는 말이나 글이에요.",
+      "sourceDefinition": "다른 사람의 의견이나 주장에 잘못된 점이 있음을 근거를 들어 말하는 것을 말해요.",
       "sourceExample": "친구가 내 생각이 틀렸다고 하자 나는 근거를 들어 반박했어.",
-      "definition": "상대방의 의견이 틀렸음을 지적하며 다시 공격하는 말이나 글이에요.",
+      "definition": "다른 사람의 의견이나 주장에 잘못된 점이 있음을 근거를 들어 말하는 것을 말해요.",
       "example": "친구가 내 생각이 틀렸다고 하자 나는 근거를 들어 반박했어.",
       "flags": [],
       "duplicateReview": null,
@@ -2912,7 +2906,7 @@
           "prompt": "‘반박’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "상대방의 의견이 틀렸음을 지적하며 다시 공격하는 말이나 글이에요.",
+              "value": "다른 사람의 의견이나 주장에 잘못된 점이 있음을 근거를 들어 말하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -2953,7 +2947,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "상대방의 의견이 틀렸음을 지적하며 다시 공격하는 말이나 글이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 사람의 의견이나 주장에 잘못된 점이 있음을 근거를 들어 말하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "반박"
           ]
@@ -2978,7 +2972,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고기압’의 쓰임이에요. ‘반박’은 상대방의 의견이 틀렸음을 지적하며 다시 공격하는 말이나 글이에요.",
+          "explanation": "이 문장은 원래 ‘고기압’의 쓰임이에요. ‘반박’은 다른 사람의 의견이나 주장에 잘못된 점이 있음을 근거를 들어 말하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2993,9 +2987,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "세상 사람들에게 널리 알려서 알리는 것을 말해요.",
+      "sourceDefinition": "법령이나 새로 정한 내용 등을 세상에 널리 알리는 것을 말해요.",
       "sourceExample": "세종대왕은 훈민정음을 창제하시고 백성들을 위해 널리 반포하셨어요.",
-      "definition": "세상 사람들에게 널리 알려서 알리는 것을 말해요.",
+      "definition": "법령이나 새로 정한 내용 등을 세상에 널리 알리는 것을 말해요.",
       "example": "세종대왕은 훈민정음을 창제하시고 백성들을 위해 널리 반포하셨어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3018,7 +3012,7 @@
               "isCorrect": false
             },
             {
-              "value": "세상 사람들에게 널리 알려서 알리는 것을 말해요.",
+              "value": "법령이나 새로 정한 내용 등을 세상에 널리 알리는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3055,7 +3049,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "세상 사람들에게 널리 알려서 알리는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "법령이나 새로 정한 내용 등을 세상에 널리 알리는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "반포"
           ]
@@ -3080,7 +3074,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘반포’는 세상 사람들에게 널리 알려서 알리는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘반포’는 법령이나 새로 정한 내용 등을 세상에 널리 알리는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3328,7 +3322,7 @@
               "isCorrect": false
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
@@ -3382,7 +3376,7 @@
               "isCorrect": true
             },
             {
-              "value": "슬퍼하는 친구의 마음을 용질해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 용질해 주면 큰 위로가 된단다.",
               "isCorrect": false
             }
           ],
@@ -3842,7 +3836,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]
@@ -3912,9 +3906,9 @@
       "category": "우리 역사",
       "level": 3,
       "sourceDefinition": "전쟁터로 향하던 군대를 가던 길에서 되돌리는 것을 말해요.",
-      "sourceExample": "이성계는 위화도에서 군대를 회군하여 고려를 무너뜨리고 조선을 세울 기틀을 마련했어요.",
+      "sourceExample": "이성계는 위화도에서 회군하여 조선을 세울 기틀을 마련했어요.",
       "definition": "전쟁터로 향하던 군대를 가던 길에서 되돌리는 것을 말해요.",
-      "example": "이성계는 위화도에서 군대를 회군하여 고려를 무너뜨리고 조선을 세울 기틀을 마련했어요.",
+      "example": "이성계는 위화도에서 회군하여 조선을 세울 기틀을 마련했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3951,7 +3945,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "이성계는 위화도에서 군대를 ＿＿＿＿하여 고려를 무너뜨리고 조선을 세울 기틀을 마련했어요.",
+          "prompt": "이성계는 위화도에서 ＿＿＿＿하여 조선을 세울 기틀을 마련했어요.",
           "options": [
             {
               "value": "회군",
@@ -3980,7 +3974,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "이성계는 위화도에서 군대를 ＿＿＿＿하여 고려를 무너뜨리고 조선을 세울 기틀을 마련했어요.",
+          "prompt": "이성계는 위화도에서 ＿＿＿＿하여 조선을 세울 기틀을 마련했어요.",
           "acceptedAnswers": [
             "회군"
           ]
@@ -3990,7 +3984,7 @@
           "prompt": "다음 중 ‘회군’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "이성계는 위화도에서 군대를 회군하여 고려를 무너뜨리고 조선을 세울 기틀을 마련했어요.",
+              "value": "이성계는 위화도에서 회군하여 조선을 세울 기틀을 마련했어요.",
               "isCorrect": true
             },
             {

@@ -1,25 +1,37 @@
 /**
- * 퀴즈 아레나 **기본(공식) 문제 세트** 만들기 (2026-10-23, 선생님 요청).
+ * 퀴즈 아레나 **기본(공식) 문제 세트** 만들기 — 2026-10-23 판(문항 형식 다양화).
  *
- * 아지트에 이미 있는 어휘·맞춤법 자료로 고정 세트를 만든다 — 학년별 어휘 10세트(3~6학년 = 40세트) +
- * 맞춤법 수준별(하·중·상) 10세트씩(30세트), 세트마다 15문제 또는 20문제. 같은 입력이면 항상 같은 세트가 나온다(난수는 고정 씨앗).
- * 결과는 `public/quiz-arena/official-sets-v1.json` 으로 내보내고(`scripts/build-quiz-arena-official-sets.mjs`),
- * 교사 화면의 `기본 세트` 탭이 그 파일을 읽는다. 문제 모양·한도는 `quizSetBuilder.js`(= 게임 서버 검증)를 따른다.
+ * 아지트의 어휘·맞춤법 자료로 고정 세트를 만든다. 같은 입력이면 항상 같은 세트가 나온다(난수는 고정 씨앗).
+ *   · 어휘: 학년(3~6) × 수준(쉬움·보통·어려움) 별 세트. 한 세트는 같은 수준 낱말만 모으고, 문항 형식은 섞는다.
+ *       4지선다(뜻→낱말) · 4지선다(예문 빈칸) · 2지선다(예문 빈칸) · O/X(낱말과 뜻이 맞는지)
+ *   · 맞춤법: 수준(하·중·상)별 10세트. 문항 형식은 섞는다.
+ *       O/X(바르게 쓴 문장인지) · 2지선다(빈칸에 알맞은 말) · 4지선다(바르게/틀리게 쓴 말 고르기)
+ * 세트마다 15문제 또는 20문제. 결과는 `public/quiz-arena/official-sets-v1.json`(`scripts/build-quiz-arena-official-sets.mjs`).
+ * 문제 모양·글자 수 한도는 `quizSetBuilder.js`(= 게임 서버 검증)를 따른다.
  *
- * 검토에서 지적된 문제(정답이 둘로 읽히는 보기·어색한 문장 등)는 `exclusions` 로 빼고, 빠진 자리는 같은 수준의 다른 자료로
- * 채운다(`scripts/quiz-arena-official-exclusions.json`). 한 자료는 한 학년(수준)의 모든 세트를 통틀어 한 번만 쓴다.
+ * 검토에서 지적된 자료는 `exclusions`(`scripts/quiz-arena-official-exclusions.json`)로 빼고, 그 자리만 같은 수준의 예비 자료로 채운다 —
+ * 자리마다 형식이 정해져 있고 예비는 뒤쪽에서 꺼내므로, 자료 하나를 빼도 다른 세트가 밀리지 않는다(다시 검토할 문제가 최소).
  */
 import { QUIZ_BLANK } from '../spelling-claw/quiz/spellingQuizBuilder.js';
 import { ARENA_LIMITS, fitExplanation, validateArenaQuestions } from './quizSetBuilder.js';
 
-export const OFFICIAL_SET_COUNT = 10;
 export const OFFICIAL_SET_SIZES = Object.freeze([15, 20]);
+export const SPELLING_SET_COUNT = 10;
+export const VOCAB_LEVELS = Object.freeze([
+    { level: 1, id: 'easy', label: '쉬움' },
+    { level: 2, id: 'normal', label: '보통' },
+    { level: 3, id: 'hard', label: '어려움' }
+]);
 export const SPELLING_LEVELS = Object.freeze([
     { id: 'low', level: 1, label: '하', title: '쉬움' },
     { id: 'mid', level: 2, label: '중', title: '보통' },
     { id: 'high', level: 3, label: '상', title: '어려움' }
 ]);
+/** 세트 크기별 형식 개수(합 = 크기). */
+export const VOCAB_FORMAT_PLAN = Object.freeze({ 15: { def: 4, blank: 4, pair: 4, ox: 3 }, 20: { def: 6, blank: 5, pair: 5, ox: 4 } });
+export const SPELLING_FORMAT_PLAN = Object.freeze({ 15: { ox: 5, pair: 5, pick: 5 }, 20: { ox: 7, pair: 7, pick: 6 } });
 
+const hash = (text) => { let h = 2166136261; for (const ch of String(text)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const mulberry32 = (seed) => () => {
     seed = (seed + 0x6D2B79F5) >>> 0;
     let t = seed;
@@ -28,192 +40,255 @@ const mulberry32 = (seed) => () => {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 const shuffle = (list, rng) => list.map((value) => ({ value, key: rng() })).sort((a, b) => a.key - b.key).map(({ value }) => value);
+/** 항목마다 고정된 키로 정렬 — 목록 구성이 바뀌어도 나머지 순서가 그대로다. */
+const stableOrder = (list, tag, keyOf) => [...list].sort((a, b) => hash(`${tag}|${keyOf(a)}`) - hash(`${tag}|${keyOf(b)}`));
+/** 맞춤법 자료의 해설 가운데 교차 검토에서 부정확하다고 지적된 문구를 바로잡는다(자료 원본은 인형뽑기와 함께 쓰므로 여기서만 고친다). */
+const EXPLANATION_FIXES = Object.freeze([
+    ['외래어는 된소리(ㄲ·ㄸ·ㅃ·ㅆ·ㅉ)로 적지 않는 것이 원칙이라', '외래어 표기법에 따라'],
+    ['‘달라, 달랐다’에서만 ‘ㄹ’이 하나 더 생겨요.', '‘-아’가 붙으면 ‘달라’처럼 ‘ㄹ’이 하나 더 생겨요.'],
+    ['‘몰라, 몰랐다’에서만 ‘ㄹ’이 하나 더 생겨요.', '‘-아’가 붙으면 ‘몰라’처럼 ‘ㄹ’이 하나 더 생겨요.'],
+    ['매일을 뜻하는 ‘마다’는 앞말에 붙여 써요.', '‘마다’는 하나하나 모두를 뜻하는 조사라서 앞말에 붙여 써요.'],
+    ['‘ㅂ’이 바뀌는 말은 ‘-워’로 적어서 ‘무서워’예요.', '‘무섭다’에 ‘-어’가 붙으면 ‘ㅂ’이 ‘우’로 바뀌어 ‘무서워’가 돼요.'],
+    ['낱말 사이를 ‘띄우다’에서 온 말이라 ‘띄어쓰기’예요.', '낱말 사이를 띄어 쓰는 일이라 ‘띄어쓰기’예요.'],
+    ['뒤 글자가 된소리·거센소리이거나 한자어끼리 합친 말이라 사이시옷을 쓰지 않아서 ‘위층 집’이에요.', '‘층’이 거센소리로 시작하므로 사이시옷 없이 ‘위층’으로 쓰고, ‘집’은 띄어 ‘위층 집’으로 적어요.']
+]);
+const fixExplanation = (text) => EXPLANATION_FIXES.reduce((acc, [from, to]) => acc.replaceAll(from, to), String(text ?? ''));
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
-/** 세트 크기: 홀수 번째 15문제, 짝수 번째 20문제. */
-export const sizeOfSet = (index) => OFFICIAL_SET_SIZES[index % 2];
-const sum = (list) => list.reduce((a, b) => a + b, 0);
+const sizeOfSet = (index) => OFFICIAL_SET_SIZES.at(index % 2);
+const vocabPlanOf = (size) => (size === 15 ? VOCAB_FORMAT_PLAN[15] : VOCAB_FORMAT_PLAN[20]);
+const spellingPlanOf = (size) => (size === 15 ? SPELLING_FORMAT_PLAN[15] : SPELLING_FORMAT_PLAN[20]);
+export const stripMeta = (question) => { const copy = { ...question }; delete copy.meta; return copy; };
 
-/** 난이도 칸 수(세트 크기 → 쉬움·보통·어려움 문제 수). 합이 크기와 같다. */
-const splitCounts = (size, ratio) => {
-    const counts = ratio.map((r) => Math.floor(size * r));
-    let rest = size - sum(counts);
-    for (let i = 0; rest > 0; i = (i + 1) % counts.length, rest -= 1) counts[i] += 1; // eslint-disable-line security/detect-object-injection
-    return counts;
+const hasFinal = (word) => { const code = clean(word).codePointAt(clean(word).length - 1) - 0xac00; return code >= 0 && code <= 11171 && code % 28 !== 0; };
+const eunNeun = (word) => {
+    const code = clean(word).codePointAt(clean(word).length - 1) - 0xac00;
+    return code >= 0 && code <= 11171 ? (code % 28 === 0 ? '는' : '은') : '은(는)';
 };
+const formatSequence = (plan, rng) => shuffle(Object.entries(plan).flatMap(([name, count]) => Array.from({ length: count }, () => name)), rng);
 
 /* ---------------- 어휘 ---------------- */
 
-const DEF_PREFIX = '뜻에 알맞은 낱말은? ';
-const EX_PREFIX = '빈칸에 알맞은 낱말은? ';
-
-/** 낱말 하나로 만들 수 있는 문제 모양들(뜻형·예문 빈칸형). */
-const vocabForms = (word, limits) => {
-    const text = clean(word.word);
-    const forms = [];
-    const definition = clean(word.definition);
-    if (definition && !definition.includes(text) && DEF_PREFIX.length + definition.length <= limits.question) {
-        forms.push({ type: 'def', text: `${DEF_PREFIX}${definition}` });
+const vocabQuestion = (format, word, helpers) => {
+    const { limits, rng, others, confusable = new Set(), isBad = () => false } = helpers;
+    const name = clean(word.word), def = clean(word.definition), example = clean(word.example);
+    const blanked = example.includes(name) ? example.replace(name, QUIZ_BLANK) : '';
+    const exFits = (prefix) => blanked && !blanked.includes(name) && `${prefix}${blanked}`.length <= limits.question;
+    const pickFrom = (list, count) => { const out = []; for (const w of list) { const n = clean(w.word); if (n !== name && n.length <= limits.choice && !out.includes(n) && !def.includes(n) && !confusable.has([name, n].sort().join('|')) && !isBad(n)) out.push(n); if (out.length === count) break; } return out; };
+    const sameCat = shuffle(others.filter((w) => w.category === word.category), rng);
+    const otherCat = shuffle(others.filter((w) => w.category !== word.category), rng);
+    if (format === 'def') {
+        const text = `뜻에 알맞은 낱말은? ${def}`;
+        if (def.includes(name) || text.length > limits.question) return null;
+        const distractors = pickFrom([...sameCat, ...otherCat], 3);
+        if (distractors.length < 3) return null;
+        const choices = shuffle([name, ...distractors], rng);
+        return { kind: 'c4', text, choices, answer: choices.indexOf(name), explanation: fitExplanation(example, limits.explanation) };
     }
-    const example = clean(word.example);
-    if (example.includes(text)) {
-        const blanked = example.replace(text, QUIZ_BLANK);
-        if (!blanked.includes(text) && EX_PREFIX.length + blanked.length <= limits.question) forms.push({ type: 'ex', text: `${EX_PREFIX}${blanked}` });
+    if (format === 'blank') {
+        if (!exFits('빈칸에 알맞은 낱말은? ')) return null;
+        const distractors = pickFrom([...sameCat, ...otherCat], 3);
+        if (distractors.length < 3) return null;
+        const choices = shuffle([name, ...distractors], rng);
+        return { kind: 'c4', text: `빈칸에 알맞은 낱말은? ${blanked}`, choices, answer: choices.indexOf(name), explanation: fitExplanation(def, limits.explanation) };
     }
-    return forms;
+    if (format === 'pair') {
+        if (!exFits('알맞은 낱말은? ')) return null;
+        const distractor = pickFrom(otherCat, 1);
+        if (!distractor.length) return null;
+        const choices = shuffle([name, distractor.at(0)], rng);
+        return { kind: 'c2', text: `알맞은 낱말은? ${blanked}`, choices, answer: choices.indexOf(name), explanation: fitExplanation(def, limits.explanation) };
+    }
+    // ox: 낱말과 뜻이 맞는지(거짓은 다른 분류 낱말의 뜻을 붙인다 — 확실히 거짓이 되도록)
+    const budget = limits.question - (`‘${name}’${eunNeun(name)} `).length;
+    const wantTrue = rng() < 0.5;
+    if (wantTrue) {
+        if (def.length > budget || def.includes(name)) return null;
+        return { kind: 'ox', text: `‘${name}’${eunNeun(name)} ${def}`, answer: 0, explanation: fitExplanation(example, limits.explanation) };
+    }
+    const wrong = otherCat.find((w) => clean(w.definition).length <= budget && !clean(w.definition).includes(name) && !clean(w.definition).includes(clean(w.word))) ?? null;
+    if (!wrong) return null;
+    return { kind: 'ox', text: `‘${name}’${eunNeun(name)} ${clean(wrong.definition)}`, answer: 1, explanation: fitExplanation(`‘${name}’${eunNeun(name)} ${def}`, limits.explanation) };
 };
 
-const pickDistractors = (target, grade, words, rng) => {
-    const name = clean(target.word);
-    const same = shuffle(words.filter((w) => w.category === target.category && clean(w.word) !== name), rng);
-    const others = shuffle(words.filter((w) => w.category !== target.category && clean(w.word) !== name), rng);
+const buildVocabLevel = (grade, lv, ordered, unique, setCount, banned, limits, confusable) => {
+    const rng = mulberry32(hash(`vocab|${grade}|${lv.level}`));
+    const sizes = Array.from({ length: setCount }, (_, index) => sizeOfSet(index));
+    const need = sizes.reduce((a, b) => a + b, 0);
+    const main = ordered.slice(0, need);
+    const reserve = ordered.slice(need);
+    let cursor = 0;
     const out = [];
-    for (const w of [...same, ...others]) {
-        const candidate = clean(w.word);
-        if (candidate.length <= ARENA_LIMITS.choice && !out.includes(candidate) && !clean(target.definition).includes(candidate)) out.push(candidate);
-        if (out.length === 3) break;
+    for (const [s, size] of sizes.entries()) {
+        const sequence = formatSequence(vocabPlanOf(size), rng);
+        const remaining = { ...vocabPlanOf(size) };
+        const questions = [];
+        const attempt = (candidate) => {
+            if (banned.has(`g${grade}:${clean(candidate.word)}`)) return null;
+            const preferred = sequence.at(questions.length);
+            const order = [preferred, ...Object.keys(remaining).filter((f) => f !== preferred)].filter((f) => remaining[f] > 0); // eslint-disable-line security/detect-object-injection
+            const others = unique.filter((w) => clean(w.word) !== clean(candidate.word));
+            for (const format of order) {
+                const q = vocabQuestion(format, candidate, { limits, rng: mulberry32(hash(`vq|${grade}|${clean(candidate.word)}|${format}`)), others, confusable, isBad: (word) => banned.has(`g${grade}:${word}`) });
+                if (q) { remaining[format] -= 1; return { ...q, meta: { level: lv.level, word: clean(candidate.word), format } }; } // eslint-disable-line security/detect-object-injection
+            }
+            return null;
+        };
+        while (questions.length < size) {
+            // 자리마다 정해진 낱말(main)을 먼저 쓰고, 제외·실패하면 그 자리만 예비(reserve)에서 채워 다른 세트가 밀리지 않게 한다
+            let made = cursor < main.length ? attempt(main.at(cursor++)) : null;
+            while (!made) {
+                const spare = reserve.shift();
+                if (!spare) return null;
+                made = attempt(spare);
+            }
+            questions.push(made);
+        }
+        out.push({
+            id: `official-vocab-g${grade}-${lv.id}-${String(s + 1).padStart(2, '0')}`,
+            title: `${grade}학년 어휘 ${lv.label} ${s + 1}`,
+            grade,
+            subject: '국어',
+            unit: '어휘',
+            description: `${grade}학년 ${lv.label} 수준 낱말을 O/X·2지선다·4지선다로 풀어요. ${questions.length}문제.`,
+            kind: 'vocab',
+            level: lv.level,
+            questions: shuffle(questions, rng)
+        });
     }
     return out;
 };
 
-/** 검토용 표식(`meta`)을 뺀 문제(서버로 보내는 모양). */
-export const stripMeta = (question) => {
-    const copy = { ...question };
-    delete copy.meta;
-    return copy;
-};
-
-/** 같은 낱말이 자료에 두 번 있으면 첫 번째만 쓴다. */
-const uniqueWords = (words) => {
+/** 학년 하나의 어휘 세트(수준별). 한 낱말은 그 학년의 모든 세트를 통틀어 한 번만 나온다. */
+export const buildVocabSets = (grade, words, { exclusions = [], excludedWords = [], confusable = [], limits = ARENA_LIMITS } = {}) => {
+    const banned = new Set([...exclusions, ...excludedWords].map((item) => String(item)));
     const seen = new Set();
-    return words.filter((w) => {
-        const key = clean(w.word);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
-};
-
-/** 학년 하나의 어휘 세트 10개. 한 낱말은 그 학년 세트들을 통틀어 한 번만 나온다. 쉬움·보통·어려움(자료의 level 1·2·3)을 4:4:2 로 섞는다. */
-export const buildVocabSets = (grade, words, { exclusions = [], limits = ARENA_LIMITS } = {}) => {
-    const rng = mulberry32(1000 + grade);
-    words = uniqueWords(words);
-    const banned = new Set(exclusions);
-    // 검토에서 뺀 낱말 때문에 뒤쪽 세트가 통째로 밀리지 않게: 섞은 순서는 그대로 두고, 세트에 들어갈 몫(main)과 대체용(reserve)으로 나눈 뒤
-    // 뺀 낱말이 걸리면 그 자리만 reserve 에서 채운다.
-    const byLevel = new Map([1, 2, 3].map((level) => [level, shuffle(words.filter((w) => w.level === level && vocabForms(w, limits).length), rng)]));
-    const need = [0, 0, 0];
-    for (let s = 0; s < OFFICIAL_SET_COUNT; s += 1) splitCounts(sizeOfSet(s), [0.4, 0.4, 0.2]).forEach((count, i) => { need[i] += count; }); // eslint-disable-line security/detect-object-injection
-    const reserve = new Map([1, 2, 3].map((level) => [level, byLevel.get(level).splice(need[level - 1])]));
+    const unique = words.filter((w) => { const key = clean(w.word); if (seen.has(key)) return false; seen.add(key); return true; });
     const sets = [];
-    for (let s = 0; s < OFFICIAL_SET_COUNT; s += 1) {
-        const size = sizeOfSet(s);
-        const counts = splitCounts(size, [0.4, 0.4, 0.2]);
-        const questions = [];
-        [1, 2, 3].forEach((level, li) => {
-            // 그 수준 자료가 바닥나면(검토에서 뺀 뒤 쉬운 낱말이 모자라는 학년) 가까운 수준에서 채운다
-            const order = [level, ...[1, 2, 3].filter((l) => l !== level).sort((x, y) => Math.abs(x - level) - Math.abs(y - level))];
-            for (let n = 0; n < counts[li]; n += 1) { // eslint-disable-line security/detect-object-injection
-                const pool = order.map((l) => byLevel.get(l)).find((list) => list.length);
-                if (!pool) break;
-                let word = pool.shift();
-                while (word && banned.has(`g${grade}:${clean(word.word)}`)) word = order.map((l) => reserve.get(l)).find((list) => list.length)?.shift();
-                if (!word) break;
-                const forms = vocabForms(word, limits);
-                // 뜻형을 먼저, 한 세트에서 예문형이 약 40% 되도록 번갈아 쓴다
-                const wantEx = (questions.length % 5) >= 3;
-                const form = forms.find((f) => f.type === (wantEx ? 'ex' : 'def')) || forms[0];
-                const distractors = pickDistractors(word, grade, words, rng);
-                if (distractors.length < 3) { n -= 1; continue; }
-                const choices = shuffle([clean(word.word), ...distractors], rng);
-                const explanation = fitExplanation(form.type === 'def' ? word.example : word.definition, limits.explanation);
-                questions.push({ kind: 'c4', text: form.text, choices, answer: choices.indexOf(clean(word.word)), ...(explanation ? { explanation } : {}), meta: { level, word: clean(word.word) } });
-            }
-        });
-        const mixed = shuffle(questions, rng);
-        sets.push({
-            id: `official-vocab-g${grade}-${String(s + 1).padStart(2, '0')}`,
-            title: `${grade}학년 어휘 ${s + 1}세트`,
-            grade,
-            subject: '국어',
-            unit: '어휘 익히기',
-            description: `뜻과 예문으로 ${grade}학년 낱말을 익혀요. ${mixed.length}문제, 쉬운 문제와 어려운 문제가 섞여 있어요.`,
-            kind: 'vocab',
-            questions: mixed
-        });
+    for (const lv of VOCAB_LEVELS) {
+        const ordered = stableOrder(unique.filter((w) => w.level === lv.level), `vocab|${grade}|${lv.level}`, (w) => clean(w.word));
+        // 세트 수를 줄여 가며 모든 세트가 정해진 크기로 채워지는 가장 많은 수를 찾는다(예비 자료를 남겨 둔다).
+        for (let setCount = Math.max(1, Math.floor((ordered.length * 0.9) / 17.5)); setCount >= 1; setCount -= 1) {
+            const built = buildVocabLevel(grade, lv, ordered, unique, setCount, banned, limits, new Set(confusable.map((pair) => [...pair].sort().join('|'))));
+            if (built) { sets.push(...built); break; }
+        }
     }
     return sets;
 };
 
 /* ---------------- 맞춤법 ---------------- */
 
-const toStatement = (item, shown) => {
-    const sentence = String(item.prompt).includes(QUIZ_BLANK) ? String(item.prompt).replace(QUIZ_BLANK, shown) : shown;
-    return clean(sentence);
+const statementOf = (item, shown) => clean(String(item.prompt).includes(QUIZ_BLANK) ? String(item.prompt).replace(QUIZ_BLANK, shown) : shown);
+const SINGLE_WORD_CATEGORIES = /^(외래어|낱말 표기|합성어·사이시옷)\//u;
+
+/** 낱말 표기 항목에서 `바른 말 / 틀린 말` 한 쌍을 꺼낸다(바른 말이 정답인 단어 표기 항목만). */
+const spellingPairOf = (entry) => {
+    if (!SINGLE_WORD_CATEGORIES.test(`${entry.category}/${entry.subcategory}`)) return null;
+    const [right, wrong, extra] = clean(entry.learningLabel || entry.question).split(' / ').map(clean);
+    if (!right || !wrong || extra !== undefined || right === wrong || clean(entry.answer) !== right) return null;
+    if (right.length > ARENA_LIMITS.choice || wrong.length > ARENA_LIMITS.choice) return null;
+    return { right, wrong };
 };
 
-/** 맞춤법 O/X 세트: 수준(하·중·상)마다 10세트. 자료는 수준 맵(`difficulty`: 항목키 → 1·2·3)으로 나눈다. 한 항목은 모든 맞춤법 세트를 통틀어 한 번만. */
-export const buildSpellingSets = (pool, difficulty, { exclusions = [], limits = ARENA_LIMITS } = {}) => {
+/** 맞춤법 세트: 수준(하·중·상)마다 10세트. 자료는 수준 맵(`difficulty`: 항목키 → 1·2·3)으로 나눈다. 한 항목은 모든 맞춤법 세트를 통틀어 한 번만. */
+export const buildSpellingSets = (pool, lookupEntries, difficulty, { exclusions = [], badForms = [], limits = ARENA_LIMITS } = {}) => {
     const banned = new Set(exclusions);
-    const items = (pool || []).filter((item) => item.kind === 'choice' && item.choices?.length === 2 && item.answer);
-    // 항목(entryKey)마다 문제 하나: 보여 줄 문장이 한도 안이어야 한다
-    const byEntry = new Map();
-    items.forEach((item) => {
-        if (byEntry.has(item.entryKey)) return;
-        const lengths = item.choices.map((shown) => `바르게 쓴 문장일까요? ${toStatement(item, shown)}`.length);
-        if (Math.max(...lengths) <= limits.question) byEntry.set(item.entryKey, item);
+    // 복수 표준어처럼 '틀린 표기'로 쓰면 안 되는 말이 들어 있는 항목은 통째로 뺀다
+    const bad = new Set(badForms);
+    for (const entry of lookupEntries || []) if (clean(entry.learningLabel || entry.question).split(' / ').some((form) => bad.has(clean(form)))) banned.add(`base:${entry.id}`);
+    const choiceItems = new Map(); // 항목당 문제 재료(문장형 우선) — O/X 용
+    const blankItems = new Map(); // 항목당 빈칸형 재료 — 2지선다 용
+    (pool || []).filter((item) => item.kind === 'choice' && item.choices?.length === 2 && item.answer).forEach((item) => {
+        const target = String(item.prompt).includes(QUIZ_BLANK) ? blankItems : choiceItems;
+        if (!target.has(item.entryKey)) target.set(item.entryKey, item);
     });
+    blankItems.forEach((item, key) => { if (!choiceItems.has(key)) choiceItems.set(key, item); });
+    const pairs = new Map();
+    for (const entry of lookupEntries || []) { const pair = spellingPairOf(entry); if (pair) pairs.set(`base:${entry.id}`, pair); }
+    const allRight = new Set([...pairs.values()].map((p) => p.right));
     const used = new Set();
-    const usedTexts = new Set(); // 문장이 같은 다른 항목도 한 번만(같은 문제가 두 번 나오지 않게)
-    const statementsOf = (item) => item.choices.map((shown) => toStatement(item, shown));
+    const usedTexts = new Set();
+    const levelOf = (key) => difficulty[key]; // eslint-disable-line security/detect-object-injection
     const sets = [];
     for (const lv of SPELLING_LEVELS) {
-        const rng = mulberry32(2000 + lv.level);
-        const poolOf = (level) => shuffle([...byEntry.values()].filter((item) => difficulty[item.entryKey] === level && !used.has(item.entryKey)), rng);
-        const own = poolOf(lv.level);
-        // 가까운 수준을 30% 섞는다(하·상은 중, 중은 하·상 절반씩)
-        const near = lv.level === 2 ? [poolOf(1), poolOf(3)] : [poolOf(2)];
-        for (let s = 0; s < OFFICIAL_SET_COUNT; s += 1) {
-            const size = sizeOfSet(s);
-            const nearCount = Math.round(size * 0.3);
-            const picked = [];
-            // 검토에서 뺀 항목이 앞에서 걸리면 그 자리만 같은 목록의 뒤쪽(대체용)에서 채워, 다른 세트가 밀리지 않게 한다
-            const take = (list) => {
-                let next = list.shift();
-                while (next && (banned.has(next.entryKey) || used.has(next.entryKey))) next = list.pop();
-                return next;
-            };
-            for (let n = 0; n < size - nearCount && own.length; n += 1) { const next = take(own); if (next) picked.push(next); }
-            for (let n = 0; picked.length < size; n += 1) {
-                const source = near[n % near.length];
-                const next = take(source) || take(own) || take(near.flat());
-                if (!next) break;
-                picked.push(next);
+        const tag = `spelling|${lv.level}`;
+        const rng = mulberry32(hash(tag));
+        const inLevel = (key) => levelOf(key) === lv.level;
+        const queue = (keys) => stableOrder(keys.filter(inLevel), tag, (key) => key);
+        const pickQueue = queue([...pairs.keys()]);
+        const pairQueue = queue([...blankItems.keys()]);
+        const oxQueue = queue([...choiceItems.keys()]);
+        const take = (list, accept) => {
+            // 앞에서 꺼낸 항목이 제외·실패하면 목록 뒤쪽(예비)에서 채워, 뒤의 세트들이 밀리지 않게 한다
+            let key = list.shift();
+            while (key !== undefined) {
+                if (!used.has(key) && !banned.has(key)) {
+                    const made = accept(key);
+                    if (made) return { key, made };
+                }
+                key = list.pop();
             }
-            // 같은 문장이 이미 쓰였으면 그 항목은 빼고 같은 풀에서 채운다
-            for (let i = picked.length - 1; i >= 0; i -= 1) {
-                const statements = statementsOf(picked[i]); // eslint-disable-line security/detect-object-injection
-                if (statements.some((t) => usedTexts.has(t))) {
-                    picked.splice(i, 1);
-                    const spare = [...own, ...near.flat()].find((c) => !used.has(c.entryKey) && !picked.includes(c) && !statementsOf(c).some((t) => usedTexts.has(t)));
-                    if (spare) { picked.push(spare); [own, ...near].forEach((list) => { const at = list.indexOf(spare); if (at >= 0) list.splice(at, 1); }); }
+            return null;
+        };
+        const makePick = (key) => {
+            const pair = pairs.get(key);
+            const askWrong = hash(`${tag}|${key}|ask`) % 2 === 0; // 반은 "틀린 것"을 묻는다
+            const others = stableOrder([...pairs.keys()].filter((k) => k !== key), `${tag}|${key}|opts`, (k) => k).map((k) => pairs.get(k));
+            let choices;
+            if (askWrong) {
+                const rights = others.map((p) => p.right).filter((r) => r !== pair.wrong && r !== pair.right);
+                choices = [...new Set(rights)].slice(0, 3);
+                if (choices.length < 3) return null;
+                choices = shuffle([pair.wrong, ...choices], mulberry32(hash(`${key}|c`)));
+                return { kind: 'c4', text: '맞춤법이 틀린 것은?', choices, answer: choices.indexOf(pair.wrong), explanation: fitExplanation(`‘${pair.wrong}’${eunNeun(pair.wrong)} 틀린 표기예요. 바른 표기는 ‘${pair.right}’${hasFinal(pair.right) ? '이에요' : '예요'}.`, limits.explanation) };
+            }
+            const wrongs = others.map((p) => p.wrong).filter((w) => w !== pair.right && !allRight.has(w));
+            choices = [...new Set(wrongs)].slice(0, 3);
+            if (choices.length < 3) return null;
+            choices = shuffle([pair.right, ...choices], mulberry32(hash(`${key}|c`)));
+            return { kind: 'c4', text: '맞춤법이 맞는 것은?', choices, answer: choices.indexOf(pair.right), explanation: fitExplanation(`바른 표기는 ‘${pair.right}’${hasFinal(pair.right) ? '이에요' : '예요'}. ‘${pair.wrong}’${eunNeun(pair.wrong)} 틀려요.`, limits.explanation) };
+        };
+        const makePair = (key) => {
+            const item = blankItems.get(key);
+            const text = `빈칸에 알맞은 말은? ${clean(item.prompt)}`;
+            if (text.length > limits.question || item.choices.some((c) => clean(c).length > limits.choice)) return null;
+            const choices = shuffle(item.choices.map(clean), mulberry32(hash(`${key}|p`)));
+            return { kind: 'c2', text, choices, answer: choices.indexOf(clean(item.answer)), explanation: fitExplanation(fixExplanation(item.explanation), limits.explanation) };
+        };
+        const makeOx = (key) => {
+            const item = choiceItems.get(key);
+            const right = hash(`${tag}|${key}|ox`) % 2 === 0;
+            const shown = right ? item.answer : item.choices.find((c) => c !== item.answer);
+            const sentence = statementOf(item, shown);
+            const text = `${/[.!?]$/u.test(sentence) ? '바르게 쓴 문장일까요?' : '바르게 쓴 말일까요?'} ${sentence}`;
+            if (text.length > limits.question || usedTexts.has(sentence)) return null;
+            return { kind: 'ox', text, answer: right ? 0 : 1, explanation: fitExplanation(fixExplanation(item.explanation), limits.explanation), sentence };
+        };
+        for (let s = 0; s < SPELLING_SET_COUNT; s += 1) {
+            const size = sizeOfSet(s);
+            const questions = [];
+            const queues = { pick: [pickQueue, makePick], pair: [pairQueue, makePair], ox: [oxQueue, makeOx] };
+            for (const preferred of formatSequence(spellingPlanOf(size), rng)) {
+                // 그 형식의 자료가 바닥나면 다른 형식으로 채운다(자리마다 형식이 정해져 있어 다른 세트는 밀리지 않는다)
+                for (const format of [preferred, ...['ox', 'pair', 'pick'].filter((f) => f !== preferred)]) {
+                    const [list, make] = queues[format]; // eslint-disable-line security/detect-object-injection
+                    const got = take(list, make);
+                    if (!got) continue;
+                    used.add(got.key);
+                    const { sentence, ...q } = got.made;
+                    if (sentence) usedTexts.add(sentence);
+                    questions.push({ ...q, meta: { level: lv.level, entry: got.key, format } });
+                    break;
                 }
             }
-            picked.forEach((item) => { used.add(item.entryKey); statementsOf(item).forEach((t) => usedTexts.add(t)); });
-            const questions = picked.map((item, index) => {
-                // 정답이 O·X 반반이 되게 번갈아 바른 문장·틀린 문장을 보여 준다
-                const right = index % 2 === 0;
-                const shown = right ? item.answer : item.choices.find((c) => c !== item.answer);
-                const explanation = fitExplanation(item.explanation, limits.explanation);
-                return { kind: 'ox', text: `바르게 쓴 문장일까요? ${toStatement(item, shown)}`, answer: right ? 0 : 1, ...(explanation ? { explanation } : {}), meta: { level: difficulty[item.entryKey], entry: item.entryKey } };
-            });
             sets.push({
                 id: `official-spelling-${lv.id}-${String(s + 1).padStart(2, '0')}`,
                 title: `맞춤법 ${lv.label}(${lv.title}) ${s + 1}세트`,
                 grade: null,
                 subject: '국어',
                 unit: '맞춤법',
-                description: `바르게 쓴 문장인지 O/X로 맞춰요. 수준 ${lv.label}, ${questions.length}문제.`,
+                description: `맞춤법을 O/X·2지선다·4지선다로 풀어요. 수준 ${lv.label}, ${questions.length}문제.`,
                 kind: 'spelling',
+                level: lv.level,
                 questions: shuffle(questions, rng)
             });
         }
@@ -222,14 +297,14 @@ export const buildSpellingSets = (pool, difficulty, { exclusions = [], limits = 
 };
 
 /** 모든 기본 세트. 문제 하나하나를 서버 규칙으로 검사하고 문제가 있으면 던진다. */
-export const buildOfficialSets = ({ vocabByGrade, spellingPool, difficulty, exclusions = {}, limits = ARENA_LIMITS }) => {
+export const buildOfficialSets = ({ vocabByGrade, spellingPool, lookupEntries, difficulty, exclusions = {}, limits = ARENA_LIMITS }) => {
     const sets = [
-        ...Object.keys(vocabByGrade).sort().flatMap((grade) => buildVocabSets(Number(grade), vocabByGrade[grade], { exclusions: exclusions.vocab || [], limits })), // eslint-disable-line security/detect-object-injection
-        ...buildSpellingSets(spellingPool, difficulty, { exclusions: exclusions.spelling || [], limits })
+        ...Object.keys(vocabByGrade).sort().flatMap((grade) => buildVocabSets(Number(grade), vocabByGrade[grade], { exclusions: exclusions.vocab || [], excludedWords: exclusions.badWords || [], confusable: exclusions.confusable || [], limits })), // eslint-disable-line security/detect-object-injection
+        ...buildSpellingSets(spellingPool, lookupEntries, difficulty, { exclusions: exclusions.spelling || [], badForms: exclusions.badForms || [], limits })
     ];
     sets.forEach((set) => {
         const problems = validateArenaQuestions(set.questions.map(stripMeta), limits);
-        if (problems.length) throw new Error(`${set.id}: ${problems[0]}`);
+        if (problems.length) throw new Error(`${set.id}: ${problems.at(0)}`);
         if (!OFFICIAL_SET_SIZES.includes(set.questions.length)) throw new Error(`${set.id}: 문제 수가 ${set.questions.length}개예요(15 또는 20이어야 함)`);
     });
     return sets;

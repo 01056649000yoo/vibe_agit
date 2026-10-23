@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck04",
   "deckNumber": 4,
@@ -258,7 +258,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             },
             {
@@ -266,7 +266,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+              "value": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -335,9 +335,9 @@
       "meaningNumber": 1,
       "category": "학교생활",
       "level": 1,
-      "sourceDefinition": "학교의 입구에 있는 커다란 문을 말해요.",
+      "sourceDefinition": "학교로 드나드는 문을 말해요.",
       "sourceExample": "아침마다 교문에서 웃으며 인사해 주시는 선생님을 만나면 기분이 좋아.",
-      "definition": "학교의 입구에 있는 커다란 문을 말해요.",
+      "definition": "학교로 드나드는 문을 말해요.",
       "example": "아침마다 교문에서 웃으며 인사해 주시는 선생님을 만나면 기분이 좋아.",
       "flags": [],
       "duplicateReview": null,
@@ -360,7 +360,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -368,7 +368,7 @@
               "isCorrect": false
             },
             {
-              "value": "학교의 입구에 있는 커다란 문을 말해요.",
+              "value": "학교로 드나드는 문을 말해요.",
               "isCorrect": true
             }
           ]
@@ -397,7 +397,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "학교의 입구에 있는 커다란 문을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "학교로 드나드는 문을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "교문"
           ]
@@ -422,7 +422,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘가치’의 쓰임이에요. ‘교문’은 학교의 입구에 있는 커다란 문을 말해요.",
+          "explanation": "이 문장은 원래 ‘가치’의 쓰임이에요. ‘교문’은 학교로 드나드는 문을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -466,7 +466,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -520,15 +520,15 @@
               "isCorrect": true
             },
             {
-              "value": "손을 깨끗이 씻으면 병균에 기분되는 것을 막을 수 있어.",
+              "value": "눈을 감고 손끝의 기분만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감염’의 쓰임이에요. ‘기분’은 어떤 상황에 따라 마음속에 느껴지는 즐겁거나 슬픈 감정이에요.",
+          "explanation": "이 문장은 원래 ‘감각’의 쓰임이에요. ‘기분’은 어떤 상황에 따라 마음속에 느껴지는 즐겁거나 슬픈 감정이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
-          "sourceItemKey": "vocab:g3:감염"
+          "sourceItemKey": "vocab:g3:감각"
         }
       }
     },
@@ -641,9 +641,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 1,
-      "sourceDefinition": "도형에서 점과 점을 이은 곧은 선분을 말해요.",
+      "sourceDefinition": "다각형의 둘레를 이루는 선분 하나하나를 말해요.",
       "sourceExample": "삼각형은 변이 3개이고, 사각형은 변이 4개예요.",
-      "definition": "도형에서 점과 점을 이은 곧은 선분을 말해요.",
+      "definition": "다각형의 둘레를 이루는 선분 하나하나를 말해요.",
       "example": "삼각형은 변이 3개이고, 사각형은 변이 4개예요.",
       "flags": [],
       "duplicateReview": null,
@@ -670,7 +670,7 @@
               "isCorrect": false
             },
             {
-              "value": "도형에서 점과 점을 이은 곧은 선분을 말해요.",
+              "value": "다각형의 둘레를 이루는 선분 하나하나를 말해요.",
               "isCorrect": true
             },
             {
@@ -703,7 +703,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "도형에서 점과 점을 이은 곧은 선분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다각형의 둘레를 이루는 선분 하나하나를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "변"
           ]
@@ -728,7 +728,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감동’의 쓰임이에요. ‘변’은 도형에서 점과 점을 이은 곧은 선분을 말해요.",
+          "explanation": "이 문장은 원래 ‘감동’의 쓰임이에요. ‘변’은 다각형의 둘레를 이루는 선분 하나하나를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -874,7 +874,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -948,9 +948,9 @@
       "category": "우리 역사",
       "level": 1,
       "sourceDefinition": "아주 먼 옛날부터 지금까지 인류가 살아온 이야기를 말해요.",
-      "sourceExample": "역사 책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
+      "sourceExample": "역사책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
       "definition": "아주 먼 옛날부터 지금까지 인류가 살아온 이야기를 말해요.",
-      "example": "역사 책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
+      "example": "역사책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -968,7 +968,7 @@
           "prompt": "‘역사’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+              "value": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
               "isCorrect": false
             },
             {
@@ -987,7 +987,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿ 책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
+          "prompt": "＿＿＿＿책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
           "options": [
             {
               "value": "건축물",
@@ -1016,7 +1016,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿ 책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
+          "prompt": "＿＿＿＿책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
           "acceptedAnswers": [
             "역사"
           ]
@@ -1030,7 +1030,7 @@
               "isCorrect": false
             },
             {
-              "value": "역사 책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
+              "value": "역사책을 읽다 보면 옛날 영웅들의 용기에 깜짝 놀라게 돼.",
               "isCorrect": true
             }
           ],
@@ -1049,9 +1049,9 @@
       "meaningNumber": 1,
       "category": "시간과 생활",
       "level": 1,
-      "sourceDefinition": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+      "sourceDefinition": "밤 12시부터 낮 12시까지의 시간을 말해요.",
       "sourceExample": "오전 9시가 되면 우리 학교의 1교시 수업이 시작돼요.",
-      "definition": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+      "definition": "밤 12시부터 낮 12시까지의 시간을 말해요.",
       "example": "오전 9시가 되면 우리 학교의 1교시 수업이 시작돼요.",
       "flags": [],
       "duplicateReview": null,
@@ -1078,11 +1078,11 @@
               "isCorrect": false
             },
             {
-              "value": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+              "value": "밤 12시부터 낮 12시까지의 시간을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "낮 12시부터 밤 12시까지의 시간을 말해요. 점심 먹고 난 뒤예요.",
+              "value": "낮 12시부터 밤 12시까지의 시간을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1111,7 +1111,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "밤 12시부터 낮 12시까지의 시간을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "오전"
           ]
@@ -1136,7 +1136,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘강력’의 쓰임이에요. ‘오전’은 밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+          "explanation": "이 문장은 원래 ‘강력’의 쓰임이에요. ‘오전’은 밤 12시부터 낮 12시까지의 시간을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1388,7 +1388,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1690,11 +1690,11 @@
               "isCorrect": false
             },
             {
-              "value": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+              "value": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
               "isCorrect": false
             },
             {
-              "value": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+              "value": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1763,9 +1763,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 2,
-      "sourceDefinition": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+      "sourceDefinition": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
       "sourceExample": "문제를 풀기 전에는 반드시 수학 개념을 먼저 이해해야 해요.",
-      "definition": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+      "definition": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
       "example": "문제를 풀기 전에는 반드시 수학 개념을 먼저 이해해야 해요.",
       "flags": [],
       "duplicateReview": null,
@@ -1788,7 +1788,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": true
             },
             {
@@ -1825,7 +1825,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "개념"
           ]
@@ -1850,7 +1850,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경고’의 쓰임이에요. ‘개념’은 어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘경고’의 쓰임이에요. ‘개념’은 여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1988,11 +1988,11 @@
           "prompt": "‘기후’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2094,7 +2094,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2200,7 +2200,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2376,9 +2376,9 @@
       "category": "숫자와 연산",
       "level": 2,
       "sourceDefinition": "전체를 똑같이 나눈 것 중의 일부분을 나타내는 수예요.",
-      "sourceExample": "피자 한 판을 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
+      "sourceExample": "피자 한 판을 똑같이 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
       "definition": "전체를 똑같이 나눈 것 중의 일부분을 나타내는 수예요.",
-      "example": "피자 한 판을 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
+      "example": "피자 한 판을 똑같이 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2415,7 +2415,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "피자 한 판을 둘로 나눈 것 중 하나는 2분의 1이라는 ＿＿＿＿로 써요.",
+          "prompt": "피자 한 판을 똑같이 둘로 나눈 것 중 하나는 2분의 1이라는 ＿＿＿＿로 써요.",
           "options": [
             {
               "value": "가분수",
@@ -2444,7 +2444,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "피자 한 판을 둘로 나눈 것 중 하나는 2분의 1이라는 ＿＿＿＿로 써요.",
+          "prompt": "피자 한 판을 똑같이 둘로 나눈 것 중 하나는 2분의 1이라는 ＿＿＿＿로 써요.",
           "acceptedAnswers": [
             "분수"
           ]
@@ -2458,7 +2458,7 @@
               "isCorrect": false
             },
             {
-              "value": "피자 한 판을 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
+              "value": "피자 한 판을 똑같이 둘로 나눈 것 중 하나는 2분의 1이라는 분수로 써요.",
               "isCorrect": true
             }
           ],
@@ -2502,7 +2502,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2560,7 +2560,7 @@
               "isCorrect": true
             },
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 상황란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 상황란다.",
               "isCorrect": false
             }
           ],
@@ -2579,9 +2579,9 @@
       "meaningNumber": 1,
       "category": "가족과 이웃",
       "level": 2,
-      "sourceDefinition": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+      "sourceDefinition": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
       "sourceExample": "할아버지 세대와 우리 세대는 즐겨 부르는 노래가 서로 달라.",
-      "definition": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+      "definition": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
       "example": "할아버지 세대와 우리 세대는 즐겨 부르는 노래가 서로 달라.",
       "flags": [],
       "duplicateReview": null,
@@ -2604,11 +2604,11 @@
               "isCorrect": false
             },
             {
-              "value": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+              "value": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
               "isCorrect": true
             },
             {
-              "value": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+              "value": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
               "isCorrect": false
             },
             {
@@ -2641,7 +2641,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "세대"
           ]
@@ -2666,7 +2666,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘세대’는 부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘세대’는 비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2714,7 +2714,7 @@
               "isCorrect": true
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2804,7 +2804,7 @@
           "prompt": "‘의료’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2914,7 +2914,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2988,9 +2988,9 @@
       "category": "모양과 도형",
       "level": 2,
       "sourceDefinition": "네 변의 길이가 모두 같고 네 각이 모두 직각인 사각형이에요.",
-      "sourceExample": "색종이는 네 모서리가 반듯하고 길이가 같은 정사각형이에요.",
+      "sourceExample": "색종이는 네 각이 모두 직각이고 네 변의 길이가 같은 정사각형이에요.",
       "definition": "네 변의 길이가 모두 같고 네 각이 모두 직각인 사각형이에요.",
-      "example": "색종이는 네 모서리가 반듯하고 길이가 같은 정사각형이에요.",
+      "example": "색종이는 네 각이 모두 직각이고 네 변의 길이가 같은 정사각형이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3027,7 +3027,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "색종이는 네 모서리가 반듯하고 길이가 같은 ＿＿＿＿이에요.",
+          "prompt": "색종이는 네 각이 모두 직각이고 네 변의 길이가 같은 ＿＿＿＿이에요.",
           "options": [
             {
               "value": "공간",
@@ -3056,7 +3056,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "색종이는 네 모서리가 반듯하고 길이가 같은 ＿＿＿＿이에요.",
+          "prompt": "색종이는 네 각이 모두 직각이고 네 변의 길이가 같은 ＿＿＿＿이에요.",
           "acceptedAnswers": [
             "정사각형"
           ]
@@ -3070,7 +3070,7 @@
               "isCorrect": false
             },
             {
-              "value": "색종이는 네 모서리가 반듯하고 길이가 같은 정사각형이에요.",
+              "value": "색종이는 네 각이 모두 직각이고 네 변의 길이가 같은 정사각형이에요.",
               "isCorrect": true
             }
           ],
@@ -3110,7 +3110,7 @@
           "prompt": "‘조사’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -3416,7 +3416,7 @@
           "prompt": "‘한류’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3518,7 +3518,7 @@
           "prompt": "‘가치’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {
@@ -3620,7 +3620,7 @@
           "prompt": "‘세계화’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3803,10 +3803,10 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 3,
-      "sourceDefinition": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
-      "sourceExample": "비가 너무 많이 와서 생기는 자연 재해를 막기 위해 댐을 만들어요.",
-      "definition": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
-      "example": "비가 너무 많이 와서 생기는 자연 재해를 막기 위해 댐을 만들어요.",
+      "sourceDefinition": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
+      "sourceExample": "비가 너무 많이 와서 생기는 자연재해를 막기 위해 댐을 만들어요.",
+      "definition": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
+      "example": "비가 너무 많이 와서 생기는 자연재해를 막기 위해 댐을 만들어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3828,7 +3828,7 @@
               "isCorrect": false
             },
             {
-              "value": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
+              "value": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
               "isCorrect": true
             },
             {
@@ -3836,14 +3836,14 @@
               "isCorrect": false
             },
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "비가 너무 많이 와서 생기는 자연 ＿＿＿＿를 막기 위해 댐을 만들어요.",
+          "prompt": "비가 너무 많이 와서 생기는 자연＿＿＿＿를 막기 위해 댐을 만들어요.",
           "options": [
             {
               "value": "대기",
@@ -3865,14 +3865,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "재해"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "비가 너무 많이 와서 생기는 자연 ＿＿＿＿를 막기 위해 댐을 만들어요.",
+          "prompt": "비가 너무 많이 와서 생기는 자연＿＿＿＿를 막기 위해 댐을 만들어요.",
           "acceptedAnswers": [
             "재해"
           ]
@@ -3886,11 +3886,11 @@
               "isCorrect": false
             },
             {
-              "value": "비가 너무 많이 와서 생기는 자연 재해를 막기 위해 댐을 만들어요.",
+              "value": "비가 너무 많이 와서 생기는 자연재해를 막기 위해 댐을 만들어요.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘재해’는 홍수나 지진처럼 자연 현상 때문에 생기는 큰 사고나 피해를 말해요.",
+          "explanation": "이 문장은 원래 ‘공통점’의 쓰임이에요. ‘재해’는 홍수, 지진, 화재 등의 재난으로 생기는 피해를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3938,7 +3938,7 @@
               "isCorrect": true
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -4028,7 +4028,7 @@
           "prompt": "‘현상’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "manual_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "manual",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck01",
   "deckNumber": 1,
@@ -11,14 +11,14 @@
   "reviewSummary": {
     "partOfSpeechFilled": 40,
     "meaningNumbersAssigned": 40,
-    "definitionsChanged": 14,
-    "examplesChanged": 9,
+    "definitionsChanged": 15,
+    "examplesChanged": 10,
     "acceptedAnswersChanged": 0,
     "usageDistinctionsAuthored": 40,
-    "priorityItems": 18,
-    "sampleItems": 22,
-    "correctedItems": 18,
-    "autoDraftCorrectionRate": 0.45
+    "priorityItems": 20,
+    "sampleItems": 20,
+    "correctedItems": 20,
+    "autoDraftCorrectionRate": 0.5
   },
   "requiredEnrichment": [],
   "items": [
@@ -58,7 +58,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -368,7 +368,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             },
             {
@@ -578,7 +578,7 @@
               "isCorrect": false
             },
             {
-              "value": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+              "value": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -751,7 +751,7 @@
       "meaningNumber": 1,
       "category": "학교생활",
       "level": 1,
-      "sourceDefinition": "여러 사람에게 소식을 알리기 위해 적은 글을 말해요.",
+      "sourceDefinition": "어떤 장소나 행사, 이용 방법 등을 알려 주어 사람들을 돕는 글을 말해요.",
       "sourceExample": "게시판에 붙은 급식 안내문을 보고 오늘 메뉴를 확인했어.",
       "definition": "여러 사람에게 알려 줄 내용을 적은 글을 말해요.",
       "example": "게시판에 붙은 급식 안내문을 보고 오늘 메뉴를 확인했어.",
@@ -778,7 +778,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -888,7 +888,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -963,7 +963,7 @@
       "meaningNumber": 1,
       "category": "시간과 생활",
       "level": 1,
-      "sourceDefinition": "낮 12시부터 밤 12시까지의 시간을 말해요. 점심 먹고 난 뒤예요.",
+      "sourceDefinition": "낮 12시부터 밤 12시까지의 시간을 말해요.",
       "sourceExample": "학교가 끝나고 오후 3시에는 친구들과 놀이터에서 만나기로 했어요.",
       "definition": "낮 12시부터 밤 12시까지의 시간을 말해요.",
       "example": "학교가 끝나고 오후 3시에는 친구들과 놀이터에서 만나기로 했어요.",
@@ -971,15 +971,13 @@
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
-        "definition": true,
+        "definition": false,
         "example": false,
         "acceptedAnswers": false
       },
       "reviewOrigin": "manual_codex_review",
-      "reviewPriority": "priority",
-      "reviewReasons": [
-        "edited_source"
-      ],
+      "reviewPriority": "sample",
+      "reviewReasons": [],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
@@ -998,7 +996,7 @@
               "isCorrect": false
             },
             {
-              "value": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+              "value": "밤 12시부터 낮 12시까지의 시간을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1054,10 +1052,8 @@
           ],
           "explanation": "낮 12시 전은 오전이고 낮 12시 뒤는 오후예요.",
           "reviewOrigin": "manual_codex_review",
-          "reviewPriority": "priority",
-          "reviewReasons": [
-            "edited_source"
-          ],
+          "reviewPriority": "sample",
+          "reviewReasons": [],
           "sourceItemKey": null
         }
       }
@@ -1312,7 +1308,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1412,7 +1408,7 @@
               "isCorrect": true
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -1587,7 +1583,7 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "바다와 육지가 만나는 모래사장이나 자갈밭을 말해요.",
+      "sourceDefinition": "바다와 맞닿아 있는 육지 부분을 말해요.",
       "sourceExample": "여름휴가 때 해변에서 모래성을 쌓으며 재미있게 놀았어.",
       "definition": "바다와 육지가 만나는 모래사장이나 자갈밭을 말해요.",
       "example": "여름휴가 때 해변에서 모래성을 쌓으며 재미있게 놀았어.",
@@ -1595,13 +1591,15 @@
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
-        "definition": false,
+        "definition": true,
         "example": false,
         "acceptedAnswers": false
       },
       "reviewOrigin": "manual_codex_review",
-      "reviewPriority": "sample",
-      "reviewReasons": [],
+      "reviewPriority": "priority",
+      "reviewReasons": [
+        "edited_source"
+      ],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
@@ -1676,8 +1674,10 @@
           ],
           "explanation": "해변은 바다와 육지가 맞닿는 곳이에요.",
           "reviewOrigin": "manual_codex_review",
-          "reviewPriority": "sample",
-          "reviewReasons": [],
+          "reviewPriority": "priority",
+          "reviewReasons": [
+            "edited_source"
+          ],
           "sourceItemKey": null
         }
       }
@@ -1718,7 +1718,7 @@
               "isCorrect": false
             },
             {
-              "value": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+              "value": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
               "isCorrect": false
             },
             {
@@ -1792,7 +1792,7 @@
       "category": "나와 몸",
       "level": 2,
       "sourceDefinition": "눈, 코, 입, 귀, 피부를 통해 주변의 자극을 느끼는 능력을 말해요.",
-      "sourceExample": "맛있는 떡볶이 냄새를 맡으니 후각 감각이 살아나는 기분이야.",
+      "sourceExample": "눈을 감고 손끝의 감각만으로 상자 속 물건을 맞혔어.",
       "definition": "눈, 코, 혀, 귀, 피부를 통해 주변의 자극을 느끼는 능력을 말해요.",
       "example": "향긋한 꽃냄새를 맡자 냄새를 느끼는 감각이 또렷해졌어.",
       "flags": [],
@@ -2134,7 +2134,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2313,7 +2313,7 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "공공 기관에서 증명서나 서류 등을 만들어서 내주는 것을 말해요.",
+      "sourceDefinition": "기관이나 단체 등에서 증명서나 신분증 같은 서류를 만들어 내주는 것을 말해요.",
       "sourceExample": "도서관을 이용하기 위해 어린이 회원증을 발급받았어.",
       "definition": "공공 기관에서 증명서나 서류 등을 만들어서 내주는 것을 말해요.",
       "example": "도서관을 이용하기 위해 어린이 회원증을 발급받았어.",
@@ -2321,20 +2321,22 @@
       "duplicateReview": null,
       "reviewStatus": "reviewed",
       "reviewChanges": {
-        "definition": false,
+        "definition": true,
         "example": false,
         "acceptedAnswers": false
       },
       "reviewOrigin": "manual_codex_review",
-      "reviewPriority": "sample",
-      "reviewReasons": [],
+      "reviewPriority": "priority",
+      "reviewReasons": [
+        "edited_source"
+      ],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
           "prompt": "‘발급’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2402,8 +2404,10 @@
           ],
           "explanation": "발급은 기관이 증명서나 회원증 같은 문서를 만들어 내주는 일이에요.",
           "reviewOrigin": "manual_codex_review",
-          "reviewPriority": "sample",
-          "reviewReasons": [],
+          "reviewPriority": "priority",
+          "reviewReasons": [
+            "edited_source"
+          ],
           "sourceItemKey": null
         }
       }
@@ -2436,7 +2440,7 @@
           "prompt": "‘세시풍속’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -2517,7 +2521,7 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "연극이나 영화를 할 때 무대 위에서 사용하는 작은 도구들이에요.",
+      "sourceDefinition": "연극이나 영화에서 배우가 사용하거나 장면을 꾸미는 데 쓰는 작은 물건을 말해요.",
       "sourceExample": "연극에서 할머니 역할을 하기 위해 지팡이 소품을 준비했어.",
       "definition": "연극이나 영화에서 장면을 꾸미거나 연기에 사용하는 작은 도구예요.",
       "example": "연극 무대에서 쓸 지팡이를 소품으로 준비했어.",
@@ -2544,7 +2548,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2848,7 +2852,7 @@
           "prompt": "‘자료’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2929,7 +2933,7 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "물건이나 정보를 나중에 쓰기 위해 소중히 모아 두는 것을 말해요.",
+      "sourceDefinition": "물건이나 정보를 나중에 쓰기 위해 모아 두거나 보관하는 것을 말해요.",
       "sourceExample": "열심히 만든 숙제 파일을 컴퓨터에 잊지 않고 저장했어.",
       "definition": "물건이나 정보를 나중에 쓰려고 모아 두거나 기록해 두는 것을 말해요.",
       "example": "열심히 만든 숙제 파일을 컴퓨터에 잊지 않고 저장했어.",
@@ -2960,7 +2964,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3058,7 +3062,7 @@
           "prompt": "‘지방’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3174,7 +3178,7 @@
               "isCorrect": true
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             }
           ]
@@ -3264,7 +3268,7 @@
           "prompt": "‘지형’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -3272,7 +3276,7 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3346,7 +3350,7 @@
       "category": "모양과 도형",
       "level": 2,
       "sourceDefinition": "한 각이 직각인 삼각형을 말해요.",
-      "sourceExample": "삼각자 중에는 한쪽 끝이 반듯한 직각인 직각삼각형이 있어요.",
+      "sourceExample": "삼각자는 한 각이 직각인 직각삼각형 모양이에요.",
       "definition": "한 각이 직각인 삼각형을 말해요.",
       "example": "삼각자에는 한 각이 직각인 직각삼각형 모양이 있어요.",
       "flags": [],
@@ -3578,7 +3582,7 @@
           "prompt": "‘화폐’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3686,7 +3690,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 사실을 알 수 있게 해주는 오래된 책이나 기록들을 말해요.",
+              "value": "어떤 내용을 연구할 때 자료가 되는 책이나 기록을 말해요.",
               "isCorrect": false
             },
             {
@@ -3892,7 +3896,7 @@
           "prompt": "‘이주민’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3974,7 +3978,7 @@
       "category": "생각과 공부",
       "level": 3,
       "sourceDefinition": "어떤 사실이 정말 맞다는 것을 논리적으로 밝히는 거예요.",
-      "sourceExample": "수학 공식을 이용해 이 문제가 정답임을 증명해 보았어.",
+      "sourceExample": "수학 공식을 이용해 내가 구한 답이 맞다는 것을 증명해 보았어.",
       "definition": "어떤 사실이 정말 맞다는 것을 논리적으로 밝히는 거예요.",
       "example": "수학 공식을 이용해 이 문제가 정답임을 증명해 보았어.",
       "flags": [],
@@ -3982,12 +3986,14 @@
       "reviewStatus": "reviewed",
       "reviewChanges": {
         "definition": false,
-        "example": false,
+        "example": true,
         "acceptedAnswers": false
       },
       "reviewOrigin": "manual_codex_review",
-      "reviewPriority": "sample",
-      "reviewReasons": [],
+      "reviewPriority": "priority",
+      "reviewReasons": [
+        "edited_source"
+      ],
       "questions": {
         "meaningChoice": {
           "status": "reviewed",
@@ -4006,7 +4012,7 @@
               "isCorrect": true
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -4062,8 +4068,10 @@
           ],
           "explanation": "증명은 근거나 논리를 들어 사실이 맞음을 밝혀야 해요.",
           "reviewOrigin": "manual_codex_review",
-          "reviewPriority": "sample",
-          "reviewReasons": [],
+          "reviewPriority": "priority",
+          "reviewReasons": [
+            "edited_source"
+          ],
           "sourceItemKey": null
         }
       }
@@ -4102,7 +4110,7 @@
               "isCorrect": false
             },
             {
-              "value": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+              "value": "전체에서 일부를 줄이거나 빼는 것을 말해요.",
               "isCorrect": false
             },
             {

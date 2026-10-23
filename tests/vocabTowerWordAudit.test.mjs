@@ -137,9 +137,9 @@ test('40개 덱 1,573개 보조 검수 후보를 빠짐없이 만들고 학생 �
     assert.equal(reviewManifest.deckCount, 40);
     assert.equal(reviewManifest.itemCount, 1573);
     assert.equal(reviewManifest.priorityItemCount + reviewManifest.sampleItemCount, 1573);
-    assert.equal(reviewManifest.pendingPriorityItemCount, 28);
-    assert.equal(reviewManifest.teacherConfirmedDeckCount, 20);
-    assert.equal(reviewManifest.editorialReviewDeckCount, 20);
+    assert.equal(reviewManifest.pendingPriorityItemCount, 17); // 2026-10-23 세 모델 교차 검수로 뜻·예문 355건을 고쳐 28 → 17
+    assert.equal(reviewManifest.teacherConfirmedDeckCount, 27);
+    assert.equal(reviewManifest.editorialReviewDeckCount, 13);
     assert.equal(reviewDrafts.filter((draft) => draft.reviewMode === 'manual').length, 1);
     assert.equal(reviewDrafts.filter((draft) => draft.reviewMode === 'assisted').length, 39);
     assert.equal(files.length, 43);

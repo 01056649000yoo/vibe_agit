@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck10",
   "deckNumber": 10,
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 전달을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 전달기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -335,9 +335,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 1,
-      "sourceDefinition": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+      "sourceDefinition": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
       "sourceExample": "방학 때 공기 맑은 지방에 계신 할머니 댁에 다녀왔어요.",
-      "definition": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+      "definition": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
       "example": "방학 때 공기 맑은 지방에 계신 할머니 댁에 다녀왔어요.",
       "flags": [],
       "duplicateReview": null,
@@ -368,7 +368,7 @@
               "isCorrect": false
             },
             {
-              "value": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+              "value": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
               "isCorrect": true
             }
           ]
@@ -397,7 +397,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "서울이나 수도권을 제외한 다른 지역들을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "지방"
           ]
@@ -422,7 +422,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘지방’은 서울이나 수도권을 제외한 다른 지역들을 말해요.",
+          "explanation": "이 문장은 원래 ‘가열’의 쓰임이에요. ‘지방’은 수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -641,9 +641,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 1,
-      "sourceDefinition": "남의 나라나 땅을 강제로 쳐들어가는 나쁜 행동이에요.",
+      "sourceDefinition": "허락 없이 남의 땅이나 장소 등에 들어가는 것을 말해요.",
       "sourceExample": "거란의 침입에 맞서 강감찬 장군은 귀주 대첩에서 큰 승리를 거두셨어요.",
-      "definition": "남의 나라나 땅을 강제로 쳐들어가는 나쁜 행동이에요.",
+      "definition": "허락 없이 남의 땅이나 장소 등에 들어가는 것을 말해요.",
       "example": "거란의 침입에 맞서 강감찬 장군은 귀주 대첩에서 큰 승리를 거두셨어요.",
       "flags": [],
       "duplicateReview": null,
@@ -662,7 +662,7 @@
           "prompt": "‘침입’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+              "value": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -670,7 +670,7 @@
               "isCorrect": false
             },
             {
-              "value": "남의 나라나 땅을 강제로 쳐들어가는 나쁜 행동이에요.",
+              "value": "허락 없이 남의 땅이나 장소 등에 들어가는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -703,7 +703,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "남의 나라나 땅을 강제로 쳐들어가는 나쁜 행동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "허락 없이 남의 땅이나 장소 등에 들어가는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "침입"
           ]
@@ -728,7 +728,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감상’의 쓰임이에요. ‘침입’은 남의 나라나 땅을 강제로 쳐들어가는 나쁜 행동이에요.",
+          "explanation": "이 문장은 원래 ‘감상’의 쓰임이에요. ‘침입’은 허락 없이 남의 땅이나 장소 등에 들어가는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -845,9 +845,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+      "sourceDefinition": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
       "sourceExample": "여름철에는 우리나라 전체 강수량의 절반 이상이 비로 내려요.",
-      "definition": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+      "definition": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
       "example": "여름철에는 우리나라 전체 강수량의 절반 이상이 비로 내려요.",
       "flags": [],
       "duplicateReview": null,
@@ -866,7 +866,7 @@
           "prompt": "‘강수량’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": true
             },
             {
@@ -907,7 +907,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "강수량"
           ]
@@ -932,7 +932,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘강수량’은 일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘강수량’은 일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1694,7 +1694,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1890,7 +1890,7 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
@@ -1898,7 +1898,7 @@
               "isCorrect": true
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -1967,9 +1967,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+      "sourceDefinition": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
       "sourceExample": "우리 모둠 광고 영상을 예쁘게 편집해서 친구들에게 보여주었어.",
-      "definition": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+      "definition": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
       "example": "우리 모둠 광고 영상을 예쁘게 편집해서 친구들에게 보여주었어.",
       "flags": [],
       "duplicateReview": null,
@@ -1996,11 +1996,11 @@
               "isCorrect": false
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+              "value": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
               "isCorrect": true
             }
           ]
@@ -2029,7 +2029,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "편집"
           ]
@@ -2054,7 +2054,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘견제’의 쓰임이에요. ‘편집’은 찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+          "explanation": "이 문장은 원래 ‘견제’의 쓰임이에요. ‘편집’은 찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2094,7 +2094,7 @@
               "isCorrect": true
             },
             {
-              "value": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+              "value": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2298,7 +2298,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {
@@ -2306,7 +2306,7 @@
               "isCorrect": true
             },
             {
-              "value": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+              "value": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2376,9 +2376,9 @@
       "category": "우리 역사",
       "level": 3,
       "sourceDefinition": "억지로 강요해서 맺은 정당하지 않은 조약을 말해요.",
-      "sourceExample": "을사늑약은 일제가 강제로 맺게 한 우리나라의 주권을 뺏은 아픈 역사예요.",
+      "sourceExample": "을사늑약은 일제가 대한 제국의 외교권을 빼앗으려고 강제로 맺게 한 조약이에요.",
       "definition": "억지로 강요해서 맺은 정당하지 않은 조약을 말해요.",
-      "example": "을사늑약은 일제가 강제로 맺게 한 우리나라의 주권을 뺏은 아픈 역사예요.",
+      "example": "을사늑약은 일제가 대한 제국의 외교권을 빼앗으려고 강제로 맺게 한 조약이에요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2415,7 +2415,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "을사＿＿＿＿은 일제가 강제로 맺게 한 우리나라의 주권을 뺏은 아픈 역사예요.",
+          "prompt": "을사＿＿＿＿은 일제가 대한 제국의 외교권을 빼앗으려고 강제로 맺게 한 조약이에요.",
           "options": [
             {
               "value": "개항",
@@ -2444,7 +2444,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "을사＿＿＿＿은 일제가 강제로 맺게 한 우리나라의 주권을 뺏은 아픈 역사예요.",
+          "prompt": "을사＿＿＿＿은 일제가 대한 제국의 외교권을 빼앗으려고 강제로 맺게 한 조약이에요.",
           "acceptedAnswers": [
             "늑약"
           ]
@@ -2458,7 +2458,7 @@
               "isCorrect": false
             },
             {
-              "value": "을사늑약은 일제가 강제로 맺게 한 우리나라의 주권을 뺏은 아픈 역사예요.",
+              "value": "을사늑약은 일제가 대한 제국의 외교권을 빼앗으려고 강제로 맺게 한 조약이에요.",
               "isCorrect": true
             }
           ],
@@ -2706,7 +2706,7 @@
               "isCorrect": false
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -2812,7 +2812,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 장소에서 생물과 비생물 요소가 서로 영향을 주고받으며 사는 시스템이에요.",
+              "value": "어느 지역의 생물과 물, 흙, 햇빛 같은 비생물 요소가 서로 영향을 주고받는 하나의 체계를 말해요.",
               "isCorrect": false
             },
             {
@@ -2987,10 +2987,10 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 3,
-      "sourceDefinition": "분모와 분자를 그들의 공약수로 나누어 간단하게 만드는 거예요.",
-      "sourceExample": "2/4를 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
-      "definition": "분모와 분자를 그들의 공약수로 나누어 간단하게 만드는 거예요.",
-      "example": "2/4를 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
+      "sourceDefinition": "분모와 분자를 1보다 큰 같은 공약수로 나누어 분수를 간단하게 만드는 것을 말해요.",
+      "sourceExample": "2/4의 분모와 분자를 각각 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
+      "definition": "분모와 분자를 1보다 큰 같은 공약수로 나누어 분수를 간단하게 만드는 것을 말해요.",
+      "example": "2/4의 분모와 분자를 각각 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3012,7 +3012,7 @@
               "isCorrect": false
             },
             {
-              "value": "분모와 분자를 그들의 공약수로 나누어 간단하게 만드는 거예요.",
+              "value": "분모와 분자를 1보다 큰 같은 공약수로 나누어 분수를 간단하게 만드는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3027,7 +3027,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "2/4를 2로 나누어 1/2로 만드는 것을 ＿＿＿＿이라고 해.",
+          "prompt": "2/4의 분모와 분자를 각각 2로 나누어 1/2로 만드는 것을 ＿＿＿＿이라고 해.",
           "options": [
             {
               "value": "공배수",
@@ -3049,14 +3049,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "분모와 분자를 그들의 공약수로 나누어 간단하게 만드는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "분모와 분자를 1보다 큰 같은 공약수로 나누어 분수를 간단하게 만드는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "약분"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "2/4를 2로 나누어 1/2로 만드는 것을 ＿＿＿＿이라고 해.",
+          "prompt": "2/4의 분모와 분자를 각각 2로 나누어 1/2로 만드는 것을 ＿＿＿＿이라고 해.",
           "acceptedAnswers": [
             "약분"
           ]
@@ -3070,11 +3070,11 @@
               "isCorrect": false
             },
             {
-              "value": "2/4를 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
+              "value": "2/4의 분모와 분자를 각각 2로 나누어 1/2로 만드는 것을 약분이라고 해.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘약분’은 분모와 분자를 그들의 공약수로 나누어 간단하게 만드는 거예요.",
+          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘약분’은 분모와 분자를 1보다 큰 같은 공약수로 나누어 분수를 간단하게 만드는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3090,9 +3090,9 @@
       "category": "우리 역사",
       "level": 3,
       "sourceDefinition": "여러 나라나 단체가 공통의 목적을 위해 하나로 뭉친 모임이에요.",
-      "sourceExample": "삼국 시대 이전에는 여러 부족이 연맹하여 나라를 다스리기도 했어요.",
+      "sourceExample": "옛날 여러 부족이 힘을 합쳐 연맹을 이루고 함께 나라를 지켰어.",
       "definition": "여러 나라나 단체가 공통의 목적을 위해 하나로 뭉친 모임이에요.",
-      "example": "삼국 시대 이전에는 여러 부족이 연맹하여 나라를 다스리기도 했어요.",
+      "example": "옛날 여러 부족이 힘을 합쳐 연맹을 이루고 함께 나라를 지켰어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3129,7 +3129,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "삼국 시대 이전에는 여러 부족이 ＿＿＿＿하여 나라를 다스리기도 했어요.",
+          "prompt": "옛날 여러 부족이 힘을 합쳐 ＿＿＿＿을 이루고 함께 나라를 지켰어.",
           "options": [
             {
               "value": "연맹",
@@ -3158,7 +3158,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "삼국 시대 이전에는 여러 부족이 ＿＿＿＿하여 나라를 다스리기도 했어요.",
+          "prompt": "옛날 여러 부족이 힘을 합쳐 ＿＿＿＿을 이루고 함께 나라를 지켰어.",
           "acceptedAnswers": [
             "연맹"
           ]
@@ -3168,7 +3168,7 @@
           "prompt": "다음 중 ‘연맹’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "삼국 시대 이전에는 여러 부족이 연맹하여 나라를 다스리기도 했어요.",
+              "value": "옛날 여러 부족이 힘을 합쳐 연맹을 이루고 함께 나라를 지켰어.",
               "isCorrect": true
             },
             {
@@ -3322,7 +3322,7 @@
               "isCorrect": false
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
@@ -3376,7 +3376,7 @@
               "isCorrect": true
             },
             {
-              "value": "슬퍼하는 친구의 마음을 용매해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 용매해 주면 큰 위로가 된단다.",
               "isCorrect": false
             }
           ],
@@ -3395,9 +3395,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "남이 쓴 글이나 말을 내 글 속에 가져다 쓰는 것을 말해요.",
+      "sourceDefinition": "남의 말이나 글을 자신의 말이나 글에 가져다 쓰는 것을 말해요.",
       "sourceExample": "유명한 학자의 말을 인용해서 내 주장을 더 설득력 있게 만들었어.",
-      "definition": "남이 쓴 글이나 말을 내 글 속에 가져다 쓰는 것을 말해요.",
+      "definition": "남의 말이나 글을 자신의 말이나 글에 가져다 쓰는 것을 말해요.",
       "example": "유명한 학자의 말을 인용해서 내 주장을 더 설득력 있게 만들었어.",
       "flags": [],
       "duplicateReview": null,
@@ -3416,11 +3416,11 @@
           "prompt": "‘인용’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "남이 쓴 글이나 말을 내 글 속에 가져다 쓰는 것을 말해요.",
+              "value": "남의 말이나 글을 자신의 말이나 글에 가져다 쓰는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3457,7 +3457,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "남이 쓴 글이나 말을 내 글 속에 가져다 쓰는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "남의 말이나 글을 자신의 말이나 글에 가져다 쓰는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "인용"
           ]
@@ -3474,7 +3474,7 @@
           "prompt": "다음 중 ‘인용’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "슬퍼하는 친구의 마음을 인용해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 인용해 주면 큰 위로가 된단다.",
               "isCorrect": false
             },
             {
@@ -3482,7 +3482,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘인용’은 남이 쓴 글이나 말을 내 글 속에 가져다 쓰는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘인용’은 남의 말이나 글을 자신의 말이나 글에 가져다 쓰는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3580,7 +3580,7 @@
               "isCorrect": true
             },
             {
-              "value": "슬퍼하는 친구의 마음을 적외선해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 적외선해 주면 큰 위로가 된단다.",
               "isCorrect": false
             }
           ],
@@ -3803,9 +3803,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 3,
-      "sourceDefinition": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+      "sourceDefinition": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
       "sourceExample": "똑같은 모양의 색종이 두 장은 서로 합동인 도형이야.",
-      "definition": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+      "definition": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
       "example": "똑같은 모양의 색종이 두 장은 서로 합동인 도형이야.",
       "flags": [],
       "duplicateReview": null,
@@ -3828,7 +3828,7 @@
               "isCorrect": false
             },
             {
-              "value": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+              "value": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
               "isCorrect": true
             },
             {
@@ -3865,7 +3865,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "합동"
           ]
@@ -3890,7 +3890,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공약수’의 쓰임이에요. ‘합동’은 모양과 크기가 완전히 같아서 포갰을 때 딱 겹쳐지는 두 도형이에요.",
+          "explanation": "이 문장은 원래 ‘공약수’의 쓰임이에요. ‘합동’은 두 도형의 모양과 크기가 같아서 포개면 완전히 겹쳐지는 관계를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3921,7 +3921,7 @@
             "sourceIndex": 47,
             "category": "생각과 공부",
             "level": 3,
-            "definition": "문장이나 상황 속에 담긴 의미를 풀이해서 이해하는 거예요.",
+            "definition": "말이나 글, 자료 등의 뜻을 풀어서 이해하거나 설명하는 것을 말해요.",
             "example": "시의 내용을 나만의 생각으로 해석해서 독후감을 썼어."
           },
           {
@@ -3963,7 +3963,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]

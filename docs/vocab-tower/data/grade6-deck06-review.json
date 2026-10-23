@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 6,
   "deckId": "grade6-deck06",
   "deckNumber": 6,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "경제와 생활",
       "level": 1,
-      "sourceDefinition": "사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
+      "sourceDefinition": "사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
       "sourceExample": "용돈을 아껴 쓰고 저축하는 것도 우리가 실천할 수 있는 작은 경제 활동이야.",
-      "definition": "사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
+      "definition": "사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
       "example": "용돈을 아껴 쓰고 저축하는 것도 우리가 실천할 수 있는 작은 경제 활동이야.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘경제’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
               "isCorrect": true
             },
             {
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "경제"
           ]
@@ -116,7 +116,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘경제’는 사람들이 사는데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
+          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘경제’는 사람들이 사는 데 필요한 물건이나 서비스를 만들고, 나누고, 사용하는 모든 활동이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -152,7 +152,7 @@
           "prompt": "‘기온’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "비가 아주 적게 와서 물기가 없고 메마른 상태를 말해요.",
+              "value": "물기나 습기가 적어 메마른 상태를 말해요.",
               "isCorrect": false
             },
             {
@@ -164,7 +164,7 @@
               "isCorrect": false
             },
             {
-              "value": "적도 근처의 아주 덥고 비가 많이 오는 기후나 지역을 말해요.",
+              "value": "적도 가까이에 있어 일 년 내내 기온이 높은 지역을 말해요.",
               "isCorrect": false
             }
           ]
@@ -336,9 +336,9 @@
       "category": "사회와 소통",
       "level": 1,
       "sourceDefinition": "오랫동안 떨어져 있던 사람들이 서로 다시 만나는 것을 말해요.",
-      "sourceExample": "추석을 맞아 멀리 사시는 할아버지와 할머니를 반갑게 상봉했어.",
+      "sourceExample": "오랫동안 헤어져 살던 이산가족들이 마침내 눈물로 상봉했어.",
       "definition": "오랫동안 떨어져 있던 사람들이 서로 다시 만나는 것을 말해요.",
-      "example": "추석을 맞아 멀리 사시는 할아버지와 할머니를 반갑게 상봉했어.",
+      "example": "오랫동안 헤어져 살던 이산가족들이 마침내 눈물로 상봉했어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -356,7 +356,7 @@
           "prompt": "‘상봉’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건을 팔거나 정보를 알리기 위해 사람들의 시선을 끄는 활동이에요.",
+              "value": "물건이나 서비스, 소식 등을 여러 사람에게 널리 알리는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -375,7 +375,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "추석을 맞아 멀리 사시는 할아버지와 할머니를 반갑게 ＿＿＿＿했어.",
+          "prompt": "오랫동안 헤어져 살던 이산가족들이 마침내 눈물로 ＿＿＿＿했어.",
           "options": [
             {
               "value": "광고",
@@ -404,7 +404,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "추석을 맞아 멀리 사시는 할아버지와 할머니를 반갑게 ＿＿＿＿했어.",
+          "prompt": "오랫동안 헤어져 살던 이산가족들이 마침내 눈물로 ＿＿＿＿했어.",
           "acceptedAnswers": [
             "상봉"
           ]
@@ -418,7 +418,7 @@
               "isCorrect": false
             },
             {
-              "value": "추석을 맞아 멀리 사시는 할아버지와 할머니를 반갑게 상봉했어.",
+              "value": "오랫동안 헤어져 살던 이산가족들이 마침내 눈물로 상봉했어.",
               "isCorrect": true
             }
           ],
@@ -572,7 +572,7 @@
               "isCorrect": false
             },
             {
-              "value": "굽지 않고 곧게 뻗은 선을 말해요.",
+              "value": "양쪽으로 끝없이 뻗어 있는 곧은 선을 말해요.",
               "isCorrect": false
             }
           ]
@@ -641,9 +641,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 1,
-      "sourceDefinition": "어렵거나 복합한 문제를 풀어서 마무리하는 거예요.",
+      "sourceDefinition": "어렵거나 복잡한 문제를 풀어서 마무리하는 거예요.",
       "sourceExample": "비례배분을 이용해서 간식을 공평하게 나누는 문제를 해결했어.",
-      "definition": "어렵거나 복합한 문제를 풀어서 마무리하는 거예요.",
+      "definition": "어렵거나 복잡한 문제를 풀어서 마무리하는 거예요.",
       "example": "비례배분을 이용해서 간식을 공평하게 나누는 문제를 해결했어.",
       "flags": [],
       "duplicateReview": null,
@@ -670,7 +670,7 @@
               "isCorrect": false
             },
             {
-              "value": "어렵거나 복합한 문제를 풀어서 마무리하는 거예요.",
+              "value": "어렵거나 복잡한 문제를 풀어서 마무리하는 거예요.",
               "isCorrect": true
             },
             {
@@ -703,7 +703,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어렵거나 복합한 문제를 풀어서 마무리하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어렵거나 복잡한 문제를 풀어서 마무리하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "해결"
           ]
@@ -728,7 +728,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감전’의 쓰임이에요. ‘해결’은 어렵거나 복합한 문제를 풀어서 마무리하는 거예요.",
+          "explanation": "이 문장은 원래 ‘감전’의 쓰임이에요. ‘해결’은 어렵거나 복잡한 문제를 풀어서 마무리하는 거예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -948,9 +948,9 @@
       "category": "측정과 단위",
       "level": 2,
       "sourceDefinition": "전체를 똑같은 크기나 양으로 나누는 것을 말해요.",
-      "sourceExample": "원을 중심을 지나게 8등분 하면 피자 조각 같은 모양이 나와.",
+      "sourceExample": "원의 중심을 지나는 선을 그어 원을 8등분하면 피자 조각 같은 모양이 나와.",
       "definition": "전체를 똑같은 크기나 양으로 나누는 것을 말해요.",
-      "example": "원을 중심을 지나게 8등분 하면 피자 조각 같은 모양이 나와.",
+      "example": "원의 중심을 지나는 선을 그어 원을 8등분하면 피자 조각 같은 모양이 나와.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -987,7 +987,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "원을 중심을 지나게 8＿＿＿＿ 하면 피자 조각 같은 모양이 나와.",
+          "prompt": "원의 중심을 지나는 선을 그어 원을 8＿＿＿＿하면 피자 조각 같은 모양이 나와.",
           "options": [
             {
               "value": "단위",
@@ -1016,7 +1016,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "원을 중심을 지나게 8＿＿＿＿ 하면 피자 조각 같은 모양이 나와.",
+          "prompt": "원의 중심을 지나는 선을 그어 원을 8＿＿＿＿하면 피자 조각 같은 모양이 나와.",
           "acceptedAnswers": [
             "등분"
           ]
@@ -1030,7 +1030,7 @@
               "isCorrect": false
             },
             {
-              "value": "원을 중심을 지나게 8등분 하면 피자 조각 같은 모양이 나와.",
+              "value": "원의 중심을 지나는 선을 그어 원을 8등분하면 피자 조각 같은 모양이 나와.",
               "isCorrect": true
             }
           ],
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "옷, 신발, 종이처럼 무게가 가벼운 물건을 만드는 산업을 말해요.",
+              "value": "옷, 신발, 종이 등 주로 일상생활에 쓰는 소비재를 만드는 공업을 말해요.",
               "isCorrect": false
             },
             {
@@ -1355,10 +1355,10 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "국회에서 정한 나라의 강제적인 약속으로, 국민이 지켜야 할 최소한의 도덕이에요.",
-      "sourceExample": "새롭게 바뀐 도로 교통 법률에 따라 횡단보도에서는 일시 정지해야 해.",
-      "definition": "국회에서 정한 나라의 강제적인 약속으로, 국민이 지켜야 할 최소한의 도덕이에요.",
-      "example": "새롭게 바뀐 도로 교통 법률에 따라 횡단보도에서는 일시 정지해야 해.",
+      "sourceDefinition": "국회가 정해진 절차에 따라 만드는 법의 한 종류로, 나라와 국민이 따라야 할 규칙을 말해요.",
+      "sourceExample": "국회에서 만든 법률에 따라 우리 사회의 여러 문제를 해결해.",
+      "definition": "국회가 정해진 절차에 따라 만드는 법의 한 종류로, 나라와 국민이 따라야 할 규칙을 말해요.",
+      "example": "국회에서 만든 법률에 따라 우리 사회의 여러 문제를 해결해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1380,7 +1380,7 @@
               "isCorrect": false
             },
             {
-              "value": "국회에서 정한 나라의 강제적인 약속으로, 국민이 지켜야 할 최소한의 도덕이에요.",
+              "value": "국회가 정해진 절차에 따라 만드는 법의 한 종류로, 나라와 국민이 따라야 할 규칙을 말해요.",
               "isCorrect": true
             },
             {
@@ -1395,7 +1395,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "새롭게 바뀐 도로 교통 ＿＿＿＿에 따라 횡단보도에서는 일시 정지해야 해.",
+          "prompt": "국회에서 만든 ＿＿＿＿에 따라 우리 사회의 여러 문제를 해결해.",
           "options": [
             {
               "value": "공식적",
@@ -1417,14 +1417,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "국회에서 정한 나라의 강제적인 약속으로, 국민이 지켜야 할 최소한의 도덕이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "국회가 정해진 절차에 따라 만드는 법의 한 종류로, 나라와 국민이 따라야 할 규칙을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "법률"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "새롭게 바뀐 도로 교통 ＿＿＿＿에 따라 횡단보도에서는 일시 정지해야 해.",
+          "prompt": "국회에서 만든 ＿＿＿＿에 따라 우리 사회의 여러 문제를 해결해.",
           "acceptedAnswers": [
             "법률"
           ]
@@ -1438,11 +1438,11 @@
               "isCorrect": false
             },
             {
-              "value": "새롭게 바뀐 도로 교통 법률에 따라 횡단보도에서는 일시 정지해야 해.",
+              "value": "국회에서 만든 법률에 따라 우리 사회의 여러 문제를 해결해.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘결론’의 쓰임이에요. ‘법률’은 국회에서 정한 나라의 강제적인 약속으로, 국민이 지켜야 할 최소한의 도덕이에요.",
+          "explanation": "이 문장은 원래 ‘결론’의 쓰임이에요. ‘법률’은 국회가 정해진 절차에 따라 만드는 법의 한 종류로, 나라와 국민이 따라야 할 규칙을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1482,7 +1482,7 @@
               "isCorrect": false
             },
             {
-              "value": "설탕이나 소금이 물에 골고루 섞여 투명하게 변한 상태예요.",
+              "value": "어떤 물질이 물과 같은 용매에 녹아 고르게 섞인 혼합물을 말해요.",
               "isCorrect": false
             },
             {
@@ -1559,9 +1559,9 @@
       "meaningNumber": 1,
       "category": "숫자와 연산",
       "level": 2,
-      "sourceDefinition": "분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.",
+      "sourceDefinition": "분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.",
       "sourceExample": "비율을 분수로 나타낼 때 기준량은 항상 분모 자리에 와.",
-      "definition": "분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.",
+      "definition": "분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.",
       "example": "비율을 분수로 나타낼 때 기준량은 항상 분모 자리에 와.",
       "flags": [],
       "duplicateReview": null,
@@ -1584,15 +1584,15 @@
               "isCorrect": false
             },
             {
-              "value": "분수에서 위에 있는 수로, 나눈 것 중의 몫을 나타내요.",
+              "value": "분수에서 가로선 위에 있는 수로, 똑같이 나눈 것 중 몇 개를 나타내는지 알려 줘요.",
               "isCorrect": false
             },
             {
-              "value": "숫자가 일정한 간격으로 적혀 있는 곧은 선이에요.",
+              "value": "곧은 선 위에 0을 기준으로 정하고, 일정한 길이를 단위로 삼아 수의 위치를 나타낸 선이에요.",
               "isCorrect": false
             },
             {
-              "value": "분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.",
+              "value": "분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.",
               "isCorrect": true
             }
           ]
@@ -1621,7 +1621,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "분모"
           ]
@@ -1646,7 +1646,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘견해’의 쓰임이에요. ‘분모’는 분수에서 아래에 있는 수로, 전체를 몇 등분 했는지 알려줘요.",
+          "explanation": "이 문장은 원래 ‘견해’의 쓰임이에요. ‘분모’는 분수에서 아래에 있는 수로, 전체를 몇 등분했는지 알려줘요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1992,7 +1992,7 @@
               "isCorrect": false
             },
             {
-              "value": "남을 대할 때 스스로 부끄럽지 않게 세우는 얼굴이나 도리예요.",
+              "value": "다른 사람 앞에서 지키고 싶어 하는 자신의 품위나 사회적 위치를 말해요.",
               "isCorrect": false
             },
             {
@@ -2171,9 +2171,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "북극이나 남극 주변처럼 1년 내내 아주 춥고 땅이 얼어 있는 기후예요.",
+      "sourceDefinition": "가장 따뜻한 달의 평균 기온도 10도 미만인 매우 추운 기후예요.",
       "sourceExample": "한대 기후 지역에서는 얼음집인 이글루를 짓고 살기도 했어.",
-      "definition": "북극이나 남극 주변처럼 1년 내내 아주 춥고 땅이 얼어 있는 기후예요.",
+      "definition": "가장 따뜻한 달의 평균 기온도 10도 미만인 매우 추운 기후예요.",
       "example": "한대 기후 지역에서는 얼음집인 이글루를 짓고 살기도 했어.",
       "flags": [],
       "duplicateReview": null,
@@ -2196,7 +2196,7 @@
               "isCorrect": false
             },
             {
-              "value": "북극이나 남극 주변처럼 1년 내내 아주 춥고 땅이 얼어 있는 기후예요.",
+              "value": "가장 따뜻한 달의 평균 기온도 10도 미만인 매우 추운 기후예요.",
               "isCorrect": true
             },
             {
@@ -2233,7 +2233,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "북극이나 남극 주변처럼 1년 내내 아주 춥고 땅이 얼어 있는 기후예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "가장 따뜻한 달의 평균 기온도 10도 미만인 매우 추운 기후예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "한대"
           ]
@@ -2258,7 +2258,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계산’의 쓰임이에요. ‘한대’는 북극이나 남극 주변처럼 1년 내내 아주 춥고 땅이 얼어 있는 기후예요.",
+          "explanation": "이 문장은 원래 ‘계산’의 쓰임이에요. ‘한대’는 가장 따뜻한 달의 평균 기온도 10도 미만인 매우 추운 기후예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2375,9 +2375,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 3,
-      "sourceDefinition": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+      "sourceDefinition": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
       "sourceExample": "지구의 공전 때문에 우리가 사는 지구에는 계절의 변화가 나타난단다.",
-      "definition": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+      "definition": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
       "example": "지구의 공전 때문에 우리가 사는 지구에는 계절의 변화가 나타난단다.",
       "flags": [],
       "duplicateReview": null,
@@ -2404,11 +2404,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양이나 별이 하늘의 정남쪽 하늘에 위치하는 순간이에요.",
+              "value": "태양이나 별이 하루 중 정남쪽 하늘에 위치하는 순간이에요.",
               "isCorrect": false
             },
             {
-              "value": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+              "value": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
               "isCorrect": true
             }
           ]
@@ -2437,7 +2437,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "공전"
           ]
@@ -2462,7 +2462,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계산’의 쓰임이에요. ‘공전’은 지구가 태양 주위를 일정한 길을 따라 1년에 한 바퀴씩 도는 운동이에요.",
+          "explanation": "이 문장은 원래 ‘계산’의 쓰임이에요. ‘공전’은 한 천체가 다른 천체의 주위를 일정한 궤도를 따라 도는 운동이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2612,7 +2612,7 @@
               "isCorrect": false
             },
             {
-              "value": "하나의 낱말이 두 가지 이상의 여러 가지 뜻을 가진 말이에요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말이에요.",
               "isCorrect": false
             }
           ]
@@ -2658,7 +2658,7 @@
           "prompt": "다음 중 ‘교정’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 교정을 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 교정을 이루고 있어.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "뼈와 근육이 모여 우리 몸의 튼튼한 내항을 이루고 있어.",
+              "value": "여러 뼈가 서로 연결되어 우리 몸의 튼튼한 내항을 이루고 있어.",
               "isCorrect": false
             }
           ],
@@ -2987,10 +2987,10 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 3,
-      "sourceDefinition": "지구본에서 가로로 그어진 선을 통해 위치가 북쪽인지 남쪽인지 나타내는 좌표예요.",
-      "sourceExample": "위도에 따라 햇빛을 받는 양이 달라서 각 지역의 날씨가 결정된단다.",
-      "definition": "지구본에서 가로로 그어진 선을 통해 위치가 북쪽인지 남쪽인지 나타내는 좌표예요.",
-      "example": "위도에 따라 햇빛을 받는 양이 달라서 각 지역의 날씨가 결정된단다.",
+      "sourceDefinition": "적도를 기준으로 북쪽이나 남쪽으로 얼마나 떨어져 있는지 각도로 나타낸 것이에요.",
+      "sourceExample": "위도에 따라 햇빛을 받는 양이 달라져 각 지역의 기후에 영향을 준단다.",
+      "definition": "적도를 기준으로 북쪽이나 남쪽으로 얼마나 떨어져 있는지 각도로 나타낸 것이에요.",
+      "example": "위도에 따라 햇빛을 받는 양이 달라져 각 지역의 기후에 영향을 준단다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3012,7 +3012,7 @@
               "isCorrect": false
             },
             {
-              "value": "지구본에서 가로로 그어진 선을 통해 위치가 북쪽인지 남쪽인지 나타내는 좌표예요.",
+              "value": "적도를 기준으로 북쪽이나 남쪽으로 얼마나 떨어져 있는지 각도로 나타낸 것이에요.",
               "isCorrect": true
             },
             {
@@ -3027,7 +3027,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿에 따라 햇빛을 받는 양이 달라서 각 지역의 날씨가 결정된단다.",
+          "prompt": "＿＿＿＿에 따라 햇빛을 받는 양이 달라져 각 지역의 기후에 영향을 준단다.",
           "options": [
             {
               "value": "경도",
@@ -3049,14 +3049,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구본에서 가로로 그어진 선을 통해 위치가 북쪽인지 남쪽인지 나타내는 좌표예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "적도를 기준으로 북쪽이나 남쪽으로 얼마나 떨어져 있는지 각도로 나타낸 것이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "위도"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿에 따라 햇빛을 받는 양이 달라서 각 지역의 날씨가 결정된단다.",
+          "prompt": "＿＿＿＿에 따라 햇빛을 받는 양이 달라져 각 지역의 기후에 영향을 준단다.",
           "acceptedAnswers": [
             "위도"
           ]
@@ -3070,11 +3070,11 @@
               "isCorrect": false
             },
             {
-              "value": "위도에 따라 햇빛을 받는 양이 달라서 각 지역의 날씨가 결정된단다.",
+              "value": "위도에 따라 햇빛을 받는 양이 달라져 각 지역의 기후에 영향을 준단다.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘위도’는 지구본에서 가로로 그어진 선을 통해 위치가 북쪽인지 남쪽인지 나타내는 좌표예요.",
+          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘위도’는 적도를 기준으로 북쪽이나 남쪽으로 얼마나 떨어져 있는지 각도로 나타낸 것이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3114,7 +3114,7 @@
               "isCorrect": false
             },
             {
-              "value": "식물의 잎 뒷면에 있는 아주 작은 구멍으로, 공기가 드나들고 수분이 빠져나가요.",
+              "value": "주로 식물의 잎에 있는 아주 작은 구멍으로, 공기가 드나들고 수증기가 빠져나가는 곳이에요.",
               "isCorrect": false
             },
             {
@@ -3216,7 +3216,7 @@
               "isCorrect": false
             },
             {
-              "value": "달이 지구 주위를 도는 모양의 변화를 기준으로 만든 달력이에요.",
+              "value": "달의 모양이 변하는 주기를 기준으로 한 달을 정하는 달력이에요.",
               "isCorrect": false
             },
             {
@@ -3734,7 +3734,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리나라 고유의 정해진 틀을 가진 짧은 시 형태의 문학이에요.",
+              "value": "보통 초장·중장·종장의 세 부분으로 이루어진 우리나라 고유의 정형시를 말해요.",
               "isCorrect": false
             }
           ]

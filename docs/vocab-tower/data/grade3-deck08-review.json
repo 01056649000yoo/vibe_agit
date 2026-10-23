@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck08",
   "deckNumber": 8,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+      "sourceDefinition": "힘이나 기운이 매우 센 것을 말해요.",
       "sourceExample": "우리 팀은 강력한 응원 덕분에 줄다리기에서 이길 수 있었어.",
-      "definition": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+      "definition": "힘이나 기운이 매우 센 것을 말해요.",
       "example": "우리 팀은 강력한 응원 덕분에 줄다리기에서 이길 수 있었어.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘강력’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+              "value": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "힘이나 기운이 무척 세고 당당한 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "힘이나 기운이 매우 센 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "강력"
           ]
@@ -116,7 +116,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘강력’은 힘이나 기운이 무척 세고 당당한 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘강력’은 힘이나 기운이 매우 센 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -152,7 +152,7 @@
           "prompt": "‘건강’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+              "value": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
               "isCorrect": false
             },
             {
@@ -160,7 +160,7 @@
               "isCorrect": true
             },
             {
-              "value": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+              "value": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
               "isCorrect": false
             },
             {
@@ -360,7 +360,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -618,7 +618,7 @@
           "prompt": "다음 중 ‘공공장소’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 공공장소가 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 공공장소만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             },
             {
@@ -768,7 +768,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -878,7 +878,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1253,9 +1253,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 1,
-      "sourceDefinition": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+      "sourceDefinition": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
       "sourceExample": "'강아지 똥' 이야기에서 가장 기억에 남는 인물은 민들레 꽃이야.",
-      "definition": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+      "definition": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
       "example": "'강아지 똥' 이야기에서 가장 기억에 남는 인물은 민들레 꽃이야.",
       "flags": [],
       "duplicateReview": null,
@@ -1274,7 +1274,7 @@
           "prompt": "‘인물’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+              "value": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
               "isCorrect": true
             },
             {
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -1315,7 +1315,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "인물"
           ]
@@ -1340,7 +1340,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘인물’은 이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘인물’은 이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1384,7 +1384,7 @@
               "isCorrect": true
             },
             {
-              "value": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+              "value": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
               "isCorrect": false
             },
             {
@@ -1482,7 +1482,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1763,9 +1763,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+      "sourceDefinition": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
       "sourceExample": "얼음이나 책상처럼 딱딱하고 모양이 일정한 것을 고체라고 불러.",
-      "definition": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+      "definition": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
       "example": "얼음이나 책상처럼 딱딱하고 모양이 일정한 것을 고체라고 불러.",
       "flags": [],
       "duplicateReview": null,
@@ -1788,7 +1788,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": true
             },
             {
@@ -1825,7 +1825,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "고체"
           ]
@@ -1850,7 +1850,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경고’의 쓰임이에요. ‘고체’는 담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+          "explanation": "이 문장은 원래 ‘경고’의 쓰임이에요. ‘고체’는 담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1988,7 +1988,7 @@
           "prompt": "‘문화’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2094,7 +2094,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2192,7 +2192,7 @@
           "prompt": "‘생태’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2294,7 +2294,7 @@
           "prompt": "‘생활 양식’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2477,9 +2477,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 2,
-      "sourceDefinition": "상한 음식을 먹어서 배가 아프거나 구토가 나는 병이에요.",
+      "sourceDefinition": "해로운 세균이나 독성 물질이 들어 있는 음식을 먹어 배가 아프거나 구토, 설사 등이 생기는 병을 말해요.",
       "sourceExample": "여름철에는 음식이 쉽게 상하니 식중독에 걸리지 않게 조심해야 해.",
-      "definition": "상한 음식을 먹어서 배가 아프거나 구토가 나는 병이에요.",
+      "definition": "해로운 세균이나 독성 물질이 들어 있는 음식을 먹어 배가 아프거나 구토, 설사 등이 생기는 병을 말해요.",
       "example": "여름철에는 음식이 쉽게 상하니 식중독에 걸리지 않게 조심해야 해.",
       "flags": [],
       "duplicateReview": null,
@@ -2498,7 +2498,7 @@
           "prompt": "‘식중독’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "상한 음식을 먹어서 배가 아프거나 구토가 나는 병이에요.",
+              "value": "해로운 세균이나 독성 물질이 들어 있는 음식을 먹어 배가 아프거나 구토, 설사 등이 생기는 병을 말해요.",
               "isCorrect": true
             },
             {
@@ -2539,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "상한 음식을 먹어서 배가 아프거나 구토가 나는 병이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "해로운 세균이나 독성 물질이 들어 있는 음식을 먹어 배가 아프거나 구토, 설사 등이 생기는 병을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "식중독"
           ]
@@ -2564,7 +2564,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고유’의 쓰임이에요. ‘식중독’은 상한 음식을 먹어서 배가 아프거나 구토가 나는 병이에요.",
+          "explanation": "이 문장은 원래 ‘고유’의 쓰임이에요. ‘식중독’은 해로운 세균이나 독성 물질이 들어 있는 음식을 먹어 배가 아프거나 구토, 설사 등이 생기는 병을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2706,7 +2706,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "'하늘', '사랑', '미소' 같은 단어들은 아름다운 우리말인 액체란다.",
+              "value": "‘하늘’, ‘사랑’, ‘웃음’ 같은 단어들은 아름다운 우리말인 액체란다.",
               "isCorrect": false
             }
           ],
@@ -2804,7 +2804,7 @@
           "prompt": "‘유산’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -3008,7 +3008,7 @@
           "prompt": "‘조건’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3216,7 +3216,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3416,7 +3416,7 @@
           "prompt": "‘혼잡’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3522,7 +3522,7 @@
               "isCorrect": false
             },
             {
-              "value": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+              "value": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -3620,7 +3620,7 @@
           "prompt": "‘기본형’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "줄거리나 내용 중 일부를 줄이거나 빼는 것을 말해요.",
+              "value": "전체에서 일부를 줄이거나 빼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3730,7 +3730,7 @@
               "isCorrect": false
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3824,7 +3824,7 @@
           "prompt": "‘원활’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4032,7 +4032,7 @@
               "isCorrect": false
             },
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {

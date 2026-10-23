@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck03",
   "deckNumber": 3,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 1,
-      "sourceDefinition": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+      "sourceDefinition": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
       "sourceExample": "1945년 8월 15일, 우리나라는 일제의 지배에서 벗어나 광복을 맞이했어요.",
-      "definition": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+      "definition": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
       "example": "1945년 8월 15일, 우리나라는 일제의 지배에서 벗어나 광복을 맞이했어요.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘광복’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+              "value": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "광복"
           ]
@@ -116,7 +116,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가능성’의 쓰임이에요. ‘광복’은 빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+          "explanation": "이 문장은 원래 ‘가능성’의 쓰임이에요. ‘광복’은 빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -164,7 +164,7 @@
               "isCorrect": false
             },
             {
-              "value": "1, 2, 3... 처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
+              "value": "1, 2, 3처럼 물건을 셀 때 쓰는 가장 기본적인 수예요.",
               "isCorrect": false
             }
           ]
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 사물을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 사물기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -364,7 +364,7 @@
               "isCorrect": false
             },
             {
-              "value": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+              "value": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
               "isCorrect": false
             },
             {
@@ -641,9 +641,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 1,
-      "sourceDefinition": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+      "sourceDefinition": "강이나 내처럼 땅 위의 일정한 길을 따라 흐르는 물줄기를 말해요.",
       "sourceExample": "우리 마을 앞 하천에는 예쁜 물고기와 오리들이 살고 있어요.",
-      "definition": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+      "definition": "강이나 내처럼 땅 위의 일정한 길을 따라 흐르는 물줄기를 말해요.",
       "example": "우리 마을 앞 하천에는 예쁜 물고기와 오리들이 살고 있어요.",
       "flags": [],
       "duplicateReview": null,
@@ -670,7 +670,7 @@
               "isCorrect": false
             },
             {
-              "value": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+              "value": "강이나 내처럼 땅 위의 일정한 길을 따라 흐르는 물줄기를 말해요.",
               "isCorrect": true
             },
             {
@@ -703,7 +703,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "강이나 내처럼 땅 위의 일정한 길을 따라 흐르는 물줄기를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "하천"
           ]
@@ -728,7 +728,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘감상’의 쓰임이에요. ‘하천’은 땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+          "explanation": "이 문장은 원래 ‘감상’의 쓰임이에요. ‘하천’은 강이나 내처럼 땅 위의 일정한 길을 따라 흐르는 물줄기를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -874,7 +874,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             },
             {
@@ -1049,9 +1049,9 @@
       "meaningNumber": 1,
       "category": "지구와 우주",
       "level": 2,
-      "sourceDefinition": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+      "sourceDefinition": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
       "sourceExample": "금성은 지구와 크기가 비슷하지만 표면 온도가 아주 뜨거운 행성이에요.",
-      "definition": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+      "definition": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
       "example": "금성은 지구와 크기가 비슷하지만 표면 온도가 아주 뜨거운 행성이에요.",
       "flags": [],
       "duplicateReview": null,
@@ -1074,11 +1074,11 @@
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": true
             },
             {
@@ -1111,7 +1111,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "금성"
           ]
@@ -1136,7 +1136,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘금성’은 태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+          "explanation": "이 문장은 원래 ‘개선’의 쓰임이에요. ‘금성’은 태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -1254,9 +1254,9 @@
       "category": "물질의 성질",
       "level": 2,
       "sourceDefinition": "나사못처럼 소용돌이 모양으로 뱅뱅 돌아가며 만들어진 선을 말해요.",
-      "sourceExample": "현미경의 조절 나사를 나선 방향으로 돌려 초점을 맞추었어요.",
+      "sourceExample": "현미경의 조절 나사에는 나선 모양의 홈이 있어요.",
       "definition": "나사못처럼 소용돌이 모양으로 뱅뱅 돌아가며 만들어진 선을 말해요.",
-      "example": "현미경의 조절 나사를 나선 방향으로 돌려 초점을 맞추었어요.",
+      "example": "현미경의 조절 나사에는 나선 모양의 홈이 있어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1293,7 +1293,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "현미경의 조절 나사를 ＿＿＿＿ 방향으로 돌려 초점을 맞추었어요.",
+          "prompt": "현미경의 조절 나사에는 ＿＿＿＿ 모양의 홈이 있어요.",
           "options": [
             {
               "value": "변색",
@@ -1322,7 +1322,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "현미경의 조절 나사를 ＿＿＿＿ 방향으로 돌려 초점을 맞추었어요.",
+          "prompt": "현미경의 조절 나사에는 ＿＿＿＿ 모양의 홈이 있어요.",
           "acceptedAnswers": [
             "나선"
           ]
@@ -1332,7 +1332,7 @@
           "prompt": "다음 중 ‘나선’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "현미경의 조절 나사를 나선 방향으로 돌려 초점을 맞추었어요.",
+              "value": "현미경의 조절 나사에는 나선 모양의 홈이 있어요.",
               "isCorrect": true
             },
             {
@@ -1559,9 +1559,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 2,
-      "sourceDefinition": "남을 지배하거나 자기 의사를 관철할 수 있는 힘의 크기를 말해요.",
+      "sourceDefinition": "다른 사람이나 집단에 영향을 미치거나 자기 뜻을 이루게 하는 힘을 말해요.",
       "sourceExample": "광개토대왕은 영토를 크게 넓혀 고구려의 세력을 널리 떨치셨어요.",
-      "definition": "남을 지배하거나 자기 의사를 관철할 수 있는 힘의 크기를 말해요.",
+      "definition": "다른 사람이나 집단에 영향을 미치거나 자기 뜻을 이루게 하는 힘을 말해요.",
       "example": "광개토대왕은 영토를 크게 넓혀 고구려의 세력을 널리 떨치셨어요.",
       "flags": [],
       "duplicateReview": null,
@@ -1592,7 +1592,7 @@
               "isCorrect": false
             },
             {
-              "value": "남을 지배하거나 자기 의사를 관철할 수 있는 힘의 크기를 말해요.",
+              "value": "다른 사람이나 집단에 영향을 미치거나 자기 뜻을 이루게 하는 힘을 말해요.",
               "isCorrect": true
             }
           ]
@@ -1621,7 +1621,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "남을 지배하거나 자기 의사를 관철할 수 있는 힘의 크기를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "다른 사람이나 집단에 영향을 미치거나 자기 뜻을 이루게 하는 힘을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "세력"
           ]
@@ -1646,7 +1646,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘결정’의 쓰임이에요. ‘세력’은 남을 지배하거나 자기 의사를 관철할 수 있는 힘의 크기를 말해요.",
+          "explanation": "이 문장은 원래 ‘결정’의 쓰임이에요. ‘세력’은 다른 사람이나 집단에 영향을 미치거나 자기 뜻을 이루게 하는 힘을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1661,9 +1661,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 2,
-      "sourceDefinition": "자연의 소리나 물건의 소리를 흉내 낸 말을 말해요.",
+      "sourceDefinition": "사람이나 동물, 사물 등이 내는 소리를 흉내 낸 말을 말해요.",
       "sourceExample": "'졸졸', '땡그랑'처럼 소리를 본뜬 말을 의성어라고 해.",
-      "definition": "자연의 소리나 물건의 소리를 흉내 낸 말을 말해요.",
+      "definition": "사람이나 동물, 사물 등이 내는 소리를 흉내 낸 말을 말해요.",
       "example": "'졸졸', '땡그랑'처럼 소리를 본뜬 말을 의성어라고 해.",
       "flags": [],
       "duplicateReview": null,
@@ -1682,7 +1682,7 @@
           "prompt": "‘의성어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "자연의 소리나 물건의 소리를 흉내 낸 말을 말해요.",
+              "value": "사람이나 동물, 사물 등이 내는 소리를 흉내 낸 말을 말해요.",
               "isCorrect": true
             },
             {
@@ -1723,7 +1723,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "자연의 소리나 물건의 소리를 흉내 낸 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사람이나 동물, 사물 등이 내는 소리를 흉내 낸 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "의성어"
           ]
@@ -1748,7 +1748,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘의성어’는 자연의 소리나 물건의 소리를 흉내 낸 말을 말해요.",
+          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘의성어’는 사람이나 동물, 사물 등이 내는 소리를 흉내 낸 말을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1792,7 +1792,7 @@
               "isCorrect": true
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1898,7 +1898,7 @@
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2298,7 +2298,7 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
@@ -2306,7 +2306,7 @@
               "isCorrect": true
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2404,7 +2404,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             },
             {
@@ -2454,7 +2454,7 @@
           "prompt": "다음 중 ‘화제’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 화제했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 화제 활동을 펼쳤어요.",
               "isCorrect": false
             },
             {
@@ -2560,7 +2560,7 @@
               "isCorrect": true
             },
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 견문했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 견문 활동을 펼쳤어요.",
               "isCorrect": false
             }
           ],
@@ -2658,7 +2658,7 @@
           "prompt": "다음 중 ‘견제’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "슬퍼하는 친구의 마음을 견제해 주면 큰 위로가 된단다.",
+              "value": "슬퍼하는 친구의 마음에 견제해 주면 큰 위로가 된단다.",
               "isCorrect": false
             },
             {
@@ -2783,9 +2783,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 3,
-      "sourceDefinition": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+      "sourceDefinition": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
       "sourceExample": "모둠 친구들의 의견을 모두 고려해서 발표 주제를 정했어.",
-      "definition": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+      "definition": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
       "example": "모둠 친구들의 의견을 모두 고려해서 발표 주제를 정했어.",
       "flags": [],
       "duplicateReview": null,
@@ -2812,11 +2812,11 @@
               "isCorrect": false
             },
             {
-              "value": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+              "value": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": true
             }
           ]
@@ -2845,7 +2845,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "고려"
           ]
@@ -2870,7 +2870,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘고려’는 어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘고려’는 어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3090,9 +3090,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "해야 할 의무나 책임을 특별히 하지 않아도 되게 해주는 거예요.",
-      "sourceExample": "숙제를 아주 열심히 한 친구는 오늘 발표를 면제받았어.",
+      "sourceExample": "몸이 아픈 친구는 오늘 체육 시간의 달리기를 면제받았어.",
       "definition": "해야 할 의무나 책임을 특별히 하지 않아도 되게 해주는 거예요.",
-      "example": "숙제를 아주 열심히 한 친구는 오늘 발표를 면제받았어.",
+      "example": "몸이 아픈 친구는 오늘 체육 시간의 달리기를 면제받았어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3129,7 +3129,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "숙제를 아주 열심히 한 친구는 오늘 발표를 ＿＿＿＿받았어.",
+          "prompt": "몸이 아픈 친구는 오늘 체육 시간의 달리기를 ＿＿＿＿받았어.",
           "options": [
             {
               "value": "면제",
@@ -3158,7 +3158,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "숙제를 아주 열심히 한 친구는 오늘 발표를 ＿＿＿＿받았어.",
+          "prompt": "몸이 아픈 친구는 오늘 체육 시간의 달리기를 ＿＿＿＿받았어.",
           "acceptedAnswers": [
             "면제"
           ]
@@ -3168,7 +3168,7 @@
           "prompt": "다음 중 ‘면제’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "숙제를 아주 열심히 한 친구는 오늘 발표를 면제받았어.",
+              "value": "몸이 아픈 친구는 오늘 체육 시간의 달리기를 면제받았어.",
               "isCorrect": true
             },
             {
@@ -3191,9 +3191,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 3,
-      "sourceDefinition": "잘못된 일을 바로잡기 위해 많은 사람이 떼를 지어 일어나는 거예요.",
+      "sourceDefinition": "여러 사람이 뜻을 모아 저항하거나 요구를 내세우며 집단으로 일어나는 것을 말해요.",
       "sourceExample": "동학 농민군들은 탐관오리의 횡포에 맞서 전국적으로 봉기했어요.",
-      "definition": "잘못된 일을 바로잡기 위해 많은 사람이 떼를 지어 일어나는 거예요.",
+      "definition": "여러 사람이 뜻을 모아 저항하거나 요구를 내세우며 집단으로 일어나는 것을 말해요.",
       "example": "동학 농민군들은 탐관오리의 횡포에 맞서 전국적으로 봉기했어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3224,7 +3224,7 @@
               "isCorrect": false
             },
             {
-              "value": "잘못된 일을 바로잡기 위해 많은 사람이 떼를 지어 일어나는 거예요.",
+              "value": "여러 사람이 뜻을 모아 저항하거나 요구를 내세우며 집단으로 일어나는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3253,7 +3253,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "잘못된 일을 바로잡기 위해 많은 사람이 떼를 지어 일어나는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "여러 사람이 뜻을 모아 저항하거나 요구를 내세우며 집단으로 일어나는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "봉기"
           ]
@@ -3278,7 +3278,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘봉기’는 잘못된 일을 바로잡기 위해 많은 사람이 떼를 지어 일어나는 거예요.",
+          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘봉기’는 여러 사람이 뜻을 모아 저항하거나 요구를 내세우며 집단으로 일어나는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3318,7 +3318,7 @@
               "isCorrect": true
             },
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -3424,7 +3424,7 @@
               "isCorrect": true
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -3804,9 +3804,9 @@
       "category": "숫자와 연산",
       "level": 3,
       "sourceDefinition": "분모가 서로 다른 분수들의 분모를 같게 맞추는 과정이에요.",
-      "sourceExample": "분모를 통분해야 분수끼리 더하거나 뺄 수 있단다.",
+      "sourceExample": "분모가 다른 분수끼리 더하거나 빼려면 먼저 분수를 통분해야 한단다.",
       "definition": "분모가 서로 다른 분수들의 분모를 같게 맞추는 과정이에요.",
-      "example": "분모를 통분해야 분수끼리 더하거나 뺄 수 있단다.",
+      "example": "분모가 다른 분수끼리 더하거나 빼려면 먼저 분수를 통분해야 한단다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3843,7 +3843,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "분모를 ＿＿＿＿해야 분수끼리 더하거나 뺄 수 있단다.",
+          "prompt": "분모가 다른 분수끼리 더하거나 빼려면 먼저 분수를 ＿＿＿＿해야 한단다.",
           "options": [
             {
               "value": "공배수",
@@ -3872,7 +3872,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "분모를 ＿＿＿＿해야 분수끼리 더하거나 뺄 수 있단다.",
+          "prompt": "분모가 다른 분수끼리 더하거나 빼려면 먼저 분수를 ＿＿＿＿해야 한단다.",
           "acceptedAnswers": [
             "통분"
           ]
@@ -3886,7 +3886,7 @@
               "isCorrect": false
             },
             {
-              "value": "분모를 통분해야 분수끼리 더하거나 뺄 수 있단다.",
+              "value": "분모가 다른 분수끼리 더하거나 빼려면 먼저 분수를 통분해야 한단다.",
               "isCorrect": true
             }
           ],

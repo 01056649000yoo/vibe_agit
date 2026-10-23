@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck09",
   "deckNumber": 9,
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 공통을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 공통기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -466,7 +466,7 @@
               "isCorrect": false
             },
             {
-              "value": "서울이나 수도권을 제외한 다른 지역들을 말해요.",
+              "value": "수도를 제외한 다른 지역이나, 어느 한 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -662,7 +662,7 @@
           "prompt": "‘일제’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+              "value": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -846,9 +846,9 @@
       "category": "자연과 환경",
       "level": 2,
       "sourceDefinition": "공기 중에 수증기를 보태어 습도를 높이는 것을 말해요.",
-      "sourceExample": "겨울철 방 안이 너무 건조해서 가습기를 틀어 가습을 했어.",
+      "sourceExample": "겨울철 방 안이 너무 건조해서 가습기를 틀어 습도를 높였어.",
       "definition": "공기 중에 수증기를 보태어 습도를 높이는 것을 말해요.",
-      "example": "겨울철 방 안이 너무 건조해서 가습기를 틀어 가습을 했어.",
+      "example": "겨울철 방 안이 너무 건조해서 가습기를 틀어 습도를 높였어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -870,7 +870,7 @@
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -885,7 +885,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "겨울철 방 안이 너무 건조해서 ＿＿＿＿기를 틀어 가습을 했어.",
+          "prompt": "겨울철 방 안이 너무 건조해서 ＿＿＿＿기를 틀어 습도를 높였어.",
           "options": [
             {
               "value": "강수량",
@@ -914,7 +914,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "겨울철 방 안이 너무 건조해서 ＿＿＿＿기를 틀어 가습을 했어.",
+          "prompt": "겨울철 방 안이 너무 건조해서 ＿＿＿＿기를 틀어 습도를 높였어.",
           "acceptedAnswers": [
             "가습"
           ]
@@ -924,7 +924,7 @@
           "prompt": "다음 중 ‘가습’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 가습을 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 습도를 높였어.",
               "isCorrect": true
             },
             {
@@ -1151,9 +1151,9 @@
       "meaningNumber": 1,
       "category": "자료와 가능성",
       "level": 2,
-      "sourceDefinition": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+      "sourceDefinition": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
       "sourceExample": "우리 반 친구들의 키를 대표하는 값으로 평균을 구해 봤어.",
-      "definition": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+      "definition": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
       "example": "우리 반 친구들의 키를 대표하는 값으로 평균을 구해 봤어.",
       "flags": [],
       "duplicateReview": null,
@@ -1184,7 +1184,7 @@
               "isCorrect": false
             },
             {
-              "value": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+              "value": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -1213,7 +1213,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "전체 자료의 특징을 가장 잘 보여주는 값을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "대표"
           ]
@@ -1238,7 +1238,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개혁’의 쓰임이에요. ‘대표’는 전체 자료의 특징을 가장 잘 보여주는 값을 말해요.",
+          "explanation": "이 문장은 원래 ‘개혁’의 쓰임이에요. ‘대표’는 전체를 대신하여 나서거나 전체의 특징을 드러내는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1490,7 +1490,7 @@
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1662,9 +1662,9 @@
       "category": "모양과 도형",
       "level": 2,
       "sourceDefinition": "두 점을 곧게 이은 선을 말해요. 양 끝이 정해져 있어요.",
-      "sourceExample": "자 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
+      "sourceExample": "자를 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
       "definition": "두 점을 곧게 이은 선을 말해요. 양 끝이 정해져 있어요.",
-      "example": "자 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
+      "example": "자를 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1701,7 +1701,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "자 대고 점 A와 점 B를 연결하면 ＿＿＿＿ AB가 돼.",
+          "prompt": "자를 대고 점 A와 점 B를 연결하면 ＿＿＿＿ AB가 돼.",
           "options": [
             {
               "value": "다각형",
@@ -1730,7 +1730,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "자 대고 점 A와 점 B를 연결하면 ＿＿＿＿ AB가 돼.",
+          "prompt": "자를 대고 점 A와 점 B를 연결하면 ＿＿＿＿ AB가 돼.",
           "acceptedAnswers": [
             "선분"
           ]
@@ -1740,7 +1740,7 @@
           "prompt": "다음 중 ‘선분’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "자 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
+              "value": "자를 대고 점 A와 점 B를 연결하면 선분 AB가 돼.",
               "isCorrect": true
             },
             {
@@ -1865,9 +1865,9 @@
       "meaningNumber": 1,
       "category": "지리",
       "level": 2,
-      "sourceDefinition": "지구의 중심을 가로로 한 바퀴 도는 가장 뜨거운 지점의 가상 선이에요.",
+      "sourceDefinition": "지구 표면에서 북극과 남극 사이의 가운데를 지나는 가상의 선으로, 위도 0도인 선이에요.",
       "sourceExample": "적도 주변의 나라들은 1년 내내 여름처럼 아주 더운 날씨가 계속돼요.",
-      "definition": "지구의 중심을 가로로 한 바퀴 도는 가장 뜨거운 지점의 가상 선이에요.",
+      "definition": "지구 표면에서 북극과 남극 사이의 가운데를 지나는 가상의 선으로, 위도 0도인 선이에요.",
       "example": "적도 주변의 나라들은 1년 내내 여름처럼 아주 더운 날씨가 계속돼요.",
       "flags": [],
       "duplicateReview": null,
@@ -1894,7 +1894,7 @@
               "isCorrect": false
             },
             {
-              "value": "지구의 중심을 가로로 한 바퀴 도는 가장 뜨거운 지점의 가상 선이에요.",
+              "value": "지구 표면에서 북극과 남극 사이의 가운데를 지나는 가상의 선으로, 위도 0도인 선이에요.",
               "isCorrect": true
             },
             {
@@ -1927,7 +1927,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "지구의 중심을 가로로 한 바퀴 도는 가장 뜨거운 지점의 가상 선이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "지구 표면에서 북극과 남극 사이의 가운데를 지나는 가상의 선으로, 위도 0도인 선이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "적도"
           ]
@@ -1952,7 +1952,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘견문’의 쓰임이에요. ‘적도’는 지구의 중심을 가로로 한 바퀴 도는 가장 뜨거운 지점의 가상 선이에요.",
+          "explanation": "이 문장은 원래 ‘견문’의 쓰임이에요. ‘적도’는 지구 표면에서 북극과 남극 사이의 가운데를 지나는 가상의 선으로, 위도 0도인 선이에요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2098,11 +2098,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -2171,9 +2171,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 2,
-      "sourceDefinition": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+      "sourceDefinition": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
       "sourceExample": "우리나라는 첨단 로봇 기술이 아주 발달한 나라 중 하나야.",
-      "definition": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+      "definition": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
       "example": "우리나라는 첨단 로봇 기술이 아주 발달한 나라 중 하나야.",
       "flags": [],
       "duplicateReview": null,
@@ -2196,7 +2196,7 @@
               "isCorrect": false
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": true
             },
             {
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "찍어온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
+              "value": "찍어 온 영상이나 글을 잘 다듬어 완성된 작품으로 만드는 일이에요.",
               "isCorrect": false
             }
           ]
@@ -2233,7 +2233,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "첨단"
           ]
@@ -2258,7 +2258,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘결정’의 쓰임이에요. ‘첨단’은 가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+          "explanation": "이 문장은 원래 ‘결정’의 쓰임이에요. ‘첨단’은 어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2306,7 +2306,7 @@
               "isCorrect": true
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2404,7 +2404,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 장소에서 생물과 비생물 요소가 서로 영향을 주고받으며 사는 시스템이에요.",
+              "value": "어느 지역의 생물과 물, 흙, 햇빛 같은 비생물 요소가 서로 영향을 주고받는 하나의 체계를 말해요.",
               "isCorrect": false
             },
             {
@@ -2579,9 +2579,9 @@
       "meaningNumber": 1,
       "category": "모양과 도형",
       "level": 3,
-      "sourceDefinition": "어느 선이나 점을 중심으로 좌우가 똑같은 모양인 것을 말해요.",
+      "sourceDefinition": "어느 선이나 점을 중심으로 마주 보는 부분이 서로 똑같이 대응하는 모양을 말해요.",
       "sourceExample": "나비 날개는 몸통을 중심으로 양쪽이 똑같은 대칭 모양이야.",
-      "definition": "어느 선이나 점을 중심으로 좌우가 똑같은 모양인 것을 말해요.",
+      "definition": "어느 선이나 점을 중심으로 마주 보는 부분이 서로 똑같이 대응하는 모양을 말해요.",
       "example": "나비 날개는 몸통을 중심으로 양쪽이 똑같은 대칭 모양이야.",
       "flags": [],
       "duplicateReview": null,
@@ -2604,7 +2604,7 @@
               "isCorrect": false
             },
             {
-              "value": "어느 선이나 점을 중심으로 좌우가 똑같은 모양인 것을 말해요.",
+              "value": "어느 선이나 점을 중심으로 마주 보는 부분이 서로 똑같이 대응하는 모양을 말해요.",
               "isCorrect": true
             },
             {
@@ -2641,7 +2641,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어느 선이나 점을 중심으로 좌우가 똑같은 모양인 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어느 선이나 점을 중심으로 마주 보는 부분이 서로 똑같이 대응하는 모양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "대칭"
           ]
@@ -2666,7 +2666,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘대칭’은 어느 선이나 점을 중심으로 좌우가 똑같은 모양인 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘대칭’은 어느 선이나 점을 중심으로 마주 보는 부분이 서로 똑같이 대응하는 모양을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2681,9 +2681,9 @@
       "meaningNumber": 1,
       "category": "생각과 공부",
       "level": 3,
-      "sourceDefinition": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+      "sourceDefinition": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
       "sourceExample": "관찰한 내용을 잘 정리해서 '빛은 직진한다'는 결론을 도출했어.",
-      "definition": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+      "definition": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
       "example": "관찰한 내용을 잘 정리해서 '빛은 직진한다'는 결론을 도출했어.",
       "flags": [],
       "duplicateReview": null,
@@ -2710,11 +2710,11 @@
               "isCorrect": false
             },
             {
-              "value": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+              "value": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]
@@ -2743,7 +2743,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "도출"
           ]
@@ -2768,7 +2768,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘계승’의 쓰임이에요. ‘도출’은 실험 결과를 바탕으로 어떤 결론을 이끌어 내는 거예요.",
+          "explanation": "이 문장은 원래 ‘계승’의 쓰임이에요. ‘도출’은 자료나 생각 등을 바탕으로 판단이나 결론을 이끌어 내는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2914,7 +2914,7 @@
               "isCorrect": false
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -3396,9 +3396,9 @@
       "category": "물질의 성질",
       "level": 3,
       "sourceDefinition": "비눗물처럼 미끈거리고 단백질을 녹이는 성질을 가진 물질의 상태예요.",
-      "sourceExample": "지시약이 염기성을 만나면 대개 푸른색이나 초록색 계열로 변한단다.",
+      "sourceExample": "붉은 리트머스 종이는 염기성 용액에 닿으면 푸른색으로 변한단다.",
       "definition": "비눗물처럼 미끈거리고 단백질을 녹이는 성질을 가진 물질의 상태예요.",
-      "example": "지시약이 염기성을 만나면 대개 푸른색이나 초록색 계열로 변한단다.",
+      "example": "붉은 리트머스 종이는 염기성 용액에 닿으면 푸른색으로 변한단다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3424,7 +3424,7 @@
               "isCorrect": true
             },
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": false
             },
             {
@@ -3435,7 +3435,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "지시약이 ＿＿＿＿을 만나면 대개 푸른색이나 초록색 계열로 변한단다.",
+          "prompt": "붉은 리트머스 종이는 ＿＿＿＿ 용액에 닿으면 푸른색으로 변한단다.",
           "options": [
             {
               "value": "결정",
@@ -3464,7 +3464,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "지시약이 ＿＿＿＿을 만나면 대개 푸른색이나 초록색 계열로 변한단다.",
+          "prompt": "붉은 리트머스 종이는 ＿＿＿＿ 용액에 닿으면 푸른색으로 변한단다.",
           "acceptedAnswers": [
             "염기성"
           ]
@@ -3478,7 +3478,7 @@
               "isCorrect": false
             },
             {
-              "value": "지시약이 염기성을 만나면 대개 푸른색이나 초록색 계열로 변한단다.",
+              "value": "붉은 리트머스 종이는 염기성 용액에 닿으면 푸른색으로 변한단다.",
               "isCorrect": true
             }
           ],
@@ -3498,9 +3498,9 @@
       "category": "말과 글",
       "level": 3,
       "sourceDefinition": "뜻이 서로 비슷비슷한 단어들을 말해요.",
-      "sourceExample": "'생각'과 '고려'는 서로 뜻이 비슷한 유의어란다.",
+      "sourceExample": "'가게'와 '상점'은 서로 뜻이 비슷한 유의어란다.",
       "definition": "뜻이 서로 비슷비슷한 단어들을 말해요.",
-      "example": "'생각'과 '고려'는 서로 뜻이 비슷한 유의어란다.",
+      "example": "'가게'와 '상점'은 서로 뜻이 비슷한 유의어란다.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3518,7 +3518,7 @@
           "prompt": "‘유의어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -3537,7 +3537,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "'생각'과 '고려'는 서로 뜻이 비슷한 ＿＿＿＿란다.",
+          "prompt": "'가게'와 '상점'은 서로 뜻이 비슷한 ＿＿＿＿란다.",
           "options": [
             {
               "value": "유의어",
@@ -3566,7 +3566,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "'생각'과 '고려'는 서로 뜻이 비슷한 ＿＿＿＿란다.",
+          "prompt": "'가게'와 '상점'은 서로 뜻이 비슷한 ＿＿＿＿란다.",
           "acceptedAnswers": [
             "유의어"
           ]
@@ -3576,7 +3576,7 @@
           "prompt": "다음 중 ‘유의어’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "'생각'과 '고려'는 서로 뜻이 비슷한 유의어란다.",
+              "value": "'가게'와 '상점'은 서로 뜻이 비슷한 유의어란다.",
               "isCorrect": true
             },
             {
@@ -3702,9 +3702,9 @@
       "category": "우리 역사",
       "level": 3,
       "sourceDefinition": "힘이나 권력을 써서 사람들의 자유로운 활동을 억누르는 거예요.",
-      "sourceExample": "일제는 우리 민족의 독립 운동을 아주 혹독하게 탄압했어요.",
+      "sourceExample": "일제는 우리 민족의 독립운동을 아주 혹독하게 탄압했어요.",
       "definition": "힘이나 권력을 써서 사람들의 자유로운 활동을 억누르는 거예요.",
-      "example": "일제는 우리 민족의 독립 운동을 아주 혹독하게 탄압했어요.",
+      "example": "일제는 우리 민족의 독립운동을 아주 혹독하게 탄압했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3741,7 +3741,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "일제는 우리 민족의 독립 운동을 아주 혹독하게 ＿＿＿＿했어요.",
+          "prompt": "일제는 우리 민족의 독립운동을 아주 혹독하게 ＿＿＿＿했어요.",
           "options": [
             {
               "value": "개항",
@@ -3770,7 +3770,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "일제는 우리 민족의 독립 운동을 아주 혹독하게 ＿＿＿＿했어요.",
+          "prompt": "일제는 우리 민족의 독립운동을 아주 혹독하게 ＿＿＿＿했어요.",
           "acceptedAnswers": [
             "탄압"
           ]
@@ -3780,7 +3780,7 @@
           "prompt": "다음 중 ‘탄압’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "일제는 우리 민족의 독립 운동을 아주 혹독하게 탄압했어요.",
+              "value": "일제는 우리 민족의 독립운동을 아주 혹독하게 탄압했어요.",
               "isCorrect": true
             },
             {

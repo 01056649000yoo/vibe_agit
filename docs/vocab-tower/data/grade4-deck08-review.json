@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 4,
   "deckId": "grade4-deck08",
   "deckNumber": 8,
@@ -62,7 +62,7 @@
               "isCorrect": false
             },
             {
-              "value": "숫자나 모양이 일정한 순서대로 되풀이되는 약속을 말해요.",
+              "value": "수나 모양 등이 일정하게 배열되거나 변할 때 따르는 방식을 말해요.",
               "isCorrect": false
             }
           ]
@@ -112,7 +112,7 @@
               "isCorrect": true
             },
             {
-              "value": "4분의 4나 4분의 5처럼 머리가 몸통보다 큰 분수가 결과예요.",
+              "value": "4분의 4나 4분의 5처럼 분자가 분모와 같거나 분모보다 큰 분수가 결과예요.",
               "isCorrect": false
             }
           ],
@@ -160,7 +160,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리가 눈으로 볼 수 있고 만질 수 있는 구체적인 모양을 가진 물건이에요.",
+              "value": "모양을 가지고 공간을 차지하는 구체적인 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -335,9 +335,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 1,
-      "sourceDefinition": "생각이나 감정을 담아 글자로 나타낸 한 마디의 완벽한 글이에요.",
+      "sourceDefinition": "생각이나 감정을 완결된 내용으로 나타내는 말의 단위를 말해요.",
       "sourceExample": "마침표를 찍어서 한 문장을 바르게 마무리했어.",
-      "definition": "생각이나 감정을 담아 글자로 나타낸 한 마디의 완벽한 글이에요.",
+      "definition": "생각이나 감정을 완결된 내용으로 나타내는 말의 단위를 말해요.",
       "example": "마침표를 찍어서 한 문장을 바르게 마무리했어.",
       "flags": [],
       "duplicateReview": null,
@@ -360,7 +360,7 @@
               "isCorrect": false
             },
             {
-              "value": "동화책이나 만화 속에 나오는 사람이나 동물을 말해요.",
+              "value": "이야기나 연극, 영화 등에 나오는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
               "isCorrect": false
             },
             {
@@ -368,7 +368,7 @@
               "isCorrect": false
             },
             {
-              "value": "생각이나 감정을 담아 글자로 나타낸 한 마디의 완벽한 글이에요.",
+              "value": "생각이나 감정을 완결된 내용으로 나타내는 말의 단위를 말해요.",
               "isCorrect": true
             }
           ]
@@ -397,7 +397,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "생각이나 감정을 담아 글자로 나타낸 한 마디의 완벽한 글이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "생각이나 감정을 완결된 내용으로 나타내는 말의 단위를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "문장"
           ]
@@ -422,7 +422,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘각도’의 쓰임이에요. ‘문장’은 생각이나 감정을 담아 글자로 나타낸 한 마디의 완벽한 글이에요.",
+          "explanation": "이 문장은 원래 ‘각도’의 쓰임이에요. ‘문장’은 생각이나 감정을 완결된 내용으로 나타내는 말의 단위를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -438,9 +438,9 @@
       "category": "감정과 태도",
       "level": 1,
       "sourceDefinition": "어떤 일을 겪은 뒤에 마음속에 일어나는 생각이나 느낌이에요.",
-      "sourceExample": "체험 학습을 다녀온 뒤에 느낀 점을 소감문으로 작성했어요.",
+      "sourceExample": "체험 학습을 다녀온 뒤에 느낀 소감을 발표했어요.",
       "definition": "어떤 일을 겪은 뒤에 마음속에 일어나는 생각이나 느낌이에요.",
-      "example": "체험 학습을 다녀온 뒤에 느낀 점을 소감문으로 작성했어요.",
+      "example": "체험 학습을 다녀온 뒤에 느낀 소감을 발표했어요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -462,11 +462,11 @@
               "isCorrect": true
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "value": "다른 사람의 생각이나 감정을 이해하고 비슷하게 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -477,7 +477,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "체험 학습을 다녀온 뒤에 느낀 점을 ＿＿＿＿문으로 작성했어요.",
+          "prompt": "체험 학습을 다녀온 뒤에 느낀 ＿＿＿＿을 발표했어요.",
           "options": [
             {
               "value": "감동",
@@ -506,7 +506,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "체험 학습을 다녀온 뒤에 느낀 점을 ＿＿＿＿문으로 작성했어요.",
+          "prompt": "체험 학습을 다녀온 뒤에 느낀 ＿＿＿＿을 발표했어요.",
           "acceptedAnswers": [
             "소감"
           ]
@@ -516,7 +516,7 @@
           "prompt": "다음 중 ‘소감’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "체험 학습을 다녀온 뒤에 느낀 점을 소감문으로 작성했어요.",
+              "value": "체험 학습을 다녀온 뒤에 느낀 소감을 발표했어요.",
               "isCorrect": true
             },
             {
@@ -572,7 +572,7 @@
               "isCorrect": false
             },
             {
-              "value": "중요한 건물만 간단하게 그려서 길을 찾기 쉽게 만든 지도예요.",
+              "value": "길이나 장소의 위치를 중요한 부분만 간단하게 그린 지도를 말해요.",
               "isCorrect": false
             }
           ]
@@ -666,7 +666,7 @@
               "isCorrect": false
             },
             {
-              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "value": "액체 속에 생기는 기체 방울을 말해요.",
               "isCorrect": false
             },
             {
@@ -772,7 +772,7 @@
               "isCorrect": false
             },
             {
-              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "value": "어떤 일이나 모습을 접하고 마음이 크게 움직여 깊이 느끼는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1278,7 +1278,7 @@
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -1356,9 +1356,9 @@
       "category": "숫자와 연산",
       "level": 2,
       "sourceDefinition": "1,000이 10개 모인 수로, 0이 네 개 붙는 큰 수예요.",
-      "sourceExample": "만원 버스에는 사람들이 정말 가득 타고 있었어요.",
+      "sourceExample": "천 원짜리 지폐 10장을 모으면 만 원이 돼요.",
       "definition": "1,000이 10개 모인 수로, 0이 네 개 붙는 큰 수예요.",
-      "example": "만원 버스에는 사람들이 정말 가득 타고 있었어요.",
+      "example": "천 원짜리 지폐 10장을 모으면 만 원이 돼요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1395,7 +1395,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿원 버스에는 사람들이 정말 가득 타고 있었어요.",
+          "prompt": "천 원짜리 지폐 10장을 모으면 ＿＿＿＿ 원이 돼요.",
           "options": [
             {
               "value": "등호",
@@ -1424,7 +1424,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "＿＿＿＿원 버스에는 사람들이 정말 가득 타고 있었어요.",
+          "prompt": "천 원짜리 지폐 10장을 모으면 ＿＿＿＿ 원이 돼요.",
           "acceptedAnswers": [
             "만"
           ]
@@ -1438,7 +1438,7 @@
               "isCorrect": false
             },
             {
-              "value": "만원 버스에는 사람들이 정말 가득 타고 있었어요.",
+              "value": "천 원짜리 지폐 10장을 모으면 만 원이 돼요.",
               "isCorrect": true
             }
           ],
@@ -1588,7 +1588,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날 조상님들의 생활 모습이 그대로 남아 있는 역사적인 장소예요.",
+              "value": "옛사람들의 생활 흔적이나 건물 등의 자취가 남아 있는 역사적인 장소예요.",
               "isCorrect": false
             },
             {
@@ -1690,11 +1690,11 @@
               "isCorrect": false
             },
             {
-              "value": "생물이 알을 낳거나 새끼를 쳐서 그 수가 점점 늘어나는 것을 말해요.",
+              "value": "생물이 알이나 새끼, 씨앗, 포자 등을 만들거나 몸이 나뉘는 등의 방법으로 수를 늘리는 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "생물이 자라나고 활동하는 데 필요한 영양분을 말해요.",
+              "value": "생물이 살아가고 자라며 활동하는 데 필요한 영양이 되는 성분을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1763,9 +1763,9 @@
       "meaningNumber": 1,
       "category": "경제와 생활",
       "level": 2,
-      "sourceDefinition": "열심히 일한 대가로 벌어들이는 돈을 말해요.",
+      "sourceDefinition": "일한 대가나 이자, 임대료 등으로 얻는 돈이나 이익을 말해요.",
       "sourceExample": "부모님께서는 직장에서 열심히 일하시고 소득을 얻으세요.",
-      "definition": "열심히 일한 대가로 벌어들이는 돈을 말해요.",
+      "definition": "일한 대가나 이자, 임대료 등으로 얻는 돈이나 이익을 말해요.",
       "example": "부모님께서는 직장에서 열심히 일하시고 소득을 얻으세요.",
       "flags": [],
       "duplicateReview": null,
@@ -1788,7 +1788,7 @@
               "isCorrect": false
             },
             {
-              "value": "열심히 일한 대가로 벌어들이는 돈을 말해요.",
+              "value": "일한 대가나 이자, 임대료 등으로 얻는 돈이나 이익을 말해요.",
               "isCorrect": true
             },
             {
@@ -1796,7 +1796,7 @@
               "isCorrect": false
             },
             {
-              "value": "사람들이 사는데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
+              "value": "사람들이 사는 데 필요한 물건이나 서비스를 만드는 모든 활동을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1825,7 +1825,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "열심히 일한 대가로 벌어들이는 돈을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일한 대가나 이자, 임대료 등으로 얻는 돈이나 이익을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "소득"
           ]
@@ -1850,7 +1850,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘경청’의 쓰임이에요. ‘소득’은 열심히 일한 대가로 벌어들이는 돈을 말해요.",
+          "explanation": "이 문장은 원래 ‘경청’의 쓰임이에요. ‘소득’은 일한 대가나 이자, 임대료 등으로 얻는 돈이나 이익을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2102,7 +2102,7 @@
               "isCorrect": false
             },
             {
-              "value": "비가 많이 와서 산의 흙과 바위가 한꺼번에 아래로 무너져 내리는 일이에요.",
+              "value": "산의 흙이나 바위가 한꺼번에 아래로 무너져 내리는 현상을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2192,7 +2192,7 @@
           "prompt": "‘점검’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "value": "여러 사물이나 현상에서 공통된 특징을 뽑아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2404,7 +2404,7 @@
               "isCorrect": false
             },
             {
-              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "value": "평면이나 물체의 표면, 땅 등의 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -2579,9 +2579,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "강물이 바다로 흘러 들어가는 끝부분으로, 물살이 느리고 모래가 많아요.",
+      "sourceDefinition": "강에서 물이 흘러가는 방향의 아래쪽 부분을 말해요.",
       "sourceExample": "강의 하류에는 고운 모래가 넓게 펼쳐진 백사장을 흔히 볼 수 있어요.",
-      "definition": "강물이 바다로 흘러 들어가는 끝부분으로, 물살이 느리고 모래가 많아요.",
+      "definition": "강에서 물이 흘러가는 방향의 아래쪽 부분을 말해요.",
       "example": "강의 하류에는 고운 모래가 넓게 펼쳐진 백사장을 흔히 볼 수 있어요.",
       "flags": [],
       "duplicateReview": null,
@@ -2600,11 +2600,11 @@
           "prompt": "‘하류’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비의 양과 눈·우박 등을 녹인 물의 양을 합해 나타낸 것을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "강물이 바다로 흘러 들어가는 끝부분으로, 물살이 느리고 모래가 많아요.",
+              "value": "강에서 물이 흘러가는 방향의 아래쪽 부분을 말해요.",
               "isCorrect": true
             },
             {
@@ -2641,7 +2641,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "강물이 바다로 흘러 들어가는 끝부분으로, 물살이 느리고 모래가 많아요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "강에서 물이 흘러가는 방향의 아래쪽 부분을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "하류"
           ]
@@ -2666,7 +2666,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘하류’는 강물이 바다로 흘러 들어가는 끝부분으로, 물살이 느리고 모래가 많아요.",
+          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘하류’는 강에서 물이 흘러가는 방향의 아래쪽 부분을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "친구가 슬플 때 그 마음을 현미경해 주면 큰 힘이 된단다.",
+              "value": "친구가 슬플 때 그 마음에 현미경해 주면 큰 힘이 된단다.",
               "isCorrect": false
             }
           ],
@@ -3089,9 +3089,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 3,
-      "sourceDefinition": "어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.",
+      "sourceDefinition": "사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.",
       "sourceExample": "작가님은 숲속 풍경을 마치 눈앞에 있는 것처럼 자세하게 묘사해 주셨어요.",
-      "definition": "어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.",
+      "definition": "사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.",
       "example": "작가님은 숲속 풍경을 마치 눈앞에 있는 것처럼 자세하게 묘사해 주셨어요.",
       "flags": [],
       "duplicateReview": null,
@@ -3118,7 +3118,7 @@
               "isCorrect": false
             },
             {
-              "value": "어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.",
+              "value": "사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -3151,7 +3151,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "묘사"
           ]
@@ -3176,7 +3176,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘묘사’는 어떤 사물이나 풍경을 눈에 보이는 것처럼 생생하게 그려내듯 말하는 거예요.",
+          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘묘사’는 사물이나 사람, 풍경 등을 말이나 글, 그림으로 생생하게 나타내는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3424,7 +3424,7 @@
               "isCorrect": true
             },
             {
-              "value": "나와 생각이 다른 사람을 너그럽게 이해하고 받아들이는 마음이에요.",
+              "value": "남의 잘못을 너그럽게 용서하거나 나와 다른 생각을 넓게 받아들이는 마음이에요.",
               "isCorrect": false
             },
             {
@@ -3518,11 +3518,11 @@
           "prompt": "‘오류’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 일을 결정하기 전에 틀린 곳이나 문제는 없는지 자세히 살피는 거예요.",
+              "value": "어떤 내용이나 일에 문제가 없는지 자세히 살펴보는 거예요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 신중하게 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             },
             {
@@ -3726,11 +3726,11 @@
               "isCorrect": true
             },
             {
-              "value": "지구에서 보았을 때 달의 모양이 변하는 모습을 말해요.",
+              "value": "태양빛을 받아 밝게 보이는 부분에 따라 달이나 행성이 서로 다른 모양으로 보이는 모습을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "행성의 주위를 일정한 길을 따라 도는 별이에요. 지구의 위성은 '달'이에요.",
+              "value": "행성의 주위를 일정한 길을 따라 도는 천체예요. 지구 주위를 도는 것은 '달'이에요.",
               "isCorrect": false
             },
             {

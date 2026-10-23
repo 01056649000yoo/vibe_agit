@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 5,
   "deckId": "grade5-deck06",
   "deckNumber": 6,
@@ -131,9 +131,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 1,
-      "sourceDefinition": "예술 작품을 보거나 듣고 마음속으로 느끼는 즐거움을 말해요.",
+      "sourceDefinition": "예술 작품을 보거나 듣고 그 아름다움과 의미를 느끼며 음미하는 것을 말해요.",
       "sourceExample": "미술관에서 멋진 그림을 감상하며 내 생각을 정리해 보았어.",
-      "definition": "예술 작품을 보거나 듣고 마음속으로 느끼는 즐거움을 말해요.",
+      "definition": "예술 작품을 보거나 듣고 그 아름다움과 의미를 느끼며 음미하는 것을 말해요.",
       "example": "미술관에서 멋진 그림을 감상하며 내 생각을 정리해 보았어.",
       "flags": [],
       "duplicateReview": null,
@@ -156,7 +156,7 @@
               "isCorrect": false
             },
             {
-              "value": "예술 작품을 보거나 듣고 마음속으로 느끼는 즐거움을 말해요.",
+              "value": "예술 작품을 보거나 듣고 그 아름다움과 의미를 느끼며 음미하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -193,7 +193,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "예술 작품을 보거나 듣고 마음속으로 느끼는 즐거움을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "예술 작품을 보거나 듣고 그 아름다움과 의미를 느끼며 음미하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "감상"
           ]
@@ -218,7 +218,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘감상’은 예술 작품을 보거나 듣고 마음속으로 느끼는 즐거움을 말해요.",
+          "explanation": "이 문장은 원래 ‘가설’의 쓰임이에요. ‘감상’은 예술 작품을 보거나 듣고 그 아름다움과 의미를 느끼며 음미하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -316,7 +316,7 @@
               "isCorrect": true
             },
             {
-              "value": "겨울철 방 안이 너무 건조해서 가습기를 틀어 거리를 했어.",
+              "value": "겨울철 방 안이 너무 건조해서 거리기를 틀어 습도를 높였어.",
               "isCorrect": false
             }
           ],
@@ -662,7 +662,7 @@
           "prompt": "‘유교’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "빼앗겼던 나라의 주권을 다시 되찾은 기쁜 날이에요.",
+              "value": "빼앗겼던 나라의 주권을 되찾는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -845,9 +845,9 @@
       "meaningNumber": 1,
       "category": "활동과 순서",
       "level": 2,
-      "sourceDefinition": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+      "sourceDefinition": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
       "sourceExample": "좋아하는 과일 이름을 공책에 쭉 나열해서 적어 보았어.",
-      "definition": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+      "definition": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
       "example": "좋아하는 과일 이름을 공책에 쭉 나열해서 적어 보았어.",
       "flags": [],
       "duplicateReview": null,
@@ -866,7 +866,7 @@
           "prompt": "‘나열’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -907,7 +907,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "나열"
           ]
@@ -928,11 +928,11 @@
               "isCorrect": true
             },
             {
-              "value": "법은 도덕과 달리 어겼을 때 벌을 받는 나열을 가지고 있어요.",
+              "value": "법은 도덕과 달리 국가의 힘으로 지키게 할 수 있는 나열을 가지고 있어요.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘강제성’의 쓰임이에요. ‘나열’은 물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘강제성’의 쓰임이에요. ‘나열’은 물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -947,10 +947,10 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "나라의 살림을 위해 국민이 세금을 내는 의무를 말해요.",
-      "sourceExample": "우리가 내는 세금은 도로를 닦거나 학교를 짓는 등 납세의 보람으로 돌아와요.",
-      "definition": "나라의 살림을 위해 국민이 세금을 내는 의무를 말해요.",
-      "example": "우리가 내는 세금은 도로를 닦거나 학교를 짓는 등 납세의 보람으로 돌아와요.",
+      "sourceDefinition": "국가나 지방 자치 단체에 세금을 내는 것을 말해요.",
+      "sourceExample": "납세로 모인 세금은 도로를 닦거나 학교를 짓는 데 쓰여요.",
+      "definition": "국가나 지방 자치 단체에 세금을 내는 것을 말해요.",
+      "example": "납세로 모인 세금은 도로를 닦거나 학교를 짓는 데 쓰여요.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -972,7 +972,7 @@
               "isCorrect": false
             },
             {
-              "value": "나라의 살림을 위해 국민이 세금을 내는 의무를 말해요.",
+              "value": "국가나 지방 자치 단체에 세금을 내는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -980,14 +980,14 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우리가 내는 세금은 도로를 닦거나 학교를 짓는 등 ＿＿＿＿의 보람으로 돌아와요.",
+          "prompt": "＿＿＿＿로 모인 세금은 도로를 닦거나 학교를 짓는 데 쓰여요.",
           "options": [
             {
               "value": "갈등",
@@ -1009,14 +1009,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "나라의 살림을 위해 국민이 세금을 내는 의무를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "국가나 지방 자치 단체에 세금을 내는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "납세"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우리가 내는 세금은 도로를 닦거나 학교를 짓는 등 ＿＿＿＿의 보람으로 돌아와요.",
+          "prompt": "＿＿＿＿로 모인 세금은 도로를 닦거나 학교를 짓는 데 쓰여요.",
           "acceptedAnswers": [
             "납세"
           ]
@@ -1030,11 +1030,11 @@
               "isCorrect": false
             },
             {
-              "value": "우리가 내는 세금은 도로를 닦거나 학교를 짓는 등 납세의 보람으로 돌아와요.",
+              "value": "납세로 모인 세금은 도로를 닦거나 학교를 짓는 데 쓰여요.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개항’의 쓰임이에요. ‘납세’는 나라의 살림을 위해 국민이 세금을 내는 의무를 말해요.",
+          "explanation": "이 문장은 원래 ‘개항’의 쓰임이에요. ‘납세’는 국가나 지방 자치 단체에 세금을 내는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1282,11 +1282,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -1588,7 +1588,7 @@
               "isCorrect": false
             },
             {
-              "value": "동물이나 식물이 실제로 뿌리를 내리고 살고 있는 장소를 말해요.",
+              "value": "동물이나 식물이 자연에서 자리를 잡고 살아가는 장소를 말해요.",
               "isCorrect": false
             },
             {
@@ -1792,7 +1792,7 @@
               "isCorrect": true
             },
             {
-              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "value": "일정한 기간에 내린 비, 눈, 우박 등을 모두 물로 바꾸었을 때의 양을 깊이로 나타낸 것이에요.",
               "isCorrect": false
             },
             {
@@ -1967,9 +1967,9 @@
       "meaningNumber": 1,
       "category": "말과 글",
       "level": 2,
-      "sourceDefinition": "사람이나 동물의 모양이나 움직임을 흉내 낸 말을 말해요.",
+      "sourceDefinition": "사람이나 사물의 모양, 움직임, 상태 등을 흉내 내어 만든 말을 말해요.",
       "sourceExample": "'뒤뚱뒤뚱', '반짝반짝'처럼 모양을 본뜬 말을 의태어라고 해.",
-      "definition": "사람이나 동물의 모양이나 움직임을 흉내 낸 말을 말해요.",
+      "definition": "사람이나 사물의 모양, 움직임, 상태 등을 흉내 내어 만든 말을 말해요.",
       "example": "'뒤뚱뒤뚱', '반짝반짝'처럼 모양을 본뜬 말을 의태어라고 해.",
       "flags": [],
       "duplicateReview": null,
@@ -2000,7 +2000,7 @@
               "isCorrect": false
             },
             {
-              "value": "사람이나 동물의 모양이나 움직임을 흉내 낸 말을 말해요.",
+              "value": "사람이나 사물의 모양, 움직임, 상태 등을 흉내 내어 만든 말을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2029,7 +2029,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "사람이나 동물의 모양이나 움직임을 흉내 낸 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사람이나 사물의 모양, 움직임, 상태 등을 흉내 내어 만든 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "의태어"
           ]
@@ -2054,7 +2054,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘의태어’는 사람이나 동물의 모양이나 움직임을 흉내 낸 말을 말해요.",
+          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘의태어’는 사람이나 사물의 모양, 움직임, 상태 등을 흉내 내어 만든 말을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2204,7 +2204,7 @@
               "isCorrect": false
             },
             {
-              "value": "다른 나라의 침략으로부터 우리 나라를 안전하게 지키는 일을 말해요.",
+              "value": "다른 나라의 침략으로부터 우리나라를 안전하게 지키는 일을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2764,7 +2764,7 @@
               "isCorrect": true
             },
             {
-              "value": "독립 협회는 강연을 열어 사람들에게 나라 사랑의 마음을 대응점했어요.",
+              "value": "독립 협회는 강연을 열어 백성들을 깨우치는 대응점 활동을 펼쳤어요.",
               "isCorrect": false
             }
           ],
@@ -2885,10 +2885,10 @@
       "meaningNumber": 1,
       "category": "물질의 성질",
       "level": 3,
-      "sourceDefinition": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
-      "sourceExample": "지시약인 자주색 양배추 지시약이 산성을 만나면 붉은색으로 변해.",
-      "definition": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
-      "example": "지시약인 자주색 양배추 지시약이 산성을 만나면 붉은색으로 변해.",
+      "sourceDefinition": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
+      "sourceExample": "자주색 양배추 지시약이 산성 용액을 만나면 붉은색으로 변해.",
+      "definition": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
+      "example": "자주색 양배추 지시약이 산성 용액을 만나면 붉은색으로 변해.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -2906,7 +2906,7 @@
           "prompt": "‘산성’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+              "value": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
               "isCorrect": true
             },
             {
@@ -2925,7 +2925,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "지시약인 자주색 양배추 지시약이 ＿＿＿＿을 만나면 붉은색으로 변해.",
+          "prompt": "자주색 양배추 지시약이 ＿＿＿＿ 용액을 만나면 붉은색으로 변해.",
           "options": [
             {
               "value": "결정",
@@ -2947,14 +2947,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "산성"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "지시약인 자주색 양배추 지시약이 ＿＿＿＿을 만나면 붉은색으로 변해.",
+          "prompt": "자주색 양배추 지시약이 ＿＿＿＿ 용액을 만나면 붉은색으로 변해.",
           "acceptedAnswers": [
             "산성"
           ]
@@ -2964,7 +2964,7 @@
           "prompt": "다음 중 ‘산성’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "지시약인 자주색 양배추 지시약이 산성을 만나면 붉은색으로 변해.",
+              "value": "자주색 양배추 지시약이 산성 용액을 만나면 붉은색으로 변해.",
               "isCorrect": true
             },
             {
@@ -2972,7 +2972,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘산성’은 레몬즙처럼 신맛이 나고 금속을 녹이는 성질을 가진 물질의 상태예요.",
+          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘산성’은 수용액이 푸른 리트머스 종이를 붉게 바꾸는 등 산의 특징을 나타내는 성질을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3016,7 +3016,7 @@
               "isCorrect": true
             },
             {
-              "value": "물건이나 단어를 하나하나 순서대로 늘어놓는 것을 말해요.",
+              "value": "물건이나 낱말을 일정한 차례로 죽 벌여 놓는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3212,7 +3212,7 @@
           "prompt": "‘신조어’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "하나의 단어가 두 가지 이상의 여러 가지 뜻을 가진 말을 말해요.",
+              "value": "하나의 낱말이 서로 관련된 두 가지 이상의 뜻을 가진 말을 말해요.",
               "isCorrect": false
             },
             {
@@ -3326,7 +3326,7 @@
               "isCorrect": false
             },
             {
-              "value": "가장 앞서가는 최신 기술이나 과학 분야를 말해요.",
+              "value": "어떤 분야에서 수준이나 기술이 가장 앞선 상태를 말해요.",
               "isCorrect": false
             }
           ]
@@ -3424,7 +3424,7 @@
               "isCorrect": true
             },
             {
-              "value": "공기가 우리를 누르는 힘을 말해요.",
+              "value": "공기의 무게 때문에 일정한 넓이에 작용하는 누르는 힘의 크기를 말해요.",
               "isCorrect": false
             },
             {
@@ -3730,11 +3730,11 @@
               "isCorrect": false
             },
             {
-              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 빛나는 별이에요.",
+              "value": "태양계의 두 번째 행성으로, 밤하늘에서 아주 밝게 보이는 천체예요.",
               "isCorrect": false
             },
             {
-              "value": "바다로 둘러싸인 아주 크고 넓은 땅 덩어리를 말해요.",
+              "value": "바다로 둘러싸인 아주 크고 넓은 땅덩어리를 말해요.",
               "isCorrect": false
             }
           ]
@@ -3938,7 +3938,7 @@
               "isCorrect": true
             },
             {
-              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 깊이 생각하는 거예요.",
+              "value": "어떤 일을 결정할 때 관련된 여러 상황을 함께 생각해 보는 거예요.",
               "isCorrect": false
             }
           ]
@@ -4008,9 +4008,9 @@
       "category": "모양과 도형",
       "level": 3,
       "sourceDefinition": "마주 보는 두 쌍의 변이 서로 평행한 사각형이에요.",
-      "sourceExample": "직사각형을 한쪽으로 살짝 기울여 놓은 모양이 평행사변형이야.",
+      "sourceExample": "마주 보는 두 쌍의 변이 서로 평행하게 그려진 사각형은 모두 평행사변형이야.",
       "definition": "마주 보는 두 쌍의 변이 서로 평행한 사각형이에요.",
-      "example": "직사각형을 한쪽으로 살짝 기울여 놓은 모양이 평행사변형이야.",
+      "example": "마주 보는 두 쌍의 변이 서로 평행하게 그려진 사각형은 모두 평행사변형이야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -4047,7 +4047,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "직사각형을 한쪽으로 살짝 기울여 놓은 모양이 ＿＿＿＿이야.",
+          "prompt": "마주 보는 두 쌍의 변이 서로 평행하게 그려진 사각형은 모두 ＿＿＿＿이야.",
           "options": [
             {
               "value": "대각선",
@@ -4076,7 +4076,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "직사각형을 한쪽으로 살짝 기울여 놓은 모양이 ＿＿＿＿이야.",
+          "prompt": "마주 보는 두 쌍의 변이 서로 평행하게 그려진 사각형은 모두 ＿＿＿＿이야.",
           "acceptedAnswers": [
             "평행사변형"
           ]
@@ -4090,7 +4090,7 @@
               "isCorrect": false
             },
             {
-              "value": "직사각형을 한쪽으로 살짝 기울여 놓은 모양이 평행사변형이야.",
+              "value": "마주 보는 두 쌍의 변이 서로 평행하게 그려진 사각형은 모두 평행사변형이야.",
               "isCorrect": true
             }
           ],

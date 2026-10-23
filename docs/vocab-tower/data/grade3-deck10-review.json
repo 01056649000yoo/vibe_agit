@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck10",
   "deckNumber": 10,
@@ -29,9 +29,9 @@
       "meaningNumber": 1,
       "category": "감정과 태도",
       "level": 1,
-      "sourceDefinition": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+      "sourceDefinition": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
       "sourceExample": "선생님께서는 우리 모두에게 공평하게 간식을 나누어 주셨어요.",
-      "definition": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+      "definition": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
       "example": "선생님께서는 우리 모두에게 공평하게 간식을 나누어 주셨어요.",
       "flags": [],
       "duplicateReview": null,
@@ -50,7 +50,7 @@
           "prompt": "‘공평’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+              "value": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -58,7 +58,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -91,7 +91,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "공평"
           ]
@@ -116,7 +116,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘공평’은 어느 한쪽으로 치우치지 않고 모든 사람에게 똑같이 대하는 마음이에요.",
+          "explanation": "이 문장은 원래 ‘가구’의 쓰임이에요. ‘공평’은 어느 한쪽으로 치우치지 않고 공정하게 대하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -152,7 +152,7 @@
           "prompt": "‘과거’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+              "value": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
               "isCorrect": false
             },
             {
@@ -360,7 +360,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -437,9 +437,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 1,
-      "sourceDefinition": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+      "sourceDefinition": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
       "sourceExample": "책상 위에 놓인 연필, 지우개, 공책은 모두 모양이 있는 물체야.",
-      "definition": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+      "definition": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
       "example": "책상 위에 놓인 연필, 지우개, 공책은 모두 모양이 있는 물체야.",
       "flags": [],
       "duplicateReview": null,
@@ -458,7 +458,7 @@
           "prompt": "‘물체’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+              "value": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -470,7 +470,7 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -499,7 +499,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "물체"
           ]
@@ -524,7 +524,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘물체’는 우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘물체’는 일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -618,7 +618,7 @@
           "prompt": "다음 중 ‘방해’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 방해가 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 방해만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             },
             {
@@ -724,7 +724,7 @@
               "isCorrect": true
             },
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 북극이 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 북극만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             }
           ],
@@ -874,11 +874,11 @@
               "isCorrect": false
             },
             {
-              "value": "밤 12시부터 낮 12시까지의 시간을 말해요. 보통 해가 뜨는 시간이에요.",
+              "value": "밤 12시부터 낮 12시까지의 시간을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "낮 12시부터 밤 12시까지의 시간을 말해요. 점심 먹고 난 뒤예요.",
+              "value": "낮 12시부터 밤 12시까지의 시간을 말해요.",
               "isCorrect": false
             }
           ]
@@ -947,9 +947,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 1,
-      "sourceDefinition": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+      "sourceDefinition": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
       "sourceExample": "나의 1호 애장품은 할머니께서 선물해 주신 곰 인형이야.",
-      "definition": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+      "definition": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
       "example": "나의 1호 애장품은 할머니께서 선물해 주신 곰 인형이야.",
       "flags": [],
       "duplicateReview": null,
@@ -972,11 +972,11 @@
               "isCorrect": false
             },
             {
-              "value": "자기가 가장 아끼고 사랑하는 물건을 말해요.",
+              "value": "자기가 소중히 아끼며 간직하는 물건을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "바이러스 때문에 생기는 아주 독한 유행성 감기를 말해요.",
+              "value": "인플루엔자 바이러스에 감염되어 생기며, 갑작스러운 고열이나 몸살 등이 나타날 수 있는 병이에요.",
               "isCorrect": false
             },
             {
@@ -1009,7 +1009,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "자기가 가장 아끼고 사랑하는 물건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자기가 소중히 아끼며 간직하는 물건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "애장품"
           ]
@@ -1034,7 +1034,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘개념’의 쓰임이에요. ‘애장품’은 자기가 가장 아끼고 사랑하는 물건을 말해요.",
+          "explanation": "이 문장은 원래 ‘개념’의 쓰임이에요. ‘애장품’은 자기가 소중히 아끼며 간직하는 물건을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1282,7 +1282,7 @@
               "isCorrect": false
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -1458,9 +1458,9 @@
       "category": "과학과 기술",
       "level": 1,
       "sourceDefinition": "정보를 전달하기 위해 사용하는 전화기, 스마트폰, 컴퓨터 같은 도구예요.",
-      "sourceExample": "옛날에는 봉수나 파발이 중요한 통신 수단이었대.",
+      "sourceExample": "옛날에는 편지나 봉화로 소식을 전했지만, 지금은 스마트폰이 가장 흔한 통신 수단이야.",
       "definition": "정보를 전달하기 위해 사용하는 전화기, 스마트폰, 컴퓨터 같은 도구예요.",
-      "example": "옛날에는 봉수나 파발이 중요한 통신 수단이었대.",
+      "example": "옛날에는 편지나 봉화로 소식을 전했지만, 지금은 스마트폰이 가장 흔한 통신 수단이야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1490,14 +1490,14 @@
               "isCorrect": true
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "옛날에는 봉수나 파발이 중요한 ＿＿＿＿이었대.",
+          "prompt": "옛날에는 편지나 봉화로 소식을 전했지만, 지금은 스마트폰이 가장 흔한 ＿＿＿＿이야.",
           "options": [
             {
               "value": "통신 수단",
@@ -1526,7 +1526,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "옛날에는 봉수나 파발이 중요한 ＿＿＿＿이었대.",
+          "prompt": "옛날에는 편지나 봉화로 소식을 전했지만, 지금은 스마트폰이 가장 흔한 ＿＿＿＿이야.",
           "acceptedAnswers": [
             "통신 수단"
           ]
@@ -1536,11 +1536,11 @@
           "prompt": "다음 중 ‘통신 수단’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "옛날에는 봉수나 파발이 중요한 통신 수단이었대.",
+              "value": "옛날에는 편지나 봉화로 소식을 전했지만, 지금은 스마트폰이 가장 흔한 통신 수단이야.",
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 통신 수단하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 통신 수단되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
@@ -1661,9 +1661,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 1,
-      "sourceDefinition": "농사가 아주 잘 되어 곡식이 평소보다 많이 열린 해를 말해요.",
+      "sourceDefinition": "농사가 아주 잘되어 곡식이 평소보다 많이 열린 해를 말해요.",
       "sourceExample": "올해는 날씨가 좋아서 들판에 황금빛 벼가 가득한 풍년이야.",
-      "definition": "농사가 아주 잘 되어 곡식이 평소보다 많이 열린 해를 말해요.",
+      "definition": "농사가 아주 잘되어 곡식이 평소보다 많이 열린 해를 말해요.",
       "example": "올해는 날씨가 좋아서 들판에 황금빛 벼가 가득한 풍년이야.",
       "flags": [],
       "duplicateReview": null,
@@ -1682,7 +1682,7 @@
           "prompt": "‘풍년’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "농사가 아주 잘 되어 곡식이 평소보다 많이 열린 해를 말해요.",
+              "value": "농사가 아주 잘되어 곡식이 평소보다 많이 열린 해를 말해요.",
               "isCorrect": true
             },
             {
@@ -1723,7 +1723,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "농사가 아주 잘 되어 곡식이 평소보다 많이 열린 해를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "농사가 아주 잘되어 곡식이 평소보다 많이 열린 해를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "풍년"
           ]
@@ -1744,11 +1744,11 @@
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 풍년하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 풍년되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘풍년’은 농사가 아주 잘 되어 곡식이 평소보다 많이 열린 해를 말해요.",
+          "explanation": "이 문장은 원래 ‘격리’의 쓰임이에요. ‘풍년’은 농사가 아주 잘되어 곡식이 평소보다 많이 열린 해를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2094,7 +2094,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2396,7 +2396,7 @@
           "prompt": "‘도감’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -2477,9 +2477,9 @@
       "meaningNumber": 1,
       "category": "측정과 단위",
       "level": 2,
-      "sourceDefinition": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+      "sourceDefinition": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
       "sourceExample": "우리 학교 운동장의 면적은 축구 경기를 하기에 충분히 넓어.",
-      "definition": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+      "definition": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
       "example": "우리 학교 운동장의 면적은 축구 경기를 하기에 충분히 넓어.",
       "flags": [],
       "duplicateReview": null,
@@ -2498,7 +2498,7 @@
           "prompt": "‘면적’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+              "value": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
               "isCorrect": true
             },
             {
@@ -2539,7 +2539,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "도형이나 물체의 표면이 차지하는 넓이를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "면적"
           ]
@@ -2564,7 +2564,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘면적’은 평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘면적’은 도형이나 물체의 표면이 차지하는 넓이를 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2600,7 +2600,7 @@
           "prompt": "‘빙하’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -2612,7 +2612,7 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -2702,7 +2702,7 @@
           "prompt": "‘사정’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2783,9 +2783,9 @@
       "meaningNumber": 1,
       "category": "나와 몸",
       "level": 2,
-      "sourceDefinition": "생물이 살아있는 기간이나 물건을 사용할 수 있는 기한을 말해요.",
+      "sourceDefinition": "생물이 살아 있는 기간이나 물건을 사용할 수 있는 기간을 말해요.",
       "sourceExample": "의학 기술이 발달하면서 사람들의 평균 수명이 예전보다 길어졌어.",
-      "definition": "생물이 살아있는 기간이나 물건을 사용할 수 있는 기한을 말해요.",
+      "definition": "생물이 살아 있는 기간이나 물건을 사용할 수 있는 기간을 말해요.",
       "example": "의학 기술이 발달하면서 사람들의 평균 수명이 예전보다 길어졌어.",
       "flags": [],
       "duplicateReview": null,
@@ -2816,7 +2816,7 @@
               "isCorrect": false
             },
             {
-              "value": "생물이 살아있는 기간이나 물건을 사용할 수 있는 기한을 말해요.",
+              "value": "생물이 살아 있는 기간이나 물건을 사용할 수 있는 기간을 말해요.",
               "isCorrect": true
             }
           ]
@@ -2845,7 +2845,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "생물이 살아있는 기간이나 물건을 사용할 수 있는 기한을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "생물이 살아 있는 기간이나 물건을 사용할 수 있는 기간을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "수명"
           ]
@@ -2870,7 +2870,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘곤충’의 쓰임이에요. ‘수명’은 생물이 살아있는 기간이나 물건을 사용할 수 있는 기한을 말해요.",
+          "explanation": "이 문장은 원래 ‘곤충’의 쓰임이에요. ‘수명’은 생물이 살아 있는 기간이나 물건을 사용할 수 있는 기간을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2910,7 +2910,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3016,7 +3016,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3191,9 +3191,9 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 2,
-      "sourceDefinition": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 것을 말해요.",
+      "sourceDefinition": "어떤 집단에서 오랫동안 전해 내려오는 생각, 풍습, 행동 방식 등을 말해요.",
       "sourceExample": "한복은 우리나라의 아름다운 전통 의상이야.",
-      "definition": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 것을 말해요.",
+      "definition": "어떤 집단에서 오랫동안 전해 내려오는 생각, 풍습, 행동 방식 등을 말해요.",
       "example": "한복은 우리나라의 아름다운 전통 의상이야.",
       "flags": [],
       "duplicateReview": null,
@@ -3212,7 +3212,7 @@
           "prompt": "‘전통’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "배운 내용을 직접 확인하기 위해 현장에 가서 조사하는 활동이에요.",
+              "value": "어떤 곳에 직접 가서 그곳의 모습이나 사정을 살펴보고 조사하는 활동이에요.",
               "isCorrect": false
             },
             {
@@ -3224,7 +3224,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 것을 말해요.",
+              "value": "어떤 집단에서 오랫동안 전해 내려오는 생각, 풍습, 행동 방식 등을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3253,7 +3253,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 집단에서 오랫동안 전해 내려오는 생각, 풍습, 행동 방식 등을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "전통"
           ]
@@ -3278,7 +3278,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘전통’은 옛날부터 오늘날까지 전해 내려오는 우리 고유의 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘전통’은 어떤 집단에서 오랫동안 전해 내려오는 생각, 풍습, 행동 방식 등을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3416,7 +3416,7 @@
           "prompt": "‘취직’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3522,7 +3522,7 @@
               "isCorrect": false
             },
             {
-              "value": "모자라거나 부족한 부분을 채워 넣어서 완벽하게 만드는 거예요.",
+              "value": "모자라거나 부족한 부분을 채워 더 나아지게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3620,7 +3620,7 @@
           "prompt": "‘과밀’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -3926,7 +3926,7 @@
           "prompt": "‘저출산’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4008,9 +4008,9 @@
       "category": "감정과 태도",
       "level": 3,
       "sourceDefinition": "굳게 믿고 있어서 조금도 의심하지 않는 마음의 상태예요.",
-      "sourceExample": "열심히 공부한 덕분에 이번 문제는 정답일 거라는 확신이 들어.",
+      "sourceExample": "열심히 공부한 덕분에 내가 고른 답이 맞다는 확신이 들어.",
       "definition": "굳게 믿고 있어서 조금도 의심하지 않는 마음의 상태예요.",
-      "example": "열심히 공부한 덕분에 이번 문제는 정답일 거라는 확신이 들어.",
+      "example": "열심히 공부한 덕분에 내가 고른 답이 맞다는 확신이 들어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -4032,7 +4032,7 @@
               "isCorrect": false
             },
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {
@@ -4047,7 +4047,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "열심히 공부한 덕분에 이번 문제는 정답일 거라는 ＿＿＿＿이 들어.",
+          "prompt": "열심히 공부한 덕분에 내가 고른 답이 맞다는 ＿＿＿＿이 들어.",
           "options": [
             {
               "value": "가치",
@@ -4076,7 +4076,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "열심히 공부한 덕분에 이번 문제는 정답일 거라는 ＿＿＿＿이 들어.",
+          "prompt": "열심히 공부한 덕분에 내가 고른 답이 맞다는 ＿＿＿＿이 들어.",
           "acceptedAnswers": [
             "확신"
           ]
@@ -4090,7 +4090,7 @@
               "isCorrect": false
             },
             {
-              "value": "열심히 공부한 덕분에 이번 문제는 정답일 거라는 확신이 들어.",
+              "value": "열심히 공부한 덕분에 내가 고른 답이 맞다는 확신이 들어.",
               "isCorrect": true
             }
           ],

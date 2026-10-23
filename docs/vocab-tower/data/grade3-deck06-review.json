@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
   "reviewMode": "assisted",
-  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "sourceFingerprint": "f07b03ae03998f0aa120f5c4f9df38b649cdca4f8d5af5e66e32edb830995566",
   "grade": 3,
   "deckId": "grade3-deck06",
   "deckNumber": 6,
@@ -58,7 +58,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -233,9 +233,9 @@
       "meaningNumber": 1,
       "category": "과학과 기술",
       "level": 1,
-      "sourceDefinition": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+      "sourceDefinition": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
       "sourceExample": "과학 시간에 태양계 모형을 보며 행성들의 위치를 공부했어요.",
-      "definition": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+      "definition": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
       "example": "과학 시간에 태양계 모형을 보며 행성들의 위치를 공부했어요.",
       "flags": [],
       "duplicateReview": null,
@@ -262,11 +262,11 @@
               "isCorrect": false
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "우리 눈에 보이고 만질 수 있는 모양이 있는 것을 말해요.",
+              "value": "일정한 모양을 가지고 공간을 차지하는 것을 말해요.",
               "isCorrect": false
             }
           ]
@@ -295,7 +295,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "모형"
           ]
@@ -320,7 +320,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘가치’의 쓰임이에요. ‘모형’은 실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+          "explanation": "이 문장은 원래 ‘가치’의 쓰임이에요. ‘모형’은 실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -618,7 +618,7 @@
           "prompt": "다음 중 ‘사각형’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 사각형이 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 사각형만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             },
             {
@@ -666,7 +666,7 @@
               "isCorrect": false
             },
             {
-              "value": "생각이나 감정을 완벽하게 나타내는 글의 마디를 말해요.",
+              "value": "생각이나 감정을 하나의 완결된 내용으로 나타내는 말이나 글의 단위를 말해요.",
               "isCorrect": false
             },
             {
@@ -674,7 +674,7 @@
               "isCorrect": true
             },
             {
-              "value": "이야기나 동화 속에 나오는 사람이나 동물을 말해요.",
+              "value": "이야기 속에서 생각하고 행동하는 사람이나, 사람처럼 표현된 동물과 사물 등을 말해요.",
               "isCorrect": false
             }
           ]
@@ -724,7 +724,7 @@
               "isCorrect": true
             },
             {
-              "value": "맛있는 떡볶이 냄새를 맡으니 후각 설명이 살아나는 기분이야.",
+              "value": "눈을 감고 손끝의 설명만으로 상자 속 물건을 맞혔어.",
               "isCorrect": false
             }
           ],
@@ -768,7 +768,7 @@
               "isCorrect": false
             },
             {
-              "value": "힘이나 기운이 무척 세고 당당한 것을 말해요.",
+              "value": "힘이나 기운이 매우 센 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -947,10 +947,10 @@
       "meaningNumber": 1,
       "category": "우리 역사",
       "level": 1,
-      "sourceDefinition": "일정한 기간을 나타내는 해(year)를 말해요.",
-      "sourceExample": "내가 태어난 연도는 201x년이야.",
-      "definition": "일정한 기간을 나타내는 해(year)를 말해요.",
-      "example": "내가 태어난 연도는 201x년이야.",
+      "sourceDefinition": "어떤 일이 일어난 해를 숫자로 나타낸 것을 말해요.",
+      "sourceExample": "내가 태어난 연도는 2015년이야.",
+      "definition": "어떤 일이 일어난 해를 숫자로 나타낸 것을 말해요.",
+      "example": "내가 태어난 연도는 2015년이야.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -968,11 +968,11 @@
           "prompt": "‘연도’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "집, 다리, 탑처럼 사람의 손으로 정성껏 지은 모든 건물을 말해요.",
+              "value": "집이나 탑처럼 땅 위에 지은 건물이나 시설물을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "일정한 기간을 나타내는 해(year)를 말해요.",
+              "value": "어떤 일이 일어난 해를 숫자로 나타낸 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -987,7 +987,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "내가 태어난 ＿＿＿＿는 201x년이야.",
+          "prompt": "내가 태어난 ＿＿＿＿는 2015년이야.",
           "options": [
             {
               "value": "건축물",
@@ -1009,14 +1009,14 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "일정한 기간을 나타내는 해(year)를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "어떤 일이 일어난 해를 숫자로 나타낸 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "연도"
           ]
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "내가 태어난 ＿＿＿＿는 201x년이야.",
+          "prompt": "내가 태어난 ＿＿＿＿는 2015년이야.",
           "acceptedAnswers": [
             "연도"
           ]
@@ -1030,11 +1030,11 @@
               "isCorrect": false
             },
             {
-              "value": "내가 태어난 연도는 201x년이야.",
+              "value": "내가 태어난 연도는 2015년이야.",
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘감지’의 쓰임이에요. ‘연도’는 일정한 기간을 나타내는 해(year)를 말해요.",
+          "explanation": "이 문장은 원래 ‘감지’의 쓰임이에요. ‘연도’는 어떤 일이 일어난 해를 숫자로 나타낸 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1074,7 +1074,7 @@
               "isCorrect": false
             },
             {
-              "value": "직접 현장에 가서 보고 배우는 즐거운 활동을 말해요.",
+              "value": "직접 현장에 가서 보고 배우는 활동을 말해요.",
               "isCorrect": false
             },
             {
@@ -1176,7 +1176,7 @@
               "isCorrect": false
             },
             {
-              "value": "단어의 뜻을 풀이해 놓은 두꺼운 책이나 프로그램을 말해요.",
+              "value": "낱말을 일정한 순서로 모아 뜻이나 발음 등을 설명해 놓은 책이나 전자 자료를 말해요.",
               "isCorrect": false
             },
             {
@@ -1253,9 +1253,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 1,
-      "sourceDefinition": "연극이나 영화에서 한 번에 보여지는 그림 같은 모습을 말해요.",
+      "sourceDefinition": "연극이나 영화, 이야기에서 어떤 일이 벌어지는 한 부분이나 모습을 말해요.",
       "sourceExample": "영화에서 주인공이 하늘을 나는 장면이 정말 신기했어.",
-      "definition": "연극이나 영화에서 한 번에 보여지는 그림 같은 모습을 말해요.",
+      "definition": "연극이나 영화, 이야기에서 어떤 일이 벌어지는 한 부분이나 모습을 말해요.",
       "example": "영화에서 주인공이 하늘을 나는 장면이 정말 신기했어.",
       "flags": [],
       "duplicateReview": null,
@@ -1274,7 +1274,7 @@
           "prompt": "‘장면’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "연극이나 영화에서 한 번에 보여지는 그림 같은 모습을 말해요.",
+              "value": "연극이나 영화, 이야기에서 어떤 일이 벌어지는 한 부분이나 모습을 말해요.",
               "isCorrect": true
             },
             {
@@ -1315,7 +1315,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "연극이나 영화에서 한 번에 보여지는 그림 같은 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "연극이나 영화, 이야기에서 어떤 일이 벌어지는 한 부분이나 모습을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "장면"
           ]
@@ -1340,7 +1340,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘건강’의 쓰임이에요. ‘장면’은 연극이나 영화에서 한 번에 보여지는 그림 같은 모습을 말해요.",
+          "explanation": "이 문장은 원래 ‘건강’의 쓰임이에요. ‘장면’은 연극이나 영화, 이야기에서 어떤 일이 벌어지는 한 부분이나 모습을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -1356,9 +1356,9 @@
       "category": "자연과 환경",
       "level": 1,
       "sourceDefinition": "위험을 무릅쓰고 알려지지 않은 곳에 가서 조사하는 것을 말해요.",
-      "sourceExample": "우리는 학교 뒤뜰에 무엇이 사는지 보물 지도를 들고 탐험을 떠났어.",
+      "sourceExample": "우리는 신비한 동굴에 무엇이 사는지 손전등을 들고 탐험을 떠났어.",
       "definition": "위험을 무릅쓰고 알려지지 않은 곳에 가서 조사하는 것을 말해요.",
-      "example": "우리는 학교 뒤뜰에 무엇이 사는지 보물 지도를 들고 탐험을 떠났어.",
+      "example": "우리는 신비한 동굴에 무엇이 사는지 손전등을 들고 탐험을 떠났어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -1395,7 +1395,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "우리는 학교 뒤뜰에 무엇이 사는지 보물 지도를 들고 ＿＿＿＿을 떠났어.",
+          "prompt": "우리는 신비한 동굴에 무엇이 사는지 손전등을 들고 ＿＿＿＿을 떠났어.",
           "options": [
             {
               "value": "곤충",
@@ -1424,7 +1424,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "우리는 학교 뒤뜰에 무엇이 사는지 보물 지도를 들고 ＿＿＿＿을 떠났어.",
+          "prompt": "우리는 신비한 동굴에 무엇이 사는지 손전등을 들고 ＿＿＿＿을 떠났어.",
           "acceptedAnswers": [
             "탐험"
           ]
@@ -1438,7 +1438,7 @@
               "isCorrect": false
             },
             {
-              "value": "우리는 학교 뒤뜰에 무엇이 사는지 보물 지도를 들고 탐험을 떠났어.",
+              "value": "우리는 신비한 동굴에 무엇이 사는지 손전등을 들고 탐험을 떠났어.",
               "isCorrect": true
             }
           ],
@@ -1490,7 +1490,7 @@
               "isCorrect": true
             },
             {
-              "value": "실제 물건의 모양을 본떠서 작게 만든 물건을 말해요.",
+              "value": "실제 물건의 모양이나 구조를 본떠 만든 물건을 말해요.",
               "isCorrect": false
             }
           ]
@@ -1540,7 +1540,7 @@
               "isCorrect": true
             },
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 통신하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 통신되어 쉬어야 해.",
               "isCorrect": false
             }
           ],
@@ -1580,15 +1580,15 @@
           "prompt": "‘합’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "수를 더하거나 빼서 알맞은 답을 구하는 과정이에요.",
+              "value": "수를 더하거나 빼거나 곱하거나 나누는 등의 방법으로 값을 구하는 과정이에요.",
               "isCorrect": false
             },
             {
-              "value": "큰 수에서 작은 수를 뺐을 때 남는 값을 말해요.",
+              "value": "어떤 수에서 다른 수를 뺐을 때 얻는 값을 말해요.",
               "isCorrect": false
             },
             {
-              "value": "어떤 일이 일어난 차례나 번수를 말해요.",
+              "value": "어떤 일이 몇 번 일어났는지를 나타내는 수를 말해요.",
               "isCorrect": false
             },
             {
@@ -1638,7 +1638,7 @@
           "prompt": "다음 중 ‘합’의 쓰임이 알맞은 문장을 고르세요.",
           "options": [
             {
-              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 합하며 쉬어야 해.",
+              "value": "독감에 걸린 친구는 병이 옮지 않도록 집에서 며칠 동안 합되어 쉬어야 해.",
               "isCorrect": false
             },
             {
@@ -1686,7 +1686,7 @@
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -1988,7 +1988,7 @@
           "prompt": "‘단위’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "평평한 바닥이나 땅의 넓이를 숫자로 나타낸 것이에요.",
+              "value": "도형이나 물체의 표면이 차지하는 넓이를 말해요.",
               "isCorrect": false
             },
             {
@@ -2192,7 +2192,7 @@
           "prompt": "‘보육’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2273,9 +2273,9 @@
       "meaningNumber": 1,
       "category": "자연과 환경",
       "level": 2,
-      "sourceDefinition": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+      "sourceDefinition": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
       "sourceExample": "지구를 위해 플라스틱과 종이를 꼼꼼하게 분리해서 버렸어.",
-      "definition": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+      "definition": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
       "example": "지구를 위해 플라스틱과 종이를 꼼꼼하게 분리해서 버렸어.",
       "flags": [],
       "duplicateReview": null,
@@ -2294,7 +2294,7 @@
           "prompt": "‘분리’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "지구의 가장 위쪽인 북극과 아래쪽인 남극 주변의 아주 추운 곳이에요.",
+              "value": "북극과 남극 주변의 매우 추운 지역을 말해요.",
               "isCorrect": false
             },
             {
@@ -2302,7 +2302,7 @@
               "isCorrect": false
             },
             {
-              "value": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+              "value": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
               "isCorrect": true
             },
             {
@@ -2335,7 +2335,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "종류에 따라 나누어 따로 떼어놓는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "분리"
           ]
@@ -2360,7 +2360,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘분리’는 종류에 따라 나누어 따로 떼어놓는 것을 말해요.",
+          "explanation": "이 문장은 원래 ‘계획’의 쓰임이에요. ‘분리’는 서로 붙어 있거나 함께 있는 것을 나누어 따로 떨어지게 하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2608,7 +2608,7 @@
               "isCorrect": true
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -2885,9 +2885,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "일이나 공부를 하지 않고 남는 시간에 자유롭게 즐기는 활동이에요.",
+      "sourceDefinition": "일이나 공부를 하고 남아 자유롭게 쓸 수 있는 시간을 말해요.",
       "sourceExample": "주말 여가 시간에는 가족들과 함께 자전거를 타러 가.",
-      "definition": "일이나 공부를 하지 않고 남는 시간에 자유롭게 즐기는 활동이에요.",
+      "definition": "일이나 공부를 하고 남아 자유롭게 쓸 수 있는 시간을 말해요.",
       "example": "주말 여가 시간에는 가족들과 함께 자전거를 타러 가.",
       "flags": [],
       "duplicateReview": null,
@@ -2906,11 +2906,11 @@
           "prompt": "‘여가’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "일이나 공부를 하지 않고 남는 시간에 자유롭게 즐기는 활동이에요.",
+              "value": "일이나 공부를 하고 남아 자유롭게 쓸 수 있는 시간을 말해요.",
               "isCorrect": true
             },
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -2947,7 +2947,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "일이나 공부를 하지 않고 남는 시간에 자유롭게 즐기는 활동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "일이나 공부를 하고 남아 자유롭게 쓸 수 있는 시간을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "여가"
           ]
@@ -2972,7 +2972,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘공경’의 쓰임이에요. ‘여가’는 일이나 공부를 하지 않고 남는 시간에 자유롭게 즐기는 활동이에요.",
+          "explanation": "이 문장은 원래 ‘공경’의 쓰임이에요. ‘여가’는 일이나 공부를 하고 남아 자유롭게 쓸 수 있는 시간을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -2988,9 +2988,9 @@
       "category": "생각과 공부",
       "level": 2,
       "sourceDefinition": "어떤 일이 일어나게 된 근본적인 이유를 말해요.",
-      "sourceExample": "배가 아픈 원인을 생각해보니 아까 찬 우유를 너무 많이 마셨어.",
+      "sourceExample": "배가 아픈 원인을 생각해 보니 아까 찬 우유를 너무 많이 마신 탓인 것 같아.",
       "definition": "어떤 일이 일어나게 된 근본적인 이유를 말해요.",
-      "example": "배가 아픈 원인을 생각해보니 아까 찬 우유를 너무 많이 마셨어.",
+      "example": "배가 아픈 원인을 생각해 보니 아까 찬 우유를 너무 많이 마신 탓인 것 같아.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -3008,7 +3008,7 @@
           "prompt": "‘원인’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "어떤 사물이나 일의 핵심적인 특징을 이해하는 것을 말해요.",
+              "value": "여러 사물이나 일의 공통된 특징을 모아 머릿속에 정리한 생각을 말해요.",
               "isCorrect": false
             },
             {
@@ -3027,7 +3027,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "배가 아픈 ＿＿＿＿을 생각해보니 아까 찬 우유를 너무 많이 마셨어.",
+          "prompt": "배가 아픈 ＿＿＿＿을 생각해 보니 아까 찬 우유를 너무 많이 마신 탓인 것 같아.",
           "options": [
             {
               "value": "개념",
@@ -3056,7 +3056,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "배가 아픈 ＿＿＿＿을 생각해보니 아까 찬 우유를 너무 많이 마셨어.",
+          "prompt": "배가 아픈 ＿＿＿＿을 생각해 보니 아까 찬 우유를 너무 많이 마신 탓인 것 같아.",
           "acceptedAnswers": [
             "원인"
           ]
@@ -3070,7 +3070,7 @@
               "isCorrect": false
             },
             {
-              "value": "배가 아픈 원인을 생각해보니 아까 찬 우유를 너무 많이 마셨어.",
+              "value": "배가 아픈 원인을 생각해 보니 아까 찬 우유를 너무 많이 마신 탓인 것 같아.",
               "isCorrect": true
             }
           ],
@@ -3089,9 +3089,9 @@
       "meaningNumber": 1,
       "category": "가족과 이웃",
       "level": 2,
-      "sourceDefinition": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+      "sourceDefinition": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
       "sourceExample": "할머니와 할아버지의 사랑 덕분에 우리 같은 귀한 자손들이 태어났어.",
-      "definition": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+      "definition": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
       "example": "할머니와 할아버지의 사랑 덕분에 우리 같은 귀한 자손들이 태어났어.",
       "flags": [],
       "duplicateReview": null,
@@ -3110,7 +3110,7 @@
           "prompt": "‘자손’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "부모, 자식처럼 비슷한 시기에 태어나서 살아가는 사람들의 무리를 말해요.",
+              "value": "비슷한 시기에 태어나 같은 시대를 살아가며 비슷한 경험을 하는 사람들의 무리를 말해요.",
               "isCorrect": false
             },
             {
@@ -3118,7 +3118,7 @@
               "isCorrect": false
             },
             {
-              "value": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+              "value": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
               "isCorrect": true
             },
             {
@@ -3151,7 +3151,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "자손"
           ]
@@ -3176,7 +3176,7 @@
               "isCorrect": false
             }
           ],
-          "explanation": "이 문장은 원래 ‘곤충’의 쓰임이에요. ‘자손’은 부모님으로부터 태어나 대를 이어 나가는 아들이나 딸을 말해요.",
+          "explanation": "이 문장은 원래 ‘곤충’의 쓰임이에요. ‘자손’은 자식과 손자처럼 자기에게서 대를 이어 태어나는 사람들을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3191,9 +3191,9 @@
       "meaningNumber": 1,
       "category": "사회와 소통",
       "level": 2,
-      "sourceDefinition": "둘 이상의 대상을 등급을 나누어 다르게 대우하는 나쁜 행동이에요.",
+      "sourceDefinition": "사람이나 집단을 합당한 이유 없이 다르게 대우하는 것을 말해요.",
       "sourceExample": "성별이나 피부색이 다르다는 이유로 차별을 해서는 절대 안 돼.",
-      "definition": "둘 이상의 대상을 등급을 나누어 다르게 대우하는 나쁜 행동이에요.",
+      "definition": "사람이나 집단을 합당한 이유 없이 다르게 대우하는 것을 말해요.",
       "example": "성별이나 피부색이 다르다는 이유로 차별을 해서는 절대 안 돼.",
       "flags": [],
       "duplicateReview": null,
@@ -3212,7 +3212,7 @@
           "prompt": "‘차별’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "우리 모두의 이익과 편리한 생활을 위해 국가에서 운영하는 곳이에요.",
+              "value": "국가나 지방 자치 단체 등이 세워 여러 사람의 공동 이익을 위한 일을 하는 기관이에요.",
               "isCorrect": false
             },
             {
@@ -3224,7 +3224,7 @@
               "isCorrect": false
             },
             {
-              "value": "둘 이상의 대상을 등급을 나누어 다르게 대우하는 나쁜 행동이에요.",
+              "value": "사람이나 집단을 합당한 이유 없이 다르게 대우하는 것을 말해요.",
               "isCorrect": true
             }
           ]
@@ -3253,7 +3253,7 @@
         },
         "definitionInput": {
           "status": "reviewed",
-          "prompt": "둘 이상의 대상을 등급을 나누어 다르게 대우하는 나쁜 행동이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "prompt": "사람이나 집단을 합당한 이유 없이 다르게 대우하는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
           "acceptedAnswers": [
             "차별"
           ]
@@ -3278,7 +3278,7 @@
               "isCorrect": true
             }
           ],
-          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘차별’은 둘 이상의 대상을 등급을 나누어 다르게 대우하는 나쁜 행동이에요.",
+          "explanation": "이 문장은 원래 ‘공통’의 쓰임이에요. ‘차별’은 사람이나 집단을 합당한 이유 없이 다르게 대우하는 것을 말해요.",
           "reviewOrigin": "assisted_codex_candidate",
           "reviewPriority": "sample",
           "reviewReasons": [],
@@ -3322,7 +3322,7 @@
               "isCorrect": false
             },
             {
-              "value": "담는 그릇이 바뀌어도 모양과 크기가 변하지 않는 단단한 상태의 물질이에요.",
+              "value": "담는 그릇이 바뀌어도 모양과 부피가 거의 일정하게 유지되는 상태의 물질이에요.",
               "isCorrect": false
             },
             {
@@ -3522,7 +3522,7 @@
               "isCorrect": false
             },
             {
-              "value": "자기가 맡은 의무나 책임을 다하는 것을 말해요.",
+              "value": "자기가 맡아서 해야 할 일이나 책임을 말해요.",
               "isCorrect": false
             },
             {
@@ -3620,7 +3620,7 @@
           "prompt": "‘생활권’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4008,9 +4008,9 @@
       "category": "사회와 소통",
       "level": 3,
       "sourceDefinition": "자신이 직접 보고 들은 사실을 말하는 것을 말해요.",
-      "sourceExample": "옛날이야기를 들려주시는 할아버지의 증언은 살아있는 역사와 같아.",
+      "sourceExample": "그날 사고 현장을 직접 보신 할아버지의 증언 덕분에 사실을 알게 되었어.",
       "definition": "자신이 직접 보고 들은 사실을 말하는 것을 말해요.",
-      "example": "옛날이야기를 들려주시는 할아버지의 증언은 살아있는 역사와 같아.",
+      "example": "그날 사고 현장을 직접 보신 할아버지의 증언 덕분에 사실을 알게 되었어.",
       "flags": [],
       "duplicateReview": null,
       "reviewStatus": "reviewed",
@@ -4028,7 +4028,7 @@
           "prompt": "‘증언’의 뜻으로 알맞은 것을 고르세요.",
           "options": [
             {
-              "value": "전염병이 퍼지는 것을 막기 위해 아픈 사람을 따로 떨어진 곳에 있게 하는 거예요.",
+              "value": "다른 사람이나 집단과 접촉하지 못하도록 따로 떨어져 있게 하는 것을 말해요.",
               "isCorrect": false
             },
             {
@@ -4047,7 +4047,7 @@
         },
         "clozeChoice": {
           "status": "reviewed",
-          "prompt": "옛날이야기를 들려주시는 할아버지의 ＿＿＿＿은 살아있는 역사와 같아.",
+          "prompt": "그날 사고 현장을 직접 보신 할아버지의 ＿＿＿＿ 덕분에 사실을 알게 되었어.",
           "options": [
             {
               "value": "격리",
@@ -4076,7 +4076,7 @@
         },
         "clozeInput": {
           "status": "reviewed",
-          "prompt": "옛날이야기를 들려주시는 할아버지의 ＿＿＿＿은 살아있는 역사와 같아.",
+          "prompt": "그날 사고 현장을 직접 보신 할아버지의 ＿＿＿＿ 덕분에 사실을 알게 되었어.",
           "acceptedAnswers": [
             "증언"
           ]
@@ -4090,7 +4090,7 @@
               "isCorrect": false
             },
             {
-              "value": "옛날이야기를 들려주시는 할아버지의 증언은 살아있는 역사와 같아.",
+              "value": "그날 사고 현장을 직접 보신 할아버지의 증언 덕분에 사실을 알게 되었어.",
               "isCorrect": true
             }
           ],

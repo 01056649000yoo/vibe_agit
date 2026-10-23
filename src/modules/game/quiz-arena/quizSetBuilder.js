@@ -40,10 +40,13 @@ export const fitExplanation = (text, max = ARENA_LIMITS.explanation) => {
  * 글자 수 한도를 넘는 문제·보기는 만들지 않는다.
  */
 export const buildVocabQuestions = (words, { count = 10, rng = Math.random, limits = ARENA_LIMITS } = {}) => {
+    const seenWords = new Set();
     const usable = (words || []).filter((w) => {
         const word = clean(w?.word);
         const definition = clean(w?.definition);
-        return word && definition && word.length <= limits.choice && !definition.includes(word);
+        if (!word || !definition || word.length > limits.choice || definition.includes(word) || seenWords.has(word)) return false;
+        seenWords.add(word); // 학년이 달라도 같은 낱말은 한 번만(한 판에 같은 정답이 두 번 나오지 않게)
+        return true;
     });
     const byCategory = new Map();
     usable.forEach((w) => byCategory.set(w.category, [...(byCategory.get(w.category) || []), w]));
@@ -89,7 +92,7 @@ export const buildSpellingQuestions = (pool, { count = 10, rng = Math.random, li
 
 /** 게임 서버로 보내는 모양(`id`·`choices` 는 서버가 다시 만든다). */
 export const toArenaPayload = (questions) => questions.map(({ kind, text, choices, answer, explanation }) => (
-    { kind, text, ...(kind === 'c4' ? { choices } : {}), answer, ...(explanation ? { explanation } : {}) }
+    { kind, text, ...(kind === 'c4' || kind === 'c2' ? { choices } : {}), answer, ...(explanation ? { explanation } : {}) }
 ));
 
 /** 서버 검증(`validate.ts`)과 같은 규칙으로 미리 확인한다. 문제 목록이 올바르면 빈 배열. */
@@ -102,13 +105,14 @@ export const validateArenaQuestions = (questions, limits = ARENA_LIMITS) => {
         const text = clean(q?.text);
         if (!text) problems.push(`${n}번 문제 글이 비었어요`);
         else if (text.length > limits.question) problems.push(`${n}번 문제가 ${limits.question}자를 넘어요`);
-        if (q?.kind !== 'ox' && q?.kind !== 'c4') { problems.push(`${n}번 문제 형태(ox / c4)를 확인해 주세요`); return; }
+        if (q?.kind !== 'ox' && q?.kind !== 'c4' && q?.kind !== 'c2') { problems.push(`${n}번 문제 형태(ox / c2 / c4)를 확인해 주세요`); return; }
         let choices = ['O', 'X'];
-        if (q.kind === 'c4') {
+        if (q.kind === 'c4' || q.kind === 'c2') {
+            const want = q.kind === 'c4' ? 4 : 2;
             choices = Array.isArray(q.choices) ? q.choices.map(clean) : [];
-            if (choices.length !== 4 || choices.some((c) => !c)) problems.push(`${n}번 문제 보기는 4개가 필요해요`);
+            if (choices.length !== want || choices.some((c) => !c)) problems.push(`${n}번 문제 보기는 ${want}개가 필요해요`);
             else if (choices.some((c) => c.length > limits.choice)) problems.push(`${n}번 문제 보기가 ${limits.choice}자를 넘어요`);
-            else if (new Set(choices).size !== 4) problems.push(`${n}번 문제 보기가 서로 같아요`);
+            else if (new Set(choices).size !== want) problems.push(`${n}번 문제 보기가 서로 같아요`);
         }
         if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= choices.length) problems.push(`${n}번 문제 정답 번호를 확인해 주세요`);
         if (q.explanation && clean(q.explanation).length > limits.explanation) problems.push(`${n}번 해설이 ${limits.explanation}자를 넘어요`);

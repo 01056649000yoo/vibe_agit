@@ -19,9 +19,10 @@ const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 export const buildOfficialFile = () => {
     const vocabByGrade = Object.fromEntries([3, 4, 5, 6].map((grade) => [grade, read(`public/data/grade${grade}_vocab.json`)]));
     const pool = buildSpellingQuizPool(spellingSourcesFromCatalog(read('public/spelling/elementary-lookup-v1.json'), read('public/spelling/elementary-detection-v1.json')));
+    const lookupEntries = read('public/spelling/elementary-lookup-v1.json').lookupEntries;
     const difficulty = read('scripts/quiz-arena-spelling-difficulty.json');
     const exclusions = existsSync('scripts/quiz-arena-official-exclusions.json') ? read('scripts/quiz-arena-official-exclusions.json') : {};
-    const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, difficulty, exclusions });
+    const sets = buildOfficialSets({ vocabByGrade, spellingPool: pool, lookupEntries, difficulty, exclusions });
     // 서버로 보낼 때 필요 없는 검토용 표식(meta)은 파일에도 두지 않는다
     const clean = sets.map((set) => ({ ...set, questions: set.questions.map(stripMeta) }));
     return `${JSON.stringify({ version: 1, sets: clean }, null, 1)}\n`;

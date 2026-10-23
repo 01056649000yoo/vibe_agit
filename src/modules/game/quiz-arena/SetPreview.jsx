@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 const letters = ['①', '②', '③', '④'];
+const KIND_LABELS = { ox: 'O/X', c2: '2지선다', c4: '4지선다' };
 const navButton = { padding: 'var(--ui-space-2) var(--ui-space-4)', borderRadius: 'var(--ui-radius-sm)', border: '1px solid var(--ui-border-strong)', background: 'var(--ui-surface)', color: 'var(--ui-ink)', fontSize: 'var(--ui-text-md)', cursor: 'pointer' };
 
 /** 문제를 한 장씩 넘겨 보는 미리보기 카드(정답·해설 포함). 줄줄이 늘어놓지 않는다. */
@@ -17,7 +18,7 @@ export default function SetPreview({ set, onClose }) {
                 <button type="button" onClick={onClose} style={{ border: 0, background: 'transparent', color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-sm)', cursor: 'pointer' }}>닫기 ✕</button>
             </div>
             <div style={{ display: 'grid', gap: 'var(--ui-space-2)', padding: 'var(--ui-space-4)', borderRadius: 'var(--ui-radius-md)', background: 'var(--ui-surface)', minHeight: 140 }}>
-                <span style={{ color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-sm)' }}>{index + 1} / {questions.length} · {question.kind === 'ox' ? 'O/X' : '4지선다'}</span>
+                <span style={{ color: 'var(--ui-ink-muted)', fontSize: 'var(--ui-text-sm)' }}>{index + 1} / {questions.length} · {KIND_LABELS[question.kind] ?? question.kind}</span>
                 <div style={{ fontSize: 'var(--ui-text-lg)', color: 'var(--ui-ink-strong)', lineHeight: 'var(--ui-line-body)' }}>{question.text}</div>
                 {question.kind === 'c4' && (
                     <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--ui-space-2)' }}>
