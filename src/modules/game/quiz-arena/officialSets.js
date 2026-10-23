@@ -4,8 +4,8 @@
  * 아지트의 어휘·맞춤법 자료로 고정 세트를 만든다. 같은 입력이면 항상 같은 세트가 나온다(난수는 고정 씨앗).
  *   · 어휘: 학년(3~6) × 수준(쉬움·보통·어려움) 별 세트. 한 세트는 같은 수준 낱말만 모으고, 문항 형식은 섞는다.
  *       4지선다(뜻→낱말) · 4지선다(예문 빈칸) · 2지선다(예문 빈칸) · O/X(낱말과 뜻이 맞는지)
- *   · 맞춤법: 수준(하·중·상)별 10세트. 문항 형식은 섞는다.
- *       O/X(바르게 쓴 문장인지) · 2지선다(빈칸에 알맞은 말) · 4지선다(바르게/틀리게 쓴 말 고르기)
+ *   · 맞춤법: 학년(3~6)별 여러 세트. **문장 속에서만** 묻는다(낱말만 보여 주고 묻지 않는다).
+ *       O/X(바르게 쓴 문장인지) · 2지선다(빈칸에 알맞은 말 — 고쳐 쓰기)
  * 세트마다 15문제 또는 20문제. 결과는 `public/quiz-arena/official-sets-v1.json`(`scripts/build-quiz-arena-official-sets.mjs`).
  * 문제 모양·글자 수 한도는 `quizSetBuilder.js`(= 게임 서버 검증)를 따른다.
  *
@@ -23,7 +23,7 @@ export const VOCAB_LEVELS = Object.freeze([
 ]);
 /** 세트 크기별 형식 개수(합 = 크기). */
 export const VOCAB_FORMAT_PLAN = Object.freeze({ 15: { def: 4, blank: 4, pair: 4, ox: 3 }, 20: { def: 6, blank: 5, pair: 5, ox: 4 } });
-export const SPELLING_FORMAT_PLAN = Object.freeze({ 15: { ox: 5, pair: 5, pick: 5 }, 20: { ox: 7, pair: 7, pick: 6 } });
+export const SPELLING_FORMAT_PLAN = Object.freeze({ 15: { ox: 7, pair: 8 }, 20: { ox: 10, pair: 10 } });
 
 const hash = (text) => { let h = 2166136261; for (const ch of String(text)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const mulberry32 = (seed) => () => {
@@ -44,7 +44,12 @@ const EXPLANATION_FIXES = Object.freeze([
     ['매일을 뜻하는 ‘마다’는 앞말에 붙여 써요.', '‘마다’는 하나하나 모두를 뜻하는 조사라서 앞말에 붙여 써요.'],
     ['‘ㅂ’이 바뀌는 말은 ‘-워’로 적어서 ‘무서워’예요.', '‘무섭다’에 ‘-어’가 붙으면 ‘ㅂ’이 ‘우’로 바뀌어 ‘무서워’가 돼요.'],
     ['낱말 사이를 ‘띄우다’에서 온 말이라 ‘띄어쓰기’예요.', '낱말 사이를 띄어 쓰는 일이라 ‘띄어쓰기’예요.'],
-    ['뒤 글자가 된소리·거센소리이거나 한자어끼리 합친 말이라 사이시옷을 쓰지 않아서 ‘위층 집’이에요.', '‘층’이 거센소리로 시작하므로 사이시옷 없이 ‘위층’으로 쓰고, ‘집’은 띄어 ‘위층 집’으로 적어요.']
+    ['뒤 글자가 된소리·거센소리이거나 한자어끼리 합친 말이라 사이시옷을 쓰지 않아서 ‘위층 집’이에요.', '‘층’이 거센소리로 시작하므로 사이시옷 없이 ‘위층’으로 쓰고, ‘집’은 띄어 ‘위층 집’으로 적어요.'],
+    ['외래어는 된소리로 적지 않아서', '외래어 표기법에 따라'],
+    ['외래어는 된소리로 적지 않는 것이 원칙이라', '외래어 표기법에 따라'],
+    ['외래어 끝의 ‘-ow’는 ‘우’를 붙이지 않고 ‘오’로 적어요.', '‘window’처럼 끝의 ‘-ow’는 ‘우’ 없이 ‘오’로 적는 말이 있어요.'],
+    ['위아래 짝이 있는 말이라 ‘위쪽’이에요.', '‘쪽’이 된소리로 시작해서 ‘웃’ 대신 ‘위’를 써서 ‘위쪽’이에요.'],
+    ['동작 앞에 붙는 말은 ‘안’이에요. ‘안 보다’ 또는 ‘보지 않다’로 써요.', '‘보이다’ 앞에서 부정을 나타내는 말은 ‘안’이고, 띄어 써서 ‘안 보이던’이에요.']
 ]);
 const fixExplanation = (text) => EXPLANATION_FIXES.reduce((acc, [from, to]) => acc.replaceAll(from, to), String(text ?? ''));
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -53,7 +58,6 @@ const vocabPlanOf = (size) => (size === 15 ? VOCAB_FORMAT_PLAN[15] : VOCAB_FORMA
 const spellingPlanOf = (size) => (size === 15 ? SPELLING_FORMAT_PLAN[15] : SPELLING_FORMAT_PLAN[20]);
 export const stripMeta = (question) => { const copy = { ...question }; delete copy.meta; return copy; };
 
-const hasFinal = (word) => { const code = clean(word).codePointAt(clean(word).length - 1) - 0xac00; return code >= 0 && code <= 11171 && code % 28 !== 0; };
 const eunNeun = (word) => {
     const code = clean(word).codePointAt(clean(word).length - 1) - 0xac00;
     return code >= 0 && code <= 11171 ? (code % 28 === 0 ? '는' : '은') : '은(는)';
@@ -172,20 +176,9 @@ export const buildVocabSets = (grade, words, { exclusions = [], excludedWords = 
 /* ---------------- 맞춤법 ---------------- */
 
 const statementOf = (item, shown) => clean(String(item.prompt).includes(QUIZ_BLANK) ? String(item.prompt).replace(QUIZ_BLANK, shown) : shown);
-const SINGLE_WORD_CATEGORIES = /^(외래어|낱말 표기|합성어·사이시옷)\//u;
-
-/** 낱말 표기 항목에서 `바른 말 / 틀린 말` 한 쌍을 꺼낸다(바른 말이 정답인 단어 표기 항목만). */
-const spellingPairOf = (entry) => {
-    if (!SINGLE_WORD_CATEGORIES.test(`${entry.category}/${entry.subcategory}`)) return null;
-    const [right, wrong, extra] = clean(entry.learningLabel || entry.question).split(' / ').map(clean);
-    if (!right || !wrong || extra !== undefined || right === wrong || clean(entry.answer) !== right) return null;
-    if (right.length > ARENA_LIMITS.choice || wrong.length > ARENA_LIMITS.choice) return null;
-    return { right, wrong };
-};
-
 /** 맞춤법 세트: **학년(3~6) 수준**별로 여러 세트. 항목마다 학년은 `grades`(항목키 → 3~6)로 나눈다.
- * 한 항목은 같은 형식으로는 한 번만, 형식이 다르면 최대 두 형식까지(같은 말을 다른 방식으로 다시 풀어 보게) 나온다.
- * 세트마다 O/X·2지선다·4지선다가 모두 들어가야 하므로, 4지선다 재료가 바닥나면 그 학년은 거기서 끝난다. */
+ * 한 항목은 같은 형식으로는 한 번만, 형식이 다르면 두 형식까지(O/X·2지선다로 같은 말을 다시 풀어 보게) 나온다.
+ * 문제는 늘 문장 속에서 묻는다. 세트마다 O/X와 2지선다가 모두 들어가고, 재료가 바닥나면 그 학년은 거기서 끝난다. */
 export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = [], badForms = [], limits = ARENA_LIMITS } = {}) => {
     const banned = new Set(exclusions);
     // 복수 표준어처럼 '틀린 표기'로 쓰면 안 되는 말이 들어 있는 항목은 통째로 뺀다
@@ -198,30 +191,14 @@ export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = []
         if (!target.has(item.entryKey)) target.set(item.entryKey, item);
     });
     blankItems.forEach((item, key) => { if (!choiceItems.has(key)) choiceItems.set(key, item); });
-    const pairs = new Map();
-    for (const entry of lookupEntries || []) { const pair = spellingPairOf(entry); if (pair) pairs.set(`base:${entry.id}`, pair); }
-    const allRight = new Set([...pairs.values()].map((p) => p.right));
     const usedFormats = new Map(); // 항목 → 이미 쓴 형식들
     const usedTexts = new Set(); // 같은 문제(문장·보기)가 두 번 나오지 않게
     const gradeOf = (key) => grades[key]; // eslint-disable-line security/detect-object-injection
 
-    const makePick = (key, askWrong, tag) => {
-        const pair = pairs.get(key);
-        const others = stableOrder([...pairs.keys()].filter((k) => k !== key), `${tag}|${key}|opts`, (k) => k).map((k) => pairs.get(k));
-        if (askWrong) {
-            const rights = [...new Set(others.map((p) => p.right).filter((r) => r !== pair.wrong && r !== pair.right))].slice(0, 3);
-            if (rights.length < 3) return null;
-            const choices = shuffle([pair.wrong, ...rights], mulberry32(hash(`${key}|cw`)));
-            return { kind: 'c4', text: '맞춤법이 틀린 것은?', choices, answer: choices.indexOf(pair.wrong), explanation: fitExplanation(`‘${pair.wrong}’${eunNeun(pair.wrong)} 틀린 표기예요. 바른 표기는 ‘${pair.right}’${hasFinal(pair.right) ? '이에요' : '예요'}.`, limits.explanation) };
-        }
-        const wrongs = [...new Set(others.map((p) => p.wrong).filter((w) => w !== pair.right && !allRight.has(w)))].slice(0, 3);
-        if (wrongs.length < 3) return null;
-        const choices = shuffle([pair.right, ...wrongs], mulberry32(hash(`${key}|cr`)));
-        return { kind: 'c4', text: '맞춤법이 맞는 것은?', choices, answer: choices.indexOf(pair.right), explanation: fitExplanation(`바른 표기는 ‘${pair.right}’${hasFinal(pair.right) ? '이에요' : '예요'}. ‘${pair.wrong}’${eunNeun(pair.wrong)} 틀려요.`, limits.explanation) };
-    };
     const makePair = (key) => {
         const item = blankItems.get(key);
         const text = `빈칸에 알맞은 말은? ${clean(item.prompt)}`;
+        if (clean(String(item.prompt).replace(QUIZ_BLANK, '')).length < 6) return null; // 문장 없이 빈칸뿐인 문제는 만들지 않는다
         if (text.length > limits.question || item.choices.some((c) => clean(c).length > limits.choice)) return null;
         const choices = shuffle(item.choices.map(clean), mulberry32(hash(`${key}|p`)));
         return { kind: 'c2', text, choices, answer: choices.indexOf(clean(item.answer)), explanation: fitExplanation(fixExplanation(item.explanation), limits.explanation) };
@@ -231,6 +208,7 @@ export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = []
         const right = hash(`${tag}|${key}|ox`) % 2 === 0;
         const shown = right ? item.answer : item.choices.find((c) => c !== item.answer);
         const sentence = statementOf(item, shown);
+        if (!/\s/u.test(sentence) || sentence.length < 6 || !/[.!?]$/u.test(sentence)) return null; // 낱말·구만 보여 주고 묻지 않는다(완성된 문장만)
         const text = `${/[.!?]$/u.test(sentence) ? '바르게 쓴 문장일까요?' : '바르게 쓴 말일까요?'} ${sentence}`;
         if (text.length > limits.question) return null;
         return { kind: 'ox', text, answer: right ? 0 : 1, explanation: fitExplanation(fixExplanation(item.explanation), limits.explanation) };
@@ -243,12 +221,10 @@ export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = []
         const rng = mulberry32(hash(tag));
         const inGrade = (key) => gradeOf(key) === grade;
         const queues = {
-            pickR: stableOrder([...pairs.keys()].filter(inGrade), `${tag}|pickR`, (key) => key),
-            pickW: stableOrder([...pairs.keys()].filter(inGrade), `${tag}|pickW`, (key) => key),
             pair: stableOrder([...blankItems.keys()].filter(inGrade), `${tag}|pair`, (key) => key),
             ox: stableOrder([...choiceItems.keys()].filter(inGrade), `${tag}|ox`, (key) => key)
         };
-        const maker = { pickR: (key) => makePick(key, false, tag), pickW: (key) => makePick(key, true, tag), pair: makePair, ox: (key) => makeOx(key, tag) };
+        const maker = { pair: makePair, ox: (key) => makeOx(key, tag) };
         const allowed = (key, format) => {
             const seen = usedFormats.get(key);
             return !banned.has(key) && !seen?.has(format) && (seen?.size ?? 0) < 2;
@@ -269,13 +245,10 @@ export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = []
         for (let s = 0; s < 80; s += 1) {
             const size = sizeOfSet(s);
             const plan = spellingPlanOf(size);
-            if (queues.pickR.length + queues.pickW.length < plan.pick * 2 || queues.ox.length < plan.ox || queues.pair.length < 1) break; // 재료가 모자라면 이 학년은 여기서 끝
+            if (queues.ox.length < plan.ox || queues.pair.length < plan.pair) break; // 재료가 모자라면 이 학년은 여기서 끝
             const questions = [];
-            let pickTurn = 0;
             for (const preferred of formatSequence(plan, rng)) {
-                const pickPair = pickTurn % 2 === 0 ? ['pickR', 'pickW'] : ['pickW', 'pickR'];
-                const order = preferred === 'pick' ? [...pickPair, 'ox', 'pair'] : [preferred, 'ox', 'pair', ...pickPair].filter((f, k, all) => all.indexOf(f) === k);
-                if (preferred === 'pick') pickTurn += 1;
+                const order = preferred === 'ox' ? ['ox', 'pair'] : ['pair', 'ox'];
                 for (const format of order) {
                     const got = take(format);
                     if (!got) continue;
@@ -286,14 +259,14 @@ export const buildSpellingSets = (pool, lookupEntries, grades, { exclusions = []
                 }
             }
             const kinds = new Set(questions.map((q) => q.kind));
-            if (questions.length < size || kinds.size < 3) break; // 세 형식이 모두 있는 꽉 찬 세트만 만든다
+            if (questions.length < size || kinds.size < 2) break; // 두 형식이 모두 있는 꽉 찬 세트만 만든다
             sets.push({
                 id: `official-spelling-g${grade}-${String(s + 1).padStart(2, '0')}`,
                 title: `${grade}학년 맞춤법 ${s + 1}`,
                 grade,
                 subject: '국어',
                 unit: '맞춤법',
-                description: `${grade}학년 수준 맞춤법을 O/X·2지선다·4지선다로 풀어요. ${questions.length}문제.`,
+                description: `${grade}학년 수준 맞춤법을 문장 속에서 O/X·2지선다로 풀어요. ${questions.length}문제.`,
                 kind: 'spelling',
                 level: grade,
                 questions: shuffle(questions, rng)

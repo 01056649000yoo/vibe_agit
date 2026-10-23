@@ -30,11 +30,12 @@ test('모든 문제가 게임 서버 규칙을 지키고 정답 번호가 보기
     }
 });
 
-test('문항 형식이 섞인다: 어휘·맞춤법 세트마다 O/X·2지선다·4지선다가 모두 들어 있고 전체 비율이 한쪽으로 쏠리지 않는다', () => {
-    for (const set of file.sets) assert.deepEqual([...kindsOf(set)].sort(), ['c2', 'c4', 'ox'], `${set.id}: 형식이 한 가지 이상 빠졌습니다`);
-    for (const sets of [vocab, spelling]) {
+test('문항 형식이 섞인다: 어휘 세트마다 O/X·2지선다·4지선다, 맞춤법 세트마다 O/X·2지선다(4지선다 없음)가 들어 있고 전체 비율이 쏠리지 않는다', () => {
+    for (const set of vocab) assert.deepEqual([...kindsOf(set)].sort(), ['c2', 'c4', 'ox'], `${set.id}: 형식이 한 가지 이상 빠졌습니다`);
+    for (const set of spelling) assert.deepEqual([...kindsOf(set)].sort(), ['c2', 'ox'], `${set.id}: 맞춤법은 O/X·2지선다만 씁니다`);
+    for (const [sets, kinds] of [[vocab, ['ox', 'c2', 'c4']], [spelling, ['ox', 'c2']]]) {
         const all = sets.flatMap((set) => set.questions);
-        for (const kind of ['ox', 'c2', 'c4']) assert.ok(all.filter((q) => q.kind === kind).length / all.length > 0.15, `${kind} 비율이 너무 낮습니다`);
+        for (const kind of kinds) assert.ok(all.filter((q) => q.kind === kind).length / all.length > 0.15, `${kind} 비율이 너무 낮습니다`);
         const ox = all.filter((q) => q.kind === 'ox');
         const o = ox.filter((q) => q.answer === 0).length / ox.length;
         assert.ok(o > 0.35 && o < 0.65, `O/X 정답이 한쪽으로 쏠립니다: O ${o}`);
@@ -56,12 +57,13 @@ test('어휘: 한 학년 안에서 낱말이 겹치지 않고, 정답이 문제�
     }
 });
 
-test('맞춤법: 같은 문제가 두 번 나오지 않고, 한 항목은 같은 형식으로 한 번만, 4지선다는 정답이 하나뿐이도록 보기를 다른 항목에서 가져온다', () => {
+test('맞춤법: 같은 문제가 두 번 나오지 않고, 낱말만 보여 주는 문제 없이 모두 문장 속에서 묻는다', () => {
     const texts = spelling.flatMap((set) => set.questions.map((q) => `${q.kind}|${q.text}|${q.choices?.join('/') ?? ''}`));
     assert.equal(new Set(texts).size, texts.length, '같은 문제가 있습니다');
-    for (const set of spelling) for (const q of set.questions.filter((item) => item.kind === 'c4')) {
-        assert.match(q.text, /^맞춤법이 (맞는|틀린) 것은\?$/u);
-        assert.equal(new Set(q.choices).size, 4);
+    for (const set of spelling) for (const q of set.questions) {
+        const body = q.text.replace(/^(바르게 쓴 (문장|말)일까요\?|빈칸에 알맞은 말은\?) /u, '').replace(/＿+/gu, '').trim();
+        assert.ok(body.length >= 6, `${set.id}: 문장이 없습니다 — ${q.text}`);
+        assert.ok(q.kind === 'ox' ? /^바르게 쓴 문장일까요\? .*[.!?]$/u.test(q.text) : q.choices.length === 2, `${set.id}: 낱말만 묻는 형식입니다 — ${q.text}`);
     }
 });
 

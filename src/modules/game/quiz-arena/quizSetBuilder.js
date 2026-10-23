@@ -140,3 +140,13 @@ export const buildDefaultSet = (kind, { vocab = [], spellingPool = [], count = 1
     } else questions = [];
     return questions;
 };
+
+/** 게임 서버 선생님 입구 주소 뒤에 세트를 실어 보내는 주소(`#set=` 은 서버로 가지 않는 해시). 20문제 안팎이라 주소에 담긴다. */
+export const arenaOpenUrl = (hostUrl, set) => {
+    const json = JSON.stringify({ title: set.title, questions: toArenaPayload(set.questions) });
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    const encoded = btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/u, '');
+    return `${hostUrl}#set=${encoded}`;
+};
