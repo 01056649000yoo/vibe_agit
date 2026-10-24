@@ -36,7 +36,11 @@ const toToday = (today = {}) => ({
     playsDone: Number(today.plays_done) || 0,
     prizes: Number(today.prizes) || 0,
     consolationPoints: Number(today.consolation_points) || 0,
-    playingId: today.playing_id || null
+    playingId: today.playing_id || null,
+    // 어휘의 탑 코인: 날이 지나도 남는 코인 수, 오늘 받은 수, 하루 받을 수 있는 수(2026-10-24)
+    towerCoins: Number(today.tower_coins_left) || 0,
+    towerCoinsEarnedToday: Number(today.tower_coins_earned_today) || 0,
+    towerCoinCap: Number(today.tower_coin_daily_cap) || 3
 });
 
 export const createServerClawSession = () => ({
@@ -76,7 +80,7 @@ export const createServerClawSession = () => ({
     },
     async startPlay() {
         const data = await rpc('start_my_spelling_claw_play_v1');
-        return { playId: data?.play_id || null, coinsLeft: Number(data?.coins_left) || 0 };
+        return { playId: data?.play_id || null, coinsLeft: Number(data?.coins_left) || 0, towerCoinsLeft: Number(data?.tower_coins_left) || 0 };
     },
     async finishPlay(playId, caught) {
         const data = await invoke({ action: 'play-finish', playId, caught });

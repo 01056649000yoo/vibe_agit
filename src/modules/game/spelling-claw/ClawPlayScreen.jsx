@@ -46,6 +46,7 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const [busy, setBusy] = useState(false);
     const [quizError, setQuizError] = useState('');
     const [roundActive, setRoundActive] = useState(false);
+    const [towerOpen, setTowerOpen] = useState(false); // 어휘의 탑 코인으로 열어 둔 뽑기 창
     const [lastPrize, setLastPrize] = useState('');
     const [pendingFinish, setPendingFinish] = useState(null);
     const [celebration, setCelebration] = useState(null);
@@ -111,8 +112,11 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
     const finished = Boolean(quiz) && index >= questions.length;
     const cannotPass = quizCannotPass && !finished;
     // 끝내지 못한 판(창을 닫음)도 코인 하나로 센다 — 넣으면 그 판을 이어 한다.
-    const coins = today.coinsLeft + (today.playingId && !roundActive ? 1 : 0);
-    const clawOpen = coins > 0 || roundActive || Boolean(pendingFinish);
+    const quizCoins = today.coinsLeft + (today.playingId && !roundActive ? 1 : 0);
+    // 어휘의 탑 코인: 날이 지나도 남는다. 맞춤법 코인이 없을 때만 학생이 열고 닫는다(2026-10-24).
+    const towerCoins = today.towerCoins || 0;
+    const coins = quizCoins + towerCoins;
+    const clawOpen = quizCoins > 0 || roundActive || Boolean(pendingFinish) || (towerCoins > 0 && towerOpen);
     const patchToday = (patch) => setData((current) => ({ ...current, today: { ...current.today, ...patch } }));
 
     const submit = async (value) => {
@@ -143,9 +147,9 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
         if (coins <= 0) return false;
         try {
             const started = await session.startPlay();
-            if (!started.playId) { patchToday({ coinsLeft: 0, playingId: null }); return false; }
+            if (!started.playId) { patchToday({ coinsLeft: 0, towerCoins: 0, playingId: null }); return false; }
             playRef.current = { playId: started.playId, caught: [] };
-            patchToday({ coinsLeft: started.coinsLeft, playingId: started.playId });
+            patchToday({ coinsLeft: started.coinsLeft, towerCoins: started.towerCoinsLeft ?? 0, playingId: started.playId });
             setRoundActive(true);
             setLastPrize('');
             return true;
@@ -268,7 +272,8 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
 
                 <footer className="claw-bench__counts">
                     <span>오늘 기회 <b>{today.rewardedQuizzes}/{settings.dailyPlays}</b></span>
-                    <span>남은 코인 <b>{coins}</b></span>
+                    <span>남은 코인 <b>{quizCoins}</b></span>
+                    <span title="어휘의 탑에서 한 판을 70% 이상 맞히면 받아요. 하루 {today.towerCoinCap || 3}개까지, 날이 지나도 남아요.">🏰 어휘의 탑 코인 <b>{towerCoins}</b>{today.towerCoinsEarnedToday ? <small> (오늘 +{today.towerCoinsEarnedToday})</small> : null}</span>
                     <span>뽑기 <b>{today.playsDone}</b>번</span>
                     <button type="button" className="claw-bench__intro-link" onClick={() => setIntroOpen(true)}>처음 안내 다시 보기</button>
                 </footer>
@@ -277,6 +282,7 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
 
         <section className={`claw-bench__claw${clawOpen ? ' is-open' : ''}`} aria-label="인형뽑기">
             {clawOpen ? <>
+                {towerCoins > 0 && quizCoins === 0 && !roundActive && !pendingFinish && <button type="button" className="claw-bench__next" onClick={() => setTowerOpen(false)}>인형뽑기 닫기</button>}
                 {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
                 {pendingFinish?.error && <p className="claw-bench__error" role="alert">
                     {pendingFinish.error} <button type="button" onClick={() => finishPlay(pendingFinish)}>상품 다시 확인하기</button>
@@ -287,9 +293,11 @@ export default function ClawPlayScreen({ session, quality = 'auto', refreshKey =
                 />
             </> : <div className="claw-bench__locked">
                 <span aria-hidden="true">🔒</span>
-                <strong>목표를 달성하면 인형뽑기 창이 열려요</strong>
+                <strong>{towerCoins > 0 ? `어휘의 탑 코인 ${towerCoins}개가 있어요!` : '목표를 달성하면 인형뽑기 창이 열려요'}</strong>
+                {towerCoins > 0 && <button type="button" className="claw-bench__next" onClick={() => setTowerOpen(true)}>🏰 어휘의 탑 코인으로 인형뽑기 열기</button>}
                 {/* 한 판이 끝나 창이 잠겨도 방금 받은 상품은 크게 보인다(2026-10-02 작은 회색 글씨라 안 보였다). */}
                 {lastPrize && <p className="claw-bench__prize" role="status">{lastPrize}</p>}
+                <small>🏰 어휘의 탑에서 한 판을 70% 이상 맞히면 어휘의 탑 코인을 받아요(하루 {today.towerCoinCap || 3}개까지). 이 코인은 날이 지나도 남아서 모아 둘 수 있어요.</small>
                 <small>{today.rewardedQuizzes >= settings.dailyPlays
                     ? '오늘 받을 수 있는 코인을 다 받았어요. 내일 또 만나요!'
                     : `문제 ${questions.length || 10}개 중 ${settings.passCount}개 이상 맞히면 코인 1개, 10개 모두 맞히면 코인 ${CLAW_PERFECT_COINS}개!`}</small>

@@ -214,7 +214,8 @@ export default function SpellingClawTeacherManager({ activeClass }) {
             key: current.key + 1,
             session: createLocalClawSession({
                 student: target, classSettings: classDraft, prizeSettings: prizeDraft,
-                catalog: DRAGON_DECOR_ITEMS, quizPool: getPreviewPool()
+                catalog: DRAGON_DECOR_ITEMS, quizPool: getPreviewPool(),
+                towerCoins: 2 // 미리보기에서 어휘의 탑 코인으로 열고 닫는 모습을 볼 수 있게 두 개를 준다
             })
         }));
         setNotificationPreview(null);

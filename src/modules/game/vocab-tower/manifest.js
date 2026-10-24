@@ -43,6 +43,21 @@ export const vocabTowerManifest = {
     // 놀이터 카드에서 바로 열 수 있는 학생 안내. 다른 게임 모듈도 같은 자리에 두면 버튼이 붙는다.
     guide: VOCAB_TOWER_STUDENT_GUIDE
   },
+  /*
+   * 학생 홈 활동 알림(2026-10-24). 한 판을 끝까지 마치고 정답률 70% 이상(8문제 이상)이면 서버 트리거(`20261410`)가
+   * **같은 트랜잭션에서** 어휘의 탑 코인을 주고 이 알림을 남긴다(event_key = 판 id). payload: { coins_today, daily_cap }.
+   */
+  notifications: [
+    {
+      eventType: 'vocab-tower.coin_awarded',
+      icon: '🪙',
+      tone: 'positive',
+      title: '어휘의 탑 코인을 받았어요',
+      message: (payload) => `오늘 ${Number(payload?.coins_today) || 1}번째 코인이에요(하루 ${Number(payload?.daily_cap) || 3}개까지). 수호룡의 인형뽑기에서 써요. 날이 지나도 남아요!`,
+      action: 'confirm',
+      actionLabel: '확인했어요'
+    }
+  ],
   management: {
     title: '어휘의 탑 관리',
     subtitle: '오답 복습이 이어지는 선택형 어휘 탐험',

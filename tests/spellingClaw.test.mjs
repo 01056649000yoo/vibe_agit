@@ -217,7 +217,10 @@ test('수호룡이 문제를 내고, 수호룡이 자라면 함께 자라며, �
     assert.match(manager, /rpc\('get_teacher_dragon_growth_dashboard', \{ p_class_id: classId \}\)/);
     assert.doesNotMatch(manager, /DRAGON_SPECIES/, '교사가 수호룡 종류를 고르는 칸이 남아 있습니다.');
     // 문제가 위, 목표를 달성하면(코인이 있거나 한 판 중) 아래에 뽑기 창이 열린다.
-    assert.match(screen, /const clawOpen = coins > 0 \|\| roundActive/);
+    // 창은 맞춤법 코인이 있으면 저절로, 어휘의 탑 코인뿐이면 학생이 열고 닫는다(2026-10-24)
+    assert.match(screen, /const clawOpen = quizCoins > 0 \|\| roundActive/);
+    assert.match(screen, /towerCoins > 0 && towerOpen/);
+    assert.match(screen, /어휘의 탑 코인으로 인형뽑기 열기/);
     assert.ok(screen.indexOf('claw-bench__quiz') < screen.indexOf('claw-bench__claw'), '문제가 뽑기 창보다 위에 있어야 합니다.');
     // 처음 들어오면 한 번, 그리고 다시 보기로 언제든 — 포인트부터 수호룡 상점 아이템까지 무작위·확률 공개.
     assert.match(screen, /useState\(\(\) => !readIntroSeen\(\)\)/);

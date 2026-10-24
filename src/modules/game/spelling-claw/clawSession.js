@@ -25,7 +25,7 @@ const plushNameOf = (id) => CLAW_PLUSHES.find((plush) => plush.id === id)?.name 
  * 교사 미리보기용. `student` 는 학급 명단에서 고른 학생(수호룡·단계·가진 아이템), `catalog` 는 앱의 수호룡 상점 목록.
  * 설정은 교사가 **저장 전에** 고친 값을 그대로 받는다(저장하기 전에 해 볼 수 있게).
  */
-export const createLocalClawSession = ({ student, classSettings, prizeSettings, catalog, quizPool }) => {
+export const createLocalClawSession = ({ student, classSettings, prizeSettings, catalog, quizPool, towerCoins: initialTowerCoins = 0 }) => {
     const settings = normalizeClawClassSettings(classSettings);
     const prizes = normalizeClawPrizeSettings(prizeSettings);
     const owned = [...(student.owned || [])];
@@ -34,6 +34,7 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
     let recent = [];
     let collection = {};
     let consolationGiven = false;
+    let towerCoins = Number(initialTowerCoins) || 0; // 어휘의 탑 코인(미리보기용 시작 개수)
     let sequence = 0;
     const nextId = () => `local-${Date.now()}-${(sequence += 1)}`;
     const decorNow = () => eligibleClawDecor(catalog, {
@@ -47,7 +48,10 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
         playsDone: plays.filter((play) => play.status === 'done').length,
         prizes: plays.reduce((sum, play) => sum + (play.prizes?.length || 0), 0),
         consolationPoints: consolationGiven ? settings.minPoints : 0,
-        playingId: plays.find((play) => play.status === 'playing')?.id || null
+        playingId: plays.find((play) => play.status === 'playing')?.id || null,
+        towerCoins,
+        towerCoinsEarnedToday: 0,
+        towerCoinCap: 3
     });
 
     return {
@@ -99,9 +103,15 @@ export const createLocalClawSession = ({ student, classSettings, prizeSettings, 
         },
         async startPlay() {
             const playing = plays.find((play) => play.status === 'playing');
-            const coin = playing || plays.find((play) => play.status === 'coin');
+            let coin = playing || plays.find((play) => play.status === 'coin');
             if (coin) coin.status = 'playing';
-            return { playId: coin?.id || null, coinsLeft: today().coinsLeft };
+            else if (towerCoins > 0) {
+                // 맞춤법 코인이 없으면 어휘의 탑 코인 한 개로 한 판(서버와 같은 순서)
+                towerCoins -= 1;
+                coin = { id: nextId(), attemptId: null, status: 'playing', prizes: [] };
+                plays.push(coin);
+            }
+            return { playId: coin?.id || null, coinsLeft: today().coinsLeft, towerCoinsLeft: towerCoins };
         },
         async finishPlay(playId, caught) {
             const play = plays.find((item) => item.id === playId);
