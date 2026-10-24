@@ -8,6 +8,7 @@ const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonSt
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
+const VocabTowerDeckMapPreview = lazy(() => import('./VocabTowerDeckMapPreview.jsx'))
 const VocabTowerCoinPreview = lazy(() => import('./VocabTowerCoinPreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
 const NeighborBooksStudentPreview = lazy(() => import('./NeighborBooksStudentPreview.jsx'))
@@ -126,6 +127,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '우리반 아지트 저장·공개',
     description: '초안 저장·학급 공개·충돌·원글 재확인·철회 흐름을 DB 없는 샘플로 점검한다',
     Component: ClassAgitPersistencePreview,
+  }),
+  Object.freeze({
+    id: 'vocab-tower-deckmap',
+    icon: '🏰',
+    title: '어휘의 탑 지도(정복 완료·만점)',
+    description: '정복 완료가 덱마스터 도전 자격과 같은지, ⭐ 만점이 따로 보이는지 DB 없이 확인한다',
+    Component: VocabTowerDeckMapPreview,
   }),
   Object.freeze({
     id: 'vocab-tower-coin',

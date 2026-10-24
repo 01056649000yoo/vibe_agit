@@ -255,7 +255,9 @@ test('V2 덱 지도는 정상부터 입구까지 이어지는 탐험 경로와 �
     assert.match(v2DeckMap, /어휘의 정상/);
     assert.match(v2DeckMap, /탑 입구/);
     assert.match(v2DeckMap, /vocab-tower-route__stop/);
-    assert.match(v2DeckMap, /bestAccuracy >= 100/);
+    // 정복 완료 = 덱마스터 도전 자격(서버 master_eligible), 한 판 만점은 따로 ⭐ 만점(2026-10-24)
+    assert.match(v2DeckMap, /const isConquered = Boolean\(deck\.master_eligible\)/);
+    assert.match(v2DeckMap, /const hasPerfectRun = bestAccuracy >= 100/);
     assert.match(v2DeckMap, /정복 완료/);
     assert.match(v2DeckMap, /aria-current=\{isActive \? 'step'/);
     assert.match(v2DeckMap, /scrollIntoView\(\{ block: 'center' \}\)/);
@@ -410,7 +412,8 @@ test('교사 도움말은 포인트 지급 기준을 오해하지 않도록 설�
     assert.match(teacherGuides, /25·50·75·100%/);
     // 한 번 받은 구간이 사라지지 않는다는 점과 정복이 포인트와 무관하다는 점이 핵심 오해 지점이다.
     assert.match(teacherGuides, /한 번 받은 구간은 다시 사라지지 않습니다/);
-    assert.match(teacherGuides, /포인트와는 관계가 없습니다/);
+    assert.match(teacherGuides, /포인트와는 관계가 없고/);
+    assert.match(teacherGuides, /덱마스터에 도전할 자격이 생겼다/);
     assert.match(teacherGuides, /서로 다른 두 가지 문제 형태를 힌트 없이 연속으로 성공해야/);
     // 도움말 버튼 자체는 공통 게임 관리 셸이 그린다(2026-08-24). 어디서 그리는지는 아래
     // `게임 모듈은 도움말을 따로 그리지 않는다` 검사가 지키므로 여기서는 내용만 본다.
@@ -424,7 +427,8 @@ test('학생 도움말은 포인트·익힘 규칙을 쉬운 말로 알려준다
     assert.match(learningStateGuide, /맞힌 낱말을 되풀이하지 않아요/);
     assert.match(towerGuide, /직접 쓰다가 틀려도 점수가 깎이지 않아요/);
     assert.match(towerGuide, /서너 문제 뒤에[^.]*다시 나와요/);
-    assert.match(towerGuide, /별은 포인트와 상관없는 기록이에요/);
+    assert.match(towerGuide, /정복 완료도, 만점도 포인트와는 상관이 없어요/);
+    assert.match(towerGuide, /정복 완료는 덱마스터에 도전할 수 있다는 뜻이에요/);
     // 공용 정보 아이콘·모달을 쓰고 별도 아이콘을 만들지 않는다.
     assert.match(studentModuleGuide, /GuideInfoButton/);
     assert.match(studentModuleGuide, /ModalPortal/);

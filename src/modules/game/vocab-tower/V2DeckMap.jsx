@@ -35,7 +35,8 @@ const V2DeckMap = ({
     const totalMastered = decks.reduce((sum, deck) => sum + Number(deck.mastered_count || 0), 0);
     const earnedRewardPoints = decks.reduce((sum, deck) => sum + Number(deck.earned_reward_points || 0), 0);
     const totalRewardPoints = decks.reduce((sum, deck) => sum + Number(deck.deck_reward_points || 0), 0);
-    const conqueredDecks = decks.filter((deck) => Number(deck.best_accuracy || 0) >= 100).length;
+    // 정복 완료 = 덱마스터에 도전할 자격을 얻은 층(2026-10-24 선생님 결정). 서버가 판단한 값(master_eligible)이나 이미 통과한 층.
+    const conqueredDecks = decks.filter((deck) => Boolean(deck.master_eligible) || Boolean(deck.master_passed)).length;
     const deckCount = decks.length || 10;
     const ascendingDecks = [...decks].sort((a, b) => Number(a.deck_number) - Number(b.deck_number));
     const explorationDecks = [...ascendingDecks].reverse();
@@ -94,7 +95,7 @@ const V2DeckMap = ({
                 <p className="vocab-intro-card__lead">1층부터 시작해 층마다 12개 낱말을 익혀요. 덱마스터를 통과하면 바로 다음 층이 열려요.</p>
 
                 <div className="vocab-deck-map__summary" aria-label="개인 연습 요약">
-                    <div className="is-conquest"><span>100%로 정복한 층</span><strong>{conqueredDecks}/{deckCount}</strong></div>
+                    <div className="is-conquest"><span>정복한 층(덱마스터 도전 자격)</span><strong>{conqueredDecks}/{deckCount}</strong></div>
                     <div><span>한 번 이상 학습한 낱말</span><strong>{totalSeen}/{totalItems}</strong></div>
                     <div><span>완전히 익힌 낱말</span><strong>{totalMastered}/{totalItems}</strong></div>
                     <div><span>모은 포인트</span><strong>{earnedRewardPoints}/{totalRewardPoints}P</strong></div>
@@ -285,7 +286,9 @@ const V2DeckMap = ({
                         const learningPercent = itemCount > 0
                             ? Math.min(100, Math.round(seenCount / itemCount * 100))
                             : 0;
-                        const isConquered = bestAccuracy >= 100;
+                        // 정복 완료 = 덱마스터 도전 자격이 생김. 연습 한 판을 만점으로 마친 것은 따로 `⭐ 만점`으로 보여 준다.
+                        const isConquered = Boolean(deck.master_eligible) || Boolean(deck.master_passed);
+                        const hasPerfectRun = bestAccuracy >= 100;
                         // 지난 시험에서 틀린 낱말을 다시 익혀야 또 칠 수 있다(서버가 판단한 값을 그대로 쓴다).
                         const masterRetry = deck.master_retry || null;
                         const retryBlocked = Boolean(masterRetry?.blocked);
@@ -298,7 +301,7 @@ const V2DeckMap = ({
                             ? `${unlockRequiredDeck}층 덱마스터 필요`
                             : isActive
                             ? `연습 진행 중 ${activeRun.answer_count}/${activeRun.target_question_count}`
-                            : isConquered ? '정복 완료' : hasPractice ? `학습 ${seenCount}/${itemCount}` : '미탐험';
+                            : isConquered ? '정복 완료' : hasPractice ? (Number(deck.master_missing_mastered || 0) > 0 ? `정복까지 ${Number(deck.master_missing_mastered)}개 더 익히기` : `학습 ${seenCount}/${itemCount}`) : '미탐험';
                         // 포인트는 익힌 낱말 수가 25·50·75·100% 구간을 넘을 때마다 나눠 받는다.
                         const rewardTitle = deckPoints <= 0
                             ? '포인트 목표 없음'
@@ -331,6 +334,7 @@ const V2DeckMap = ({
                                     <div className="vocab-deck-card__copy">
                                         <div className="vocab-deck-card__heading">
                                             <strong>전체 {itemCount}개 낱말</strong>
+                                            {hasPerfectRun && <small className="vocab-deck-card__perfect" title="연습 한 판을 모두 맞힌 적이 있어요">⭐ 만점</small>}
                                             <span className={isActive ? 'is-active' : isConquered ? 'is-conquered' : hasPractice ? 'is-started' : ''}>{cardStatus}</span>
                                         </div>
                                         {difficultyStage && (

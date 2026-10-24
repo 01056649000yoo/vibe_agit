@@ -642,3 +642,5 @@
 .vocab-summit-help-toggle:hover { background: #eef2fb; }
 .vocab-summit-help__warn { display: block; margin-top: 9px; color: #9a5b16; }
 .vocab-summit-help ul { margin-bottom: 0; }
+
+.vocab-deck-card__perfect { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #fff3c4; color: #8b6518; font-size: var(--ui-text-sm); font-weight: 900; }

@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-24 — 어휘의 탑 정복 완료를 덱마스터 도전 자격과 일치 (Claude)
+- **한 일**: 정복 완료가 떴는데 덱마스터가 안 열리는 혼동(정복=한 판 만점, 도전=낱말 80% 익힘)을 없애려고, 지도의 `정복 완료`·깃발·요약을 서버의 도전 자격(`master_eligible`)과 같게 하고, 한 판 만점은 `⭐ 만점`으로 따로 보임. 아직이면 카드에 `정복까지 N개 더 익히기`. 어휘의 탑 안내·교사 도움말·시험 문구 정리.
+- **변경**: `V2DeckMap.jsx`·css·`towerGuide.js`·`teacherGuides.js`·`tests/vocabTower.test.mjs`·개발실 `VocabTowerDeckMapPreview`·FEATURE_MAP v1.26.41. DB 변경 없음.
+- **결과/검증**: 개발실에서 1층(만점+정복 완료→도전 열림)·2층(만점인데 정복 아님→도전 잠김, 12개 더)·3층 확인. 테스트 1706·eslint 0.
+- **남은 것 / 다음**: OI-043(20261411 적용 대기).
+
 ## 2026-10-24 — 어휘의 탑 코인 보완: 결과 창 안내·학급별 하루 한도 (Claude)
 - **한 일**: 선생님 요청(연습 결과 창에 코인 반영, 오늘 모은 수/한도 표시, 교사가 하루 한도 설정·기본 3)에 따라 `20261411_vocab_tower_coin_limit.sql` 작성 — `classes.vocab_tower_coin_daily_limit`(0~10, 기본 3)·지급 트리거가 학급 한도 사용·인형뽑기 컨텍스트의 한도·연습 마무리 함수가 `tower_coin_earned`·`tower_coins_today`·`tower_coin_cap`·`tower_coin_reason` 반환. 화면: 결과 창 `TowerCoinNotice`(받음·70% 미만·8문제 미만·중도·한도 채움·끔 상태별), 교사 설정 칸, 안내·도움말 문구.
 - **변경**: 마이그레이션·스모크(`tests/sql/20261411…`)·`TowerCoinNotice.jsx`·`VocabularyTowerGame.jsx`·`TeacherManager.jsx`·css·개발실 `VocabTowerCoinPreview`·`tests/vocabTowerCoins.test.mjs`·문서(FEATURE_MAP v1.26.40·OPEN_ITEMS OI-043). **운영 DB 미적용.**
