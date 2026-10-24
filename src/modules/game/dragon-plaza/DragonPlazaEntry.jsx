@@ -34,6 +34,7 @@ function Chalkboard({ seatCount, visitors }) {
  */
 export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api = plazaApi }) {
     const studentId = studentSession?.id;
+    const classId = studentSession?.classId || studentSession?.class_id;
     const { status, message, seats, visitors, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
     const [openedSeat, setOpenedSeat] = useState(null);
     const { classroomReady } = useDeskArt();
@@ -87,7 +88,7 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api
                     <FriendProfileShell
                         friend={openedSeat.row}
                         viewerId={studentId}
-                        classId={studentSession?.class_id}
+                        classId={classId}
                         onClose={() => setOpenedSeat(null)}
                         onOpenPost={openLoadedPost}
                         presentation="modal"
@@ -100,6 +101,7 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api
                     <PlazaPostModal
                         {...reading}
                         studentSession={studentSession}
+                        classId={classId}
                         classmates={classmates}
                         isMobile={isMobile}
                         onClose={() => setReading(null)}

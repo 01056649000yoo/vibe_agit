@@ -32,10 +32,10 @@ export const loadPlazaPost = async ({ postId, friend, classId }) => {
  * 교실 위에 뜨는 글 읽기 창. `post`(이미 불러온 글) 또는 `postId`+`friend`(새 글 단추)를 받는다.
  * 닫으면 교실(또는 친구 아지트 창)로 그대로 돌아온다.
  */
-export default function PlazaPostModal({ post: givenPost, postId, friend, studentSession, classmates, isMobile, onClose }) {
+export default function PlazaPostModal({ post: givenPost, postId, friend, studentSession, classId: givenClassId, classmates, isMobile, onClose }) {
     const [post, setPost] = useState(givenPost || null);
     const [failed, setFailed] = useState(false);
-    const classId = studentSession?.class_id || studentSession?.classId;
+    const classId = givenClassId || studentSession?.classId || studentSession?.class_id;
 
     useEffect(() => {
         if (givenPost || !postId || !friend?.id) return undefined;
@@ -57,7 +57,10 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
             </div>
         );
     }
-    if (!post) return null;
+    if (!post) {
+        // 글을 불러오는 동안 눌린 것이 보이도록 알려 준다(조용하면 안 눌린 것처럼 느껴진다).
+        return <div className="plaza__opening" role="status" onMouseDown={onClose}>친구 글을 여는 중… 📖</div>;
+    }
     const mission = post.mission_id ? post.writing_missions : null;
     return (
         <PostDetailModal

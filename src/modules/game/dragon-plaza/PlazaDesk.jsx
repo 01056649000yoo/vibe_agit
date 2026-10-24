@@ -1,6 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getDragonNameplateTextLayout } from '../dragon/decorCatalog';
 import { deskArtSrc } from './deskArt';
+
+/** 화면 밖 자리는 `is-offscreen` 을 붙여 CSS 움직임을 멈춘다. 감시자는 모든 자리가 하나를 같이 쓴다. */
+let pauseObserver = null;
+const registerSeatForPause = (element) => {
+    if (!element || typeof IntersectionObserver === 'undefined') return undefined;
+    pauseObserver ||= new IntersectionObserver((entries) => {
+        entries.forEach((entry) => entry.target.classList.toggle('is-offscreen', !entry.isIntersecting));
+    }, { rootMargin: '80px' });
+    pauseObserver.observe(element);
+    return () => pauseObserver?.unobserve(element);
+};
 
 /** 작가 단계 → 빛깔 단계(0 없음 ~ 5 가장 화려함). 단계가 오를수록 책상 위 수호룡이 눈에 띄게 빛난다. */
 export const auraTier = (level) => (level >= 10 ? 5 : level >= 9 ? 4 : level >= 7 ? 3 : level >= 5 ? 2 : level >= 3 ? 1 : 0);
@@ -15,11 +26,14 @@ export default function PlazaDesk({ seat, newPost, onOpen, onOpenNewPost }) {
     const [artFailed, setArtFailed] = useState(false);
     const hasDeskArt = !artFailed;
     const tier = auraTier(level);
+    // 화면 밖으로 나간 자리는 빛 움직임을 멈춘다(자리마다 감시자를 두지 않고 교실 하나가 함께 본다: 아래 useOffscreenPause).
+    const seatRef = useRef(null);
+    useEffect(() => registerSeatForPause(seatRef.current), []);
     const label = `${name}${isMe ? '(나)' : ''}의 자리, 작가 ${level}단계 ${stage.species.shortName}${isMe ? '' : ', 누르면 아지트가 열려요'}`;
     const dragonSize = 46 + level * 3; // 단계가 오를수록 커진다(%)
     const plateStyle = nameplate ? getDragonNameplateTextLayout(nameplate.preview, name, '', { thumbnail: true }) : undefined;
     return (
-        <div className={`plaza-seat${isMe ? ' is-me' : ''}`}>
+        <div ref={seatRef} className={`plaza-seat${isMe ? ' is-me' : ''}`}>
             <button
                 type="button"
                 className={`plaza-desk${hasDeskArt ? ' has-art' : ''}`}
@@ -40,6 +54,7 @@ export default function PlazaDesk({ seat, newPost, onOpen, onOpenNewPost }) {
                             <span className="plaza-desk__front" aria-hidden="true" />
                         </>
                     )}
+                {tier >= 3 && <span className="plaza-desk__spark" data-tier={tier} data-species={seat.speciesId} aria-hidden="true" />}
                 <span className={`plaza-plate${nameplate ? '' : ' is-plain'}`} data-plate={nameplate?.preview || 'plain'} style={plateStyle}>
                     {nameplate && <img src={nameplate.image} alt="" loading="lazy" decoding="async" draggable="false" />}
                     <span>{name}</span>
