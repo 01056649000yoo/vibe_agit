@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { dragonPlazaManifest } from '../src/modules/game/dragon-plaza/manifest.js';
 import {
-    buildSeats, deskColumns, describeVisitors, markPostSeen, NEW_POST_DAYS, pickNewPosts, readSeenPosts
+    buildSeat, buildSeats, deskColumns, describeVisitors, markPostSeen, NEW_POST_DAYS, pickNewPosts, readSeenPosts
 } from '../src/modules/game/dragon-plaza/plazaModel.js';
 
 // 우리반 수호룡 아지트(2026-10-24): 교실 자리·책상 장식·새 글 표시·이번 주 방문자 칠판.
@@ -123,11 +123,14 @@ test('그림: 앉은 수호룡 4종 × 10단계 40장과 교실 배경이 모두
     assert.ok(room.size > 20000 && room.size < 400000, `교실 배경 크기(${room.size}B)가 이상합니다`);
 });
 
-test('작가 단계가 오를수록 책상 위 수호룡의 빛 단계가 높아진다(1~2는 없음, 10은 최고)', async () => {
-    const { auraTier } = await import('../src/modules/game/dragon-plaza/PlazaDesk.jsx').catch(() => ({}));
-    if (!auraTier) return; // JSX 를 직접 읽지 못하는 환경에서는 소스 검사로 대신한다
-    const tiers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(auraTier);
-    assert.deepEqual(tiers, [0, 0, 1, 1, 2, 2, 3, 4, 5, 6]);
+test('후광은 작가 단계가 아니라 소통(독서) 칭호 단계 1~7을 따르고, 그림은 작가 성장 단계를 따른다', () => {
+    const base = { id: 'a', name: '가', pet_data: { species: 'star' }, writer_total_chars: 60000, writer_completed_posts: 40 };
+    const low = buildSeat({ ...base, reader_score: 0 });
+    const high = buildSeat({ ...base, reader_score: 100000 });
+    assert.equal(low.level, high.level, '그림(작가 단계)은 같다');
+    assert.equal(low.readerLevel, 1);
+    assert.equal(high.readerLevel, 7, '소통 점수가 높으면 7단계 후광');
+    assert.equal(buildSeat({ ...base, pet_data: { species: 'star', _testReaderLevel: 4 } }).readerLevel, 4);
 });
 
 test('새 글 창은 놀이터 게임 화면(zIndex 20000)보다 위에 뜬다 — 아니면 글 창이 화면 뒤에 숨어 아무 일도 없어 보인다', async () => {

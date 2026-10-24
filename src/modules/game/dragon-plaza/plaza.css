@@ -94,33 +94,15 @@
   .plaza-desk.has-art .plaza-plate { width: 74%; }
 }
 
-/* 작가 단계별 빛(2026-10-24): 3단계부터 눈에 띄게. 기기 부담을 줄이려고 ① 그림에 filter 를 쓰지 않고 빛은 따로 깐 그라데이션 한 장으로,
-   ② 움직임은 transform·opacity 만(그래픽 칩이 처리), ③ 화면 밖 자리는 멈춤(.is-offscreen), ④ 3단계 이상만 움직인다. 움직임 줄이기 설정과 무관하게 보인다. */
-.plaza-desk__spark { --aura: 255,200,70; position: absolute; inset: 2px; border-radius: 18px; pointer-events: none; }
-/* 빛은 수호룡 뒤의 동그란 후광(드래곤 아지트 방과 같은 모양)이다. 단계가 오를수록 더 크고 밝고 겹이 늘어난다. */
-.plaza-desk__aura { --aura: 255,200,70; position: absolute; left: 7%; top: 2%; width: 86%; aspect-ratio: 1 / 1; border-radius: 50%; pointer-events: none; }
-.plaza-desk__aura { will-change: transform, opacity; }
-.plaza-desk__aura[data-species="forest"], .plaza-desk__spark[data-species="forest"] { --aura: 80,220,110; }
-.plaza-desk__aura[data-species="ember"], .plaza-desk__spark[data-species="ember"] { --aura: 255,120,50; }
-.plaza-desk__aura[data-species="moon"], .plaza-desk__spark[data-species="moon"] { --aura: 160,140,255; }
-.plaza-desk__spark::before, .plaza-desk__spark::after { position: absolute; font-size: 1.4rem; line-height: 1; color: rgb(var(--aura)); text-shadow: 0 0 5px #fff, 0 0 9px rgba(var(--aura), 1); will-change: opacity; }
-.plaza-desk__spark[data-tier="3"]::after, .plaza-desk__spark[data-tier="4"]::after, .plaza-desk__spark[data-tier="5"]::after, .plaza-desk__spark[data-tier="6"]::after { content: "✦"; right: 10%; top: 12%; animation: plaza-twinkle 2.2s ease-in-out infinite; }
-.plaza-desk__spark[data-tier="4"]::before, .plaza-desk__spark[data-tier="5"]::before { content: "✧✦"; left: 10%; top: 30%; animation: plaza-twinkle 1.7s ease-in-out .6s infinite; }
-.plaza-desk__spark[data-tier="6"]::before { content: "👑"; left: 50%; top: 1%; transform: translateX(-50%); font-size: 1.5rem; text-shadow: none; animation: none; }
-@keyframes plaza-aura { 0%, 100% { opacity: .78; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.05); } }
-@keyframes plaza-twinkle { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
-.plaza-desk__aura[data-tier="1"] { background: radial-gradient(closest-side, rgba(var(--aura), .5), rgba(var(--aura), .15) 70%, transparent 100%); }
-.plaza-desk__aura[data-tier="2"] { background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(var(--aura), .6) 55%, rgba(var(--aura), .2) 80%, transparent 100%); }
-/* 7단계: 흰 중심 + 종류 빛깔의 또렷한 원 테두리가 숨 쉬듯 */
-.plaza-desk__aura[data-tier="3"] { background: radial-gradient(closest-side, rgba(255,255,255,.7), rgba(var(--aura), .65) 62%, rgba(var(--aura), .25) 88%, transparent 100%); box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 18px 5px rgba(var(--aura), .85); animation: plaza-aura 3.2s ease-in-out infinite; }
-/* 8단계: 더 커지고, 바깥에 두 번째 원이 겹친다 */
-.plaza-desk__aura[data-tier="4"] { width: 94%; left: 3%; top: -1%; background: radial-gradient(closest-side, rgba(255,255,255,.8), rgba(var(--aura), .75) 60%, rgba(var(--aura), .3) 88%, transparent 100%); box-shadow: 0 0 0 4px rgba(255,255,255,1), 0 0 0 9px rgba(var(--aura), .55), 0 0 24px 8px rgba(var(--aura), .9); animation: plaza-aura 2.6s ease-in-out infinite; }
-/* 9~10단계: 가장 크고 밝은 흰 후광에 세 겹 */
-.plaza-desk__aura[data-tier="5"], .plaza-desk__aura[data-tier="6"] { width: 100%; left: 0; top: -4%; background: radial-gradient(closest-side, #fff, rgba(255,255,255,.75) 35%, rgba(var(--aura), .8) 65%, rgba(var(--aura), .3) 90%, transparent 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 10px rgba(var(--aura), .6), 0 0 0 15px rgba(255,255,255,.45), 0 0 30px 12px rgba(var(--aura), 1); animation: plaza-aura 2s ease-in-out infinite; }
-.plaza-desk__spark::before, .plaza-desk__spark::after { font-size: 1.8rem; color: #fff; text-shadow: 0 0 4px rgb(var(--aura)), 0 0 10px rgb(var(--aura)), 0 0 16px rgba(var(--aura), .9); }
-.plaza-desk__spark[data-tier="3"]::before { content: "✧"; left: 9%; top: 34%; animation: plaza-twinkle 1.9s ease-in-out .5s infinite; }
-.plaza-desk__spark[data-tier="6"]::before { color: inherit; text-shadow: none; }
-.plaza-seat.is-offscreen .plaza-desk__aura, .plaza-seat.is-offscreen .plaza-desk__spark::before, .plaza-seat.is-offscreen .plaza-desk__spark::after { animation-play-state: paused; }
+/* 수호룡 후광(2026-10-25): 소통 칭호 단계 1~7 — 드래곤 아지트 방과 같은 층(DragonAvatar.css)을 그림 뒤·앞에 깐다.
+   부담을 줄이려고 ① 그림에 filter 를 쓰지 않고(층만 가져옴) ② 화면 밖 자리는 움직임을 멈춘다(.is-offscreen). */
+/* 후광은 카드 안에서만 보이게 자른다(이웃 카드·교실 바닥까지 번지지 않게). */
+.plaza-halo-clip { position: absolute; inset: 2px; overflow: hidden; border-radius: 18px; pointer-events: none; }
+.plaza-halo-clip--front { z-index: 4; }
+.plaza-halo { position: absolute; left: 3%; top: 1%; display: inline-grid; place-items: center; width: 94%; height: auto; aspect-ratio: 1 / 1; pointer-events: none; container-type: inline-size; }
+/* 단계 표식은 오른쪽 위의 `새 글`·`내 자리` 표시와 겹치지 않게 조금 아래로 */
+.plaza-halo .dragon-reader-effect__sigil { top: 14%; right: 6%; }
+.plaza-seat.is-offscreen .plaza-halo *, .plaza-seat.is-offscreen .plaza-halo::before, .plaza-seat.is-offscreen .plaza-halo::after { animation-play-state: paused !important; }
 
 .plaza-postfail { position: fixed; inset: 0; z-index: 20600; display: grid; place-items: center; background: rgba(32,22,14,.58); }
 .plaza-postfail > div { background: #fffdf5; border-radius: 20px; padding: 22px 26px; text-align: center; font-weight: 800; }

@@ -9,6 +9,8 @@ const SPECIES = ['star', 'forest', 'ember', 'moon']
 const FRAMES = ['default', 'sunny-garden', 'wave-harbor', 'sky', 'forest', 'volcano', 'moon', 'crystal', 'rune', 'galaxy', 'storm', 'dreamlight-library']
 const PLATES = ['nameplate-sunny-garden', 'nameplate-brass', 'nameplate-ember', '', 'nameplate-crystal', '', 'nameplate-celestial', '', '', 'nameplate-sunny-garden', '', '']
 const NAMES = ['김도윤', '이서연', '박하준', '최지우', '정민재', '한수아', '윤지호', '강예은', '조은우', '임하린', '송다온', '오세아']
+// 소통 칭호 단계 1~7 을 돌려 가며 후광이 모두 보이게(점수는 단계 시작 점수)
+const READER_SCORES = [0, 1, 20, 50, 120, 200, 300]
 const CHARS = [0, 600, 1500, 3200, 6000, 12000, 22000, 35000, 52000, 80000, 120000, 200000]
 
 // `&plaza=40` — 네 종류 × 10단계 40마리가 모두 앉은 교실(그림이 전부 뜨는지 시험)
@@ -17,14 +19,14 @@ const SPECIES_ORDER = ['star', 'forest', 'ember', 'moon']
 const FULL_CLASSMATES = SPECIES_ORDER.flatMap((species, row) => Array.from({ length: 10 }, (_, index) => ({
   id: `full-${species}-${index + 1}`, name: `${['별', '숲', '노', '달'].at(row)}${index + 1}`,
   pet_data: { species, level: index + 1, _testWriterLevel: index + 1, equippedDecor: { wallpaper: FRAMES.at((row * 10 + index) % FRAMES.length), nameplate: PLATES.at((row * 10 + index) % PLATES.length) || undefined } },
-  writer_total_chars: [0, 600, 1500, 3200, 6000, 12000, 22000, 35000, 52000, 80000].at(index) * 1, writer_completed_posts: index * 4
+  writer_total_chars: [0, 600, 1500, 3200, 6000, 12000, 22000, 35000, 52000, 80000].at(index) * 1, writer_completed_posts: index * 4, reader_score: READER_SCORES.at(index % 7)
 })))
 const classmates = FULL ? FULL_CLASSMATES : NAMES.map((name, index) => ({
   id: `friend-${index + 1}`, name,
   pet_data: { species: SPECIES.at(index % 4), level: index + 1, equippedDecor: { wallpaper: FRAMES.at(index), nameplate: PLATES.at(index) || undefined } },
-  writer_total_chars: CHARS.at(index), writer_completed_posts: index * 2
+  writer_total_chars: CHARS.at(index), writer_completed_posts: index * 2, reader_score: READER_SCORES.at(index % 7)
 }))
-const me = { id: 'me', name: '나나', pet_data: { species: 'star', level: 4, equippedDecor: { wallpaper: 'sunny-garden', nameplate: 'nameplate-sunny-garden' } }, writer_total_chars: 3600, writer_completed_posts: 7 }
+const me = { id: 'me', name: '나나', pet_data: { species: 'star', level: 4, equippedDecor: { wallpaper: 'sunny-garden', nameplate: 'nameplate-sunny-garden' } }, writer_total_chars: 3600, writer_completed_posts: 7, reader_score: 120 }
 const now = Date.now()
 const api = {
   loadClassmates: async () => classmates,

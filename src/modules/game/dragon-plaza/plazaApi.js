@@ -20,7 +20,8 @@ export const plazaApi = Object.freeze({
         return {
             id: studentId, name: me?.name || '나', pet_data: me?.pet_data || {},
             writer_total_chars: Number(title?.writer_total_chars) || 0,
-            writer_completed_posts: Number(title?.writer_completed_posts) || 0
+            writer_completed_posts: Number(title?.writer_completed_posts) || 0,
+            reader_score: Number(title?.reader_score) || 0
         };
     },
     // 새 글 표시용 최근 공개 글(최신순 50편, 서버 상한)

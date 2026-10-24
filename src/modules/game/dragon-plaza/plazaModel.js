@@ -2,7 +2,7 @@
  * 우리반 수호룡 아지트의 순수 계산(화면과 따로 시험한다, 2026-10-24).
  * 자리·단계·책상 장식·새 글 표시를 한 곳에서 정한다.
  */
-import { getWriterLevel } from '../../../constants/writerLevels.js';
+import { getReaderLevel, getWriterLevel } from '../../../constants/writerLevels.js';
 import { getDragonDecorItem, normalizeDragonDecor } from '../dragon/decorCatalog.js';
 import { getDragonStage, getHideoutBackground } from '../dragon/presentation.js';
 
@@ -16,6 +16,8 @@ const koreanCompare = (a, b) => String(a || '').localeCompare(String(b || ''), '
 export const buildSeat = (row, { isMe = false } = {}) => {
     const petData = row?.pet_data || {};
     const writerLevel = getWriterLevel(row?.writer_total_chars, row?.writer_completed_posts, petData._testWriterLevel).level;
+    // 그림은 작가 성장 단계, 후광은 소통(독서) 칭호 단계(1~7)를 따른다.
+    const readerLevel = getReaderLevel(row?.reader_score, petData._testReaderLevel).level;
     const stage = getDragonStage(writerLevel, petData.species);
     const decor = normalizeDragonDecor(petData);
     const frame = getHideoutBackground(decor.equipped.wallpaper);
@@ -26,6 +28,7 @@ export const buildSeat = (row, { isMe = false } = {}) => {
         isMe,
         row,
         level: writerLevel,
+        readerLevel,
         speciesId: stage.speciesId,
         stage,
         frame: { border: frame.border, glow: frame.glow || frame.border },
