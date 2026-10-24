@@ -97,9 +97,9 @@ const StudentHomeGrowthPanel = ({
                 )}
                     {plazaEnabled && (
                         <button type="button" className="student-home-plaza-entry" onClick={onOpenPlaza}>
-                            <span aria-hidden="true">🏫</span>
-                            <span><small>친구들이 모여 앉은 교실</small><strong>우리반 수호룡 아지트</strong></span>
-                            <em>들어가기 ›</em>
+                            <span className="student-home-plaza-entry__icon" aria-hidden="true">🏫</span>
+                            <span className="student-home-plaza-entry__text"><small>친구들이 모인 교실</small><strong>우리반 수호룡 아지트</strong></span>
+                            <em aria-hidden="true">›</em>
                         </button>
                     )}
                 </div>
