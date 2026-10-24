@@ -1,5 +1,5 @@
 /* 우리반 수호룡 아지트: 교실 배경 + 칠판 + 책상 줄. 글자는 디자인 토큰(0.9rem 이상)을 쓴다. */
-.plaza { min-height: 100vh; padding: 12px 14px 28px; background: linear-gradient(180deg, #e9f3e3 0%, #f6efe1 38%, #d9b98a 38.1%, #c9a273 100%); color: #3e2e23; }
+.plaza { container: plaza / inline-size; min-height: 100vh; padding: 12px 14px 28px; background: linear-gradient(180deg, #e9f3e3 0%, #f6efe1 38%, #d9b98a 38.1%, #c9a273 100%); color: #3e2e23; }
 .plaza.has-photo { background: #e0a050 repeating-linear-gradient(0deg, rgba(120,70,20,.06) 0 2px, transparent 2px 58px); }
 /* 교실 사진: 칠판·창문·게시판이 보이는 위쪽. 사진의 칠판 자리에 이번 주 방문자 글씨를 올린다(태블릿·PC). */
 .plaza__hero { position: relative; max-width: 1180px; margin: 0 auto 6px; container-type: inline-size; }
@@ -11,14 +11,15 @@
 .plaza.has-photo .plaza-board__visitors p { margin: .4cqw 0 0; font-size: max(.85rem, 1.8cqw); }
 .plaza.has-photo .plaza-board__visitors ul { gap: .8cqw; margin-top: .8cqw; }
 .plaza.has-photo .plaza-board__visitors li { padding: .3cqw 1.4cqw; font-size: max(.8rem, 1.8cqw); }
+/* 화면 크기는 기기 화면이 아니라 이 교실이 차지한 폭(`@container plaza`)으로 가른다 — 개발실·옆 메뉴가 있어도 같게 동작한다.
+   교실 폭 ≥900: 5열, 600~899: 4열(세로 태블릿), <600: 3열(휴대폰). */
 /* 휴대폰: 사진 칠판이 너무 작아 글씨를 올릴 수 없으니 사진은 장식 띠로 두고 칠판 상자를 따로 보여 준다 */
-@media (max-width: 760px) {
+@container plaza (max-width: 599px) {
   .plaza.has-photo .plaza__hero { aspect-ratio: auto; background: none; mask-image: none; -webkit-mask-image: none; }
   .plaza.has-photo .plaza-board { position: static; width: auto; height: auto; padding: 14px 16px; border: 6px solid #8a5a2c; border-radius: 12px; background: #2f5d46; box-shadow: inset 0 0 18px rgba(0,0,0,.3); overflow: visible; }
   .plaza.has-photo .plaza-board h2 { font-size: var(--ui-text-lg); }
   .plaza.has-photo .plaza-board__visitors strong, .plaza.has-photo .plaza-board__visitors p { font-size: var(--ui-text-md); }
   .plaza.has-photo .plaza-board__visitors li { padding: 4px 12px; font-size: var(--ui-text-md); }
-  .plaza.has-photo { background: #e0a050; }
   .plaza.has-photo .plaza__hero { margin-bottom: 14px; }
 }
 .plaza__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 1180px; margin: 0 auto 10px; }
@@ -38,7 +39,8 @@
 .plaza-board__visitors li { padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.16); font-size: var(--ui-text-md); font-weight: 800; }
 
 .plaza__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 16px; max-width: 1180px; margin: 0 auto; }
-@media (max-width: 760px) { .plaza__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; } }
+@container plaza (max-width: 899px) { .plaza__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 12px; } }
+@container plaza (max-width: 599px) { .plaza__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; } }
 
 .plaza-seat { position: relative; }
 .plaza-desk { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1.14; padding: 0; border: 0; background: none; cursor: pointer; overflow: visible; font: inherit; }
@@ -82,7 +84,7 @@
 .plaza-plate[data-plate='dreamlight-library'] > span { color: #574270; text-shadow: 0 1px 2px rgba(255,255,255,.45); }
 
 /* 작은 태블릿(세로 화면)은 사진 칠판이 낮아 글씨를 조금 줄이고 보조 글을 뺀다 */
-@media (min-width: 761px) and (max-width: 900px) {
+@container plaza (min-width: 600px) and (max-width: 899px) {
   .plaza.has-photo .plaza-board { padding: .8cqw 2cqw; }
   .plaza.has-photo .plaza-board h2 small { display: none; }
   .plaza.has-photo .plaza-board h2 { font-size: max(.9rem, 2.2cqw); margin-bottom: .2cqw; }

@@ -161,3 +161,12 @@ test('새 글 단추를 누르면 그 친구의 안 본 새 글이 모두 읽음
     assert.equal(after.has('s2'), false, '여러 편이어도 표시가 사라져야 한다');
     assert.equal(after.get('s3').id, 'b1', '다른 친구의 새 글은 그대로');
 });
+
+test('교실 열 수는 기기 화면이 아니라 교실 폭(@container)으로 5열 → 4열 → 3열로 바뀐다', async () => {
+    const css = await readFile('src/modules/game/dragon-plaza/plaza.css', 'utf8');
+    assert.match(css, /\.plaza \{ container: plaza \/ inline-size;/);
+    assert.match(css, /repeat\(5, minmax\(0, 1fr\)\)/);
+    assert.match(css, /@container plaza \(max-width: 899px\) \{ \.plaza__grid \{ grid-template-columns: repeat\(4/);
+    assert.match(css, /@container plaza \(max-width: 599px\) \{ \.plaza__grid \{ grid-template-columns: repeat\(3/);
+    assert.doesNotMatch(css, /@media \(max-width: 760px\)/, '화면 폭 기준 규칙이 남아 있습니다');
+});
