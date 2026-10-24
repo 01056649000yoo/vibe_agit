@@ -11,14 +11,26 @@
 | 이것이 무엇과 이어져 있나 | `npm run map -- explain DragonPlazaEntry` |
 | 이름이 나오는 부분 지도 | `npm run map -- query "buildSeat useDragonPlaza"` |
 | 두 이름 사이의 길 | `npm run map -- path "A" "B"` |
+| **함수·컴포넌트 하나의 소스만**(파일 전체를 읽지 않기) | `npm run map -- show buildSeat` (겹치면 `show 이름 파일일부`) |
+| **DB 함수의 최신 정의만**·부르는 곳·권한(낡은 정의 건너뜀) | `npm run map -- rpc get_my_title_status` |
 | 지도가 신선한가 | `npm run map -- status` |
 
 - `npm run recall -- src/…파일` 에 ⑥ "이 파일을 부르는 곳"이 자동으로 붙는다. 평소 하던 recall 만 해도 된다.
 - 도구(graphify)가 없는 컴퓨터·모델에서는 한 줄 안내만 하고 끝난다 — 평소처럼 `grep` 으로 찾으면 된다.
 
+## 토큰이 가장 크게 줄어드는 곳
+
+찾는 것보다 **큰 파일을 통째로 읽는 것**이 더 비싸다(src 7.6MB·migrations 5MB·tests 3MB·docs 3.7MB). 그래서 `show`·`rpc` 가 핵심이다.
+- `rpc get_my_title_status`: 열 번 다시 정의된 DB 함수의 **최신 정의 4.5KB** (grep 8.2KB·최신 정의가 든 마이그레이션 파일 전체 38KB).
+- `show buildSeat`: 함수 하나 1.3KB (파일 전체 6.2KB). 큰 컴포넌트일수록 차이가 커진다.
+- `affected`: 부르는 곳 몇 줄 0.4KB (grep 2.3KB).
+
 ## 갱신은 자동이다
 
-조회할 때마다 "지도를 만든 뒤 소스가 바뀌었나(수정 시각)·소스 파일 수가 달라졌나(지운 파일 포함)"를 보고, **낡았을 때만** 다시 만든다(약 4~6초).
+- **세션을 열면** `.claude/hooks/code-map-refresh.sh` 가 백그라운드로 지도를 최신화한다(컨텍스트에 아무것도 싣지 않는다). 신선하면 몇십 ms, 낡았으면 4~6초 — 세션은 기다리지 않고, 그 사이 조회하면 잠금으로 끝날 때까지 기다렸다 신선한 지도를 쓴다.
+- Claude Code 전용 훅이다(Codex 는 조회 때 알아서 갱신).
+
+조회할 때도 "지도를 만든 뒤 소스가 바뀌었나(수정 시각)·소스 파일 수가 달라졌나(지운 파일 포함)"를 보고, **낡았을 때만** 다시 만든다(약 4~6초).
 훅·백그라운드 프로세스가 없다. 직접 갱신하려면 `npm run map -- update`.
 
 ## 한계 — 이럴 땐 grep

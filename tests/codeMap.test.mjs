@@ -42,3 +42,39 @@ test('코드 지도는 쓸 때마다 저장소 밖에 기록하고, 집계·평�
     assert.match(tool, /logUsage\(\{ source: 'recall'/, 'recall 에서 쓴 것도 센다');
     assert.doesNotMatch(tool, /usage\.jsonl[\s\S]{0,40}repo|appendFileSync\(['"]\./, '기록은 저장소 안에 두지 않는다');
 });
+
+import { extractBlock, extractSqlFunction, findSqlFunction } from '../scripts/codeMapSource.mjs';
+
+test('show: 함수 하나만 중괄호가 닫힐 때까지 뽑고, 한 줄 화살표 함수도 뽑는다', () => {
+    const lines = ['const a = 1;', 'export const f = (x) => {', '  if (x) { return 1; }', '  return "}" + 2;', '};', 'const g = (y) => y + 1;', 'const z = 3;'];
+    assert.deepEqual(extractBlock(lines, 2), { from: 2, to: 5, truncated: false });
+    assert.deepEqual(extractBlock(lines, 6), { from: 6, to: 6, truncated: false }, '한 줄 함수');
+    assert.equal(extractBlock(['f = () => {', ...Array(300).fill('  x;')], 1, 20).truncated, true, '길면 상한에서 자른다');
+});
+
+test('rpc: 여러 번 다시 정의된 DB 함수는 최신 정의만, DROP·권한도 알려 준다', () => {
+    const migrations = [
+        { file: '001_a.sql', text: 'CREATE OR REPLACE FUNCTION public.get_x()\nRETURNS INT AS $$\nSELECT 1;\n$$ LANGUAGE sql;\nGRANT EXECUTE ON FUNCTION public.get_x() TO authenticated;' },
+        { file: '002_b.sql', text: '-- 새 판\nCREATE OR REPLACE FUNCTION public.get_x()\nRETURNS INT\nLANGUAGE plpgsql\nAS $fn$\nBEGIN RETURN 2; END;\n$fn$;' },
+        { file: '003_c.sql', text: 'DROP FUNCTION IF EXISTS public.get_x();' }
+    ];
+    const found = findSqlFunction(migrations, 'get_x');
+    assert.equal(found.definitions.length, 2);
+    assert.deepEqual(found.latest, { file: '002_b.sql', line: 2 });
+    assert.equal(found.droppedAfter?.file, '003_c.sql', '정의 뒤에 DROP 이 있으면 알린다');
+    assert.deepEqual(found.grants, ['001_a.sql']);
+    assert.deepEqual(extractSqlFunction(migrations[1].text, 2), { from: 2, to: 7, truncated: false });
+    assert.equal(findSqlFunction(migrations, 'nope').latest, null);
+});
+
+test('세션을 열면 코드 지도가 백그라운드로 갱신되고, 갱신 중 조회는 잠금으로 기다린다', async () => {
+    const [settings, hook, tool, skill] = await Promise.all([
+        readFile('.claude/settings.json', 'utf8'), readFile('.claude/hooks/code-map-refresh.sh', 'utf8'),
+        readFile('scripts/code-map.mjs', 'utf8'), readFile('.claude/skills/code-map/SKILL.md', 'utf8')
+    ]);
+    assert.match(settings, /code-map-refresh\.sh/);
+    assert.match(hook, /nohup node scripts\/code-map\.mjs update --quiet/, '세션을 막지 않게 백그라운드');
+    assert.match(hook, /exit 0\s*$/, '실패해도 세션을 막지 않는다');
+    assert.match(tool, /waitForLock\(\)/);
+    assert.match(skill, /^name: code-map/m);
+});

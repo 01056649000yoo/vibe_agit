@@ -8,6 +8,8 @@
  *   path "A" "B"      두 이름 사이의 가장 짧은 길
  *   status            지도 상태(낡았는지)
  *   update            지금 바로 다시 만들기(보통은 조회할 때 알아서 한다)
+ *   show "이름"        함수·컴포넌트 **하나의 소스만**(파일 전체를 읽지 않는다)
+ *   rpc "함수이름"     DB 함수의 **최신 정의만**·부르는 곳·권한(낡은 정의는 건너뜀)
  *   usage             지금까지 몇 번 썼는지(2주 평가용)
  *   note 도움됨|아님|놓침 "이유"   직전 조회가 쓸모 있었는지 한 줄 기록(평가용)
  *
@@ -16,10 +18,11 @@
  * 코드(src/)만 읽는다: 로컬 분석이라 외부로 나가는 것이 없고 API 키가 필요 없다. 문서·PDF·이미지는 일부러 넣지 않는다.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { isMapSource, needsEnglishName, needsFullRescan, staleReason } from './codeMapPolicy.mjs';
+import { extractBlock, extractSqlFunction, findSqlFunction } from './codeMapSource.mjs';
 
 const OUT = process.env.CODE_MAP_DIR || path.join(homedir(), 'graphify', 'vibe-agit');
 const GRAPH = path.join(OUT, 'graphify-out', 'graph.json');
@@ -63,10 +66,30 @@ const state = () => {
     return { ...input, reason: staleReason(input), full: needsFullRescan(input) };
 };
 
+const LOCK_FILE = path.join(OUT, '.refresh.lock');
+const sleepMs = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+/** 세션 시작 갱신(백그라운드)과 조회가 동시에 지도를 만들지 않게 한다: 잠금이 있으면(90초 안) 끝날 때까지 기다린다. */
+const waitForLock = () => {
+    for (let waited = 0; waited < 40000 && existsSync(LOCK_FILE); waited += 500) {
+        if (Date.now() - statSync(LOCK_FILE).mtimeMs > 90000) return; // 죽은 잠금
+        sleepMs(500);
+    }
+};
+
 /** 낡았을 때만 다시 만든다. 성공하면 true. */
 export const refreshIfStale = (bin, { quiet = false } = {}) => {
+    waitForLock();
     const current = state();
     if (!current.reason) return true;
+    try { mkdirSync(OUT, { recursive: true }); writeFileSync(LOCK_FILE, String(process.pid)); } catch { /* 잠금을 못 만들어도 진행 */ }
+    try {
+        return rebuild(bin, current, quiet);
+    } finally {
+        try { unlinkSync(LOCK_FILE); } catch { /* 이미 없음 */ }
+    }
+};
+
+const rebuild = (bin, current, quiet) => {
     if (!quiet) console.error(`[코드 지도] ${current.reason} — 다시 만드는 중…`);
     const extract = run(bin, ['extract', SRC, '--code-only', '--out', OUT], current.full || current.graphMtimeMs == null ? { GRAPHIFY_FORCE: '1' } : {});
     if (extract.status !== 0) { if (!quiet) console.error(`[코드 지도] 만들지 못했어요: ${(extract.stderr || '').split('\n').filter(Boolean).at(-1) || '알 수 없음'}`); return false; }
@@ -90,6 +113,58 @@ export const affectedLines = (file, { depth = 1, max = 12 } = {}) => {
     const lines = result.stdout.split('\n').filter((line) => line.startsWith('- ')).slice(0, max);
     logUsage({ source: 'recall', command: 'affected', target: label, lines: lines.length, bytes: Buffer.byteLength(result.stdout) });
     return lines;
+};
+
+const readLines = (file) => readFileSync(file, 'utf8').split('\n');
+const printRange = (file, from, to) => readLines(file).slice(from - 1, to).forEach((line, offset) => console.log(`${String(from + offset).padStart(5)}  ${line}`));
+
+/** 함수 하나의 소스만 보여 준다(파일 전체를 읽지 않는다). */
+const showSymbol = (bin, name, fileHint = '') => {
+    if (!refreshIfStale(bin)) return 1;
+    const graph = JSON.parse(readFileSync(GRAPH, 'utf8'));
+    const wanted = name.replace(/\(\)$/, '');
+    let found = (graph.nodes || []).filter((node) => node.file_type === 'code' && node.source_file && node.source_location
+        && String(node.label).replace(/\(\)$/, '') === wanted);
+    // 같은 이름이 여러 곳이면: 파일 힌트가 있으면 그것으로, 없으면 파일 이름이 이름과 같은 것(컴포넌트 본체)을 먼저 고른다.
+    if (found.length > 1 && fileHint) found = found.filter((node) => node.source_file.includes(fileHint));
+    if (found.length > 1) {
+        const sameFile = found.filter((node) => path.basename(node.source_file).replace(/\.[^.]+$/, '') === wanted);
+        if (sameFile.length === 1) found = sameFile;
+    }
+    if (found.length === 0) { console.log(`'${name}' 이름의 함수·컴포넌트를 지도에서 못 찾았어요. 영문 이름이 맞는지, 또는 npm run map -- query ${wanted} 로 비슷한 이름을 찾아 보세요.`); return 4; }
+    if (found.length > 1) {
+        console.log(`'${name}' 이 ${found.length}곳에 있어요. 어느 것인지 파일을 붙여 다시 부르세요(npm run map -- show ${wanted} <파일 일부>):`);
+        found.slice(0, 12).forEach((node) => console.log(`  ${SRC}/${node.source_file}:${node.source_location.replace('L', '')}`));
+        return 3;
+    }
+    const [node] = found;
+    const file = path.join(SRC, node.source_file);
+    const start = Number(node.source_location.replace('L', ''));
+    const block = extractBlock(readLines(file), start);
+    console.log(`${file}:${block.from}-${block.to}${block.truncated ? ' (길어서 일부만)' : ''}`);
+    printRange(file, block.from, block.to);
+    logUsage({ source: 'cli', command: 'show', target: wanted, lines: block.to - block.from + 1, bytes: 0 });
+    return 0;
+};
+
+/** DB 함수의 **최신 정의만**·부르는 곳·권한을 보여 준다(여러 번 다시 정의된 낡은 것은 건너뜀). */
+const showRpc = (name) => {
+    const dir = 'supabase/migrations';
+    if (!existsSync(dir)) { console.log('supabase/migrations 가 없어요.'); return 2; }
+    const migrations = readdirSync(dir).filter((file) => file.endsWith('.sql')).sort().map((file) => ({ file, text: readFileSync(path.join(dir, file), 'utf8') }));
+    const found = findSqlFunction(migrations, name);
+    if (!found.latest) { console.log(`'${name}' 정의를 마이그레이션에서 못 찾았어요(이름 철자·public 스키마 확인).`); return 4; }
+    const target = migrations.find((migration) => migration.file === found.latest.file);
+    const block = extractSqlFunction(target.text, found.latest.line);
+    console.log(`최신 정의: ${dir}/${found.latest.file}:${block.from}-${block.to}${block.truncated ? ' (길어서 일부만)' : ''}  · 정의 ${found.definitions.length}번 · 권한 ${found.grants.length}곳`);
+    if (found.definitions.length > 1) console.log(`이전 정의: ${found.definitions.slice(0, -1).map((def) => def.file.replace(/\.sql$/, '')).join(', ')}`);
+    if (found.droppedAfter) console.log(`⚠ 이 정의 뒤에 DROP 이 있어요: ${found.droppedAfter.file}:${found.droppedAfter.line} (지금은 없는 함수일 수 있어요)`);
+    const callers = spawnSync('grep', ['-rn', '--include=*.js', '--include=*.jsx', '--include=*.mjs', `['"]${name}['"]`, 'src', 'tests', 'scripts'], { encoding: 'utf8' }).stdout.split('\n').filter(Boolean);
+    console.log(`부르는 곳(${callers.length}): ${callers.slice(0, 8).map((line) => line.split(':').slice(0, 2).join(':')).join(' · ') || '없음'}`);
+    console.log('');
+    printRange(path.join(dir, found.latest.file), block.from, block.to);
+    logUsage({ source: 'cli', command: 'rpc', target: name, lines: block.to - block.from + 1, bytes: 0 });
+    return 0;
 };
 
 const printUsage = () => {
@@ -124,8 +199,10 @@ const main = () => {
         console.log(`지도 위치: ${GRAPH}`);
         return 0;
     }
-    if (command === 'update') return refreshIfStale(bin) ? 0 : 1;
+    if (command === 'update') return refreshIfStale(bin, { quiet: rest.includes('--quiet') }) ? 0 : 1;
     if (command === 'usage') return printUsage();
+    if (command === 'rpc') return rest[0] ? showRpc(rest[0]) : (console.log('예: npm run map -- rpc get_my_title_status'), 2);
+    if (command === 'show') return rest[0] ? showSymbol(bin, rest[0], rest[1] || '') : (console.log('예: npm run map -- show buildSeat'), 2);
     if (command === 'note') { // 직전 조회가 도움이 됐는지 한 줄로 남긴다: npm run map -- note 도움됨|아님 "이유"
         logUsage({ source: 'note', command: 'note', target: rest.join(' ').slice(0, 200), verdict: ['도움됨', '아님', '놓침'].find((word) => rest[0] === word) || '' });
         console.log('기록했어요.');

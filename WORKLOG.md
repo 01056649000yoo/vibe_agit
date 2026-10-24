@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 코드 지도: 필요한 조각만 보기(show·rpc)·세션 시작 자동 갱신·스킬 (Claude)
+- **한 일**: 선생님 `토큰 감소 효과가 큰 부분 더·세션 열 때 지도 최신화·자동화`. 큰 파일을 통째로 읽는 것이 가장 비싸므로 ① `npm run map -- show <함수>`(함수 하나 소스만: 6.2KB→1.3KB) ② `rpc <DB함수>`(여러 번 다시 정의된 함수의 최신 정의·부르는 곳·권한: 파일 38KB·grep 8.2KB→4.5KB, DROP 뒤 경고) 추가. 세션을 열면 SessionStart 훅이 지도를 백그라운드로 최신화(출력 0, 세션 안 막음), 갱신 중 조회는 잠금으로 기다림. 프로젝트 스킬 `code-map` 추가.
+- **변경**: scripts/code-map.mjs·codeMapSource.mjs(새)·.claude/hooks/code-map-refresh.sh(새)·.claude/settings.json(SessionStart 훅 1개 추가)·.claude/skills/code-map/SKILL.md(새)·docs/wiki/CODE_MAP.md·SESSION_RULES 한 줄·tests/codeMap.test.mjs.
+- **결과/검증**: 시험·eslint 통과. 소스를 건드린 뒤 훅 → 4초 안에 갱신, 그 사이 조회가 잠금으로 기다렸다 신선한 지도 사용 확인.
+- **남은 것**: 11-08 평가(`npm run map -- usage`).
+
 ## 2026-10-25 — 코드 지도 사용 기록·평가 메모 (Claude)
 - **한 일**: 선생님 `지도를 쓴 경우를 잘 체크해놔` — 지도를 쓸 때마다(직접 조회·recall) 저장소 밖 `~/graphify/vibe-agit/usage.jsonl` 에 질문 이름·답 크기·시각만 기록(코드 내용 없음). `npm run map -- usage` 로 횟수·명령별·평균 답 크기·결과 없음 집계, `npm run map -- note 도움됨|아님|놓침 "이유"` 로 쓴 뒤 평가 한 줄을 남김. 2026-11-08 평가 근거.
 - **변경**: scripts/code-map.mjs·docs/wiki/CODE_MAP.md·tests/codeMap.test.mjs.
