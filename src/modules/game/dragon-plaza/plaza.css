@@ -113,6 +113,13 @@
 .plaza-desk__spark[data-tier="6"]::before { content: "👑"; left: 50%; top: 1%; transform: translateX(-50%); font-size: 1.5rem; text-shadow: none; animation: none; }
 @keyframes plaza-aura { 0%, 100% { opacity: .78; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.05); } }
 @keyframes plaza-twinkle { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+/* 7단계부터는 흰 테두리 빛 + 흰 반짝이로, 종류 빛깔(특히 노을룡의 주황)이 카드 바탕에 묻히지 않게 한다 */
+.plaza-desk__aura[data-tier="3"] { box-shadow: inset 0 0 0 3px rgba(255,255,255,.95), inset 0 0 26px 8px rgba(var(--aura), .9), 0 0 14px 3px rgba(255,255,255,.75); }
+.plaza-desk__aura[data-tier="4"] { box-shadow: inset 0 0 0 4px rgba(255,255,255,1), inset 0 0 34px 11px rgba(var(--aura), 1), 0 0 20px 6px rgba(255,255,255,.85); }
+.plaza-desk__aura[data-tier="5"], .plaza-desk__aura[data-tier="6"] { box-shadow: inset 0 0 0 5px rgba(255,255,255,1), inset 0 0 40px 15px rgba(var(--aura), 1), 0 0 26px 9px rgba(255,255,255,.95); }
+.plaza-desk__spark::before, .plaza-desk__spark::after { font-size: 1.8rem; color: #fff; text-shadow: 0 0 4px rgb(var(--aura)), 0 0 10px rgb(var(--aura)), 0 0 16px rgba(var(--aura), .9); }
+.plaza-desk__spark[data-tier="3"]::before { content: "✧"; left: 9%; top: 34%; animation: plaza-twinkle 1.9s ease-in-out .5s infinite; }
+.plaza-desk__spark[data-tier="6"]::before { color: inherit; text-shadow: none; }
 .plaza-seat.is-offscreen .plaza-desk__aura, .plaza-seat.is-offscreen .plaza-desk__spark::before, .plaza-seat.is-offscreen .plaza-desk__spark::after { animation-play-state: paused; }
 
 .plaza-postfail { position: fixed; inset: 0; z-index: 20600; display: grid; place-items: center; background: rgba(32,22,14,.58); }
