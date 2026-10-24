@@ -116,3 +116,6 @@
 .plaza-postfail { position: fixed; inset: 0; z-index: 10003; display: grid; place-items: center; background: rgba(32,22,14,.58); }
 .plaza-postfail > div { background: #fffdf5; border-radius: 20px; padding: 22px 26px; text-align: center; font-weight: 800; }
 .plaza-postfail button { margin-top: 8px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 14px; background: #3e2e23; color: #fff; font-weight: 900; }
+
+/* 어휘의 탑 정복 덱 수: 좌상단 단계 표시 아래 작은 배지(순위·점수 아님, 정복한 개수만) */
+.plaza-desk__tower { position: absolute; left: 8px; top: 38px; z-index: 3; padding: 2px 8px; border-radius: 999px; background: rgba(62,46,35,.82); color: #ffe9a8; font-size: var(--ui-text-xs); font-weight: 900; line-height: 1.3; }

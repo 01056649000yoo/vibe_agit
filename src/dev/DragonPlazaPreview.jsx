@@ -30,6 +30,7 @@ const api = {
     { id: 'post-2', student_id: 'friend-7', title: '우리 동네 작은 숲', feed_published_at: new Date(now - 86400000).toISOString() },
     { id: 'post-3', student_id: 'friend-9', title: '아주 오래된 글', feed_published_at: new Date(now - 30 * 86400000).toISOString() }
   ],
+  loadConquests: async () => [{ student_id: 'friend-3', decks: [1, 2, 3] }, { student_id: 'friend-4', decks: [1] }],
   loadVisitors: async () => [{ name: '이서연' }, { name: '박하준' }, { name: '윤지호' }]
 }
 

@@ -25,5 +25,7 @@ export const plazaApi = Object.freeze({
     },
     // 새 글 표시용 최근 공개 글(최신순 50편, 서버 상한)
     loadFeed: async () => must(await supabase.rpc('get_class_public_writing_feed_v1', { p_group: 'all', p_limit: 50 }), {}).items || [],
+    // 같은 반 친구가 정복한 어휘의 탑 덱 번호(`20261414`). 아직 적용 전이거나 실패하면 책상 배지만 빠진다.
+    loadConquests: async () => must(await supabase.rpc('get_class_vocab_conquests_v1'), {}).students || [],
     loadVisitors: async () => must(await supabase.rpc('get_my_hideout_visitors_v1'), {}).visitors || []
 });

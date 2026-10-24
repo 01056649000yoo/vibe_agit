@@ -35,7 +35,7 @@ function Chalkboard({ seatCount, visitors }) {
 export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api = plazaApi }) {
     const studentId = studentSession?.id;
     const classId = studentSession?.classId || studentSession?.class_id;
-    const { status, message, seats, visitors, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
+    const { status, message, seats, visitors, conquestCounts, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
     const [openedSeat, setOpenedSeat] = useState(null);
     const { classroomReady } = useDeskArt();
 
@@ -73,6 +73,7 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api
                                 <PlazaDesk
                                     seat={seat}
                                     newPost={newPosts.get(seat.id)}
+                                    conquered={conquestCounts.get(seat.id) || 0}
                                     onOpen={setOpenedSeat}
                                     onOpenNewPost={openNewPost}
                                 />

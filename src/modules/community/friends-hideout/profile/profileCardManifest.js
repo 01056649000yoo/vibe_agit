@@ -4,6 +4,7 @@ const FriendDragonProfileCard = lazy(() => import('./cards/FriendDragonProfileCa
 const FriendWritingShelf = lazy(() => import('../FriendWritingShelf'));
 const FriendRelationshipCard = lazy(() => import('./cards/FriendRelationshipCard'));
 const FriendMasteryCard = lazy(() => import('./cards/FriendMasteryCard'));
+const FriendTowerConquestCard = lazy(() => import('./cards/FriendTowerConquestCard'));
 
 /**
  * 친구 프로필 확장 지점.
@@ -35,6 +36,14 @@ const friendProfileCardManifest = [
         status: 'active',
         component: FriendMasteryCard,
         loadingMessage: '친구가 받은 휘장을 확인하는 중... 🏆'
+    },
+    {
+        id: 'tower-conquest',
+        title: '어휘의 탑 정복',
+        order: 17,
+        status: 'active',
+        component: FriendTowerConquestCard,
+        loadingMessage: '어휘의 탑 정복을 확인하는 중... 🏰'
     },
     {
         id: 'relationships',
