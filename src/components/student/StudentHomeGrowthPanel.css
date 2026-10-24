@@ -9,7 +9,7 @@
 }
 
 .student-home-growth.has-dragon {
-    grid-template-columns: minmax(0, 1fr) 190px;
+    grid-template-columns: minmax(0, 1fr) clamp(230px, 28%, 280px);
     gap: var(--ui-space-5);
 }
 

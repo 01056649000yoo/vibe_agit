@@ -3,6 +3,8 @@ import { supabase } from '../../../lib/supabaseClient';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import { getMissionReactionOptions } from '../../writing/mission-types/registry';
 
+// 게임 화면(StudentDashboard 의 module 래퍼 zIndex 20000)보다 높아야 글 창이 보인다. 개발실 확인으로는 못 잡는 문제였다.
+const PLAZA_POST_Z_INDEX = 20500;
 const POST_COLUMNS = 'id, title, content, student_id, mission_id, created_at, updated_at, published_at, char_count, is_confirmed, is_submitted, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content';
 
 /** 친구의 공개 글 한 편을 불러온다(글쓴이 학생·학급이 맞고 공개일 때만). 책장의 글 열기와 같은 조건이다. */
@@ -80,6 +82,7 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
             ACCESSORIES={[]}
             classmates={classmates}
             enforcePublicAccess
+            zIndex={PLAZA_POST_Z_INDEX}
         />
         </PostBoundary>
     );

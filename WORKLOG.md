@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 광장 새 글이 열리지 않던 원인 수정, 첫 화면 오른쪽 폭 조정 (Claude)
+- **한 일**: 새 글을 눌러도 "번쩍하고 아무 일 없음" — 글 읽기 창(`PostDetailModal`, zIndex 10002)이 놀이터 게임 화면(zIndex 20000) 뒤에 숨어 있었다. 창에 `zIndex` 를 넘기게 하고 광장은 20500 을 쓴다 [원인: body 로 붙는 창의 기본 zIndex 가 게임 화면보다 낮음; 개발실에는 게임 화면 래퍼가 없어 못 잡음]. 서버 조회 횟수로 요청은 갔고 창이 열려 있었음을 확인(진단). 학생 첫 화면은 오른쪽 줄 폭을 키워(230~280px) 왼쪽 칭호 상자를 줄임.
+- **변경**: PostDetailModal(`zIndex` prop)·PlazaPostModal·plaza.css·StudentHomeGrowthPanel.css·tests(층 순서 검사)·PITFALLS 한 줄.
+- **결과/검증**: eslint 0, test:all 1719(층 순서 검사 추가). 배포 전.
+- **남은 것**: OI-045(선택 개선).
+
 ## 2026-10-25 — 학생 첫 화면에 우리반 수호룡 아지트 입구, 교사 단계별 모습 미리보기 (Claude)
 - **한 일**: 학생 첫 화면 오른쪽 줄에 `나의 작가 수호룡`(내 방) 아래 `우리반 수호룡 아지트`(들어가기) 버튼 추가 — 둘 다 첫 화면에서 바로 보임(아지트 모듈이 꺼진 반은 안 보임). 교사 화면(놀이터 → 우리반 수호룡 아지트)에 4종류 1~10단계 책상 모습과 빛 효과 미리보기 추가.
 - **변경**: StudentHomeGrowthPanel(.jsx/.css)·StudentDashboard(`plazaEnabled`·`onOpenPlaza`)·dragon-plaza/TeacherManager.jsx·PlazaDesk(`AURA_TIER_LABELS`)·개발실 `&view=home|teacher`.

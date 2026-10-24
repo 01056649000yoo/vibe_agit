@@ -180,7 +180,9 @@ const PostDetailModal = ({
     isMobile,
     ACCESSORIES,
     classmates = [],
-    enforcePublicAccess = false
+    enforcePublicAccess = false,
+    // 놀이터 게임 화면(zIndex 20000) 안에서 열 때는 그보다 높게 넘긴다. 기본값이면 게임 화면 뒤에 숨는다(2026-10-25 광장 새 글).
+    zIndex = 10002
 }) => {
     const [commentInput, setCommentInput] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -348,7 +350,7 @@ const PostDetailModal = ({
                 background: 'rgba(0,0,0,0.5)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
-                zIndex: 10002,
+                zIndex,
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: isMobile ? 'flex-end' : 'center',

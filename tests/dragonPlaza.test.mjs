@@ -129,3 +129,17 @@ test('작가 단계가 오를수록 책상 위 수호룡의 빛 단계가 높아
     const tiers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(auraTier);
     assert.deepEqual(tiers, [0, 0, 1, 1, 2, 2, 3, 4, 5, 6]);
 });
+
+test('새 글 창은 놀이터 게임 화면(zIndex 20000)보다 위에 뜬다 — 아니면 글 창이 화면 뒤에 숨어 아무 일도 없어 보인다', async () => {
+    const [modal, dashboard, detail] = await Promise.all([
+        readFile('src/modules/game/dragon-plaza/PlazaPostModal.jsx', 'utf8'),
+        readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
+        readFile('src/components/student/PostDetailModal.jsx', 'utf8')
+    ]);
+    const gameZ = Number(/zIndex: (\d+), overflowX: 'hidden'/.exec(dashboard)?.[1]);
+    const plazaZ = Number(/PLAZA_POST_Z_INDEX = (\d+)/.exec(modal)?.[1]);
+    assert.ok(gameZ >= 20000, '게임 화면 zIndex 를 읽지 못했습니다');
+    assert.ok(plazaZ > gameZ, `글 창(${plazaZ})이 게임 화면(${gameZ}) 뒤에 숨습니다`);
+    assert.match(modal, /zIndex=\{PLAZA_POST_Z_INDEX\}/);
+    assert.match(detail, /zIndex = 10002/);
+});
