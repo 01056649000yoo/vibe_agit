@@ -96,6 +96,6 @@ test('학생 입장은 두 반이 모이면 저절로 열리고, 교사가 닫�
     // 교사가 닫으면 기록, 열면 지운다.
     assert.match(sql, /student_access_closed = NOT v_enabled/);
     // 닫아 둔 반만 위쪽에 다시 열 곳을 보여 준다.
-    assert.match(entry, /우리 반 학생 입장을 닫아 두었어요/);
+    assert.match(entry, /우리 반 학생에게는 모두의 아지트를 숨겨 두었어요/);
     assert.doesNotMatch(entry, /다른 반은 그 반 선생님이 엽니다/);
 });

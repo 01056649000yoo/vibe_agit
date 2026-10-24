@@ -1210,9 +1210,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_ACCESS)}
                                 className={`neighbor-teacher__access-toggle${workspace.space.student_access_enabled ? ' is-on' : ''}`}
                                 disabled={Boolean(busy)}
-                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생 입장을 닫았습니다.' : '우리 반 학생 입장을 열었습니다.')}
+                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생에게 모두의 아지트를 숨겼습니다.' : '우리 반 학생에게 모두의 아지트를 보이게 했습니다.')}
                             >
-                                학생 입장 {workspace.space.student_access_enabled ? '열림' : '닫힘'}
+                                {workspace.space.student_access_enabled ? '우리 반 학생에게 보임' : '우리 반 학생에게 숨김'}
                             </button>
                             <Button type="button" variant="outline" {...tourAnchor(TEACHER_TOUR_ANCHORS.NEIGHBOR_REVIEW)} className="neighbor-teacher__review-btn" onClick={() => setReviewInboxOpen(true)}>
                                 {/* 메뉴와 같은 규칙: 처리할 일은 숫자 배지 하나(2026-09-26, 전에는 NEW 글자와 숫자가 함께였다). */}
@@ -1226,9 +1226,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                     {!workspace.space.student_access_enabled && activeMemberships.length >= 2 && (
                         /* 학생 입장은 두 반이 모이면 저절로 열린다(20261349). 닫혀 있다면 이 반 선생님이 닫은 것 — 다시 열 곳을 위에 둔다. */
                         <div className="neighbor-teacher__access-callout" role="status">
-                            <span>🔒 <strong>우리 반 학생 입장을 닫아 두었어요.</strong> 우리 반 학생에게는 모두의 아지트가 보이지 않아요. 다시 열면 학생 홈에 카드가 나타나요.</span>
+                            <span>🔒 <strong>우리 반 학생에게는 모두의 아지트를 숨겨 두었어요.</strong> 모임과 글은 그대로이고, 우리 반 학생 홈에서만 카드가 보이지 않아요. 보이게 하면 다시 나타나요.</span>
                             <Button type="button" size="sm" loading={busy === 'set_access'} disabled={Boolean(busy)}
-                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: true }, '우리 반 학생 입장을 열었습니다.')}>학생 입장 열기</Button>
+                                onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: true }, '우리 반 학생에게 모두의 아지트를 보이게 했습니다.')}>우리 반 학생에게 보이기</Button>
                         </div>
                     )}
                     <p className="neighbor-teacher__live-status" role="status" aria-live="polite">
@@ -1753,9 +1753,9 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                             </section>
                         )}
                         <section>
-                            <h3>우리 반 학생 입장</h3>
+                            <h3>우리 반 학생에게 보이기·숨기기</h3>
                             <p>두 반 이상 모이면 저절로 열려 우리 반 학생 홈에 카드가 나타납니다. 닫으면 우리 반 학생에게만 보이지 않아요(다른 반은 그대로).</p>
-                            <Button type="button" variant={workspace.space.student_access_enabled ? 'outline' : 'primary'} loading={busy === 'set_access'} disabled={Boolean(busy) || activeMemberships.length < 2} onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생 입장을 닫았습니다.' : '우리 반 학생 입장을 열었습니다.')}>{workspace.space.student_access_enabled ? '학생 입장 닫기' : '학생 입장 열기'}</Button>
+                            <Button type="button" variant={workspace.space.student_access_enabled ? 'outline' : 'primary'} loading={busy === 'set_access'} disabled={Boolean(busy) || activeMemberships.length < 2} onClick={() => runAction('set_access', { space_id: workspace.space.id, enabled: !workspace.space.student_access_enabled }, workspace.space.student_access_enabled ? '우리 반 학생에게 모두의 아지트를 숨겼습니다.' : '우리 반 학생에게 모두의 아지트를 보이게 했습니다.')}>{workspace.space.student_access_enabled ? '우리 반 학생에게 숨기기' : '우리 반 학생에게 보이기'}</Button>
                         </section>
                         <section>
                             {workspace.space.my_role === 'host'
