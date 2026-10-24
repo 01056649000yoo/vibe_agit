@@ -2,24 +2,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import ModalPortal from '../../components/common/ModalPortal';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
-import { notificationApi } from './notificationApi';
+import { FEEDBACK_MODULE_IDS, notificationApi } from './notificationApi';
 import { resolveActivityNotification } from './registry';
 import './ActivityNotificationPanel.css';
 
 const EMPTY_SUMMARY = Object.freeze({ version: 1, unread_count: 0, latest: null });
 
-const NotificationDetailModal = ({ initialEvent, onClose, onRead, onAction }) => {
+const NotificationDetailModal = ({ initialEvent, onClose, onRead, onReadAll, onAction }) => {
     const [items, setItems] = useState(initialEvent ? [initialEvent] : []);
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [confirmingAll, setConfirmingAll] = useState(false);
 
     useEffect(() => {
         let active = true;
         const load = async () => {
             try {
-                const result = await notificationApi.listUnread({ limit: 50 });
+                // 홈 `활동 알림`은 `내 글 소식`(feedback)을 뺀 나머지만 센다 — 목록도 같은 범위로 맞춘다.
+                const result = await notificationApi.listUnread({ limit: 50, excludeModuleIds: FEEDBACK_MODULE_IDS });
                 if (!active) return;
                 setItems(result.items || []);
                 setIndex(0);
@@ -44,6 +46,25 @@ const NotificationDetailModal = ({ initialEvent, onClose, onRead, onAction }) =>
 
     const current = items.at(index) || null;
     const presentation = useMemo(() => resolveActivityNotification(current), [current]);
+
+    // 밀린 알림을 한 번에 확인 처리한다. 서버가 목록 50건이 아니라 이 갈래 전체를 처리한다.
+    const handleConfirmAll = async () => {
+        if (saving) return;
+        if (!confirmingAll) { setConfirmingAll(true); return; }
+        setSaving(true);
+        setError('');
+        try {
+            await notificationApi.markAllRead({ excludeModuleIds: FEEDBACK_MODULE_IDS });
+            onReadAll();
+            onClose();
+        } catch (saveError) {
+            console.error('활동 알림 모두 확인 실패:', saveError.message);
+            setError('모두 확인하지 못했어요. 다시 눌러 주세요.');
+            setConfirmingAll(false);
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleConfirm = async () => {
         if (!current || saving) return;
@@ -112,6 +133,11 @@ const NotificationDetailModal = ({ initialEvent, onClose, onRead, onAction }) =>
                                 {saving ? '저장하는 중…' : presentation.actionLabel}
                             </button>
                             <small>이 버튼을 누르면 확인한 알림으로 처리돼요.</small>
+                            {items.length > 1 && (
+                                <button type="button" className="activity-notification-modal__all" onClick={handleConfirmAll} disabled={saving}>
+                                    {confirmingAll ? `정말 알림 ${items.length}개를 모두 확인할까요? (한 번 더 누르세요)` : `밀린 알림 모두 확인하기 (${items.length}개)`}
+                                </button>
+                            )}
                         </>
                     ) : (
                         <div className="activity-notification-modal__state">확인할 알림이 없어요.</div>
@@ -149,6 +175,10 @@ const ActivityNotificationPanel = ({
             unread_count: Math.max(0, unreadCount - 1),
             latest: nextLatest
         });
+    };
+
+    const handleReadAll = () => {
+        onSummaryChange({ version: 1, unread_count: 0, latest: null });
     };
 
     const handleAction = (event, eventPresentation) => {
@@ -215,6 +245,7 @@ const ActivityNotificationPanel = ({
                     initialEvent={latest}
                     onClose={closeModal}
                     onRead={handleRead}
+                    onReadAll={handleReadAll}
                     onAction={handleAction}
                 />
             )}

@@ -347,3 +347,11 @@ test('독서록과 일기는 글 완료 시 홈 알림 캐시를 무효화하고
     assert.match(migration, /points\.adjusted/);
     assert.match(migration, /format\('point-log:%s', NEW\.id\)/);
 });
+
+test('홈 활동 알림: 밀린 알림을 한 번에 확인할 수 있고, 목록·모두 확인은 내 글 소식(feedback)을 뺀 같은 범위를 쓴다', async () => {
+    const panel = await read('src/modules/notifications/ActivityNotificationPanel.jsx');
+    assert.match(panel, /markAllRead\(\{ excludeModuleIds: FEEDBACK_MODULE_IDS \}\)/);
+    assert.match(panel, /listUnread\(\{ limit: 50, excludeModuleIds: FEEDBACK_MODULE_IDS \}\)/);
+    assert.match(panel, /unread_count: 0, latest: null/, '모두 확인하면 배지가 0 이 된다');
+    assert.match(panel, /confirmingAll/, '실수로 누르지 않게 한 번 더 확인한다');
+});

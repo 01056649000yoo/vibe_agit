@@ -66,7 +66,7 @@ test('학생 활동 알림 목록은 열 때만 읽고 반려·승인 신호만 
     assert.doesNotMatch(dashboard, /supabase\.(?:from|rpc)\(/);
     assert.match(api, /get_my_activity_notifications_v1/);
     assert.match(api, /mark_my_activity_notifications_read_v1/);
-    assert.match(panel, /listUnread\(\{ limit: 50 \}\)/);
+    assert.match(panel, /listUnread\(\{ limit: 50, excludeModuleIds: FEEDBACK_MODULE_IDS \}\)/);
     assert.doesNotMatch(panel, /setInterval\s*\(|\.channel\(|postgres_changes/);
     assert.match(priorityPolicy, /PRIORITY_WRITING_POLL_INTERVAL_MS = 12000/);
     assert.match(priorityBanner, /notificationApi\.pollPriorityWriting/);

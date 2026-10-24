@@ -171,3 +171,19 @@
 @media (max-width: 680px) {
     .student-home-action-grid { grid-template-columns: 1fr; }
 }
+
+.activity-notification-modal__all {
+    min-height: 44px;
+    margin-top: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--ui-border, #cbd5e1);
+    border-radius: 12px;
+    background: var(--ui-page, #f8fafc);
+    color: var(--ui-ink-strong, #1e293b);
+    font: inherit;
+    font-size: var(--ui-text-sm);
+    font-weight: 900;
+    cursor: pointer;
+}
+.activity-notification-modal__all:hover { background: var(--ui-surface, #fff); }
+.activity-notification-modal__all:disabled { opacity: .6; cursor: default; }

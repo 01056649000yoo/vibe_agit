@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 학생 홈 활동 알림 밀린 알림 모두 확인 (Claude)
+- **한 일**: 활동 알림 창에 `밀린 알림 모두 확인하기 (N개)` 추가(한 번 더 눌러야 처리 — 실수 방지). 서버의 기존 `mark_my_activity_notifications_read_all_v1` 이 갈래 전체를 처리해 목록 50건 밖의 알림도 지워진다. 알림 목록도 홈 개수와 같은 범위(`내 글 소식` feedback 제외)로 맞춤 [원인: 목록은 feedback 까지 불러와 홈 숫자와 어긋날 수 있었음].
+- **변경**: ActivityNotificationPanel.jsx·.css, tests(studentNotifications·performanceArchitecture). DB 변경 없음.
+- **결과/검증**: eslint 0, test:all 통과. 배포 전.
+- **남은 것**: OI-045(선택 개선).
+
 ## 2026-10-25 — 새 글 표시가 어떤 때는 안 사라지던 문제 (Claude)
 - **한 일**: 새 글 단추를 누르면 그 친구의 안 본 새 글을 모두 읽음 처리해 표시가 확실히 사라지게 함 [원인: 열어 본 글 한 편만 읽음 처리해서, 안 본 글이 더 있는 친구는 다음으로 새로운 글 때문에 표시가 다시 남음].
 - **변경**: plazaModel.js(`pickNewPosts` 가 `ids` 제공, `markPostSeen` 이 여러 편 받음)·DragonPlazaEntry.jsx·tests.
