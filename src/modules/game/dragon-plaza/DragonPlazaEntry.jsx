@@ -9,8 +9,11 @@ import './plaza.css';
 const FriendProfileShell = lazy(() => import('../../community/friends-hideout/profile/FriendProfileShell'));
 
 /** 칠판: 우리 반 이름 줄과 "이번 주 내 아지트에 놀러 온 친구" 명단(누군가 보고 있다는 신호, 횟수·순위 없음). */
+const MAX_VISITOR_NAMES = 8;
 function Chalkboard({ seatCount, visitors }) {
     const info = describeVisitors(visitors);
+    const shown = info.empty ? [] : info.names.slice(0, MAX_VISITOR_NAMES);
+    const more = info.empty ? 0 : info.names.length - shown.length;
     return (
         <section className="plaza-board" aria-label="칠판">
             <h2>우리반 수호룡 광장 <small>{seatCount}명이 앉아 있어요</small></h2>
@@ -18,7 +21,7 @@ function Chalkboard({ seatCount, visitors }) {
                 <strong>{info.title}</strong>
                 {info.empty
                     ? <p>{info.text}</p>
-                    : <ul>{info.names.map((visitorName) => <li key={visitorName}>{visitorName}</li>)}</ul>}
+                    : <ul>{shown.map((visitorName) => <li key={visitorName}>{visitorName}</li>)}{more > 0 && <li>외 {more}명</li>}</ul>}
             </div>
         </section>
     );
@@ -54,7 +57,7 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
 
             {seats.length > 0 && (
                 <>
-                    <Chalkboard seatCount={seats.length} visitors={visitors} />
+                    <div className="plaza__hero"><Chalkboard seatCount={seats.length} visitors={visitors} /></div>
                     <div className="plaza__grid" role="list" aria-label="교실 자리">
                         {seats.map((seat) => (
                             <div role="listitem" key={seat.id}>

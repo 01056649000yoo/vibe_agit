@@ -1,6 +1,7 @@
 # 우리반 드래곤 광장 — GPT 그림 의뢰서
 
-> 계획: [CLASS_DRAGON_ROOM_PLAN.md](CLASS_DRAGON_ROOM_PLAN.md). 만드는 사람: 선생님(ChatGPT 이미지 생성). 이 파일은 **프롬프트 틀과 파일 규칙**이다.
+> **2026-10-24 완료**: Codex(GPT 이미지 생성)로 40장+교실 1장을 만들어 설치했다. 아래는 다시 만들 때 쓰는 규칙이다.
+> 계획: [CLASS_DRAGON_ROOM_PLAN.md](CLASS_DRAGON_ROOM_PLAN.md). 만드는 사람: 선생님 또는 Codex. 이 파일은 **프롬프트 틀과 파일 규칙**이다.
 
 ## 1. 공통 규칙
 - 같은 **화풍·색·선 굵기**로 모든 그림을 만든다. **기존 드래곤 그림을 참고 이미지로 첨부**한다(`public/assets/dragons/v2/{종류}/level-{단계}.webp`).

@@ -12,3 +12,11 @@
 - 친구 자리를 누르면 기존 `FriendProfileShell` 이 열린다. 그 안에서 **방문 기록**(`record_hideout_visit_v1`, `20261413`)이 남는다 — 광장이든 `친구 아지트` 목록이든 같은 곳.
 - 교실에서는 순위·점수·포인트 보유량을 보여 주지 않는다.
 - 개발실: `?dev-lab=dragon-plaza`.
+
+## 그림 (2026-10-24, GPT 이미지 생성으로 만듦)
+- 앉은 수호룡 4종 × 10단계 40장(`public/assets/dragons/desk/{종류}/level-{단계}.webp`, 768×768, 투명 배경)과 교실 배경(`public/assets/class-room/classroom-day.webp`, 1600×900)이 들어 있다.
+  1단계는 책상 위 쿠션에 놓인 알, 2단계는 알껍데기를 쓴 갓 부화한 새끼, 3단계 이후는 뿔·날개·장식이 자라는 모습. 책상·의자·이름표 자리는 모든 그림에서 같은 위치라 코드가 이름·문패를 같은 자리에 올린다.
+- 다시 만들 때: Codex(`codex exec`, 이미지 생성 도구)에 기존 그림(`public/assets/dragons/v2/…`)과 책상 기준 그림을 `-i` 로 첨부해 한 종류씩 만든다(의뢰서 `docs/CLASS_DRAGON_ROOM_ART_BRIEF.md`). 그림 한 장이 Codex 5시간 사용량의 1% 안팎.
+- 문패마다 글씨 색이 달라(어두운 문패에는 밝은 글씨) `plaza.css` 의 `data-plate` 규칙이 공방 아지트 장면과 같은 값을 쓴다.
+- 칠판 글씨는 교실 사진의 칠판 자리 위에 올린다(태블릿·PC, `cqw` 단위). 휴대폰은 칠판 상자를 따로 보여 준다.
+- 시뮬레이션: `?dev-lab=dragon-plaza&plaza=40` 은 4종×10단계 40마리가 모두 앉은 교실이다.

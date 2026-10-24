@@ -109,3 +109,15 @@ test('서버: 방문 기록은 같은 학급·본인 제외·10분 안 재방문
     assert.match(entry, /friends_hideout/);
     assert.match(entry, /initialPostId/);
 });
+
+test('그림: 앉은 수호룡 4종 × 10단계 40장과 교실 배경이 모두 있고, 크기가 알맞다', async () => {
+    const { stat } = await import('node:fs/promises');
+    for (const species of ['star', 'forest', 'ember', 'moon']) {
+        for (let level = 1; level <= 10; level += 1) {
+            const info = await stat(`public/assets/dragons/desk/${species}/level-${level}.webp`);
+            assert.ok(info.size > 20000 && info.size < 260000, `${species} ${level}단계 그림 크기(${info.size}B)가 이상합니다`);
+        }
+    }
+    const room = await stat('public/assets/class-room/classroom-day.webp');
+    assert.ok(room.size > 20000 && room.size < 400000, `교실 배경 크기(${room.size}B)가 이상합니다`);
+});

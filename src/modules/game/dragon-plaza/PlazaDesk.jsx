@@ -30,7 +30,7 @@ export default function PlazaDesk({ seat, hasDeskArt, newPost, onOpen, onOpenNew
                             <span className="plaza-desk__front" aria-hidden="true" />
                         </>
                     )}
-                <span className={`plaza-plate${nameplate ? '' : ' is-plain'}`} style={plateStyle}>
+                <span className={`plaza-plate${nameplate ? '' : ' is-plain'}`} data-plate={nameplate?.preview || 'plain'} style={plateStyle}>
                     {nameplate && <img src={nameplate.image} alt="" loading="lazy" decoding="async" draggable="false" />}
                     <span>{name}</span>
                 </span>

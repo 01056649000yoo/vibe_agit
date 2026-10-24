@@ -28,6 +28,12 @@
 - **결과/검증**: 친구 목록 RPC(`get_student_hideout_directory`)가 `pet_data`(종류·단계·장착 장식)를 이미 주므로 새 RPC 없이 교실을 그릴 수 있음을 확인. 포인트 흐름 조사(30일: 글쓰기 보상 54만P가 대부분, 쓴 포인트는 공방 구입 17.6만P가 전부, 학생 중앙값 100P).
 - **남은 것 / 다음**: OI-045(`진행` 대기).
 
+## 2026-10-24 — 수호룡 광장 그림 40장·교실 배경을 GPT(Codex)로 만들어 설치 (Claude)
+- **한 일**: 선생님 요청("지피티에게 만들어 달라고 하고 전체 구성을 정리한 뒤 시뮬레이션")으로 Codex 의 이미지 생성 도구에 기존 드래곤 그림과 책상 기준 그림을 첨부해 책상에 앉은 수호룡 4종×10단계(1단계=책상 위 알, 2단계=알껍데기를 쓴 새끼로 다시 생성, 3~10단계=자라는 모습)와 교실 배경 1장을 만들고, 규격 검사(정사각형·투명·가장자리 안 닿음)·webp 변환(768px)·설치. 화면: 한 줄 5자리(휴대폰 3)·큰 카드·교실 사진 위 칠판 글씨·문패별 글씨 색(어두운 문패에 밝은 글씨)·이름표를 책상 앞면 자리에.
+- **변경**: `public/assets/dragons/desk/*`(40장)·`public/assets/class-room/classroom-day.webp`·`plaza.css`·`PlazaDesk.jsx`·`DragonPlazaEntry.jsx`·개발실 `plaza=40`·테스트·README·OI-045. 그림 한 장이 Codex 5시간 사용량 약 1%(총 약 45%).
+- **결과/검증**: 시뮬레이션(휴대폰 390·작은 태블릿 768·태블릿 1024·PC 1500): 41자리(40+나)·앉은 그림 41/41·임시 그림 0·깨진 그림 0·가로 넘침 없음·이름 잘림 0·칠판 글씨 잘림 없음·새 글 1개→누르면 `friends_hideout`+글 이동·읽으면 표시 사라짐·친구 자리 누르면 아지트 창 열림→닫으면 교실 그대로·내 자리 비활성. 테스트·eslint 통과.
+- **남은 것 / 다음**: OI-045(선택 개선: 2단계 기능·인접 단계 구분).
+
 ## 2026-10-24 — 우리반 수호룡 광장 1단계 구현 (Claude)
 - **한 일**: 선생님 확정 사양(이름 `우리반 수호룡 광장`, 놀이터 `나의 작가 수호룡` 아래, 학급 설정 기본 켜짐, 학급 학생 수만큼 자리·단계별 드래곤·책상 이름표(문패)·프레임 빛 테두리, 자리를 누르면 친구 아지트, 칠판에 이번 주 내 아지트 방문자, 새 글 표시→글로 이동, 친구 아지트를 **어디서 열든** 방문 기록)대로 모듈 `dragon-plaza` 작성. 방문 기록은 `FriendProfileShell` 한 곳에서 남겨 광장·`친구 아지트` 목록 모두 기록. 새 글은 DB 없이 이 기기의 읽은 기록으로 판단(한계: 기기를 바꾸면 다시 새 글).
 - **변경**: `src/modules/game/dragon-plaza/*`·`20261413_dragon_plaza_visits.sql`(표 `hideout_visits`·함수 `record_hideout_visit_v1`·`get_my_hideout_visitors_v1`·기본 켜짐)·`FriendProfileShell.jsx`·`StudentGameModuleHost.jsx`·`StudentDashboard.jsx`·`registry.js`·도움말·활용 안내서·개발실 `DragonPlazaPreview`·테스트·FEATURE_MAP v1.26.43·OPEN_ITEMS OI-045·TECH_GLOSSARY 대기열. **운영 DB 미적용.**

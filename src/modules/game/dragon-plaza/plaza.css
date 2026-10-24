@@ -1,6 +1,26 @@
 /* 우리반 수호룡 광장: 교실 배경 + 칠판 + 책상 줄. 글자는 디자인 토큰(0.9rem 이상)을 쓴다. */
 .plaza { min-height: 100vh; padding: 12px 14px 28px; background: linear-gradient(180deg, #e9f3e3 0%, #f6efe1 38%, #d9b98a 38.1%, #c9a273 100%); color: #3e2e23; }
-.plaza.has-photo { background: var(--classroom) center top / cover no-repeat, #d9b98a; }
+.plaza.has-photo { background: #e0a050 repeating-linear-gradient(0deg, rgba(120,70,20,.06) 0 2px, transparent 2px 58px); }
+/* 교실 사진: 칠판·창문·게시판이 보이는 위쪽. 사진의 칠판 자리에 이번 주 방문자 글씨를 올린다(태블릿·PC). */
+.plaza__hero { position: relative; max-width: 1180px; margin: 0 auto 6px; container-type: inline-size; }
+.plaza.has-photo .plaza__hero { aspect-ratio: 1672 / 600; background: var(--classroom) top center / 100% auto no-repeat; border-radius: 16px 16px 0 0; -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent); }
+.plaza.has-photo .plaza-board { position: absolute; left: 18.6%; top: 22.8%; width: 63.8%; height: 46%; max-width: none; margin: 0; padding: 1.2cqw 2.4cqw; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: hidden; }
+.plaza.has-photo .plaza-board h2 { margin: 0 0 .6cqw; font-size: max(.95rem, 2.4cqw); color: #f5f9f3; }
+.plaza.has-photo .plaza-board h2 small { font-size: max(.8rem, 1.5cqw); }
+.plaza.has-photo .plaza-board__visitors strong { font-size: max(.85rem, 1.9cqw); }
+.plaza.has-photo .plaza-board__visitors p { margin: .4cqw 0 0; font-size: max(.85rem, 1.8cqw); }
+.plaza.has-photo .plaza-board__visitors ul { gap: .8cqw; margin-top: .8cqw; }
+.plaza.has-photo .plaza-board__visitors li { padding: .3cqw 1.4cqw; font-size: max(.8rem, 1.8cqw); }
+/* 휴대폰: 사진 칠판이 너무 작아 글씨를 올릴 수 없으니 사진은 장식 띠로 두고 칠판 상자를 따로 보여 준다 */
+@media (max-width: 760px) {
+  .plaza.has-photo .plaza__hero { aspect-ratio: auto; background: none; mask-image: none; -webkit-mask-image: none; }
+  .plaza.has-photo .plaza-board { position: static; width: auto; height: auto; padding: 14px 16px; border: 6px solid #8a5a2c; border-radius: 12px; background: #2f5d46; box-shadow: inset 0 0 18px rgba(0,0,0,.3); overflow: visible; }
+  .plaza.has-photo .plaza-board h2 { font-size: var(--ui-text-lg); }
+  .plaza.has-photo .plaza-board__visitors strong, .plaza.has-photo .plaza-board__visitors p { font-size: var(--ui-text-md); }
+  .plaza.has-photo .plaza-board__visitors li { padding: 4px 12px; font-size: var(--ui-text-md); }
+  .plaza.has-photo { background: #e0a050; }
+  .plaza.has-photo .plaza__hero { margin-bottom: 14px; }
+}
 .plaza__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 1180px; margin: 0 auto 10px; }
 .plaza__bar strong { font-size: var(--ui-text-lg); }
 .plaza__bar button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: rgba(255,255,255,.85); color: #3e2e23; font: inherit; font-weight: 800; cursor: pointer; }
@@ -47,3 +67,27 @@
 .plaza-desk.has-art .plaza-plate > span { width: 90%; font-size: clamp(.82rem, 1.5vw, 1.08rem); }
 .plaza-desk.has-art .plaza-plate.is-plain > span { width: 94%; }
 .plaza-desk.has-art .plaza-desk__ring { background: rgba(255,255,255,.28); }
+
+/* 문패마다 글씨 색(공방 아지트 장면과 같은 값) — 어두운 문패에 어두운 글씨가 되지 않게 */
+.plaza-plate[data-plate='oak'] > span { color: #fff0c3; text-shadow: 0 1px 2px #3d2414; }
+.plaza-plate[data-plate='brass'] > span { color: #f8e5ac; text-shadow: 0 1px 2px #1d1815; }
+.plaza-plate[data-plate='crystal'] > span { color: #f5f2ff; text-shadow: 0 1px 2px #29255d; }
+.plaza-plate[data-plate='rune'] > span { color: #d9fbff; text-shadow: 0 1px 2px #123d49; }
+.plaza-plate[data-plate='celestial'] > span { color: #fff1b1; text-shadow: 0 1px 2px #142656; }
+.plaza-plate[data-plate='ember'] > span { color: #ffe0a7; text-shadow: 0 1px 2px #471810; }
+.plaza-plate[data-plate='storm'] > span { color: #eef5ff; text-shadow: 0 1px 2px #182a61; }
+.plaza-plate[data-plate='legend'] > span { color: #5b3b13; text-shadow: 0 1px 2px rgba(255,255,255,.4); }
+.plaza-plate[data-plate='sunny-garden'] > span { color: #4f4a20; text-shadow: 0 1px 2px rgba(255,255,255,.45); }
+.plaza-plate[data-plate='wave-harbor'] > span { color: #285768; text-shadow: 0 1px 2px rgba(255,255,255,.45); }
+.plaza-plate[data-plate='dreamlight-library'] > span { color: #574270; text-shadow: 0 1px 2px rgba(255,255,255,.45); }
+
+/* 작은 태블릿(세로 화면)은 사진 칠판이 낮아 글씨를 조금 줄이고 보조 글을 뺀다 */
+@media (min-width: 761px) and (max-width: 900px) {
+  .plaza.has-photo .plaza-board { padding: .8cqw 2cqw; }
+  .plaza.has-photo .plaza-board h2 small { display: none; }
+  .plaza.has-photo .plaza-board h2 { font-size: max(.9rem, 2.2cqw); margin-bottom: .2cqw; }
+  .plaza.has-photo .plaza-board__visitors strong { font-size: max(.82rem, 1.8cqw); }
+  .plaza.has-photo .plaza-board__visitors li { padding: .1cqw 1.2cqw; font-size: max(.8rem, 1.7cqw); }
+  .plaza.has-photo .plaza-board__visitors ul { margin-top: .4cqw; }
+  .plaza-desk.has-art .plaza-plate { width: 74%; }
+}
