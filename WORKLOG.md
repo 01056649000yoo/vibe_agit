@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 학생 첫 화면에 우리반 수호룡 아지트 입구, 교사 단계별 모습 미리보기 (Claude)
+- **한 일**: 학생 첫 화면 오른쪽 줄에 `나의 작가 수호룡`(내 방) 아래 `우리반 수호룡 아지트`(들어가기) 버튼 추가 — 둘 다 첫 화면에서 바로 보임(아지트 모듈이 꺼진 반은 안 보임). 교사 화면(놀이터 → 우리반 수호룡 아지트)에 4종류 1~10단계 책상 모습과 빛 효과 미리보기 추가.
+- **변경**: StudentHomeGrowthPanel(.jsx/.css)·StudentDashboard(`plazaEnabled`·`onOpenPlaza`)·dragon-plaza/TeacherManager.jsx·PlazaDesk(`AURA_TIER_LABELS`)·개발실 `&view=home|teacher`.
+- **결과/검증**: eslint 0, test:all 1718, 개발실에서 PC 첫 화면·교사 미리보기 확인. 배포 전.
+- **남은 것**: OI-045(선택 개선).
+
 ## 2026-10-25 — 책상 수호룡 6~9단계 그림 다시 만들기, 새 글 오류 이유 표시, 정복 덱 DB 적용 (Claude)
 - **한 일**: 인접 단계가 비슷하던 6~9단계 책상 그림 16장(4종류)을 GPT(Codex)로 단계마다 장식이 쌓이게 다시 만들어 설치(7 스카프·긴 뿔, 8 보석·가슴 보호구·큰 날개, 9 갑옷·무늬 날개·후광). 새 글이 안 열릴 때 화면에 이유를 보이고 글 화면 오류는 교실이 사라지지 않게 막음. `20261414` 운영 DB 적용.
 - **변경**: public/assets/dragons/desk/{star,forest,ember,moon}/level-6~9.webp, PlazaPostModal.jsx. 옛 그림은 작업 폴더에 보관.

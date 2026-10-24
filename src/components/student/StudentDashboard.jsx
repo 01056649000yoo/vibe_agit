@@ -372,6 +372,11 @@ const StudentDashboard = ({
                             setIsMyAgitOpen(true);
                         }}
                         onOpenDragon={() => setIsDragonModalOpen(true)}
+                        plazaEnabled={isOn('dragon-plaza')}
+                        onOpenPlaza={() => {
+                            const plaza = enabledModules.find((item) => item.id === 'dragon-plaza');
+                            if (plaza) openGameModule(plaza);
+                        }}
                         onOpenPoints={() => setIsPlaygroundOpen(true)}
                     />
 

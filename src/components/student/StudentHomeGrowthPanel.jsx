@@ -36,10 +36,12 @@ const StudentHomeGrowthPanel = ({
     marathonMedalCount,
     onOpenMyAgit,
     onOpenDragon,
+    onOpenPlaza,
+    plazaEnabled,
     onOpenPoints
 }) => {
     return (
-        <section className={`student-home-growth ${dragonEnabled ? 'has-dragon' : ''}`} aria-label="나의 성장 상태">
+        <section className={`student-home-growth ${dragonEnabled || plazaEnabled ? 'has-dragon' : ''}`} aria-label="나의 성장 상태">
             <div className="student-home-growth__main">
                 <p className="student-home-growth__eyebrow">오늘도 한 걸음씩 자라는 중</p>
                 <div className="student-home-growth__greeting">
@@ -75,21 +77,32 @@ const StudentHomeGrowthPanel = ({
                 </div>
             </div>
 
-            {/* 수호룡은 나의 아지트를 거치지 않고 바로 방으로 들어간다 — 중간 단계는 불필요한 클릭이다. */}
-            {dragonEnabled && (
-                <button type="button" className="student-home-dragon-summary" onClick={onOpenDragon}>
-                    <span className="student-home-dragon-summary__label">나의 작가 수호룡</span>
-                    <DragonAvatar
-                        dragon={dragonInfo}
-                        readerLevel={readerLevel}
-                        alt={`${dragonInfo.species.name} ${dragonInfo.name} 모습`}
-                        className="student-home-dragon-summary__avatar"
-                        eager
-                    />
-                    <strong>{petData?.name || '나의 드래곤'}</strong>
-                    <span className="student-home-dragon-summary__meta">작가 성장 {petData?.level || 1}/10 · {dragonInfo.species.name}</span>
-                    <em>수호룡 방 들어가기 ›</em>
-                </button>
+            {/* 오른쪽 줄: 내 수호룡 방으로 가거나, 우리 반 수호룡 아지트(친구들이 앉은 교실)로 간다. 둘 다 첫 화면에서 바로 보인다. */}
+            {(dragonEnabled || plazaEnabled) && (
+                <div className="student-home-dragon-side">
+                    {dragonEnabled && (
+                    <button type="button" className="student-home-dragon-summary" onClick={onOpenDragon}>
+                        <span className="student-home-dragon-summary__label">나의 작가 수호룡</span>
+                        <DragonAvatar
+                            dragon={dragonInfo}
+                            readerLevel={readerLevel}
+                            alt={`${dragonInfo.species.name} ${dragonInfo.name} 모습`}
+                            className="student-home-dragon-summary__avatar"
+                            eager
+                        />
+                        <strong>{petData?.name || '나의 드래곤'}</strong>
+                        <span className="student-home-dragon-summary__meta">작가 성장 {petData?.level || 1}/10 · {dragonInfo.species.name}</span>
+                        <em>수호룡 방 들어가기 ›</em>
+                    </button>
+                )}
+                    {plazaEnabled && (
+                        <button type="button" className="student-home-plaza-entry" onClick={onOpenPlaza}>
+                            <span aria-hidden="true">🏫</span>
+                            <span><small>친구들이 모여 앉은 교실</small><strong>우리반 수호룡 아지트</strong></span>
+                            <em>들어가기 ›</em>
+                        </button>
+                    )}
+                </div>
             )}
         </section>
     );

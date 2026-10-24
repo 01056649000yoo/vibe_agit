@@ -1,4 +1,8 @@
 import DragonPlazaEntry from '../modules/game/dragon-plaza/DragonPlazaEntry.jsx'
+import DragonPlazaTeacherManager from '../modules/game/dragon-plaza/TeacherManager.jsx'
+import StudentHomeGrowthPanel from '../components/student/StudentHomeGrowthPanel.jsx'
+import { getDragonStage } from '../modules/game/dragon/presentation.js'
+import { getWriterLevel, getReaderLevel, getDiaryLevel, getReadingLevel } from '../constants/writerLevels.js'
 
 // 우리반 수호룡 아지트 — 서로 다른 단계·종류·공방 장식의 반 친구 12명을 DB 없이 보여 준다(2026-10-24).
 const SPECIES = ['star', 'forest', 'ember', 'moon']
@@ -34,6 +38,22 @@ const api = {
   loadVisitors: async () => [{ name: '이서연' }, { name: '박하준' }, { name: '윤지호' }]
 }
 
+// `&view=teacher` 교사 화면(단계별 모습 미리보기), `&view=home` 학생 첫 화면 오른쪽 줄(내 수호룡 + 우리반 수호룡 아지트)
+const VIEW = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('view') : null
+
 export default function DragonPlazaPreview() {
+  if (VIEW === 'teacher') return <div style={{ maxWidth: 980, margin: '0 auto', padding: 16 }}><DragonPlazaTeacherManager /></div>
+  if (VIEW === 'home') {
+    return (
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: 16 }}>
+        <StudentHomeGrowthPanel
+          studentSession={{ name: '김도윤' }} points={1250}
+          writerLevel={getWriterLevel(3000, 6)} readerLevel={getReaderLevel(40)} diaryLevel={getDiaryLevel(5)} readingLevel={getReadingLevel(3)}
+          titleLoading={false} dragonEnabled plazaEnabled petData={{ name: '불꽃이', level: 6 }} dragonInfo={getDragonStage(6, 'ember')}
+          onOpenMyAgit={() => {}} onOpenDragon={() => window.alert('내 수호룡 방')} onOpenPlaza={() => window.alert('우리반 수호룡 아지트')} onOpenPoints={() => {}}
+        />
+      </div>
+    )
+  }
   return <DragonPlazaEntry studentSession={{ id: 'me', class_id: 'class-1' }} onBack={() => {}} onNavigate={(page, params) => window.alert(`이동: ${page} ${JSON.stringify(params)}`)} api={api} />
 }

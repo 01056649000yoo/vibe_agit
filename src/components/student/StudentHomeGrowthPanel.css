@@ -235,3 +235,42 @@
     .student-home-dragon-summary__avatar { width: 64px; height: 64px; }
     .student-home-dragon-summary em { display: none; }
 }
+
+/* 오른쪽 줄: 내 수호룡(위) + 우리반 수호룡 아지트 입구(아래). 가운데 구분선은 줄 전체가 맡는다. */
+.student-home-dragon-side {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--ui-space-3);
+    padding-left: var(--ui-space-5);
+    border-left: 1px solid var(--ui-border);
+}
+.student-home-dragon-side .student-home-dragon-summary { padding: 4px 0; border-left: 0; }
+.student-home-plaza-entry {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 10px;
+    min-height: 56px;
+    padding: 10px 12px;
+    border: 1px solid var(--ui-border);
+    border-radius: 14px;
+    background: var(--ui-page);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background var(--ui-motion-fast);
+}
+.student-home-plaza-entry:hover { background: var(--ui-surface); }
+.student-home-plaza-entry:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.student-home-plaza-entry > span:first-child { grid-row: 1 / 3; font-size: 1.6rem; }
+.student-home-plaza-entry small { display: block; color: var(--ui-ink-muted, #64748b); font-size: var(--ui-text-xs); font-weight: 800; }
+.student-home-plaza-entry strong { display: block; font-size: var(--ui-text-sm); font-weight: 950; line-height: 1.3; }
+.student-home-plaza-entry em { grid-column: 2; color: var(--ui-primary); font-size: var(--ui-text-xs); font-style: normal; font-weight: 900; }
+@media (max-width: 780px) {
+    .student-home-dragon-side { padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--ui-border); }
+    .student-home-dragon-side .student-home-dragon-summary { border-top: 0; padding: 0 4px; }
+}
