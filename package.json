@@ -9,6 +9,7 @@
     "build": "vite build",
     "checklist": "node scripts/checklist.mjs",
     "recall": "node scripts/recall.mjs",
+    "map": "node scripts/code-map.mjs",
     "retro": "node scripts/retro.mjs",
     "worklog:rotate": "node scripts/worklog.mjs rotate",
     "worklog:lint": "node scripts/worklog.mjs lint",

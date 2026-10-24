@@ -22,6 +22,7 @@
 | 작업 주제 | 먼저 읽을 문서 | 함께 확인할 것 |
 |---|---|---|
 | 시스템 구조·맥미니 운영 상식 | [ARCHITECTURE.md](../../ARCHITECTURE.md)·[TECH_GLOSSARY.md](../TECH_GLOSSARY.md) | ROADMAP 현재 위치 |
+| 고치기 전 영향 범위·호출 관계(코드 지도) | [CODE_MAP.md](CODE_MAP.md) | `npm run map -- affected <영문 이름>`·`npm run recall` |
 | 화면 디자인·글자 크기·공용 부품 | [DESIGN_GUIDE.md](DESIGN_GUIDE.md) | `src/styles/design-system.css`(값의 정본) |
 | 이관·연구소 통합 | [INTEGRATION_PLAN.md](../../INTEGRATION_PLAN.md) | ARCHITECTURE |
 | 우리반 글 전시관·학급 문집 | [CLASS_AGIT_PLAN.md](../../CLASS_AGIT_PLAN.md) | ROADMAP |

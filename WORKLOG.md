@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 코드 지도(Graphify) 시험 도입: 자동 갱신·recall 연결 (Claude)
+- **한 일**: Graphify 설치(코드만 `--code-only`, 로컬 분석·API 키 없음, 결과는 저장소 밖 `~/graphify/vibe-agit`). `npm run map -- affected|explain|query|path|status|update` 도구를 만들고, 조회할 때마다 "지도 이후 소스가 바뀌었나·파일 수가 달라졌나(지운 파일 포함)"를 보아 낡았을 때만 알아서 다시 만들게 함(4~6초, 훅·상주 프로세스 없음). `npm run recall` 에 ⑥ "이 파일을 부르는 곳" 추가. 도구가 없으면 안내 한 줄만(다른 컴퓨터·모델에서 안 깨짐).
+- **변경**: scripts/code-map.mjs·codeMapPolicy.mjs·recall.mjs·package.json(`map`)·docs/wiki/CODE_MAP.md·SESSION_RULES 한 줄·wiki README 한 줄·tests/codeMap.test.mjs.
+- **결과/검증**: 시험 1727 통과, eslint 0. 한계 확인: RPC 이름 같은 문자열 연결·SQL·한글 질문은 못 봄(→ grep). 토큰 절감은 실측 전 — 2026-11-08 에 평가.
+- **남은 것**: 없음(시험 기간, CODE_MAP.md "효과 재기").
+
 ## 2026-10-25 — 후광을 작가 단계가 아니라 소통 칭호 단계로 (오해 바로잡음) (Claude)
 - **한 일**: 선생님 뜻은 "그림은 작가 성장 단계, 후광은 소통 칭호 단계(1~7)" 였다 [원인: 제가 후광도 작가 단계로 만들었음]. 작가 단계 기준 후광을 없애고 드래곤 아지트 방의 소통 효과(`DragonAvatar.css` 층: 무대·빛무리·궤도·문양·오로라·수호광·단계 표식·입자)를 그림 뒤·앞에 깔았다. 소통 점수는 친구 목록·내 칭호 현황의 `reader_score` 로 읽음(DB 변경 없음). 부담: 그림 filter 없이 층만, 카드 안에서만 보이게 자름, 화면 밖은 멈춤. 교사 미리보기를 `작가 1~10단계 그림` + `소통 1~7단계 후광`(이름·설명, 7단계 아지트 수호광 강조) 두 묶음으로 바꿈.
 - **변경**: ReaderHalo.jsx(새)·PlazaDesk·plazaModel(`readerLevel`)·plazaApi(내 소통 점수)·TeacherManager·plaza.css·개발실·tests.

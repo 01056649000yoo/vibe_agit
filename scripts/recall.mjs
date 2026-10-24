@@ -7,6 +7,7 @@
  *   ③ 관련 교훈 — PITFALLS 의 `[경로: …]` 꼬리표가 맞는 것
  *   ④ 이 파일을 지키는 검사 — `scripts/relatedTests.mjs`
  *   ⑤ 이 파일이 나오는 열린 일(OPEN_ITEMS)·BACKLOG 줄
+ *   ⑥ 이 파일을 부르는 곳 — 코드 지도(Graphify)가 있을 때만(`npm run map`, docs/wiki/CODE_MAP.md)
  *
  * 왜 (2026-09-28): 9월 fix 커밋은 `neighbor-agit` 6·`class-agit` 3 처럼 같은 곳에 몰렸다. 고치기 전에 그곳의
  * 지난 사고가 먼저 보이면 같은 실수를 덜 한다. 지금은 모델이 매번 grep 으로 흩어진 기록을 찾아야 했다.
@@ -15,6 +16,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { affectedLines } from './code-map.mjs';
 import { guardsFor } from './relatedTests.mjs';
 import { entriesMentioning, lessonsFor, parseOpenItems, parsePitfalls } from './workMemory.mjs';
 
@@ -73,5 +75,12 @@ for (const file of files) {
     if (!items.length && !backlogHits.length) console.log('   (없음)');
     for (const item of items) console.log(`   ${item.id} ${item.kind} · ${item.text.slice(0, 90)}`);
     for (const line of backlogHits.slice(0, 5)) console.log(`   BACKLOG ${line.trim().slice(0, 100)}`);
+
+    if (/\.(jsx?|mjs|tsx?)$/.test(file) && file.startsWith('src/')) {
+        const callers = affectedLines(file);
+        console.log('\n⑥ 이 파일을 부르는 곳 (코드 지도)');
+        if (callers === null) console.log('   (코드 지도 없음 — 건너뜀)');
+        else console.log(callers.length ? callers.map((l) => `   ${l.replace(/^- /, '')}`).join('\n') : '   (없음 — 이름이 겹치면 npm run map -- affected <이름>)');
+    }
 }
 console.log('');

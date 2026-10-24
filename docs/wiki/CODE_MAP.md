@@ -1,0 +1,45 @@
+# 코드 지도 (Graphify) — 쓰는 법과 한계
+
+> 2026-10-25 시험 도입. `src/` 의 코드를 지도(함수·파일·컴포넌트와 그 연결)로 만들어 두고, 고치기 전에 "여기를 바꾸면 어디가 영향받나"를 몇 줄로 본다.
+> 지도 결과는 **저장소 밖**(`~/graphify/vibe-agit`, 환경변수 `CODE_MAP_DIR`)에 둔다 — 저장소가 공개라서 구조 정보를 올리지 않는다.
+
+## 쓰는 법
+
+| 하고 싶은 것 | 명령 (영문 이름으로) |
+|---|---|
+| 이것을 고치면 영향받는 곳(부르는 곳·가져오는 곳) | `npm run map -- affected PlazaPostModal` |
+| 이것이 무엇과 이어져 있나 | `npm run map -- explain DragonPlazaEntry` |
+| 이름이 나오는 부분 지도 | `npm run map -- query "buildSeat useDragonPlaza"` |
+| 두 이름 사이의 길 | `npm run map -- path "A" "B"` |
+| 지도가 신선한가 | `npm run map -- status` |
+
+- `npm run recall -- src/…파일` 에 ⑥ "이 파일을 부르는 곳"이 자동으로 붙는다. 평소 하던 recall 만 해도 된다.
+- 도구(graphify)가 없는 컴퓨터·모델에서는 한 줄 안내만 하고 끝난다 — 평소처럼 `grep` 으로 찾으면 된다.
+
+## 갱신은 자동이다
+
+조회할 때마다 "지도를 만든 뒤 소스가 바뀌었나(수정 시각)·소스 파일 수가 달라졌나(지운 파일 포함)"를 보고, **낡았을 때만** 다시 만든다(약 4~6초).
+훅·백그라운드 프로세스가 없다. 직접 갱신하려면 `npm run map -- update`.
+
+## 한계 — 이럴 땐 grep
+
+- **문자열로 이어진 것은 못 본다**: RPC 이름(`supabase.rpc('…')`), CSS 클래스, 모듈 id, 문서 속 이름. → `grep -rn "이름" src supabase/migrations`.
+- **SQL(마이그레이션)은 아직 안 읽는다**(`graphifyy[sql]` 추가 설치가 필요하고, JS 의 RPC 호출과도 이어지지 않아 이득이 작다).
+- **한글 질문은 못 찾는다** — 함수·파일·컴포넌트의 영문 이름으로 묻는다.
+- 이름이 겹치면(예: `registry.js`) 후보가 나온다 — `경로::이름` 형식으로 다시 묻는다.
+- 지도에 없다고 "아무도 안 부른다"는 뜻이 아니다. 지운다·이름 바꾼다면 반드시 grep 으로도 한 번 더 센다.
+
+## 일부러 넣지 않은 것
+
+- 문서·PDF·이미지 분석: AI 서버로 전송된다(`--code-only` 로 막아 둠). 운영 정보가 든 우리 문서에는 쓰지 않는다.
+- Claude Code 훅·`graphify claude install`: 저장소 `CLAUDE.md` 를 바꾸고 모든 파일 읽기에 끼어든다. 효과를 먼저 재 본 뒤에 판단한다.
+
+## 효과 재기 (시험 기간)
+
+토큰 절감은 아직 실측 전이다. 영향 범위를 볼 때마다 `affected` 를 쓰고(예: `buildSeat` — grep 18줄 2.3KB, 지도 6줄 0.4KB),
+2주 뒤(2026-11-08) 도움이 됐는지(찾기 빨라짐·놓친 곳 줄어듦)를 선생님께 말씀드리고 계속 쓸지 정한다.
+쓰지 않기로 하면: `graphify uninstall --purge`, `uv tool uninstall graphifyy`, 이 문서와 `scripts/code-map*.mjs` 삭제.
+
+## 설치(새 컴퓨터)
+
+`brew install uv` → `uv tool install graphifyy` → `npm run map -- update`. (코드만 분석하므로 API 키가 필요 없다.)
