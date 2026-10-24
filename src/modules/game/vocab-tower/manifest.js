@@ -18,7 +18,7 @@ export const vocabTowerManifest = {
   icon: '🏰',
   part: 'game',
   audience: 'both',
-  defaultEnabled: false,
+  defaultEnabled: true, // 2026-10-24부터 기본 켜짐(20261409) — 안 쓰는 선생님이 끈다
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100 },
   // enabled_modules가 아직 NULL인 학급의 기존 상태 및 롤백 호환용 미러 컬럼.
   legacyFlag: 'vocab_tower_enabled',

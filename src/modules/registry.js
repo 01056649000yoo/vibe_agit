@@ -47,7 +47,7 @@ const manifests = [
   labActivitiesManifest, // src/modules/writing/lab-activities/
   classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
   classTimetableManifest, // src/modules/tool/class-timetable/ (new:module, 공개 전)
-  spellingClawManifest, // src/modules/game/spelling-claw/ (학급별 켜기, 기본 꺼짐)
+  spellingClawManifest, // src/modules/game/spelling-claw/ (학급별 켜기, 2026-10-24부터 기본 켜짐)
   quizArenaManifest, // src/modules/game/quiz-arena/ (new:module, 공개 전)
 ];
 

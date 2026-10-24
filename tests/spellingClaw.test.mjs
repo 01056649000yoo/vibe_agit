@@ -73,14 +73,14 @@ test('포켓몬 모델·외부 CDN 을 쓰지 않고, 3D 엔진은 게임을 열
     assert.match(engine, /if \(roundActive\) \{\s*roundWins\.push/);
 });
 
-test('학급별 켜기로 학생에게 연다 — 기본 꺼짐, 켜야만 학생 놀이터에 보인다', async () => {
+test('학급별 켜기로 학생에게 연다 — 2026-10-24부터 기본 켜짐, 안 쓰는 선생님이 끈다', async () => {
     const { spellingClawManifest } = await import('../src/modules/game/spelling-claw/manifest.js');
     assert.equal(spellingClawManifest.adminOnly, undefined, '관리자 전용 표시가 남아 있습니다.');
     assert.equal(spellingClawManifest.audience, 'both');
-    assert.equal(spellingClawManifest.defaultEnabled, false);
+    assert.equal(spellingClawManifest.defaultEnabled, true);
     assert.equal(typeof spellingClawManifest.studentEntry, 'function');
     assert.equal(spellingClawManifest.performance.realtime, 'none');
-    // 학생 목록은 enabled_modules 로만 거른다(getEnabledModules) — 관리자 시험 표시가 없으니 켜면 보이고, 기본은 꺼짐.
+    // 학생 목록은 enabled_modules 로만 거른다(getEnabledModules) — 관리자 시험 표시가 없으니 켜져 있으면 보이고, 기본은 켜짐(20261409).
     const cards = await readFile('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8');
     assert.match(cards, /<FeatureAvailabilitySwitch/);
     // 관리자 화면 탭은 놀이터 메뉴로 옮기며 뺐다(2026-10-01) — 들어가는 곳을 하나로.

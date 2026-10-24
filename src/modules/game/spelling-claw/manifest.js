@@ -2,7 +2,7 @@
  * 수호룡의 인형뽑기 모듈 (2026-10-01 시험 → 2026-10-02 학생 공개).
  *
  * 학생이 키운 수호룡이 맞춤법 문제를 내고(수호룡이 자라면 함께 자란다), 통과하면 코인 → 3D 인형뽑기 → 상품(랜덤 포인트·선생님 선물·수호룡 아이템).
- * 학생 노출은 다른 놀이와 같이 **학급별 켜기/끄기**(enabled_modules, 기본 꺼짐)로 선생님이 정한다.
+ * 학생 노출은 다른 놀이와 같이 **학급별 켜기/끄기**(enabled_modules, 2026-10-24부터 기본 켜짐 — 안 쓰는 선생님이 끈다)로 선생님이 정한다.
  * 문제·채점·코인·상품은 서버가 정한다(Edge 함수 `spelling-claw` + `20261363_spelling_claw_server.sql`).
  * 이름은 이 파일 한 곳에서만 정한다(놀이터 메뉴·카드가 여기서 읽는다).
  */
@@ -21,7 +21,7 @@ export const spellingClawManifest = {
   icon: '🧸',
   part: 'game',
   audience: 'both',
-  defaultEnabled: false,
+  defaultEnabled: true,
   // 열 때 오늘 상태 RPC 1회(최근 기록 30건), 문제 받기·답마다 Edge 1회, 코인 넣기 RPC 1회, 한 판 끝 Edge 1회. 폴링 없음.
   performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 30 },
   studentEntry: () => import('./StudentEntry'),

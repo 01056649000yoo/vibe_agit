@@ -22,6 +22,9 @@ const TEACHER_GAME_MODULES = getAllModules()
     .sort((a, b) => (a.management?.order ?? 100) - (b.management?.order ?? 100))
     .map((module) => ({ module, TeacherEntry: lazy(module.teacherEntry) }));
 
+/** 2026-10-24(20261409)부터 모든 학급에서 기본 켜짐인 놀이 — 안 쓰는 선생님이 끈다. */
+const DEFAULT_ON_MODULE_IDS = new Set(['vocab-tower', 'spelling-claw']);
+
 class ModuleErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -295,6 +298,11 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile, navigationTarget, on
                                     <TeacherGuideButton tabId={selected.module.id} variant="help" />
                                 </div>
                                 <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.74rem' }}>{selected.module.description}</p>
+                                {DEFAULT_ON_MODULE_IDS.has(selected.module.id) && (
+                                    <p role="note" style={{ margin: '6px 0 0', padding: '7px 10px', borderRadius: '10px', background: '#ECFDF5', color: '#166534', fontSize: 'var(--ui-text-sm)', fontWeight: '800', lineHeight: 1.5 }}>
+                                        ✅ 이 놀이는 <strong>기본으로 켜져</strong> 있어요. 학생은 하고 싶은 친구만 해요. 학급에서 쓰지 않으시면 오른쪽 스위치로 끄세요.
+                                    </p>
+                                )}
                             </div>
                             {selected.module.adminOnly ? (
                                 <span style={{ padding: '6px 12px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontSize: '0.8rem', fontWeight: '900' }}>
