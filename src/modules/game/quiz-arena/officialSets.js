@@ -3,7 +3,7 @@
  *
  * 아지트의 어휘·맞춤법 자료로 고정 세트를 만든다. 같은 입력이면 항상 같은 세트가 나온다(난수는 고정 씨앗).
  *   · 어휘: 학년(3~6) × 수준(쉬움·보통·어려움) 별 세트. 한 세트는 같은 수준 낱말만 모으고, 문항 형식은 섞는다.
- *       4지선다(뜻→낱말) · 4지선다(예문 빈칸) · 2지선다(예문 빈칸) · O/X(낱말과 뜻이 맞는지)
+ *       4지선다(뜻→낱말) · 4지선다(예문 빈칸) · O/X(낱말과 뜻이 맞는지) — 2지선다는 너무 쉬워 어휘에서 뺐다(2026-10-24)
  *   · 맞춤법: 학년(3~6)별 여러 세트. **문장 속에서만** 묻는다(낱말만 보여 주고 묻지 않는다).
  *       O/X(바르게 쓴 문장인지) · 2지선다(빈칸에 알맞은 말 — 고쳐 쓰기)
  * 세트마다 15문제 또는 20문제. 결과는 `public/quiz-arena/official-sets-v1.json`(`scripts/build-quiz-arena-official-sets.mjs`).
@@ -22,7 +22,7 @@ export const VOCAB_LEVELS = Object.freeze([
     { level: 3, id: 'hard', label: '어려움' }
 ]);
 /** 세트 크기별 형식 개수(합 = 크기). */
-export const VOCAB_FORMAT_PLAN = Object.freeze({ 15: { def: 4, blank: 4, pair: 4, ox: 3 }, 20: { def: 6, blank: 5, pair: 5, ox: 4 } });
+export const VOCAB_FORMAT_PLAN = Object.freeze({ 15: { def: 6, blank: 6, ox: 3 }, 20: { def: 8, blank: 8, ox: 4 } });
 export const SPELLING_FORMAT_PLAN = Object.freeze({ 15: { ox: 7, pair: 8 }, 20: { ox: 10, pair: 10 } });
 
 const hash = (text) => { let h = 2166136261; for (const ch of String(text)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -89,13 +89,6 @@ const vocabQuestion = (format, word, helpers) => {
         const choices = shuffle([name, ...distractors], rng);
         return { kind: 'c4', text: `빈칸에 알맞은 낱말은? ${blanked}`, choices, answer: choices.indexOf(name), explanation: fitExplanation(def, limits.explanation) };
     }
-    if (format === 'pair') {
-        if (!exFits('알맞은 낱말은? ')) return null;
-        const distractor = pickFrom(otherCat, 1);
-        if (!distractor.length) return null;
-        const choices = shuffle([name, distractor.at(0)], rng);
-        return { kind: 'c2', text: `알맞은 낱말은? ${blanked}`, choices, answer: choices.indexOf(name), explanation: fitExplanation(def, limits.explanation) };
-    }
     // ox: 낱말과 뜻이 맞는지(거짓은 다른 분류 낱말의 뜻을 붙인다 — 확실히 거짓이 되도록)
     const budget = limits.question - (`‘${name}’${eunNeun(name)} `).length;
     const wantTrue = rng() < 0.5;
@@ -147,7 +140,7 @@ const buildVocabLevel = (grade, lv, ordered, unique, setCount, banned, limits, c
             grade,
             subject: '국어',
             unit: '어휘',
-            description: `${grade}학년 ${lv.label} 수준 낱말을 O/X·2지선다·4지선다로 풀어요. ${questions.length}문제.`,
+            description: `${grade}학년 ${lv.label} 수준 낱말을 O/X·4지선다로 풀어요. ${questions.length}문제.`,
             kind: 'vocab',
             level: lv.level,
             questions: shuffle(questions, rng)

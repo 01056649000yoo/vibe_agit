@@ -30,10 +30,10 @@ test('모든 문제가 게임 서버 규칙을 지키고 정답 번호가 보기
     }
 });
 
-test('문항 형식이 섞인다: 어휘 세트마다 O/X·2지선다·4지선다, 맞춤법 세트마다 O/X·2지선다(4지선다 없음)가 들어 있고 전체 비율이 쏠리지 않는다', () => {
-    for (const set of vocab) assert.deepEqual([...kindsOf(set)].sort(), ['c2', 'c4', 'ox'], `${set.id}: 형식이 한 가지 이상 빠졌습니다`);
+test('문항 형식이 섞인다: 어휘 세트마다 O/X·4지선다(2지선다 없음), 맞춤법 세트마다 O/X·2지선다(4지선다 없음)가 들어 있고 전체 비율이 쏠리지 않는다', () => {
+    for (const set of vocab) assert.deepEqual([...kindsOf(set)].sort(), ['c4', 'ox'], `${set.id}: 어휘는 O/X·4지선다만 씁니다`);
     for (const set of spelling) assert.deepEqual([...kindsOf(set)].sort(), ['c2', 'ox'], `${set.id}: 맞춤법은 O/X·2지선다만 씁니다`);
-    for (const [sets, kinds] of [[vocab, ['ox', 'c2', 'c4']], [spelling, ['ox', 'c2']]]) {
+    for (const [sets, kinds] of [[vocab, ['ox', 'c4']], [spelling, ['ox', 'c2']]]) {
         const all = sets.flatMap((set) => set.questions);
         for (const kind of kinds) assert.ok(all.filter((q) => q.kind === kind).length / all.length > 0.15, `${kind} 비율이 너무 낮습니다`);
         const ox = all.filter((q) => q.kind === 'ox');
