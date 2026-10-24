@@ -33,7 +33,8 @@ const LoadingCard = ({ message }) => (
 );
 
 /** 공개 칭호·드래곤·서재와 둘 사이의 기록만 보여 주는 친구 공간. */
-const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) => {
+const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, presentation = 'page' }) => {
+    const isModal = presentation === 'modal';
     // 어디로 들어오든(친구 아지트 목록·우리반 수호룡 아지트) 친구 아지트를 열면 "놀러 왔다"는 신호를 남긴다(20261413).
     // 실패해도 화면은 그대로 — 기록은 덤이다. 같은 친구는 서버가 10분 안 재방문을 한 번으로 센다.
     const friendId = friend?.id;
@@ -41,6 +42,14 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
         if (!friendId || !viewerId || friendId === viewerId) return;
         void supabase.rpc('record_hideout_visit_v1', { p_owner_id: friendId }).then(() => {}, () => {});
     }, [friendId, viewerId]);
+
+    // 모달로 열렸을 때 Esc 로 닫는다(전체 화면판은 기존 그대로).
+    useEffect(() => {
+        if (!isModal) return undefined;
+        const onKey = (event) => { if (event.key === 'Escape') onClose?.(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isModal, onClose]);
 
     if (!friend?.id || !viewerId) return null;
 
@@ -56,21 +65,24 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
     });
     const activeCards = getActiveFriendProfileCards();
 
+    const pageMotion = { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' }, transition: { type: 'spring', damping: 26, stiffness: 210 } };
+    const modalMotion = { initial: { opacity: 0, scale: 0.96 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.96 }, transition: { duration: 0.18 } };
+    const frameStyle = isModal
+        ? { position: 'fixed', inset: 0, zIndex: 10001, display: 'grid', placeItems: 'center', padding: '16px', boxSizing: 'border-box', background: 'rgba(32,22,14,.58)' }
+        : { position: 'fixed', inset: 0, zIndex: 10001, overflowY: 'auto', background: 'linear-gradient(180deg,#FFFDF5 0%,#FFF8E1 100%)' };
+
     return (
         <motion.div
             role="dialog"
             aria-modal="true"
             aria-label={`${friend.name}의 아지트`}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 26, stiffness: 210 }}
-            style={{
-                position: 'fixed', inset: 0, zIndex: 10001, overflowY: 'auto',
-                background: 'linear-gradient(180deg,#FFFDF5 0%,#FFF8E1 100%)'
-            }}
+            {...(isModal ? modalMotion : pageMotion)}
+            style={frameStyle}
+            onMouseDown={isModal ? (event) => { if (event.target === event.currentTarget) onClose?.(); } : undefined}
         >
-            <div style={{ width: 'min(560px,100%)', margin: '0 auto', padding: '18px 18px 90px', boxSizing: 'border-box' }}>
+            <div style={isModal
+                ? { width: 'min(560px,100%)', maxHeight: '92dvh', overflowY: 'auto', padding: '18px 18px 22px', boxSizing: 'border-box', borderRadius: '26px', background: 'linear-gradient(180deg,#FFFDF5 0%,#FFF8E1 100%)', boxShadow: '0 24px 60px rgba(0,0,0,.35)' }
+                : { width: 'min(560px,100%)', margin: '0 auto', padding: '18px 18px 90px', boxSizing: 'border-box' }}>
                 <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
                     <div style={{ minWidth: 0 }}>
                         <h2 style={{ margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '1.3rem', fontWeight: 950 }}>
@@ -122,7 +134,7 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
 
                 <footer style={{ marginTop: '18px' }}>
                     <Button variant="primary" onClick={onClose} style={{ width: '100%', minHeight: '50px', borderRadius: '16px', fontWeight: '900' }}>
-                        친구 목록으로 돌아가기
+                        {isModal ? '닫고 교실로 돌아가기' : '친구 목록으로 돌아가기'}
                     </Button>
                 </footer>
             </div>

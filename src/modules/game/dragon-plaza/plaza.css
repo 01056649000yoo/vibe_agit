@@ -91,3 +91,32 @@
   .plaza.has-photo .plaza-board__visitors ul { margin-top: .4cqw; }
   .plaza-desk.has-art .plaza-plate { width: 74%; }
 }
+
+/* 작가 단계별 빛: 3단계부터 은은한 빛, 5·7단계에서 더 밝게, 9단계는 반짝임, 10단계는 번쩍이는 후광. 종류마다 빛깔이 다르다. */
+.plaza-desk__aura { --aura: 255,214,102; position: absolute; left: 12%; right: 12%; top: 2%; height: 62%; border-radius: 50%; pointer-events: none; }
+.plaza-desk__aura[data-species="forest"] { --aura: 112,220,128; }
+.plaza-desk__aura[data-species="ember"] { --aura: 255,138,76; }
+.plaza-desk__aura[data-species="moon"] { --aura: 170,160,255; }
+.plaza-desk__aura[data-tier="1"] { background: radial-gradient(closest-side, rgba(var(--aura), .30), transparent 100%); }
+.plaza-desk__aura[data-tier="2"] { background: radial-gradient(closest-side, rgba(var(--aura), .50), transparent 100%); }
+.plaza-desk__aura[data-tier="3"],
+.plaza-desk__aura[data-tier="4"],
+.plaza-desk__aura[data-tier="5"] { background: radial-gradient(closest-side, rgba(var(--aura), .62), rgba(var(--aura), .18) 70%, transparent 100%); animation: plaza-aura 3.4s ease-in-out infinite; }
+.plaza-desk__aura[data-tier="4"], .plaza-desk__aura[data-tier="5"] { left: 6%; right: 6%; top: -2%; height: 70%; }
+.plaza-desk__aura[data-tier="3"]::after,
+.plaza-desk__aura[data-tier="4"]::after,
+.plaza-desk__aura[data-tier="5"]::after { content: "✦ ✧"; position: absolute; inset: 4% 4% auto auto; font-size: .9rem; letter-spacing: .6em; color: rgb(var(--aura)); text-shadow: 0 0 6px rgba(var(--aura), .9); animation: plaza-twinkle 2.2s ease-in-out infinite; }
+.plaza-desk__aura[data-tier="4"]::before,
+.plaza-desk__aura[data-tier="5"]::before { content: "✧"; position: absolute; left: 8%; top: 24%; font-size: 1.1rem; color: rgb(var(--aura)); text-shadow: 0 0 8px rgba(var(--aura), .95); animation: plaza-twinkle 1.7s ease-in-out .6s infinite; }
+.plaza-desk__aura[data-tier="5"] { background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(var(--aura), .65) 45%, rgba(var(--aura), .2) 75%, transparent 100%); }
+.plaza-desk__aura[data-tier="5"]::before { content: "👑"; left: 50%; top: -6%; transform: translateX(-50%); font-size: 1.3rem; text-shadow: none; }
+.plaza-desk[data-tier="2"] .plaza-desk__art { filter: saturate(1.08); }
+.plaza-desk[data-tier="3"] .plaza-desk__art { filter: saturate(1.12) drop-shadow(0 0 4px rgba(255,255,255,.7)); }
+.plaza-desk[data-tier="4"] .plaza-desk__art, .plaza-desk[data-tier="5"] .plaza-desk__art { filter: saturate(1.18) brightness(1.04) drop-shadow(0 0 8px rgba(255,255,255,.85)); }
+@keyframes plaza-aura { 0%, 100% { opacity: .75; transform: scale(.97); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes plaza-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .plaza-desk__aura, .plaza-desk__aura::before, .plaza-desk__aura::after { animation: none !important; } }
+
+.plaza-postfail { position: fixed; inset: 0; z-index: 10003; display: grid; place-items: center; background: rgba(32,22,14,.58); }
+.plaza-postfail > div { background: #fffdf5; border-radius: 20px; padding: 22px 26px; text-align: center; font-weight: 800; }
+.plaza-postfail button { margin-top: 8px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 14px; background: #3e2e23; color: #fff; font-weight: 900; }

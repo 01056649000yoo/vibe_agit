@@ -6,6 +6,7 @@ import { plazaApi } from './plazaApi';
 import useDragonPlaza from './useDragonPlaza';
 import './plaza.css';
 
+const PlazaPostModal = lazy(() => import('./PlazaPostModal'));
 const FriendProfileShell = lazy(() => import('../../community/friends-hideout/profile/FriendProfileShell'));
 
 /** 칠판: 우리 반 이름 줄과 "이번 주 내 아지트에 놀러 온 친구" 명단(누군가 보고 있다는 신호, 횟수·순위 없음). */
@@ -28,18 +29,25 @@ function Chalkboard({ seatCount, visitors }) {
 }
 
 /**
- * 학생 놀이터 모듈 입구: 우리 반 수호룡이 모인 교실. 자리를 누르면 그 친구의 아지트(기존 친구 아지트 화면)가 열리고,
- * 닫으면 교실로 돌아온다. `새 글`을 누르면 바로 그 글로 이동한다. `api` 로 데이터 길을 갈아 끼울 수 있다(개발실).
+ * 학생 놀이터 모듈 입구: 우리 반 수호룡이 모인 교실. 자리를 누르면 그 친구의 아지트가 창으로 열리고,
+ * 닫으면 교실로 돌아온다. `새 글`을 누르면 그 친구의 새 글 하나만 창으로 열린다. `api` 로 데이터 길을 갈아 끼울 수 있다(개발실).
  */
-export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, api = plazaApi }) {
+export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api = plazaApi }) {
     const studentId = studentSession?.id;
     const { status, message, seats, visitors, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
     const [openedSeat, setOpenedSeat] = useState(null);
     const { classroomReady } = useDeskArt();
 
-    const openPost = (post) => {
+    // 친구 아지트·글 읽기는 모두 교실 위의 창으로 열고 닫는다(화면이 바뀌지 않는다).
+    const [reading, setReading] = useState(null); // { post } 또는 { postId, friend }
+    const classmates = seats.map((seat) => ({ id: seat.id, name: seat.name }));
+    const openLoadedPost = (post) => {
         if (post?.id) markSeen(post.id);
-        onNavigate?.('friends_hideout', { initialPostId: post?.id });
+        setReading({ post });
+    };
+    const openNewPost = (seat, post) => {
+        if (post?.id) markSeen(post.id);
+        setReading({ postId: post?.id, friend: seat.row });
     };
 
     return (
@@ -65,7 +73,7 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
                                     seat={seat}
                                     newPost={newPosts.get(seat.id)}
                                     onOpen={setOpenedSeat}
-                                    onOpenNewPost={(_, post) => openPost(post)}
+                                    onOpenNewPost={openNewPost}
                                 />
                             </div>
                         ))}
@@ -81,7 +89,20 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
                         viewerId={studentId}
                         classId={studentSession?.class_id}
                         onClose={() => setOpenedSeat(null)}
-                        onOpenPost={openPost}
+                        onOpenPost={openLoadedPost}
+                        presentation="modal"
+                    />
+                </Suspense>
+            )}
+
+            {reading && (
+                <Suspense fallback={null}>
+                    <PlazaPostModal
+                        {...reading}
+                        studentSession={studentSession}
+                        classmates={classmates}
+                        isMobile={isMobile}
+                        onClose={() => setReading(null)}
                     />
                 </Suspense>
             )}

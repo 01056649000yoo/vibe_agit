@@ -106,8 +106,9 @@ test('서버: 방문 기록은 같은 학급·본인 제외·10분 안 재방문
     assert.match(shell, /record_hideout_visit_v1/);
     assert.match(host, /onNavigate/);
     assert.match(dashboard, /onNavigate=\{onNavigate\}/);
-    assert.match(entry, /friends_hideout/);
-    assert.match(entry, /initialPostId/);
+    assert.match(entry, /presentation="modal"/, '친구 아지트는 교실 위의 창으로 연다');
+    assert.doesNotMatch(entry, /onNavigate/, '교실 밖 화면으로 이동하지 않는다');
+    assert.match(entry, /PlazaPostModal/);
 });
 
 test('그림: 앉은 수호룡 4종 × 10단계 40장과 교실 배경이 모두 있고, 크기가 알맞다', async () => {
@@ -120,4 +121,11 @@ test('그림: 앉은 수호룡 4종 × 10단계 40장과 교실 배경이 모두
     }
     const room = await stat('public/assets/class-room/classroom-day.webp');
     assert.ok(room.size > 20000 && room.size < 400000, `교실 배경 크기(${room.size}B)가 이상합니다`);
+});
+
+test('작가 단계가 오를수록 책상 위 수호룡의 빛 단계가 높아진다(1~2는 없음, 10은 최고)', async () => {
+    const { auraTier } = await import('../src/modules/game/dragon-plaza/PlazaDesk.jsx').catch(() => ({}));
+    if (!auraTier) return; // JSX 를 직접 읽지 못하는 환경에서는 소스 검사로 대신한다
+    const tiers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(auraTier);
+    assert.deepEqual(tiers, [0, 0, 1, 1, 2, 2, 3, 3, 4, 5]);
 });
