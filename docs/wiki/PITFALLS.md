@@ -71,6 +71,7 @@
 - **고치려던 문제를 새 부품이 그대로 되풀이하지 않는지 그려 보고 확인한다.** "브라우저 기본 창은
   긴 이름이 잘린다"를 이유로 앱 안 창으로 옮겨 놓고, 새 창 제목이 `white-space: nowrap` 이라
   똑같이 잘렸다. 코드만 읽었으면 못 봤다. (2026-09-03) [경로: src/components/common/**]
+- **놀이터 게임 화면(zIndex 20000) 안에서 `createPortal` 로 body 에 붙는 창(글 읽기 `PostDetailModal` 등)은 기본 zIndex 로는 화면 뒤에 숨는다.** 눌러도 "번쩍하고 아무 일 없음" 으로 보인다(2026-10-25, 광장 새 글 — 개발실에는 20000 래퍼가 없어 못 잡았다). 창에 `zIndex` 를 넘기거나 게임 화면 안에서 렌더하고, 개발실 확인 뒤 실제 화면 층도 따져 본다. [경로: src/modules/game/**]
 
 ## 브라우저가 말없이 다르게 굴 때
 
@@ -166,4 +167,3 @@
 - **`npm audit fix` 는 검사 도구(eslint 플러그인)까지 올려 옛 코드를 새 오류로 만든다.** 연구소가 푸시 뒤 CI 린트에서 멈췄다(2026-10-11). 취약한 패키지만 `npm update <이름>` 으로 올리고, 푸시 전에 `npm run lint` 를 돌린다. [경로: package-lock.json]
 - **오픈클로 실행 정책은 실행 파일도 스크립트도 절대 경로여야 묶는다.** `python3 -B scripts/x.py`(상대)·`rg`(이름만)는 `SYSTEM_RUN_DENIED`, 허용 목록에도 이름과 절대 경로를 따로 적어야 한다(2026-10-13). 막힌 명령은 `~/.openclaw/state/openclaw.sqlite` 의 `operator_approvals` 와 `agents/main/agent/codex-home/logs_2.sqlite` 로 찾는다. [경로: ops/openclaw/**]
 - **도커 가상 디스크(Docker.raw)가 가득 차면 컨테이너는 살아 있어도 점검 응답이 막혀 `container_down` 경고가 난다.** 하루 빌드를 여러 번 하면 빌드 캐시가 16GB 까지 쌓였다(2026-10-14, 한도 32→64GB 로 증설). 많이 빌드한 날은 `docker builder prune -af` 로 캐시를 비우고, 알림의 "도커 %"는 맥 내장이 아니라 이 가상 디스크 사용률이다. [경로: scripts/trim-old-docker-images.sh]
-- **놀이터 게임 화면(zIndex 20000) 안에서 `createPortal` 로 body 에 붙는 창(글 읽기 `PostDetailModal` 등)은 기본 zIndex 로는 화면 뒤에 숨는다.** 눌러도 "번쩍하고 아무 일 없음" 으로 보인다(2026-10-25, 광장 새 글 — 개발실에는 20000 래퍼가 없어 못 잡았다). 창에 `zIndex` 를 넘기거나 게임 화면 안에서 렌더하고, 개발실 확인 뒤 실제 화면 층도 따져 본다. [경로: src/modules/game/**]
