@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 코드 지도 사용 기록·평가 메모 (Claude)
+- **한 일**: 선생님 `지도를 쓴 경우를 잘 체크해놔` — 지도를 쓸 때마다(직접 조회·recall) 저장소 밖 `~/graphify/vibe-agit/usage.jsonl` 에 질문 이름·답 크기·시각만 기록(코드 내용 없음). `npm run map -- usage` 로 횟수·명령별·평균 답 크기·결과 없음 집계, `npm run map -- note 도움됨|아님|놓침 "이유"` 로 쓴 뒤 평가 한 줄을 남김. 2026-11-08 평가 근거.
+- **변경**: scripts/code-map.mjs·docs/wiki/CODE_MAP.md·tests/codeMap.test.mjs.
+- **결과/검증**: 시험·eslint 통과, 조회·메모·집계 동작 확인.
+- **남은 것**: 11-08 평가(CODE_MAP.md "효과 재기").
+
 ## 2026-10-25 — 우리반 수호룡 아지트에 아지트 공방 바로가기 (Claude)
 - **한 일**: 교실 상단 바에 `🛠 내 공방`, 친구 아지트 창 아래에 `🛠 내 공방에서 꾸미러 가기` 추가(수호룡 모듈이 켜진 학급에서만). 눌러도 교실이 그대로 남고 공방 창이 교실 위에 뜬다(공방 창에 `zIndex` 를 받게 하고 게임 화면 위 20500) [원인 예방: 게임 화면 20000 뒤에 숨는 문제를 미리 피함]. 공방에서 사고 바꾼 내 모습은 대시보드의 최신 수호룡 값으로 서버 재조회 없이 내 책상에 바로 반영.
 - **변경**: StudentDashboard·StudentGameModuleHost·DragonPlazaEntry·useDragonPlaza·FriendProfileShell(`extraAction`)·BackgroundShopModal(`zIndex`)·plaza.css·개발실·tests.

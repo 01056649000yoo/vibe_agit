@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 코드 지도 조회: `npm run map -- <명령> <영문 이름>`  (Graphify, 2026-10-25 시험 도입 — docs/wiki/CODE_MAP.md)
+ * 코드 지도 조회: `npm run map -- <명령> <영문 이름>  (쓸 때마다 저장소 밖 usage.jsonl 에 기록 → `usage` 로 집계)`  (Graphify, 2026-10-25 시험 도입 — docs/wiki/CODE_MAP.md)
  *
  *   affected "이름"   이것을 고치면 영향받는 곳(부르는 곳·가져오는 곳)
  *   explain  "이름"   이것이 무엇과 이어져 있나
@@ -8,13 +8,15 @@
  *   path "A" "B"      두 이름 사이의 가장 짧은 길
  *   status            지도 상태(낡았는지)
  *   update            지금 바로 다시 만들기(보통은 조회할 때 알아서 한다)
+ *   usage             지금까지 몇 번 썼는지(2주 평가용)
+ *   note 도움됨|아님|놓침 "이유"   직전 조회가 쓸모 있었는지 한 줄 기록(평가용)
  *
  * 지도는 저장소 밖(`CODE_MAP_DIR`, 기본 ~/graphify/vibe-agit)에 둔다 — 공개 저장소에 구조 정보를 올리지 않는다.
  * graphify 가 없으면 한 줄 안내만 하고 끝낸다(다른 컴퓨터·다른 모델에서도 깨지지 않게).
  * 코드(src/)만 읽는다: 로컬 분석이라 외부로 나가는 것이 없고 API 키가 필요 없다. 문서·PDF·이미지는 일부러 넣지 않는다.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { isMapSource, needsEnglishName, needsFullRescan, staleReason } from './codeMapPolicy.mjs';
@@ -22,6 +24,11 @@ import { isMapSource, needsEnglishName, needsFullRescan, staleReason } from './c
 const OUT = process.env.CODE_MAP_DIR || path.join(homedir(), 'graphify', 'vibe-agit');
 const GRAPH = path.join(OUT, 'graphify-out', 'graph.json');
 const COUNT_FILE = path.join(OUT, 'source-file-count.txt');
+// 사용 기록(저장소 밖): 2주 평가 때 "몇 번, 어떤 질문에, 얼마나 짧은 답"을 세는 근거. 질문 이름만 적고 코드 내용은 적지 않는다.
+const USAGE_LOG = path.join(OUT, 'usage.jsonl');
+const logUsage = (entry) => {
+    try { appendFileSync(USAGE_LOG, `${JSON.stringify({ at: new Date().toISOString(), ...entry })}\n`); } catch { /* 기록 실패는 조회를 막지 않는다 */ }
+};
 const SRC = 'src';
 
 const findGraphify = () => {
@@ -80,7 +87,24 @@ export const affectedLines = (file, { depth = 1, max = 12 } = {}) => {
     const label = path.basename(file);
     const result = run(bin, ['affected', label, '--depth', String(depth), '--graph', GRAPH]);
     if (result.status !== 0) return [];
-    return result.stdout.split('\n').filter((line) => line.startsWith('- ')).slice(0, max);
+    const lines = result.stdout.split('\n').filter((line) => line.startsWith('- ')).slice(0, max);
+    logUsage({ source: 'recall', command: 'affected', target: label, lines: lines.length, bytes: Buffer.byteLength(result.stdout) });
+    return lines;
+};
+
+const printUsage = () => {
+    if (!existsSync(USAGE_LOG)) { console.log('아직 사용 기록이 없어요.'); return 0; }
+    const all = readFileSync(USAGE_LOG, 'utf8').split('\n').filter(Boolean).map((line) => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
+    const rows = all.filter((row) => row.source !== 'note'); // 조회만 센다(평가 메모는 따로)
+    const by = (key) => rows.reduce((acc, row) => ({ ...acc, [row[key]]: (acc[row[key]] || 0) + 1 }), {});
+    const bytes = rows.reduce((sum, row) => sum + (row.bytes || 0), 0);
+    console.log(`조회 ${rows.length}번 (첫 기록 ${rows[0]?.at?.slice(0, 10) || '-'} · 마지막 ${rows.at(-1)?.at?.slice(0, 10) || '-'})`);
+    console.log('명령별:', JSON.stringify(by('command')), '· 경로별:', JSON.stringify(by('source')));
+    console.log(`답 크기 합계 ${Math.round(bytes / 1024 * 10) / 10}KB (평균 ${rows.length ? Math.round(bytes / rows.length) : 0}B) · 결과 없음 ${rows.filter((row) => !row.lines).length}번`);
+    const verdicts = all.filter((row) => row.source === 'note');
+    if (verdicts.length) console.log(`평가 메모 ${verdicts.length}개 — 도움됨 ${verdicts.filter((row) => row.verdict === '도움됨').length} · 아님 ${verdicts.filter((row) => row.verdict === '아님').length} · 지도가 놓침 ${verdicts.filter((row) => row.verdict === '놓침').length}`);
+    console.log(`최근: ${rows.slice(-5).map((row) => `${row.command} ${row.target}`).join(' | ')}`);
+    return 0;
 };
 
 const main = () => {
@@ -101,11 +125,20 @@ const main = () => {
         return 0;
     }
     if (command === 'update') return refreshIfStale(bin) ? 0 : 1;
+    if (command === 'usage') return printUsage();
+    if (command === 'note') { // 직전 조회가 도움이 됐는지 한 줄로 남긴다: npm run map -- note 도움됨|아님 "이유"
+        logUsage({ source: 'note', command: 'note', target: rest.join(' ').slice(0, 200), verdict: ['도움됨', '아님', '놓침'].find((word) => rest[0] === word) || '' });
+        console.log('기록했어요.');
+        return 0;
+    }
     if (!['affected', 'explain', 'query', 'path'].includes(command)) { console.log(`모르는 명령: ${command}`); return 2; }
     if (rest.length === 0) { console.log(`무엇을 찾을까요? 예: npm run map -- ${command} PlazaPostModal`); return 2; }
     if (needsEnglishName(rest.join(' '))) console.error('[코드 지도] 한글 질문은 못 찾아요. 함수·파일·컴포넌트의 영문 이름으로 물어 보세요(예: PlazaPostModal, buildSeat).');
     if (!refreshIfStale(bin)) return 1;
-    const result = spawnSync(bin, [command, ...rest, '--graph', GRAPH], { stdio: 'inherit' });
+    const started = Date.now();
+    const result = spawnSync(bin, [command, ...rest, '--graph', GRAPH], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+    if (result.stdout) process.stdout.write(result.stdout);
+    logUsage({ source: 'cli', command, target: rest.join(' ').slice(0, 120), lines: (result.stdout || '').split('\n').filter(Boolean).length, bytes: Buffer.byteLength(result.stdout || ''), ms: Date.now() - started, exit: result.status ?? 1 });
     return result.status ?? 1;
 };
 

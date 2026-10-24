@@ -33,3 +33,12 @@ test('코드 지도는 저장소 밖에 두고, 문서·PDF 는 읽지 않으며
     assert.match(tool, /graphify\)가 이 컴퓨터에 없어요/, '도구가 없으면 안내만 하고 끝낸다');
     assert.match(pkg, /"map": "node scripts\/code-map\.mjs"/);
 });
+
+test('코드 지도는 쓸 때마다 저장소 밖에 기록하고, 집계·평가 메모 명령이 있다(2주 평가 근거)', async () => {
+    const tool = await readFile('scripts/code-map.mjs', 'utf8');
+    assert.match(tool, /usage\.jsonl/);
+    assert.match(tool, /command === 'usage'/);
+    assert.match(tool, /command === 'note'/);
+    assert.match(tool, /logUsage\(\{ source: 'recall'/, 'recall 에서 쓴 것도 센다');
+    assert.doesNotMatch(tool, /usage\.jsonl[\s\S]{0,40}repo|appendFileSync\(['"]\./, '기록은 저장소 안에 두지 않는다');
+});
