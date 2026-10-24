@@ -568,6 +568,7 @@ const StudentDashboard = ({
                             claimLegendaryReward={claimLegendaryReward}
                             equipDecorItem={equipDecorItem}
                             isBusy={isBusy}
+                            zIndex={activeGameModuleId ? 20500 : undefined}
                         />
                     </Suspense>
                 )}
@@ -603,6 +604,9 @@ const StudentDashboard = ({
                             points={points}
                             onPointsChange={setPoints}
                             onNavigate={onNavigate}
+                            // 아지트 공방은 수호룡 모듈이 켜진 학급에서만. 교실에서 친구 걸 보고 바로 내 걸 바꾸러 간다.
+                            onOpenWorkshop={isOn('dragon') ? () => setIsShopOpen(true) : undefined}
+                            myPetData={displayPetData}
                             backTarget={activeGameModuleOrigin}
                             onBack={() => {
                                 setActiveGameModuleId(null);

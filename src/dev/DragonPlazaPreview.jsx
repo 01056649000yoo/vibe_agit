@@ -57,5 +57,5 @@ export default function DragonPlazaPreview() {
       </div>
     )
   }
-  return <DragonPlazaEntry studentSession={{ id: 'me', class_id: 'class-1' }} backTarget={new URLSearchParams(window.location.search).get('from') === 'home' ? 'home' : 'playground'} onBack={() => {}} onNavigate={(page, params) => window.alert(`이동: ${page} ${JSON.stringify(params)}`)} api={api} />
+  return <DragonPlazaEntry studentSession={{ id: 'me', class_id: 'class-1' }} onOpenWorkshop={() => window.alert('내 공방 열기')} backTarget={new URLSearchParams(window.location.search).get('from') === 'home' ? 'home' : 'playground'} onBack={() => {}} onNavigate={(page, params) => window.alert(`이동: ${page} ${JSON.stringify(params)}`)} api={api} />
 }

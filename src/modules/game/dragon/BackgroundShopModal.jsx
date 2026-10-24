@@ -30,7 +30,9 @@ const BackgroundShopModal = ({
     buyDecorSet,
     claimLegendaryReward,
     equipDecorItem,
-    isBusy
+    isBusy,
+    // 놀이터 게임 화면(zIndex 20000) 위에서 열 때는 그보다 높은 값을 넘긴다(기본값이면 게임 화면 뒤에 숨는다).
+    zIndex
 }) => {
     const [activeSlot, setActiveSlot] = useState('wallpaper');
     const [previewEquipped, setPreviewEquipped] = useState(null);
@@ -108,7 +110,7 @@ const BackgroundShopModal = ({
 
     return (
         <ModalPortal>
-            <div className="agit-workshop" onClick={onClose}>
+            <div className="agit-workshop" style={zIndex ? { zIndex } : undefined} onClick={onClose}>
                 <motion.div
                     role="dialog"
                     aria-modal="true"

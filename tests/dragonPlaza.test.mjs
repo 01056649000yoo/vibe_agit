@@ -236,3 +236,22 @@ test('GPT 재검토 반영: 글 창 Esc·처음 글 두 번째 요청의 공개 
     assert.match(card, /cached\.viewerId !== viewerId/, '캐시는 보는 학생마다 따로');
     assert.match(tool, /unlinkSync\(COUNT_FILE\)/, '지도 묶음 단계가 실패하면 다음에 다시 시도한다');
 });
+
+test('아지트 공방 바로가기: 상단 바와 친구 창에 있고, 공방 창은 게임 화면 위에 뜨며, 내 책상은 바로 바뀐다', async () => {
+    const [dashboard, host, entry, shell, shop, hook] = await Promise.all([
+        readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
+        readFile('src/modules/game/StudentGameModuleHost.jsx', 'utf8'),
+        readFile('src/modules/game/dragon-plaza/DragonPlazaEntry.jsx', 'utf8'),
+        readFile('src/modules/community/friends-hideout/profile/FriendProfileShell.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/BackgroundShopModal.jsx', 'utf8'),
+        readFile('src/modules/game/dragon-plaza/useDragonPlaza.js', 'utf8')
+    ]);
+    assert.match(dashboard, /onOpenWorkshop=\{isOn\('dragon'\) \? \(\) => setIsShopOpen\(true\) : undefined\}/, '수호룡 모듈이 켜진 학급에서만');
+    assert.match(dashboard, /zIndex=\{activeGameModuleId \? 20500 : undefined\}/, '공방 창이 게임 화면(20000) 위에');
+    assert.match(shop, /style=\{zIndex \? \{ zIndex \} : undefined\}/);
+    assert.match(host, /onOpenWorkshop,\s*myPetData/);
+    assert.match(entry, /className="plaza__workshop"/, '상단 바 단추');
+    assert.match(entry, /내 공방에서 꾸미러 가기/, '친구 창 아래 단추');
+    assert.match(shell, /extraAction/);
+    assert.match(hook, /\.\.\.state\.me\.pet_data, \.\.\.myPetData/, '방금 바꾼 내 모습은 서버를 다시 읽지 않고 바로 반영');
+});

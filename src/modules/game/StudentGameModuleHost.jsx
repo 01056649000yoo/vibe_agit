@@ -49,7 +49,7 @@ class StudentModuleErrorBoundary extends React.Component {
  * `backTarget`('playground' | 'home')은 돌아가기가 어디로 가는지 알려 준다 — 단추 이름을 길에 맞출 때만 쓴다.
  * studentEntry는 아래 props만 사용하면 StudentDashboard 수정 없이 놀이터에서 열린다.
  */
-const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPointsChange, onBack, onNavigate, backTarget = 'playground' }) => {
+const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPointsChange, onBack, onNavigate, backTarget = 'playground', onOpenWorkshop, myPetData }) => {
     if (!module?.studentEntry || module.playground?.entryMode === 'legacy') return null;
     const StudentEntry = STUDENT_ENTRIES.get(module.id);
     if (!StudentEntry) return null;
@@ -69,6 +69,8 @@ const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPoi
                     onBack,
                     onNavigate,
                     backTarget,
+                    onOpenWorkshop,
+                    myPetData,
                     module
                 })}
             </Suspense>

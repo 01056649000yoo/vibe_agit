@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildSeats, markPostSeen, pickNewPosts, readSeenPosts } from './plazaModel';
 
 /** 광장 화면 상태. 한 번 읽고, 일부가 실패해도(새 글·방문자) 교실은 그대로 보여 준다. */
-export default function useDragonPlaza(api, studentId) {
+export default function useDragonPlaza(api, studentId, myPetData = null) {
     const [state, setState] = useState({ status: 'loading', classmates: [], me: null, feed: [], visitors: [], conquests: [], message: '' });
     const [seen, setSeen] = useState(() => readSeenPosts(studentId));
 
@@ -36,7 +36,9 @@ export default function useDragonPlaza(api, studentId) {
         return () => window.clearTimeout(timer);
     }, [load]);
 
-    const seats = useMemo(() => buildSeats(state.classmates, state.me), [state.classmates, state.me]);
+    // 공방에서 방금 사고 바꾼 내 모습은 서버를 다시 읽지 않고 대시보드가 가진 최신 값으로 바로 보여 준다.
+    const me = useMemo(() => (state.me && myPetData ? { ...state.me, pet_data: { ...state.me.pet_data, ...myPetData } } : state.me), [state.me, myPetData]);
+    const seats = useMemo(() => buildSeats(state.classmates, me), [state.classmates, me]);
     // 학생 id → 정복한 덱 수(배지용). 덱 번호는 친구 아지트 창의 카드가 따로 읽는다.
     const conquestCounts = useMemo(() => new Map((state.conquests || []).map((row) => [row.student_id, Array.isArray(row.decks) ? row.decks.length : 0])), [state.conquests]);
     const newPosts = useMemo(() => pickNewPosts(state.feed, seen, studentId), [state.feed, seen, studentId]);

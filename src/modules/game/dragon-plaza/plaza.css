@@ -24,6 +24,9 @@
 }
 .plaza__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 1180px; margin: 0 auto 10px; }
 .plaza__bar strong { font-size: var(--ui-text-lg); }
+.plaza__bar-right { display: inline-flex; align-items: center; gap: 8px; }
+.plaza__bar .plaza__workshop { background: #fff3cd; color: #6b4a00; box-shadow: 0 0 0 2px #e0a050 inset; }
+@container plaza (max-width: 420px) { .plaza__bar strong { display: none; } .plaza__bar { justify-content: space-between; } }
 .plaza__bar button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: rgba(255,255,255,.85); color: #3e2e23; font: inherit; font-weight: 800; cursor: pointer; }
 .plaza__loading, .plaza__opening { text-align: center; padding: 40px 0; font-size: var(--ui-text-md); font-weight: 800; }
 .plaza__opening { position: fixed; inset: 0; z-index: 20400; display: grid; place-items: center; background: rgba(0,0,0,.7); color: #fff; }

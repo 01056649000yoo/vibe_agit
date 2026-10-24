@@ -32,10 +32,10 @@ function Chalkboard({ seatCount, visitors }) {
  * 학생 놀이터 모듈 입구: 우리 반 수호룡이 모인 교실. 자리를 누르면 그 친구의 아지트가 창으로 열리고,
  * 닫으면 교실로 돌아온다. `새 글`을 누르면 그 친구의 새 글 하나만 창으로 열린다. `api` 로 데이터 길을 갈아 끼울 수 있다(개발실).
  */
-export default function DragonPlazaEntry({ studentSession, isMobile, onBack, backTarget = 'playground', api = plazaApi }) {
+export default function DragonPlazaEntry({ studentSession, isMobile, onBack, backTarget = 'playground', onOpenWorkshop, myPetData, api = plazaApi }) {
     const studentId = studentSession?.id;
     const classId = studentSession?.classId || studentSession?.class_id;
-    const { status, message, seats, visitors, conquestCounts, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
+    const { status, message, seats, visitors, conquestCounts, newPosts, markSeen, reload } = useDragonPlaza(api, studentId, myPetData);
     const [openedSeat, setOpenedSeat] = useState(null);
     const { classroomReady } = useDeskArt();
 
@@ -67,7 +67,10 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, bac
             <header className="plaza__bar" inert={modalOpen || undefined}>
                 <button type="button" onClick={onBack}>{backTarget === 'home' ? '← 처음 화면' : '← 놀이터'}</button>
                 <strong>🏫 우리반 수호룡 아지트</strong>
-                <button type="button" onClick={reload} aria-label="교실 새로고침">↻</button>
+                <span className="plaza__bar-right">
+                    {onOpenWorkshop && <button type="button" className="plaza__workshop" onClick={onOpenWorkshop}>🛠 내 공방</button>}
+                    <button type="button" onClick={reload} aria-label="교실 새로고침">↻</button>
+                </span>
             </header>
 
             {status === 'error' && (
@@ -104,6 +107,7 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, bac
                         onClose={closeFriend}
                         onOpenPost={openLoadedPost}
                         presentation="modal"
+                        extraAction={onOpenWorkshop ? { label: '🛠 내 공방에서 꾸미러 가기', onClick: onOpenWorkshop } : null}
                         closeOnEscape={!reading}
                     />
                 </Suspense>
