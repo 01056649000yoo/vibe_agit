@@ -170,3 +170,16 @@ test('교실 열 수는 기기 화면이 아니라 교실 폭(@container)으로 
     assert.match(css, /@container plaza \(max-width: 599px\) \{ \.plaza__grid \{ grid-template-columns: repeat\(3/);
     assert.doesNotMatch(css, /@media \(max-width: 760px\)/, '화면 폭 기준 규칙이 남아 있습니다');
 });
+
+test('돌아가기 단추는 들어온 길에 따라 다르다: 놀이터에서 들어오면 놀이터로, 첫 화면 입구로 들어오면 첫 화면으로', async () => {
+    const [dashboard, host, entry] = await Promise.all([
+        readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
+        readFile('src/modules/game/StudentGameModuleHost.jsx', 'utf8'),
+        readFile('src/modules/game/dragon-plaza/DragonPlazaEntry.jsx', 'utf8')
+    ]);
+    assert.match(dashboard, /openGameModule\(plaza, 'home'\)/);
+    assert.match(dashboard, /if \(activeGameModuleOrigin !== 'home'\) setIsPlaygroundOpen\(true\)/);
+    assert.match(dashboard, /backTarget=\{activeGameModuleOrigin\}/);
+    assert.match(host, /backTarget,/);
+    assert.match(entry, /backTarget === 'home' \? '← 처음 화면' : '← 놀이터'/);
+});

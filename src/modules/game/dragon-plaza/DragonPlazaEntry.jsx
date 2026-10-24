@@ -32,7 +32,7 @@ function Chalkboard({ seatCount, visitors }) {
  * 학생 놀이터 모듈 입구: 우리 반 수호룡이 모인 교실. 자리를 누르면 그 친구의 아지트가 창으로 열리고,
  * 닫으면 교실로 돌아온다. `새 글`을 누르면 그 친구의 새 글 하나만 창으로 열린다. `api` 로 데이터 길을 갈아 끼울 수 있다(개발실).
  */
-export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api = plazaApi }) {
+export default function DragonPlazaEntry({ studentSession, isMobile, onBack, backTarget = 'playground', api = plazaApi }) {
     const studentId = studentSession?.id;
     const classId = studentSession?.classId || studentSession?.class_id;
     const { status, message, seats, visitors, conquestCounts, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
@@ -55,7 +55,7 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api
     return (
         <div className={`plaza${classroomReady ? ' has-photo' : ''}`} style={classroomReady ? { '--classroom': `url(${CLASSROOM_BACKGROUND})` } : undefined}>
             <header className="plaza__bar">
-                <button type="button" onClick={onBack}>← 놀이터</button>
+                <button type="button" onClick={onBack}>{backTarget === 'home' ? '← 처음 화면' : '← 놀이터'}</button>
                 <strong>🏫 우리반 수호룡 아지트</strong>
                 <button type="button" onClick={reload} aria-label="교실 새로고침">↻</button>
             </header>

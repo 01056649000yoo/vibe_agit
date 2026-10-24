@@ -15,6 +15,7 @@ const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 /** 학생 광장에서 보이는 그대로(책상에 앉은 그림 + 단계별 빛)를 한 종류씩 1~10단계로 훑어 본다. DB 없이 그림 파일만 쓴다. */
 function LevelPreview() {
     const [speciesId, setSpeciesId] = useState('star');
+    const [showEffect, setShowEffect] = useState(true); // 빛 효과를 껐다 켜며 단계별 변화를 비교한다
     return (
         <div style={{ display: 'grid', gap: 10 }}>
             <div role="tablist" aria-label="수호룡 종류" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -31,9 +32,14 @@ function LevelPreview() {
                     </button>
                 ))}
             </div>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
+                <input type="checkbox" checked={showEffect} onChange={(event) => setShowEffect(event.target.checked)} style={{ width: 20, height: 20 }} />
+                단계별 후광 효과 보기 <small style={{ color: '#64748b', fontWeight: 600 }}>(7단계부터 흰 테두리 원 후광이 생겨요)</small>
+            </label>
             <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, margin: 0, padding: 0, listStyle: 'none' }}>
                 {LEVELS.map((level) => {
-                    const tier = auraTier(level);
+                    const effectTier = auraTier(level);
+                    const tier = showEffect ? effectTier : 0;
                     const stage = getDragonStage(level, speciesId);
                     return (
                         <li key={`${speciesId}-${level}`} style={{ display: 'grid', gap: 4, justifyItems: 'center' }}>
@@ -45,7 +51,7 @@ function LevelPreview() {
                                 <span className="plaza-desk__level" aria-hidden="true">Lv.{level}</span>
                             </div>
                             <strong style={{ fontSize: 'var(--ui-text-sm)' }}>{level}단계 · {stage.name}</strong>
-                            <small style={{ color: '#64748b', fontSize: 'var(--ui-text-xs)' }}>{AURA_TIER_LABELS.at(tier)}</small>
+                            <small style={{ color: effectTier >= 3 ? '#b45309' : '#64748b', fontSize: 'var(--ui-text-xs)', fontWeight: effectTier >= 3 ? 900 : 400 }}>{AURA_TIER_LABELS.at(effectTier)}</small>
                         </li>
                     );
                 })}

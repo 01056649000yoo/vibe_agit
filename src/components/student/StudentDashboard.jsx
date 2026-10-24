@@ -53,6 +53,8 @@ const StudentDashboard = ({
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
+    // 게임 화면을 어디서 열었는지: 놀이터 목록이면 '돌아가기'가 놀이터로, 첫 화면 입구 버튼이면 첫 화면으로 간다.
+    const [activeGameModuleOrigin, setActiveGameModuleOrigin] = useState('playground');
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
@@ -257,9 +259,10 @@ const StudentDashboard = ({
         ? activityOverride.summary
         : serverActivitySummary;
 
-    const openGameModule = (module) => {
+    const openGameModule = (module, origin = 'playground') => {
         setIsPlaygroundOpen(false);
         if (module.playground?.entryMode !== 'legacy') {
+            setActiveGameModuleOrigin(origin);
             setActiveGameModuleId(module.id);
             return;
         }
@@ -375,7 +378,7 @@ const StudentDashboard = ({
                         plazaEnabled={isOn('dragon-plaza')}
                         onOpenPlaza={() => {
                             const plaza = enabledModules.find((item) => item.id === 'dragon-plaza');
-                            if (plaza) openGameModule(plaza);
+                            if (plaza) openGameModule(plaza, 'home');
                         }}
                         onOpenPoints={() => setIsPlaygroundOpen(true)}
                     />
@@ -600,9 +603,11 @@ const StudentDashboard = ({
                             points={points}
                             onPointsChange={setPoints}
                             onNavigate={onNavigate}
+                            backTarget={activeGameModuleOrigin}
                             onBack={() => {
                                 setActiveGameModuleId(null);
-                                setIsPlaygroundOpen(true);
+                                // 첫 화면 입구로 들어왔으면 놀이터를 거치지 않고 바로 첫 화면으로 돌아간다.
+                                if (activeGameModuleOrigin !== 'home') setIsPlaygroundOpen(true);
                             }}
                         />
                     </motion.div>

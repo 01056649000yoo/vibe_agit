@@ -14,7 +14,7 @@ const registerSeatForPause = (element) => {
 };
 
 /** 교사 미리보기용 한 줄 설명 */
-export const AURA_TIER_LABELS = ['빛 없음', '은은한 빛', '더 밝은 빛', '빛 + 반짝이 1개', '짙은 빛 + 반짝이 2개', '흰 중심빛 + 큰 빛', '흰 중심빛 + 👑'];
+export const AURA_TIER_LABELS = ['후광 없음', '은은한 원 후광', '더 밝은 흰 중심 후광', '흰 테두리 원 후광 + 반짝이 2개', '큰 후광 + 바깥 원 + 반짝이 3개', '가장 큰 흰 후광 세 겹', '흰 후광 세 겹 + 👑'];
 
 /** 작가 단계 → 빛깔 단계(0 없음 ~ 6 가장 화려함, 7·8·9·10 은 서로 다르다). 단계가 오를수록 책상 위 수호룡이 눈에 띄게 빛난다. */
 export const auraTier = (level) => (level >= 10 ? 6 : level >= 9 ? 5 : level >= 8 ? 4 : level >= 7 ? 3 : level >= 5 ? 2 : level >= 3 ? 1 : 0);
