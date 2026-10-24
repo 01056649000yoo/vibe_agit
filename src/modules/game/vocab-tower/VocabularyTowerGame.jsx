@@ -1,3 +1,4 @@
+import TowerCoinNotice from './TowerCoinNotice';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
@@ -632,6 +633,7 @@ const VocabularyTowerGame = ({
                                     ? `${summary.next_milestone_percent}% 목표까지 ${summary.next_milestone_remaining}개 더 익히면 +${summary.next_milestone_points}P`
                                     : `${summary.deck_number}층 포인트를 모두 모았어요.`}</small>
                         </div>
+                        <TowerCoinNotice summary={summary} />
                         <p>{Number(summary.needs_review_count || 0) > 0
                             ? `복습할 낱말 ${summary.needs_review_count}개를 다음 연습에서 먼저 만나요.`
                             : '연습 결과와 낱말별 익힘 상태는 층별로 계속 쌓여요.'}</p>

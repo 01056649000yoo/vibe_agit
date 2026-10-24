@@ -8,6 +8,7 @@ const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonSt
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
+const VocabTowerCoinPreview = lazy(() => import('./VocabTowerCoinPreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
 const NeighborBooksStudentPreview = lazy(() => import('./NeighborBooksStudentPreview.jsx'))
 const NeighborAgitStudentPreview = lazy(() => import('./NeighborAgitStudentPreview.jsx'))
@@ -125,6 +126,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '우리반 아지트 저장·공개',
     description: '초안 저장·학급 공개·충돌·원글 재확인·철회 흐름을 DB 없는 샘플로 점검한다',
     Component: ClassAgitPersistencePreview,
+  }),
+  Object.freeze({
+    id: 'vocab-tower-coin',
+    icon: '🪙',
+    title: '어휘의 탑 코인 결과 칸',
+    description: '연습 결과 창에 나오는 코인 안내의 모든 상태를 DB 없이 확인한다',
+    Component: VocabTowerCoinPreview,
   }),
   Object.freeze({
     id: 'neighbor-agit-teacher',

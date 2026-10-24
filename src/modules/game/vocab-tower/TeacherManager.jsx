@@ -38,6 +38,7 @@ import {
 const DEFAULT_CONFIG = {
     grade: 3,
     perfectRewardPoints: VOCAB_FLOOR_REWARD_DEFAULT_POINTS,
+    coinDailyLimit: 3, // 하루에 모을 수 있는 어휘의 탑 코인(0이면 코인 없음, 20261411)
     masterQuestionCount: 12,
     masterInputCount: 5,
     masterPassCorrect: 10,
@@ -123,6 +124,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             .select([
                 'vocab_tower_grade',
                 'vocab_tower_v2_perfect_reward_points',
+                'vocab_tower_coin_daily_limit',
                 'vocab_master_question_count',
                 'vocab_master_input_count',
                 'vocab_master_pass_correct',
@@ -148,6 +150,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             setConfig({
                 grade: data.vocab_tower_grade || DEFAULT_CONFIG.grade,
                 perfectRewardPoints: data.vocab_tower_v2_perfect_reward_points ?? DEFAULT_CONFIG.perfectRewardPoints,
+                coinDailyLimit: data.vocab_tower_coin_daily_limit ?? DEFAULT_CONFIG.coinDailyLimit,
                 masterQuestionCount: data.vocab_master_question_count ?? DEFAULT_CONFIG.masterQuestionCount,
                 masterInputCount: data.vocab_master_input_count ?? DEFAULT_CONFIG.masterInputCount,
                 masterPassCorrect: data.vocab_master_pass_correct ?? DEFAULT_CONFIG.masterPassCorrect,
@@ -186,7 +189,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             ...master,
             ...summitValues,
             grade: clamp(config.grade, 3, 6),
-            perfectRewardPoints: normalizeFloorRewardPoints(config.perfectRewardPoints)
+            perfectRewardPoints: normalizeFloorRewardPoints(config.perfectRewardPoints),
+            coinDailyLimit: clamp(Math.round(Number(config.coinDailyLimit)), 0, 10)
         };
         setSaving(true);
         const { error } = await supabase
@@ -194,6 +198,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             .update({
                 vocab_tower_grade: nextConfig.grade,
                 vocab_tower_v2_perfect_reward_points: nextConfig.perfectRewardPoints,
+                vocab_tower_coin_daily_limit: nextConfig.coinDailyLimit,
                 vocab_master_question_count: nextConfig.masterQuestionCount,
                 vocab_master_input_count: nextConfig.masterInputCount,
                 vocab_master_pass_correct: nextConfig.masterPassCorrect,
@@ -338,11 +343,15 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                             <span>🏆 층당 진도 보상 총액</span>
                             <input type="number" min={VOCAB_FLOOR_REWARD_MIN_POINTS} max={VOCAB_FLOOR_REWARD_MAX_POINTS} step={VOCAB_FLOOR_REWARD_STEP_POINTS} value={config.perfectRewardPoints} onChange={(event) => updateConfig('perfectRewardPoints', event.target.value)} />
                         </label>
+                        <label>
+                            <span>🪙 하루에 모을 수 있는 어휘의 탑 코인</span>
+                            <input type="number" min={0} max={10} step={1} value={config.coinDailyLimit} onChange={(event) => updateConfig('coinDailyLimit', event.target.value)} />
+                        </label>
                     </div>
                 </div>
 
                 <div className="vocab-teacher__footer-actions">
-                    <p>층당 총액을 25·50·75·100% 네 구간에 20·20·30·30%로 나눠 지급하며, 같은 구간은 한 번만 지급됩니다. 0P로 저장하면 보상을 끕니다.</p>
+                    <p>어휘의 탑 코인: 한 판을 끝까지 풀고 정답률 70% 이상(8문제 이상)이면 1개를 받고, 날이 지나도 남아 인형뽑기에서 씁니다. 한도는 처음 3개이며 0으로 저장하면 코인을 끕니다. 층당 총액을 25·50·75·100% 네 구간에 20·20·30·30%로 나눠 지급하며, 같은 구간은 한 번만 지급됩니다. 0P로 저장하면 보상을 끕니다.</p>
                     {/* 아래 덱마스터 섹션까지 한 번에 저장한다. 어느 쪽 버튼을 눌러도 결과는 같다. */}
                     <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
                         설정 저장

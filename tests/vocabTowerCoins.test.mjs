@@ -36,3 +36,22 @@ test('화면: 서버 값을 읽고, 코인이 있으면 학생이 인형뽑기�
     assert.match(manifest, /eventType: 'vocab-tower\.coin_awarded'/);
     assert.match(guide, /어휘의 탑 코인으로 인형뽑기를 해요/);
 });
+
+test('하루 한도는 학급 설정(기본 3, 0~10)이고, 연습 결과 창이 코인 여부·오늘 수·한도를 보여 준다', async () => {
+    const limit = await readFile('supabase/migrations/20261411_vocab_tower_coin_limit.sql', 'utf8');
+    assert.match(limit, /vocab_tower_coin_daily_limit SMALLINT NOT NULL DEFAULT 3/);
+    assert.match(limit, /CHECK \(vocab_tower_coin_daily_limit BETWEEN 0 AND 10\)/);
+    assert.match(limit, /v_count >= v_limit/);
+    assert.match(limit, /'tower_coin_earned'/);
+    assert.match(limit, /'tower_coin_reason'/);
+    const [game, notice, manager] = await Promise.all([
+        readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
+        readFile('src/modules/game/vocab-tower/TowerCoinNotice.jsx', 'utf8'),
+        readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8')
+    ]);
+    assert.match(game, /<TowerCoinNotice summary=\{summary\} \/>/);
+    assert.match(notice, /오늘 \$\{today\}\/\$\{cap\}개/);
+    assert.match(manager, /coinDailyLimit: 3/);
+    assert.match(manager, /vocab_tower_coin_daily_limit: nextConfig\.coinDailyLimit/);
+    assert.match(manager, /하루에 모을 수 있는 어휘의 탑 코인/);
+});

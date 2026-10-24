@@ -323,6 +323,13 @@
 .vocab-summary-card__reward span { color: #8b6518; font-weight: 900; }
 .vocab-summary-card__reward strong { color: #cf7c13; font-size: 2.4rem; }
 .vocab-summary-card__reward small { color: #8d733e; }
+.vocab-summary-card__coin { display: grid; gap: 3px; margin: 0 0 16px; padding: 14px 16px; border: 2px solid #cbd5e1; border-radius: 16px; background: #f8fafc; }
+.vocab-summary-card__coin span { color: #475569; font-weight: 900; font-size: var(--ui-text-md); }
+.vocab-summary-card__coin strong { color: #334155; font-size: var(--ui-text-xl); }
+.vocab-summary-card__coin small { color: #64748b; font-size: var(--ui-text-sm); }
+.vocab-summary-card__coin.is-earned { border-color: #e3a92f; background: #fff3c4; }
+.vocab-summary-card__coin.is-earned span { color: #8b6518; }
+.vocab-summary-card__coin.is-earned strong { color: #cf7c13; }
 .vocab-summary-card > p { color: #6c778a; font-size: .8rem; }
 .vocab-summary-card__difficulty { display: grid; gap: 4px; margin: 12px 0 0; padding: 11px 13px; border-radius: 14px; background: #eef3ff; }
 .vocab-summary-card__difficulty strong { color: #4059a0; }

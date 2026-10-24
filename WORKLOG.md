@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-24 — 어휘의 탑 코인 보완: 결과 창 안내·학급별 하루 한도 (Claude)
+- **한 일**: 선생님 요청(연습 결과 창에 코인 반영, 오늘 모은 수/한도 표시, 교사가 하루 한도 설정·기본 3)에 따라 `20261411_vocab_tower_coin_limit.sql` 작성 — `classes.vocab_tower_coin_daily_limit`(0~10, 기본 3)·지급 트리거가 학급 한도 사용·인형뽑기 컨텍스트의 한도·연습 마무리 함수가 `tower_coin_earned`·`tower_coins_today`·`tower_coin_cap`·`tower_coin_reason` 반환. 화면: 결과 창 `TowerCoinNotice`(받음·70% 미만·8문제 미만·중도·한도 채움·끔 상태별), 교사 설정 칸, 안내·도움말 문구.
+- **변경**: 마이그레이션·스모크(`tests/sql/20261411…`)·`TowerCoinNotice.jsx`·`VocabularyTowerGame.jsx`·`TeacherManager.jsx`·css·개발실 `VocabTowerCoinPreview`·`tests/vocabTowerCoins.test.mjs`·문서(FEATURE_MAP v1.26.40·OPEN_ITEMS OI-043). **운영 DB 미적용.**
+- **결과/검증**: 롤백 검증·스모크(한도 3 기본·한도 2·한도 0·마무리 함수 값 4가지 까닭·컨텍스트 한도·범위 밖 거절) 통과, 테스트·eslint 통과, 개발실에서 일곱 상태 렌더 확인.
+- **남은 것 / 다음**: OI-043 — `적용해` → 앱 배포.
+
 ## 2026-10-24 — 어휘의 탑 코인 준비: 모아 쓰는 코인 + 인형뽑기 열고 닫기 (Claude)
 - **한 일**: 선생님 결정(정답률 70% 이상, 맞춤법 코인과 별개로 날이 지나도 남는 `어휘의 탑 코인`, 학생 대시보드의 인형뽑기에서 코인이 있으면 열고 닫기)에 따라 `20261410_vocab_tower_coins.sql` 작성 — 코인 장부·`spelling_claw_plays.tower_coin_id`·지급 트리거(끝까지 마친 판 70% 이상·8문제 이상·하루 3개·판마다 한 번·실패해도 종료는 막지 않음·활동 알림)·인형뽑기 시작/컨텍스트 함수(맞춤법 코인이 없을 때만 어휘의 탑 코인 사용). 학생 화면에 `🏰 어휘의 탑 코인` 수와 `열기`/`닫기`, 어휘의 탑 안내·인형뽑기 안내·교사 도움말·알림 문구 추가.
 - **변경**: 마이그레이션·스모크(`tests/sql/20261410…`)·`ClawPlayScreen.jsx`·`clawServerSession.js`·`clawSession.js`(미리보기)·`TeacherManager.jsx`·`vocab-tower/manifest.js`·`towerGuide.js`·`clawGuide.js`·`tests/vocabTowerCoins.test.mjs`·문서(FEATURE_MAP v1.26.39·OPEN_ITEMS OI-042). **운영 DB 미적용.**
