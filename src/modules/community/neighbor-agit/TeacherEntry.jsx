@@ -1040,9 +1040,14 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
     // ③ 댓글·반응: 학생 이웃 글 마당과 같은 반별 구조(반 고르기 → 주제별 묶음). 작업 공간의 public_posts 는
     // 50편 상한이라 반별로 모으기엔 모자라 전용 조회를 쓴다(20261336).
     const renderEngageStep = () => (
-        <TeacherEngagementPanel spaceId={workspace.space.id} classId={classId}
-            kind={activeActivityTab === 'topic' ? 'topic' : 'gallery'} onOpenPost={openPostDetail}
-            refreshToken={engageRefresh} api={api} />
+        <>
+            <p className="neighbor-teacher__start-note" role="note">
+                ℹ️ 여기 댓글·공감은 <strong>이 모임 안에서만</strong> 보여요. 모임을 종료하거나 우리 반이 나가면 <strong>우리 반 글은 학급에 그대로 남지만 이 댓글·공감은 따라가지 않고 더 이상 볼 수 없어요.</strong> 남기고 싶은 말은 끝내기 전에 따로 적어 두세요.
+            </p>
+            <TeacherEngagementPanel spaceId={workspace.space.id} classId={classId}
+                kind={activeActivityTab === 'topic' ? 'topic' : 'gallery'} onOpenPost={openPostDetail}
+                refreshToken={engageRefresh} api={api} />
+        </>
     );
 
     if (loading) {
