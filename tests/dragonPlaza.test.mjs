@@ -20,6 +20,10 @@ test('모듈: 기본 켜짐, 놀이터에서 `나의 작가 수호룡` 바로 �
     assert.equal(dragonPlazaManifest.name, '우리반 수호룡 광장');
     assert.equal(dragonPlazaManifest.defaultEnabled, true);
     assert.equal(dragonPlazaManifest.performance.realtime, 'none');
+    // 놀이터 화면은 economy 가 earn/spend 인 카드만 그린다(`free` 로 두면 카드가 어디에도 안 나온다 — 2026-10-24 실제로 겪음)
+    assert.ok(['earn', 'spend'].includes(dragonPlazaManifest.playground.economy));
+    const { validateManifest } = await import('../src/modules/types.js');
+    assert.deepEqual(validateManifest(dragonPlazaManifest), []);
     const dragonOrder = await orderOf('src/modules/game/dragon/manifest.js');
     const towerOrder = await orderOf('src/modules/game/vocab-tower/manifest.js');
     assert.ok(dragonPlazaManifest.playground.order > dragonOrder, '`나의 작가 수호룡` 아래여야 합니다.');

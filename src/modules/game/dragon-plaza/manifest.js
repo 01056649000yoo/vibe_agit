@@ -22,8 +22,9 @@ export const dragonPlazaManifest = {
     description: '우리 반 수호룡이 모인 교실 구경하기',
     background: 'linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)',
     borderColor: '#C5E1A5',
-    economy: 'free',
-    pointLabel: '구경하기',
+    // 놀이터는 `얻기`·`쓰기` 두 묶음뿐이다. 광장은 공방에서 쓴 포인트로 꾸민 아지트를 뽐내는 곳이라 `쓰기` 묶음, `나의 작가 수호룡` 바로 아래.
+    economy: 'spend',
+    pointLabel: '꾸민 아지트 뽐내기',
     ctaLabel: '교실 들어가기',
     // 놀이터 목록에서 `나의 작가 수호룡`(10) 바로 아래
     order: 11,
