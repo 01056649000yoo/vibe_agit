@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import { getMissionReactionOptions } from '../../writing/mission-types/registry';
@@ -7,10 +7,12 @@ const POST_COLUMNS = 'id, title, content, student_id, mission_id, created_at, up
 
 /** 친구의 공개 글 한 편을 불러온다(글쓴이 학생·학급이 맞고 공개일 때만). 책장의 글 열기와 같은 조건이다. */
 export const loadPlazaPost = async ({ postId, friend, classId }) => {
+    if (!classId) throw new Error('학급 번호를 찾지 못했어요(no-class)');
     const { data, error } = await supabase.from('student_posts').select(POST_COLUMNS)
         .eq('class_id', classId).eq('id', postId).eq('student_id', friend.id)
         .eq('is_submitted', true).eq('visibility', 'class').maybeSingle();
-    if (error || !data) return null;
+    if (error) throw new Error(`글을 읽지 못했어요(${error.code || 'query'}: ${error.message || ''})`);
+    if (!data) return null;
     const [mission, reactions] = await Promise.all([
         data.mission_id
             ? supabase.from('writing_missions').select('id, title, allow_comments, mission_type, input_template').eq('class_id', classId).eq('id', data.mission_id).maybeSingle()
@@ -34,7 +36,7 @@ export const loadPlazaPost = async ({ postId, friend, classId }) => {
  */
 export default function PlazaPostModal({ post: givenPost, postId, friend, studentSession, classId: givenClassId, classmates, isMobile, onClose }) {
     const [post, setPost] = useState(givenPost || null);
-    const [failed, setFailed] = useState(false);
+    const [failed, setFailed] = useState(null); // 실패 이유(null 이면 정상)
     const classId = givenClassId || studentSession?.classId || studentSession?.class_id;
 
     useEffect(() => {
@@ -42,8 +44,11 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
         let alive = true;
         void loadPlazaPost({ postId, friend, classId }).then((loaded) => {
             if (!alive) return;
-            if (loaded) setPost(loaded); else setFailed(true);
-        }, () => { if (alive) setFailed(true); });
+            if (loaded) setPost(loaded); else setFailed('이 글은 비공개로 바뀌었거나 더 이상 볼 수 없어요. 🔒');
+        }, (error) => {
+            console.warn('[dragon-plaza] 새 글 열기 실패', error);
+            if (alive) setFailed(error?.message || '알 수 없는 이유로 글을 열지 못했어요.');
+        });
         return () => { alive = false; };
     }, [givenPost, postId, friend, classId]);
 
@@ -51,7 +56,7 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
         return (
             <div role="alertdialog" aria-label="글을 열 수 없어요" className="plaza-postfail" onMouseDown={onClose}>
                 <div onMouseDown={(event) => event.stopPropagation()}>
-                    <p>이 글은 비공개로 바뀌었거나 더 이상 볼 수 없어요. 🔒</p>
+                    <p>{failed}</p>
                     <button type="button" onClick={onClose}>닫기</button>
                 </div>
             </div>
@@ -63,6 +68,7 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
     }
     const mission = post.mission_id ? post.writing_missions : null;
     return (
+        <PostBoundary onClose={onClose}>
         <PostDetailModal
             key={post.id}
             post={post}
@@ -75,5 +81,23 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
             classmates={classmates}
             enforcePublicAccess
         />
+        </PostBoundary>
     );
+}
+
+class PostBoundary extends Component {
+    state = { message: '' };
+    static getDerivedStateFromError(error) { return { message: error?.message || '글 화면에서 오류가 났어요.' }; }
+    componentDidCatch(error) { console.warn('[dragon-plaza] 글 화면 오류', error); }
+    render() {
+        if (!this.state.message) return this.props.children;
+        return (
+            <div role="alertdialog" aria-label="글 화면 오류" className="plaza-postfail" onMouseDown={this.props.onClose}>
+                <div onMouseDown={(event) => event.stopPropagation()}>
+                    <p>글 화면을 여는 중 오류가 났어요. ({this.state.message})</p>
+                    <button type="button" onClick={this.props.onClose}>닫기</button>
+                </div>
+            </div>
+        );
+    }
 }
