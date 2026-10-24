@@ -42,3 +42,7 @@
 .plaza-seat__new { position: absolute; top: -6px; right: 2px; z-index: 4; min-height: 30px; padding: 0 12px; border: 2px solid #fff; border-radius: 999px; background: #e11d48; color: #fff; font: inherit; font-size: var(--ui-text-sm); font-weight: 900; cursor: pointer; box-shadow: 0 3px 8px rgba(225,29,72,.4); animation: plaza-new-pulse 1.8s ease-in-out infinite; }
 @keyframes plaza-new-pulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .plaza-seat__new { animation: none; } }
+
+/* 앉은 그림(책상 앞면에 비어 있는 이름표 자리가 있음)을 쓰는 책상: 이름표를 그 자리 위에 올린다 */
+.plaza-desk.has-art .plaza-plate { bottom: 25%; width: 52%; }
+.plaza-desk.has-art .plaza-desk__ring { background: rgba(255,255,255,.28); }
