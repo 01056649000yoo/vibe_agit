@@ -172,7 +172,7 @@ test('새로 옮긴 평어·수호룡 화면도 실패 창 전에 잠금을 풀�
     }
 
     const dragonFailures = [...dragon.matchAll(/\} catch \([^)]*\) \{([\s\S]*?)\n        \} finally \{/g)];
-    assert.equal(dragonFailures.length, 6, '수호룡 실패 갈래 수가 바뀌었다');
+    assert.equal(dragonFailures.length, 7, '수호룡 실패 갈래 수가 바뀌었다(공방 세트 구입 갈래 추가, 2026-10-24)');
     for (const [, block] of dragonFailures) {
         assert.ok(block.indexOf('setIsBusy(false)') >= 0
             && block.indexOf('setIsBusy(false)') < block.indexOf('await ask('),

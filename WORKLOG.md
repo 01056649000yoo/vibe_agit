@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-24 — 아지트 공방: 못 사는 까닭 안내와 세트 한 번에 사기 (Claude)
+- **한 일**: 레벨이 안 맞아 구입이 안 될 때 알려 달라는 요청과 "일부를 가졌으면 나머지만 살까요?/세트를 한 번에 사기"를 만들었다. 상품마다 까닭(작가·소통 단계, 포인트 부족) 문장, 세트 카드 잠금 표시, 세트 구입 안내 패널(5개 상태·요약·남은 값), `세트 한 번에 구입`/`나머지 M개 구입`과 확인 질문. [원인: 소통 단계가 모자라도 `작가 N단계 필요`로 나오고 세트에는 아무 안내가 없었음]
+- **변경**: `collectionAvailability.js`(판단 한 곳)·`BackgroundShopModal.jsx`·css·`useDragonPet.js`·`StudentDashboard.jsx`·`20261412_dragon_decor_set_purchase.sql`(기존 `buy_my_dragon_decor` 를 한 거래로 묶음, 레벨 기준을 새로 두지 않음)·스모크·`tests/dragonDecorSetPurchase.test.mjs`·개발실 `WorkshopSetPurchasePreview`·FEATURE_MAP v1.26.42·OPEN_ITEMS OI-044. **운영 DB 미적용.**
+- **결과/검증**: 롤백 검증·스모크(나머지만 사기 600P·다시 사도 0원·레벨 모자란 상품이 끼면 전부 취소·빈 목록 거절) 통과, 개발실에서 일곱 세트 카드·확인창·구입 뒤 `모두 가지고 있어요`·레벨 부족 세트 안내 확인, 테스트·eslint 통과.
+- **남은 것 / 다음**: OI-044 — `적용해` → 앱 배포.
+
 ## 2026-10-24 — 어휘의 탑 정복 완료를 덱마스터 도전 자격과 일치 (Claude)
 - **한 일**: 정복 완료가 떴는데 덱마스터가 안 열리는 혼동(정복=한 판 만점, 도전=낱말 80% 익힘)을 없애려고, 지도의 `정복 완료`·깃발·요약을 서버의 도전 자격(`master_eligible`)과 같게 하고, 한 판 만점은 `⭐ 만점`으로 따로 보임. 아직이면 카드에 `정복까지 N개 더 익히기`. 어휘의 탑 안내·교사 도움말·시험 문구 정리.
 - **변경**: `V2DeckMap.jsx`·css·`towerGuide.js`·`teacherGuides.js`·`tests/vocabTower.test.mjs`·개발실 `VocabTowerDeckMapPreview`·FEATURE_MAP v1.26.41. DB 변경 없음.

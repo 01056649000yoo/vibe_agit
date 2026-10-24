@@ -15,6 +15,7 @@ import {
     hasDragonLegendaryReward,
     normalizeDragonDecor
 } from './decorCatalog';
+import { describeCollectionAvailability, getCollectionAvailability, getItemAvailability } from './collectionAvailability';
 import './BackgroundShopModal.css';
 
 const BackgroundShopModal = ({
@@ -26,6 +27,7 @@ const BackgroundShopModal = ({
     readerLevel,
     ownerName,
     buyDecorItem,
+    buyDecorSet,
     claimLegendaryReward,
     equipDecorItem,
     isBusy
@@ -33,6 +35,7 @@ const BackgroundShopModal = ({
     const [activeSlot, setActiveSlot] = useState('wallpaper');
     const [previewEquipped, setPreviewEquipped] = useState(null);
     const [previewCollectionId, setPreviewCollectionId] = useState(null);
+    const [confirmingSet, setConfirmingSet] = useState(false);
     const [notice, setNotice] = useState('장착한 모습은 친구 아지트에도 그대로 보여요.');
     const decor = useMemo(() => normalizeDragonDecor(petData), [petData]);
     const items = getDragonDecorItemsForSlot(activeSlot);
@@ -40,8 +43,11 @@ const BackgroundShopModal = ({
     const writerLevel = Number(petData?.level || 1);
     const currentReaderLevel = Number(typeof readerLevel === 'object' ? readerLevel?.level : readerLevel) || 1;
     const hasLegendaryReward = hasDragonLegendaryReward(petData);
+    const selectedCollection = previewCollectionId ? DRAGON_DECOR_COLLECTIONS.find((collection) => collection.id === previewCollectionId) : null;
+    const shopContext = { writerLevel, readerLevel: currentReaderLevel, points: Number(points || 0), ownedIds: decor.owned };
     const canClaimLegendaryReward = writerLevel >= DRAGON_LEGENDARY_REWARD.requiredWriterLevel
         && currentReaderLevel >= DRAGON_LEGENDARY_REWARD.requiredReaderLevel;
+    const selectedAvailability = selectedCollection ? getCollectionAvailability(getDragonDecorCollectionItems(selectedCollection.id), shopContext) : null;
     const previewPetData = useMemo(() => {
         if (!previewEquipped) return petData;
         return {
@@ -56,6 +62,15 @@ const BackgroundShopModal = ({
     const handleBuy = async (item) => {
         const success = await buyDecorItem(item);
         if (success) setNotice(`${item.name}을(를) 구입했어요. 이제 장착할 수 있어요.`);
+    };
+
+    // 세트 한 번에(또는 가진 것을 뺀 나머지만) 사기. 사기 전에 한 번 더 물어본다.
+    const handleBuySet = async () => {
+        if (!selectedCollection || !selectedAvailability) return;
+        const ids = selectedAvailability.rows.filter((row) => ['buyable', 'points'].includes(row.status)).map((row) => row.item.id);
+        setConfirmingSet(false);
+        const done = await buyDecorSet?.(ids);
+        if (done) setNotice(`${selectedCollection.name} 세트에서 ${done.purchased}개를 구입했어요(${done.spent.toLocaleString('ko-KR')}P). 이제 장착할 수 있어요.`);
     };
 
     const handleEquip = async (item) => {
@@ -79,6 +94,7 @@ const BackgroundShopModal = ({
     const previewCollection = (collection) => {
         setPreviewEquipped({ ...collection.items });
         setPreviewCollectionId(collection.id);
+        setConfirmingSet(false);
         setNotice(collection.acquisitionType === 'achievement'
             ? `${collection.name} 전체 조합이에요. 두 칭호를 달성하면 5종을 한 번에 선물로 받아요.`
             : `${collection.name} 전체 조합이에요. 상품은 하나씩 구입하고 장착할 수 있어요.`);
@@ -153,8 +169,9 @@ const BackgroundShopModal = ({
                                 </div>
                                 <div className="agit-workshop__collection-list">
                                     {DRAGON_DECOR_COLLECTIONS.map((collection, index) => {
-                                        const totalPrice = getDragonDecorCollectionItems(collection.id)
-                                            .reduce((sum, item) => sum + Number(item.price || 0), 0);
+                                        const collectionItems = getDragonDecorCollectionItems(collection.id);
+                                        const totalPrice = collectionItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
+                                        const availability = getCollectionAvailability(collectionItems, shopContext);
                                         return (
                                             <button
                                                 key={collection.id}
@@ -167,10 +184,56 @@ const BackgroundShopModal = ({
                                                 <span>{String(index + 1).padStart(2, '0')}</span>
                                                 <strong>{collection.name}</strong>
                                                 <small>{collection.acquisitionType === 'achievement' ? '달성 선물' : `${collection.levelFree ? '자유 구매 · ' : ''}${totalPrice.toLocaleString('ko-KR')}P`}</small>
+                                                {collection.acquisitionType !== 'achievement' && availability.levelLocked > 0 && (
+                                                    <em className="agit-workshop__collection-lock">🔒 {availability.maxWriter > 1 ? `작가 ${availability.maxWriter}단계` : `소통 ${availability.maxReader}단계`}이 되면 전부 구입</em>
+                                                )}
                                             </button>
                                         );
                                     })}
                                 </div>
+                                {selectedCollection && selectedCollection.acquisitionType !== 'achievement' && (
+                                    <div className="agit-workshop__collection-detail" role="status" aria-live="polite">
+                                        <strong>{selectedCollection.name} 세트 구입 안내</strong>
+                                        <p>{describeCollectionAvailability(selectedAvailability)}</p>
+                                        <ul>
+                                            {selectedAvailability.rows.map((row) => (
+                                                <li key={row.item.id} className={`is-${row.status}`}>
+                                                    <span>{DRAGON_DECOR_SLOTS.find((slot) => slot.id === row.item.slot)?.name} · {row.item.name}</span>
+                                                    <b>{row.status === 'buyable' ? `${Number(row.item.price || 0).toLocaleString('ko-KR')}P` : row.text}</b>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        {(() => {
+                                            const remaining = selectedAvailability.buyable + selectedAvailability.pointsShort;
+                                            const price = selectedAvailability.remainingPrice;
+                                            if (remaining === 0 && selectedAvailability.levelLocked === 0) return <small>이 세트는 모두 가지고 있어요.</small>;
+                                            const owned = selectedAvailability.owned;
+                                            if (selectedAvailability.levelLocked > 0) {
+                                                const need = [selectedAvailability.maxWriter > 1 ? `작가 ${selectedAvailability.maxWriter}단계` : null, selectedAvailability.maxReader > 1 ? `소통 ${selectedAvailability.maxReader}단계` : null].filter(Boolean).join('·');
+                                                return <small>🔒 {need}가 되면 세트를 한 번에 살 수 있어요. 지금은 위에서 살 수 있는 상품을 하나씩 구입해요.</small>;
+                                            }
+                                            if (Number(points || 0) < price) return <small>세트를 한 번에 사려면 {price.toLocaleString('ko-KR')}P가 필요해요(지금 {(price - Number(points || 0)).toLocaleString('ko-KR')}P 모자라요).</small>;
+                                            if (confirmingSet) {
+                                                return (
+                                                    <div className="agit-workshop__set-confirm">
+                                                        <p>{owned > 0
+                                                            ? `이미 가진 ${owned}개는 빼고, 나머지 ${remaining}개를 ${price.toLocaleString('ko-KR')}P에 살까요?`
+                                                            : `세트 ${remaining}개를 한 번에 ${price.toLocaleString('ko-KR')}P에 살까요?`}</p>
+                                                        <span>
+                                                            <Button size="sm" variant="primary" disabled={isBusy} onClick={handleBuySet}>네, 구입해요</Button>
+                                                            <Button size="sm" variant="ghost" disabled={isBusy} onClick={() => setConfirmingSet(false)}>아니요</Button>
+                                                        </span>
+                                                    </div>
+                                                );
+                                            }
+                                            return (
+                                                <Button size="sm" variant="primary" disabled={isBusy} onClick={() => setConfirmingSet(true)}>
+                                                    {owned > 0 ? `나머지 ${remaining}개 구입 · ${price.toLocaleString('ko-KR')}P` : `세트 한 번에 구입 · ${price.toLocaleString('ko-KR')}P`}
+                                                </Button>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="agit-workshop__tabs" role="tablist" aria-label="꾸미기 슬롯">
@@ -247,16 +310,8 @@ const BackgroundShopModal = ({
                                                     )}
                                                 </div>
                                                 <strong>{item.name}</strong>
-                                                <small>
-                                                    {isEquipped
-                                                        ? '현재 장착 중'
-                                                        : isOwned
-                                                            ? '보유 중'
-                                                            : isReward
-                                                                ? '작가 10 · 소통 7 달성 선물'
-                                                                : isLocked
-                                                                    ? `작가 ${item.requiredWriterLevel}단계 필요`
-                                                                    : `${Number(item.price || 0).toLocaleString()}P`}
+                                                <small className={isLocked ? 'agit-workshop__item-need' : undefined}>
+                                                    {getItemAvailability(item, { ...shopContext, equippedId: Reflect.get(decor.equipped, item.slot) }).text}
                                                 </small>
                                             </div>
                                             {isOwned ? (

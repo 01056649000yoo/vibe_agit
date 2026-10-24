@@ -8,6 +8,7 @@ const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonSt
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
+const WorkshopSetPurchasePreview = lazy(() => import('./WorkshopSetPurchasePreview.jsx'))
 const VocabTowerDeckMapPreview = lazy(() => import('./VocabTowerDeckMapPreview.jsx'))
 const VocabTowerCoinPreview = lazy(() => import('./VocabTowerCoinPreview.jsx'))
 const NeighborAgitTeacherPreview = lazy(() => import('./NeighborAgitTeacherPreview.jsx'))
@@ -127,6 +128,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '우리반 아지트 저장·공개',
     description: '초안 저장·학급 공개·충돌·원글 재확인·철회 흐름을 DB 없는 샘플로 점검한다',
     Component: ClassAgitPersistencePreview,
+  }),
+  Object.freeze({
+    id: 'workshop-set-purchase',
+    icon: '🛠️',
+    title: '아지트 공방 세트 구입 안내',
+    description: '레벨이 모자란 세트·가진 것을 뺀 나머지 구입·한 번에 구입 확인창을 DB 없이 눌러 본다',
+    Component: WorkshopSetPurchasePreview,
   }),
   Object.freeze({
     id: 'vocab-tower-deckmap',

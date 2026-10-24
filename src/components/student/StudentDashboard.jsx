@@ -160,7 +160,7 @@ const StudentDashboard = ({
     const {
         petData, isFlashing, isBusy,
         confirmDialog: dragonDialog, notice: dragonNotice,
-        handleBond, buyDecorItem, claimLegendaryReward, equipDecorItem, selectSpecies, acknowledgeGrowth
+        handleBond, buyDecorItem, buyDecorSet, claimLegendaryReward, equipDecorItem, selectSpecies, acknowledgeGrowth
     } = useDragonPet(
         studentSession?.id,
         points,
@@ -556,6 +556,7 @@ const StudentDashboard = ({
                             readerLevel={readerLevel}
                             ownerName={studentSession?.name}
                             buyDecorItem={buyDecorItem}
+                            buyDecorSet={buyDecorSet}
                             claimLegendaryReward={claimLegendaryReward}
                             equipDecorItem={equipDecorItem}
                             isBusy={isBusy}

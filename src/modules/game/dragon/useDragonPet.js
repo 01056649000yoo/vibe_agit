@@ -158,6 +158,32 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         }
     };
 
+    // 세트(또는 세트의 나머지)를 한 번에 산다. 서버가 한 거래로 묶어 하나라도 못 사면 전부 취소한다(20261412).
+    const buyDecorSet = async (itemIds) => {
+        if (points === undefined || points === null || isBusy || !itemIds?.length) return null;
+        setIsBusy(true);
+        try {
+            const { data, error } = await supabase.rpc('buy_my_dragon_decor_set_v1', { p_item_ids: itemIds });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || '세트 구입 실패');
+            setPoints(data.new_points);
+            setPetData(normalizePetData(data.pet_data));
+            return { purchased: Number(data.purchased_count) || 0, spent: Number(data.spent_points) || 0 };
+        } catch (err) {
+            console.error('아지트 세트 구매 실패:', err.message);
+            setIsBusy(false);
+            await ask({
+                title: '세트를 사지 못했어요',
+                body: '포인트는 그대로 있고, 아무것도 사지 않았어요. 레벨이나 포인트를 확인하고 다시 눌러 주세요.',
+                confirmLabel: '알겠어요',
+                acknowledgeOnly: true
+            });
+            return null;
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
     const equipDecorItem = async (slotId, itemId) => {
         if (isBusy) return false;
         setIsBusy(true);
@@ -278,6 +304,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         isBusy,
         handleBond,
         buyDecorItem,
+        buyDecorSet,
         claimLegendaryReward,
         equipDecorItem,
         selectSpecies,
