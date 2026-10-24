@@ -16,7 +16,7 @@ function Chalkboard({ seatCount, visitors }) {
     const more = info.empty ? 0 : info.names.length - shown.length;
     return (
         <section className="plaza-board" aria-label="칠판">
-            <h2>우리반 수호룡 광장 <small>{seatCount}명이 앉아 있어요</small></h2>
+            <h2>우리반 수호룡 아지트 <small>{seatCount}명이 앉아 있어요</small></h2>
             <div className="plaza-board__visitors">
                 <strong>{info.title}</strong>
                 {info.empty
@@ -35,7 +35,7 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
     const studentId = studentSession?.id;
     const { status, message, seats, visitors, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
     const [openedSeat, setOpenedSeat] = useState(null);
-    const { available, classroomReady } = useDeskArt(seats.map((seat) => seat.speciesId));
+    const { classroomReady } = useDeskArt();
 
     const openPost = (post) => {
         if (post?.id) markSeen(post.id);
@@ -46,7 +46,7 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
         <div className={`plaza${classroomReady ? ' has-photo' : ''}`} style={classroomReady ? { '--classroom': `url(${CLASSROOM_BACKGROUND})` } : undefined}>
             <header className="plaza__bar">
                 <button type="button" onClick={onBack}>← 놀이터</button>
-                <strong>🏫 우리반 수호룡 광장</strong>
+                <strong>🏫 우리반 수호룡 아지트</strong>
                 <button type="button" onClick={reload} aria-label="교실 새로고침">↻</button>
             </header>
 
@@ -63,7 +63,6 @@ export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, a
                             <div role="listitem" key={seat.id}>
                                 <PlazaDesk
                                     seat={seat}
-                                    hasDeskArt={Boolean(available[seat.speciesId])}
                                     newPost={newPosts.get(seat.id)}
                                     onOpen={setOpenedSeat}
                                     onOpenNewPost={(_, post) => openPost(post)}

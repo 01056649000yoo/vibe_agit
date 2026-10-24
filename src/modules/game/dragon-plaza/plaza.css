@@ -1,4 +1,4 @@
-/* 우리반 수호룡 광장: 교실 배경 + 칠판 + 책상 줄. 글자는 디자인 토큰(0.9rem 이상)을 쓴다. */
+/* 우리반 수호룡 아지트: 교실 배경 + 칠판 + 책상 줄. 글자는 디자인 토큰(0.9rem 이상)을 쓴다. */
 .plaza { min-height: 100vh; padding: 12px 14px 28px; background: linear-gradient(180deg, #e9f3e3 0%, #f6efe1 38%, #d9b98a 38.1%, #c9a273 100%); color: #3e2e23; }
 .plaza.has-photo { background: #e0a050 repeating-linear-gradient(0deg, rgba(120,70,20,.06) 0 2px, transparent 2px 58px); }
 /* 교실 사진: 칠판·창문·게시판이 보이는 위쪽. 사진의 칠판 자리에 이번 주 방문자 글씨를 올린다(태블릿·PC). */

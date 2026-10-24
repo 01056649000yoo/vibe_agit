@@ -1,5 +1,5 @@
 /**
- * 우리반 수호룡 광장 교사 화면. 교사가 정하거나 올릴 것은 없다 — 켜고 끄는 스위치는 놀이터 관리 화면의 공통 스위치가 맡는다.
+ * 우리반 수호룡 아지트 교사 화면. 교사가 정하거나 올릴 것은 없다 — 켜고 끄는 스위치는 놀이터 관리 화면의 공통 스위치가 맡는다.
  * (교사 활용 방법은 구현 뒤 선생님 결정으로 이어서 붙인다. docs/CLASS_DRAGON_ROOM_PLAN.md)
  */
 export default function DragonPlazaTeacherManager() {

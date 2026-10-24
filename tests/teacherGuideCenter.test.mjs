@@ -78,7 +78,7 @@ test('교사 도움말 31개는 빠짐없이 활용 안내서의 큰 흐름과 �
     // 2026-10-01: 관리자 시험 모듈의 도움말(`adminOnly`)은 공개 전이라 세지도 잇지도 않는다.
     // 2026-10-02 에 29 → 30: `spelling-claw`(수호룡의 인형뽑기)를 학생에게 열며 포인트·동기부여 흐름에 연결했다.
     const publicGuideIds = Object.keys(TEACHER_GUIDES).filter((guideId) => !Reflect.get(TEACHER_GUIDES, guideId).adminOnly);
-    // 2026-10-24 에 30 → 31: `dragon-plaza`(우리반 수호룡 광장)를 놀이 활동 흐름에 연결했다.
+    // 2026-10-24 에 30 → 31: `dragon-plaza`(우리반 수호룡 아지트)를 놀이 활동 흐름에 연결했다.
     assert.equal(publicGuideIds.length, 31);
     for (const guideId of publicGuideIds) {
         assert.ok(getJourneysForGuide(guideId).length > 0, `${guideId}: 연결된 활용 안내서가 없다`);

@@ -6,7 +6,7 @@ import {
     buildSeats, deskColumns, describeVisitors, markPostSeen, NEW_POST_DAYS, pickNewPosts, readSeenPosts
 } from '../src/modules/game/dragon-plaza/plazaModel.js';
 
-// 우리반 수호룡 광장(2026-10-24): 교실 자리·책상 장식·새 글 표시·이번 주 방문자 칠판.
+// 우리반 수호룡 아지트(2026-10-24): 교실 자리·책상 장식·새 글 표시·이번 주 방문자 칠판.
 const row = (id, name, extra = {}) => ({ id, name, pet_data: { species: 'star', equippedDecor: {} }, writer_total_chars: 0, writer_completed_posts: 0, ...extra });
 const memoryStorage = () => {
     const data = new Map();
@@ -17,7 +17,7 @@ const orderOf = async (path) => Number((await readFile(path, 'utf8')).match(/pla
 
 test('모듈: 기본 켜짐, 놀이터에서 `나의 작가 수호룡` 바로 아래, 학생 입구와 교사 화면이 있다', async () => {
     assert.equal(dragonPlazaManifest.id, 'dragon-plaza');
-    assert.equal(dragonPlazaManifest.name, '우리반 수호룡 광장');
+    assert.equal(dragonPlazaManifest.name, '우리반 수호룡 아지트');
     assert.equal(dragonPlazaManifest.defaultEnabled, true);
     assert.equal(dragonPlazaManifest.performance.realtime, 'none');
     // 놀이터 화면은 economy 가 earn/spend 인 카드만 그린다(`free` 로 두면 카드가 어디에도 안 나온다 — 2026-10-24 실제로 겪음)

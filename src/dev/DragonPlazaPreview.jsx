@@ -1,6 +1,6 @@
 import DragonPlazaEntry from '../modules/game/dragon-plaza/DragonPlazaEntry.jsx'
 
-// 우리반 수호룡 광장 — 서로 다른 단계·종류·공방 장식의 반 친구 12명을 DB 없이 보여 준다(2026-10-24).
+// 우리반 수호룡 아지트 — 서로 다른 단계·종류·공방 장식의 반 친구 12명을 DB 없이 보여 준다(2026-10-24).
 const SPECIES = ['star', 'forest', 'ember', 'moon']
 const FRAMES = ['default', 'sunny-garden', 'wave-harbor', 'sky', 'forest', 'volcano', 'moon', 'crystal', 'rune', 'galaxy', 'storm', 'dreamlight-library']
 const PLATES = ['nameplate-sunny-garden', 'nameplate-brass', 'nameplate-ember', '', 'nameplate-crystal', '', 'nameplate-celestial', '', '', 'nameplate-sunny-garden', '', '']

@@ -1,5 +1,5 @@
 /**
- * 우리반 수호룡 광장 모듈 (2026-10-24 선생님 결정).
+ * 우리반 수호룡 아지트 모듈 (2026-10-24 선생님 결정).
  *
  * 반 친구의 수호룡이 한 교실에 모여 책상에 앉아 있고, 자리를 누르면 그 친구의 아지트가 열린다.
  * 친구 아지트를 서로 구경하며 교류하는 곳이라 "내 아지트를 꾸밀 동기"가 된다. 교사가 정하거나 올릴 것은 없다
@@ -7,7 +7,7 @@
  */
 export const dragonPlazaManifest = {
   id: 'dragon-plaza',
-  name: '우리반 수호룡 광장',
+  name: '우리반 수호룡 아지트',
   description: '우리 반 수호룡이 모인 교실에서 친구 아지트를 구경해요',
   icon: '🏫',
   part: 'game',
@@ -18,7 +18,7 @@ export const dragonPlazaManifest = {
   studentEntry: () => import('./DragonPlazaEntry'),
   teacherEntry: () => import('./TeacherManager'),
   playground: {
-    name: '우리반 수호룡 광장',
+    name: '우리반 수호룡 아지트',
     description: '우리 반 수호룡이 모인 교실 구경하기',
     background: 'linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)',
     borderColor: '#C5E1A5',
@@ -30,5 +30,5 @@ export const dragonPlazaManifest = {
     order: 11,
     entryMode: 'standard'
   },
-  management: { title: '우리반 수호룡 광장', subtitle: '켜고 끄기만 있어요', order: 11, activeColor: '#2E7D32' }
+  management: { title: '우리반 수호룡 아지트', subtitle: '켜고 끄기만 있어요', order: 11, activeColor: '#2E7D32' }
 };

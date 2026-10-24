@@ -133,7 +133,7 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
   Object.freeze({
     id: 'dragon-plaza',
     icon: '🏫',
-    title: '우리반 수호룡 광장',
+    title: '우리반 수호룡 아지트',
     description: '학급 수호룡이 모인 교실·책상 이름표·프레임 빛 테두리·새 글·이번 주 방문자 칠판을 DB 없이 확인한다',
     Component: DragonPlazaPreview,
   }),

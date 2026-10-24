@@ -34,7 +34,7 @@ const LoadingCard = ({ message }) => (
 
 /** 공개 칭호·드래곤·서재와 둘 사이의 기록만 보여 주는 친구 공간. */
 const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) => {
-    // 어디로 들어오든(친구 아지트 목록·우리반 수호룡 광장) 친구 아지트를 열면 "놀러 왔다"는 신호를 남긴다(20261413).
+    // 어디로 들어오든(친구 아지트 목록·우리반 수호룡 아지트) 친구 아지트를 열면 "놀러 왔다"는 신호를 남긴다(20261413).
     // 실패해도 화면은 그대로 — 기록은 덤이다. 같은 친구는 서버가 10분 안 재방문을 한 번으로 센다.
     const friendId = friend?.id;
     useEffect(() => {
