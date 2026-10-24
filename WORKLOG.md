@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-24 — 우리 반 드래곤 교실 계획 정리 (Claude)
+- **한 일**: 포인트 사용처를 넓히는 논의(학급 기부함·친구 선물 등)에서 선생님이 "친구 아지트를 교류하는 교실 광장 — 내 아지트를 꾸밀 동기"로 방향을 정함. 쇼케이스·교사 관리 제외, 기본 켜짐, 그림은 GPT로. 계획서와 GPT 그림 의뢰서를 작성하고 OI-045로 등록. 현재 드래곤 그림은 4종×10단계 서 있는 모습(1~2단계는 알)이라 책상에 앉은 그림 40장+교실 배경 1장이 필요함을 확인.
+- **변경**: `docs/CLASS_DRAGON_ROOM_PLAN.md`·`docs/CLASS_DRAGON_ROOM_ART_BRIEF.md`·OPEN_ITEMS OI-045. 코드·DB 변경 없음.
+- **결과/검증**: 친구 목록 RPC(`get_student_hideout_directory`)가 `pet_data`(종류·단계·장착 장식)를 이미 주므로 새 RPC 없이 교실을 그릴 수 있음을 확인. 포인트 흐름 조사(30일: 글쓰기 보상 54만P가 대부분, 쓴 포인트는 공방 구입 17.6만P가 전부, 학생 중앙값 100P).
+- **남은 것 / 다음**: OI-045(`진행` 대기).
+
 ## 2026-10-24 — 아지트 공방: 못 사는 까닭 안내와 세트 한 번에 사기 (Claude)
 - **한 일**: 레벨이 안 맞아 구입이 안 될 때 알려 달라는 요청과 "일부를 가졌으면 나머지만 살까요?/세트를 한 번에 사기"를 만들었다. 상품마다 까닭(작가·소통 단계, 포인트 부족) 문장, 세트 카드 잠금 표시, 세트 구입 안내 패널(5개 상태·요약·남은 값), `세트 한 번에 구입`/`나머지 M개 구입`과 확인 질문. [원인: 소통 단계가 모자라도 `작가 N단계 필요`로 나오고 세트에는 아무 안내가 없었음]
 - **변경**: `collectionAvailability.js`(판단 한 곳)·`BackgroundShopModal.jsx`·css·`useDragonPet.js`·`StudentDashboard.jsx`·`20261412_dragon_decor_set_purchase.sql`(기존 `buy_my_dragon_decor` 를 한 거래로 묶음, 레벨 기준을 새로 두지 않음)·스모크·`tests/dragonDecorSetPurchase.test.mjs`·개발실 `WorkshopSetPurchasePreview`·FEATURE_MAP v1.26.42·OPEN_ITEMS OI-044. **운영 DB 미적용.**
