@@ -391,6 +391,11 @@ const NeighborAgitStudentEntry = ({ spaceId, params, onBack, onNavigate, api = n
                 )}
             </header>
 
+            <aside className="neighbor-student-page__note" role="note">
+                <strong>📌 알아 두어요</strong>
+                <span>여기에서 주고받은 댓글과 공감은 <b>이 모임 안에서만</b> 보여요. 모임이 끝나거나 우리 반이 나가면 <b>내가 쓴 글은 우리 반에 그대로 남지만, 댓글과 공감은 더 이상 볼 수 없어요.</b> 오래 기억하고 싶은 말은 미리 공책에 적어 두세요.</span>
+            </aside>
+
             {activeSection === null ? (
                 /* 로비: 세 공간의 입구. 방에 들어간다는 느낌이 아이들에게 가장 쉽다. 숫자는 이미 받은 피드에서 센다. */
                 <nav className="neighbor-student-lobby" aria-label="모두의 아지트 공간 고르기">

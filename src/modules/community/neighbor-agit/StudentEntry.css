@@ -232,3 +232,6 @@
 .neighbor-post-card:hover { background: var(--ui-surface); color: inherit; }
 .neighbor-student-lobby__door:hover { background: linear-gradient(160deg, var(--space-soft), var(--ui-surface) 70%); color: var(--space-ink); }
 .neighbor-student-room__lobby:hover, .neighbor-student-room__switch button:hover { background: var(--space-soft); color: var(--space-ink); box-shadow: none; }
+
+.neighbor-student-page__note { display: grid; gap: 4px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid #bcd4f0; border-left: 5px solid #3b82c4; border-radius: 12px; background: #f0f7ff; color: #334e68; font-size: var(--ui-text-md); line-height: 1.6; }
+.neighbor-student-page__note strong { color: #1f4e8c; font-size: var(--ui-text-lg); }
