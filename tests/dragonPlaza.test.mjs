@@ -224,3 +224,15 @@ test('GPT 검토 반영: 새 글 창은 공개하지 않은 처음 글을 요청
     assert.match(entry, /inert=\{modalOpen \|\| undefined\}/, '창이 열리면 뒤 교실은 조작되지 않는다');
     assert.match(shell, /dialogRef\.current\?\.focus\(\)/, '창이 열리면 포커스가 창으로 간다');
 });
+
+test('GPT 재검토 반영: 글 창 Esc·처음 글 두 번째 요청의 공개 조건·정복 카드 캐시는 학생별', async () => {
+    const [modal, card, tool] = await Promise.all([
+        readFile('src/modules/game/dragon-plaza/PlazaPostModal.jsx', 'utf8'),
+        readFile('src/modules/community/friends-hideout/profile/cards/FriendTowerConquestCard.jsx', 'utf8'),
+        readFile('scripts/code-map.mjs', 'utf8')
+    ]);
+    assert.match(modal, /event\.key === 'Escape'\) onClose\?\.\(\)/, '글 창이 Esc 로 닫힌다');
+    assert.match(modal, /\.eq\('is_submitted', true\)\.eq\('visibility', 'class'\)\.eq\('show_original', true\)/, '처음 글 요청도 공개 조건을 지킨다');
+    assert.match(card, /cached\.viewerId !== viewerId/, '캐시는 보는 학생마다 따로');
+    assert.match(tool, /unlinkSync\(COUNT_FILE\)/, '지도 묶음 단계가 실패하면 다음에 다시 시도한다');
+});

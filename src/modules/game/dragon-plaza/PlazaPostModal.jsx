@@ -19,7 +19,8 @@ export const loadPlazaPost = async ({ postId, friend, classId }) => {
     let original = { original_title: null, original_content: null };
     if (data.show_original) {
         const { data: originalRow } = await supabase.from('student_posts').select('original_title, original_content')
-            .eq('class_id', classId).eq('id', postId).eq('student_id', friend.id).eq('show_original', true).maybeSingle();
+            .eq('class_id', classId).eq('id', postId).eq('student_id', friend.id)
+            .eq('is_submitted', true).eq('visibility', 'class').eq('show_original', true).maybeSingle();
         original = { original_title: originalRow?.original_title ?? null, original_content: originalRow?.original_content ?? null };
     }
     const [mission, reactions] = await Promise.all([
@@ -46,6 +47,13 @@ export default function PlazaPostModal({ post: givenPost, postId, friend, studen
     const [post, setPost] = useState(givenPost || null);
     const [failed, setFailed] = useState(null); // 실패 이유(null 이면 정상)
     const classId = givenClassId || studentSession?.classId || studentSession?.class_id;
+
+    // 글 창이 맨 위에 있을 때 Esc 로 닫는다(친구 창의 Esc 는 이때 꺼져 있다). 불러오는 중·실패 화면도 같다.
+    useEffect(() => {
+        const onKey = (event) => { if (event.key === 'Escape') onClose?.(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
 
     useEffect(() => {
         if (givenPost || !postId || !friend?.id) return undefined;

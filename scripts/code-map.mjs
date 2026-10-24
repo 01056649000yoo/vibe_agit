@@ -14,7 +14,7 @@
  * 코드(src/)만 읽는다: 로컬 분석이라 외부로 나가는 것이 없고 API 키가 필요 없다. 문서·PDF·이미지는 일부러 넣지 않는다.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { isMapSource, needsEnglishName, needsFullRescan, staleReason } from './codeMapPolicy.mjs';
@@ -64,7 +64,10 @@ export const refreshIfStale = (bin, { quiet = false } = {}) => {
     const extract = run(bin, ['extract', SRC, '--code-only', '--out', OUT], current.full || current.graphMtimeMs == null ? { GRAPHIFY_FORCE: '1' } : {});
     if (extract.status !== 0) { if (!quiet) console.error(`[코드 지도] 만들지 못했어요: ${(extract.stderr || '').split('\n').filter(Boolean).at(-1) || '알 수 없음'}`); return false; }
     const cluster = run(bin, ['cluster-only', OUT, '--no-label', '--no-viz']);
-    if (cluster.status !== 0) { if (!quiet) console.error('[코드 지도] 묶음 단계가 실패해 지도를 낡은 것으로 둡니다.'); return false; }
+    if (cluster.status !== 0) {
+        // 다음 조회가 다시 시도하도록 파일 수 기록을 지운다(지도 파일 시각만 새로워져 "신선"으로 보이는 것을 막는다).
+        try { unlinkSync(COUNT_FILE); } catch { /* 없으면 그대로 */ }
+        if (!quiet) console.error('[코드 지도] 묶음 단계가 실패해 지도를 낡은 것으로 둡니다.'); return false; }
     writeFileSync(COUNT_FILE, String(current.currentFileCount));
     return true;
 };
