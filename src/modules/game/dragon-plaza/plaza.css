@@ -1,15 +1,15 @@
 /* 우리반 수호룡 광장: 교실 배경 + 칠판 + 책상 줄. 글자는 디자인 토큰(0.9rem 이상)을 쓴다. */
 .plaza { min-height: 100vh; padding: 12px 14px 28px; background: linear-gradient(180deg, #e9f3e3 0%, #f6efe1 38%, #d9b98a 38.1%, #c9a273 100%); color: #3e2e23; }
 .plaza.has-photo { background: var(--classroom) center top / cover no-repeat, #d9b98a; }
-.plaza__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 1080px; margin: 0 auto 10px; }
+.plaza__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 1180px; margin: 0 auto 10px; }
 .plaza__bar strong { font-size: var(--ui-text-lg); }
 .plaza__bar button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: rgba(255,255,255,.85); color: #3e2e23; font: inherit; font-weight: 800; cursor: pointer; }
 .plaza__loading, .plaza__opening { text-align: center; padding: 40px 0; font-size: var(--ui-text-md); font-weight: 800; }
 .plaza__opening { position: fixed; inset: 0; z-index: 10001; display: grid; place-items: center; background: rgba(0,0,0,.7); color: #fff; }
 .plaza__error { max-width: 560px; margin: 20px auto; padding: 14px; border-radius: 14px; background: #fff5f5; color: #b91c1c; font-weight: 800; text-align: center; }
-.plaza__hint { max-width: 1080px; margin: 14px auto 0; text-align: center; color: #5b4630; font-size: var(--ui-text-sm); font-weight: 700; }
+.plaza__hint { max-width: 1180px; margin: 14px auto 0; text-align: center; color: #5b4630; font-size: var(--ui-text-sm); font-weight: 700; }
 
-.plaza-board { max-width: 1080px; margin: 0 auto 16px; padding: 16px 20px; border: 8px solid #8a5a2c; border-radius: 14px; background: #2f5d46; color: #f5f9f3; box-shadow: inset 0 0 22px rgba(0,0,0,.35), 0 6px 14px rgba(60,40,20,.3); }
+.plaza-board { max-width: 1180px; margin: 0 auto 16px; padding: 16px 20px; border: 8px solid #8a5a2c; border-radius: 14px; background: #2f5d46; color: #f5f9f3; box-shadow: inset 0 0 22px rgba(0,0,0,.35), 0 6px 14px rgba(60,40,20,.3); }
 .plaza-board h2 { margin: 0 0 8px; font-size: var(--ui-text-xl); }
 .plaza-board h2 small { margin-left: 8px; color: #cfe5d6; font-size: var(--ui-text-sm); font-weight: 700; }
 .plaza-board__visitors strong { display: block; font-size: var(--ui-text-md); color: #ffe9a8; }
@@ -17,12 +17,11 @@
 .plaza-board__visitors ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
 .plaza-board__visitors li { padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.16); font-size: var(--ui-text-md); font-weight: 800; }
 
-.plaza__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px 12px; max-width: 1080px; margin: 0 auto; }
-@media (max-width: 820px) { .plaza__grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px 8px; } }
-@media (max-width: 520px) { .plaza__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.plaza__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 16px; max-width: 1180px; margin: 0 auto; }
+@media (max-width: 760px) { .plaza__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; } }
 
 .plaza-seat { position: relative; }
-.plaza-desk { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1.08; padding: 0; border: 0; background: none; cursor: pointer; overflow: visible; font: inherit; }
+.plaza-desk { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1.14; padding: 0; border: 0; background: none; cursor: pointer; overflow: visible; font: inherit; }
 .plaza-desk:disabled { cursor: default; }
 .plaza-desk:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; border-radius: 18px; }
 .plaza-desk__ring { position: absolute; inset: 2px; border: 3px solid var(--frame, #a97848); border-radius: 18px; background: rgba(255,255,255,.38); box-shadow: 0 0 14px 2px var(--glow, #a97848); }
@@ -30,7 +29,7 @@
 .plaza-desk__dragon { position: absolute; left: 50%; bottom: 36%; width: var(--dragon-size, 70%); max-height: 62%; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 4px 3px rgba(60,40,20,.28)); }
 .plaza-desk__top { position: absolute; left: 8%; right: 8%; bottom: 31%; height: 9%; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, #c18a4f, #a06a35); box-shadow: 0 3px 0 #7a4f26; }
 .plaza-desk__front { position: absolute; left: 12%; right: 12%; bottom: 7%; height: 25%; border-radius: 2px 2px 8px 8px; background: linear-gradient(180deg, #a06a35, #86552a); }
-.plaza-desk__art { position: absolute; inset: 4% 4% 14% 4%; width: 92%; height: 82%; object-fit: contain; }
+.plaza-desk__art { position: absolute; top: 3%; left: 0; width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; }
 .plaza-plate { position: absolute; left: 50%; bottom: 9%; z-index: 2; width: 74%; aspect-ratio: 2.35; transform: translateX(-50%); }
 .plaza-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 1px rgba(45,31,21,.3)); }
 .plaza-plate > span { position: absolute; z-index: 1; top: var(--nameplate-copy-top, 50%); left: 50%; width: var(--nameplate-copy-width, 80%); overflow: hidden; color: #3e2415; font-size: max(.8rem, calc(var(--nameplate-thumbnail-size, .33rem) * 2.5)); font-weight: 950; letter-spacing: -.03em; text-align: center; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px rgba(255,255,255,.5); transform: translate(-50%, -50%); }
@@ -44,5 +43,7 @@
 @media (prefers-reduced-motion: reduce) { .plaza-seat__new { animation: none; } }
 
 /* 앉은 그림(책상 앞면에 비어 있는 이름표 자리가 있음)을 쓰는 책상: 이름표를 그 자리 위에 올린다 */
-.plaza-desk.has-art .plaza-plate { bottom: 25%; width: 52%; }
+.plaza-desk.has-art .plaza-plate { bottom: 27%; width: 68%; }
+.plaza-desk.has-art .plaza-plate > span { width: 90%; font-size: clamp(.82rem, 1.5vw, 1.08rem); }
+.plaza-desk.has-art .plaza-plate.is-plain > span { width: 94%; }
 .plaza-desk.has-art .plaza-desk__ring { background: rgba(255,255,255,.28); }
