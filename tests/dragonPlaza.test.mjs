@@ -143,3 +143,21 @@ test('새 글 창은 놀이터 게임 화면(zIndex 20000)보다 위에 뜬다 �
     assert.match(modal, /zIndex=\{PLAZA_POST_Z_INDEX\}/);
     assert.match(detail, /zIndex = 10002/);
 });
+
+test('새 글 단추를 누르면 그 친구의 안 본 새 글이 모두 읽음 처리되어 표시가 사라진다', () => {
+    const now = Date.parse('2026-10-25T00:00:00Z');
+    const feed = [
+        { id: 'a2', student_id: 's2', title: '둘째', feed_published_at: '2026-10-24T10:00:00Z' },
+        { id: 'a1', student_id: 's2', title: '첫째', feed_published_at: '2026-10-23T10:00:00Z' },
+        { id: 'b1', student_id: 's3', title: '다른 친구', feed_published_at: '2026-10-24T09:00:00Z' }
+    ];
+    const first = pickNewPosts(feed, {}, 'me', now);
+    assert.equal(first.get('s2').id, 'a2');
+    assert.deepEqual([...first.get('s2').ids].sort(), ['a1', 'a2']);
+    const store = new Map();
+    const storage = { getItem: (key) => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
+    const seen = markPostSeen('me', first.get('s2').ids, storage, now);
+    const after = pickNewPosts(feed, seen, 'me', now);
+    assert.equal(after.has('s2'), false, '여러 편이어도 표시가 사라져야 한다');
+    assert.equal(after.get('s3').id, 'b1', '다른 친구의 새 글은 그대로');
+});

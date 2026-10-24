@@ -47,7 +47,8 @@ export default function DragonPlazaEntry({ studentSession, isMobile, onBack, api
         setReading({ post });
     };
     const openNewPost = (seat, post) => {
-        if (post?.id) markSeen(post.id);
+        // 그 친구의 안 본 새 글을 모두 읽은 것으로 쳐서, 누르면 표시가 확실히 사라진다(글이 여러 편이어도).
+        markSeen(post?.ids?.length ? post.ids : post?.id);
         setReading({ postId: post?.id, friend: seat.row });
     };
 

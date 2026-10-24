@@ -55,16 +55,17 @@ export const readSeenPosts = (studentId, storage = globalThis.localStorage) => {
     }
 };
 
-export const markPostSeen = (studentId, postId, storage = globalThis.localStorage, now = Date.now()) => {
-    if (!studentId || !postId) return {};
-    const seen = { ...readSeenPosts(studentId, storage), [postId]: now };
+export const markPostSeen = (studentId, postIds, storage = globalThis.localStorage, now = Date.now()) => {
+    const ids = [postIds].flat().filter(Boolean); // 글 하나 또는 여러 편
+    if (!studentId || ids.length === 0) return {};
+    const seen = { ...readSeenPosts(studentId, storage), ...Object.fromEntries(ids.map((id) => [id, now])) };
     const trimmed = Object.fromEntries(Object.entries(seen).sort((a, b) => b[1] - a[1]).slice(0, SEEN_LIMIT));
     try { storage?.setItem(`dragon-plaza:seen:${studentId}`, JSON.stringify(trimmed)); } catch { /* 저장 못 해도 화면은 그대로 */ }
     return trimmed;
 };
 
 /**
- * 친구별로 "아직 열어 보지 않은 가장 최근 공개 글" 하나를 고른다.
+ * 친구별로 "아직 열어 보지 않은 가장 최근 공개 글" 하나를 고른다(안 본 글이 더 있으면 `ids` 에 모두 담는다).
  * 공개 글 목록(최신순)과 이 기기의 읽은 기록만 쓴다 — 서버에 읽음 표를 늘리지 않는다.
  */
 export const pickNewPosts = (feedItems, seen, myId, now = Date.now()) => {
@@ -76,8 +77,12 @@ export const pickNewPosts = (feedItems, seen, myId, now = Date.now()) => {
         const publishedAt = Date.parse(post.feed_published_at || post.published_at || post.created_at || '');
         if (!Number.isFinite(publishedAt) || publishedAt < oldest) continue;
         const current = result.get(studentId);
+        // `ids` 는 그 친구의 아직 안 본 새 글 전부 — 새 글 단추를 누르면 한꺼번에 읽은 것으로 쳐서 표시가 사라진다.
+        const ids = [...(current?.ids || []), post.id];
         if (!current || publishedAt > current.publishedAt) {
-            result.set(studentId, { id: post.id, title: post.title || '새 글', publishedAt });
+            result.set(studentId, { id: post.id, title: post.title || '새 글', publishedAt, ids });
+        } else {
+            current.ids = ids;
         }
     }
     return result;
