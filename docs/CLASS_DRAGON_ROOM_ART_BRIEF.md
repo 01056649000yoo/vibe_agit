@@ -1,4 +1,4 @@
-# 우리 반 드래곤 교실 — GPT 그림 의뢰서
+# 우리반 드래곤 광장 — GPT 그림 의뢰서
 
 > 계획: [CLASS_DRAGON_ROOM_PLAN.md](CLASS_DRAGON_ROOM_PLAN.md). 만드는 사람: 선생님(ChatGPT 이미지 생성). 이 파일은 **프롬프트 틀과 파일 규칙**이다.
 
