@@ -38,7 +38,9 @@ export const buildSeat = (row, { isMe = false } = {}) => {
 
 /** 교실 자리 순서: 이름 가나다순으로 고정(누가 어디 있는지 외울 수 있게). 내 자리도 그 순서 안에 들어간다. */
 export const buildSeats = (classmates, me) => {
-    const seats = (classmates || []).filter((row) => row?.id && row.id !== me?.id).map((row) => buildSeat(row));
+    const unique = new Map();
+    for (const row of classmates || []) if (row?.id && row.id !== me?.id && !unique.has(row.id)) unique.set(row.id, row); // 같은 학생이 두 번 와도 자리는 하나
+    const seats = [...unique.values()].map((row) => buildSeat(row));
     if (me?.id) seats.push(buildSeat(me, { isMe: true }));
     return seats.sort((a, b) => koreanCompare(a.name, b.name) || String(a.id).localeCompare(String(b.id)));
 };
@@ -48,8 +50,13 @@ export const deskColumns = (width) => (width <= 520 ? 3 : width <= 820 ? 4 : wid
 
 /* ---------------- 새 글 표시 ---------------- */
 
+/** `localStorage` 를 읽는 것 자체가 막힌 환경(사생활 보호·쿠키 차단)에서는 getter 가 예외를 던진다 — 그때는 저장소가 없는 것으로 본다. */
+const defaultStorage = () => {
+    try { return globalThis.localStorage; } catch { return null; }
+};
+
 /** 이 기기에서 읽은 글 기록(없으면 빈 기록). 저장소를 못 쓰는 환경에서도 화면은 그대로 돈다. */
-export const readSeenPosts = (studentId, storage = globalThis.localStorage) => {
+export const readSeenPosts = (studentId, storage = defaultStorage()) => {
     try {
         const parsed = JSON.parse(storage?.getItem(`dragon-plaza:seen:${studentId}`) || '{}');
         return parsed && typeof parsed === 'object' ? parsed : {};
@@ -58,11 +65,13 @@ export const readSeenPosts = (studentId, storage = globalThis.localStorage) => {
     }
 };
 
-export const markPostSeen = (studentId, postIds, storage = globalThis.localStorage, now = Date.now()) => {
-    const ids = [postIds].flat().filter(Boolean); // 글 하나 또는 여러 편
+export const markPostSeen = (studentId, postIds, storage = defaultStorage(), now = Date.now()) => {
+    const ids = [...new Set([postIds].flat().filter(Boolean))]; // 글 하나 또는 여러 편(중복 제거)
     if (!studentId || ids.length === 0) return {};
     const seen = { ...readSeenPosts(studentId, storage), ...Object.fromEntries(ids.map((id) => [id, now])) };
-    const trimmed = Object.fromEntries(Object.entries(seen).sort((a, b) => b[1] - a[1]).slice(0, SEEN_LIMIT));
+    // 시각이 같으면 방금 읽은 글이 먼저 남도록 앞에 둔다(정렬은 안정적이다).
+    const entries = [...ids.map((id) => [id, now]), ...Object.entries(seen).filter(([id]) => !ids.includes(id))];
+    const trimmed = Object.fromEntries(entries.sort((a, b) => b[1] - a[1]).slice(0, SEEN_LIMIT));
     try { storage?.setItem(`dragon-plaza:seen:${studentId}`, JSON.stringify(trimmed)); } catch { /* 저장 못 해도 화면은 그대로 */ }
     return trimmed;
 };
@@ -81,7 +90,7 @@ export const pickNewPosts = (feedItems, seen, myId, now = Date.now()) => {
         if (!Number.isFinite(publishedAt) || publishedAt < oldest) continue;
         const current = result.get(studentId);
         // `ids` 는 그 친구의 아직 안 본 새 글 전부 — 새 글 단추를 누르면 한꺼번에 읽은 것으로 쳐서 표시가 사라진다.
-        const ids = [...(current?.ids || []), post.id];
+        const ids = [...new Set([...(current?.ids || []), post.id])];
         if (!current || publishedAt > current.publishedAt) {
             result.set(studentId, { id: post.id, title: post.title || '새 글', publishedAt, ids });
         } else {

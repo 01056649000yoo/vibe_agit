@@ -63,7 +63,8 @@ export const refreshIfStale = (bin, { quiet = false } = {}) => {
     if (!quiet) console.error(`[코드 지도] ${current.reason} — 다시 만드는 중…`);
     const extract = run(bin, ['extract', SRC, '--code-only', '--out', OUT], current.full || current.graphMtimeMs == null ? { GRAPHIFY_FORCE: '1' } : {});
     if (extract.status !== 0) { if (!quiet) console.error(`[코드 지도] 만들지 못했어요: ${(extract.stderr || '').split('\n').filter(Boolean).at(-1) || '알 수 없음'}`); return false; }
-    run(bin, ['cluster-only', OUT, '--no-label', '--no-viz']);
+    const cluster = run(bin, ['cluster-only', OUT, '--no-label', '--no-viz']);
+    if (cluster.status !== 0) { if (!quiet) console.error('[코드 지도] 묶음 단계가 실패해 지도를 낡은 것으로 둡니다.'); return false; }
     writeFileSync(COUNT_FILE, String(current.currentFileCount));
     return true;
 };

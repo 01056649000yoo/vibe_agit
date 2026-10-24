@@ -8,7 +8,7 @@ import './ActivityNotificationPanel.css';
 
 const EMPTY_SUMMARY = Object.freeze({ version: 1, unread_count: 0, latest: null });
 
-const NotificationDetailModal = ({ initialEvent, onClose, onRead, onReadAll, onAction }) => {
+const NotificationDetailModal = ({ initialEvent, totalCount = 0, onClose, onRead, onReadAll, onAction }) => {
     const [items, setItems] = useState(initialEvent ? [initialEvent] : []);
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -135,7 +135,7 @@ const NotificationDetailModal = ({ initialEvent, onClose, onRead, onReadAll, onA
                             <small>이 버튼을 누르면 확인한 알림으로 처리돼요.</small>
                             {items.length > 1 && (
                                 <button type="button" className="activity-notification-modal__all" onClick={handleConfirmAll} disabled={saving}>
-                                    {confirmingAll ? `정말 알림 ${items.length}개를 모두 확인할까요? (한 번 더 누르세요)` : `밀린 알림 모두 확인하기 (${items.length}개)`}
+                                    {confirmingAll ? `정말 알림 ${Math.max(totalCount, items.length)}개를 모두 확인할까요? (한 번 더 누르세요)` : `밀린 알림 모두 확인하기 (${Math.max(totalCount, items.length)}개)`}
                                 </button>
                             )}
                         </>
@@ -243,6 +243,7 @@ const ActivityNotificationPanel = ({
             {modalOpen && (
                 <NotificationDetailModal
                     initialEvent={latest}
+                    totalCount={unreadCount}
                     onClose={closeModal}
                     onRead={handleRead}
                     onReadAll={handleReadAll}

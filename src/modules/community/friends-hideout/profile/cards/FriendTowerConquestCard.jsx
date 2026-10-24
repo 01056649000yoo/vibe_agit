@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../../lib/supabaseClient';
 
+// 친구 창을 열 때마다 반 전체를 다시 읽지 않게, 같은 응답을 30초 동안 나눠 쓴다.
+let cached = null;
+const loadConquests = () => {
+    if (!cached || Date.now() - cached.at > 30000) {
+        cached = { at: Date.now(), promise: supabase.rpc('get_class_vocab_conquests_v1').then((result) => { if (result.error) cached = null; return result; }, (error) => { cached = null; throw error; }) };
+    }
+    return cached.promise;
+};
+
 /**
  * 친구가 정복한 어휘의 탑 덱(번호만). 정답률·점수·틀린 낱말은 서버가 돌려주지 않는다(`get_class_vocab_conquests_v1`).
  * 같은 반 친구만 보이고, 읽지 못하면(아직 적용 전·네트워크) 카드는 조용히 사라진다.
@@ -9,7 +18,7 @@ export default function FriendTowerConquestCard({ friendId, friendName }) {
     const [state, setState] = useState({ status: 'loading', decks: [], grade: null });
     useEffect(() => {
         let alive = true;
-        void supabase.rpc('get_class_vocab_conquests_v1').then(({ data, error }) => {
+        void loadConquests().then(({ data, error }) => {
             if (!alive) return;
             if (error) { setState({ status: 'hidden', decks: [], grade: null }); return; }
             const row = (data?.students || []).find((item) => item.student_id === friendId);

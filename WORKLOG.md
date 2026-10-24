@@ -22,6 +22,12 @@
 > - **결과/검증**: …
 > - **남은 것 / 다음**: …
 > ```
+## 2026-10-25 — 오늘 코드 총점검(GPT 교차 검토·시뮬레이션) 반영 + 공지 초안 (Claude)
+- **한 일**: 오늘 변경분(37개 파일)을 GPT(Codex gpt-6.1-sol)에게 독립 검토·시뮬레이션 맡기고(45개 검사 중 38개 기대와 일치, 7개 달랐음) 코드로 확인해 고침: ① 저장소 getter 예외 시 교실이 안 열리던 것 ② 연속 읽음 때 앞서 읽은 기록을 잃던 것·같은 시각 기록 탈락 ③ 새로고침 연타 때 옛 응답이 덮던 것 ④ 새 글 창이 공개하지 않은 처음 글 컬럼을 요청하던 것(공개한 글만 따로 요청) ⑤ 글이 열린 뒤에야 읽음 처리 ⑥ 친구 창 Esc 순서·뒤 교실 조작 막기(inert)·포커스 이동·복귀 ⑦ 모두 확인 문구를 전체 개수로 ⑧ 글 창 닫기 함수 고정(공개 확인 요청 반복 방지) ⑨ 정복 카드 30초 공유 ⑩ 같은 학생·같은 글 id 중복 제거 ⑪ 코드 지도 묶음 단계 실패 알림.
+- **변경**: dragon-plaza(Entry·PostModal·Model·useDragonPlaza)·FriendProfileShell·ActivityNotificationPanel·FriendTowerConquestCard·code-map.mjs·tests·docs/NOTICE_plaza_2026-10-25.md. 받아들인 것(고치지 않음): 학급 100명 초과 정복 배지(교사 현황 함수와 같은 100명 상한)·정복 판정이 앱 `정복 완료`와 같은 정의라는 점.
+- **결과/검증**: 시험 1729 통과·eslint 0·화면 시험 95 통과. 실제 DB 21명 대조 불일치 0·반환 필드 2개뿐·anon 실행 불가. 가짜 서버 화면 시뮬레이션(게임 화면 20000 위 글 창·Esc·포커스·inert) 통과. 40자리 후광 켠 채 75fps(끈 채 70fps).
+- **남은 것**: OI-045(선택 개선). 공지 게시는 선생님.
+
 ## 2026-10-25 — 코드 지도(Graphify) 시험 도입: 자동 갱신·recall 연결 (Claude)
 - **한 일**: Graphify 설치(코드만 `--code-only`, 로컬 분석·API 키 없음, 결과는 저장소 밖 `~/graphify/vibe-agit`). `npm run map -- affected|explain|query|path|status|update` 도구를 만들고, 조회할 때마다 "지도 이후 소스가 바뀌었나·파일 수가 달라졌나(지운 파일 포함)"를 보아 낡았을 때만 알아서 다시 만들게 함(4~6초, 훅·상주 프로세스 없음). `npm run recall` 에 ⑥ "이 파일을 부르는 곳" 추가. 도구가 없으면 안내 한 줄만(다른 컴퓨터·모델에서 안 깨짐).
 - **변경**: scripts/code-map.mjs·codeMapPolicy.mjs·recall.mjs·package.json(`map`)·docs/wiki/CODE_MAP.md·SESSION_RULES 한 줄·wiki README 한 줄·tests/codeMap.test.mjs.

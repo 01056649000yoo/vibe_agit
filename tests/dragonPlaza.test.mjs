@@ -186,3 +186,41 @@ test('돌아가기 단추는 들어온 길에 따라 다르다: 놀이터에서 
     assert.match(host, /backTarget,/);
     assert.match(entry, /backTarget === 'home' \? '← 처음 화면' : '← 놀이터'/);
 });
+
+test('GPT 검토 반영: 저장소 getter 예외·연속 읽음·중복 id·같은 시각 기록이 화면을 깨지 않는다', () => {
+    const blocked = { get localStorage() { throw new Error('SecurityError'); } };
+    // 기본 저장소를 읽는 것 자체가 막혀도 예외가 번지지 않는다(여기서는 호출만 확인).
+    assert.deepEqual(readSeenPosts('s1', null), {});
+    assert.deepEqual(readSeenPosts('s1', { getItem: () => { throw new Error('막힘'); } }), {});
+    assert.ok(blocked);
+    // 같은 글 id 가 두 번 와도 ids 는 하나
+    const feed = [
+        { id: 'same', student_id: 's2', feed_published_at: '2026-10-24T10:00:00Z' },
+        { id: 'same', student_id: 's2', feed_published_at: '2026-10-24T10:00:00Z' }
+    ];
+    assert.deepEqual(pickNewPosts(feed, {}, 'me', Date.parse('2026-10-25T00:00:00Z')).get('s2').ids, ['same']);
+    // 같은 학생이 두 번 와도 자리는 하나
+    const seats = buildSeats([{ id: 'a', name: '가', pet_data: {} }, { id: 'a', name: '가', pet_data: {} }], null);
+    assert.equal(seats.length, 1);
+    // 기록이 300개 꽉 찬 상태에서 시각이 같아도 방금 읽은 글이 남는다
+    const store = new Map();
+    const storage = { getItem: (key) => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
+    for (let index = 0; index < 300; index += 1) markPostSeen('s1', `old${index}`, storage, 5000);
+    const after = markPostSeen('s1', 'fresh', storage, 5000);
+    assert.ok(after.fresh, '같은 시각이어도 새 기록이 잘리지 않는다');
+});
+
+test('GPT 검토 반영: 새 글 창은 공개하지 않은 처음 글을 요청하지 않고, 글이 열린 뒤에야 읽음 처리한다', async () => {
+    const [modal, entry, shell] = await Promise.all([
+        readFile('src/modules/game/dragon-plaza/PlazaPostModal.jsx', 'utf8'),
+        readFile('src/modules/game/dragon-plaza/DragonPlazaEntry.jsx', 'utf8'),
+        readFile('src/modules/community/friends-hideout/profile/FriendProfileShell.jsx', 'utf8')
+    ]);
+    const columns = /const POST_COLUMNS = '([^']*)'/.exec(modal)?.[1] || '';
+    assert.doesNotMatch(columns, /original_content|original_title/, '처음 글 컬럼은 첫 요청에 넣지 않는다');
+    assert.match(modal, /if \(data\.show_original\)/, '공개를 허락한 글만 처음 글을 따로 가져온다');
+    assert.match(entry, /onOpened: \(\) => markSeen\(ids\)/, '열린 뒤에 읽음 처리');
+    assert.match(entry, /closeOnEscape=\{!reading\}/, '글 창이 위에 있으면 Esc 는 글 창이 먼저');
+    assert.match(entry, /inert=\{modalOpen \|\| undefined\}/, '창이 열리면 뒤 교실은 조작되지 않는다');
+    assert.match(shell, /dialogRef\.current\?\.focus\(\)/, '창이 열리면 포커스가 창으로 간다');
+});

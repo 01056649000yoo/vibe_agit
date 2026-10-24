@@ -1,4 +1,4 @@
-import React, { memo, Suspense, useEffect } from 'react';
+import React, { memo, Suspense, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
@@ -33,7 +33,7 @@ const LoadingCard = ({ message }) => (
 );
 
 /** 공개 칭호·드래곤·서재와 둘 사이의 기록만 보여 주는 친구 공간. */
-const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, presentation = 'page' }) => {
+const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, presentation = 'page', closeOnEscape = true }) => {
     const isModal = presentation === 'modal';
     // 어디로 들어오든(친구 아지트 목록·우리반 수호룡 아지트) 친구 아지트를 열면 "놀러 왔다"는 신호를 남긴다(20261413).
     // 실패해도 화면은 그대로 — 기록은 덤이다. 같은 친구는 서버가 10분 안 재방문을 한 번으로 센다.
@@ -45,11 +45,17 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, pr
 
     // 모달로 열렸을 때 Esc 로 닫는다(전체 화면판은 기존 그대로).
     useEffect(() => {
-        if (!isModal) return undefined;
+        if (!isModal || !closeOnEscape) return undefined; // 위에 글 창이 떠 있으면 Esc 는 그 글 창이 먼저 닫는다
         const onKey = (event) => { if (event.key === 'Escape') onClose?.(); };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [isModal, onClose]);
+    }, [isModal, closeOnEscape, onClose]);
+
+    // 모달로 열리면 창으로 포커스를 옮긴다(키보드 사용자). 닫을 때 되돌리는 일은 연 쪽이 맡는다.
+    const dialogRef = useRef(null);
+    useEffect(() => {
+        if (isModal) dialogRef.current?.focus();
+    }, [isModal]);
 
     if (!friend?.id || !viewerId) return null;
 
@@ -76,6 +82,8 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, pr
             role="dialog"
             aria-modal="true"
             aria-label={`${friend.name}의 아지트`}
+            ref={dialogRef}
+            tabIndex={-1}
             {...(isModal ? modalMotion : pageMotion)}
             style={frameStyle}
             onMouseDown={isModal ? (event) => { if (event.target === event.currentTarget) onClose?.(); } : undefined}
