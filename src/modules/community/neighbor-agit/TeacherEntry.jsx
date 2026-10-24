@@ -1072,6 +1072,17 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                 </div>
             </header>
 
+            {/* 학급당 모임 하나 규칙(2026-10-24 선생님 결정: 호스트든 게스트든 한 학급은 하나). 상태에 맞춰 늘 보인다. */}
+            <aside className="neighbor-teacher__rule" role="note" aria-label="모임 개수 안내">
+                <strong>📌 한 학급은 모임 하나만 (호스트든 게스트든)</strong>
+                <span>
+                    {!workspace.space
+                        ? <>지금 {activeClass?.name || '이 학급'}은 참여한 모임이 없어요. 모임을 <b>새로 열거나</b> 초대 코드로 <b>들어가는 것</b> 중 하나만 할 수 있어요.</>
+                        : <>지금 {activeClass?.name || '이 학급'}은 <b>‘{workspace.space.name}’</b>에 {workspace.space.my_role === 'host' ? '호스트' : '게스트'}{workspace.space.my_status === 'pending' ? '로 신청 중' : '로 참여 중'}이에요. 다른 모임을 하려면 먼저 {workspace.space.my_status === 'pending' ? '신청을 취소해야' : workspace.space.my_role === 'host' ? '공간을 종료해야' : '이 공간에서 나가야'} 해요.</>}
+                    {' '}학급이 여러 개인 선생님은 학급마다 따로 모임을 가질 수 있어요(위쪽 학급 선택).
+                </span>
+            </aside>
+
             {message && <p className="neighbor-teacher__message" role="status">{message}</p>}
             {errorMessage && <p className="neighbor-teacher__message neighbor-teacher__message--error" role="alert">{errorMessage}</p>}
 
