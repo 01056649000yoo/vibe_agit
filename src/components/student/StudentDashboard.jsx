@@ -594,6 +594,7 @@ const StudentDashboard = ({
                             isMobile={isMobile}
                             points={points}
                             onPointsChange={setPoints}
+                            onNavigate={onNavigate}
                             onBack={() => {
                                 setActiveGameModuleId(null);
                                 setIsPlaygroundOpen(true);

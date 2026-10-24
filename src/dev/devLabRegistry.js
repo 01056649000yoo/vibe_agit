@@ -8,6 +8,7 @@ const ReadingMarathonStudentCardPreview = lazy(() => import('./ReadingMarathonSt
 const FeedbackPhrasePreview = lazy(() => import('./FeedbackPhrasePreview.jsx'))
 const ReadingMarathonStatusPreview = lazy(() => import('./ReadingMarathonStatusPreview.jsx'))
 const ReadingMarathonCelebratePreview = lazy(() => import('./ReadingMarathonCelebratePreview.jsx'))
+const DragonPlazaPreview = lazy(() => import('./DragonPlazaPreview.jsx'))
 const WorkshopSetPurchasePreview = lazy(() => import('./WorkshopSetPurchasePreview.jsx'))
 const VocabTowerDeckMapPreview = lazy(() => import('./VocabTowerDeckMapPreview.jsx'))
 const VocabTowerCoinPreview = lazy(() => import('./VocabTowerCoinPreview.jsx'))
@@ -128,6 +129,13 @@ export const DEV_LAB_SCENARIOS = Object.freeze([
     title: '우리반 아지트 저장·공개',
     description: '초안 저장·학급 공개·충돌·원글 재확인·철회 흐름을 DB 없는 샘플로 점검한다',
     Component: ClassAgitPersistencePreview,
+  }),
+  Object.freeze({
+    id: 'dragon-plaza',
+    icon: '🏫',
+    title: '우리반 수호룡 광장',
+    description: '학급 수호룡이 모인 교실·책상 이름표·프레임 빛 테두리·새 글·이번 주 방문자 칠판을 DB 없이 확인한다',
+    Component: DragonPlazaPreview,
   }),
   Object.freeze({
     id: 'workshop-set-purchase',

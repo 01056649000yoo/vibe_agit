@@ -48,7 +48,7 @@ class StudentModuleErrorBoundary extends React.Component {
  * 신규 게임 모듈의 학생 공통 진입 계약.
  * studentEntry는 아래 props만 사용하면 StudentDashboard 수정 없이 놀이터에서 열린다.
  */
-const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPointsChange, onBack }) => {
+const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPointsChange, onBack, onNavigate }) => {
     if (!module?.studentEntry || module.playground?.entryMode === 'legacy') return null;
     const StudentEntry = STUDENT_ENTRIES.get(module.id);
     if (!StudentEntry) return null;
@@ -66,6 +66,7 @@ const StudentGameModuleHost = ({ module, studentSession, isMobile, points, onPoi
                     points,
                     onPointsChange,
                     onBack,
+                    onNavigate,
                     module
                 })}
             </Suspense>

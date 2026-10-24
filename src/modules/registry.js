@@ -27,6 +27,7 @@ import { classAgitManifest } from './class-agit/manifest';
 import { classTimetableManifest } from './tool/class-timetable/manifest';
 import { spellingClawManifest } from './game/spelling-claw/manifest';
 import { quizArenaManifest } from './game/quiz-arena/manifest';
+import { dragonPlazaManifest } from './game/dragon-plaza/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -48,6 +49,7 @@ const manifests = [
   classAgitManifest, // C0 내부 전시실 시안, 기본 OFF
   classTimetableManifest, // src/modules/tool/class-timetable/ (new:module, 공개 전)
   spellingClawManifest, // src/modules/game/spelling-claw/ (학급별 켜기, 2026-10-24부터 기본 켜짐)
+  dragonPlazaManifest, // src/modules/game/dragon-plaza/ (우리반 수호룡 광장, 기본 켜짐·놀이터 `나의 작가 수호룡` 아래)
   quizArenaManifest, // src/modules/game/quiz-arena/ (new:module, 공개 전)
 ];
 

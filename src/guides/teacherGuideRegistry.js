@@ -40,6 +40,7 @@ export const TEACHER_GUIDE_TARGETS = Object.freeze({
     dragon: { tab: 'playground', module: 'dragon' },
     'vocab-tower': { tab: 'playground', module: 'vocab-tower' },
     'spelling-claw': { tab: 'playground', module: 'spelling-claw' },
+    'dragon-plaza': { tab: 'playground', module: 'dragon-plaza' },
     'quiz-arena': { tab: 'playground', module: 'quiz-arena' }
 });
 

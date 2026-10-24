@@ -115,6 +115,7 @@ export const TEACHER_GUIDE_JOURNEYS = Object.freeze([
             step('playground-modules', '놀이 활동 켜고 끄기', '학급 학생에게 보여 줄 놀이 활동을 고르고 각 활동 설정으로 들어갑니다.', 'playground'),
             step('dragon', '작가 수호룡 운영', '글쓰기 성장과 학기별 시즌 마감 순서를 확인합니다.', 'dragon'),
             step('vocab-tower', '어휘의 탑 운영', '익힘·도전·포인트 기준을 정하고 학생의 단계별 학습을 지원합니다.', 'vocab-tower'),
+            step('dragon-plaza', '우리반 수호룡 광장 켜고 끄기', '우리 반 수호룡이 모여 앉은 교실에서 학생이 친구 아지트를 구경합니다. 처음부터 켜져 있고 선생님이 따로 정할 것은 없으며, 쓰지 않으면 스위치로 끕니다.', 'dragon-plaza'),
             step('spelling-claw', '수호룡의 인형뽑기 운영', '맞춤법 목표·하루 기회·상품 확률을 저장하고, 뽑기 내역에서 선생님 선물을 챙깁니다.', 'spelling-claw'),
             step('dahandin-cookies', '다했니 쿠키 연동', '다했니 API 키를 넣고 학생을 매칭해, 쿠키가 늘어난 만큼 다했니 포인트로 정산합니다.', 'settings:dahandin')
         ]

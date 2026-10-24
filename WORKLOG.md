@@ -28,6 +28,12 @@
 - **결과/검증**: 친구 목록 RPC(`get_student_hideout_directory`)가 `pet_data`(종류·단계·장착 장식)를 이미 주므로 새 RPC 없이 교실을 그릴 수 있음을 확인. 포인트 흐름 조사(30일: 글쓰기 보상 54만P가 대부분, 쓴 포인트는 공방 구입 17.6만P가 전부, 학생 중앙값 100P).
 - **남은 것 / 다음**: OI-045(`진행` 대기).
 
+## 2026-10-24 — 우리반 수호룡 광장 1단계 구현 (Claude)
+- **한 일**: 선생님 확정 사양(이름 `우리반 수호룡 광장`, 놀이터 `나의 작가 수호룡` 아래, 학급 설정 기본 켜짐, 학급 학생 수만큼 자리·단계별 드래곤·책상 이름표(문패)·프레임 빛 테두리, 자리를 누르면 친구 아지트, 칠판에 이번 주 내 아지트 방문자, 새 글 표시→글로 이동, 친구 아지트를 **어디서 열든** 방문 기록)대로 모듈 `dragon-plaza` 작성. 방문 기록은 `FriendProfileShell` 한 곳에서 남겨 광장·`친구 아지트` 목록 모두 기록. 새 글은 DB 없이 이 기기의 읽은 기록으로 판단(한계: 기기를 바꾸면 다시 새 글).
+- **변경**: `src/modules/game/dragon-plaza/*`·`20261413_dragon_plaza_visits.sql`(표 `hideout_visits`·함수 `record_hideout_visit_v1`·`get_my_hideout_visitors_v1`·기본 켜짐)·`FriendProfileShell.jsx`·`StudentGameModuleHost.jsx`·`StudentDashboard.jsx`·`registry.js`·도움말·활용 안내서·개발실 `DragonPlazaPreview`·테스트·FEATURE_MAP v1.26.43·OPEN_ITEMS OI-045·TECH_GLOSSARY 대기열. **운영 DB 미적용.**
+- **결과/검증**: 롤백 검증·스모크(친구가 열면 기록·10분 안 재방문 한 번·본인/다른 학급/빈 값 기록 없음·내 방문자만 이름으로·횟수 비노출·지난 주 제외·표 권한 막힘) 통과, 개발실에서 PC·휴대폰 폭 렌더(13자리·새 글 2·칠판 명단·가로 넘침 없음), 테스트·eslint 통과.
+- **남은 것 / 다음**: OI-045 — `적용해` → 배포, GPT 그림 넣기(자동 반영).
+
 ## 2026-10-24 — 아지트 공방: 못 사는 까닭 안내와 세트 한 번에 사기 (Claude)
 - **한 일**: 레벨이 안 맞아 구입이 안 될 때 알려 달라는 요청과 "일부를 가졌으면 나머지만 살까요?/세트를 한 번에 사기"를 만들었다. 상품마다 까닭(작가·소통 단계, 포인트 부족) 문장, 세트 카드 잠금 표시, 세트 구입 안내 패널(5개 상태·요약·남은 값), `세트 한 번에 구입`/`나머지 M개 구입`과 확인 질문. [원인: 소통 단계가 모자라도 `작가 N단계 필요`로 나오고 세트에는 아무 안내가 없었음]
 - **변경**: `collectionAvailability.js`(판단 한 곳)·`BackgroundShopModal.jsx`·css·`useDragonPet.js`·`StudentDashboard.jsx`·`20261412_dragon_decor_set_purchase.sql`(기존 `buy_my_dragon_decor` 를 한 거래로 묶음, 레벨 기준을 새로 두지 않음)·스모크·`tests/dragonDecorSetPurchase.test.mjs`·개발실 `WorkshopSetPurchasePreview`·FEATURE_MAP v1.26.42·OPEN_ITEMS OI-044. **운영 DB 미적용.**

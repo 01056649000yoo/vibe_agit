@@ -1,0 +1,88 @@
+import { lazy, Suspense, useState } from 'react';
+import PlazaDesk from './PlazaDesk';
+import { CLASSROOM_BACKGROUND, useDeskArt } from './deskArt';
+import { describeVisitors } from './plazaModel';
+import { plazaApi } from './plazaApi';
+import useDragonPlaza from './useDragonPlaza';
+import './plaza.css';
+
+const FriendProfileShell = lazy(() => import('../../community/friends-hideout/profile/FriendProfileShell'));
+
+/** 칠판: 우리 반 이름 줄과 "이번 주 내 아지트에 놀러 온 친구" 명단(누군가 보고 있다는 신호, 횟수·순위 없음). */
+function Chalkboard({ seatCount, visitors }) {
+    const info = describeVisitors(visitors);
+    return (
+        <section className="plaza-board" aria-label="칠판">
+            <h2>우리반 수호룡 광장 <small>{seatCount}명이 앉아 있어요</small></h2>
+            <div className="plaza-board__visitors">
+                <strong>{info.title}</strong>
+                {info.empty
+                    ? <p>{info.text}</p>
+                    : <ul>{info.names.map((visitorName) => <li key={visitorName}>{visitorName}</li>)}</ul>}
+            </div>
+        </section>
+    );
+}
+
+/**
+ * 학생 놀이터 모듈 입구: 우리 반 수호룡이 모인 교실. 자리를 누르면 그 친구의 아지트(기존 친구 아지트 화면)가 열리고,
+ * 닫으면 교실로 돌아온다. `새 글`을 누르면 바로 그 글로 이동한다. `api` 로 데이터 길을 갈아 끼울 수 있다(개발실).
+ */
+export default function DragonPlazaEntry({ studentSession, onBack, onNavigate, api = plazaApi }) {
+    const studentId = studentSession?.id;
+    const { status, message, seats, visitors, newPosts, markSeen, reload } = useDragonPlaza(api, studentId);
+    const [openedSeat, setOpenedSeat] = useState(null);
+    const { available, classroomReady } = useDeskArt(seats.map((seat) => seat.speciesId));
+
+    const openPost = (post) => {
+        if (post?.id) markSeen(post.id);
+        onNavigate?.('friends_hideout', { initialPostId: post?.id });
+    };
+
+    return (
+        <div className={`plaza${classroomReady ? ' has-photo' : ''}`} style={classroomReady ? { '--classroom': `url(${CLASSROOM_BACKGROUND})` } : undefined}>
+            <header className="plaza__bar">
+                <button type="button" onClick={onBack}>← 놀이터</button>
+                <strong>🏫 우리반 수호룡 광장</strong>
+                <button type="button" onClick={reload} aria-label="교실 새로고침">↻</button>
+            </header>
+
+            {status === 'error' && (
+                <p className="plaza__error" role="alert">{message} <button type="button" onClick={reload}>다시 불러오기</button></p>
+            )}
+            {status === 'loading' && seats.length === 0 && <p className="plaza__loading" role="status">교실 문을 여는 중… 🏫</p>}
+
+            {seats.length > 0 && (
+                <>
+                    <Chalkboard seatCount={seats.length} visitors={visitors} />
+                    <div className="plaza__grid" role="list" aria-label="교실 자리">
+                        {seats.map((seat) => (
+                            <div role="listitem" key={seat.id}>
+                                <PlazaDesk
+                                    seat={seat}
+                                    hasDeskArt={Boolean(available[seat.speciesId])}
+                                    newPost={newPosts.get(seat.id)}
+                                    onOpen={setOpenedSeat}
+                                    onOpenNewPost={(_, post) => openPost(post)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <p className="plaza__hint">친구 자리를 누르면 그 친구의 아지트를 구경할 수 있어요. 내 아지트에 놀러 온 친구는 칠판에 나와요.</p>
+                </>
+            )}
+
+            {openedSeat?.row && (
+                <Suspense fallback={<div className="plaza__opening" role="status">친구 아지트를 여는 중… 🏠</div>}>
+                    <FriendProfileShell
+                        friend={openedSeat.row}
+                        viewerId={studentId}
+                        classId={studentSession?.class_id}
+                        onClose={() => setOpenedSeat(null)}
+                        onOpenPost={openPost}
+                    />
+                </Suspense>
+            )}
+        </div>
+    );
+}
