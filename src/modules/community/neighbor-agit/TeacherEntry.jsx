@@ -238,7 +238,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (result.success === false) {
             setErrorMessage(result.error === 'rate_limited'
                 ? `초대 코드를 여러 번 잘못 넣어 잠시 막혔어요. ${Math.ceil((Number(result.retry_after_seconds) || 60) / 60)}분 뒤 다시 해 주세요.`
-                : '초대 코드가 맞지 않거나, 기한이 지났거나, 새 코드로 바뀌었어요. 모임을 연 선생님께 코드를 다시 받아 주세요.');
+                : '초대 코드가 맞지 않거나, 만든 지 7일이 지났거나, 새 코드로 바뀌었어요(새 코드를 만들면 이전 코드는 바로 멈춰요). 모임을 연 선생님께 새 코드를 받아 주세요.');
             return;
         }
         setMessage('참여를 신청했습니다. 모임을 연 선생님이 승인하면 이 화면이 저절로 바뀌어요.');
@@ -392,8 +392,8 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
         if (eligible.length === 0 || busy) return;
         const scope = collectGroupBy === 'student' ? `${group.label} 학생` : `"${group.label}" 주제`;
         const ok = await ask({
-            title: `${scope}의 글 ${eligible.length}편을 지금 모두 공개할까요?`,
-            body: '전문 확인은 생략하고 바로 공개합니다. 공개된 글은 공개 글 관리에서 다시 숨길 수 있어요.',
+            title: `${scope}의 글 ${eligible.length}편을 지금 모두 공유할까요?`,
+            body: '전문 확인은 생략하고 바로 공개합니다. 이 묶음의 글만 공유되고 다른 주제는 그대로예요. `공유 해제`로 언제든 되돌릴 수 있어요.',
             confirmLabel: `${eligible.length}편 공개하기`,
             cancelLabel: '그만두기'
         });
@@ -406,6 +406,59 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             setGalleryCandidates(null);
             setMessage(`${result.published}편을 공개했습니다.${result.skipped ? ` (${result.skipped}편은 지금 공개할 수 없어 건너뜀)` : ''}`);
         }
+    };
+
+    // 글 고르기 화면에서 묶음(주제/학생)·글 한 편의 공유를 바로 해제하고 다시 공유한다(2026-10-24 선생님 요청).
+    // 해제 = 서버의 `숨김`(공개 글에서 내려감, 댓글·공감은 보관). 다시 공유 = 숨김 해제.
+    const sharedStatusCounts = (group) => ({
+        published: group.posts.filter((post) => post.share_status === 'published').length,
+        hidden: group.posts.filter((post) => post.share_status === 'hidden').length,
+        ready: group.posts.filter((post) => !['published', 'hidden'].includes(post.share_status)).length
+    });
+    const groupScope = (group) => (collectGroupBy === 'student' ? `${group.label} 학생` : `"${group.label}" 주제`);
+    const unshareGroup = async (group) => {
+        const eligible = group.posts.filter((post) => post.share_status === 'published' && post.shared_post_id);
+        if (eligible.length === 0 || busy) return;
+        const ok = await ask({
+            title: `${groupScope(group)}의 공개 글 ${eligible.length}편의 공유를 해제할까요?`,
+            body: '이웃 반 학생에게 더는 보이지 않습니다. 언제든 `다시 공유`로 되돌릴 수 있어요. 다른 주제의 글은 그대로예요.',
+            confirmLabel: `${eligible.length}편 공유 해제`, cancelLabel: '그만두기', tone: 'danger'
+        });
+        if (!ok) return;
+        const result = await runAction('hide_gallery_posts_bulk', {
+            space_id: workspace.space.id, shared_post_ids: eligible.map((post) => post.shared_post_id)
+        }, '');
+        if (result) {
+            setGalleryCandidates(null);
+            setMessage(`${result.hidden}편의 공유를 해제했습니다.${result.skipped ? ` (${result.skipped}편은 건너뜀)` : ''}`);
+        }
+    };
+    const reshareGroup = async (group) => {
+        const eligible = group.posts.filter((post) => post.share_status === 'hidden' && post.shared_post_id);
+        if (eligible.length === 0 || busy) return;
+        const ok = await ask({
+            title: `${groupScope(group)}의 공유 해제된 글 ${eligible.length}편을 다시 공유할까요?`,
+            body: '바로 이웃 반 학생에게 다시 보입니다.',
+            confirmLabel: `${eligible.length}편 다시 공유`, cancelLabel: '그만두기'
+        });
+        if (!ok) return;
+        setBusy('restore_post'); setMessage(''); setErrorMessage('');
+        let restored = 0, skipped = 0, latest = null;
+        for (const post of eligible) {
+            try {
+                latest = await api.runAction(classId, 'restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' });
+                restored += 1;
+            } catch { skipped += 1; }
+        }
+        if (latest?.workspace) setWorkspace(latest.workspace);
+        setGalleryCandidates(null);
+        setBusy('');
+        setMessage(`${restored}편을 다시 공유했습니다.${skipped ? ` (${skipped}편은 다른 반이 숨겼거나 지금 할 수 없어 건너뜀)` : ''}`);
+    };
+    const unsharePost = async (post) => {
+        if (!post.shared_post_id || busy) return;
+        const result = await runAction('hide_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '교사 확인' }, '글의 공유를 해제했습니다.');
+        if (result) setGalleryCandidates(null);
     };
 
     // 공개 글 관리에서 묶음 안 공개 중인 글을 한 번에 비공개로 돌린다.
@@ -1055,6 +1108,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 onChange={(event) => setSpaceForm({ ...spaceForm, publicClassName: event.target.value })} />
                                 <small>학생 글과 댓글 옆에 이 이름이 붙어요.</small></label>
                             <label>공간 소개<textarea value={spaceForm.description} maxLength={240} onChange={(event) => setSpaceForm({ ...spaceForm, description: event.target.value })} /></label>
+                            <p className="neighbor-teacher__start-note" role="note">ℹ️ 한 학급은 한 번에 <strong>모임 하나</strong>만 열거나 참여할 수 있어요. 모임이 끝나면(모임 종료·나가기) 같은 학급에서 새 모임을 다시 열 수 있어요.</p>
                             <Button type="submit" loading={busy === 'create_space'} disabled={Boolean(busy)}>공간 만들기</Button>
                         </form>
                     </Modal>
@@ -1068,11 +1122,12 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         <form className="neighbor-teacher__start-form" onSubmit={joinSpace}>
                             <label>받은 초대 코드<input value={joinForm.inviteKey} maxLength={24} required autoComplete="off" placeholder="예: ABCD-EFGH-JKMN-PQRS"
                                 onChange={(event) => setJoinForm({ ...joinForm, inviteKey: event.target.value })} />
-                                <small>띄어쓰기·하이픈은 있어도 없어도 돼요.</small></label>
+                                <small>띄어쓰기·하이픈은 있어도 없어도 돼요. 코드는 <strong>만든 때부터 7일 동안만</strong> 쓸 수 있고, 모임을 연 선생님이 새 코드를 만들면 이전 코드는 멈춰요.</small></label>
                             <label>다른 반에 보일 우리 반 이름<input value={joinForm.publicClassName} maxLength={40} required placeholder="예: 진남초 4-2"
                                 onChange={(event) => setJoinForm({ ...joinForm, publicClassName: event.target.value })} />
                                 <small>학생 글과 댓글 옆에 이 이름이 붙어요.</small></label>
                             <Button type="submit" loading={busy === 'join_space'} disabled={Boolean(busy)}>참여 신청하기</Button>
+                            <p className="neighbor-teacher__start-note" role="note">ℹ️ 한 학급은 한 번에 <strong>모임 하나</strong>에만 참여할 수 있어요. 이미 다른 모임에 있는 학급은 그 모임을 나간 뒤 신청해 주세요.</p>
                             <small className="neighbor-teacher__start-hint">신청하면 모임을 연 선생님이 승인해요. 승인되면 이 화면이 12초 안에 저절로 바뀌어요.</small>
                         </form>
                     </Modal>
@@ -1104,7 +1159,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                 <div><span>2단계</span><h3>이웃 반 초대 코드</h3></div>
                                 {invite
                                     ? <InviteCodeBox invite={invite} spaceName={workspace.space.name} />
-                                    : <p>초대 코드를 만들어 이웃 반 선생님들께 보내요. <strong>코드 하나로 여러 반</strong>이 7일 동안 신청할 수 있고, 들어온 신청은 아래에서 승인해요.</p>}
+                                    : <p>초대 코드를 만들어 이웃 반 선생님들께 보내요. <strong>코드 하나로 여러 반</strong>이 신청할 수 있고, 들어온 신청은 아래에서 승인해요. <strong>코드는 만든 때부터 7일 동안만</strong> 쓸 수 있고, 새 코드를 만들면 이전 코드는 바로 멈춰요.</p>}
                                 <Button type="button" variant={invite ? 'outline' : 'primary'} loading={busy === 'create_invite'} disabled={Boolean(busy)} onClick={createInvite}>{invite ? '새 초대 코드로 바꾸기' : '초대 코드 만들기'}</Button>
                             </section>
                             <section className="neighbor-teacher-card">
@@ -1245,24 +1300,40 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                     return (
                                                         <div className="neighbor-teacher__folder-list">
                                                             {collectGroups.map((group) => {
-                                                                const ready = shareable(group).length;
+                                                                const counts = sharedStatusCounts(group);
                                                                 return (
                                                                     <div className="neighbor-teacher__folder" key={group.key}>
                                                                         <button type="button" className="neighbor-teacher__folder-open" onClick={() => setCollectOpenGroup(group.key)}>
                                                                             <span className="neighbor-teacher__folder-icon" aria-hidden="true">{collectGroupBy === 'student' ? '🙂' : '📘'}</span>
                                                                             <span className="neighbor-teacher__folder-body">
                                                                                 <strong>{group.label}</strong>
-                                                                                <small>{group.posts.length}편{ready > 0 ? ` · ${ready} 공개 가능` : ' · 모두 공개됨'}</small>
+                                                                                <small>{group.posts.length}편 · 공개 중 {counts.published} · 공유 전 {counts.ready}{counts.hidden > 0 ? ` · 해제됨 ${counts.hidden}` : ''}</small>
                                                                             </span>
                                                                             <span className="neighbor-teacher__folder-arrow" aria-hidden="true">›</span>
                                                                         </button>
-                                                                        {ready > 0 && (
-                                                                            <Button type="button" size="sm" className="neighbor-teacher__folder-action"
-                                                                                loading={busy === 'publish_gallery_posts_bulk'} disabled={Boolean(busy)}
-                                                                                onClick={() => bulkPublishGroup(group)}>
-                                                                                {ready}편 일괄 공개
-                                                                            </Button>
-                                                                        )}
+                                                                        <span className="neighbor-teacher__folder-actions">
+                                                                            {counts.ready > 0 && (
+                                                                                <Button type="button" size="sm" className="neighbor-teacher__folder-action"
+                                                                                    loading={busy === 'publish_gallery_posts_bulk'} disabled={Boolean(busy)}
+                                                                                    onClick={() => bulkPublishGroup(group)}>
+                                                                                    {counts.ready}편 일괄 공유
+                                                                                </Button>
+                                                                            )}
+                                                                            {counts.published > 0 && (
+                                                                                <Button type="button" size="sm" variant="outline" className="neighbor-teacher__folder-action"
+                                                                                    loading={busy === 'hide_gallery_posts_bulk'} disabled={Boolean(busy)}
+                                                                                    onClick={() => unshareGroup(group)}>
+                                                                                    {counts.published}편 공유 해제
+                                                                                </Button>
+                                                                            )}
+                                                                            {counts.hidden > 0 && (
+                                                                                <Button type="button" size="sm" variant="ghost" className="neighbor-teacher__folder-action"
+                                                                                    loading={busy === 'restore_post'} disabled={Boolean(busy)}
+                                                                                    onClick={() => reshareGroup(group)}>
+                                                                                    해제된 {counts.hidden}편 다시 공유
+                                                                                </Button>
+                                                                            )}
+                                                                        </span>
                                                                     </div>
                                                                 );
                                                             })}
@@ -1281,7 +1352,17 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                                 <Button type="button" size="sm" className="neighbor-teacher__bulk-publish"
                                                                     loading={busy === 'publish_gallery_posts_bulk'} disabled={Boolean(busy)}
                                                                     onClick={() => bulkPublishGroup(openGroup)}>
-                                                                    이 묶음 {ready.length}편 일괄 공개
+                                                                    이 묶음 {ready.length}편 일괄 공유
+                                                                </Button>
+                                                            )}
+                                                            {sharedStatusCounts(openGroup).published > 0 && (
+                                                                <Button type="button" size="sm" variant="outline" loading={busy === 'hide_gallery_posts_bulk'} disabled={Boolean(busy)} onClick={() => unshareGroup(openGroup)}>
+                                                                    공개 중 {sharedStatusCounts(openGroup).published}편 공유 해제
+                                                                </Button>
+                                                            )}
+                                                            {sharedStatusCounts(openGroup).hidden > 0 && (
+                                                                <Button type="button" size="sm" variant="ghost" loading={busy === 'restore_post'} disabled={Boolean(busy)} onClick={() => reshareGroup(openGroup)}>
+                                                                    해제된 {sharedStatusCounts(openGroup).hidden}편 다시 공유
                                                                 </Button>
                                                             )}
                                                         </header>
@@ -1291,26 +1372,30 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                                                                     <div className="neighbor-teacher__candidate-card-body">
                                                                         <div className="neighbor-teacher__candidate-meta">
                                                                             <span className="neighbor-teacher__mission-chip">{post.mission_title || '자율 글'}</span>
-                                                                            <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '숨김' : '공유 전'}</span>
+                                                                            <span className={`neighbor-teacher__share-status is-${post.share_status || 'ready'}`}>{post.share_status === 'published' ? '공개 중' : post.share_status === 'hidden' ? '공유 해제됨' : '공유 전'}</span>
                                                                         </div>
                                                                         <h3>{post.title || '제목 없는 글'}</h3>
                                                                         <p>{post.excerpt || '내용 미리보기가 없습니다.'}</p>
                                                                         <strong className="neighbor-teacher__candidate-author">{post.student_name}</strong>
                                                                     </div>
-                                                                    {post.share_status === 'hidden' ? (
+                                                                    {post.share_status === 'published' ? (
+                                                                        <Button type="button" variant="outline" loading={busy === 'hide_post'} disabled={Boolean(busy)} onClick={() => unsharePost(post)}>
+                                                                            공유 해제
+                                                                        </Button>
+                                                                    ) : post.share_status === 'hidden' ? (
                                                                         <Button type="button" loading={busy === 'restore_post'} disabled={Boolean(busy)}
-                                                                            onClick={async () => { const r = await runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공개했습니다.'); if (r) setGalleryCandidates(null); }}>
-                                                                            숨김 해제·다시 공개
+                                                                            onClick={async () => { const r = await runAction('restore_post', { space_id: workspace.space.id, item_id: post.shared_post_id, reason: '' }, '글을 다시 공유했습니다.'); if (r) setGalleryCandidates(null); }}>
+                                                                            공유 해제됨 · 다시 공유
                                                                         </Button>
                                                                     ) : (
                                                                         <Button
                                                                             type="button"
                                                                             variant={post.share_status ? 'outline' : 'primary'}
                                                                             loading={busy === 'publish_gallery_post'}
-                                                                            disabled={Boolean(busy) || post.share_status === 'published'}
+                                                                            disabled={Boolean(busy)}
                                                                             onClick={() => setReviewSelection({ post, mode: 'gallery' })}
                                                                         >
-                                                                            {post.share_status === 'published' ? '공개 중' : '전문 확인 후 공유'}
+                                                                            전문 확인 후 공유
                                                                         </Button>
                                                                     )}
                                                                 </article>
@@ -1636,6 +1721,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
             {workspace?.space?.my_status === 'active' && isReady && (
                 <Modal isOpen={manageOpen} onClose={() => { if (!busy) setManageOpen(false); }} title="⚙️ 공간 관리" maxWidth="640px" showFooter={false}>
                     <div className="neighbor-teacher__manage">
+                        <p className="neighbor-teacher__start-note" role="note">ℹ️ 한 학급은 한 번에 <strong>모임 하나</strong>만 열거나 참여할 수 있어요. 다른 모임을 새로 열려면 이 모임을 {workspace.space.my_role === 'host' ? '종료' : '나간'} 뒤에 하세요.</p>
                         <section>
                             <h3>참여 학급 {activeMemberships.length}/{NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace}</h3>
                             <ul className="neighbor-teacher__members">
@@ -1650,7 +1736,7 @@ const NeighborAgitTeacherEntry = ({ activeClass, isMobile, api = neighborAgitTea
                         {workspace.space.my_role === 'host' && (
                             <section>
                                 <h3>이웃 반 초대</h3>
-                                {invite ? <InviteCodeBox invite={invite} spaceName={workspace.space.name} /> : <p>초대 코드 하나로 여러 반이 7일 동안 신청할 수 있어요.</p>}
+                                {invite ? <InviteCodeBox invite={invite} spaceName={workspace.space.name} /> : <p>초대 코드 하나로 여러 반이 신청할 수 있어요. <strong>코드는 만든 때부터 7일 동안만</strong> 쓸 수 있고, 새 코드를 만들면 이전 코드는 바로 멈춰요.</p>}
                                 <Button type="button" variant={invite ? 'outline' : 'primary'} loading={busy === 'create_invite'} disabled={Boolean(busy) || activeMemberships.length >= NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace} onClick={createInvite}>{invite ? '새 초대 코드로 바꾸기' : '초대 코드 만들기'}</Button>
                                 {activeMemberships.length >= NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace && <p className="neighbor-teacher__empty">참여 학급이 {NEIGHBOR_AGIT_LIMITS.maxClassesPerSpace}개로 가득 찼습니다.</p>}
                             </section>

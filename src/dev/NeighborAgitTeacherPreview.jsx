@@ -84,7 +84,13 @@ const initialWorkspace = {
 }
 
 function createPreviewApi() {
-  let workspace = structuredClone(initialWorkspace)
+  let shareCandidates = [
+  { post_id: 'post-1', mission_id: 'mission-town', mission_title: '우리 동네의 숨은 보물', student_name: '김도윤', title: '우리 동네 작은 숲', excerpt: '학교 뒤 산책길에서 발견한 작은 숲을 소개합니다.', share_status: null },
+  { post_id: 'post-2', mission_id: 'mission-letter', mission_title: '마음을 전하는 편지', student_name: '이서윤', title: '할머니의 손편지', excerpt: '할머니가 보내 주신 편지를 읽으며 떠올린 마음을 썼습니다.', share_status: null },
+  { post_id: 'post-3', mission_id: 'mission-town', mission_title: '우리 동네의 숨은 보물', student_name: '박하준', title: '비 오는 운동장', excerpt: '창문 너머 운동장을 바라보며 소리와 냄새를 기록했습니다.', share_status: 'published', shared_post_id: 'shared-post-3' },
+  { post_id: 'post-4', mission_id: 'mission-letter', mission_title: '마음을 전하는 편지', student_name: '최지우', title: '친구에게 쓴 편지', excerpt: '전학 간 친구에게 안부를 전하는 편지입니다.', share_status: null },
+]
+let workspace = structuredClone(initialWorkspace)
   return {
   async getWorkspace() {
     return workspace
@@ -130,6 +136,19 @@ function createPreviewApi() {
     return { success: true, activity_id: id }
   },
   async runAction(_classId, action, payload) {
+    const setShare = (ids, key, status) => { shareCandidates = shareCandidates.map((post) => ids.includes(key === 'post_id' ? post.post_id : post.shared_post_id) ? { ...post, share_status: status, shared_post_id: `shared-${post.post_id}` } : post) }
+    if (action === 'publish_gallery_posts_bulk') {
+      setShare(payload.post_ids, 'post_id', 'published')
+      return { result: { success: true, published: payload.post_ids.length, skipped: 0 }, workspace }
+    }
+    if (action === 'hide_gallery_posts_bulk') {
+      setShare(payload.shared_post_ids, 'shared_post_id', 'hidden')
+      return { result: { success: true, hidden: payload.shared_post_ids.length, skipped: 0 }, workspace }
+    }
+    if (action === 'hide_post' || action === 'restore_post') {
+      setShare([payload.item_id], 'shared_post_id', action === 'hide_post' ? 'hidden' : 'published')
+      return { result: { success: true }, workspace }
+    }
     if (action === 'review_post') {
       workspace = { ...workspace, review_total: 0, review_posts: [] }
     }
@@ -144,11 +163,7 @@ function createPreviewApi() {
     }
   },
   async getShareCandidates() {
-    return [
-      { post_id: 'post-1', mission_id: 'mission-town', mission_title: '우리 동네의 숨은 보물', student_name: '김도윤', title: '우리 동네 작은 숲', excerpt: '학교 뒤 산책길에서 발견한 작은 숲을 소개합니다.', share_status: null },
-      { post_id: 'post-2', mission_id: 'mission-letter', mission_title: '마음을 전하는 편지', student_name: '이서윤', title: '할머니의 손편지', excerpt: '할머니가 보내 주신 편지를 읽으며 떠올린 마음을 썼습니다.', share_status: 'pending' },
-      { post_id: 'post-3', mission_id: 'mission-town', mission_title: '우리 동네의 숨은 보물', student_name: '박하준', title: '비 오는 운동장', excerpt: '창문 너머 운동장을 바라보며 소리와 냄새를 기록했습니다.', share_status: 'published' },
-    ]
+    return shareCandidates.map((post) => ({ ...post }))
   },
   async getSourcePost({ postId }) {
     const detail = await this.getPostDetail()

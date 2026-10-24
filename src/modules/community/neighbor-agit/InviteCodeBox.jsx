@@ -22,7 +22,7 @@ export default function InviteCodeBox({ invite, spaceName }) {
     const until = new Date(invite.expires_at).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' });
     const guide = `끄적끄적 아지트 '모두의 아지트'${spaceName ? ` [${spaceName}]` : ''}에 초대합니다.\n`
         + `선생님 화면 → 모두의 아지트 → '받은 초대 코드로 들어가기'에 아래 코드를 넣어 주세요.\n`
-        + `초대 코드: ${invite.invite_key}\n(${until}까지)`;
+        + `초대 코드: ${invite.invite_key}\n(${until}까지 유효 · 만든 때부터 7일)`;
     const copy = async (kind, text) => {
         setCopied(await writeClipboard(text) ? kind : 'failed');
     };
@@ -42,6 +42,7 @@ export default function InviteCodeBox({ invite, spaceName }) {
                 </Button>
             </span>
             {copied === 'failed' && <small className="neighbor-invite-box__warn">복사하지 못했어요. 코드를 직접 옮겨 적어 주세요.</small>}
+            <small className="neighbor-invite-box__note">⏳ 코드는 <strong>만든 때부터 7일 동안만</strong> 쓸 수 있어요. 기한이 지나거나 새 코드를 만들면 이전 코드는 &quot;유효하지 않다&quot;고 나와요.</small>
             <small className="neighbor-invite-box__note">🔒 코드는 지금 한 번만 보여요. 잊으셨으면 새 코드를 만드세요(이전 코드는 멈춰요).</small>
         </div>
     );
