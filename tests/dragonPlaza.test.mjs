@@ -127,5 +127,5 @@ test('작가 단계가 오를수록 책상 위 수호룡의 빛 단계가 높아
     const { auraTier } = await import('../src/modules/game/dragon-plaza/PlazaDesk.jsx').catch(() => ({}));
     if (!auraTier) return; // JSX 를 직접 읽지 못하는 환경에서는 소스 검사로 대신한다
     const tiers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(auraTier);
-    assert.deepEqual(tiers, [0, 0, 1, 1, 2, 2, 3, 3, 4, 5]);
+    assert.deepEqual(tiers, [0, 0, 1, 1, 2, 2, 3, 4, 5, 6]);
 });

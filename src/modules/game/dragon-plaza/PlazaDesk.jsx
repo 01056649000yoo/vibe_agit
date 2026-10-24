@@ -13,8 +13,8 @@ const registerSeatForPause = (element) => {
     return () => pauseObserver?.unobserve(element);
 };
 
-/** 작가 단계 → 빛깔 단계(0 없음 ~ 5 가장 화려함). 단계가 오를수록 책상 위 수호룡이 눈에 띄게 빛난다. */
-export const auraTier = (level) => (level >= 10 ? 5 : level >= 9 ? 4 : level >= 7 ? 3 : level >= 5 ? 2 : level >= 3 ? 1 : 0);
+/** 작가 단계 → 빛깔 단계(0 없음 ~ 6 가장 화려함, 7·8·9·10 은 서로 다르다). 단계가 오를수록 책상 위 수호룡이 눈에 띄게 빛난다. */
+export const auraTier = (level) => (level >= 10 ? 6 : level >= 9 ? 5 : level >= 8 ? 4 : level >= 7 ? 3 : level >= 5 ? 2 : level >= 3 ? 1 : 0);
 
 /**
  * 교실 책상 한 자리. 책상에 앉은 수호룡(단계별), 책상 둘레의 빛 테두리(공방에서 고른 프레임), 이름표 자리(공방에서 고른 문패 + 이름).
